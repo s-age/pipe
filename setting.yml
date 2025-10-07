@@ -14,7 +14,7 @@ parameters:
     value: 0.2
     description: "Be precise and factual. A lower value is preferred for deterministic output."
   top_p:
-    value: 1.0
+    value: 0.5
     description: "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
   top_k:
     value: 5

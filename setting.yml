@@ -1,0 +1,21 @@
+# Default model to use
+model: gemini-2.5-flash
+context_limit: 1000000
+
+# The language hint for the model
+language: "Japanese"
+
+# Auto-confirm for gemini-cli. If false, the -y flag will be omitted.
+yolo: true
+
+# Hyperparameters to be included in the prompt as contextual hints
+parameters:
+  temperature:
+    value: 0.2
+    description: "Be precise and factual. A lower value is preferred for deterministic output."
+  top_p:
+    value: 1.0
+    description: "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
+  top_k:
+    value: 5
+    description: "Limit the generation to the top 5 most likely tokens at each step."

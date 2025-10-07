@@ -1,0 +1,218 @@
+from flask import Flask, render_template, abort, jsonify, request
+from pathlib import Path
+import sys
+import yaml
+from src.history_manager import HistoryManager
+
+def load_settings(config_path: Path) -> dict:
+    if config_path.exists():
+        with config_path.open('r', encoding='utf-8') as f:
+            return yaml.safe_load(f)
+    return {}
+
+app = Flask(__name__)
+project_root = Path(__file__).parent
+config_path = project_root / 'setting.yml'
+settings = load_settings(config_path)
+history_manager = HistoryManager(project_root / 'sessions')
+
+@app.route('/')
+def index():
+    """
+    Serves the main HTML page for viewing conversation history.
+    """
+    sessions_index = history_manager.list_sessions()
+    # 最終更新日時でセッションをソート
+    sorted_sessions = sorted(
+        sessions_index.items(),
+        key=lambda item: item[1].get('last_updated', ''),
+        reverse=True
+    )
+    return render_template('index.html', sessions=sorted_sessions, current_session_id=None, session_data={})
+
+@app.route('/new_session')
+def new_session_form():
+    return render_template('new_session.html')
+
+@app.route('/api/session/new', methods=['POST'])
+def create_new_session_api():
+    try:
+        data = request.get_json()
+        purpose = data.get('purpose')
+        background = data.get('background')
+        roles_str = data.get('roles', '')
+        instruction = data.get('instruction')
+        multi_step_reasoning_enabled = data.get('multi_step_reasoning_enabled', False)
+
+        if not all([purpose, background, instruction]):
+            return jsonify({"success": False, "message": "Purpose, background, and first instruction are required."}), 400
+        
+        roles = [r.strip() for r in roles_str.split(',') if r.strip()]
+
+        session_id = history_manager.create_new_session(purpose, background, roles, multi_step_reasoning_enabled)
+        
+        # Now, call conductor.py to process the first instruction.
+        import subprocess
+        command = ['python3', 'conductor.py', '--session', session_id, '--instruction', instruction]
+        if multi_step_reasoning_enabled:
+            command.append('--multi-step-reasoning')
+        process = subprocess.run(
+            command, capture_output=True, text=True, check=True, encoding='utf-8'
+        )
+        
+        return jsonify({"success": True, "session_id": session_id}), 200
+    except subprocess.CalledProcessError as e:
+        return jsonify({"success": False, "message": "Conductor script failed during initial instruction processing.", "details": e.stderr}), 500
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route('/session/<session_id>')
+def view_session(session_id):
+    sessions_index = history_manager.list_sessions()
+    if session_id not in sessions_index:
+        abort(404)
+
+    sorted_sessions = sorted(
+        sessions_index.items(),
+        key=lambda item: item[1].get('last_updated', ''),
+        reverse=True
+    )
+    
+    session_data = history_manager.get_session(session_id)
+    if not session_data:
+        abort(404)
+
+    turns = session_data.get("turns", [])
+    # Reverse the turns for display
+    turns.reverse()
+    
+    current_session_purpose = session_data.get('purpose', 'Session')
+    multi_step_reasoning_enabled = session_data.get('multi_step_reasoning_enabled', False)
+    token_count = session_data.get('token_count', 0)
+    context_limit = settings.get('context_limit', 1000000)
+
+    return render_template('index.html',
+                           sessions=sorted_sessions,
+                           current_session_id=session_id,
+                           current_session_purpose=current_session_purpose,
+                           session_data=session_data,
+                           turns=turns,
+                           multi_step_reasoning_enabled=multi_step_reasoning_enabled,
+                           token_count=token_count,
+                           context_limit=context_limit)
+
+# --- API Endpoints for Deletion ---
+
+@app.route('/api/session/<session_id>', methods=['DELETE'])
+def delete_session_api(session_id):
+    try:
+        history_manager.delete_session(session_id)
+        return jsonify({"success": True, "message": f"Session {session_id} deleted."}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route('/api/session/<session_id>/turn/<int:turn_index>', methods=['DELETE'])
+def delete_turn_api(session_id, turn_index):
+    try:
+        # Since we reverse the turns for display, we need to convert the index back
+        session_data = history_manager.get_session(session_id)
+        if not session_data:
+            return jsonify({"success": False, "message": "Session not found."}), 404
+        
+        original_length = len(session_data.get("turns", []))
+        # The index from the frontend is for the reversed list
+        index_to_delete = original_length - 1 - turn_index
+
+        history_manager.delete_turn(session_id, index_to_delete)
+        return jsonify({"success": True, "message": f"Turn {turn_index} from session {session_id} deleted."}), 200
+    except IndexError:
+        return jsonify({"success": False, "message": "Turn index out of range."}), 400
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route('/api/session/<session_id>/turn/<int:turn_index>/edit', methods=['POST'])
+def edit_turn_api(session_id, turn_index):
+    try:
+        new_data = request.get_json()
+        if not new_data:
+            return jsonify({"success": False, "message": "No data provided."}), 400
+
+        # Since we reverse the turns for display, we need to convert the index back
+        session_data = history_manager.get_session(session_id)
+        if not session_data:
+            return jsonify({"success": False, "message": "Session not found."}), 404
+        
+        original_length = len(session_data.get("turns", []))
+        index_to_edit = original_length - 1 - turn_index
+
+        history_manager.edit_turn(session_id, index_to_edit, new_data)
+        return jsonify({"success": True, "message": f"Turn {turn_index} from session {session_id} updated."}), 200
+    except IndexError:
+        return jsonify({"success": False, "message": "Turn index out of range."}), 400
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route('/api/session/<session_id>/meta/edit', methods=['POST'])
+def edit_session_meta_api(session_id):
+    try:
+        new_meta_data = request.get_json()
+        if not new_meta_data or not any(k in new_meta_data for k in ['purpose', 'background', 'multi_step_reasoning_enabled', 'token_count']):
+            return jsonify({"success": False, "message": "No data provided."}), 400
+
+        history_manager.edit_session_meta(session_id, new_meta_data)
+        return jsonify({"success": True, "message": f"Session {session_id} metadata updated."}), 200
+    except FileNotFoundError:
+        return jsonify({"success": False, "message": "Session not found."}), 404
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route('/api/session/<session_id>/compress', methods=['POST'])
+def compress_session_api(session_id):
+    try:
+        # Use conductor.py to perform the compression
+        import subprocess
+        command = ['python3', 'conductor.py', '--session', session_id, '--compress']
+        process = subprocess.run(
+            command, capture_output=True, text=True, check=True, encoding='utf-8'
+        )
+        return jsonify({"success": True, "message": "Session compressed successfully.", "details": process.stdout}), 200
+    except subprocess.CalledProcessError as e:
+        return jsonify({"success": False, "message": "Compression script failed.", "details": e.stderr}), 500
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route('/api/session/<session_id>/instruction', methods=['POST'])
+def send_instruction_api(session_id):
+    try:
+        new_data = request.get_json()
+        instruction = new_data.get('instruction')
+        if not instruction:
+            return jsonify({"success": False, "message": "No instruction provided."}), 400
+
+        session_data = history_manager.get_session(session_id)
+        if not session_data:
+            return jsonify({"success": False, "message": "Session not found."}), 404
+        
+        enable_multi_step_reasoning = session_data.get('multi_step_reasoning_enabled', False)
+
+        import subprocess
+        command = ['python3', 'conductor.py', '--session', session_id, '--instruction', instruction]
+        if enable_multi_step_reasoning:
+            command.append('--multi-step-reasoning')
+        process = subprocess.run(
+            command, capture_output=True, text=True, check=True, encoding='utf-8'
+        )
+        llm_response = process.stdout.strip()
+        
+        return jsonify({"success": True, "message": "Instruction sent successfully.", "llm_response": llm_response}), 200
+    except subprocess.CalledProcessError as e:
+        return jsonify({"success": False, "message": "Conductor script failed.", "details": e.stderr}), 500
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5001, debug=True)

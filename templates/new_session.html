@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Session</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #343a40; }
+        .container { max-width: 800px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #007bff; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #495057; }
+        input[type="text"], textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        textarea { min-height: 100px; resize: vertical; }
+        .action-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .action-btn:hover { background-color: #0056b3; }
+        .cancel-btn { background-color: #6c757d; margin-left: 10px; }
+        .cancel-btn:hover { background-color: #5a6268; }
+        .error-message { color: #dc3545; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create New Chat Session</h1>
+        <form id="new-session-form">
+            <label for="purpose">Purpose:</label>
+            <input type="text" id="purpose" name="purpose" required>
+
+            <label for="background">Background:</label>
+            <textarea id="background" name="background" required></textarea>
+
+            <label for="roles">Roles (comma-separated paths, e.g., roles/engineer.md):</label>
+            <input type="text" id="roles" name="roles">
+
+            <label for="instruction">First Instruction:</label>
+            <textarea id="instruction" name="instruction" required></textarea>
+
+            <div style="margin-bottom: 15px;">
+                <input type="checkbox" id="multi-step-reasoning" name="multi_step_reasoning_enabled">
+                <label for="multi-step-reasoning">Enable Multi-step Reasoning</label>
+            </div>
+
+            <button type="submit" class="action-btn" id="create-session-btn">Create Session</button>
+            <button type="button" class="action-btn cancel-btn" onclick="window.location.href='/'">Cancel</button>
+        </form>
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script>
+        document.getElementById('new-session-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const createButton = document.getElementById('create-session-btn');
+            createButton.disabled = true; // Disable button
+            const originalButtonText = createButton.textContent;
+            createButton.textContent = 'Creating...'; // Change button text
+
+            const purpose = document.getElementById('purpose').value;
+            const background = document.getElementById('background').value;
+            const roles = document.getElementById('roles').value;
+            const instruction = document.getElementById('instruction').value;
+            const multi_step_reasoning_enabled = document.getElementById('multi-step-reasoning').checked;
+
+            const errorMessageDiv = document.getElementById('error-message');
+            errorMessageDiv.textContent = ''; // Clear previous errors
+
+            fetch('/api/session/new', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ purpose, background, roles, instruction, multi_step_reasoning_enabled })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.message || 'Server error'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    window.location.href = `/session/${data.session_id}`;
+                } else {
+                    errorMessageDiv.textContent = data.message || 'Failed to create session.';
+                }
+            })
+            .catch(error => {
+                errorMessageDiv.textContent = 'An error occurred: ' + error.message;
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                createButton.disabled = false; // Re-enable button
+                createButton.textContent = originalButtonText; // Restore button text
+            });
+        });
+    </script>
+</body>
+</html>

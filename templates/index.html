@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en" data-color-mode="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conductor Sessions</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; background-color: #f8f9fa; font-size: 14px; color: #343a40; height: 100vh; overflow: hidden; }
+        .column { height: 100vh; overflow-y: auto; padding: 15px; box-sizing: border-box; }
+        
+        /* Column 1: Sessions List */
+        #sessions-column { flex: 2; background-color: #343a40; color: #f8f9fa; box-shadow: 2px 0 5px rgba(0,0,0,0.1); z-index: 10; }
+        #sessions-column h2 { margin-top: 0; font-size: 1.4em; color: #ffffff; border-bottom: 1px solid #495057; padding-bottom: 10px; margin-bottom: 15px; }
+        #sessions-column ul { list-style: none; padding: 0; margin: 0; }
+        #sessions-column li { margin-bottom: 8px; }
+        #sessions-column a { text-decoration: none; color: #adb5bd; display: block; padding: 10px 12px; border-radius: 5px; transition: background-color 0.2s, color 0.2s; white-space: normal; word-wrap: break-word; }
+        #sessions-column a:hover { background-color: #495057; color: #ffffff; }
+        #sessions-column a.active { background-color: #666; color: white; font-weight: bold; }
+        #sessions-column a .session-id { font-size: 0.7em; color: #eee8aa; display: block; margin-top: 4px; word-break: break-all; }
+
+        /* Column 2: Turns List */
+        #turns-column { flex: 6; background-color: #f0f2f5; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .turn { margin-bottom: 0; padding: 10px 15px; border-radius: 18px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); width: 70%; position: relative; }
+        .turn-header { font-weight: bold; margin-bottom: 5px; text-transform: capitalize; color: #6c757d; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center; }
+        .user_task { background-color: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .model_response { background-color: #ffffff; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .condensed_history { background-color: #fffbe6; align-self: center; border-left: 4px solid #ffc107; }
+        .model_response .turn-content, .condensed_history .turn-content { padding: 1px 15px; } /* Padding for markdown */
+        pre, textarea { background-color: transparent; padding: 0; border-radius: 0; border: none; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; width: 100%; min-height: auto; }
+        .turn-content { margin-top: 5px; }
+        .turn-content p { margin: 0; }
+        .turn-header-controls { display: none; position: absolute; top: 5px; right: 10px; background-color: rgba(255,255,255,0.8); border-radius: 5px; padding: 2px; }
+        .turn:hover .turn-header-controls { display: flex; }
+        .welcome-message { text-align: center; color: #6c757d; margin-top: 50px; }
+
+        /* Column 3: Meta & Actions */
+        #meta-column { flex: 3; background-color: #f8f9fa; border-left: 1px solid #dee2e6; }
+        #meta-column h1 { margin-top: 0; color: #343a40; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.8em; }
+        .session-meta { background-color: #fff; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
+        .session-meta .meta-item { margin-bottom: 10px; }
+        .session-meta strong { display: block; color: #495057; margin-bottom: 5px; }
+        .session-meta p, .session-meta pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+        .session-meta textarea { min-height: 60px; }
+        .action-btn { background-color: #6c757d; color: white; border: none; padding: 4px 8px; font-size: 0.8em; border-radius: 4px; cursor: pointer; margin-left: 5px; }
+        .delete-btn { background-color: #dc3545; }
+        .delete-btn:hover { background-color: #c82333; }
+        .edit-btn { background-color: #ffc107; }
+        .edit-btn:hover { background-color: #e0a800; }
+        .copy-turn-btn { background-color: #007bff; }
+        .copy-turn-btn:hover { background-color: #0069d9; }
+        .edit-meta-btn { background-color: #fd7e14; }
+        .edit-meta-btn:hover { background-color: #e66a00; }
+        .save-btn { background-color: #28a745; }
+        .save-btn:hover { background-color: #218838; }
+        .send-instruction-btn { background-color: #28a745; }
+        .send-instruction-btn:hover { background-color: #218838; }
+        .cancel-btn { background-color: #6c757d; }
+        .compress-btn { background-color: #17a2b8; }
+        .compress-btn:hover { background-color: #138496; }
+        .session-actions { margin-top: 20px; display: flex; gap: 10px; }
+        #new-instruction-text { padding: 8px; border: 1px solid #dee2e6; border-radius: 8px; }
+
+        .markdown-body {
+            background-color: #ffffff !important;
+            color: #24292f !important;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown.min.css">
+</head>
+<body>
+    <!-- Column 1: Session List -->
+    <div id="sessions-column" class="column">
+        <h2>Sessions</h2>
+        <button class="action-btn save-btn" style="width: 100%; margin-bottom: 15px;" id="new-chat-button">+ New Chat</button>
+        <ul>
+            {% for session_id, meta in sessions %}
+            <li>
+                <a href="{{ url_for('view_session', session_id=session_id) }}" class="{{ 'active' if session_id == current_session_id else '' }}">
+                    {{ meta.purpose }}
+                    <span class="session-id">{{ session_id }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Column 2: Turns List -->
+    <div id="turns-column" class="column">
+        {% if current_session_id %}
+            {% for turn in turns %}
+                <div class="turn {{ turn.type }}" id="turn-{{ loop.index0 }}">
+                    <div class="turn-header">
+                        <span>
+                            {% if turn.type == 'user_task' %}You{% elif turn.type == 'model_response' %}Model{% else %}System{% endif %}
+                            <span style="font-weight: normal; color: #999; margin-left: 10px;">{{ turn.timestamp.split('T')[1].split('.')[0] if turn.timestamp else '' }}</span>
+                        </span>
+                        <div class="turn-header-controls">
+                            <button class="action-btn copy-turn-btn" data-turn-index="{{ loop.index0 }}">Copy</button>
+                            <button class="action-btn edit-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}" data-turn-type="{{ turn.type }}">Edit</button>
+                            <button class="action-btn delete-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}">Delete</button>
+                        </div>
+                    </div>
+                    <div class="turn-content">
+                        {% if turn.type == 'user_task' %}
+                            <pre class="editable" data-field="instruction">{{ turn.instruction }}</pre>
+                        {% elif turn.type == 'model_response' or turn.type == 'condensed_history' %}
+                            {% if turn.type == 'condensed_history' %}<p><strong><em>-- History Condensed --</em></strong></p>{% endif %}
+                            <div class="raw-markdown" style="display: none;">{{ turn.content }}</div>
+                            <div class="rendered-markdown markdown-body editable" data-field="content"></div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="welcome-message">
+                <h1>Welcome</h1>
+                <p>Select a session from the sidebar to view its details.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Column 3: Meta & Actions -->
+    <div id="meta-column" class="column">
+        {% if current_session_id %}
+            <input type="hidden" id="current-session-id" value="{{ current_session_id }}">
+            <h3>Session Meta {% if context_limit > 0 and token_count is not none %}({{ ((context_limit - token_count) / context_limit * 100) | round(0, 'floor') }}% context left){% endif %}</h3>
+            <div class="session-meta" id="session-meta-view">
+                <div class="meta-item">
+                    <strong>Purpose:</strong>
+                    <p class="editable-meta" data-field="purpose">{{ session_data.purpose }}</p>
+                </div>
+                <div class="meta-item">
+                    <strong>Background:</strong>
+                    <p class="editable-meta" data-field="background">{{ session_data.background }}</p>
+                </div>
+                <div class="meta-item">
+                    <strong>Multi-step Reasoning:</strong>
+                    <p class="editable-meta" data-field="multi_step_reasoning_enabled">{{ "Enabled" if session_data.multi_step_reasoning_enabled else "Disabled" }}</p>
+                </div>
+                <button class="action-btn edit-meta-btn" data-session-id="{{ current_session_id }}">Edit Meta</button>
+            </div>
+            <h3>Session Control</h3>
+            <div class="session-actions">
+                <button class="action-btn compress-btn" data-session-id="{{ current_session_id }}">Compress Session</button>
+                <button class="action-btn delete-session-btn" data-session-id="{{ current_session_id }}">Delete Session</button>
+            </div>
+            <div class="new-instruction-control" style="margin-top: 20px;">
+                <h4>New Instruction</h4>
+                <textarea id="new-instruction-text" placeholder="Enter your instruction here..." style="width: 95%; min-height: 80px; margin-bottom: 10px;"></textarea>
+                <button class="action-btn send-instruction-btn" data-session-id="{{ current_session_id }}">Send Instruction</button>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.marked) {
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                });
+            }
+
+            function handleResponse(response) {
+                // If the response is not OK, we need to parse the JSON body
+                // to get the detailed error message from the server.
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        let errorMessage = `HTTP error! status: ${response.status}`;
+                        if (errorData && errorData.message) {
+                            errorMessage = errorData.message;
+                        }
+                        if (errorData && errorData.details) {
+                            errorMessage += `\n\n--- Details ---\n${errorData.details}`;
+                        }
+                        throw new Error(errorMessage);
+                    }).catch(parsingError => {
+                        // If parsing the error JSON fails, throw a generic error
+                        throw new Error(`HTTP error! status: ${response.status}. Could not parse error response.`);
+                    });
+                }
+                return response.json();
+            }
+
+            function handleError(error) {
+                console.error('Error:', error);
+                alert('An error occurred: ' + error.message);
+            }
+
+            function renderMarkdown() {
+                document.querySelectorAll('.model_response .turn-content, .condensed_history .turn-content').forEach(contentElement => {
+                    const rawMarkdownDiv = contentElement.querySelector('.raw-markdown');
+                    const renderedMarkdownDiv = contentElement.querySelector('.rendered-markdown');
+                    if (rawMarkdownDiv && renderedMarkdownDiv && window.marked) {
+                        renderedMarkdownDiv.innerHTML = marked.parse(rawMarkdownDiv.textContent || '');
+                    }
+                });
+            }
+            renderMarkdown();
+
+            function fallbackCopyTextToClipboard(text) {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    return Promise.resolve();
+                } catch (err) {
+                    return Promise.reject(err);
+                } finally {
+                    document.body.removeChild(textArea);
+                }
+            }
+
+            // Event Listeners
+            document.getElementById('new-chat-button').addEventListener('click', () => window.location.href = '/new_session');
+
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const { sessionId, turnIndex, turnType } = this.dataset;
+                    toggleEdit(this, sessionId, parseInt(turnIndex), turnType);
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const { sessionId, turnIndex } = this.dataset;
+                    deleteTurn(sessionId, parseInt(turnIndex));
+                });
+            });
+
+            document.querySelectorAll('.copy-turn-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const turnIndex = this.dataset.turnIndex;
+                    const turnElement = document.getElementById(`turn-${turnIndex}`);
+                    const turnType = turnElement.classList.contains('model_response') ? 'model_response' :
+                                     (turnElement.classList.contains('condensed_history') ? 'condensed_history' : 'user_task');
+
+                    let textToCopy = '';
+                    if (turnType === 'model_response' || turnType === 'condensed_history') {
+                        textToCopy = turnElement.querySelector('.raw-markdown').textContent;
+                    } else { // user_task
+                        textToCopy = turnElement.querySelector('.editable').textContent;
+                    }
+
+                    const copyPromise = navigator.clipboard ? 
+                        navigator.clipboard.writeText(textToCopy) : 
+                        fallbackCopyTextToClipboard(textToCopy);
+
+                    copyPromise.then(() => {
+                        const originalText = this.textContent;
+                        this.textContent = 'Copied!';
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy turn content: ', err);
+                        alert('Failed to copy');
+                    });
+                });
+            });
+
+            document.querySelectorAll('.edit-meta-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    toggleMetaEdit(this, this.dataset.sessionId);
+                });
+            });
+
+            document.querySelectorAll('.compress-btn, .delete-session-btn, .send-instruction-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const actionMap = { 'compress-btn': compressSession, 'delete-session-btn': deleteSession, 'send-instruction-btn': sendInstruction };
+                    const action = Object.keys(actionMap).find(cls => this.classList.contains(cls));
+                    if(action) actionMap[action](this.dataset.sessionId);
+                });
+            });
+
+            function deleteTurn(sessionId, turnIndex) {
+                if (!confirm('Are you sure you want to delete this turn?')) return;
+                fetch(`/api/session/${sessionId}/turn/${turnIndex}`, { method: 'DELETE' })
+                    .then(handleResponse)
+                    .then(data => data.success ? window.location.reload() : Promise.reject(new Error(data.message)))
+                    .catch(handleError);
+            }
+
+            function deleteSession(sessionId) {
+                if (!confirm('Are you sure you want to delete this entire session?')) return;
+                fetch(`/api/session/${sessionId}`, { method: 'DELETE' })
+                    .then(handleResponse)
+                    .then(data => data.success ? (window.location.href = '/') : Promise.reject(new Error(data.message)))
+                    .catch(handleError);
+            }
+
+            function compressSession(sessionId) {
+                if (!confirm('Are you sure you want to compress this session?')) return;
+                const turnsColumn = document.getElementById('turns-column');
+                const originalHtml = turnsColumn.innerHTML;
+                turnsColumn.innerHTML = '<h1>Compressing session...</h1><p>Please wait.</p>';
+
+                fetch(`/api/session/${sessionId}/compress`, { method: 'POST' })
+                    .then(handleResponse)
+                    .then(data => {
+                        if (data.success) window.location.reload();
+                        else Promise.reject(new Error(data.message));
+                    })
+                    .catch(error => {
+                        turnsColumn.innerHTML = originalHtml;
+                        handleError(error);
+                    });
+            }
+
+            function toggleEdit(editButton, sessionId, turnIndex, turnType) {
+                const turnElement = document.getElementById(`turn-${turnIndex}`);
+                const contentDiv = turnElement.querySelector('.turn-content');
+                const controls = editButton.parentElement;
+
+                let editableElement, originalContent, fieldName;
+                
+                if (turnType === 'model_response' || turnType === 'condensed_history') {
+                    editableElement = contentDiv.querySelector('.rendered-markdown');
+                    originalContent = contentDiv.querySelector('.raw-markdown').textContent.trim();
+                    fieldName = 'content';
+                } else { // user_task
+                    editableElement = contentDiv.querySelector('.editable');
+                    originalContent = editableElement.textContent.trim();
+                    fieldName = 'instruction';
+                }
+
+                const textarea = document.createElement('textarea');
+                textarea.value = originalContent;
+                textarea.style.width = '100%';
+                textarea.style.minHeight = '120px';
+                textarea.style.height = (editableElement.scrollHeight + 20) + 'px';
+                textarea.style.boxSizing = 'border-box';
+                textarea.style.padding = '10px';
+                textarea.style.borderRadius = '5px';
+                textarea.style.border = '1px solid #ced4da';
+                textarea.style.whiteSpace = 'pre-wrap';
+                textarea.style.wordWrap = 'break-word';
+
+                editableElement.style.display = 'none';
+                if (editableElement.previousElementSibling) editableElement.previousElementSibling.style.display = 'none';
+                
+                contentDiv.appendChild(textarea);
+                textarea.focus();
+
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+
+                const saveButton = document.createElement('button');
+                saveButton.className = 'action-btn save-btn';
+                saveButton.textContent = 'Save';
+                saveButton.onclick = () => saveEdit(sessionId, turnIndex, fieldName, textarea.value, () => exitEditMode(editButton, contentDiv, textarea, controls));
+
+                const cancelButton = document.createElement('button');
+                cancelButton.className = 'action-btn cancel-btn';
+                cancelButton.textContent = 'Cancel';
+                cancelButton.onclick = () => exitEditMode(editButton, contentDiv, textarea, controls);
+
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.textAlign = 'right';
+                buttonContainer.appendChild(saveButton);
+                buttonContainer.appendChild(cancelButton);
+
+                controls.style.visibility = 'hidden';
+                controls.parentElement.appendChild(buttonContainer);
+            }
+
+            function exitEditMode(editButton, contentDiv, textarea, controls) {
+                const editableElement = contentDiv.querySelector('.editable');
+                editableElement.style.display = 'block';
+                if (editableElement.previousElementSibling) editableElement.previousElementSibling.style.display = 'block';
+                
+                textarea.remove();
+                const buttonContainer = controls.parentElement.querySelector('div[style="text-align: right;"]');
+                if (buttonContainer) buttonContainer.remove();
+                
+                controls.style.visibility = 'visible';
+            }
+
+            function saveEdit(sessionId, turnIndex, fieldName, newContent, callback) {
+                const payload = { [fieldName]: newContent };
+
+                fetch(`/api/session/${sessionId}/turn/${turnIndex}/edit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                    .then(handleResponse)
+                    .then(data => {
+                        if (data.success) {
+                            const turnElement = document.getElementById(`turn-${turnIndex}`);
+                            const turnType = turnElement.classList.contains('model_response') || turnElement.classList.contains('condensed_history') ? 'model_response' : 'user_task';
+                            
+                            if (turnType === 'model_response') {
+                                const renderedDiv = turnElement.querySelector('.rendered-markdown');
+                                const rawDiv = turnElement.querySelector('.raw-markdown');
+                                rawDiv.textContent = newContent;
+                                if(window.marked) {
+                                    renderedDiv.innerHTML = marked.parse(newContent);
+                                }
+                            } else {
+                                turnElement.querySelector('.editable').textContent = newContent;
+                            }
+                            callback();
+                        } else { throw new Error(data.message); }
+                    })
+                    .catch(handleError);
+            }
+
+            function toggleMetaEdit(editButton, sessionId) {
+                const viewContainer = document.getElementById('session-meta-view');
+                const fields = {
+                    purpose: viewContainer.querySelector('[data-field="purpose"]'),
+                    background: viewContainer.querySelector('[data-field="background"]'),
+                    multi_step_reasoning_enabled: viewContainer.querySelector('[data-field="multi_step_reasoning_enabled"]'),
+                };
+
+                const inputs = {
+                    purpose: document.createElement('textarea'),
+                    background: document.createElement('textarea'),
+                    multi_step_reasoning_enabled: document.createElement('input'),
+                };
+
+                inputs.purpose.value = fields.purpose.textContent.trim();
+                inputs.background.value = fields.background.textContent.trim();
+                inputs.multi_step_reasoning_enabled.type = 'checkbox';
+                inputs.multi_step_reasoning_enabled.checked = fields.multi_step_reasoning_enabled.textContent.trim() === 'Enabled';
+
+                const label = document.createElement('label');
+                label.textContent = ' Enable Multi-step Reasoning';
+
+                Object.values(fields).forEach(p => p.style.display = 'none');
+                fields.purpose.parentElement.appendChild(inputs.purpose);
+                fields.background.parentElement.appendChild(inputs.background);
+                fields.multi_step_reasoning_enabled.parentElement.appendChild(inputs.multi_step_reasoning_enabled);
+                fields.multi_step_reasoning_enabled.parentElement.appendChild(label);
+                
+                editButton.style.display = 'none';
+
+                const saveButton = document.createElement('button');
+                saveButton.className = 'action-btn save-btn';
+                saveButton.textContent = 'Save Meta';
+                saveButton.onclick = () => saveMetaEdit(sessionId, inputs);
+
+                const cancelButton = document.createElement('button');
+                cancelButton.className = 'action-btn cancel-btn';
+                cancelButton.textContent = 'Cancel';
+                cancelButton.onclick = () => window.location.reload();
+
+                viewContainer.appendChild(saveButton);
+                viewContainer.appendChild(cancelButton);
+            }
+
+            function saveMetaEdit(sessionId, inputs) {
+                const payload = {
+                    purpose: inputs.purpose.value,
+                    background: inputs.background.value,
+                    multi_step_reasoning_enabled: inputs.multi_step_reasoning_enabled.checked
+                };
+
+                fetch(`/api/session/${sessionId}/meta/edit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                    .then(handleResponse)
+                    .then(data => data.success ? window.location.reload() : Promise.reject(new Error(data.message)))
+                    .catch(handleError);
+            }
+
+            function sendInstruction(sessionId) {
+                const instructionTextarea = document.getElementById('new-instruction-text');
+                const instruction = instructionTextarea.value.trim();
+                if (!instruction) return alert('Instruction cannot be empty.');
+
+                const sendButton = document.querySelector('.send-instruction-btn');
+                sendButton.disabled = true;
+                const originalButtonText = sendButton.textContent;
+                sendButton.textContent = 'Sending...';
+
+                fetch(`/api/session/${sessionId}/instruction`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ instruction }) })
+                    .then(handleResponse)
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        }
+                    })
+                    .catch(handleError)
+                    .finally(() => {
+                        sendButton.disabled = false;
+                        sendButton.textContent = originalButtonText;
+                    });
+            }
+
+            const newInstructionText = document.getElementById('new-instruction-text');
+            if (newInstructionText) newInstructionText.focus();
+
+        }); // End DOMContentLoaded
+    </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+google-generativeai
+PyYAML
+python-dotenv
+Flask
+cryptography

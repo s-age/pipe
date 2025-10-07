@@ -28,12 +28,14 @@ class PromptBuilder:
         current_task_turn = all_turns[-1] if all_turns else {}
 
         roles_content = self._load_roles()
+        hyperparams_from_settings = self._build_hyperparameters_section()
 
         prompt_object = {
             "description": "JSON object representing the entire request to the AI sub-agent. The agent's goal is to accomplish the 'current_task' based on all provided context.",
             "main_instruction": "When you receive JSON data, process your thoughts according to the following flowchart:\n\n```mermaid\ngraph TD\n    A[\"Start: JSON Input\"] --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    C --> D[\"Step 3: Integrate extracted task instructions and historical information, then summarize the current context\"];\n    D --> E[\"Step 4: Based on the summarized information, think and plan for response generation\"];\n    E --> F[\"Step 5: Generate final response based on the plan\"];\n    F --> G[\"End: Output Response\"];\n```",
             "hyperparameters": {
-                "description": "Contextual instructions to control the AI model's generation process. The model should strive to follow these instructions."
+                "description": "Contextual instructions to control the AI model's generation process. The model should strive to follow these instructions.",
+                **hyperparams_from_settings
             },
             "session_goal": {
                 "description": "The immutable purpose and background for this entire conversation session.",

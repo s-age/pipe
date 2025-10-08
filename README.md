@@ -146,8 +146,8 @@ Note that the JSON presented here is pretty-printed for readability; the actual 
   },
   "session_goal": {
     "description": "The immutable purpose and background for this entire conversation session.",
-    "purpose": "src/components/atoms/Button の実装",
-    "background": "Reactプロジェクト開始に向けたコンポーネント準備"
+    "purpose": "Implementation of src/components/atoms/Button",
+    "background": "Component preparation for starting a React project"
   },
   "response_constraints": {
     "description": "Constraints that the AI sub-agent should adhere to when generating responses. The entire response, including all content, must be generated in the specified language.",
@@ -165,7 +165,7 @@ Note that the JSON presented here is pretty-printed for readability; the actual 
   },
   "current_task": {
     "description": "The specific task that the AI sub-agent must currently execute.",
-    "instruction": "React、Atomic Design, Vanilla Extractを使ってButtonコンポーネントを作りたい"
+    "instruction": "I want to create a Button component using React, Atomic Design, and Vanilla Extract"
   },
-  "reasoning_process": "```mermaid\ngraph TD\n    A([\"開始: JSON入力\"]) --> B[\"Step 1: 'current_task.instruction'を読み込み、タスクの目的を特定\"];\n    B --> C[\"Step 2: タスクの背後にある一般的な原理原則を導き出す (Step-Back)\"];\n    C --> D[\"Step 3: 'conversation_history.turns'の最新ターンから関連情報を抽出\"];\n    D --> E[\"Step 4: 抽出したタスク指示、原理原則、履歴情報を統合し、現在の文脈を要約\"];\n    E --> F[\"Step 5: 要約された情報に基づき、回答生成のための思考と計画\"];\n    F --> G{\"判定: 論理に矛盾や飛躍はないか？\"};\n    G -- NO --> E;\n    G -- YES --> H[\"Step 6: 複数の視点から推論経路を再検討し、結論の堅牢性を確認 (Self-Consistency)\"];\n    H --> I[\"Step 7: 計画に基づき、最終的な回答を生成\"];\n    I --> J{\"判定: 初期要件 (形式・目的) を満たしているか？\"};\n    J -- NO --> F;\n    J -- YES --> K([\"終了: 回答出力\"]);\n```"
+  "reasoning_process": "```mermaid\ngraph TD\n    A([\"Start: JSON Input\"]) --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Derive general principles behind the task (Step-Back)\"];\n    C --> D[\"Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    D --> E[\"Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context\"];\n    E --> F[\"Step 5: Based on the summarized information, think and plan for response generation\"];\n    F --> G{\"Decision: Are there any contradictions or leaps in logic?\"};\n    G -- NO --> E;\n    G -- YES --> H[\"Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)\"];\n    H --> I[\"Step 7: Generate the final response based on the plan\"];\n    I --> J{\"Decision: Does it meet the initial requirements (format/purpose)?\"};\n    J -- NO --> F;\n    J -- YES --> K([\"End: Output Response\"]);\n```"
 }

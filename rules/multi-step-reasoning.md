@@ -1,15 +1,15 @@
 ```mermaid
 graph TD
-    A(["開始: JSON入力"]) --> B["Step 1: 'current_task.instruction'を読み込み、タスクの目的を特定"];
-    B --> C["Step 2: タスクの背後にある一般的な原理原則を導き出す (Step-Back)"];
-    C --> D["Step 3: 'conversation_history.turns'の最新ターンから関連情報を抽出"];
-    D --> E["Step 4: 抽出したタスク指示、原理原則、履歴情報を統合し、現在の文脈を要約"];
-    E --> F["Step 5: 要約された情報に基づき、回答生成のための思考と計画"];
-    F --> G{"判定: 論理に矛盾や飛躍はないか？"};
+    A(["Start: JSON Input"]) --> B["Step 1: Read 'current_task.instruction' to identify task objective"];
+    B --> C["Step 2: Derive general principles behind the task (Step-Back)"];
+    C --> D["Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'"];
+    D --> E["Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context"];
+    E --> F["Step 5: Based on the summarized information, think and plan for response generation"];
+    F --> G{"Decision: Are there any contradictions or leaps in logic?"};
     G -- NO --> E;
-    G -- YES --> H["Step 6: 複数の視点から推論経路を再検討し、結論の堅牢性を確認 (Self-Consistency)"];
-    H --> I["Step 7: 計画に基づき、最終的な回答を生成"];
-    I --> J{"判定: 初期要件 (形式・目的) を満たしているか？"};
+    G -- YES --> H["Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)"];
+    H --> I["Step 7: Generate the final response based on the plan"];
+    I --> J{"Decision: Does it meet the initial requirements (format/purpose)?"};
     J -- NO --> F;
-    J -- YES --> K(["終了: 回答出力"]);
+    J -- YES --> K(["End: Output Response"]);
 ```

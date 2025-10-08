@@ -85,22 +85,12 @@ def main():
         # Add the current instruction to the turns for prompt building
         session_data_for_prompt['turns'].append({"type": "user_task", "instruction": args.instruction})
 
-        if enable_multi_step_reasoning:
-            multi_step_reasoning_path = project_root / 'rules' / 'multi-step-reasoning.md'
-            if multi_step_reasoning_path.exists():
-                with multi_step_reasoning_path.open('r', encoding='utf-8') as f:
-                    raw_content = f.read()
-                    multi_step_reasoning_content = raw_content
-            else:
-                print(f"Warning: multi-step-reasoning.md not found at {multi_step_reasoning_path}", file=sys.stderr)
 
         # 2. Build prompts and calculate tokens
-        builder = PromptBuilder(settings=settings, session_data=session_data_for_prompt, project_root=project_root)
+        builder = PromptBuilder(settings=settings, session_data=session_data_for_prompt, project_root=project_root, multi_step_reasoning_enabled=enable_multi_step_reasoning)
         
         # Build the rich prompt for gemini-cli
         final_prompt_obj = builder.build()
-        if multi_step_reasoning_content:
-            final_prompt_obj['reasoning_process'] = multi_step_reasoning_content
         final_prompt = json.dumps(final_prompt_obj, ensure_ascii=False)
 
         # Build contents for the API and count tokens

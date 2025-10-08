@@ -47,7 +47,9 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
 
 1.  **Prerequisites:** Python 3.x and `gemini-cli` installed in your PATH.
 2.  **Install Dependencies:** `pip3 install -r requirements.txt`
-3.  **Set up API Key:** Create a `.env` file (you can copy `.env.default`) and add your `GEMINI_API_KEY`.
+3.  **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
+    *   For consistency with `.env.default`, add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
+    *   For CLI usage, ensure `GOOGLE_API_KEY` is set in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`) as `conductor.py` expects this variable.
 
 -----
 

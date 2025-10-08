@@ -56,6 +56,7 @@ def main():
 
     elif args.instruction:
         session_id = args.session
+        multi_step_reasoning_content = None
 
         # 1. Load or create session data in memory
         if session_id:
@@ -98,7 +99,8 @@ def main():
         
         # Build the rich prompt for gemini-cli
         final_prompt_obj = builder.build()
-        final_prompt_obj['reasoning_process'] = multi_step_reasoning_content
+        if multi_step_reasoning_content:
+            final_prompt_obj['reasoning_process'] = multi_step_reasoning_content
         final_prompt = json.dumps(final_prompt_obj, ensure_ascii=False)
 
         # Build contents for the API and count tokens

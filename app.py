@@ -51,9 +51,8 @@ def create_new_session_api():
 
         session_id = history_manager.create_new_session(purpose, background, roles, multi_step_reasoning_enabled)
         
-        # Now, call conductor.py to process the first instruction.
-        import subprocess
-        command = ['python3', 'conductor.py', '--session', session_id, '--instruction', instruction]
+        import subprocess # Moved import here to be within the function scope if not already global
+        command = ['python3', 'takt.py', '--session', session_id, '--instruction', instruction]
         if multi_step_reasoning_enabled:
             command.append('--multi-step-reasoning')
         process = subprocess.run(
@@ -172,9 +171,9 @@ def edit_session_meta_api(session_id):
 @app.route('/api/session/<session_id>/compress', methods=['POST'])
 def compress_session_api(session_id):
     try:
-        # Use conductor.py to perform the compression
+        # Now, call takt.py to process the first instruction.
         import subprocess
-        command = ['python3', 'conductor.py', '--session', session_id, '--compress']
+        command = ['python3', 'takt.py', '--session', session_id, '--compress']
         process = subprocess.run(
             command, capture_output=True, text=True, check=True, encoding='utf-8'
         )
@@ -199,7 +198,7 @@ def send_instruction_api(session_id):
         enable_multi_step_reasoning = session_data.get('multi_step_reasoning_enabled', False)
 
         import subprocess
-        command = ['python3', 'conductor.py', '--session', session_id, '--instruction', instruction]
+        command = ['python3', 'takt.py', '--session', session_id, '--instruction', instruction]
         if enable_multi_step_reasoning:
             command.append('--multi-step-reasoning')
         process = subprocess.run(
@@ -215,4 +214,4 @@ def send_instruction_api(session_id):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=False)

@@ -49,7 +49,7 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
 2.  **Install Dependencies:** `pip3 install -r requirements.txt`
 3.  **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
     *   For consistency with `.env.default`, add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
-    *   For CLI usage, ensure `GOOGLE_API_KEY` is set in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`) as `conductor.py` expects this variable.
+    *   For CLI usage, ensure `GOOGLE_API_KEY` is set in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`) as `takt.py` expects this variable.
 
 -----
 
@@ -72,10 +72,9 @@ This route is ideal for **automation, scripting, and CLI-focused developers** wh
 
 ```bash
 # Start New Session Example
-python3 conductor.py --purpose "Create a new React component" --background "..." --roles "roles/engineer.md" --instruction "Create a 'UserProfile' component."
+python3 takt.py --purpose "Create a new React component" --background "..." --roles "roles/engineer.md" --instruction "Create a 'UserProfile' component."
 
-# Continue Session Example
-python3 conductor.py --session <SESSION_ID> --instruction "Now, add a state for loading."
+python3 takt.py --session <SESSION_ID> --instruction "Now, add a state for loading."
 ```
 
 ### 2. Route 2: Web UI (Management & Human-in-the-Loop)
@@ -111,16 +110,16 @@ This is for **advanced AI system builders** leveraging **pipe's** full context c
 > **[IMPORTANT] The following command examples are not intended to be executed directly in the user's terminal. They are used as instructions to an already launched parent agent (such as Gemini) to assign the Conductor role and delegate tasks.**
 
 ```bash
-Act as @roles/conductor.md python3 conductor.py --session <SESSION_ID> --instruction "Now, add a state for loading."
+Act as @roles/conductor.md python3 takt.py --session <SESSION_ID> --instruction "Now, add a state for loading."
 ```
 
 ## Dry Run Output Example
 
-When running `conductor.py` with the `--dry-run` flag, the generated JSON prompt is displayed. This JSON object represents the structured input that would be sent to the AI sub-agent. It can be useful for understanding how `pipe` constructs its prompts or for direct experimentation with AI models.
+When running `takt.py` with the `--dry-run` flag, the generated JSON prompt is displayed. This JSON object represents the structured input that would be sent to the AI sub-agent. It can be useful for understanding how `pipe` constructs its prompts or for direct experimentation with AI models.
 
 Here's an example of a generated prompt:
 
-Note that the JSON presented here is pretty-printed for readability; the actual output from `conductor.py --dry-run` is a single-line JSON string.
+Note that the JSON presented here is pretty-printed for readability; the actual output from `takt.py --dry-run` is a single-line JSON string.
 
 ```json
 {

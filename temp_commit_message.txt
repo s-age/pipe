@@ -1,5 +1,0 @@
-feat: Refactor prompt structure and translate flowcharts to English
-
-- Refactor the prompt JSON structure in `src/prompt_builder.py` for better clarity and LLM interpretation.
-- Translate the multi-step reasoning flowchart from Japanese to English in `rules/multi-step-reasoning.md` and `README.md`.
-- Adjust `conductor.py` to reflect the new prompt building logic.

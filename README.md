@@ -64,7 +64,7 @@ This route is ideal for **automation, scripting, and CLI-focused developers** wh
 | Use Case | Description |
 | :--- | :--- |
 | **Start New Session** | Define the complete context (`--purpose`, `--background`, `--roles`) and first instruction. |
-| **Continue Session** | Specify an existing `<SESSION\_ID>` and add a new instruction. This is the primary way to give the short-lived agent "memory." |
+| **Continue Session** | Specify an existing `<SESSION_ID>` and add a new instruction. This is the primary way to give the short-lived agent "memory." |
 | **Compress History** | Use the `--compress` flag to efficiently replace long history with a summary. |
 | **Debug/Cost Control** | Use the `--dry-run` flag to inspect the generated JSON prompt before the API call. |
 
@@ -96,7 +96,7 @@ python3 app.py
 
 *(Navigate to `http://127.0.0.1:5001` in your browser)*
 
-### 3\. Route 3: Execution from Agent (Orchestration)
+### 3. Route 3: Execution from Agent (Orchestration)
 
 This is for **advanced AI system builders** leveraging **pipe's** full context control capabilities for multi-agent coordination.
 
@@ -113,3 +113,59 @@ This is for **advanced AI system builders** leveraging **pipe's** full context c
 ```bash
 Act as @roles/conductor.md python3 conductor.py --session <SESSION_ID> --instruction "Now, add a state for loading."
 ```
+
+## Dry Run Output Example
+
+When running `conductor.py` with the `--dry-run` flag, the generated JSON prompt is displayed. This JSON object represents the structured input that would be sent to the AI sub-agent. It can be useful for understanding how `pipe` constructs its prompts or for direct experimentation with AI models.
+
+Here's an example of a generated prompt:
+
+Note that the JSON presented here is pretty-printed for readability; the actual output from `conductor.py --dry-run` is a single-line JSON string.
+
+```json
+{
+  "description": "JSON object representing the entire request to the AI sub-agent. The agent's goal is to accomplish the 'current_task' based on all provided context.",
+  "main_instruction": "When you receive JSON data, process your thoughts according to the following flowchart:\n\n```mermaid\ngraph TD\n    A[\"Start: JSON Input\"] --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    C --> D[\"Step 3: Integrate extracted task instructions and historical information, then summarize the current context\"];\n    D --> E[\"Step 4: Based on the summarized information, think and plan for response generation\"];\n    E --> F[\"Step 5: Generate final response based on the plan\"];\n    F --> G[\"End: Output Response\"];\n```",
+  "hyperparameters": {
+    "description": "Contextual instructions to control the AI model's generation process. The model should strive to follow these instructions.",
+    "temperature": {
+      "type": "number",
+      "value": 0.2,
+      "description": "Be precise and factual. A lower value is preferred for deterministic output."
+    },
+    "top_p": {
+      "type": "number",
+      "value": 0.5,
+      "description": "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
+    },
+    "top_k": {
+      "type": "number",
+      "value": 5,
+      "description": "Limit the generation to the top 5 most likely tokens at each step."
+    }
+  },
+  "session_goal": {
+    "description": "The immutable purpose and background for this entire conversation session.",
+    "purpose": "src/components/atoms/Button の実装",
+    "background": "Reactプロジェクト開始に向けたコンポーネント準備"
+  },
+  "response_constraints": {
+    "description": "Constraints that the AI sub-agent should adhere to when generating responses. The entire response, including all content, must be generated in the specified language.",
+    "language": "Japanese"
+  },
+  "roles": {
+    "description": "A list of personas or role definitions that the AI sub-agent should conform to.",
+    "definitions": [
+      "# Role: Software Engineer\n\nYou are a professional software engineer. Your primary goal is to write clean, efficient, and maintainable code based on the provided instructions and context. Adhere to best practices and coding standards relevant to the specified language.\n"
+    ]
+  },
+  "conversation_history": {
+    "description": "Historical record of past interactions in this session, in chronological order.",
+    "turns": []
+  },
+  "current_task": {
+    "description": "The specific task that the AI sub-agent must currently execute.",
+    "instruction": "React、Atomic Design, Vanilla Extractを使ってButtonコンポーネントを作りたい"
+  },
+  "reasoning_process": "```mermaid\ngraph TD\n    A([\"開始: JSON入力\"]) --> B[\"Step 1: 'current_task.instruction'を読み込み、タスクの目的を特定\"];\n    B --> C[\"Step 2: タスクの背後にある一般的な原理原則を導き出す (Step-Back)\"];\n    C --> D[\"Step 3: 'conversation_history.turns'の最新ターンから関連情報を抽出\"];\n    D --> E[\"Step 4: 抽出したタスク指示、原理原則、履歴情報を統合し、現在の文脈を要約\"];\n    E --> F[\"Step 5: 要約された情報に基づき、回答生成のための思考と計画\"];\n    F --> G{\"判定: 論理に矛盾や飛躍はないか？\"};\n    G -- NO --> E;\n    G -- YES --> H[\"Step 6: 複数の視点から推論経路を再検討し、結論の堅牢性を確認 (Self-Consistency)\"];\n    H --> I[\"Step 7: 計画に基づき、最終的な回答を生成\"];\n    I --> J{\"判定: 初期要件 (形式・目的) を満たしているか？\"};\n    J -- NO --> F;\n    J -- YES --> K([\"終了: 回答出力\"]);\n```"
+}

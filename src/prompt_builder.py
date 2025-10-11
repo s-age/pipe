@@ -110,7 +110,7 @@ graph TD
         return prompt_object
 
     def build_contents_for_api(self) -> list[dict]:
-        """Builds a simple content list for the google-generativeai API."""
+        """Builds a simple content list for the google-genai API."""
         contents = []
         
         # 1. Combine all meta-information into a single system-like prompt.

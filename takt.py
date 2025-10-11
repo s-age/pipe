@@ -61,6 +61,7 @@ def execute_tool_call(tool_call):
 
     try:
         tool_module = importlib.import_module(f"tools.{tool_name}")
+        importlib.reload(tool_module)  # Force reload to get the latest code
         tool_function = getattr(tool_module, tool_name)
         result = tool_function(**tool_args)
         return result
@@ -161,9 +162,12 @@ def main():
                         multi_step_reasoning_enabled=enable_multi_step_reasoning
                     )
 
+                    function_call = None
                     try:
-                        part = response.candidates[0].content.parts[0]
-                        function_call = part.function_call if hasattr(part, 'function_call') and part.function_call else None
+                        for part in response.candidates[0].content.parts:
+                            if hasattr(part, 'function_call') and part.function_call:
+                                function_call = part.function_call
+                                break  # Found the first function call
                     except (IndexError, AttributeError):
                         function_call = None
 

@@ -8,10 +8,6 @@
         "path": {
           "type": "STRING"
         },
-        "file_filtering_options": {
-          "type": "OBJECT",
-          "properties": {}
-        },
         "ignore": {
           "type": "ARRAY",
           "items": {
@@ -68,23 +64,17 @@
   },
   {
     "name": "glob",
-    "description": "Efficiently finds files matching specific glob patterns.",
+    "description": "Efficiently finds files matching specific glob patterns, respecting .gitignore.",
     "parameters": {
       "type": "OBJECT",
       "properties": {
         "pattern": {
           "type": "STRING"
         },
-        "case_sensitive": {
-          "type": "BOOLEAN"
-        },
         "path": {
           "type": "STRING"
         },
-        "respect_gemini_ignore": {
-          "type": "BOOLEAN"
-        },
-        "respect_git_ignore": {
+        "recursive": {
           "type": "BOOLEAN"
         }
       },

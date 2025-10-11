@@ -1,6 +1,7 @@
 """
 Builds the final prompt object to be sent to the sub-agent (LLM).
 """
+import json
 from pathlib import Path
 
 class PromptBuilder:
@@ -31,7 +32,6 @@ class PromptBuilder:
 
         roles_content = self._load_roles()
 
-        # Load multi-step reasoning content if enabled
         advanced_reasoning_flow_content = None
         if self.multi_step_reasoning_enabled:
             multi_step_path = self.project_root / 'rules' / 'multi-step-reasoning.md'
@@ -39,53 +39,30 @@ class PromptBuilder:
                 advanced_reasoning_flow_content = multi_step_path.read_text(encoding="utf-8")
 
         prompt_object = {
-            "description": "Comprehensive JSON request for an AI sub-agent, clearly separating immutable constraints from dynamic context, with a flexible thinking pipeline.",
-            
+            "description": "Comprehensive JSON request for an AI sub-agent...",
             "session_goal": {
-                "description": "The immutable purpose and background for this entire conversation session.",
+                "description": "The immutable purpose and background...",
                 "purpose": self.session_data.get('purpose'),
                 "background": self.session_data.get('background'),
             },
             "roles": {
-                "description": "A list of personas or role definitions that the AI sub-agent should conform to.",
+                "description": "A list of personas or role definitions...",
                 "definitions": roles_content
             },
             "constraints": {
-                "description": "Constraints the agent must adhere to when generating responses.",
+                "description": "Constraints the agent must adhere to...",
                 "language": self.settings.get('language', 'English'),
                 "processing_config": {
-                    "description": "Configuration for the agent's internal processing and reasoning.",
+                    "description": "Configuration for the agent's internal processing...",
                     "multi_step_reasoning_active": self.multi_step_reasoning_enabled
                 }
             },
-            
             "main_instruction": {
-                "description": "The mandatory, high-level processing sequence for every input. If 'processing_config.multi_step_reasoning_active' is true, Step 4 must invoke the 'advanced_reasoning_flow'.",
-                "flowchart": "```mermaid\ngraph TD\n    A[Start] --> B[Step 1: Identify Task from 'current_task'];\n    B --> C[Step 2: Gather Context (History & Constraints)];\n    C --> D[Step 3: Summarize Context & Plan];\n    D --> E[Step 4: Execute Thinking Process (Conditionally Advanced)];\n    E --> F[Step 5: Generate Final Response];\n    F --> G[End];\n```"
+                "description": "The mandatory, high-level processing sequence...",
+                "flowchart": "..."
             },
-            **( 
-                {"advanced_reasoning_flow": {
-                    "description": "The detailed, multi-step internal thinking process for high-quality, verified responses. This is executed when 'processing_config.multi_step_reasoning_active' is true.",
-                    "flowchart": '''```mermaid
-graph TD
-    A(["Start: JSON Input"]) --> B["Step 1: Read 'current_task.instruction' to identify task objective"];
-    B --> C["Step 2: Derive general principles behind the task (Step-Back)"];
-    C --> D["Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'"];
-    D --> E["Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context"];
-    E --> F["Step 5: Based on the summarized information, think and plan for response generation"];
-    F --> G{"Decision: Are there any contradictions or leaps in logic?"};
-    G -- NO --> E;
-    G -- YES --> H["Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)"];
-    H --> I["Step 7: Generate the final response based on the plan"];
-    I --> J{"Decision: Does it meet the initial requirements (format/purpose)?"};
-    J -- NO --> F;
-    J -- YES --> K(["End: Output Response"]);
-```'''
-                }} if advanced_reasoning_flow_content else {}
-            ),
-            
             "conversation_history": {
-                "description": "Historical record of past interactions in this session, in chronological order.",
+                "description": "Historical record of past interactions...",
                 "turns": history_turns
             },
             "current_task": {
@@ -94,32 +71,24 @@ graph TD
             }
         }
 
+        if self.multi_step_reasoning_enabled and advanced_reasoning_flow_content:
+            prompt_object['advanced_reasoning_flow'] = {
+                "description": "The detailed, multi-step internal thinking process...",
+                "flowchart": advanced_reasoning_flow_content
+            }
+
         if self.api_mode == 'gemini-cli':
             hyperparams_from_settings = self._build_hyperparameters_section()
             prompt_object['constraints']['hyperparameters'] = {
-                "description": "Contextual instructions to control the AI model's generation process. The model should strive to follow these instructions.",
+                "description": "Contextual instructions to control the AI model's generation process...",
                 **hyperparams_from_settings
             }
 
         return prompt_object
 
-    def build_contents_for_api(self) -> list[dict]:
-        """Builds a simple content list for the google-genai API."""
+    def build_conversation_turns_for_api(self) -> list[dict]:
+        """Builds a content list for the google-genai API from conversation turns only."""
         contents = []
-        
-        initial_context = []
-        initial_context.append("## SYSTEM CONTEXT & ROLES ##")
-        initial_context.append(f"Purpose: {self.session_data.get('purpose', 'Not set')}")
-        initial_context.append(f"Background: {self.session_data.get('background', 'Not set')}")
-
-        roles_content = self._load_roles()
-        if roles_content:
-            initial_context.append("\n### Roles ###")
-            initial_context.extend(roles_content)
-
-        contents.append({'role': 'user', 'parts': [{'text': "\n".join(initial_context)}]})
-        contents.append({'role': 'model', 'parts': [{'text': "Understood. I will follow all instructions and context provided."}]})
-
         all_turns = self.session_data.get('turns', [])
         for turn in all_turns:
             role = ''
@@ -139,7 +108,7 @@ graph TD
                     parts.append({'function_call': fc})
 
             elif turn_type == 'tool_response':
-                role = 'user' 
+                role = 'user'
                 parts.append({
                     'function_response': {
                         'name': turn.get('name'),

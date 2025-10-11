@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import json
 from pathlib import Path
 import yaml
 from dotenv import load_dotenv
@@ -12,6 +13,7 @@ from google.generativeai import types as genai_types
 from src.history_manager import HistoryManager
 from src.gemini_api import call_gemini_api
 from src.gemini_cli import call_gemini_cli
+from src.prompt_builder import PromptBuilder
 
 def load_settings(config_path: Path) -> dict:
     if config_path.exists():
@@ -94,6 +96,23 @@ def main():
         
         session_data_for_prompt['turns'].append({"type": "user_task", "instruction": args.instruction})
 
+        if args.dry_run:
+            print("\n--- Dry Run Mode ---")
+            builder = PromptBuilder(
+                settings=settings,
+                session_data=session_data_for_prompt,
+                project_root=project_root,
+                api_mode=api_mode,
+                multi_step_reasoning_enabled=enable_multi_step_reasoning
+            )
+            
+            # Both modes now use the same detailed prompt structure
+            prompt_obj = builder.build()
+            print(json.dumps(prompt_obj, indent=2, ensure_ascii=False))
+            
+            print("\n--- End of Dry Run ---")
+            return
+
         model_response_text = ""
         try:
             if api_mode == 'gemini-api':
@@ -104,7 +123,7 @@ def main():
                         settings=settings,
                         session_data=session_data_for_prompt,
                         project_root=project_root,
-                        instruction=args.instruction, # This is used by the builder, not directly by the API call
+                        instruction=args.instruction,
                         api_mode=api_mode,
                         multi_step_reasoning_enabled=enable_multi_step_reasoning
                     )
@@ -117,9 +136,8 @@ def main():
 
                     if not function_call:
                         model_response_text = response.text
-                        break # No function call, so this is the final answer
+                        break
 
-                    # --- Function Call Execution ---
                     model_turn = {
                         "type": "model_response",
                         "function_call": {'name': function_call.name, 'args': dict(function_call.args)}
@@ -136,7 +154,6 @@ def main():
                     session_data_for_prompt['turns'].append(tool_turn)
 
             elif api_mode == 'gemini-cli':
-                # This mode does not support function calling loop
                 response = call_gemini_cli(
                     settings=settings,
                     session_data=session_data_for_prompt,
@@ -153,14 +170,9 @@ def main():
 
         except (ValueError, RuntimeError) as e:
             print(f"ERROR: {e}", file=sys.stderr)
-            session_data_for_prompt['turns'].pop() # Remove the user_task turn we added
+            session_data_for_prompt['turns'].pop()
             return
 
-        if args.dry_run:
-            print("\n--- Dry Run Mode: No files were written. ---")
-            return
-
-        # Pop the initial user_task, as it will be saved properly below
         session_data_for_prompt['turns'].pop(0)
 
         task_data = {"type": "user_task", "instruction": args.instruction}
@@ -174,17 +186,15 @@ def main():
         else:
             print(f"Conductor Agent: Continuing session: {session_id}")
 
-        # Save the full history of the interaction (user_task, model_function_calls, tool_responses)
         for turn in session_data_for_prompt['turns']:
             history_manager.add_turn_to_session(session_id, turn)
 
-        # Save the final text response separately
         final_response_data = {"type": "model_response", "content": model_response_text}
         history_manager.add_turn_to_session(session_id, final_response_data)
 
         print("--- Response Received ---")
         print(model_response_text)
-        print("-------------------------\n")
+        print("-------------------------\\n")
         print(f"Successfully added response to session {session_id}.")
 
     else:

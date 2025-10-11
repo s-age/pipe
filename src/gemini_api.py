@@ -25,9 +25,24 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: Path, inst
 
     builder = PromptBuilder(settings=settings, session_data=session_data, project_root=project_root, api_mode=api_mode, multi_step_reasoning_enabled=multi_step_reasoning_enabled)
     
-    api_contents = builder.build_contents_for_api()
+    # 1. Build the system context part
+    full_prompt_obj = builder.build()
+    system_context_obj = {k: v for k, v in full_prompt_obj.items() if k not in ['conversation_history', 'current_task']}
+    system_prompt_str = "## SYSTEM CONTEXT & RULES (JSON) ##\n"
+    system_prompt_str += json.dumps(system_context_obj, indent=2, ensure_ascii=False)
 
-    token_count = token_manager.count_tokens(api_contents)
+    # 2. Build the conversation turns part
+    conversation_contents = builder.build_conversation_turns_for_api()
+
+    # 3. Combine them for the final API contents
+    api_contents = [
+        {'role': 'user', 'parts': [{'text': system_prompt_str}]},
+        {'role': 'model', 'parts': [{'text': "Understood. I will follow all instructions and context provided."}]}
+    ] + conversation_contents
+
+    tools = load_tools(project_root)
+
+    token_count = token_manager.count_tokens(api_contents, tools=tools)
     
     is_within_limit, message = token_manager.check_limit(token_count)
     print(f"Token Count: {message}")
@@ -45,8 +60,6 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: Path, inst
             gen_config_params['top_k'] = top_k.get('value')
     
     generation_config = genai.GenerationConfig(**gen_config_params)
-
-    tools = load_tools(project_root)
 
     model = genai.GenerativeModel(
         model_name=model_name, 

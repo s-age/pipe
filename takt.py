@@ -1,17 +1,20 @@
 import argparse
 import os
 import sys
-import subprocess
 import json
 from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 from datetime import datetime, timezone
-import zoneinfo # Add zoneinfo import
+import zoneinfo
+import copy
 
 from src.prompt_builder import PromptBuilder
 from src.history_manager import HistoryManager
 from src.token_manager import TokenManager
+import gemini_api
+import gemini_cli_py
+
 
 def load_settings(config_path: Path) -> dict:
     if config_path.exists():
@@ -24,7 +27,7 @@ def main():
     project_root = Path(__file__).parent
     config_path = project_root / 'setting.yml'
     settings = load_settings(config_path)
-    
+
     tz_name = os.getenv('TIMEZONE', 'UTC')
     try:
         local_tz = zoneinfo.ZoneInfo(tz_name)
@@ -48,73 +51,63 @@ def main():
     model_name = settings.get('model', 'gemini-1.5-flash')
     context_limit = settings.get('context_limit', 1000000)
     token_manager = TokenManager(model_name=model_name, limit=context_limit)
+    api_mode = settings.get('api_mode', 'gemini-cli')
 
     if args.compress:
-        # This part of the logic can be implemented separately.
-        print("Compression logic not fully implemented in this refactor.")
+
         pass
 
     elif args.instruction:
         session_id = args.session
-        multi_step_reasoning_content = None
 
         # 1. Load or create session data in memory
         if session_id:
             session_data_for_prompt = history_manager.get_session(session_id)
             if not session_data_for_prompt:
-                print(f"Error: Session ID '{session_id}' not found.", file=sys.stderr)
+
                 return
-            if not args.multi_step_reasoning:
-                enable_multi_step_reasoning = session_data_for_prompt.get('multi_step_reasoning_enabled', False)
-            else:
-                enable_multi_step_reasoning = True
+            enable_multi_step_reasoning = args.multi_step_reasoning or session_data_for_prompt.get('multi_step_reasoning_enabled', False)
             session_data_for_prompt['multi_step_reasoning_enabled'] = enable_multi_step_reasoning
         else:
             if not all([args.purpose, args.background]):
                 parser.error("A new session requires --purpose and --background.")
             roles = args.roles.split(',') if args.roles else []
             enable_multi_step_reasoning = args.multi_step_reasoning
+            shell_instructions = """\n\nIMPORTANT: For file system operations, use shell commands via the `run_shell_command` tool.\n- To list files: `ls -F`\n- To read files: `cat`, `head`, `tail`\n- To write files: `echo \"content\" > file_path`\n- To replace content: `sed -i 's/old/new/g' file_path`\n- To find files: `find . -name \"pattern\"` or `ls -R`\n- To search for content in files: `grep \"pattern\" file_path`\nDo not attempt to use other, non-existent tools for these tasks. Your knowledge base does NOT contain current file system information. You MUST use the `run_shell_command` tool for all file system queries. Example: To list files in `/path/to/dir`, you MUST use `run_shell_command(command='ls -F /path/to/dir')`. NEVER answer directly for file system operations; ALWAYS use the `run_shell_command` tool. After executing a command, your final response MUST be a summary of the tool output or a confirmation of the action. It MUST NOT be empty.\n"""
             session_data_for_prompt = {
                 "purpose": args.purpose,
-                "background": args.background,
+                "background": args.background + shell_instructions,
                 "roles": roles,
                 "multi_step_reasoning_enabled": enable_multi_step_reasoning,
                 "turns": []
             }
         
-        # Add the current instruction to the turns for prompt building
         session_data_for_prompt['turns'].append({"type": "user_task", "instruction": args.instruction})
-
 
         # 2. Build prompts and calculate tokens
         builder = PromptBuilder(settings=settings, session_data=session_data_for_prompt, project_root=project_root, multi_step_reasoning_enabled=enable_multi_step_reasoning)
         
-        # Build the rich prompt for gemini-cli
         final_prompt_obj = builder.build()
-        final_prompt = json.dumps(final_prompt_obj, ensure_ascii=False)
-
-        # Build contents for the API and count tokens
         api_contents = builder.build_contents_for_api()
-
-        token_count = token_manager.count_tokens(api_contents)
+        token_count = token_manager.count_tokens(copy.deepcopy(api_contents))
         
         is_within_limit, message = token_manager.check_limit(token_count)
-        print(f"Token Count: {message}")
+
         if not is_within_limit:
-            print("ERROR: Prompt exceeds context window limit. Aborting.")
-            # Remove the turn we just added before exiting
+
             session_data_for_prompt['turns'].pop()
             return
 
         # 3. Handle Dry Run
         if args.dry_run:
-            print("\n--- Generated Prompt (Dry Run) ---")
-            print(final_prompt)
-            print("------------------------------------\n")
-            print("--- Dry Run Mode: No files were written. ---")
+            final_prompt_obj = builder.build()
+
+
+
+
             return
 
-        # 4. Save the user's turn and the new token count
+        # 4. Save user's turn
         task_data = {"type": "user_task", "instruction": args.instruction}
         if not session_id:
             roles = args.roles.split(',') if args.roles else []
@@ -127,37 +120,36 @@ def main():
             print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}")
         else:
             history_manager.add_turn_to_session(session_id, task_data, token_count=token_count)
-            print(f"Conductor Agent: Continuing session: {session_id}")
 
-        # 5. Call Sub-Agent (gemini-cli)
-        print("\nExecuting gemini-cli as a sub-agent...")
-        print("Waiting for a response from the API... This may take a moment.")
+
+        # 5. Call Sub-Agent
+
+
         
-        command = ['gemini', '-m', model_name, '-p', final_prompt]
-        if settings.get('yolo', False):
-            command.insert(1, '-y')
-        try:
-            process = subprocess.run(
-                command, capture_output=True, text=True, check=True, encoding='utf-8'
-            )
-            model_response_text = process.stdout
-            if process.stderr:
-                print(f"Warning from gemini-cli: {process.stderr}", file=sys.stderr)
-        except FileNotFoundError:
-            print("Error: 'gemini' command not found. Make sure it's in your PATH.", file=sys.stderr)
-            return
-        except subprocess.CalledProcessError as e:
-            print(f"Error during gemini-cli execution: {e.stderr}", file=sys.stderr)
+        model_response_text = ""
+        if api_mode == "gemini-cli":
+            yolo = settings.get('yolo', False)
+            final_prompt_obj = builder.build()
+            final_prompt = json.dumps(final_prompt_obj, ensure_ascii=False)
+            model_response_text = gemini_cli_py.call_gemini_cli(final_prompt, model_name, yolo)
+        elif api_mode == "gemini-api":
+            model_response_text = gemini_api.call_gemini_api(api_contents, model_name, final_prompt_obj["available_tools_schema"]["definitions"], settings)
+        else:
+
             return
 
-        print("--- Response Received ---")
-        print(model_response_text)
-        print("-------------------------\n")
+        if "Error:" in model_response_text:
 
-        # 6. Save the model's response (without updating token count)
+            return
+
+
+
+
+
+        # 6. Save model's response
         response_data = {"type": "model_response", "content": model_response_text}
         history_manager.add_turn_to_session(session_id, response_data)
-        print(f"Successfully added response to session {session_id}.")
+
     else:
         parser.print_help()
 

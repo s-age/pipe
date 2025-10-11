@@ -3,10 +3,13 @@ model: gemini-2.5-flash
 context_limit: 1000000
 
 # The language hint for the model
-language: "Japanese"
+language: "English"
 
 # Auto-confirm for gemini-cli. If false, the -y flag will be omitted.
-yolo: true
+yolo: false
+
+# gemini-cli | gemini-api(experimental)
+api_mode: "gemini-cli"
 
 # Hyperparameters to be included in the prompt as contextual hints
 parameters:
@@ -19,3 +22,6 @@ parameters:
   top_k:
     value: 5
     description: "Limit the generation to the top 5 most likely tokens at each step."
+  max_output_tokens:
+    value: 100
+    description: "The maximum number of tokens to generate in the response."

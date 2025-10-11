@@ -2,6 +2,7 @@
 Builds the final prompt object to be sent to the sub-agent (LLM).
 """
 from pathlib import Path
+import json
 
 class PromptBuilder:
     """Constructs a structured prompt object for the LLM."""
@@ -31,6 +32,13 @@ class PromptBuilder:
         roles_content = self._load_roles()
         hyperparams_from_settings = self._build_hyperparameters_section()
 
+        # Load tools.json
+        tools_path = self.project_root / 'tools.json'
+        tools_json = []
+        if tools_path.exists():
+            with tools_path.open('r', encoding='utf-8') as f:
+                tools_json = json.load(f)
+
         # Load multi-step reasoning content if enabled
         advanced_reasoning_flow_content = None
         if self.multi_step_reasoning_enabled:
@@ -54,7 +62,7 @@ class PromptBuilder:
                 "definitions": roles_content
             },
             "constraints": {
-                "description": "Constraints the agent must adhere to when generating responses.",
+                "description": "Constraints the agent must adhere to when generating responses. Tool output should be summarized when returned.",
                 "language": self.settings.get('language', 'English'),
                 "hyperparameters": {
                     "description": "Contextual instructions to control the AI model's generation process. The model should strive to follow these instructions.",
@@ -104,6 +112,10 @@ graph TD
             "current_task": {
                 "description": "The specific task that the AI sub-agent must currently execute.",
                 "instruction": current_task_turn.get('instruction')
+            },
+            "available_tools_schema": {
+                "description": "JSON Schema definitions for the tools available to the AI sub-agent.",
+                "definitions": tools_json
             }
         }
 
@@ -120,6 +132,15 @@ graph TD
         initial_context.append("## SYSTEM CONTEXT & ROLES ##")
         initial_context.append(f"Purpose: {self.session_data.get('purpose', 'Not set')}")
         initial_context.append(f"Background: {self.session_data.get('background', 'Not set')}")
+
+        # Add hyperparameters to the initial context
+        hyperparameters_section = self.build().get("constraints", {}).get("hyperparameters", {})
+        if hyperparameters_section:
+            initial_context.append("\n### Hyperparameters ###")
+            for key, value_desc_pair in hyperparameters_section.items():
+                if key == "description": # Skip the description of the hyperparameters section
+                    continue
+                initial_context.append(f"- {key}: {value_desc_pair.get('value')} ({value_desc_pair.get('description')})")
 
         roles_content = self._load_roles()
         if roles_content:

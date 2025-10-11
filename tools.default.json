@@ -1,0 +1,248 @@
+[
+  {
+    "name": "list_directory",
+    "description": "Lists the names of files and subdirectories directly within a specified directory path.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "file_filtering_options": {
+          "type": "object",
+          "properties": {}
+        },
+        "ignore": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "read_file",
+    "description": "Reads and returns the content of a specified file.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "absolute_path": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "number"
+        },
+        "offset": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "absolute_path"
+      ]
+    }
+  },
+  {
+    "name": "search_file_content",
+    "description": "Searches for a regular expression pattern within the content of files in a specified directory (or current working directory).",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "type": "string"
+        },
+        "include": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pattern"
+      ]
+    }
+  },
+  {
+    "name": "glob",
+    "description": "Efficiently finds files matching specific glob patterns.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "type": "string"
+        },
+        "case_sensitive": {
+          "type": "boolean"
+        },
+        "path": {
+          "type": "string"
+        },
+        "respect_gemini_ignore": {
+          "type": "boolean"
+        },
+        "respect_git_ignore": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "pattern"
+      ]
+    }
+  },
+  {
+    "name": "replace",
+    "description": "Replaces text within a file.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "type": "string"
+        },
+        "instruction": {
+          "type": "string"
+        },
+        "old_string": {
+          "type": "string"
+        },
+        "new_string": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_path",
+        "instruction",
+        "old_string",
+        "new_string"
+      ]
+    }
+  },
+  {
+    "name": "write_file",
+    "description": "Writes content to a specified file in the local filesystem.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_path",
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "web_fetch",
+    "description": "Processes content from URL(s) embedded in a prompt.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "prompt"
+      ]
+    }
+  },
+  {
+    "name": "read_many_files",
+    "description": "Reads content from multiple files.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "file_filtering_options": {
+          "type": "object",
+          "properties": {}
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recursive": {
+          "type": "boolean"
+        },
+        "useDefaultExcludes": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "paths"
+      ]
+    }
+  },
+  {
+    "name": "run_shell_command",
+    "description": "Executes a given shell command.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "directory": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "command"
+      ]
+    }
+  },
+  {
+    "name": "save_memory",
+    "description": "Saves a specific piece of information or fact to your long-term memory.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "fact": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fact"
+      ]
+    }
+  },
+  {
+    "name": "google_web_search",
+    "description": "Performs a web search using Google Search and returns the results.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  }
+]

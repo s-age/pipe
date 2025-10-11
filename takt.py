@@ -6,6 +6,8 @@ import yaml
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import zoneinfo
+import importlib
+from google.generativeai import types as genai_types
 
 from src.history_manager import HistoryManager
 from src.gemini_api import call_gemini_api
@@ -16,6 +18,21 @@ def load_settings(config_path: Path) -> dict:
         with config_path.open('r', encoding='utf-8') as f:
             return yaml.safe_load(f)
     return {}
+
+def execute_tool_call(tool_call):
+    """Dynamically imports and executes a tool function."""
+    tool_name = tool_call.name
+    tool_args = dict(tool_call.args)
+    
+    print(f"Tool call: {tool_name}({tool_args})")
+
+    try:
+        tool_module = importlib.import_module(f"tools.{tool_name}")
+        tool_function = getattr(tool_module, tool_name)
+        result = tool_function(**tool_args)
+        return result
+    except Exception as e:
+        return {"error": f"Failed to execute tool {tool_name}: {e}"}
 
 def main():
     load_dotenv()
@@ -49,23 +66,18 @@ def main():
     history_manager = HistoryManager(project_root / 'sessions', timezone_obj=local_tz)
 
     if args.compress:
-        # This part of the logic can be implemented separately.
         print("Compression logic not fully implemented in this refactor.")
         pass
 
     elif args.instruction:
         session_id = args.session
 
-        # 1. Load or create session data in memory
         if session_id:
             session_data_for_prompt = history_manager.get_session(session_id)
             if not session_data_for_prompt:
                 print(f"Error: Session ID '{session_id}' not found.", file=sys.stderr)
                 return
-            if not args.multi_step_reasoning:
-                enable_multi_step_reasoning = session_data_for_prompt.get('multi_step_reasoning_enabled', False)
-            else:
-                enable_multi_step_reasoning = True
+            enable_multi_step_reasoning = args.multi_step_reasoning or session_data_for_prompt.get('multi_step_reasoning_enabled', False)
             session_data_for_prompt['multi_step_reasoning_enabled'] = enable_multi_step_reasoning
         else:
             if not all([args.purpose, args.background]):
@@ -80,48 +92,77 @@ def main():
                 "turns": []
             }
         
-        # Add the current instruction to the turns for prompt building
         session_data_for_prompt['turns'].append({"type": "user_task", "instruction": args.instruction})
 
         model_response_text = ""
         try:
             if api_mode == 'gemini-api':
                 print("\nExecuting with Gemini API...")
-                model_response_text = call_gemini_api(
-                    settings=settings,
-                    session_data=session_data_for_prompt,
-                    project_root=project_root,
-                    instruction=args.instruction,
-                    multi_step_reasoning_enabled=enable_multi_step_reasoning
-                )
+                
+                while True:
+                    response = call_gemini_api(
+                        settings=settings,
+                        session_data=session_data_for_prompt,
+                        project_root=project_root,
+                        instruction=args.instruction, # This is used by the builder, not directly by the API call
+                        api_mode=api_mode,
+                        multi_step_reasoning_enabled=enable_multi_step_reasoning
+                    )
+
+                    try:
+                        part = response.candidates[0].content.parts[0]
+                        function_call = part.function_call if hasattr(part, 'function_call') and part.function_call else None
+                    except (IndexError, AttributeError):
+                        function_call = None
+
+                    if not function_call:
+                        model_response_text = response.text
+                        break # No function call, so this is the final answer
+
+                    # --- Function Call Execution ---
+                    model_turn = {
+                        "type": "model_response",
+                        "function_call": {'name': function_call.name, 'args': dict(function_call.args)}
+                    }
+                    session_data_for_prompt['turns'].append(model_turn)
+
+                    tool_result = execute_tool_call(function_call)
+                    
+                    tool_turn = {
+                        "type": "tool_response",
+                        "name": function_call.name,
+                        "response": tool_result
+                    }
+                    session_data_for_prompt['turns'].append(tool_turn)
+
             elif api_mode == 'gemini-cli':
-                print("\nExecuting with Gemini CLI...")
-                model_response_text = call_gemini_cli(
+                # This mode does not support function calling loop
+                response = call_gemini_cli(
                     settings=settings,
                     session_data=session_data_for_prompt,
                     project_root=project_root,
                     instruction=args.instruction,
+                    api_mode=api_mode,
                     multi_step_reasoning_enabled=enable_multi_step_reasoning
                 )
+                model_response_text = response.text
+
             else:
                 print(f"Error: Unknown api_mode '{api_mode}'. Please check setting.yml", file=sys.stderr)
                 return
 
-        except ValueError as e:
+        except (ValueError, RuntimeError) as e:
             print(f"ERROR: {e}", file=sys.stderr)
-            session_data_for_prompt['turns'].pop() # Remove the turn we just added before exiting
-            return
-        except RuntimeError as e:
-            print(f"ERROR: {e}", file=sys.stderr)
-            session_data_for_prompt['turns'].pop() # Remove the turn we just added before exiting
+            session_data_for_prompt['turns'].pop() # Remove the user_task turn we added
             return
 
-        # 3. Handle Dry Run (if applicable, this should be handled within the call functions)
         if args.dry_run:
             print("\n--- Dry Run Mode: No files were written. ---")
             return
 
-        # 4. Save the user's turn and the new token count (token count is now handled within gemini_api)
+        # Pop the initial user_task, as it will be saved properly below
+        session_data_for_prompt['turns'].pop(0)
+
         task_data = {"type": "user_task", "instruction": args.instruction}
         if not session_id:
             roles = args.roles.split(',') if args.roles else []
@@ -129,20 +170,23 @@ def main():
                 purpose=args.purpose, background=args.background, roles=roles, 
                 multi_step_reasoning_enabled=enable_multi_step_reasoning
             )
-            history_manager.add_turn_to_session(session_id, task_data)
             print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}")
         else:
-            history_manager.add_turn_to_session(session_id, task_data)
             print(f"Conductor Agent: Continuing session: {session_id}")
+
+        # Save the full history of the interaction (user_task, model_function_calls, tool_responses)
+        for turn in session_data_for_prompt['turns']:
+            history_manager.add_turn_to_session(session_id, turn)
+
+        # Save the final text response separately
+        final_response_data = {"type": "model_response", "content": model_response_text}
+        history_manager.add_turn_to_session(session_id, final_response_data)
 
         print("--- Response Received ---")
         print(model_response_text)
         print("-------------------------\n")
-
-        # 5. Save the model's response
-        response_data = {"type": "model_response", "content": model_response_text}
-        history_manager.add_turn_to_session(session_id, response_data)
         print(f"Successfully added response to session {session_id}.")
+
     else:
         parser.print_help()
 

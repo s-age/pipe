@@ -5,12 +5,12 @@ from pathlib import Path
 
 from src.prompt_builder import PromptBuilder
 
-def call_gemini_cli(settings: dict, session_data: dict, project_root: Path, instruction: str, multi_step_reasoning_enabled: bool) -> str:
+def call_gemini_cli(settings: dict, session_data: dict, project_root: Path, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool) -> str:
     model_name = settings.get('model')
     if not model_name:
         raise ValueError("'model' not found in setting.yml")
 
-    builder = PromptBuilder(settings=settings, session_data=session_data, project_root=project_root, multi_step_reasoning_enabled=multi_step_reasoning_enabled)
+    builder = PromptBuilder(settings=settings, session_data=session_data, project_root=project_root, api_mode=api_mode, multi_step_reasoning_enabled=multi_step_reasoning_enabled)
     
     final_prompt_obj = builder.build()
     final_prompt = json.dumps(final_prompt_obj, ensure_ascii=False)

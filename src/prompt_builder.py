@@ -6,10 +6,11 @@ from pathlib import Path
 class PromptBuilder:
     """Constructs a structured prompt object for the LLM."""
 
-    def __init__(self, settings: dict, session_data: dict, project_root: Path, multi_step_reasoning_enabled: bool = False):
+    def __init__(self, settings: dict, session_data: dict, project_root: Path, api_mode: str, multi_step_reasoning_enabled: bool = False):
         self.settings = settings
         self.session_data = session_data
         self.project_root = project_root
+        self.api_mode = api_mode
         self.multi_step_reasoning_enabled = multi_step_reasoning_enabled
 
     def _load_roles(self) -> list[str]:
@@ -29,7 +30,6 @@ class PromptBuilder:
         current_task_turn = all_turns[-1] if all_turns else {}
 
         roles_content = self._load_roles()
-        hyperparams_from_settings = self._build_hyperparameters_section()
 
         # Load multi-step reasoning content if enabled
         advanced_reasoning_flow_content = None
@@ -41,9 +41,6 @@ class PromptBuilder:
         prompt_object = {
             "description": "Comprehensive JSON request for an AI sub-agent, clearly separating immutable constraints from dynamic context, with a flexible thinking pipeline.",
             
-            # =======================================================
-            # 1. IMMUTABLE CONSTRAINTS
-            # =======================================================
             "session_goal": {
                 "description": "The immutable purpose and background for this entire conversation session.",
                 "purpose": self.session_data.get('purpose'),
@@ -56,24 +53,17 @@ class PromptBuilder:
             "constraints": {
                 "description": "Constraints the agent must adhere to when generating responses.",
                 "language": self.settings.get('language', 'English'),
-                "hyperparameters": {
-                    "description": "Contextual instructions to control the AI model's generation process. The model should strive to follow these instructions.",
-                    **hyperparams_from_settings
-                },
                 "processing_config": {
                     "description": "Configuration for the agent's internal processing and reasoning.",
                     "multi_step_reasoning_active": self.multi_step_reasoning_enabled
                 }
             },
             
-            # =======================================================
-            # 2. PROCESSING & REASONING
-            # =======================================================
             "main_instruction": {
                 "description": "The mandatory, high-level processing sequence for every input. If 'processing_config.multi_step_reasoning_active' is true, Step 4 must invoke the 'advanced_reasoning_flow'.",
                 "flowchart": "```mermaid\ngraph TD\n    A[Start] --> B[Step 1: Identify Task from 'current_task'];\n    B --> C[Step 2: Gather Context (History & Constraints)];\n    C --> D[Step 3: Summarize Context & Plan];\n    D --> E[Step 4: Execute Thinking Process (Conditionally Advanced)];\n    E --> F[Step 5: Generate Final Response];\n    F --> G[End];\n```"
             },
-            **(
+            **( 
                 {"advanced_reasoning_flow": {
                     "description": "The detailed, multi-step internal thinking process for high-quality, verified responses. This is executed when 'processing_config.multi_step_reasoning_active' is true.",
                     "flowchart": '''```mermaid
@@ -94,9 +84,6 @@ graph TD
                 }} if advanced_reasoning_flow_content else {}
             ),
             
-            # =======================================================
-            # 3. DYNAMIC CONTEXT
-            # =======================================================
             "conversation_history": {
                 "description": "Historical record of past interactions in this session, in chronological order.",
                 "turns": history_turns
@@ -107,15 +94,19 @@ graph TD
             }
         }
 
+        if self.api_mode == 'gemini-cli':
+            hyperparams_from_settings = self._build_hyperparameters_section()
+            prompt_object['constraints']['hyperparameters'] = {
+                "description": "Contextual instructions to control the AI model's generation process. The model should strive to follow these instructions.",
+                **hyperparams_from_settings
+            }
+
         return prompt_object
 
     def build_contents_for_api(self) -> list[dict]:
         """Builds a simple content list for the google-genai API."""
         contents = []
         
-        # 1. Combine all meta-information into a single system-like prompt.
-        # Since Gemini doesn't have a dedicated system role, we prepend this
-        # to the first user message.
         initial_context = []
         initial_context.append("## SYSTEM CONTEXT & ROLES ##")
         initial_context.append(f"Purpose: {self.session_data.get('purpose', 'Not set')}")
@@ -126,27 +117,38 @@ graph TD
             initial_context.append("\n### Roles ###")
             initial_context.extend(roles_content)
 
-
-
-        # The combined context is the first user message.
         contents.append({'role': 'user', 'parts': [{'text': "\n".join(initial_context)}]})
-        # Acknowledge the context as the model.
         contents.append({'role': 'model', 'parts': [{'text': "Understood. I will follow all instructions and context provided."}]})
 
-        # 2. Add the actual conversation turns
         all_turns = self.session_data.get('turns', [])
         for turn in all_turns:
             role = ''
-            text = ''
-            if turn.get('type') == 'user_task':
+            parts = []
+            turn_type = turn.get('type')
+
+            if turn_type == 'user_task':
                 role = 'user'
-                text = turn.get('instruction', '')
-            elif turn.get('type') == 'model_response':
+                if text := turn.get('instruction'):
+                    parts.append({'text': text})
+
+            elif turn_type == 'model_response':
                 role = 'model'
-                text = turn.get('content', '')
-            
-            if role and text:
-                contents.append({'role': role, 'parts': [{'text': text}]})
+                if text := turn.get('content'):
+                    parts.append({'text': text})
+                if fc := turn.get('function_call'):
+                    parts.append({'function_call': fc})
+
+            elif turn_type == 'tool_response':
+                role = 'user' 
+                parts.append({
+                    'function_response': {
+                        'name': turn.get('name'),
+                        'response': turn.get('response')
+                    }
+                })
+
+            if role and parts:
+                contents.append({'role': role, 'parts': parts})
 
         return contents
 
@@ -155,7 +157,7 @@ graph TD
         params = {}
         for key, value_desc_pair in self.settings.get('parameters', {}).items():
             params[key] = {
-                "type": "number", # Assuming number for now
+                "type": "number",
                 "value": value_desc_pair.get('value'),
                 "description": value_desc_pair.get('description')
             }

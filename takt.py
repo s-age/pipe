@@ -15,6 +15,37 @@ from src.gemini_api import call_gemini_api
 from src.gemini_cli import call_gemini_cli
 from src.prompt_builder import PromptBuilder
 
+def check_and_show_warning(project_root: Path) -> bool:
+    """Checks for the warning file, displays it, and gets user consent."""
+    sealed_path = project_root / "sealed.txt"
+    unsealed_path = project_root / "unsealed.txt"
+
+    if unsealed_path.exists():
+        return True  # Already agreed
+
+    if not sealed_path.exists():
+        return True  # No warning file, proceed
+
+    print("--- IMPORTANT NOTICE ---")
+    print(sealed_path.read_text(encoding="utf-8"))
+    print("------------------------")
+
+    while True:
+        try:
+            response = input("Do you agree to the terms above? (yes/no): ").lower().strip()
+            if response == "yes":
+                sealed_path.rename(unsealed_path)
+                print("Thank you. Proceeding...")
+                return True
+            elif response == "no":
+                print("You must agree to the terms to use this tool. Exiting.")
+                return False
+            else:
+                print("Invalid input. Please enter 'yes' or 'no'.")
+        except (KeyboardInterrupt, EOFError):
+            print("\nOperation cancelled. Exiting.")
+            return False
+
 def load_settings(config_path: Path) -> dict:
     if config_path.exists():
         with config_path.open('r', encoding='utf-8') as f:
@@ -37,8 +68,11 @@ def execute_tool_call(tool_call):
         return {"error": f"Failed to execute tool {tool_name}: {e}"}
 
 def main():
-    load_dotenv()
     project_root = Path(__file__).parent
+    if not check_and_show_warning(project_root):
+        sys.exit(1)
+
+    load_dotenv()
     config_path = project_root / 'setting.yml'
     settings = load_settings(config_path)
     
@@ -106,7 +140,6 @@ def main():
                 multi_step_reasoning_enabled=enable_multi_step_reasoning
             )
             
-            # Both modes now use the same detailed prompt structure
             prompt_obj = builder.build()
             print(json.dumps(prompt_obj, indent=2, ensure_ascii=False))
             
@@ -194,7 +227,7 @@ def main():
 
         print("--- Response Received ---")
         print(model_response_text)
-        print("-------------------------\\n")
+        print("-------------------------\n")
         print(f"Successfully added response to session {session_id}.")
 
     else:

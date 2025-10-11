@@ -3,6 +3,38 @@ from pathlib import Path
 import sys
 import yaml
 from src.history_manager import HistoryManager
+import os
+
+def check_and_show_warning(project_root: Path) -> bool:
+    """Checks for the warning file, displays it, and gets user consent."""
+    sealed_path = project_root / "sealed.txt"
+    unsealed_path = project_root / "unsealed.txt"
+
+    if unsealed_path.exists():
+        return True  # Already agreed
+
+    if not sealed_path.exists():
+        return True  # No warning file, proceed
+
+    print("--- IMPORTANT NOTICE ---")
+    print(sealed_path.read_text(encoding="utf-8"))
+    print("------------------------")
+
+    while True:
+        try:
+            response = input("Do you agree to the terms above? (yes/no): ").lower().strip()
+            if response == "yes":
+                sealed_path.rename(unsealed_path)
+                print("Thank you. Proceeding...")
+                return True
+            elif response == "no":
+                print("You must agree to the terms to use this tool. Exiting.")
+                return False
+            else:
+                print("Invalid input. Please enter 'yes' or 'no'.")
+        except (KeyboardInterrupt, EOFError):
+            print("\nOperation cancelled. Exiting.")
+            return False
 
 def load_settings(config_path: Path) -> dict:
     if config_path.exists():
@@ -214,4 +246,8 @@ def send_instruction_api(session_id):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    project_root_for_check = Path(__file__).parent
+    if check_and_show_warning(project_root_for_check):
+        app.run(host='0.0.0.0', port=5001, debug=False)
+    else:
+        sys.exit(1)

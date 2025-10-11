@@ -59,7 +59,7 @@ class PromptBuilder:
             },
             "main_instruction": {
                 "description": "The mandatory, high-level processing sequence...",
-                "flowchart": "..."
+                "flowchart": "```mermaid\ngraph TD\n    A[\"Start\"] --> B[\"Step 1: Identify Task from 'current_task'\"];\n    B --> C[\"Step 2: Gather Context (History & Constraints)\"];\n    C --> D[\"Step 3: Summarize Context & Plan\"];\n    D --> E{\"Decision: Does the task require external information or actions (e.g., web search, file access, URL fetching, shell commands)?\"};\n    E -- YES --> F[\"Step 4a: Execute Tool\"];\n    E -- NO --> G[\"Step 4b: Execute Thinking Process (Conditionally Advanced)\"];\n    F --> G;\n    G --> H[\"Step 5: Generate Final Response\"];\n    H --> I[\"End\"];\n```"
             },
             "conversation_history": {
                 "description": "Historical record of past interactions...",

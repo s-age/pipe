@@ -37,3 +37,7 @@ instance/
 
 # Logs
 *.log
+
+# User Consent Files
+sealed.txt
+unsealed.txt

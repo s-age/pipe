@@ -179,10 +179,6 @@
             "type": "STRING"
           }
         },
-        "file_filtering_options": {
-          "type": "OBJECT",
-          "properties": {}
-        },
         "include": {
           "type": "ARRAY",
           "items": {

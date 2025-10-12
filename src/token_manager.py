@@ -9,19 +9,15 @@ from google.generativeai import types
 class TokenManager:
     """Handles token counting using the google-genai library."""
 
-    DEFAULT_MODEL = "gemini-1.5-flash"
-    DEFAULT_LIMIT = 1000000
-
-    def __init__(self, model_name: str = DEFAULT_MODEL, limit: int = DEFAULT_LIMIT):
+    def __init__(self, settings: dict):
         """
         Initializes the TokenManager.
 
         Args:
-            model_name: The name of the generative model to use for token counting.
-            limit: The context window limit for the model.
+            settings: The settings dictionary containing model configuration.
         """
-        self.model_name = model_name
-        self.limit = limit
+        self.model_name = settings.get('token_manager', {}).get('model', "gemini-2.5-flash")
+        self.limit = settings.get('token_manager', {}).get('limit', 1000000)
 
     def count_tokens(self, contents: list[types.ContentDict], tools: list | None = None) -> int:
         """

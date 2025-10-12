@@ -15,13 +15,8 @@ def load_tools(project_root: Path) -> list:
         return json.load(f)
 
 def call_gemini_api(settings: dict, session_data: dict, project_root: Path, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool) -> types.GenerateContentResponse:
-    model_name = settings.get('model')
-    if not model_name:
-        raise ValueError("'model' not found in setting.yml")
-    context_limit = settings.get('context_limit')
-    if not context_limit:
-        raise ValueError("'context_limit' not found in setting.yml")
-    token_manager = TokenManager(model_name=model_name, limit=context_limit)
+
+    token_manager = TokenManager(settings=settings)
 
     builder = PromptBuilder(settings=settings, session_data=session_data, project_root=project_root, api_mode=api_mode, multi_step_reasoning_enabled=multi_step_reasoning_enabled)
     
@@ -87,7 +82,7 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: Path, inst
         response = client.models.generate_content(
             contents=api_contents,
             config=config,
-            model=model_name
+            model=token_manager.model_name
         )
         return response
     except Exception as e:

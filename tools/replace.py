@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Dict, Any
+import difflib
 
 def replace(file_path: str, instruction: str, old_string: str, new_string: str) -> Dict[str, Any]:
     """
@@ -49,7 +50,21 @@ def replace(file_path: str, instruction: str, old_string: str, new_string: str) 
         # Write back modified content
         target_path.write_text(new_content, encoding='utf-8')
         
-        return {"status": "success", "message": f"Text replaced successfully in {file_path}"}
+        diff = ""
+        if original_content != new_content:
+            diff_lines = difflib.unified_diff(
+                original_content.splitlines(keepends=True),
+                new_content.splitlines(keepends=True),
+                fromfile=f"a/{file_path}",
+                tofile=f"b/{file_path}",
+                lineterm=''
+            )
+            diff = "\n".join(list(diff_lines))
+
+        message = f"Text replaced successfully in {file_path}"
+        if diff:
+            message += f"\n\nDiff:\n```diff\n{diff}\n```"
+
+        return {"status": "success", "message": message}
     except Exception as e:
         return {"error": f"Failed to replace text in file {file_path}: {str(e)}"}
-

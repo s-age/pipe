@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Dict, Any
+import difflib
 
 def write_file(file_path: str, content: str) -> Dict[str, Any]:
     """
@@ -38,10 +39,28 @@ def write_file(file_path: str, content: str) -> Dict[str, Any]:
         # Create parent directories if they don't exist
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
+        original_content = ""
+        if target_path.exists():
+            original_content = target_path.read_text(encoding='utf-8')
+
         with open(target_path, 'w', encoding='utf-8') as f:
             f.write(content)
         
-        return {"status": "success", "message": f"File written successfully: {file_path}"}
+        diff = ""
+        if original_content:
+            diff_lines = difflib.unified_diff(
+                original_content.splitlines(keepends=True),
+                content.splitlines(keepends=True),
+                fromfile=f"a/{file_path}",
+                tofile=f"b/{file_path}",
+                lineterm=''
+            )
+            diff = "\n".join(list(diff_lines))
+
+        message = f"File written successfully: {file_path}"
+        if diff:
+            message += f"\n\nDiff:\n```diff\n{diff}\n```"
+
+        return {"status": "success", "message": message}
     except Exception as e:
         return {"error": f"Failed to write file {file_path}: {str(e)}"}
-

@@ -1,12 +1,23 @@
 [
   {
     "name": "list_directory",
-    "description": "Lists the names of files and subdirectories directly within a specified directory.",
+    "description": "Lists the names of files and subdirectories directly within a specified directory. Can optionally ignore entries matching provided glob patterns.",
     "parameters": {
       "type": "OBJECT",
       "properties": {
         "path": {
           "type": "STRING"
+        },
+        "file_filtering_options": {
+          "type": "OBJECT",
+          "properties": {
+            "respect_gemini_ignore": {
+              "type": "BOOLEAN"
+            },
+            "respect_git_ignore": {
+              "type": "BOOLEAN"
+            }
+          }
         },
         "ignore": {
           "type": "ARRAY",
@@ -22,7 +33,7 @@
   },
   {
     "name": "read_file",
-    "description": "Reads and returns the content of a specified file.",
+    "description": "Reads and returns the content of a specified file. If the file is large, the content will be truncated. The tool's response will clearly indicate if truncation has occurred and will provide details on how to read more of the file using the 'offset' and 'limit' parameters. Handles text, images (PNG, JPG, GIF, WEBP, SVG, BMP), and PDF files. For text files, it can read specific line ranges.",
     "parameters": {
       "type": "OBJECT",
       "properties": {
@@ -43,7 +54,7 @@
   },
   {
     "name": "search_file_content",
-    "description": "Searches for a regular expression pattern within the content of files in a specified directory.",
+    "description": "Searches for a regular expression pattern within the content of files in a specified directory (or current working directory). Can filter files by a glob pattern. Returns the lines containing matches, along with their file paths and line numbers. Total results limited to 20,000 matches like VSCode.",
     "parameters": {
       "type": "OBJECT",
       "properties": {
@@ -64,17 +75,23 @@
   },
   {
     "name": "glob",
-    "description": "Efficiently finds files matching specific glob patterns, respecting .gitignore.",
+    "description": "Efficiently finds files matching specific glob patterns (e.g., `src/**/*.ts`, `**/*.md`), returning absolute paths sorted by modification time (newest first). Ideal for quickly locating files based on their name or path structure, especially in large codebases.",
     "parameters": {
       "type": "OBJECT",
       "properties": {
         "pattern": {
           "type": "STRING"
         },
+        "case_sensitive": {
+          "type": "BOOLEAN"
+        },
         "path": {
           "type": "STRING"
         },
-        "recursive": {
+        "respect_gemini_ignore": {
+          "type": "BOOLEAN"
+        },
+        "respect_git_ignore": {
           "type": "BOOLEAN"
         }
       },

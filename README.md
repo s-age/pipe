@@ -47,10 +47,7 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
 ## Setup & Installation
 
 1. **Prerequisites:** Python 3.x and `gemini-cli` installed in your PATH.
-
-
-
-Python 3.12 or higher is required. For Python versions below 3.9, please use `gemini-cli` from the `python-3.9-deprecated` branch: `https://github.com/s-age/pipe/tree/python-3.9-deprecated`.
+    Python 3.12 or higher is required. For Python versions below 3.9, please use `gemini-cli` from the `python-3.9-deprecated` branch: `https://github.com/s-age/pipe/tree/python-3.9-deprecated`.
 2.  **Install Dependencies:** `pip3 install -r requirements.txt`
 3.  **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
     *   For consistency with `.env.default`, add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.

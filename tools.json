@@ -1,0 +1,251 @@
+[
+  {
+    "name": "list_directory",
+    "description": "Lists the names of files and subdirectories directly within a specified directory. Can optionally ignore entries matching provided glob patterns.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "path": {
+          "type": "STRING"
+        },
+        "file_filtering_options": {
+          "type": "OBJECT",
+          "properties": {
+            "respect_gemini_ignore": {
+              "type": "BOOLEAN"
+            },
+            "respect_git_ignore": {
+              "type": "BOOLEAN"
+            }
+          }
+        },
+        "ignore": {
+          "type": "ARRAY",
+          "items": {
+            "type": "STRING"
+          }
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "read_file",
+    "description": "Reads and returns the content of a specified file. If the file is large, the content will be truncated. The tool's response will clearly indicate if truncation has occurred and will provide details on how to read more of the file using the 'offset' and 'limit' parameters. Handles text, images (PNG, JPG, GIF, WEBP, SVG, BMP), and PDF files. For text files, it can read specific line ranges.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "absolute_path": {
+          "type": "STRING"
+        },
+        "limit": {
+          "type": "NUMBER"
+        },
+        "offset": {
+          "type": "NUMBER"
+        }
+      },
+      "required": [
+        "absolute_path"
+      ]
+    }
+  },
+  {
+    "name": "search_file_content",
+    "description": "Searches for a regular expression pattern within the content of files in a specified directory (or current working directory). Can filter files by a glob pattern. Returns the lines containing matches, along with their file paths and line numbers. Total results limited to 20,000 matches like VSCode.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "pattern": {
+          "type": "STRING"
+        },
+        "include": {
+          "type": "STRING"
+        },
+        "path": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "pattern"
+      ]
+    }
+  },
+  {
+    "name": "glob",
+    "description": "Efficiently finds files matching specific glob patterns (e.g., `src/**/*.ts`, `**/*.md`), returning absolute paths sorted by modification time (newest first). Ideal for quickly locating files based on their name or path structure, especially in large codebases.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "pattern": {
+          "type": "STRING"
+        },
+        "case_sensitive": {
+          "type": "BOOLEAN"
+        },
+        "path": {
+          "type": "STRING"
+        },
+        "respect_gemini_ignore": {
+          "type": "BOOLEAN"
+        },
+        "respect_git_ignore": {
+          "type": "BOOLEAN"
+        }
+      },
+      "required": [
+        "pattern"
+      ]
+    }
+  },
+  {
+    "name": "replace",
+    "description": "Replaces text within a file.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "file_path": {
+          "type": "STRING"
+        },
+        "instruction": {
+          "type": "STRING"
+        },
+        "old_string": {
+          "type": "STRING"
+        },
+        "new_string": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "file_path",
+        "instruction",
+        "old_string",
+        "new_string"
+      ]
+    }
+  },
+  {
+    "name": "write_file",
+    "description": "Writes content to a specified file.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "file_path": {
+          "type": "STRING"
+        },
+        "content": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "file_path",
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "web_fetch",
+    "description": "Processes content from URLs embedded in a prompt.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "prompt": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "prompt"
+      ]
+    }
+  },
+  {
+    "name": "read_many_files",
+    "description": "Reads content from multiple files.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "paths": {
+          "type": "ARRAY",
+          "items": {
+            "type": "STRING"
+          }
+        },
+        "exclude": {
+          "type": "ARRAY",
+          "items": {
+            "type": "STRING"
+          }
+        },
+        "include": {
+          "type": "ARRAY",
+          "items": {
+            "type": "STRING"
+          }
+        },
+        "recursive": {
+          "type": "BOOLEAN"
+        },
+        "useDefaultExcludes": {
+          "type": "BOOLEAN"
+        }
+      },
+      "required": [
+        "paths"
+      ]
+    }
+  },
+  {
+    "name": "run_shell_command",
+    "description": "Executes a specified shell command.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "command": {
+          "type": "STRING"
+        },
+        "description": {
+          "type": "STRING"
+        },
+        "directory": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "command"
+      ]
+    }
+  },
+  {
+    "name": "save_memory",
+    "description": "Saves specific information to long-term memory.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "fact": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "fact"
+      ]
+    }
+  },
+  {
+    "name": "google_web_search",
+    "description": "Performs a web search using Google Search and returns the results.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "query": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  }
+]

@@ -1,0 +1,4 @@
+{% macro render_main_instruction_macro(data) %}{
+  "description": {{ data.description | tojson }},
+  "flowchart": {{ data.flowchart | tojson }}
+}{% endmacro %}

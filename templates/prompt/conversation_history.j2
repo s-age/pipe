@@ -1,0 +1,16 @@
+{% macro render_conversation_history_macro(data) %}{
+  "description": {{ data.description | tojson }},
+  "turns": [
+    {% for turn in data.turns %}
+    {
+      "type": {{ turn.type | tojson }},
+      "timestamp": {{ turn.timestamp | tojson }},
+      {% if turn.instruction %}"instruction": {{ turn.instruction | tojson }}{% endif %}
+      {% if turn.content %}"content": {{ turn.content | tojson }}{% endif %}
+      {% if turn.function_call %}"function_call": {{ turn.function_call | tojson }}{% endif %}
+      {% if turn.name %}"name": {{ turn.name | tojson }}{% endif %}
+      {% if turn.response %}"response": {{ turn.response | tojson }}{% endif %}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}{% endmacro %}

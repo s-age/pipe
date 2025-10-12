@@ -3,6 +3,38 @@ from pathlib import Path
 import sys
 import yaml
 from src.history_manager import HistoryManager
+import os
+
+def check_and_show_warning(project_root: Path) -> bool:
+    """Checks for the warning file, displays it, and gets user consent."""
+    sealed_path = project_root / "sealed.txt"
+    unsealed_path = project_root / "unsealed.txt"
+
+    if unsealed_path.exists():
+        return True  # Already agreed
+
+    if not sealed_path.exists():
+        return True  # No warning file, proceed
+
+    print("--- IMPORTANT NOTICE ---")
+    print(sealed_path.read_text(encoding="utf-8"))
+    print("------------------------")
+
+    while True:
+        try:
+            response = input("Do you agree to the terms above? (yes/no): ").lower().strip()
+            if response == "yes":
+                sealed_path.rename(unsealed_path)
+                print("Thank you. Proceeding...")
+                return True
+            elif response == "no":
+                print("You must agree to the terms to use this tool. Exiting.")
+                return False
+            else:
+                print("Invalid input. Please enter 'yes' or 'no'.")
+        except (KeyboardInterrupt, EOFError):
+            print("\nOperation cancelled. Exiting.")
+            return False
 
 def load_settings(config_path: Path) -> dict:
     if config_path.exists():
@@ -28,11 +60,11 @@ def index():
         key=lambda item: item[1].get('last_updated', ''),
         reverse=True
     )
-    return render_template('index.html', sessions=sorted_sessions, current_session_id=None, session_data={})
+    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data={})
 
 @app.route('/new_session')
 def new_session_form():
-    return render_template('new_session.html')
+    return render_template('html/new_session.html')
 
 @app.route('/api/session/new', methods=['POST'])
 def create_new_session_api():
@@ -90,7 +122,7 @@ def view_session(session_id):
     token_count = session_data.get('token_count', 0)
     context_limit = settings.get('context_limit', 1000000)
 
-    return render_template('index.html',
+    return render_template('html/index.html',
                            sessions=sorted_sessions,
                            current_session_id=session_id,
                            current_session_purpose=current_session_purpose,
@@ -214,4 +246,8 @@ def send_instruction_api(session_id):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    project_root_for_check = Path(__file__).parent
+    if check_and_show_warning(project_root_for_check):
+        app.run(host='0.0.0.0', port=5001, debug=False)
+    else:
+        sys.exit(1)

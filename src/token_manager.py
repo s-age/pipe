@@ -3,72 +3,50 @@ Manages token counting using the official Google Generative AI library.
 """
 
 import os
-import google.generativeai as genai
-from google.generativeai.types import content_types
-
-# Configure the API key from environment variables.
-# It's configured here to ensure it's set before any model interactions.
-try:
-    # Attempt to configure the API key.
-    # This is wrapped in a try-except block to prevent crashes if the
-    # environment variable is not set, allowing the application to run
-    # in modes that do not require API calls (e.g., viewing history).
-    api_key = os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
-        print("Warning: GOOGLE_API_KEY environment variable not set. API calls will fail.")
-    else:
-        genai.configure(api_key=api_key)
-except Exception as e:
-    print(f"Warning: Failed to configure Google API key: {e}")
+import google.genai as genai
+from google.genai import types
 
 class TokenManager:
-    """Handles token counting using the google.generativeai library."""
+    """Handles token counting using the google-genai library."""
 
-    DEFAULT_MODEL = "gemini-1.5-flash"
-    DEFAULT_LIMIT = 1000000
-
-    def __init__(self, model_name: str = DEFAULT_MODEL, limit: int = DEFAULT_LIMIT):
+    def __init__(self, settings: dict):
         """
         Initializes the TokenManager.
 
         Args:
-            model_name: The name of the generative model to use for token counting.
-            limit: The context window limit for the model.
+            settings: The settings dictionary containing model configuration.
         """
-        self.model_name = model_name
-        self.limit = limit
+        self.model_name = settings.get('token_manager', {}).get('model', "gemini-2.5-flash")
+        self.limit = settings.get('token_manager', {}).get('limit', 1000000)
         try:
-            self.model = genai.GenerativeModel(self.model_name)
+            self.client = genai.Client()
         except Exception as e:
-            print(f"Error initializing GenerativeModel: {e}")
-            self.model = None
+            print(f"Error initializing genai.Client: {e}")
+            self.client = None
 
-    def count_tokens(self, contents: list[content_types.ContentDict]) -> int:
+    def count_tokens(self, contents: list[types.ContentDict], tools: list | None = None) -> int:
         """
         Counts the number of tokens in the prompt contents using the Gemini API.
 
         Args:
-            contents: A list of content dictionaries, matching the format
-                      expected by the google-generativeai library
-                      (e.g., [{"role": "user", "parts": [{"text": "..."}]}]).
+            contents: A list of content dictionaries.
+            tools: An optional list of tool definitions.
 
         Returns:
-            The total number of tokens, or 0 if an error occurs.
+            The total number of tokens, or a fallback estimation if an error occurs.
         """
-        if not self.model:
-            print("TokenManager: Model not initialized, cannot count tokens.")
+        if not self.client:
+            print("TokenManager: Client not initialized, cannot count tokens.")
             return 0
         try:
-            response = self.model.count_tokens(contents)
+            response = self.client.models.count_tokens(model=self.model_name, contents=contents)
             return response.total_tokens
         except Exception as e:
             print(f"Error counting tokens via API: {e}")
             # As a rough fallback, estimate based on characters.
-            # This is not accurate but better than nothing if the API call fails.
             estimated_tokens = sum(len(part.get('text', '')) for content in contents for part in content.get('parts', [])) // 4
             print(f"Using rough fallback estimation: {estimated_tokens} tokens.")
             return estimated_tokens
-
 
     def check_limit(self, tokens: int) -> tuple[bool, str]:
         """

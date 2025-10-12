@@ -1,7 +1,7 @@
 import os
 import json
 from pathlib import Path
-import google.generativeai as genai
+import google.genai as genai
 from google.genai import types
 
 from src.prompt_builder import PromptBuilder
@@ -59,17 +59,38 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: Path, inst
         if top_k := params.get('top_k'):
             gen_config_params['top_k'] = top_k.get('value')
     
-    generation_config = genai.GenerationConfig(**gen_config_params)
+    # tools.jsonからツールをロード
+    loaded_tools_data = load_tools(project_root)
 
-    model = genai.GenerativeModel(
-        model_name=model_name, 
-        tools=tools,
-        generation_config=generation_config
+    # ロードしたツールデータをtypes.Toolオブジェクトに変換
+    converted_tools = []
+    for tool_data in loaded_tools_data:
+        # parametersをtypes.Schemaオブジェクトに変換
+        parameters_schema = types.Schema(**tool_data.get('parameters', {}))
+        
+        converted_tools.append(types.Tool(function_declarations=[types.FunctionDeclaration(
+            name=tool_data['name'],
+            description=tool_data.get('description', ''),
+            parameters=parameters_schema
+        )]))
+
+    # GoogleSearchツールを追加 (GroundingとFunction Callingは両立しないため、Function Callingツールのみを渡す)
+    all_tools = converted_tools # 既存ツールのみを渡す
+
+    config = types.GenerateContentConfig(
+        tools=all_tools, # <-- 統合したツールを渡す
+        temperature=gen_config_params.get('temperature'),
+        top_p=gen_config_params.get('top_p'),
+        top_k=gen_config_params.get('top_k')
     )
 
+    client = genai.Client()
+
     try:
-        response = model.generate_content(
+        response = client.models.generate_content(
             contents=api_contents,
+            config=config,
+            model=model_name
         )
         return response
     except Exception as e:

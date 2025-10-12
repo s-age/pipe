@@ -1,5 +1,6 @@
 # Default model to use
 model: gemini-2.5-flash
+search_model: gemini-2.5-flash
 context_limit: 1000000
 
 # API mode: 'gemini-api' for direct API calls, 'gemini-cli' for CLI interaction.

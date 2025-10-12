@@ -3,7 +3,7 @@ import os
 import sys
 import json
 from pathlib import Path
-import yaml
+from src.utils import read_yaml_file
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import zoneinfo
@@ -46,11 +46,7 @@ def check_and_show_warning(project_root: Path) -> bool:
             print("\nOperation cancelled. Exiting.")
             return False
 
-def load_settings(config_path: Path) -> dict:
-    if config_path.exists():
-        with config_path.open('r', encoding='utf-8') as f:
-            return yaml.safe_load(f)
-    return {}
+
 
 def execute_tool_call(tool_call):
     """Dynamically imports and executes a tool function."""
@@ -75,7 +71,7 @@ def main():
 
     load_dotenv()
     config_path = project_root / 'setting.yml'
-    settings = load_settings(config_path)
+    settings = read_yaml_file(config_path)
     
     api_mode = settings.get('api_mode')
     if not api_mode:

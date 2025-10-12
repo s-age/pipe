@@ -3,8 +3,8 @@ Manages token counting using the official Google Generative AI library.
 """
 
 import os
-import google.generativeai as genai
-from google.generativeai import types
+import google.genai as genai
+from google.genai import types
 
 class TokenManager:
     """Handles token counting using the google-genai library."""
@@ -18,6 +18,11 @@ class TokenManager:
         """
         self.model_name = settings.get('token_manager', {}).get('model', "gemini-2.5-flash")
         self.limit = settings.get('token_manager', {}).get('limit', 1000000)
+        try:
+            self.client = genai.Client()
+        except Exception as e:
+            print(f"Error initializing genai.Client: {e}")
+            self.client = None
 
     def count_tokens(self, contents: list[types.ContentDict], tools: list | None = None) -> int:
         """
@@ -30,9 +35,11 @@ class TokenManager:
         Returns:
             The total number of tokens, or a fallback estimation if an error occurs.
         """
+        if not self.client:
+            print("TokenManager: Client not initialized, cannot count tokens.")
+            return 0
         try:
-            model = genai.GenerativeModel(self.model_name)
-            response = model.count_tokens(contents=contents, tools=tools)
+            response = self.client.models.count_tokens(model=self.model_name, contents=contents)
             return response.total_tokens
         except Exception as e:
             print(f"Error counting tokens via API: {e}")

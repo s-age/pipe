@@ -12,8 +12,7 @@ def call_gemini_cli(settings: dict, session_data: dict, project_root: Path, inst
 
     builder = PromptBuilder(settings=settings, session_data=session_data, project_root=project_root, api_mode=api_mode, multi_step_reasoning_enabled=multi_step_reasoning_enabled)
     
-    final_prompt_obj = builder.build()
-    final_prompt = json.dumps(final_prompt_obj, ensure_ascii=False)
+    final_prompt = builder.build()
 
     command = ['gemini', '-m', model_name, '-p', final_prompt]
     if settings.get('yolo', False):

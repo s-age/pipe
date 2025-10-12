@@ -8,9 +8,8 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 import zoneinfo
 import importlib
-from google.generativeai import types as genai_types
 
-from src.history_manager import HistoryManager
+from src.session_manager import SessionManager
 from src.gemini_api import call_gemini_api
 from src.gemini_cli import call_gemini_cli
 from src.prompt_builder import PromptBuilder
@@ -96,7 +95,7 @@ def main():
     
     args = parser.parse_args()
     
-    history_manager = HistoryManager(project_root / 'sessions', timezone_obj=local_tz)
+    session_manager = SessionManager(project_root / 'sessions', timezone_obj=local_tz)
 
     if args.compress:
         print("Compression logic not fully implemented in this refactor.")
@@ -104,26 +103,16 @@ def main():
 
     elif args.instruction:
         session_id = args.session
+        roles = args.roles.split(',') if args.roles else []
+        enable_multi_step_reasoning = args.multi_step_reasoning
 
-        if session_id:
-            session_data_for_prompt = history_manager.get_session(session_id)
-            if not session_data_for_prompt:
-                print(f"Error: Session ID '{session_id}' not found.", file=sys.stderr)
-                return
-            enable_multi_step_reasoning = args.multi_step_reasoning or session_data_for_prompt.get('multi_step_reasoning_enabled', False)
-            session_data_for_prompt['multi_step_reasoning_enabled'] = enable_multi_step_reasoning
-        else:
-            if not all([args.purpose, args.background]):
-                parser.error("A new session requires --purpose and --background.")
-            roles = args.roles.split(',') if args.roles else []
-            enable_multi_step_reasoning = args.multi_step_reasoning
-            session_data_for_prompt = {
-                "purpose": args.purpose,
-                "background": args.background,
-                "roles": roles,
-                "multi_step_reasoning_enabled": enable_multi_step_reasoning,
-                "turns": []
-            }
+        session_data_for_prompt = session_manager.get_or_create_session_data(
+            session_id=session_id,
+            purpose=args.purpose,
+            background=args.background,
+            roles=roles,
+            multi_step_reasoning_enabled=enable_multi_step_reasoning
+        )
         
         session_data_for_prompt['turns'].append({"type": "user_task", "instruction": args.instruction})
 
@@ -208,10 +197,8 @@ def main():
 
         session_data_for_prompt['turns'].pop(0)
 
-        task_data = {"type": "user_task", "instruction": args.instruction}
         if not session_id:
-            roles = args.roles.split(',') if args.roles else []
-            session_id = history_manager.create_new_session(
+            session_id = session_manager.create_new_session(
                 purpose=args.purpose, background=args.background, roles=roles, 
                 multi_step_reasoning_enabled=enable_multi_step_reasoning
             )
@@ -220,10 +207,10 @@ def main():
             print(f"Conductor Agent: Continuing session: {session_id}")
 
         for turn in session_data_for_prompt['turns']:
-            history_manager.add_turn_to_session(session_id, turn)
+            session_manager.add_turn_to_session(session_id, turn)
 
         final_response_data = {"type": "model_response", "content": model_response_text}
-        history_manager.add_turn_to_session(session_id, final_response_data)
+        session_manager.add_turn_to_session(session_id, final_response_data)
 
         print("--- Response Received ---")
         print(model_response_text)

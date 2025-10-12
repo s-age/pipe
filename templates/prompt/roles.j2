@@ -1,0 +1,8 @@
+{% macro render_roles_macro(data) %}{
+  "description": {{ data.description | tojson }},
+  "definitions": [
+    {% for role in data.definitions %}
+    {{ role | tojson }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}{% endmacro %}

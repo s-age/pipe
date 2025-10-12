@@ -3,6 +3,7 @@ Builds the final prompt object to be sent to the sub-agent (LLM).
 """
 import json
 from pathlib import Path
+from jinja2 import Environment, FileSystemLoader
 
 class PromptBuilder:
     """Constructs a structured prompt object for the LLM."""
@@ -13,6 +14,13 @@ class PromptBuilder:
         self.project_root = project_root
         self.api_mode = api_mode
         self.multi_step_reasoning_enabled = multi_step_reasoning_enabled
+
+        # Initialize Jinja2 environment
+        self.template_env = Environment(
+            loader=FileSystemLoader(self.project_root / 'templates' / 'prompt'),
+            trim_blocks=True, # Remove leading whitespace from lines that contain Jinja2 blocks
+            lstrip_blocks=True # Remove trailing whitespace from the end of a block
+        )
 
     def _load_roles(self) -> list[str]:
         """Loads content from role definition files."""
@@ -31,12 +39,6 @@ class PromptBuilder:
         current_task_turn = all_turns[-1] if all_turns else {}
 
         roles_content = self._load_roles()
-
-        advanced_reasoning_flow_content = None
-        if self.multi_step_reasoning_enabled:
-            multi_step_path = self.project_root / 'rules' / 'multi-step-reasoning.md'
-            if multi_step_path.is_file():
-                advanced_reasoning_flow_content = multi_step_path.read_text(encoding="utf-8")
 
         prompt_object = {
             "description": "Comprehensive JSON request for an AI sub-agent...",
@@ -71,20 +73,20 @@ class PromptBuilder:
             }
         }
 
-        if self.multi_step_reasoning_enabled and advanced_reasoning_flow_content:
-            prompt_object['advanced_reasoning_flow'] = {
-                "description": "The detailed, multi-step internal thinking process...",
-                "flowchart": advanced_reasoning_flow_content
-            }
+        hyperparams_from_settings = self._build_hyperparameters_section()
+        prompt_object['constraints']['hyperparameters'] = {
+            "description": "Contextual instructions to control the AI model's generation process...",
+            **hyperparams_from_settings
+        }
 
-        if self.api_mode == 'gemini-cli':
-            hyperparams_from_settings = self._build_hyperparameters_section()
-            prompt_object['constraints']['hyperparameters'] = {
-                "description": "Contextual instructions to control the AI model's generation process...",
-                **hyperparams_from_settings
-            }
+        if self.api_mode == 'gemini-api':
+            template = self.template_env.get_template('gemini_api_prompt.j2')
+        elif self.api_mode == 'gemini-cli':
+            template = self.template_env.get_template('gemini_cli_prompt.j2')
+        else:
+            raise ValueError(f"Unknown api_mode: {self.api_mode}")
 
-        return prompt_object
+        return template.render(session=prompt_object, settings=self.settings)
 
     def build_conversation_turns_for_api(self) -> list[dict]:
         """Builds a content list for the google-genai API from conversation turns only."""

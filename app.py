@@ -60,11 +60,11 @@ def index():
         key=lambda item: item[1].get('last_updated', ''),
         reverse=True
     )
-    return render_template('index.html', sessions=sorted_sessions, current_session_id=None, session_data={})
+    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data={})
 
 @app.route('/new_session')
 def new_session_form():
-    return render_template('new_session.html')
+    return render_template('html/new_session.html')
 
 @app.route('/api/session/new', methods=['POST'])
 def create_new_session_api():
@@ -122,7 +122,7 @@ def view_session(session_id):
     token_count = session_data.get('token_count', 0)
     context_limit = settings.get('context_limit', 1000000)
 
-    return render_template('index.html',
+    return render_template('html/index.html',
                            sessions=sorted_sessions,
                            current_session_id=session_id,
                            current_session_purpose=current_session_purpose,

@@ -13,7 +13,7 @@ def index():
     """
     Serves the main HTML page for viewing conversation history.
     """
-    return render_template('index.html')
+    return render_template('html/index.html')
 
 @app.route('/api/history')
 def get_history():

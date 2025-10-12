@@ -1,0 +1,5 @@
+{% macro render_session_goal_macro(data) %}{
+  "description": {{ data.description | tojson }},
+  "purpose": {{ data.purpose | tojson }},
+  "background": {{ data.background | tojson }}
+}{% endmacro %}

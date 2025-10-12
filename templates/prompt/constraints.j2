@@ -1,0 +1,20 @@
+{% macro render_constraints_macro(data) %}{
+  "description": {{ data.description | tojson }},
+  "language": {{ data.language | tojson }},
+  "processing_config": {
+    "description": {{ data.processing_config.description | tojson }},
+    "multi_step_reasoning_active": {{ data.processing_config.multi_step_reasoning_active | tojson }}
+  }{% if data.hyperparameters %},
+  "hyperparameters": {
+    "description": {{ data.hyperparameters.description | tojson }},
+    {% for key, value in data.hyperparameters.items() %}
+    {% if key != 'description' %}
+    {{ key | tojson }}: {
+      "type": {{ value.type | tojson }},
+      "value": {{ value.value | tojson }},
+      "description": {{ value.description | tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endif %}
+    {% endfor %}
+  }{% endif %}
+}{% endmacro %}

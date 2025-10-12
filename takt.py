@@ -114,7 +114,7 @@ def main():
             multi_step_reasoning_enabled=enable_multi_step_reasoning
         )
         
-        session_data_for_prompt['turns'].append({"type": "user_task", "instruction": args.instruction})
+        session_data_for_prompt['turns'].append({"type": "user_task", "instruction": args.instruction, "timestamp": datetime.now(local_tz).isoformat()})
 
         if args.dry_run:
             print("\n--- Dry Run Mode ---")
@@ -162,7 +162,8 @@ def main():
 
                     model_turn = {
                         "type": "model_response",
-                        "function_call": {'name': function_call.name, 'args': dict(function_call.args)}
+                        "function_call": {'name': function_call.name, 'args': dict(function_call.args)},
+                        "timestamp": datetime.now(local_tz).isoformat()
                     }
                     session_data_for_prompt['turns'].append(model_turn)
 
@@ -171,7 +172,8 @@ def main():
                     tool_turn = {
                         "type": "tool_response",
                         "name": function_call.name,
-                        "response": tool_result
+                        "response": tool_result,
+                        "timestamp": datetime.now(local_tz).isoformat()
                     }
                     session_data_for_prompt['turns'].append(tool_turn)
 
@@ -195,7 +197,7 @@ def main():
             session_data_for_prompt['turns'].pop()
             return
 
-        session_data_for_prompt['turns'].pop(0)
+
 
         if not session_id:
             session_id = session_manager.create_new_session(
@@ -209,7 +211,7 @@ def main():
         for turn in session_data_for_prompt['turns']:
             session_manager.add_turn_to_session(session_id, turn)
 
-        final_response_data = {"type": "model_response", "content": model_response_text}
+        final_response_data = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(local_tz).isoformat()}
         session_manager.add_turn_to_session(session_id, final_response_data)
 
         print("--- Response Received ---")

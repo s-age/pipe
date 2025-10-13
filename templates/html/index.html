@@ -19,8 +19,8 @@
         #sessions-column a .session-id { font-size: 0.7em; color: #eee8aa; display: block; margin-top: 4px; word-break: break-all; }
 
         /* Column 2: Turns List */
-        #turns-column { flex: 6; background-color: #f0f2f5; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .turn { margin-bottom: 0; padding: 10px 15px; border-radius: 18px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); width: 70%; position: relative; }
+        #turns-column { flex: 6; background-color: #f0f2f5; padding: 0; display: flex; flex-direction: column; gap: 15px; }
+        .turn { padding: 10px 15px; border-radius: 18px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); width: 70%; position: relative; }
         .turn-header { font-weight: bold; margin-bottom: 5px; text-transform: capitalize; color: #6c757d; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center; }
         .user_task { background-color: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
         .model_response, .function_calling, .tool_response { background-color: #ffffff; align-self: flex-start; border-bottom-left-radius: 2px; }
@@ -34,7 +34,7 @@
         .welcome-message { text-align: center; color: #6c757d; margin-top: 50px; }
 
         /* Column 3: Meta & Actions */
-        #meta-column { flex: 3; background-color: #f8f9fa; border-left: 1px solid #dee2e6; }
+        #meta-column { flex: 3; display: flex; flex-direction: column; background-color: #f8f9fa; border-left: 1px solid #dee2e6; }
         #meta-column h1 { margin-top: 0; color: #343a40; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.8em; }
         .session-meta { background-color: #fff; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
         .session-meta .meta-item { margin-bottom: 10px; }
@@ -91,6 +91,13 @@
     <!-- Column 2: Turns List -->
     <div id="turns-column" class="column">
         {% if current_session_id %}
+        <div id="turns-column-header" style="position: sticky; top: 0; background-color: #f0f2f5; padding: 10px 20px; border-bottom: 1px solid #dee2e6; z-index: 5;">
+            <h2>{{ session_data.purpose }} {% if context_limit > 0 and token_count is not none %}({{ ((context_limit - token_count) / context_limit * 100) | round(0, 'floor') }}% context left){% endif %}</h2>
+        </div>
+        {% endif %}
+
+        {% if current_session_id %}
+        <section id="turns-list-section" style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
             {% for turn in turns %}
                 <div class="turn {{ turn.type }}" id="turn-{{ loop.index0 }}">
                     <div class="turn-header">
@@ -138,8 +145,8 @@
     <div id="meta-column" class="column">
         {% if current_session_id %}
             <input type="hidden" id="current-session-id" value="{{ current_session_id }}">
-            <h3>Session Meta {% if context_limit > 0 and token_count is not none %}({{ ((context_limit - token_count) / context_limit * 100) | round(0, 'floor') }}% context left){% endif %}</h3>
-            <div class="session-meta" id="session-meta-view">
+            <div style="flex: 1; padding: 15px 0 0 15px;"><h3>Session Meta</h3></div>
+            <div class="session-meta" id="session-meta-view" style="flex: 4;">
                 <div class="meta-item">
                     <strong>Purpose:</strong>
                     <p class="editable-meta" data-field="purpose">{{ session_data.purpose }}</p>
@@ -149,17 +156,22 @@
                     <p class="editable-meta" data-field="background">{{ session_data.background }}</p>
                 </div>
                 <div class="meta-item">
+                    <strong>Roles:</strong>
+                    <p class="editable-meta" data-field="roles">{{ session_data.roles | join(', ') }}</p>
+                </div>
+                <div class="meta-item">
                     <strong>Multi-step Reasoning:</strong>
                     <p class="editable-meta" data-field="multi_step_reasoning_enabled">{{ "Enabled" if session_data.multi_step_reasoning_enabled else "Disabled" }}</p>
                 </div>
                 <button class="action-btn edit-meta-btn" data-session-id="{{ current_session_id }}">Edit Meta</button>
             </div>
-            <h3>Session Control</h3>
-            <div class="session-actions">
+            <div style="flex: 1; padding: 15px 0 0 15px;">
+                <h3>Session Control</h3>
+                <div class="session-actions">
                 <button class="action-btn compress-btn" data-session-id="{{ current_session_id }}">Compress Session</button>
                 <button class="action-btn delete-session-btn" data-session-id="{{ current_session_id }}">Delete Session</button>
             </div>
-            <div class="new-instruction-control" style="margin-top: 20px;">
+            <div class="new-instruction-control" style="flex: 3; padding: 15px 15px 0 15px;">
                 <h4>New Instruction</h4>
                 <textarea id="new-instruction-text" placeholder="Enter your instruction here..." style="width: 95%; min-height: 80px; margin-bottom: 10px;"></textarea>
                 <button class="action-btn send-instruction-btn" data-session-id="{{ current_session_id }}">Send Instruction</button>

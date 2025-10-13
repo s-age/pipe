@@ -167,9 +167,13 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
                 "message": tool_result['error']
             }
         else:
-            # Assumes success if no error key is present.
-            # The message can be a string or a dict.
-            message_content = tool_result.get('message') if isinstance(tool_result, dict) else tool_result
+            # If the result is a dict and has a 'message' key, use that.
+            if isinstance(tool_result, dict) and 'message' in tool_result:
+                message_content = tool_result['message']
+            # Otherwise, use the whole tool_result as the content.
+            else:
+                message_content = tool_result
+
             formatted_response = {
                 "status": "succeeded",
                 "message": message_content

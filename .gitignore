@@ -41,3 +41,4 @@ instance/
 # User Consent Files
 sealed.txt
 unsealed.txt
+setting.yml

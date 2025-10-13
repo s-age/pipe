@@ -2,6 +2,8 @@
 Builds the final prompt object to be sent to the sub-agent (LLM).
 """
 import json
+import json5
+import sys
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
@@ -18,9 +20,11 @@ class PromptBuilder:
         # Initialize Jinja2 environment
         self.template_env = Environment(
             loader=FileSystemLoader(self.project_root / 'templates' / 'prompt'),
-            trim_blocks=True, # Remove leading whitespace from lines that contain Jinja2 blocks
-            lstrip_blocks=True # Remove trailing whitespace from the end of a block
+            trim_blocks=True,
+            lstrip_blocks=True
         )
+        # Add tojson filter for convenience in templates
+        self.template_env.filters['tojson'] = json.dumps
 
     def _load_roles(self) -> list[str]:
         """Loads content from role definition files."""
@@ -31,54 +35,106 @@ class PromptBuilder:
                 content.append(path.read_text(encoding="utf-8"))
         return content
 
+    def _build_hyperparameters_section(self) -> dict:
+        """Builds the hyperparameters section from settings."""
+        parameters_settings = self.settings.get('parameters', {})
+        params = {
+            "description": parameters_settings.get('description', "Hyperparameter settings for the model.")
+        }
+        for key, value_desc_pair in parameters_settings.items():
+            if key != 'description':
+                params[key] = {
+                    "type": "number",
+                    "value": value_desc_pair.get('value'),
+                    "description": value_desc_pair.get('description')
+                }
+        return params
+
     def build(self) -> str:
-        """Builds the complete prompt object as a JSON string."""
+        """Builds the complete prompt object as a JSON string using Jinja2 templates."""
         
+        if self.api_mode == 'gemini-api':
+            template = self.template_env.get_template('gemini_api_prompt.j2')
+        elif self.api_mode == 'gemini-cli':
+            template = self.template_env.get_template('gemini_cli_prompt.j2')
+        else:
+            raise ValueError(f"Unknown api_mode: {self.api_mode}")
+
         all_turns = self.session_data.get('turns', [])
         history_turns = all_turns[:-1]
         current_task_turn = all_turns[-1] if all_turns else {}
 
-        roles_content = self._load_roles()
+        # If the current turn (e.g., a tool response) doesn't have an instruction,
+        # find the last user instruction to keep the main task context.
+        if not current_task_turn.get('instruction'):
+            last_user_instruction = ''
+            for turn in reversed(all_turns):
+                if turn.get('type') == 'user_task' and turn.get('instruction'):
+                    last_user_instruction = turn.get('instruction')
+                    break
+            current_task_turn['instruction'] = last_user_instruction
 
-        prompt_object = {
-            "description": "JSON object representing the entire request to the AI sub-agent. The agent's goal is to accomplish the 'current_task' based on all provided context.",
-            "main_instruction": self.settings.get('main_instruction'),
-            "hyperparameters": self._build_hyperparameters_section(),
-            "session_goal": {
-                "description": "The immutable purpose and background for this entire conversation session.",
-                "purpose": self.session_data.get('purpose'),
-                "background": self.session_data.get('background'),
+        current_instruction = current_task_turn.get('instruction', '')
+
+        roles_content = self._load_roles()
+        roles_data = {
+            "description": "The following are the roles for this session.",
+            "definitions": roles_content
+        }
+
+        file_references_content = []
+        references = self.session_data.get('references', [])
+        for ref in references:
+            if not ref.get('disabled', False):
+                file_path = Path(ref.get('path'))
+                if file_path.is_file():
+                    try:
+                        content = file_path.read_text(encoding='utf-8')
+                        file_references_content.append({
+                            "path": str(file_path),
+                            "content": content
+                        })
+                    except Exception as e:
+                        print(f"Warning: Could not read referenced file {file_path}: {e}", file=sys.stderr)
+
+        # Build the complex constraints object required by the template
+        constraints_settings = self.settings.get('constraints', {})
+        processing_config_settings = constraints_settings.get('processing_config', {})
+        hyperparameters_data = self._build_hyperparameters_section()
+
+        constraints_data = {
+            "description": constraints_settings.get('description'),
+            "language": self.settings.get('language', 'Japanese'),
+            "processing_config": {
+                "description": processing_config_settings.get('description'),
+                "multi_step_reasoning_active": self.multi_step_reasoning_enabled
             },
-            "response_constraints": {
-                "description": "Constraints that the AI sub-agent should adhere to when generating responses. The entire response, including all content, must be generated in the specified language.",
-                "language": self.settings.get('language', 'Japanese'),
-            },
-            "roles": {
-                "description": "A list of personas or role definitions that the AI sub-agent should conform to.",
-                "definitions": roles_content
-            },
-            "conversation_history": {
-                "description": "Historical record of past interactions in this session, in chronological order.",
-                "turns": history_turns
-            },
-            "current_task": {
-                "description": "The specific task that the AI sub-agent must currently execute.",
-                "instruction": current_task_turn.get('instruction')
-            },
-            "reasoning_process": self.settings.get('reasoning_process')
+            "hyperparameters": hyperparameters_data
+        }
+
+        context = {
+            "session": {
+                "description": current_instruction,
+                "session_goal": {
+                    "description": "This section outlines the goal of the current session.",
+                    "purpose": self.session_data.get('purpose'),
+                    "background": self.session_data.get('background')
+                },
+                "roles": roles_data,
+                "file_references": file_references_content,
+                "conversation_history": history_turns,
+                "current_task": current_task_turn,
+                "constraints": constraints_data,
+                "settings": self.settings
+            }
         }
         
-        return json.dumps(prompt_object, ensure_ascii=False, indent=2)
-
-
-
-    def _build_hyperparameters_section(self) -> dict:
-        """Builds the hyperparameters section from settings."""
-        params = {}
-        for key, value_desc_pair in self.settings.get('parameters', {}).items():
-            params[key] = {
-                "type": "number",
-                "value": value_desc_pair.get('value'),
-                "description": value_desc_pair.get('description')
-            }
-        return params
+        rendered_string = template.render(context)
+        try:
+            # trailing commas are ignored by `json5`.
+            parsed_json = json5.loads(rendered_string)
+            return json.dumps(parsed_json, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Error: Generated prompt is not valid JSON. {e}", file=sys.stderr)
+            print(f"--- Invalid JSON String ---\n{rendered_string}\n--- End of Invalid JSON String ---", file=sys.stderr)
+            raise

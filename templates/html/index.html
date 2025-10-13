@@ -23,7 +23,7 @@
         .turn { margin-bottom: 0; padding: 10px 15px; border-radius: 18px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); width: 70%; position: relative; }
         .turn-header { font-weight: bold; margin-bottom: 5px; text-transform: capitalize; color: #6c757d; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center; }
         .user_task { background-color: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .model_response { background-color: #ffffff; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .model_response, .function_calling, .tool_response { background-color: #ffffff; align-self: flex-start; border-bottom-left-radius: 2px; }
         .condensed_history { background-color: #fffbe6; align-self: center; border-left: 4px solid #ffc107; }
         .model_response .turn-content, .condensed_history .turn-content { padding: 1px 15px; } /* Padding for markdown */
         pre, textarea { background-color: transparent; padding: 0; border-radius: 0; border: none; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; width: 100%; min-height: auto; }
@@ -60,6 +60,9 @@
         .session-actions { margin-top: 20px; display: flex; gap: 10px; }
         #new-instruction-text { padding: 8px; border: 1px solid #dee2e6; border-radius: 8px; }
 
+        .status-succeeded { color: #28a745; font-weight: bold; }
+        .status-failed { color: #dc3545; font-weight: bold; }
+        .tool-response-content pre { background-color: #e9ecef; padding: 5px; border-radius: 4px; }
         .markdown-body {
             background-color: #ffffff !important;
             color: #24292f !important;
@@ -92,7 +95,11 @@
                 <div class="turn {{ turn.type }}" id="turn-{{ loop.index0 }}">
                     <div class="turn-header">
                         <span>
-                            {% if turn.type == 'user_task' %}You{% elif turn.type == 'model_response' %}Model{% else %}System{% endif %}
+                            {% if turn.type == 'user_task' %}You
+                            {% elif turn.type == 'model_response' %}Model
+                            {% elif turn.type == 'function_calling' %}Function Calling
+                            {% elif turn.type == 'tool_response' %}Tool Response
+                            {% else %}Unknown{% endif %}
                             <span style="font-weight: normal; color: #999; margin-left: 10px;">{{ turn.timestamp.split('T')[1].split('.')[0] if turn.timestamp else '' }}</span>
                         </span>
                         <div class="turn-header-controls">
@@ -108,6 +115,13 @@
                             {% if turn.type == 'condensed_history' %}<p><strong><em>-- History Condensed --</em></strong></p>{% endif %}
                             <div class="raw-markdown" style="display: none;">{{ turn.content }}</div>
                             <div class="rendered-markdown markdown-body editable" data-field="content"></div>
+                        {% elif turn.type == 'function_calling' %}
+                            <pre>{{ turn.response }}</pre>
+                        {% elif turn.type == 'tool_response' %}
+                            <div class="tool-response-content">
+                                <strong>Status: </strong>
+                                <span class="status-{{ turn.response.status }}">{{ turn.response.status }}</span>
+                            </div>
                         {% endif %}
                     </div>
                 </div>

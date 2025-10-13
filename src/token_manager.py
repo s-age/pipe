@@ -24,12 +24,12 @@ class TokenManager:
             print(f"Error initializing genai.Client: {e}")
             self.client = None
 
-    def count_tokens(self, contents: list[types.ContentDict], tools: list | None = None) -> int:
+    def count_tokens(self, contents, tools: list | None = None) -> int:
         """
         Counts the number of tokens in the prompt contents using the Gemini API.
 
         Args:
-            contents: A list of content dictionaries.
+            contents: A string or a list of content dictionaries.
             tools: An optional list of tool definitions.
 
         Returns:
@@ -44,7 +44,11 @@ class TokenManager:
         except Exception as e:
             print(f"Error counting tokens via API: {e}")
             # As a rough fallback, estimate based on characters.
-            estimated_tokens = sum(len(part.get('text', '')) for content in contents for part in content.get('parts', [])) // 4
+            estimated_tokens = 0
+            if isinstance(contents, str):
+                estimated_tokens = len(contents) // 4
+            elif isinstance(contents, list):
+                estimated_tokens = sum(len(part.get('text', '')) for content in contents for part in content.get('parts', [])) // 4
             print(f"Using rough fallback estimation: {estimated_tokens} tokens.")
             return estimated_tokens
 

@@ -79,24 +79,18 @@ def _dry_run(settings, session_data_for_prompt, project_root, api_mode, enable_m
         multi_step_reasoning_enabled=enable_multi_step_reasoning
     )
     
-    full_prompt_str = builder.build()
-    conversation_contents = builder.build_conversation_turns_for_api()
-
-    api_contents = [
-        {'role': 'user', 'parts': [{'text': full_prompt_str}]},
-        {'role': 'model', 'parts': [{'text': "Understood. I will follow all instructions and context provided."}]}
-    ] + conversation_contents
+    json_prompt_str = builder.build()
 
     tools = load_tools(project_root)
 
-    token_count = token_manager.count_tokens(api_contents, tools=tools)
+    token_count = token_manager.count_tokens(json_prompt_str, tools=tools)
     is_within_limit, message = token_manager.check_limit(token_count)
     print(f"Token Count: {message}")
     if not is_within_limit:
         print("WARNING: Prompt exceeds context window limit.")
 
-    # For dry run, we print the full api_contents to show what would be sent to the API
-    print(json.dumps(api_contents, indent=2, ensure_ascii=False))
+    # For dry run, we print the JSON string that would be sent to the API
+    print(json_prompt_str)
     
     print("\n--- End of Dry Run ---")
 

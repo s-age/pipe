@@ -20,17 +20,7 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: Path, inst
 
     builder = PromptBuilder(settings=settings, session_data=session_data, project_root=project_root, api_mode=api_mode, multi_step_reasoning_enabled=multi_step_reasoning_enabled)
     
-    # 1. Build the system context part
-    full_prompt_str = builder.build()
-
-    # 2. Build the conversation turns part
-    conversation_contents = builder.build_conversation_turns_for_api()
-
-    # 3. Combine them for the final API contents
-    api_contents = [
-        {'role': 'user', 'parts': [{'text': full_prompt_str}]},
-        {'role': 'model', 'parts': [{'text': "Understood. I will follow all instructions and context provided."}]}
-    ] + conversation_contents
+    api_contents = builder.build()
 
     tools = load_tools(project_root)
 

@@ -63,6 +63,17 @@ class PromptBuilder:
         all_turns = self.session_data.get('turns', [])
         history_turns = all_turns[:-1]
         current_task_turn = all_turns[-1] if all_turns else {}
+
+        # If the current turn (e.g., a tool response) doesn't have an instruction,
+        # find the last user instruction to keep the main task context.
+        if not current_task_turn.get('instruction'):
+            last_user_instruction = ''
+            for turn in reversed(all_turns):
+                if turn.get('type') == 'user_task' and turn.get('instruction'):
+                    last_user_instruction = turn.get('instruction')
+                    break
+            current_task_turn['instruction'] = last_user_instruction
+
         current_instruction = current_task_turn.get('instruction', '')
 
         roles_content = self._load_roles()

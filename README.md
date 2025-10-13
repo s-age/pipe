@@ -125,48 +125,96 @@ Note that the JSON presented here is pretty-printed for readability; the actual 
 
 ```json
 {
-  "description": "JSON object representing the entire request to the AI sub-agent. The agent's goal is to accomplish the 'current_task' based on all provided context.",
-  "main_instruction": "When you receive JSON data, process your thoughts according to the following flowchart:\n\n```mermaid\ngraph TD\n    A[\"Start: JSON Input\"] --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    C --> D[\"Step 3: Integrate extracted task instructions and historical information, then summarize the current context\"];\n    D --> E[\"Step 4: Based on the summarized information, think and plan for response generation\"];\n    E --> F[\"Step 5: Generate final response based on the plan\"];\n    F --> G[\"End: Output Response\"];\n```",
-  "hyperparameters": {
-    "description": "Contextual instructions to control the AI model's generation process. The model should strive to follow these instructions.",
-    "temperature": {
-      "type": "number",
-      "value": 0.2,
-      "description": "Be precise and factual. A lower value is preferred for deterministic output."
-    },
-    "top_p": {
-      "type": "number",
-      "value": 0.5,
-      "description": "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
-    },
-    "top_k": {
-      "type": "number",
-      "value": 5,
-      "description": "Limit the generation to the top 5 most likely tokens at each step."
-    }
-  },
+  "description": "Summarize foo.txt, again",
   "session_goal": {
-    "description": "The immutable purpose and background for this entire conversation session.",
-    "purpose": "Implementation of src/components/atoms/Button",
-    "background": "Component preparation for starting a React project"
-  },
-  "response_constraints": {
-    "description": "Constraints that the AI sub-agent should adhere to when generating responses. The entire response, including all content, must be generated in the specified language.",
-    "language": "Japanese"
+    "description": "This section outlines the goal of the current session.",
+    "purpose": "Tool Test",
+    "background": "Tool Test"
   },
   "roles": {
-    "description": "A list of personas or role definitions that the AI sub-agent should conform to.",
-    "definitions": [
-      "# Role: Software Engineer\n\nYou are a professional software engineer. Your primary goal is to write clean, efficient, and maintainable code based on the provided instructions and context. Adhere to best practices and coding standards relevant to the specified language.\n"
-    ]
+    "description": "The following are the roles for this session.",
+    "definitions": []
+  },
+  "constraints": {
+    "description": null,
+    "language": "English",
+    "processing_config": {
+      "description": null,
+      "multi_step_reasoning_active": true
+    },
+    "hyperparameters": {
+      "description": "Hyperparameter settings for the model.",
+      "temperature": {
+        "type": "number",
+        "value": 0.2,
+        "description": "Be precise and factual. A lower value is preferred for deterministic output."
+      },
+      "top_p": {
+        "type": "number",
+        "value": 0.5,
+        "description": "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
+      },
+      "top_k": {
+        "type": "number",
+        "value": 5,
+        "description": "Limit the generation to the top 5 most likely tokens at each step."
+      }
+    }
+  },
+  "main_instruction": {
+    "description": "When you receive JSON data, process your thoughts according to the following",
+    "flowchart": "```mermaid\ngraph TD\n    A[\"Start\"] --> B[\"Step 1: Identify Task from 'current_task'\"];\n    B --> C[\"Step 2: Gather Context (History & Constraints)\"];\n    C --> D[\"Step 3: Summarize Context & Plan\"];\n    D --> E{\"Decision: Does the task require external information or actions (e.g., web search, file access, URL fetching, shell commands)?\"};\n    E -- YES --> F[\"Step 4a: Execute Tool\"];\n    E -- NO --> G[\"Step 4b: Execute Thinking Process (Conditionally Advanced)\"];\n    F --> G;\n    G --> H[\"Step 5: Generate Final Response\"];\n    H --> I[\"End\"];\n```"
   },
   "conversation_history": {
     "description": "Historical record of past interactions in this session, in chronological order.",
-    "turns": []
+    "turns": [
+      {
+        "type": "user_task",
+        "instruction": "Summarize foo.txt"
+      },
+      {
+        "type": "function_calling",
+        "response": "read_file({\"absolute_path\": \"foo.txt\"})"
+      },
+      {
+        "type": "tool_response",
+        "instruction": "Summarize foo.txt",
+        "name": "read_file",
+        "response": {
+          "status": "succeeded",
+          "message": "File '/Users/s-age/gitrepos/pipe/foo.txt' has been added to the session references."
+        }
+      },
+      {
+        "type": "model_response",
+        "content": "The file contains the word 'foo'."
+      },
+      {
+        "type": "user_task",
+        "instruction": "Summarize foo.txt, again"
+      },
+      {
+        "type": "model_response",
+        "content": "The file contains the word 'foo'."
+      }
+    ]
   },
   "current_task": {
     "description": "The specific task that the AI sub-agent must currently execute.",
-    "instruction": "I want to create a Button component using React, Atomic Design, and Vanilla Extract"
+    "instruction": "Summarize foo.txt, again"
   },
-  "reasoning_process": "```mermaid\ngraph TD\n    A([\"Start: JSON Input\"]) --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Derive general principles behind the task (Step-Back)\"];\n    C --> D[\"Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    D --> E[\"Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context\"];\n    E --> F[\"Step 5: Based on the summarized information, think and plan for response generation\"];\n    F --> G{\"Decision: Are there any contradictions or leaps in logic?\"};\n    G -- NO --> E;\n    G -- YES --> H[\"Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)\"];\n    H --> I[\"Step 7: Generate the final response based on the plan\"];\n    I --> J{\"Decision: Does it meet the initial requirements (format/purpose)?\"};\n    J -- NO --> F;\n    J -- YES --> K([\"End: Output Response\"]);\n```"
+  "file_references": {
+    "description": "Content of files referenced in the session.",
+    "files": [
+      {
+        "path": "foo.txt",
+        "content": "foo\n"
+      }
+    ]
+  },
+  "reasoning_process": {
+    "description": "The detailed, multi-step internal thinking process...",
+    "flowchart": "```mermaid\ngraph TD\n    A([\"Start: JSON Input\"]) --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Derive general principles behind the task (Step-Back)\"];\n    C --> D[\"Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    D --> E[\"Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context\"];\n    E --> F[\"Step 5: Based on the summarized information, think and plan for response generation\"];\n    F --> G{\"Decision: Are there any contradictions or leaps in logic?\"};\n    G -- NO --> E;\n    G -- YES --> H[\"Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)\"];\n    H --> I[\"Step 7: Generate the final response based on the plan\"];\n    I --> J{\"Decision: Does it meet the initial requirements (format/purpose)?\"};\n    J -- NO --> F;\n    J -- YES --> K([\"End: Output Response\"]);\n```"
+  }
 }
+```

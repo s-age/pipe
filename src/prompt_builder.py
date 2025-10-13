@@ -91,7 +91,7 @@ class PromptBuilder:
                     try:
                         content = file_path.read_text(encoding='utf-8')
                         file_references_content.append({
-                            "path": str(file_path),
+                            "path": str(file_path.relative_to(self.project_root)),
                             "content": content
                         })
                     except Exception as e:
@@ -122,7 +122,10 @@ class PromptBuilder:
                 },
                 "roles": roles_data,
                 "file_references": file_references_content,
-                "conversation_history": history_turns,
+                "conversation_history": {
+                    "description": "Historical record of past interactions in this session, in chronological order.",
+                    "turns": history_turns
+                },
                 "current_task": current_task_turn,
                 "constraints": constraints_data,
                 "settings": self.settings

@@ -197,6 +197,9 @@ def _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, en
 
 def _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
     model_response_text = ""
+    # The index of the user_task turn just added.
+    new_turns_start_index = len(session_data_for_prompt['turns']) - 1
+
     try:
         if api_mode == 'gemini-api':
             print("\nExecuting with Gemini API...")
@@ -214,7 +217,12 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
         return
 
     session_id = args.session
-    for turn in session_data_for_prompt['turns']:
+    
+    # Get the new turns generated during this run (user_task + api_turns)
+    new_turns = session_data_for_prompt['turns'][new_turns_start_index:]
+
+    # Save only the new turns
+    for turn in new_turns:
         session_manager.add_turn_to_session(session_id, turn)
 
     final_response_data = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(session_manager.local_tz).isoformat()}

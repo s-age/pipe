@@ -31,8 +31,8 @@ class PromptBuilder:
                 content.append(path.read_text(encoding="utf-8"))
         return content
 
-    def build(self) -> dict:
-        """Builds the complete prompt object from all session components."""
+    def build(self) -> str:
+        """Builds the complete prompt object as a JSON string."""
         
         all_turns = self.session_data.get('turns', [])
         history_turns = all_turns[:-1]
@@ -41,87 +41,36 @@ class PromptBuilder:
         roles_content = self._load_roles()
 
         prompt_object = {
-            "description": "Comprehensive JSON request for an AI sub-agent...",
+            "description": "JSON object representing the entire request to the AI sub-agent. The agent's goal is to accomplish the 'current_task' based on all provided context.",
+            "main_instruction": self.settings.get('main_instruction'),
+            "hyperparameters": self._build_hyperparameters_section(),
             "session_goal": {
-                "description": "The immutable purpose and background...",
+                "description": "The immutable purpose and background for this entire conversation session.",
                 "purpose": self.session_data.get('purpose'),
                 "background": self.session_data.get('background'),
             },
+            "response_constraints": {
+                "description": "Constraints that the AI sub-agent should adhere to when generating responses. The entire response, including all content, must be generated in the specified language.",
+                "language": self.settings.get('language', 'Japanese'),
+            },
             "roles": {
-                "description": "A list of personas or role definitions...",
+                "description": "A list of personas or role definitions that the AI sub-agent should conform to.",
                 "definitions": roles_content
             },
-            "constraints": {
-                "description": "Constraints the agent must adhere to...",
-                "language": self.settings.get('language', 'English'),
-                "processing_config": {
-                    "description": "Configuration for the agent's internal processing...",
-                    "multi_step_reasoning_active": self.multi_step_reasoning_enabled
-                }
-            },
-            "main_instruction": {
-                "description": "The mandatory, high-level processing sequence...",
-                "flowchart": "```mermaid\ngraph TD\n    A[\"Start\"] --> B[\"Step 1: Identify Task from 'current_task'\"];\n    B --> C[\"Step 2: Gather Context (History & Constraints)\"];\n    C --> D[\"Step 3: Summarize Context & Plan\"];\n    D --> E{\"Decision: Does the task require external information or actions (e.g., web search, file access, URL fetching, shell commands)?\"};\n    E -- YES --> F[\"Step 4a: Execute Tool\"];\n    E -- NO --> G[\"Step 4b: Execute Thinking Process (Conditionally Advanced)\"];\n    F --> G;\n    G --> H[\"Step 5: Generate Final Response\"];\n    H --> I[\"End\"];\n```"
-            },
             "conversation_history": {
-                "description": "Historical record of past interactions...",
+                "description": "Historical record of past interactions in this session, in chronological order.",
                 "turns": history_turns
             },
             "current_task": {
                 "description": "The specific task that the AI sub-agent must currently execute.",
                 "instruction": current_task_turn.get('instruction')
-            }
+            },
+            "reasoning_process": self.settings.get('reasoning_process')
         }
+        
+        return json.dumps(prompt_object, ensure_ascii=False, indent=2)
 
-        hyperparams_from_settings = self._build_hyperparameters_section()
-        prompt_object['constraints']['hyperparameters'] = {
-            "description": "Contextual instructions to control the AI model's generation process...",
-            **hyperparams_from_settings
-        }
 
-        if self.api_mode == 'gemini-api':
-            template = self.template_env.get_template('gemini_api_prompt.j2')
-        elif self.api_mode == 'gemini-cli':
-            template = self.template_env.get_template('gemini_cli_prompt.j2')
-        else:
-            raise ValueError(f"Unknown api_mode: {self.api_mode}")
-
-        return template.render(session=prompt_object, settings=self.settings)
-
-    def build_conversation_turns_for_api(self) -> list[dict]:
-        """Builds a content list for the google-genai API from conversation turns only."""
-        contents = []
-        all_turns = self.session_data.get('turns', [])
-        for turn in all_turns:
-            role = ''
-            parts = []
-            turn_type = turn.get('type')
-
-            if turn_type == 'user_task':
-                role = 'user'
-                if text := turn.get('instruction'):
-                    parts.append({'text': text})
-
-            elif turn_type == 'model_response':
-                role = 'model'
-                if text := turn.get('content'):
-                    parts.append({'text': text})
-                if fc := turn.get('function_call'):
-                    parts.append({'function_call': fc})
-
-            elif turn_type == 'tool_response':
-                role = 'user'
-                parts.append({
-                    'function_response': {
-                        'name': turn.get('name'),
-                        'response': turn.get('response')
-                    }
-                })
-
-            if role and parts:
-                contents.append({'role': role, 'parts': parts})
-
-        return contents
 
     def _build_hyperparameters_section(self) -> dict:
         """Builds the hyperparameters section from settings."""

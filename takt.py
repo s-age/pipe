@@ -10,9 +10,10 @@ import zoneinfo
 import importlib
 
 from src.session_manager import SessionManager
-from src.gemini_api import call_gemini_api
+from src.gemini_api import call_gemini_api, load_tools
 from src.gemini_cli import call_gemini_cli
 from src.prompt_builder import PromptBuilder
+from src.token_manager import TokenManager
 
 def check_and_show_warning(project_root: Path) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
@@ -69,6 +70,7 @@ def _compress(session_manager, args):
 
 def _dry_run(settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
     print("\n--- Dry Run Mode ---")
+    token_manager = TokenManager(settings=settings)
     builder = PromptBuilder(
         settings=settings,
         session_data=session_data_for_prompt,
@@ -77,13 +79,30 @@ def _dry_run(settings, session_data_for_prompt, project_root, api_mode, enable_m
         multi_step_reasoning_enabled=enable_multi_step_reasoning
     )
     
-    prompt_obj = builder.build()
-    print(json.dumps(prompt_obj, indent=2, ensure_ascii=False))
+    full_prompt_str = builder.build()
+    conversation_contents = builder.build_conversation_turns_for_api()
+
+    api_contents = [
+        {'role': 'user', 'parts': [{'text': full_prompt_str}]},
+        {'role': 'model', 'parts': [{'text': "Understood. I will follow all instructions and context provided."}]}
+    ] + conversation_contents
+
+    tools = load_tools(project_root)
+
+    token_count = token_manager.count_tokens(api_contents, tools=tools)
+    is_within_limit, message = token_manager.check_limit(token_count)
+    print(f"Token Count: {message}")
+    if not is_within_limit:
+        print("WARNING: Prompt exceeds context window limit.")
+
+    # For dry run, we print the full api_contents to show what would be sent to the API
+    print(json.dumps(api_contents, indent=2, ensure_ascii=False))
     
     print("\n--- End of Dry Run ---")
 
 def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, local_tz, enable_multi_step_reasoning):
     model_response_text = ""
+    token_count = 0  # Initialize token_count
     while True:
         response = call_gemini_api(
             settings=settings,
@@ -93,6 +112,9 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
             api_mode=api_mode,
             multi_step_reasoning_enabled=enable_multi_step_reasoning
         )
+
+        # Capture token_count from the API call
+        token_count = response.usage_metadata.prompt_token_count + response.usage_metadata.candidates_token_count
 
         function_call = None
         try:
@@ -123,7 +145,7 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
             "timestamp": datetime.now(local_tz).isoformat()
         }
         session_data_for_prompt['turns'].append(tool_turn)
-    return model_response_text
+    return model_response_text, token_count
 
 def _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
     response = call_gemini_cli(
@@ -141,9 +163,10 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
     try:
         if api_mode == 'gemini-api':
             print("\nExecuting with Gemini API...")
-            model_response_text = _run_api(args, settings, session_data_for_prompt, project_root, api_mode, session_manager.local_tz, enable_multi_step_reasoning)
+            model_response_text, token_count = _run_api(args, settings, session_data_for_prompt, project_root, api_mode, session_manager.local_tz, enable_multi_step_reasoning)
         elif api_mode == 'gemini-cli':
             model_response_text = _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
+            token_count = None # CLI mode doesn't track token count in the same way
         else:
             print(f"Error: Unknown api_mode '{api_mode}'. Please check setting.yml", file=sys.stderr)
             return
@@ -157,7 +180,7 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
     if not session_id:
         session_id = session_manager.create_new_session(
             purpose=args.purpose, background=args.background, roles=args.roles.split(',') if args.roles else [],
-            multi_step_reasoning_enabled=enable_multi_step_reasoning
+            multi_step_reasoning_enabled=enable_multi_step_reasoning, token_count=token_count
         )
         print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}")
     else:
@@ -167,7 +190,7 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
         session_manager.add_turn_to_session(session_id, turn)
 
     final_response_data = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(session_manager.local_tz).isoformat()}
-    session_manager.add_turn_to_session(session_id, final_response_data)
+    session_manager.add_turn_to_session(session_id, final_response_data, token_count)
 
     print("--- Response Received ---")
     print(model_response_text)

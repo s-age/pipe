@@ -5,16 +5,19 @@
 {% from "main_instruction.j2" import render_main_instruction_macro %}
 {% from "conversation_history.j2" import render_conversation_history_macro %}
 {% from "current_task.j2" import render_current_task_macro %}
+{% from "file_references.j2" import render_file_references_macro %}
 {% from "advanced_reasoning_flow.j2" import render_advanced_reasoning_flow_macro %}
 {
   "description": {{ render_description_macro(session.description) }},
   "session_goal": {{ render_session_goal_macro(session.session_goal) }},
   "roles": {{ render_roles_macro(session.roles) }},
   "constraints": {{ render_constraints_macro(session.constraints) }},
-  "main_instruction": {{ render_main_instruction_macro(session.main_instruction) }},
+  "main_instruction": {{ render_main_instruction_macro() }},
   "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }},
   "current_task": {{ render_current_task_macro(session.current_task) }}
-  {% if session.multi_step_reasoning_enabled %},
-  "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.multi_step_reasoning_enabled) }}
+  {% if session.file_references %}
+  , "file_references": {{ render_file_references_macro(session.file_references) }}{% endif %}
+  {% if session.multi_step_reasoning_enabled %}
+  , "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.multi_step_reasoning_enabled) }}
   {% endif %}
 }

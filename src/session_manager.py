@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import zoneinfo
 from typing import Optional
 import os
+import sys
 
 from src.history_manager import HistoryManager
 
@@ -52,6 +53,33 @@ class SessionManager:
 
     def add_turn_to_session(self, session_id: str, turn_data: dict, token_count: Optional[int] = None):
         self.history_manager.add_turn_to_session(session_id, turn_data, token_count)
+
+    def add_references(self, session_id: str, file_paths: list[str]):
+        if not session_id:
+            # This case should ideally be handled by the CLI logic before calling.
+            return
+
+        session_data = self.history_manager.get_session(session_id)
+        if not session_data:
+            raise ValueError(f"Session ID '{session_id}' not found.")
+
+        references = session_data.get('references', [])
+        existing_paths = {ref['path'] for ref in references}
+
+        added_count = 0
+        for file_path in file_paths:
+            abs_path = os.path.abspath(file_path)
+            if not os.path.isfile(abs_path):
+                print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
+                continue
+
+            if abs_path not in existing_paths:
+                references.append({"path": abs_path, "disabled": False})
+                existing_paths.add(abs_path)
+                added_count += 1
+
+        if added_count > 0:
+            self.history_manager.update_references(session_id, references)
 
     def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0) -> str:
         return self.history_manager.create_new_session(purpose, background, roles, multi_step_reasoning_enabled, token_count)

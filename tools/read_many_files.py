@@ -1,28 +1,31 @@
 import os
 import glob as std_glob
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
+# session_manager and session_id are dynamically passed by the tool executor
 def read_many_files(
-    paths: list[str],
-    exclude: Optional[list[str]] = None,
-    include: Optional[list[str]] = None,
+    paths: List[str],
+    exclude: Optional[List[str]] = None,
+    include: Optional[List[str]] = None,
     recursive: bool = True,
     useDefaultExcludes: bool = True,
-) -> dict:
-    try:
-        all_files_content = []
-        project_root = Path(os.getcwd()) # Assuming current working directory is project root
+    session_manager=None,
+    session_id=None
+) -> Dict[str, Any]:
+    """
+    Resolves file paths based on glob patterns and adds them to the session's reference list.
+    """
+    if not session_manager or not session_id:
+        return {"error": "This tool requires an active session."}
 
-        # Define default exclusion patterns
+    try:
+        resolved_files = []
+        project_root = Path(os.getcwd())
+
         default_excludes = [
             "**/.git/**", "**/.gemini/**", "**/.pytest_cache/**", "**/__pycache__/**",
             "**/venv/**", "**/node_modules/**", "*.log", "*.tmp", "*.bak",
-            "*.pyc", "*.class", "*.jar", "*.zip", "*.tar.gz", "*.rar", "*.7z",
-            "*.exe", "*.dll", "*.so", "*.dylib", "*.o", "*.a",
-            "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.tiff", "*.webp", "*.ico",
-            "*.pdf", "*.doc", "*.docx", "*.xls", "*.xlsx", "*.ppt", "*.pptx",
-            "*.mp3", "*.mp4", "*.avi", "*.mov", "*.flv", "*.wmv", "*.mkv",
         ]
 
         final_excludes = set(exclude if exclude is not None else [])
@@ -31,49 +34,39 @@ def read_many_files(
         
         final_includes = set(include if include is not None else [])
 
-        # Process paths and glob patterns
         for pattern_or_path in paths:
-            # If it's a directory, glob all files within it
+            # Handle directory paths
             if (project_root / pattern_or_path).is_dir():
-                pattern_or_path = str(project_root / pattern_or_path / "**/*")
-            
-            # Use std_glob for pattern matching
-            for filepath_str in std_glob.glob(str(project_root / pattern_or_path), recursive=recursive):
+                pattern_to_glob = str(project_root / pattern_or_path / "**/*")
+            else:
+                pattern_to_glob = str(project_root / pattern_or_path)
+
+            for filepath_str in std_glob.glob(pattern_to_glob, recursive=recursive):
                 filepath = Path(filepath_str)
                 
-                # Check against final_excludes
-                is_excluded = False
-                for excl_pattern in final_excludes:
-                    if filepath.match(excl_pattern):
-                        is_excluded = True
-                        break
+                if not filepath.is_file():
+                    continue
+
+                is_excluded = any(filepath.match(p) for p in final_excludes)
                 if is_excluded:
                     continue
 
-                # Check against final_includes (if any are specified)
                 if final_includes:
-                    is_included = False
-                    for incl_pattern in final_includes:
-                        if filepath.match(incl_pattern):
-                            is_included = True
-                            break
+                    is_included = any(filepath.match(p) for p in final_includes)
                     if not is_included:
                         continue
+                
+                resolved_files.append(str(filepath.resolve()))
 
-                if filepath.is_file():
-                    try:
-                        content = filepath.read_text(encoding="utf-8")
-                        all_files_content.append(f"--- {filepath.relative_to(project_root)} ---{content}")
-                    except UnicodeDecodeError:
-                        # Handle non-text files by skipping or indicating
-                        all_files_content.append(f"--- {filepath.relative_to(project_root)} ---[Binary file or cannot decode]")
-                    except Exception as file_e:
-                        all_files_content.append(f"--- {filepath.relative_to(project_root)} ---[Error reading file: {file_e}]")
+        if not resolved_files:
+            return {"message": "No files found matching the criteria."}
 
-        if not all_files_content:
-            return {"content": "No files found matching the criteria."}
+        # Remove duplicates
+        unique_files = sorted(list(set(resolved_files)))
+        
+        session_manager.add_references(session_id, unique_files)
+        
+        return {"message": f"Added {len(unique_files)} files to the session references."}
 
-        separator = "\n--- End of content ---\n"
-        return {"content": separator.join(all_files_content)}
     except Exception as e:
-        return {"content": f"Error inside read_many_files tool: {str(e)}"}
+        return {"error": f"Error in read_many_files tool: {str(e)}"}

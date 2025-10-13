@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 import zoneinfo
 import importlib
+import inspect
 
 from src.session_manager import SessionManager
 from src.gemini_api import call_gemini_api, load_tools
@@ -48,8 +49,8 @@ def check_and_show_warning(project_root: Path) -> bool:
 
 
 
-def execute_tool_call(tool_call):
-    """Dynamically imports and executes a tool function."""
+def execute_tool_call(tool_call, session_manager, session_id):
+    """Dynamically imports and executes a tool function, passing context if needed."""
     tool_name = tool_call.name
     tool_args = dict(tool_call.args)
     
@@ -59,7 +60,20 @@ def execute_tool_call(tool_call):
         tool_module = importlib.import_module(f"tools.{tool_name}")
         importlib.reload(tool_module)  # Force reload to get the latest code
         tool_function = getattr(tool_module, tool_name)
-        result = tool_function(**tool_args)
+        
+        # Inspect the tool function's signature
+        sig = inspect.signature(tool_function)
+        params = sig.parameters
+        
+        # Prepare the arguments to pass
+        final_args = tool_args.copy()
+        
+        if 'session_manager' in params:
+            final_args['session_manager'] = session_manager
+        if 'session_id' in params:
+            final_args['session_id'] = session_id
+
+        result = tool_function(**final_args)
         return result
     except Exception as e:
         return {"error": f"Failed to execute tool {tool_name}: {e}"}
@@ -94,7 +108,7 @@ def _dry_run(settings, session_data_for_prompt, project_root, api_mode, enable_m
     
     print("\n--- End of Dry Run ---")
 
-def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, local_tz, enable_multi_step_reasoning):
+def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, local_tz, enable_multi_step_reasoning, session_manager, session_id):
     model_response_text = ""
     token_count = 0  # Initialize token_count
     while True:
@@ -123,19 +137,48 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
             model_response_text = response.text
             break
 
+        # Format the function call into a readable string
+        args_json_string = json.dumps(dict(function_call.args), ensure_ascii=False)
+        response_string = f"{function_call.name}({args_json_string})"
+
         model_turn = {
-            "type": "model_response",
-            "function_call": {'name': function_call.name, 'args': dict(function_call.args)},
+            "type": "function_calling",
+            "response": response_string,
             "timestamp": datetime.now(local_tz).isoformat()
         }
         session_data_for_prompt['turns'].append(model_turn)
 
-        tool_result = execute_tool_call(function_call)
+        tool_result = execute_tool_call(function_call, session_manager, session_id)
         
+        # After a tool call, session data on disk (like references) might have changed.
+        # We need to update our in-memory session_data_for_prompt to reflect those changes
+        # before building the next prompt.
+        reloaded_session_data = session_manager.history_manager.get_session(session_id)
+        if reloaded_session_data:
+            # Update references if they exist in the reloaded data
+            if 'references' in reloaded_session_data:
+                session_data_for_prompt['references'] = reloaded_session_data['references']
+            # Potentially update other session state modified by tools in the future
+
+        # Reformat the tool_result to include a status
+        if isinstance(tool_result, dict) and 'error' in tool_result:
+            formatted_response = {
+                "status": "failed",
+                "message": tool_result['error']
+            }
+        else:
+            # Assumes success if no error key is present.
+            # The message can be a string or a dict.
+            message_content = tool_result.get('message') if isinstance(tool_result, dict) else tool_result
+            formatted_response = {
+                "status": "succeeded",
+                "message": message_content
+            }
+
         tool_turn = {
             "type": "tool_response",
             "name": function_call.name,
-            "response": tool_result,
+            "response": formatted_response,
             "timestamp": datetime.now(local_tz).isoformat()
         }
         session_data_for_prompt['turns'].append(tool_turn)
@@ -157,7 +200,7 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
     try:
         if api_mode == 'gemini-api':
             print("\nExecuting with Gemini API...")
-            model_response_text, token_count = _run_api(args, settings, session_data_for_prompt, project_root, api_mode, session_manager.local_tz, enable_multi_step_reasoning)
+            model_response_text, token_count = _run_api(args, settings, session_data_for_prompt, project_root, api_mode, session_manager.local_tz, enable_multi_step_reasoning, session_manager, args.session)
         elif api_mode == 'gemini-cli':
             model_response_text = _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
             token_count = None # CLI mode doesn't track token count in the same way
@@ -171,15 +214,6 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
         return
 
     session_id = args.session
-    if not session_id:
-        session_id = session_manager.create_new_session(
-            purpose=args.purpose, background=args.background, roles=args.roles.split(',') if args.roles else [],
-            multi_step_reasoning_enabled=enable_multi_step_reasoning, token_count=token_count
-        )
-        print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}")
-    else:
-        print(f"Conductor Agent: Continuing session: {session_id}")
-
     for turn in session_data_for_prompt['turns']:
         session_manager.add_turn_to_session(session_id, turn)
 
@@ -244,12 +278,26 @@ def main():
             instruction=args.instruction,
             local_tz=session_manager.local_tz
         )
-        
-
 
         if args.dry_run:
             _dry_run(settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
             return
+
+        # If not a dry run, proceed with session creation/continuation and execution
+        if not session_id:
+            # Create new session first if it doesn't exist
+            if not all([args.purpose, args.background]):
+                raise ValueError("A new session requires --purpose and --background for the first instruction.")
+            session_id = session_manager.create_new_session(
+                purpose=args.purpose,
+                background=args.background,
+                roles=roles,
+                multi_step_reasoning_enabled=enable_multi_step_reasoning
+            )
+            args.session = session_id # Ensure args is updated for subsequent calls
+            print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}")
+        else:
+            print(f"Conductor Agent: Continuing session: {session_id}")
 
         _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
 

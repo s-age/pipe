@@ -1,4 +1,4 @@
-{% macro render_main_instruction_macro(data) %}{
-  "description": {{ data.description | tojson }},
-  "flowchart": {{ data.flowchart | tojson }}
+{% macro render_main_instruction_macro() %}{
+  "description": "When you receive JSON data, process your thoughts according to the following",
+  "flowchart": "```mermaid\ngraph TD\n    A[\"Start: JSON Input\"] --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    C --> D[\"Step 3: Integrate extracted task instructions and historical information, then summarize the current context\"];\n    D --> E[\"Step 4: Based on the summarized information, think and plan for response generation\"];\n    E --> F[\"Step 5: Generate final response based on the plan\"];\n    F --> G[\"End: Output Response\"];\n```"
 }{% endmacro %}

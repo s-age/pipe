@@ -1,4 +1,12 @@
-{% macro render_current_task_macro(data) %}{
-  "description": {{ "The specific task that the AI sub-agent must currently execute." | tojson }},
-  "instruction": {{ data.instruction | tojson }}
-}{% endmacro %}
+{% macro render_current_task_macro(data) %}
+{
+  {% if data.type == 'tool_response' %}
+    "description": "The result of a tool execution that the AI sub-agent must process.",
+    "tool_name": {{ data.name | tojson }},
+    "tool_response": {{ data.response | tojson }}
+  {% else %}
+    "description": "The specific task that the AI sub-agent must currently execute.",
+    "instruction": {{ data.instruction | tojson if data.instruction is defined else 'null' }}
+  {% endif %}
+}
+{% endmacro %}

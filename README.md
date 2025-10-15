@@ -41,6 +41,8 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
   * **Safe Operations:** Automatic backups are created before any edit or compression operation.
   * **Language Support:** Allows specifying the language for agent responses.
   * **YOLO Mode:** Automatically accept all actions (aka YOLO mode, see [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0) for more details).
+  * **In-Session Todos:** Manage a simple todo list directly within the session's metadata. Todos can be created, updated, and deleted via tools, and are displayed in the Web UI, making it easy to track subtasks for a larger goal.
+  * **Agent-driven History Compression:** Delegate the task of compressing long conversation histories to a specialized `Compresser` agent. This agent can be instructed to perform partial compression on any session, using policies like turn range, must-keep information, and target length to maintain context while saving tokens.
 
 -----
 
@@ -114,6 +116,26 @@ This is for **advanced AI system builders** leveraging **pipe's** full context c
 ```bash
 Act as @roles/conductor.md python3 takt.py --session <SESSION_ID> --instruction "Now, add a state for loading."
 ```
+
+### 4. Route 4: Agent-driven Workflows (Compression Example)
+
+The `pipe` framework is designed to support not just human-driven tasks, but also agent-driven meta-tasks like history management. The `Compresser` agent is a prime example.
+
+| Use Case | Description |
+| :--- | :--- |
+| **Surgical Compression** | Start a new session and assign the `roles/compresser.md` role. You can then instruct this agent to compress parts of *any other session*. |
+| **Controlled Summarization** | Guide the agent by providing the target `SESSION_ID`, a `START` and `END` turn, a `policy` (what information to keep), and a `target length`. |
+
+**Example (Starting a Compression Session):**
+
+```bash
+# Start a new session to manage other sessions
+python3 takt.py --purpose "Compress a long-running session" --role "roles/compresser.md" --instruction "I want to compress session <TARGET_SESSION_ID>."
+```
+
+The agent will then interactively ask for the required parameters (turn range, policy, etc.) to perform the compression safely.
+
+> **[WARNING]** When using the `Compresser` agent, especially for the first time, it is wise to verify the quality of the generated summary. A good practice is to ask the agent a follow-up question like, "Does this summary feel natural and preserve the key context?" This helps prevent context drift or the loss of critical information.
 
 ## Dry Run Output Example
 

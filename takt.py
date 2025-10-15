@@ -70,7 +70,7 @@ def execute_tool_call(tool_call, session_manager, session_id):
         
         if 'session_manager' in params:
             final_args['session_manager'] = session_manager
-        if 'session_id' in params:
+        if 'session_id' in params and 'session_id' not in tool_args:
             final_args['session_id'] = session_id
 
         result = tool_function(**final_args)

@@ -24,8 +24,8 @@
         .turn-header { font-weight: bold; margin-bottom: 5px; text-transform: capitalize; color: #6c757d; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center; }
         .user_task { background-color: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
         .model_response, .function_calling, .tool_response { background-color: #ffffff; align-self: flex-start; border-bottom-left-radius: 2px; }
-        .condensed_history { background-color: #fffbe6; align-self: center; border-left: 4px solid #ffc107; }
-        .model_response .turn-content, .condensed_history .turn-content { padding: 1px 15px; } /* Padding for markdown */
+        .compressed_history { background-color: #fffbe6; align-self: center; width: 90%; border-left: 4px solid #ffc107; }
+        .model_response .turn-content, .compressed_history .turn-content { padding: 1px 15px; } /* Padding for markdown */
         pre, textarea { background-color: transparent; padding: 0; border-radius: 0; border: none; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; width: 100%; min-height: auto; }
         .turn-content { margin-top: 5px; }
         .turn-content p { margin: 0; }
@@ -100,16 +100,16 @@
         <section id="turns-list-section" style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
             {% for turn in turns %}
                 <div class="turn {{ turn.type }}" id="turn-{{ loop.index0 }}">
-                    <div class="turn-header">
-                        <span>
-                            {% if turn.type == 'user_task' %}You
-                            {% elif turn.type == 'model_response' %}Model
-                            {% elif turn.type == 'function_calling' %}Function Calling
-                            {% elif turn.type == 'tool_response' %}Tool Response
-                            {% else %}Unknown{% endif %}
-                            <span style="font-weight: normal; color: #999; margin-left: 10px;">{{ turn.timestamp.split('T')[1].split('.')[0] if turn.timestamp else '' }}</span>
-                        </span>
-                        <div class="turn-header-controls">
+                                            <div class="turn-header">
+                                            <span>
+                                                <strong style="color: #007bff; margin-right: 10px;">{{ session_data.turns|length - loop.index0 }}:</strong>
+                                                                            {% if turn.type == 'user_task' %}You
+                                                                            {% elif turn.type == 'model_response' %}Model
+                                                                            {% elif turn.type == 'function_calling' %}Function Calling
+                                                                            {% elif turn.type == 'tool_response' %}Tool Response
+                                                                            {% elif turn.type == 'compressed_history' %}Compressed
+                                                                            {% else %}Unknown{% endif %}                                                <span style="font-weight: normal; color: #999; margin-left: 10px;">{{ turn.timestamp.replace('T', ' ').split('.')[0] if turn.timestamp else '' }}</span>
+                                            </span>                        <div class="turn-header-controls">
                             <button class="action-btn copy-turn-btn" data-turn-index="{{ loop.index0 }}">Copy</button>
                             <button class="action-btn edit-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}" data-turn-type="{{ turn.type }}">Edit</button>
                             <button class="action-btn delete-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}">Delete</button>
@@ -118,8 +118,8 @@
                     <div class="turn-content">
                         {% if turn.type == 'user_task' %}
                             <pre class="editable" data-field="instruction">{{ turn.instruction }}</pre>
-                        {% elif turn.type == 'model_response' or turn.type == 'condensed_history' %}
-                            {% if turn.type == 'condensed_history' %}<p><strong><em>-- History Condensed --</em></strong></p>{% endif %}
+                        {% elif turn.type == 'model_response' or turn.type == 'compressed_history' %}
+                            {% if turn.type == 'compressed_history' %}<p><strong><em>-- History Compressed --</em></strong></p>{% endif %}
                             <div class="raw-markdown" style="display: none;">{{ turn.content }}</div>
                             <div class="rendered-markdown markdown-body editable" data-field="content"></div>
                         {% elif turn.type == 'function_calling' %}
@@ -189,7 +189,6 @@
             <section style="flex: 1; box-sizing: border-box;">
                 <h3>Session Control</h3>
                 <div class="session-actions">
-                    <button class="action-btn compress-btn" data-session-id="{{ current_session_id }}">Compress Session</button>
                     <button class="action-btn delete-session-btn" data-session-id="{{ current_session_id }}">Delete Session</button>
                 </div>
             </section>
@@ -238,7 +237,7 @@
             }
 
             function renderMarkdown() {
-                document.querySelectorAll('.model_response .turn-content, .condensed_history .turn-content').forEach(contentElement => {
+                document.querySelectorAll('.model_response .turn-content, .compressed_history .turn-content').forEach(contentElement => {
                     const rawMarkdownDiv = contentElement.querySelector('.raw-markdown');
                     const renderedMarkdownDiv = contentElement.querySelector('.rendered-markdown');
                     if (rawMarkdownDiv && renderedMarkdownDiv && window.marked) {
@@ -322,9 +321,9 @@
                 });
             });
 
-            document.querySelectorAll('.compress-btn, .delete-session-btn, .send-instruction-btn').forEach(button => {
+            document.querySelectorAll('.delete-session-btn, .send-instruction-btn').forEach(button => {
                 button.addEventListener('click', function() {
-                    const actionMap = { 'compress-btn': compressSession, 'delete-session-btn': deleteSession, 'send-instruction-btn': sendInstruction };
+                    const actionMap = { 'delete-session-btn': deleteSession, 'send-instruction-btn': sendInstruction };
                     const action = Object.keys(actionMap).find(cls => this.classList.contains(cls));
                     if(action) actionMap[action](this.dataset.sessionId);
                 });
@@ -344,24 +343,6 @@
                     .then(handleResponse)
                     .then(data => data.success ? (window.location.href = '/') : Promise.reject(new Error(data.message)))
                     .catch(handleError);
-            }
-
-            function compressSession(sessionId) {
-                if (!confirm('Are you sure you want to compress this session?')) return;
-                const turnsColumn = document.getElementById('turns-column');
-                const originalHtml = turnsColumn.innerHTML;
-                turnsColumn.innerHTML = '<h1>Compressing session...</h1><p>Please wait.</p>';
-
-                fetch(`/api/session/${sessionId}/compress`, { method: 'POST' })
-                    .then(handleResponse)
-                    .then(data => {
-                        if (data.success) window.location.reload();
-                        else Promise.reject(new Error(data.message));
-                    })
-                    .catch(error => {
-                        turnsColumn.innerHTML = originalHtml;
-                        handleError(error);
-                    });
             }
 
             function toggleEdit(editButton, sessionId, turnIndex, turnType) {

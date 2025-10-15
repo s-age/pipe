@@ -288,5 +288,53 @@
       "properties": {},
       "required": []
     }
+  },
+  {
+    "name": "read_session_turns",
+    "description": "Reads a specified range of turns from a target session's history.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "session_id": {
+          "type": "STRING",
+          "description": "The ID of the session to read from."
+        },
+        "start_turn": {
+          "type": "NUMBER",
+          "description": "The starting turn index to read."
+        },
+        "end_turn": {
+          "type": "NUMBER",
+          "description": "The ending turn index to read."
+        }
+      },
+      "required": ["session_id", "start_turn", "end_turn"]
+    }
+  },
+  {
+    "name": "replace_session_turns",
+    "description": "Replaces a specified range of turns in a target session's history with a summary.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "session_id": {
+          "type": "STRING",
+          "description": "The ID of the session to modify."
+        },
+        "start_turn": {
+          "type": "NUMBER",
+          "description": "The starting turn index of the range to replace."
+        },
+        "end_turn": {
+          "type": "NUMBER",
+          "description": "The ending turn index of the range to replace."
+        },
+        "summary": {
+          "type": "STRING",
+          "description": "The summary text to replace the turns with."
+        }
+      },
+      "required": ["session_id", "start_turn", "end_turn", "summary"]
+    }
   }
 ]

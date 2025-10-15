@@ -17,12 +17,9 @@ def write_file(file_path: str, content: str) -> Dict[str, Any]:
             project_root / ".env",
             project_root / "setting.yml",
             project_root / "__pycache__",
-            project_root / "tools.json",
             project_root / "roles",
             project_root / "rules",
             project_root / "sessions",
-            project_root / "src",
-            project_root / "templates",
             project_root / "venv",
             # Add other sensitive files/directories as needed
         ]

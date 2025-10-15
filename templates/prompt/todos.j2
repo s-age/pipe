@@ -1,0 +1,13 @@
+{% macro render_todos_macro(todos) %}
+{
+  "todos": [
+    {% for todo in todos %}
+    {
+      "title": "{{ todo.title }}",
+      "description": "{{ todo.description }}",
+      "checked": {{ "true" if todo.checked else "false" }}
+    }{{ "," if not loop.last }}
+    {% endfor %}
+  ]
+}
+{% endmacro %}

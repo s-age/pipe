@@ -130,6 +130,7 @@ class PromptBuilder:
                 },
                 "current_task": current_task_turn,
                 "constraints": constraints_data,
+                "todos": self.session_data.get('todos', []),
                 "settings": self.settings
             }
         }

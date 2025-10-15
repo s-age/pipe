@@ -165,6 +165,23 @@
                         <strong>Multi-step Reasoning:</strong>
                         <p class="editable-meta" data-field="multi_step_reasoning_enabled">{{ "Enabled" if session_data.multi_step_reasoning_enabled else "Disabled" }}</p>
                     </div>
+                    <div class="meta-item">
+                        <strong>Todos:</strong>
+                        <button class="action-btn" id="delete-todos-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px; background-color: #dc3545;">Delete All</button>
+                        {% if session_data.todos and session_data.todos|length > 0 %}
+                            <ul id="todos-list" style="list-style: none; padding-left: 0;">
+                                {% for todo in session_data.todos %}
+                                    <li style="margin-bottom: 10px;">
+                                        <input type="checkbox" class="todo-checkbox" data-index="{{ loop.index0 }}" {% if todo.checked %}checked{% endif %} style="margin-right: 8px;">
+                                        <strong style="display: inline;">{{ todo.title }}</strong>
+                                        <p style="margin-left: 25px; color: #6c757d;">{{ todo.description }}</p>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>No todos for this session.</p>
+                        {% endif %}
+                    </div>
                 </div>
                 <button class="action-btn edit-meta-btn" data-session-id="{{ current_session_id }}">Edit Meta</button>
             </section>
@@ -527,6 +544,64 @@
 
             const newInstructionText = document.getElementById('new-instruction-text');
             if (newInstructionText) newInstructionText.focus();
+
+            document.getElementById('todos-list')?.addEventListener('change', function(event) {
+                if (event.target.classList.contains('todo-checkbox')) {
+                    const checkbox = event.target;
+                    const index = parseInt(checkbox.dataset.index, 10);
+                    const sessionId = document.getElementById('current-session-id').value;
+                    
+                    let todos = {{ session_data.todos | tojson | safe if session_data.todos else '[]' }};
+
+                    if (todos[index]) {
+                        todos[index].checked = checkbox.checked;
+                    }
+
+                    saveTodos(sessionId, todos);
+                }
+            });
+
+            function saveTodos(sessionId, todos) {
+                const payload = { todos };
+
+                fetch(`/api/session/${sessionId}/todos/edit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(handleResponse)
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+                    console.log("Todos saved successfully.");
+                })
+                .catch(error => {
+                    handleError(error);
+                });
+            }
+
+            document.getElementById('delete-todos-btn')?.addEventListener('click', function() {
+                const sessionId = this.dataset.sessionId;
+                if (confirm('Are you sure you want to delete all todos for this session?')) {
+                    deleteTodos(sessionId);
+                }
+            });
+
+            function deleteTodos(sessionId) {
+                fetch(`/api/session/${sessionId}/todos`, {
+                    method: 'DELETE'
+                })
+                .then(handleResponse)
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(handleError);
+            }
 
         }); // End DOMContentLoaded
     </script>

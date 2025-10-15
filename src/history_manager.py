@@ -120,6 +120,35 @@ class HistoryManager:
         
         self._update_index(session_id)
 
+    def update_todos(self, session_id: str, todos: list):
+        session_path = self.sessions_dir / f"{session_id}.json"
+        session_lock_path = self._get_session_lock_path(session_id)
+
+        with FileLock(session_lock_path):
+            if not session_path.exists():
+                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
+            with session_path.open("r+", encoding="utf-8") as f:
+                session_data = json.load(f)
+                session_data["todos"] = todos
+                f.seek(0)
+                json.dump(session_data, f, indent=2, ensure_ascii=False)
+                f.truncate()
+
+    def delete_todos(self, session_id: str):
+        session_path = self.sessions_dir / f"{session_id}.json"
+        session_lock_path = self._get_session_lock_path(session_id)
+
+        with FileLock(session_lock_path):
+            if not session_path.exists():
+                return
+            with session_path.open("r+", encoding="utf-8") as f:
+                session_data = json.load(f)
+                if "todos" in session_data:
+                    del session_data["todos"]
+                f.seek(0)
+                json.dump(session_data, f, indent=2, ensure_ascii=False)
+                f.truncate()
+
     def get_session(self, session_id: str) -> dict:
         session_path = self.sessions_dir / f"{session_id}.json"
         session_lock_path = self._get_session_lock_path(session_id)

@@ -200,6 +200,32 @@ def edit_session_meta_api(session_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+@app.route('/api/session/<session_id>/todos/edit', methods=['POST'])
+def edit_todos_api(session_id):
+    try:
+        data = request.get_json()
+        if 'todos' not in data:
+            return jsonify({"success": False, "message": "No todos data provided."}), 400
+
+        history_manager.update_todos(session_id, data['todos'])
+        return jsonify({"success": True, "message": f"Session {session_id} todos updated."}), 200
+    except FileNotFoundError:
+        return jsonify({"success": False, "message": "Session not found."}), 404
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route('/api/session/<session_id>/todos', methods=['DELETE'])
+def delete_todos_api(session_id):
+    try:
+        history_manager.delete_todos(session_id)
+        return jsonify({"success": True, "message": f"Todos deleted from session {session_id}."}), 200
+    except FileNotFoundError:
+        return jsonify({"success": False, "message": "Session not found."}), 404
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
 @app.route('/api/session/<session_id>/compress', methods=['POST'])
 def compress_session_api(session_id):
     try:

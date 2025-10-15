@@ -49,7 +49,7 @@ def check_and_show_warning(project_root: Path) -> bool:
 
 
 
-def execute_tool_call(tool_call, session_manager, session_id):
+def execute_tool_call(tool_call, session_manager, session_id, settings, project_root):
     """Dynamically imports and executes a tool function, passing context if needed."""
     tool_name = tool_call.name
     tool_args = dict(tool_call.args)
@@ -72,6 +72,10 @@ def execute_tool_call(tool_call, session_manager, session_id):
             final_args['session_manager'] = session_manager
         if 'session_id' in params and 'session_id' not in tool_args:
             final_args['session_id'] = session_id
+        if 'settings' in params:
+            final_args['settings'] = settings
+        if 'project_root' in params:
+            final_args['project_root'] = project_root
 
         result = tool_function(**final_args)
         return result
@@ -148,7 +152,7 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
         }
         session_data_for_prompt['turns'].append(model_turn)
 
-        tool_result = execute_tool_call(function_call, session_manager, session_id)
+        tool_result = execute_tool_call(function_call, session_manager, session_id, settings, project_root)
         
         # After a tool call, session data on disk (like references) might have changed.
         # We need to update our in-memory session_data_for_prompt to reflect those changes

@@ -9,7 +9,10 @@ def replace_session_turns(session_id: str, start_turn: int, end_turn: int, summa
         return {"error": "This tool requires an active session."}
 
     try:
-        session_manager.history_manager.replace_turn_range_with_summary(session_id, summary, start_turn, end_turn)
+        # Convert 1-based turn numbers to 0-based indices
+        start_index = start_turn - 1
+        end_index = end_turn - 1
+        session_manager.history_manager.replace_turn_range_with_summary(session_id, summary, start_index, end_index)
         return {"message": f"Successfully replaced turns {start_turn}-{end_turn} in session {session_id} with a summary."}
     except Exception as e:
         return {"error": f"Failed to replace turns in session {session_id}: {e}"}

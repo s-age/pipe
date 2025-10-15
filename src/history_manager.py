@@ -217,6 +217,50 @@ class HistoryManager:
             with session_path.open("r", encoding="utf-8") as f:
                 return json.load(f).get("turns", [])
 
+    def get_session_turns_range(self, session_id: str, start_index: int, end_index: int) -> list[dict]:
+        session_path = self.sessions_dir / f"{session_id}.json"
+        session_lock_path = self._get_session_lock_path(session_id)
+        with FileLock(session_lock_path):
+            if not session_path.exists():
+                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
+            with session_path.open("r", encoding="utf-8") as f:
+                session_data = json.load(f)
+                turns = session_data.get("turns", [])
+                if not (0 <= start_index < len(turns) and 0 <= end_index < len(turns) and start_index <= end_index):
+                    raise IndexError("Turn indices are out of range.")
+                return turns[start_index:end_index + 1]
+
+    def replace_turn_range_with_summary(self, session_id: str, summary_text: str, start_index: int, end_index: int):
+        self.backup_session(session_id)
+        session_path = self.sessions_dir / f"{session_id}.json"
+        session_lock_path = self._get_session_lock_path(session_id)
+        with FileLock(session_lock_path):
+            if not session_path.exists():
+                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
+            
+            summary_turn = {
+                "type": "compressed_history",
+                "content": summary_text,
+                "timestamp": datetime.now(self.timezone_obj).isoformat()
+            }
+
+            with session_path.open("r+", encoding="utf-8") as f:
+                session_data = json.load(f)
+                turns = session_data.get("turns", [])
+                
+                if not (0 <= start_index < len(turns) and 0 <= end_index < len(turns) and start_index <= end_index):
+                    raise IndexError("Turn indices are out of range for replacement.")
+
+                # Replace the specified range with the single summary turn
+                del turns[start_index:end_index + 1]
+                turns.insert(start_index, summary_turn)
+                
+                session_data["turns"] = turns
+                f.seek(0)
+                json.dump(session_data, f, indent=2, ensure_ascii=False)
+                f.truncate()
+        self._update_index(session_id)
+
     def edit_turn(self, session_id: str, turn_index: int, new_turn_data: dict):
         self.backup_session(session_id)
         session_path = self.sessions_dir / f"{session_id}.json"

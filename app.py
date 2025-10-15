@@ -226,21 +226,6 @@ def delete_todos_api(session_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<session_id>/compress', methods=['POST'])
-def compress_session_api(session_id):
-    try:
-        # Now, call takt.py to process the first instruction.
-        import subprocess
-        command = ['python3', 'takt.py', '--session', session_id, '--compress']
-        process = subprocess.run(
-            command, capture_output=True, text=True, check=True, encoding='utf-8'
-        )
-        return jsonify({"success": True, "message": "Session compressed successfully.", "details": process.stdout}), 200
-    except subprocess.CalledProcessError as e:
-        return jsonify({"success": False, "message": "Compression script failed.", "details": e.stderr}), 500
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-
 @app.route('/api/session/<session_id>/instruction', methods=['POST'])
 def send_instruction_api(session_id):
     try:

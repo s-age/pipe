@@ -104,6 +104,22 @@ class HistoryManager:
         
         self._update_index(session_id)
 
+    def update_turns(self, session_id: str, turns: list):
+        session_path = self.sessions_dir / f"{session_id}.json"
+        session_lock_path = self._get_session_lock_path(session_id)
+
+        with FileLock(session_lock_path):
+            if not session_path.exists():
+                raise FileNotFoundError(f"Session file for ID '{{session_id}}' not found.")
+            with session_path.open("r+", encoding="utf-8") as f:
+                session_data = json.load(f)
+                session_data["turns"] = turns
+                f.seek(0)
+                json.dump(session_data, f, indent=2, ensure_ascii=False)
+                f.truncate()
+        
+        self._update_index(session_id)
+
     def update_references(self, session_id: str, references: list):
         session_path = self.sessions_dir / f"{session_id}.json"
         session_lock_path = self._get_session_lock_path(session_id)

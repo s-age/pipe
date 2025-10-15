@@ -290,28 +290,6 @@
     }
   },
   {
-    "name": "read_session_turns",
-    "description": "Reads a specified range of turns from a target session's history.",
-    "parameters": {
-      "type": "OBJECT",
-      "properties": {
-        "session_id": {
-          "type": "STRING",
-          "description": "The ID of the session to read from."
-        },
-        "start_turn": {
-          "type": "NUMBER",
-          "description": "The starting turn index to read."
-        },
-        "end_turn": {
-          "type": "NUMBER",
-          "description": "The ending turn index to read."
-        }
-      },
-      "required": ["session_id", "start_turn", "end_turn"]
-    }
-  },
-  {
     "name": "replace_session_turns",
     "description": "Replaces a specified range of turns in a target session's history with a summary.",
     "parameters": {
@@ -323,11 +301,11 @@
         },
         "start_turn": {
           "type": "NUMBER",
-          "description": "The starting turn index of the range to replace."
+          "description": "The 1-based starting turn number of the range to replace."
         },
         "end_turn": {
           "type": "NUMBER",
-          "description": "The ending turn index of the range to replace."
+          "description": "The 1-based ending turn number of the range to replace."
         },
         "summary": {
           "type": "STRING",
@@ -335,6 +313,50 @@
         }
       },
       "required": ["session_id", "start_turn", "end_turn", "summary"]
+    }
+  },
+  {
+    "name": "create_verified_summary",
+    "description": "Creates and verifies a summary of a turn range from a session. It generates a summary and then has a sub-agent review it for quality before returning.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "session_id": {
+          "type": "STRING",
+          "description": "The ID of the session to compress."
+        },
+        "start_turn": {
+          "type": "NUMBER",
+          "description": "The 1-based starting turn number of the range to summarize."
+        },
+        "end_turn": {
+          "type": "NUMBER",
+          "description": "The 1-based ending turn number of the range to summarize."
+        },
+        "policy": {
+          "type": "STRING",
+          "description": "Instructions on what information is important to keep in the summary."
+        },
+        "target_length": {
+          "type": "NUMBER",
+          "description": "The desired approximate length of the summary in characters."
+        }
+      },
+      "required": ["session_id", "start_turn", "end_turn", "policy", "target_length"]
+    }
+  },
+  {
+    "name": "delete_session",
+    "description": "Deletes a specified session, including its session file and any backups.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "session_id": {
+          "type": "STRING",
+          "description": "The ID of the session to delete."
+        }
+      },
+      "required": ["session_id"]
     }
   }
 ]

@@ -110,9 +110,14 @@
                                                                             {% elif turn.type == 'compressed_history' %}Compressed
                                                                             {% else %}Unknown{% endif %}                                                <span style="font-weight: normal; color: #999; margin-left: 10px;">{{ turn.timestamp.replace('T', ' ').split('.')[0] if turn.timestamp else '' }}</span>
                                             </span>                        <div class="turn-header-controls">
+                            {% if turn.type == 'model_response' %}
+                            <button class="action-btn fork-btn" data-session-id="{{ current_session_id }}" data-fork-index="{{ (session_data.turns|length - 1) - loop.index0 }}">Fork</button>
+                            {% endif %}
                             <button class="action-btn copy-turn-btn" data-turn-index="{{ loop.index0 }}">Copy</button>
+                            {% if expert_mode %}
                             <button class="action-btn edit-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}" data-turn-type="{{ turn.type }}">Edit</button>
                             <button class="action-btn delete-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}">Delete</button>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="turn-content">
@@ -231,6 +236,21 @@
                 return response.json();
             }
 
+            function forkSession(sessionId, forkIndex) {
+                if (!confirm(`Are you sure you want to fork this session at turn index ${forkIndex}?`)) return;
+
+                fetch(`/api/session/${sessionId}/fork/${forkIndex}`, { method: 'POST' })
+                    .then(handleResponse)
+                    .then(data => {
+                        if (data.success && data.new_session_id) {
+                            window.location.href = `/session/${data.new_session_id}`;
+                        } else {
+                            throw new Error(data.message || 'Failed to fork session.');
+                        }
+                    })
+                    .catch(handleError);
+            }
+
             function handleError(error) {
                 console.error('Error:', error);
                 alert('An error occurred: ' + error.message);
@@ -280,6 +300,14 @@
                 button.addEventListener('click', function() {
                     const { sessionId, turnIndex } = this.dataset;
                     deleteTurn(sessionId, parseInt(turnIndex));
+                });
+            });
+
+            document.querySelectorAll('.fork-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const sessionId = this.dataset.sessionId;
+                    const forkIndex = this.dataset.forkIndex;
+                    forkSession(sessionId, parseInt(forkIndex));
                 });
             });
 

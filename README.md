@@ -32,17 +32,20 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
   * **Session-Based History:** Each conversation is a self-contained session, stored in a single, human-readable JSON file.
   * **Structured JSON Prompting:** Builds a detailed, self-describing JSON object as the final prompt, providing meta-context to the model for improved clarity.
   * **CLI-Driven Workflow:** A powerful command-line interface to start, continue, or compress sessions.
-  * **Extensible Backend:** Defaults to `gemini-cli`, but the architecture allows for swapping out the execution agent.
-  *   **Configuration via YAML:** Configure model, context limits, and other settings in `setting.yml`.
-      *   **`api_mode` Setting:** Specifies the backend API to use. Set to `gemini-api` for direct API calls or `gemini-cli` to use the `gemini-cli` command-line tool. Example: `api_mode: gemini-api` `api_mode: gemini-api`
+  * **Extensible Backend:** The execution agent is decoupled. You can choose between `gemini-api` (direct API calls) and `gemini-cli` (CLI tool) via the `api_mode` setting in `setting.yml`. The architecture allows for swapping in other execution agents as well.
+  * **Configuration via YAML:** Configure model, context limits, and other settings in `setting.yml`.
   * **Token-Aware:** Calculates token count for each prompt and warns before exceeding limits.
   * **Dry Run Mode:** A `--dry-run` flag to inspect the final JSON prompt before sending it to the API.
-  * **Web UI for Management:** The Web UI allows you to view a list of past conversation sessions and browse the detailed conversation history (turns) for each session. You can also intuitively perform management operations such as starting new chat sessions, deleting unnecessary sessions, editing the content of specific turns, and compressing sessions to reduce token count. Furthermore, you can send new instructions to existing sessions to continue the conversation. Metadata such as session purpose and background can also be edited.
+  * **Web UI for Management:** A comprehensive web interface to manage the entire lifecycle of a conversation.
   * **Safe Operations:** Automatic backups are created before any edit or compression operation.
   * **Language Support:** Allows specifying the language for agent responses.
   * **YOLO Mode:** Automatically accept all actions (aka YOLO mode, see [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0) for more details).
-  * **In-Session Todos:** Manage a simple todo list directly within the session's metadata. Todos can be created, updated, and deleted via tools, and are displayed in the Web UI, making it easy to track subtasks for a larger goal.
-  * **Agent-driven History Compression:** Delegate the task of compressing long conversation histories to a specialized `Compresser` agent. This agent can be instructed to perform partial compression on any session, using policies like turn range, must-keep information, and target length to maintain context while saving tokens.
+  * **In-Session Todos:** Manage a simple todo list directly within the session's metadata.
+  * **Advanced Agent-driven Compression:**
+    *   A specialized `Compresser` agent can perform **partial compression** on any session's history.
+    *   Precisely control the compression by specifying a **turn range**, a **summarization policy** (what to keep), and a **target character count**.
+    *   Before applying the compression, a `Reviewer` agent automatically **verifies** that the summarized history maintains a natural conversational flow, preventing context loss.
+  * **Turn-based Forking:** Easily fork a conversation from any specific turn. This allows you to explore alternative responses from the LLM or test different instructions without altering the original history, enabling robust validation and experimentation.
 
 -----
 
@@ -88,6 +91,7 @@ This is best for users seeking **intuitive visual management** and **direct mani
 | Use Case | Description |
 | :--- | :--- |
 | **View/Edit History** | Browse detailed session histories; surgically edit specific turns or session metadata (purpose/background). |
+| **Fork from Turn** | Easily **fork** a conversation from any specific turn to test alternative instructions or validate different LLM responses without altering the original flow. |
 | **Continue Sessions** | Use form inputs to send new instructions to existing sessions. |
 | **Management** | Intuitively start new sessions, compress history, or delete unnecessary sessions via a graphical interface. |
 
@@ -117,14 +121,16 @@ This is for **advanced AI system builders** leveraging **pipe's** full context c
 Act as @roles/conductor.md python3 takt.py --session <SESSION_ID> --instruction "Now, add a state for loading."
 ```
 
-### 4. Route 4: Agent-driven Workflows (Compression Example)
+### 4. Route 4: Agent-driven Workflows (Compression & Verification)
 
-The `pipe` framework is designed to support not just human-driven tasks, but also agent-driven meta-tasks like history management. The `Compresser` agent is a prime example.
+The `pipe` framework supports agent-driven meta-tasks like history management. The `Compresser` and `Reviewer` agents work in tandem to ensure both efficiency and quality.
 
-| Use Case | Description |
-| :--- | :--- |
-| **Surgical Compression** | Start a new session and assign the `roles/compresser.md` role. You can then instruct this agent to compress parts of *any other session*. |
-| **Controlled Summarization** | Guide the agent by providing the target `SESSION_ID`, a `START` and `END` turn, a `policy` (what information to keep), and a `target length`. |
+| Step | Agent | Use Case | Description |
+| :--- | :--- | :--- | :--- |
+| **1. Initiate** | `Compresser` | Surgical Compression | Start a new session and assign the `roles/compresser.md` role. Instruct this agent to compress parts of *any other session*. |
+| **2. Specify** | `Compresser` | Controlled Summarization | Guide the agent by providing the target `SESSION_ID`, a `START` and `END` turn, a `policy` (what to keep), and a `target length`. |
+| **3. Verify** | `Reviewer` | Quality Assurance | Before applying the summary, the `Reviewer` agent is automatically invoked to check if the compressed history flows naturally and preserves key context. |
+| **4. Apply** | `Compresser` | Finalize Compression | Once the verification is passed, the agent replaces the specified turn range with the generated summary. |
 
 **Example (Starting a Compression Session):**
 
@@ -133,9 +139,36 @@ The `pipe` framework is designed to support not just human-driven tasks, but als
 python3 takt.py --purpose "Compress a long-running session" --role "roles/compresser.md" --instruction "I want to compress session <TARGET_SESSION_ID>."
 ```
 
-The agent will then interactively ask for the required parameters (turn range, policy, etc.) to perform the compression safely.
+The agent will then interactively guide you through the specification and verification process to perform the compression safely.
 
-> **[WARNING]** When using the `Compresser` agent, especially for the first time, it is wise to verify the quality of the generated summary. A good practice is to ask the agent a follow-up question like, "Does this summary feel natural and preserve the key context?" This helps prevent context drift or the loss of critical information.
+### Compression & Verification Workflow
+
+```mermaid
+graph TD
+    subgraph "Design Phase (Turns 1-50)"
+        A["User starts conversation about design (Turns 1-50)"] --> B["Design context accumulates (including potential noise)"];
+        B --> C["User requests to compress the design phase and move to implementation"];
+    end
+
+    subgraph "Compression Gate"
+        C --> D("1. Compresser Agent starts");
+        D --> E{"Tool: read_session_turns(1-50) to load history"};
+        E --> F("2. Generate summary draft");
+        F --> G{"Tool: call create_verified_summary(Summary Draft)"};
+        G --> H("3. Verifier Agent starts");
+        H --> I{"Verifier Agent: Quality check and verification of 'Summary Draft'"};
+        I -- "NO: Critical information missing" --> F;
+        I -- "YES: Quality verified" --> J("4. Return Verified Summary to Compresser");
+        J --> K{"5. Compresser: Present Verified Summary to user for approval"};
+        K -- "User approves" --> L{"Tool: replace_session_turns(1-50, Verified Summary) to replace history"};
+        K -- "User rejects" --> M["Compression process terminated (history preserved)"];
+        L --> N("6. Compression complete: Clean context for implementation");
+    end
+
+    subgraph "Implementation Phase"
+        N --> O["User starts implementation process"];
+    end
+```
 
 ## Dry Run Output Example
 

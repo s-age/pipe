@@ -378,10 +378,14 @@ class HistoryManager:
         forked_purpose = f"Fork of: {original_data.get('purpose', 'Untitled')}"
         timestamp = datetime.now(self.timezone_obj).isoformat()
         
-        # Ensure fork_at_turn_index is valid
+        # Ensure fork_at_turn_index is valid and is a model_response
         original_turns = original_data.get('turns', [])
         if not (0 <= fork_at_turn_index < len(original_turns)):
             raise IndexError("fork_at_turn_index is out of range.")
+        
+        fork_turn = original_turns[fork_at_turn_index]
+        if fork_turn.get("type") != "model_response":
+            raise ValueError(f"Forking is only allowed from a 'model_response' turn. Turn {fork_at_turn_index + 1} is of type '{fork_turn.get('type')}'.")
 
         # Slice the history
         forked_turns = original_turns[:fork_at_turn_index + 1]

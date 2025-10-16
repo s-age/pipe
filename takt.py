@@ -3,6 +3,10 @@ import os
 import sys
 import json
 from pathlib import Path
+import warnings
+from pydantic.warnings import ArbitraryTypeWarning
+
+warnings.filterwarnings("ignore", category=ArbitraryTypeWarning)
 from src.utils import read_yaml_file
 from dotenv import load_dotenv
 from datetime import datetime, timezone

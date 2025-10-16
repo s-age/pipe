@@ -165,7 +165,8 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
             # Potentially update other session state modified by tools in the future
 
         # Reformat the tool_result to include a status
-        if isinstance(tool_result, dict) and 'error' in tool_result:
+        # Check for a meaningful error message, not just the presence of the key.
+        if isinstance(tool_result, dict) and 'error' in tool_result and tool_result['error'] != '(none)':
             formatted_response = {
                 "status": "failed",
                 "message": tool_result['error']

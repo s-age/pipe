@@ -6,6 +6,7 @@ env/
 venv/
 ENV/
 sessions/
+setting.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

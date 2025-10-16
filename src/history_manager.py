@@ -363,3 +363,56 @@ class HistoryManager:
     def _generate_hash(self, content: str) -> str:
         """Generates a SHA-256 hash for the given content."""
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    def fork_session(self, original_session_id: str, fork_at_turn_index: int) -> Optional[str]:
+        original_session_path = self.sessions_dir / f"{original_session_id}.json"
+        original_session_lock_path = self._get_session_lock_path(original_session_id)
+
+        with FileLock(original_session_lock_path):
+            if not original_session_path.exists():
+                raise FileNotFoundError(f"Original session file for ID '{{original_session_id}}' not found.")
+            with original_session_path.open("r", encoding="utf-8") as f:
+                original_data = json.load(f)
+
+        # Create a new session based on the original data
+        forked_purpose = f"Fork of: {original_data.get('purpose', 'Untitled')}"
+        timestamp = datetime.now(self.timezone_obj).isoformat()
+        
+        # Ensure fork_at_turn_index is valid
+        original_turns = original_data.get('turns', [])
+        if not (0 <= fork_at_turn_index < len(original_turns)):
+            raise IndexError("fork_at_turn_index is out of range.")
+
+        # Slice the history
+        forked_turns = original_turns[:fork_at_turn_index + 1]
+
+        # Generate a new unique ID for the forked session
+        identity_str = json.dumps({
+            "purpose": forked_purpose, 
+            "original_id": original_session_id,
+            "fork_at_turn": fork_at_turn_index,
+            "timestamp": timestamp
+        }, sort_keys=True)
+        new_session_id = self._generate_hash(identity_str)
+
+        new_session_data = {
+            "session_id": new_session_id,
+            "created_at": timestamp,
+            "purpose": forked_purpose,
+            "background": original_data.get('background', ''),
+            "roles": original_data.get('roles', []),
+            "multi_step_reasoning_enabled": original_data.get('multi_step_reasoning_enabled', False),
+            "token_count": 0, # Reset token count
+            "references": original_data.get('references', []),
+            "turns": forked_turns
+        }
+
+        new_session_path = self.sessions_dir / f"{new_session_id}.json"
+        new_session_lock_path = self._get_session_lock_path(new_session_id)
+
+        with FileLock(new_session_lock_path):
+            with new_session_path.open("w", encoding="utf-8") as f:
+                json.dump(new_session_data, f, indent=2, ensure_ascii=False)
+
+        self._update_index(new_session_id, forked_purpose, timestamp)
+        return new_session_id

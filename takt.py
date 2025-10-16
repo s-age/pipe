@@ -254,6 +254,8 @@ def _parse_arguments():
     parser.add_argument('--roles', type=str, help='Comma-separated paths to role files for the new session.')
     parser.add_argument('--instruction', type=str, help='The specific instruction for the current task.')
     parser.add_argument('--multi-step-reasoning', action='store_true', help='Include multi-step reasoning process in the prompt.')
+    parser.add_argument('--fork', type=str, metavar='SESSION_ID', help='The ID of the session to fork.')
+    parser.add_argument('--at-turn', type=int, metavar='TURN_INDEX', help='The 1-based turn number to fork from. Required with --fork.')
     
     args = parser.parse_args()
     return args, parser
@@ -279,6 +281,20 @@ def main():
 
     if args.compress:
         _compress(session_manager, args)
+
+    elif args.fork:
+        if not args.at_turn:
+            print("Error: --at-turn is required when using --fork.", file=sys.stderr)
+            sys.exit(1)
+        try:
+            # Convert 1-based turn number to 0-based index
+            fork_index = args.at_turn - 1
+            new_session_id = session_manager.history_manager.fork_session(args.fork, fork_index)
+            print(f"Successfully forked session {args.fork} at turn {args.at_turn}.")
+            print(f"New session created: {new_session_id}")
+        except (FileNotFoundError, IndexError) as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
 
     elif args.instruction:
         session_id = args.session

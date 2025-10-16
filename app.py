@@ -60,7 +60,7 @@ def index():
         key=lambda item: item[1].get('last_updated', ''),
         reverse=True
     )
-    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data={})
+    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data={}, expert_mode=settings.get('expert_mode', False))
 
 @app.route('/new_session')
 def new_session_form():
@@ -122,6 +122,8 @@ def view_session(session_id):
     token_count = session_data.get('token_count', 0)
     context_limit = settings.get('context_limit', 1000000)
 
+    expert_mode = settings.get('expert_mode', False)
+
     return render_template('html/index.html',
                            sessions=sorted_sessions,
                            current_session_id=session_id,
@@ -130,7 +132,8 @@ def view_session(session_id):
                            turns=turns,
                            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
                            token_count=token_count,
-                           context_limit=context_limit)
+                           context_limit=context_limit,
+                           expert_mode=expert_mode)
 
 # --- API Endpoints for Deletion ---
 
@@ -222,6 +225,22 @@ def delete_todos_api(session_id):
         return jsonify({"success": True, "message": f"Todos deleted from session {session_id}."}), 200
     except FileNotFoundError:
         return jsonify({"success": False, "message": "Session not found."}), 404
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route('/api/session/<session_id>/fork/<int:fork_index>', methods=['POST'])
+def fork_session_api(session_id, fork_index):
+    try:
+        new_session_id = history_manager.fork_session(session_id, fork_index)
+        if new_session_id:
+            return jsonify({"success": True, "new_session_id": new_session_id}), 200
+        else:
+            return jsonify({"success": False, "message": "Failed to fork session."}), 500
+    except FileNotFoundError:
+        return jsonify({"success": False, "message": "Session not found."}), 404
+    except IndexError:
+        return jsonify({"success": False, "message": "Fork turn index out of range."}), 400
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 

@@ -45,6 +45,7 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
     *   A specialized `Compresser` agent can perform **partial compression** on any session's history.
     *   Precisely control the compression by specifying a **turn range**, a **summarization policy** (what to keep), and a **target character count**.
     *   Before applying the compression, a `Reviewer` agent automatically **verifies** that the summarized history maintains a natural conversational flow, preventing context loss.
+    *   **Note:** This feature is currently available only when `api_mode` is set to `gemini-api`. It is not supported in `gemini-cli` mode as it requires an MCP server.
   * **Turn-based Forking:** Easily fork a conversation from any specific turn. This allows you to explore alternative responses from the LLM or test different instructions without altering the original history, enabling robust validation and experimentation.
 
 -----
@@ -92,6 +93,7 @@ This is best for users seeking **intuitive visual management** and **direct mani
 | :--- | :--- |
 | **View/Edit History** | Browse detailed session histories; surgically edit specific turns or session metadata (purpose/background). |
 | **Fork from Turn** | Easily **fork** a conversation from any specific turn to test alternative instructions or validate different LLM responses without altering the original flow. |
+| **Enable Editing** | Activate `expert_mode` in `setting.yml` to enable editing and deleting session turns directly from the Web UI. |
 | **Continue Sessions** | Use form inputs to send new instructions to existing sessions. |
 | **Management** | Intuitively start new sessions, compress history, or delete unnecessary sessions via a graphical interface. |
 
@@ -132,6 +134,8 @@ The `pipe` framework supports agent-driven meta-tasks like history management. T
 | **3. Verify** | `Reviewer` | Quality Assurance | Before applying the summary, the `Reviewer` agent is automatically invoked to check if the compressed history flows naturally and preserves key context. |
 | **4. Apply** | `Compresser` | Finalize Compression | Once the verification is passed, the agent replaces the specified turn range with the generated summary. |
 
+> **[NOTE]** The compression workflow is available only when `api_mode` is set to `gemini-api`. It is not supported in `gemini-cli` mode as it requires an MCP server.
+
 **Example (Starting a Compression Session):**
 
 ```bash
@@ -169,6 +173,29 @@ graph TD
         N --> O["User starts implementation process"];
     end
 ```
+
+### 5. Route 5: Multi-Agent Simulation (e.g., Self-Play)
+
+The true power of `pipe` is revealed in its ability to facilitate complex multi-agent simulations using nothing more than natural language. By defining roles and procedures in simple Markdown files, you can orchestrate sophisticated interactions between agents.
+
+A compelling demonstration of this is achieving a Reversi game where Gemini plays against itself. This entire simulation is orchestrated by giving a single command to a parent agent.
+
+| Use Case | Description |
+| :--- | :--- |
+| **Self-Play Simulation** | Instruct an agent to adopt a role and execute a procedure. For example, tell Gemini to act as a Reversi player and follow the game's rules. |
+| **Natural Language Programming** | The agents' behaviors are not hard-coded. They are guided entirely by the `@roles` and `@procedures` files you provide, making the system incredibly flexible. |
+
+**Execution Example (Orchestrating a Self-Play Game):**
+
+> **[IMPORTANT]** The following command is an instruction given to a parent AI agent (like Gemini), not meant for direct terminal execution.
+
+```
+Act as @roles/games/reversi_player.md and execute @procedures/reversi_game.md
+```
+
+This single line of instruction causes the agent to initiate a game of Reversi, playing against itself by following the rules and persona defined in the Markdown files. This showcases the framework's capability for complex task delegation and agent-based automation, all orchestrated through simple, human-readable text.
+
+-----
 
 ## Dry Run Output Example
 

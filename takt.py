@@ -204,7 +204,8 @@ def _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, en
         command_to_print.insert(1, '-y')
     if enable_multi_step_reasoning:
         command_to_print.append('--multi-step-reasoning')
-        response = call_gemini_cli(
+    
+    response = call_gemini_cli(
         settings=settings,
         session_data=session_data_for_prompt,
         project_root=project_root,

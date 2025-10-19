@@ -1,11 +1,12 @@
 import json
 import subprocess
 import sys
-from pathlib import Path
+import os
+
 
 from src.prompt_builder import PromptBuilder
 
-def call_gemini_cli(settings: dict, session_data: dict, project_root: Path, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool) -> str:
+def call_gemini_cli(settings: dict, session_data: dict, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool, session_id: str = None) -> str:
     model_name = settings.get('model')
     if not model_name:
         raise ValueError("'model' not found in setting.yml")
@@ -14,12 +15,17 @@ def call_gemini_cli(settings: dict, session_data: dict, project_root: Path, inst
     
     final_prompt = builder.build()
 
-    command = ['gemini', '-m', model_name, '-p', final_prompt]
+    command = ['gemini', '-m', model_name, '--debug', '-p', final_prompt]
     if settings.get('yolo', False):
         command.insert(1, '-y')
+    
+    env = os.environ.copy()
+    if session_id:
+        env['GEMINI_SESSION_ID'] = session_id
+        
     try:
         process = subprocess.run(
-            command, capture_output=True, text=True, check=True, encoding='utf-8'
+            command, capture_output=True, text=True, check=True, encoding='utf-8', env=env
         )
         model_response_text = process.stdout
         if process.stderr:

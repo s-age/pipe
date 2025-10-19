@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+
 import google.genai as genai
 from google.genai import types
 import sys
@@ -50,9 +50,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     query = sys.argv[1]
-    project_root = Path(__file__).parent.parent
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 
-    with open(project_root / "setting.yml", "r") as f:
+    with open(os.path.join(project_root, "setting.yml"), "r") as f:
         settings = yaml.safe_load(f)
 
     try:

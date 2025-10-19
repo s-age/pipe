@@ -4,10 +4,10 @@ search_model: gemini-2.5-flash
 context_limit: 1000000
 
 # API mode: 'gemini-api' for direct API calls, 'gemini-cli' for CLI interaction.
-api_mode: gemini-api
+api_mode: gemini-cli
 
 # The language hint for the model
-language: "english"
+language: "japanese"
 
 # Auto-confirm for gemini-cli. If false, the -y flag will be omitted.
 yolo: true

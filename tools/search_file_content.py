@@ -1,7 +1,7 @@
 import re
 import os
 import glob as std_glob
-from pathlib import Path
+
 from typing import Optional
 
 def search_file_content(
@@ -11,31 +11,31 @@ def search_file_content(
 ) -> dict:
     try:
         compiled_pattern = re.compile(pattern)
-        project_root = Path(os.getcwd())
+        project_root = os.getcwd()
 
         search_path = project_root
         if path:
-            abs_path = project_root / path
-            if not abs_path.is_dir():
+            abs_path = os.path.join(project_root, path)
+            if not os.path.isdir(abs_path):
                 return {"content": f"Error: Search path '{path}' is not a directory."}
             search_path = abs_path
 
         # Use glob to find files, filtered by include pattern if provided
         if include:
-            glob_pattern = str(search_path / include)
+            glob_pattern = os.path.join(search_path, include)
         else:
-            glob_pattern = str(search_path / "**/*")
+            glob_pattern = os.path.join(search_path, "**/*")
 
         matches = []
         for filepath_str in std_glob.glob(glob_pattern, recursive=True):
-            filepath = Path(filepath_str)
-            if filepath.is_file():
+            filepath = filepath_str
+            if os.path.isfile(filepath):
                 try:
                     with open(filepath, 'r', encoding='utf-8') as f:
                         for line_num, line in enumerate(f, 1):
                             if compiled_pattern.search(line):
                                 matches.append({
-                                    "file_path": str(filepath.relative_to(project_root)),
+                                    "file_path": os.path.relpath(filepath, project_root),
                                     "line_number": line_num,
                                     "line_content": line.strip()
                                 })

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "pipe_tools": {
+      "command": "python3",
+      "args": [
+        "/Users/s-age/gitrepos/pipe/mcp_server.py"
+      ]
+    }
+  }
+}

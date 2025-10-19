@@ -4,13 +4,14 @@ Builds the final prompt object to be sent to the sub-agent (LLM).
 import json
 import json5
 import sys
-from pathlib import Path
+import os
+
 from jinja2 import Environment, FileSystemLoader
 
 class PromptBuilder:
     """Constructs a structured prompt object for the LLM."""
 
-    def __init__(self, settings: dict, session_data: dict, project_root: Path, api_mode: str, multi_step_reasoning_enabled: bool = False):
+    def __init__(self, settings: dict, session_data: dict, project_root: str, api_mode: str, multi_step_reasoning_enabled: bool = False):
         self.settings = settings
         self.session_data = session_data
         self.project_root = project_root
@@ -19,7 +20,7 @@ class PromptBuilder:
 
         # Initialize Jinja2 environment
         self.template_env = Environment(
-            loader=FileSystemLoader(self.project_root / 'templates' / 'prompt'),
+            loader=FileSystemLoader(os.path.join(self.project_root, 'templates', 'prompt')),
             trim_blocks=True,
             lstrip_blocks=True
         )
@@ -30,9 +31,10 @@ class PromptBuilder:
         """Loads content from role definition files."""
         content = []
         for rel_path in self.session_data.get('roles', []):
-            path = self.project_root / rel_path.strip()
-            if path.is_file():
-                content.append(path.read_text(encoding="utf-8"))
+            path = os.path.join(self.project_root, rel_path.strip())
+            if os.path.isfile(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    content.append(f.read())
         return content
 
     def _build_hyperparameters_section(self) -> dict:
@@ -88,12 +90,13 @@ class PromptBuilder:
         references = self.session_data.get('references', [])
         for ref in references:
             if not ref.get('disabled', False):
-                file_path = Path(ref.get('path'))
-                if file_path.is_file():
+                file_path = ref.get('path')
+                if os.path.isfile(file_path):
                     try:
-                        content = file_path.read_text(encoding='utf-8')
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            content = f.read()
                         file_references_content.append({
-                            "path": str(file_path.relative_to(self.project_root)),
+                            "path": os.path.relpath(file_path, self.project_root),
                             "content": content
                         })
                     except Exception as e:

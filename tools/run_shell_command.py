@@ -1,6 +1,6 @@
 import subprocess
 import os
-from pathlib import Path
+
 from typing import Optional
 
 def run_shell_command(
@@ -10,15 +10,15 @@ def run_shell_command(
 ) -> dict:
     try:
         # Determine the directory to run the command in
-        if directory:
-            # Ensure the provided directory is within the project root for safety
-            project_root = Path(os.getcwd())
-            abs_directory = project_root / directory
-            if not abs_directory.is_dir() or not abs_directory.is_relative_to(project_root):
-                return {"error": f"Invalid or unsafe directory: {directory}"}
-            cwd = abs_directory
-        else:
-            cwd = Path(os.getcwd())
+    if directory:
+        target_directory = os.path.abspath(directory)
+        if not os.path.isdir(target_directory):
+            return {"error": f"Directory does not exist: {directory}"}
+        if not target_directory.startswith(project_root + os.sep):
+            return {"error": f"Running commands outside project root is not allowed: {directory}"}
+        cwd = target_directory
+    else:
+        cwd = project_root
 
         # Execute the command
         process = subprocess.run(

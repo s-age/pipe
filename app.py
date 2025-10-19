@@ -1,30 +1,31 @@
 from flask import Flask, render_template, abort, jsonify, request
-from pathlib import Path
+
 import sys
 import yaml
 from src.history_manager import HistoryManager
 import os
 
-def check_and_show_warning(project_root: Path) -> bool:
+def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
-    sealed_path = project_root / "sealed.txt"
-    unsealed_path = project_root / "unsealed.txt"
+    sealed_path = os.path.join(project_root, "sealed.txt")
+    unsealed_path = os.path.join(project_root, "unsealed.txt")
 
-    if unsealed_path.exists():
+    if os.path.exists(unsealed_path):
         return True  # Already agreed
 
-    if not sealed_path.exists():
+    if not os.path.exists(sealed_path):
         return True  # No warning file, proceed
 
     print("--- IMPORTANT NOTICE ---")
-    print(sealed_path.read_text(encoding="utf-8"))
+    with open(sealed_path, "r", encoding="utf-8") as f:
+        print(f.read())
     print("------------------------")
 
     while True:
         try:
             response = input("Do you agree to the terms above? (yes/no): ").lower().strip()
             if response == "yes":
-                sealed_path.rename(unsealed_path)
+                os.rename(sealed_path, unsealed_path)
                 print("Thank you. Proceeding...")
                 return True
             elif response == "no":
@@ -36,17 +37,17 @@ def check_and_show_warning(project_root: Path) -> bool:
             print("\nOperation cancelled. Exiting.")
             return False
 
-def load_settings(config_path: Path) -> dict:
-    if config_path.exists():
-        with config_path.open('r', encoding='utf-8') as f:
+def load_settings(config_path: str) -> dict:
+    if os.path.exists(config_path):
+        with open(config_path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
     return {}
 
 app = Flask(__name__)
-project_root = Path(__file__).parent
-config_path = project_root / 'setting.yml'
+project_root = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(project_root, 'setting.yml')
 settings = load_settings(config_path)
-history_manager = HistoryManager(project_root / 'sessions')
+history_manager = HistoryManager(os.path.join(project_root, 'sessions'))
 
 @app.route('/')
 def index():
@@ -276,7 +277,7 @@ def send_instruction_api(session_id):
 
 
 if __name__ == '__main__':
-    project_root_for_check = Path(__file__).parent
+    project_root_for_check = os.path.dirname(os.path.abspath(__file__))
     if check_and_show_warning(project_root_for_check):
         app.run(host='0.0.0.0', port=5001, debug=False)
     else:

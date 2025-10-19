@@ -1,5 +1,5 @@
 import json
-from pathlib import Path
+
 from datetime import datetime, timezone
 import zoneinfo
 from typing import Optional
@@ -9,7 +9,7 @@ import sys
 from src.history_manager import HistoryManager
 
 class SessionManager:
-    def __init__(self, sessions_dir: Path):
+    def __init__(self, sessions_dir: str):
         tz_name = os.getenv('TIMEZONE', 'UTC')
         try:
             self.local_tz = zoneinfo.ZoneInfo(tz_name)

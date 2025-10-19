@@ -1,10 +1,14 @@
 import json
 import subprocess
+import sys
+import os
 from typing import Dict, Any
 from src.gemini_api import call_gemini_api
+from src.gemini_cli import call_gemini_cli
+from tools.verify_summary import verify_summary
 
 def create_verified_summary(
-    session_id: str,
+    session_id: str, # This is the ID of the session to be summarized.
     start_turn: int,
     end_turn: int,
     policy: str,
@@ -14,20 +18,17 @@ def create_verified_summary(
     session_manager=None
 ) -> Dict[str, Any]:
     """
-    Creates a verified summary of a range of turns from a target session.
-    It internally generates a summary, then creates a new persistent session 
-    to have a sub-agent verify it, and returns the verification result
-    along with the verifier's session ID.
+    Generates a summary and then calls the verify_summary tool to perform
+    verification and handle subsequent actions.
     """
+    api_mode = settings.get('api_mode', 'gemini-api')
     if not session_manager:
         return {"error": "This tool requires a session_manager."}
 
     try:
-        # Convert 1-based turn numbers to 0-based indices
+        # === Step 1: Generate Summary ===
         start_index = start_turn - 1
         end_index = end_turn - 1
-
-        # === Step 1: Generate Summary (1st LLM Call, ephemeral) ===
         turns_to_summarize = session_manager.history_manager.get_session_turns_range(session_id, start_index, end_index)
         if not turns_to_summarize:
             return {"error": "No turns found in the specified range."}
@@ -41,77 +42,29 @@ def create_verified_summary(
         )
         summarizer_session_data = {"turns": [{"type": "user_task", "instruction": summarizer_instruction}]}
         
-        summary_response = call_gemini_api(
-            settings=settings,
-            session_data=summarizer_session_data,
-            project_root=project_root,
-            instruction=summarizer_instruction,
-            api_mode='gemini-api',
-            multi_step_reasoning_enabled=False
-        )
-        summary_text = summary_response.text.strip()
-
-        # === Step 2: Verify Summary (2nd LLM Call, persistent session) ===
-        original_session_data = session_manager.history_manager.get_session(session_id)
-        original_turns = original_session_data.get("turns", [])
-        temp_turns = list(original_turns)
-
-        summary_turn = {
-            "type": "compressed_history",
-            "content": summary_text,
-            "original_turns_range": [start_turn, end_turn]
-        }
-        
-        if not (0 <= start_index < len(temp_turns) and 0 <= end_index < len(temp_turns) and start_index <= end_index):
-             return {"error": "Turn indices are out of range for creating verification context."}
-        
-        del temp_turns[start_index:end_index + 1]
-        temp_turns.insert(start_index, summary_turn)
-
-        verifier_purpose = f"Verify summary for session {session_id} (range {start_turn}-{end_turn})"
-        verifier_background = "A sub-agent to verify a conversation summary. The history contains the original conversation with a 'compressed_history' turn replacing the summarized part."
-        verifier_session_id = session_manager.history_manager.create_new_session(
-            purpose=verifier_purpose,
-            background=verifier_background,
-            roles=[],
-            multi_step_reasoning_enabled=True
-        )
-
-        session_manager.history_manager.update_turns(verifier_session_id, temp_turns)
-
-        verifier_instruction = (
-            "You are a verification agent. Review the conversation history provided. A portion has been replaced by a summary (marked 'compressed_history'). "
-            "Does the conversation still flow logically? Is critical information likely missing? "
-            "You MUST answer with only 'Yes' or 'No', followed by a brief explanation. 'Yes' means the summary is good."
-        )
-
-        command = [
-            'python3', 'takt.py', '--session', verifier_session_id,
-            '--instruction', verifier_instruction, '--multi-step-reasoning'
-        ]
-        process = subprocess.run(
-            command, capture_output=True, text=True, check=True, encoding='utf-8'
-        )
-        
-        verifier_turns = session_manager.history_manager.get_session_turns(verifier_session_id)
-        verification_response_text = verifier_turns[-1]['content'] if verifier_turns else ""
-        verification_text_lower = verification_response_text.strip().lower()
-
-        # === Step 3: Return Result ===
-        if verification_text_lower.startswith('yes'):
-            return {
-                "status": "approved",
-                "summary": summary_text,
-                "verification_reasoning": verification_response_text,
-                "verifier_session_id": verifier_session_id
-            }
+        if api_mode == 'gemini-api':
+            summary_response = call_gemini_api(settings=settings, session_data=summarizer_session_data, project_root=project_root, instruction=summarizer_instruction, api_mode=api_mode, multi_step_reasoning_enabled=False)
+            summary_text = summary_response.text.strip()
+        elif api_mode == 'gemini-cli':
+            summary_response = call_gemini_cli(settings=settings, session_data=summarizer_session_data, project_root=project_root, instruction=summarizer_instruction, api_mode=api_mode, multi_step_reasoning_enabled=False)
+            summary_text = summary_response.strip()
         else:
-            return {
-                "status": "rejected",
-                "summary": summary_text,
-                "verification_reasoning": verification_response_text,
-                "verifier_session_id": verifier_session_id
-            }
+            raise ValueError(f"Unsupported api_mode: {api_mode}")
+
+        # === Step 2: Call verify_summary tool to handle verification and next steps ===
+        verification_result = verify_summary(
+            session_id=session_id,
+            start_turn=start_turn,
+            end_turn=end_turn,
+            summary_text=summary_text,
+            settings=settings,
+            project_root=project_root,
+            session_manager=session_manager
+        )
+
+        return verification_result
 
     except Exception as e:
-        return {"error": f"An unexpected error occurred during summary creation/verification: {e}"}
+        import traceback
+        print(f"ERROR in create_verified_summary: {e}\n{traceback.format_exc()}", file=sys.stderr)
+        return {"error": f"An unexpected error occurred: {e}"}

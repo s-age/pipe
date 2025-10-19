@@ -2,7 +2,6 @@ import argparse
 import os
 import sys
 import json
-from pathlib import Path
 import warnings
 from pydantic.warnings import ArbitraryTypeWarning
 
@@ -20,26 +19,27 @@ from src.gemini_cli import call_gemini_cli
 from src.prompt_builder import PromptBuilder
 from src.token_manager import TokenManager
 
-def check_and_show_warning(project_root: Path) -> bool:
+def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
-    sealed_path = project_root / "sealed.txt"
-    unsealed_path = project_root / "unsealed.txt"
+    sealed_path = os.path.join(project_root, "sealed.txt")
+    unsealed_path = os.path.join(project_root, "unsealed.txt")
 
-    if unsealed_path.exists():
+    if os.path.exists(unsealed_path):
         return True  # Already agreed
 
-    if not sealed_path.exists():
+    if not os.path.exists(sealed_path):
         return True  # No warning file, proceed
 
     print("--- IMPORTANT NOTICE ---")
-    print(sealed_path.read_text(encoding="utf-8"))
+    with open(sealed_path, "r", encoding="utf-8") as f:
+        print(f.read())
     print("------------------------")
 
     while True:
         try:
             response = input("Do you agree to the terms above? (yes/no): ").lower().strip()
             if response == "yes":
-                sealed_path.rename(unsealed_path)
+                os.rename(sealed_path, unsealed_path)
                 print("Thank you. Proceeding...")
                 return True
             elif response == "no":
@@ -198,15 +198,22 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
     return model_response_text, token_count
 
 def _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
-    response = call_gemini_cli(
+    import sys
+    command_to_print = ['gemini', '-m', settings.get('model'), '-p', '...'] # Simplified for logging
+    if settings.get('yolo', False):
+        command_to_print.insert(1, '-y')
+    if enable_multi_step_reasoning:
+        command_to_print.append('--multi-step-reasoning')
+        response = call_gemini_cli(
         settings=settings,
         session_data=session_data_for_prompt,
         project_root=project_root,
         instruction=args.instruction,
         api_mode=api_mode,
-        multi_step_reasoning_enabled=enable_multi_step_reasoning
+        multi_step_reasoning_enabled=enable_multi_step_reasoning,
+        session_id=args.session
     )
-    return response.text
+    return response
 
 def _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
     model_response_text = ""
@@ -261,28 +268,27 @@ def _parse_arguments():
     parser.add_argument('--multi-step-reasoning', action='store_true', help='Include multi-step reasoning process in the prompt.')
     parser.add_argument('--fork', type=str, metavar='SESSION_ID', help='The ID of the session to fork.')
     parser.add_argument('--at-turn', type=int, metavar='TURN_INDEX', help='The 1-based turn number to fork from. Required with --fork.')
+    parser.add_argument('--api-mode', type=str, help='Specify the API mode (e.g., gemini-api, gemini-cli).')
     
     args = parser.parse_args()
     return args, parser
 
 def main():
-    project_root = Path(__file__).parent
+    project_root = os.path.dirname(os.path.abspath(__file__))
     if not check_and_show_warning(project_root):
         sys.exit(1)
 
     load_dotenv()
-    config_path = project_root / 'setting.yml'
+    config_path = os.path.join(project_root, 'setting.yml')
     settings = read_yaml_file(config_path)
     
+    args, parser = _parse_arguments()
+
     api_mode = settings.get('api_mode')
     if not api_mode:
         raise ValueError("'api_mode' not found in setting.yml")
-
-
-
-    args, parser = _parse_arguments()
     
-    session_manager = SessionManager(project_root / 'sessions')
+    session_manager = SessionManager(os.path.join(project_root, 'sessions'))
 
     if args.compress:
         _compress(session_manager, args)

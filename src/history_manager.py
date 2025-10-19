@@ -9,9 +9,11 @@ import fnmatch
 from contextlib import contextmanager
 import fnmatch
 
-from datetime import datetime, timezone
+from datetime import timezone
 import zoneinfo
 from typing import Optional
+
+from src.utils.datetime import get_current_timestamp
 
 @contextmanager
 def FileLock(lock_file_path: str):
@@ -60,7 +62,7 @@ class HistoryManager:
                     json.dump({"sessions": {}}, f, indent=2, ensure_ascii=False)
 
     def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0) -> str:
-        timestamp = datetime.now(self.timezone_obj).isoformat()
+        timestamp = get_current_timestamp(self.timezone_obj)
         identity_str = json.dumps({"purpose": purpose, "background": background, "roles": roles, "multi_step_reasoning_enabled": multi_step_reasoning_enabled, "timestamp": timestamp}, sort_keys=True)
         session_id = self._generate_hash(identity_str)
         
@@ -97,7 +99,7 @@ class HistoryManager:
             with open(session_path, "r+", encoding="utf-8") as f:
                 session_data = json.load(f)
                 turn_with_meta = turn_data.copy()
-                turn_with_meta['timestamp'] = datetime.now(self.timezone_obj).isoformat()
+                turn_with_meta['timestamp'] = get_current_timestamp(self.timezone_obj)
                 session_data["turns"].append(turn_with_meta)
                 if token_count is not None:
                     session_data["token_count"] = token_count
@@ -260,7 +262,7 @@ class HistoryManager:
             summary_turn = {
                 "type": "compressed_history",
                 "content": summary_text,
-                "timestamp": datetime.now(self.timezone_obj).isoformat()
+                "timestamp": get_current_timestamp(self.timezone_obj)
             }
 
             with open(session_path, "r+", encoding="utf-8") as f:
@@ -336,7 +338,7 @@ class HistoryManager:
         with FileLock(session_lock_path):
             if not os.path.exists(session_path):
                 raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
+            timestamp = get_current_timestamp(timezone.utc, fmt='%Y%m%d%H%M%S')
             backup_path = os.path.join(self.sessions_dir, "backups", f"{session_id}-{timestamp}.json")
             import shutil
             shutil.copy2(session_path, backup_path)
@@ -351,7 +353,7 @@ class HistoryManager:
             summary_turn = {
                 "type": "condensed_history",
                 "content": summary_text,
-                "timestamp": datetime.now(self.timezone_obj).isoformat()
+                "timestamp": get_current_timestamp(self.timezone_obj)
             }
             with open(session_path, "r+", encoding="utf-8") as f:
                 session_data = json.load(f)
@@ -388,7 +390,7 @@ class HistoryManager:
                 index_data = json.load(f)
                 if session_id not in index_data["sessions"]:
                     index_data["sessions"][session_id] = {}
-                index_data["sessions"][session_id]['last_updated'] = datetime.now(self.timezone_obj).isoformat()
+                index_data["sessions"][session_id]['last_updated'] = get_current_timestamp(self.timezone_obj)
                 if created_at:
                     index_data["sessions"][session_id]['created_at'] = created_at
                 if purpose:
@@ -413,7 +415,7 @@ class HistoryManager:
 
         # Create a new session based on the original data
         forked_purpose = f"Fork of: {original_data.get('purpose', 'Untitled')}"
-        timestamp = datetime.now(self.timezone_obj).isoformat()
+        timestamp = get_current_timestamp(self.timezone_obj)
         
         # Ensure fork_at_turn_index is valid and is a model_response
         original_turns = original_data.get('turns', [])

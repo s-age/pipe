@@ -18,6 +18,7 @@ from src.gemini_api import call_gemini_api, load_tools
 from src.gemini_cli import call_gemini_cli
 from src.prompt_builder import PromptBuilder
 from src.token_manager import TokenManager
+from src.utils.datetime import get_current_timestamp
 
 def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
@@ -152,7 +153,7 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
         model_turn = {
             "type": "function_calling",
             "response": response_string,
-            "timestamp": datetime.now(local_tz).isoformat()
+            "timestamp": get_current_timestamp(local_tz)
         }
         session_data_for_prompt['turns'].append(model_turn)
         session_manager.history_manager.add_to_pool(session_id, model_turn)
@@ -193,7 +194,7 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
                 "type": "tool_response",
                 "name": function_call.name,
                 "response": formatted_response,
-                "timestamp": datetime.now(local_tz).isoformat()
+                "timestamp": get_current_timestamp(local_tz)
             }
             session_data_for_prompt['turns'].append(tool_turn)
             session_manager.history_manager.add_to_pool(session_id, tool_turn)
@@ -253,7 +254,7 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
     pooled_turns = session_manager.history_manager.get_and_clear_pool(session_id)
     
     # 3. The final model response
-    final_model_turn = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(session_manager.local_tz).isoformat()}
+    final_model_turn = {"type": "model_response", "content": model_response_text, "timestamp": get_current_timestamp(session_manager.local_tz)}
 
     # Filter and order the turns according to the desired sequence
     turns_to_save = []

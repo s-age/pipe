@@ -4,23 +4,19 @@ import json
 import importlib.util
 import traceback
 import inspect
-import os
-import sys
-import json
-import importlib.util
-import traceback
-import inspect
 from typing import get_type_hints, Union, get_args, List, Dict
-from src.utils import read_yaml_file
 import warnings
-from datetime import datetime
+
+# Add src directory to Python path BEFORE local imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+
+# Local imports
+from src.utils import read_yaml_file
+from src.utils.datetime import get_current_timestamp
+from session_manager import SessionManager
 
 # Suppress Pydantic's ArbitraryTypeWarning by matching the specific message
 warnings.filterwarnings("ignore", message=".*is not a Python type.*")
-
-# Add src directory to Python path to import session_manager
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
-from session_manager import SessionManager
 
 # --- Global Paths ---
 BASE_DIR = os.path.dirname(__file__)
@@ -151,7 +147,7 @@ def execute_tool(tool_name, arguments):
             function_calling_turn = {
                 "type": "function_calling",
                 "response": response_string,
-                "timestamp": datetime.now(session_manager.local_tz).isoformat()
+                "timestamp": get_current_timestamp(session_manager.local_tz)
             }
             session_manager.history_manager.add_to_pool(session_id, function_calling_turn)
         except Exception:
@@ -203,7 +199,7 @@ def execute_tool(tool_name, arguments):
                     "type": "tool_response",
                     "name": tool_name,
                     "response": formatted_response,
-                    "timestamp": datetime.now(session_manager.local_tz).isoformat()
+                    "timestamp": get_current_timestamp(session_manager.local_tz)
                 }
                 session_manager.history_manager.add_to_pool(session_id, tool_response_turn)
             except Exception:

@@ -22,7 +22,7 @@ graph TD
 
 ### Workflow Explanation
 
-1.  **Create and Verify Summary**: When the user provides a target `session_id`, `start_turn`, `end_turn`, `policy`, and `target_length`, call the `create_verified_summary` tool with these parameters. This single tool handles both summary generation and AI-powered verification.
+1.  **Create and Verify Summary**: When the user provides a target `session_id`, `start_turn`, `end_turn`, `policy`, and `target_length`, call the `create_verified_summary` tool with these parameters. **CRITICAL: If the user's instruction contains a `session_id`, you MUST pass it as the `session_id` argument to the tool.** This single tool handles both summary generation and AI-powered verification.
 2.  **Analyze Verification Result**: The tool will return a `status` of "approved" or "rejected", along with a `verifier_session_id`.
     *   If the status is "rejected", report the reasoning to the user and ask them to provide a new policy or different parameters. Then, call the `delete_session` tool to clean up the failed verifier session using its ID. After that, restart the workflow.
     *   If the status is "approved", proceed to the next step.

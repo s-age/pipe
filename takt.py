@@ -238,23 +238,39 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
         return
 
     session_id = args.session
-    
-    # Get the new turns generated during this run (user_task + api_turns)
-    new_turns = session_data_for_prompt['turns'][new_turns_start_index:]
 
-    # Save only the new turns
-    for turn in new_turns:
-        session_manager.add_turn_to_session(session_id, turn)
+    # Collect all pieces of the turn history for this run
+    # 1. The user_task from the in-memory session data
+    all_new_turns_in_memory = session_data_for_prompt['turns'][new_turns_start_index:]
+    user_turn = next((t for t in all_new_turns_in_memory if t.get('type') == 'user_task'), None)
 
-    final_response_data = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(session_manager.local_tz).isoformat()}
-    session_manager.add_turn_to_session(session_id, final_response_data, token_count)
-
-    # Get and add any turns from the pool
+    # 2. The tool-related turns from the pool on disk
     pooled_turns = session_manager.history_manager.get_and_clear_pool(session_id)
-    if pooled_turns:
-        print(f"Found {len(pooled_turns)} items in the pool. Adding to session.")
-        for turn in pooled_turns:
-            session_manager.add_turn_to_session(session_id, turn)
+    
+    # 3. The final model response
+    final_model_turn = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(session_manager.local_tz).isoformat()}
+
+    # Filter and order the turns according to the desired sequence
+    turns_to_save = []
+    if user_turn:
+        turns_to_save.append(user_turn)
+
+    # Add tool calls from the pool
+    tool_call_turns = [t for t in pooled_turns if t.get('type') in ['function_calling', 'tool_response']]
+    turns_to_save.extend(tool_call_turns)
+
+    # Add the final model response
+    turns_to_save.append(final_model_turn)
+
+    # Add any model responses from the pool (e.g., from verify_summary)
+    pooled_model_turns = [t for t in pooled_turns if t.get('type') == 'model_response']
+    turns_to_save.extend(pooled_model_turns)
+
+    # Now, save all the collected and ordered turns to the session file
+    for turn in turns_to_save:
+        # The final model turn is the only one that should update the token count
+        current_token_count = token_count if turn is final_model_turn else None
+        session_manager.add_turn_to_session(session_id, turn, current_token_count)
 
     print("--- Response Received ---")
     print(model_response_text)

@@ -13,6 +13,7 @@ import inspect
 from typing import get_type_hints, Union, get_args, List, Dict
 from src.utils import read_yaml_file
 import warnings
+from datetime import datetime
 
 # Suppress Pydantic's ArbitraryTypeWarning by matching the specific message
 warnings.filterwarnings("ignore", message=".*is not a Python type.*")
@@ -141,11 +142,25 @@ def execute_tool(tool_name, arguments):
     settings = read_yaml_file(config_path)
 
     session_id = get_latest_session_id()
+    session_manager = SessionManager(SESSIONS_DIR)
+
+    # Log the start of the tool call to the pool
+    if session_id:
+        try:
+            response_string = f"{tool_name}({json.dumps(arguments, ensure_ascii=False)})"
+            function_calling_turn = {
+                "type": "function_calling",
+                "response": response_string,
+                "timestamp": datetime.now(session_manager.local_tz).isoformat()
+            }
+            session_manager.history_manager.add_to_pool(session_id, function_calling_turn)
+        except Exception:
+            # Avoid crashing the server if logging fails
+            pass
+
     if not session_id:
         # Allow tools that don't require a session to run
         pass
-
-    session_manager = SessionManager(SESSIONS_DIR)
 
     if '..' in tool_name or '/' in tool_name:
         raise ValueError("Invalid tool name.")
@@ -173,6 +188,28 @@ def execute_tool(tool_name, arguments):
 
 
         result = tool_function(**final_args)
+
+        # Log the end of the tool call to the pool
+        if session_id:
+            try:
+                # Format the response similarly to takt.py
+                if isinstance(result, dict) and 'error' in result and result['error'] != '(none)':
+                    formatted_response = {"status": "failed", "message": result['error']}
+                else:
+                    message_content = result.get('message') if isinstance(result, dict) and 'message' in result else result
+                    formatted_response = {"status": "succeeded", "message": message_content}
+
+                tool_response_turn = {
+                    "type": "tool_response",
+                    "name": tool_name,
+                    "response": formatted_response,
+                    "timestamp": datetime.now(session_manager.local_tz).isoformat()
+                }
+                session_manager.history_manager.add_to_pool(session_id, tool_response_turn)
+            except Exception:
+                # Avoid crashing the server if logging fails
+                pass
+        
         return result
     else:
         raise NotImplementedError(f"Function '{tool_name}' not found in tool '{tool_name}'.")

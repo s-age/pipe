@@ -155,6 +155,7 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
             "timestamp": datetime.now(local_tz).isoformat()
         }
         session_data_for_prompt['turns'].append(model_turn)
+        session_manager.history_manager.add_to_pool(session_id, model_turn)
 
         tool_result = execute_tool_call(function_call, session_manager, session_id, settings, project_root)
         
@@ -188,13 +189,15 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
                 "message": message_content
             }
 
-        tool_turn = {
-            "type": "tool_response",
-            "name": function_call.name,
-            "response": formatted_response,
-            "timestamp": datetime.now(local_tz).isoformat()
-        }
-        session_data_for_prompt['turns'].append(tool_turn)
+            tool_turn = {
+                "type": "tool_response",
+                "name": function_call.name,
+                "response": formatted_response,
+                "timestamp": datetime.now(local_tz).isoformat()
+            }
+            session_data_for_prompt['turns'].append(tool_turn)
+            session_manager.history_manager.add_to_pool(session_id, tool_turn)
+
     return model_response_text, token_count
 
 def _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
@@ -225,6 +228,8 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
         if api_mode == 'gemini-api':
             print("\nExecuting with Gemini API...")
             model_response_text, token_count = _run_api(args, settings, session_data_for_prompt, project_root, api_mode, session_manager.local_tz, enable_multi_step_reasoning, session_manager, args.session)
+            if not model_response_text or not model_response_text.strip():
+                model_response_text = "API Error: Model stream ended with empty response text."
         elif api_mode == 'gemini-cli':
             model_response_text = _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
             token_count = None # CLI mode doesn't track token count in the same way

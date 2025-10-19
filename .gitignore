@@ -7,6 +7,7 @@ venv/
 ENV/
 sessions/
 setting.yml
+.gemini/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

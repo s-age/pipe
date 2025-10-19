@@ -1,7 +1,7 @@
 from typing import Dict, Any
-from pathlib import Path
 import subprocess
 import sys
+import os
 
 def google_web_search(query: str) -> Dict[str, Any]:
     """
@@ -13,7 +13,7 @@ def google_web_search(query: str) -> Dict[str, Any]:
     try:
         # pyenv exec python src/search_agent.py "$query" を実行
         # tools/google_web_search.pyから見たプロジェクトルートはPath(__file__).parent.parent
-        command = f"pyenv exec python {Path(__file__).parent.parent / 'src' / 'search_agent.py'} \"{query}\""
+        command = f"pyenv exec python {os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, 'src', 'search_agent.py')} \"{query}\""
         print(f"Executing search agent: {command}")
         
         # サブプロセスを実行し、出力をキャプチャ

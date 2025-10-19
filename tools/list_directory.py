@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+import os
 from typing import List, Optional, Dict, Any
 import fnmatch
 
@@ -8,11 +8,11 @@ def list_directory(path: str, file_filtering_options: Optional[Dict[str, Any]] =
     Lists the names of files and subdirectories directly within a specified directory.
     """
     try:
-        target_path = Path(path).resolve()
+        target_path = os.path.abspath(path)
 
-        if not target_path.exists():
+        if not os.path.exists(target_path):
             return {"error": f"Path does not exist: {path}"}
-        if not target_path.is_dir():
+        if not os.path.isdir(target_path):
             return {"error": f"Path is not a directory: {path}"}
 
         all_entries = os.listdir(target_path)
@@ -26,10 +26,10 @@ def list_directory(path: str, file_filtering_options: Optional[Dict[str, Any]] =
             if any(fnmatch.fnmatch(entry, pattern) for pattern in ignore_patterns):
                 continue
 
-            entry_path = target_path / entry
-            if entry_path.is_file():
+            entry_path = os.path.join(target_path, entry)
+            if os.path.isfile(entry_path):
                 files.append(entry)
-            elif entry_path.is_dir():
+            elif os.path.isdir(entry_path):
                 directories.append(entry)
 
         return {"files": sorted(files), "directories": sorted(directories)}

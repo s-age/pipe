@@ -1,20 +1,20 @@
 import os
 import json
-from pathlib import Path
+
 import google.genai as genai
 from google.genai import types
 
 from src.prompt_builder import PromptBuilder
 from src.token_manager import TokenManager
 
-def load_tools(project_root: Path) -> list:
-    tools_path = project_root / "tools.json"
-    if not tools_path.exists():
+def load_tools(project_root: str) -> list:
+    tools_path = os.path.join(project_root, "tools.json")
+    if not os.path.exists(tools_path):
         return []
     with open(tools_path, "r") as f:
         return json.load(f)
 
-def call_gemini_api(settings: dict, session_data: dict, project_root: Path, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool) -> types.GenerateContentResponse:
+def call_gemini_api(settings: dict, session_data: dict, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool) -> types.GenerateContentResponse:
 
     token_manager = TokenManager(settings=settings)
 

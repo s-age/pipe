@@ -7,6 +7,7 @@
 {% from "current_task.j2" import render_current_task_macro %}
 {% from "file_references.j2" import render_file_references_macro %}
 {% from "advanced_reasoning_flow.j2" import render_advanced_reasoning_flow_macro %}
+{% from "todos.j2" import render_todos_macro %}
 {
   "description": {{ render_description_macro(session.description) }},
   "session_goal": {{ render_session_goal_macro(session.session_goal) }},
@@ -15,6 +16,8 @@
   "main_instruction": {{ render_main_instruction_macro() }},
   "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }},
   "current_task": {{ render_current_task_macro(session.current_task) }}
+  {% if session.todos %}
+  , "todos": {{ render_todos_macro(session.todos) }}{% endif %}
   {% if session.file_references %}
   , "file_references": {{ render_file_references_macro(session.file_references) }}{% endif %}
   {% if session.multi_step_reasoning_enabled %}

@@ -2,7 +2,6 @@ import argparse
 import os
 import sys
 import json
-from pathlib import Path
 import warnings
 from pydantic.warnings import ArbitraryTypeWarning
 
@@ -20,26 +19,27 @@ from src.gemini_cli import call_gemini_cli
 from src.prompt_builder import PromptBuilder
 from src.token_manager import TokenManager
 
-def check_and_show_warning(project_root: Path) -> bool:
+def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
-    sealed_path = project_root / "sealed.txt"
-    unsealed_path = project_root / "unsealed.txt"
+    sealed_path = os.path.join(project_root, "sealed.txt")
+    unsealed_path = os.path.join(project_root, "unsealed.txt")
 
-    if unsealed_path.exists():
+    if os.path.exists(unsealed_path):
         return True  # Already agreed
 
-    if not sealed_path.exists():
+    if not os.path.exists(sealed_path):
         return True  # No warning file, proceed
 
     print("--- IMPORTANT NOTICE ---")
-    print(sealed_path.read_text(encoding="utf-8"))
+    with open(sealed_path, "r", encoding="utf-8") as f:
+        print(f.read())
     print("------------------------")
 
     while True:
         try:
             response = input("Do you agree to the terms above? (yes/no): ").lower().strip()
             if response == "yes":
-                sealed_path.rename(unsealed_path)
+                os.rename(sealed_path, unsealed_path)
                 print("Thank you. Proceeding...")
                 return True
             elif response == "no":
@@ -155,6 +155,7 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
             "timestamp": datetime.now(local_tz).isoformat()
         }
         session_data_for_prompt['turns'].append(model_turn)
+        session_manager.history_manager.add_to_pool(session_id, model_turn)
 
         tool_result = execute_tool_call(function_call, session_manager, session_id, settings, project_root)
         
@@ -188,25 +189,35 @@ def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, lo
                 "message": message_content
             }
 
-        tool_turn = {
-            "type": "tool_response",
-            "name": function_call.name,
-            "response": formatted_response,
-            "timestamp": datetime.now(local_tz).isoformat()
-        }
-        session_data_for_prompt['turns'].append(tool_turn)
+            tool_turn = {
+                "type": "tool_response",
+                "name": function_call.name,
+                "response": formatted_response,
+                "timestamp": datetime.now(local_tz).isoformat()
+            }
+            session_data_for_prompt['turns'].append(tool_turn)
+            session_manager.history_manager.add_to_pool(session_id, tool_turn)
+
     return model_response_text, token_count
 
 def _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
+    import sys
+    command_to_print = ['gemini', '-m', settings.get('model'), '-p', '...'] # Simplified for logging
+    if settings.get('yolo', False):
+        command_to_print.insert(1, '-y')
+    if enable_multi_step_reasoning:
+        command_to_print.append('--multi-step-reasoning')
+    
     response = call_gemini_cli(
         settings=settings,
         session_data=session_data_for_prompt,
         project_root=project_root,
         instruction=args.instruction,
         api_mode=api_mode,
-        multi_step_reasoning_enabled=enable_multi_step_reasoning
+        multi_step_reasoning_enabled=enable_multi_step_reasoning,
+        session_id=args.session
     )
-    return response.text
+    return response
 
 def _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
     model_response_text = ""
@@ -217,6 +228,8 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
         if api_mode == 'gemini-api':
             print("\nExecuting with Gemini API...")
             model_response_text, token_count = _run_api(args, settings, session_data_for_prompt, project_root, api_mode, session_manager.local_tz, enable_multi_step_reasoning, session_manager, args.session)
+            if not model_response_text or not model_response_text.strip():
+                model_response_text = "API Error: Model stream ended with empty response text."
         elif api_mode == 'gemini-cli':
             model_response_text = _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
             token_count = None # CLI mode doesn't track token count in the same way
@@ -230,16 +243,39 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
         return
 
     session_id = args.session
+
+    # Collect all pieces of the turn history for this run
+    # 1. The user_task from the in-memory session data
+    all_new_turns_in_memory = session_data_for_prompt['turns'][new_turns_start_index:]
+    user_turn = next((t for t in all_new_turns_in_memory if t.get('type') == 'user_task'), None)
+
+    # 2. The tool-related turns from the pool on disk
+    pooled_turns = session_manager.history_manager.get_and_clear_pool(session_id)
     
-    # Get the new turns generated during this run (user_task + api_turns)
-    new_turns = session_data_for_prompt['turns'][new_turns_start_index:]
+    # 3. The final model response
+    final_model_turn = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(session_manager.local_tz).isoformat()}
 
-    # Save only the new turns
-    for turn in new_turns:
-        session_manager.add_turn_to_session(session_id, turn)
+    # Filter and order the turns according to the desired sequence
+    turns_to_save = []
+    if user_turn:
+        turns_to_save.append(user_turn)
 
-    final_response_data = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(session_manager.local_tz).isoformat()}
-    session_manager.add_turn_to_session(session_id, final_response_data, token_count)
+    # Add tool calls from the pool
+    tool_call_turns = [t for t in pooled_turns if t.get('type') in ['function_calling', 'tool_response']]
+    turns_to_save.extend(tool_call_turns)
+
+    # Add the final model response
+    turns_to_save.append(final_model_turn)
+
+    # Add any model responses from the pool (e.g., from verify_summary)
+    pooled_model_turns = [t for t in pooled_turns if t.get('type') == 'model_response']
+    turns_to_save.extend(pooled_model_turns)
+
+    # Now, save all the collected and ordered turns to the session file
+    for turn in turns_to_save:
+        # The final model turn is the only one that should update the token count
+        current_token_count = token_count if turn is final_model_turn else None
+        session_manager.add_turn_to_session(session_id, turn, current_token_count)
 
     print("--- Response Received ---")
     print(model_response_text)
@@ -261,28 +297,27 @@ def _parse_arguments():
     parser.add_argument('--multi-step-reasoning', action='store_true', help='Include multi-step reasoning process in the prompt.')
     parser.add_argument('--fork', type=str, metavar='SESSION_ID', help='The ID of the session to fork.')
     parser.add_argument('--at-turn', type=int, metavar='TURN_INDEX', help='The 1-based turn number to fork from. Required with --fork.')
+    parser.add_argument('--api-mode', type=str, help='Specify the API mode (e.g., gemini-api, gemini-cli).')
     
     args = parser.parse_args()
     return args, parser
 
 def main():
-    project_root = Path(__file__).parent
+    project_root = os.path.dirname(os.path.abspath(__file__))
     if not check_and_show_warning(project_root):
         sys.exit(1)
 
     load_dotenv()
-    config_path = project_root / 'setting.yml'
+    config_path = os.path.join(project_root, 'setting.yml')
     settings = read_yaml_file(config_path)
     
+    args, parser = _parse_arguments()
+
     api_mode = settings.get('api_mode')
     if not api_mode:
         raise ValueError("'api_mode' not found in setting.yml")
-
-
-
-    args, parser = _parse_arguments()
     
-    session_manager = SessionManager(project_root / 'sessions')
+    session_manager = SessionManager(os.path.join(project_root, 'sessions'))
 
     if args.compress:
         _compress(session_manager, args)

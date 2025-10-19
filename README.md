@@ -45,7 +45,7 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
     *   A specialized `Compresser` agent can perform **partial compression** on any session's history.
     *   Precisely control the compression by specifying a **turn range**, a **summarization policy** (what to keep), and a **target character count**.
     *   Before applying the compression, a `Reviewer` agent automatically **verifies** that the summarized history maintains a natural conversational flow, preventing context loss.
-    *   **Note:** This feature is currently available only when `api_mode` is set to `gemini-api`. It is not supported in `gemini-cli` mode as it requires an MCP server.
+    *   **Note on `gemini-cli`:** To use advanced features like Compression and Forking in `gemini-cli` mode, you must first register the `pipe` tool server. See the "Integration with `gemini-cli`" section below for the required one-time setup command.
   * **Turn-based Forking:** Easily fork a conversation from any specific turn. This allows you to explore alternative responses from the LLM or test different instructions without altering the original history, enabling robust validation and experimentation.
 
 -----
@@ -58,6 +58,19 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
 3.  **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
     *   For consistency with `.env.default`, add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
     *   For CLI usage, ensure `GOOGLE_API_KEY` is set in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`) as `takt.py` expects this variable.
+
+## Integration with `gemini-cli` (One-Time Setup)
+
+To use advanced features like agent-driven **Compression** and session **Forking** in `gemini-cli` mode, you must first register `pipe`'s tool server. This command tells `gemini-cli` how to communicate with this project's tools.
+
+Execute the following command once:
+
+```bash
+gemini mcp add pipe_tools "python /path/to/pipe/mcp_server.py"
+```
+*(Replace `/path/to/pipe` with the actual absolute path to this project's directory.)*
+
+**Benefit:** After this integration, all tool calls made during a session (such as `create_verified_summary` or `read_file`) will become visible in the session history file (`.json`), providing complete transparency and auditability of the agent's actions.
 
 -----
 

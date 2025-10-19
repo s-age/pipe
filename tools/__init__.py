@@ -1,6 +1,7 @@
 import os
 import importlib
-from pathlib import Path
+import fnmatch
+
 
 # This dictionary will store the loaded tool functions
 loaded_tools = {}
@@ -10,12 +11,12 @@ def load_tools():
     Dynamically loads all Python files in the 'tools' directory as tool functions.
     Each file is expected to define a single function with the same name as the file (without .py extension).
     """
-    tools_dir = Path(__file__).parent
-    for tool_file in tools_dir.glob("*.py"):
-        if tool_file.name == "__init__.py":
-            continue
-
-        tool_name = tool_file.stem  # Get filename without extension
+    tools_dir = os.path.dirname(os.path.abspath(__file__))
+    for filename in os.listdir(tools_dir):
+        if fnmatch.fnmatch(filename, "*.py"):
+            tool_name = os.path.splitext(filename)[0]
+            if tool_name == "__init__":
+                continue
         try:
             # Import the module dynamically
             module = importlib.import_module(f"tools.{tool_name}")

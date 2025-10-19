@@ -1,6 +1,7 @@
 import os
 import glob as std_glob
-from pathlib import Path
+import fnmatch
+
 from typing import Optional, List, Dict, Any
 
 # session_manager and session_id are dynamically passed by the tool executor
@@ -21,7 +22,7 @@ def read_many_files(
 
     try:
         resolved_files = []
-        project_root = Path(os.getcwd())
+        project_root = os.getcwd()
 
         default_excludes = [
             "**/.git/**", "**/.gemini/**", "**/.pytest_cache/**", "**/__pycache__/**",
@@ -36,27 +37,27 @@ def read_many_files(
 
         for pattern_or_path in paths:
             # Handle directory paths
-            if (project_root / pattern_or_path).is_dir():
-                pattern_to_glob = str(project_root / pattern_or_path / "**/*")
+            if os.path.isdir(os.path.join(project_root, pattern_or_path)):
+                pattern_to_glob = os.path.join(project_root, pattern_or_path, "**/*")
             else:
-                pattern_to_glob = str(project_root / pattern_or_path)
+                pattern_to_glob = os.path.join(project_root, pattern_or_path)
 
             for filepath_str in std_glob.glob(pattern_to_glob, recursive=recursive):
-                filepath = Path(filepath_str)
+                filepath = filepath_str
                 
-                if not filepath.is_file():
+                if not os.path.isfile(filepath):
                     continue
 
-                is_excluded = any(filepath.match(p) for p in final_excludes)
+                is_excluded = any(std_glob.fnmatch.fnmatch(filepath, p) for p in final_excludes)
                 if is_excluded:
                     continue
 
                 if final_includes:
-                    is_included = any(filepath.match(p) for p in final_includes)
+                    is_included = any(std_glob.fnmatch.fnmatch(filepath, p) for p in final_includes)
                     if not is_included:
                         continue
                 
-                resolved_files.append(str(filepath.resolve()))
+                resolved_files.append(os.path.abspath(filepath))
 
         if not resolved_files:
             return {"message": "No files found matching the criteria."}

@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+import os
 from typing import Dict, Any
 import difflib
 
@@ -8,35 +8,36 @@ def replace(file_path: str, instruction: str, old_string: str, new_string: str) 
     Replaces text within a file.
     """
     try:
-        target_path = Path(file_path).resolve()
-        project_root = Path(os.getcwd()).resolve()
+        target_path = os.path.abspath(file_path)
+        project_root = os.path.abspath(os.getcwd())
 
         # Filesystem Safety Check (similar to write_file)
         BLOCKED_PATHS = [
-            project_root / ".git",
-            project_root / ".env",
-            project_root / "setting.yml",
-            project_root / "__pycache__",
-            project_root / "roles",
-            project_root / "rules",
-            project_root / "sessions",
-            project_root / "venv",
+            os.path.join(project_root, ".git"),
+            os.path.join(project_root, ".env"),
+            os.path.join(project_root, "setting.yml"),
+            os.path.join(project_root, "__pycache__"),
+            os.path.join(project_root, "roles"),
+            os.path.join(project_root, "rules"),
+            os.path.join(project_root, "sessions"),
+            os.path.join(project_root, "venv"),
         ]
 
         for blocked_path in BLOCKED_PATHS:
-            if target_path == blocked_path or target_path.is_relative_to(blocked_path):
+            if target_path == blocked_path or target_path.startswith(blocked_path):
                 return {"error": f"Operation on sensitive path {file_path} is not allowed."}
 
-        if not target_path.is_relative_to(project_root):
+        if not target_path.startswith(project_root):
             return {"error": f"Modifying files outside project root is not allowed: {file_path}"}
 
-        if not target_path.exists():
+        if not os.path.exists(target_path):
             return {"error": f"File not found: {file_path}"}
-        if not target_path.is_file():
+        if not os.path.isfile(target_path):
             return {"error": f"Path is not a file: {file_path}"}
 
         # Read content
-        original_content = target_path.read_text(encoding='utf-8')
+        with open(target_path, 'r', encoding='utf-8') as f:
+            original_content = f.read()
 
         # Perform simple string replacement (first occurrence only)
         if old_string not in original_content:
@@ -45,7 +46,8 @@ def replace(file_path: str, instruction: str, old_string: str, new_string: str) 
         new_content = original_content.replace(old_string, new_string, 1)
 
         # Write back modified content
-        target_path.write_text(new_content, encoding='utf-8')
+        with open(target_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
         
         diff = ""
         if original_content != new_content:

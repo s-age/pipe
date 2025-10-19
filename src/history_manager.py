@@ -73,7 +73,8 @@ class HistoryManager:
             "multi_step_reasoning_enabled": multi_step_reasoning_enabled,
             "token_count": token_count,
             "references": [],
-            "turns": []
+            "turns": [],
+            "pools": []
         }
 
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
@@ -176,6 +177,7 @@ class HistoryManager:
             with open(session_path, "r", encoding="utf-8") as f:
                 session_data = json.load(f)
                 session_data.setdefault('references', [])
+                session_data.setdefault('pools', [])
                 return session_data
 
     def list_sessions(self) -> dict:
@@ -221,10 +223,9 @@ class HistoryManager:
                 json.dump(session_data, f, indent=2, ensure_ascii=False)
                 f.truncate()
         
-        if "purpose" in new_meta_data:
-            self._update_index(session_id, purpose=new_meta_data["purpose"])
-        else:
-            self._update_index(session_id)
+        # Call _update_index, passing purpose if it exists
+        purpose_to_update = new_meta_data.get("purpose")
+        self._update_index(session_id, purpose=purpose_to_update)
 
     def get_session_turns(self, session_id: str) -> list[dict]:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
@@ -296,6 +297,39 @@ class HistoryManager:
                 f.truncate()
         self._update_index(session_id)
 
+    def add_to_pool(self, session_id: str, pool_data: dict):
+        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_lock_path = self._get_session_lock_path(session_id)
+
+        with FileLock(session_lock_path):
+            if not os.path.exists(session_path):
+                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
+            with open(session_path, "r+", encoding="utf-8") as f:
+                session_data = json.load(f)
+                session_data.setdefault("pools", [])
+                session_data["pools"].append(pool_data)
+                f.seek(0)
+                json.dump(session_data, f, indent=2, ensure_ascii=False)
+                f.truncate()
+
+    def get_and_clear_pool(self, session_id: str) -> list:
+        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_lock_path = self._get_session_lock_path(session_id)
+
+        with FileLock(session_lock_path):
+            if not os.path.exists(session_path):
+                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
+            
+            with open(session_path, "r+", encoding="utf-8") as f:
+                session_data = json.load(f)
+                pools = session_data.get("pools", [])
+                if pools:
+                    session_data["pools"] = []
+                    f.seek(0)
+                    json.dump(session_data, f, indent=2, ensure_ascii=False)
+                    f.truncate()
+                return pools
+
     def backup_session(self, session_id: str) -> str:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
@@ -355,8 +389,9 @@ class HistoryManager:
                 if session_id not in index_data["sessions"]:
                     index_data["sessions"][session_id] = {}
                 index_data["sessions"][session_id]['last_updated'] = datetime.now(self.timezone_obj).isoformat()
-                if purpose and created_at:
+                if created_at:
                     index_data["sessions"][session_id]['created_at'] = created_at
+                if purpose:
                     index_data["sessions"][session_id]['purpose'] = purpose
                 f.seek(0)
                 json.dump(index_data, f, indent=2, ensure_ascii=False)
@@ -387,7 +422,7 @@ class HistoryManager:
         
         fork_turn = original_turns[fork_at_turn_index]
         if fork_turn.get("type") != "model_response":
-            raise ValueError(f"Forking is only allowed from a 'model_response' turn. Turn {fork_at_turn_index + 1} is of type '{fork_turn.get('type')}'.")
+            raise ValueError(f"Forking is only allowed from a 'model_response' turn. Turn {fork_at_turn_index + 1} is of type '{fork_turn.get('type')}''.")
 
         # Slice the history
         forked_turns = original_turns[:fork_at_turn_index + 1]

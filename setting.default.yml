@@ -26,3 +26,6 @@ parameters:
 
 # Expert mode: If true, shows advanced/destructive UI controls like turn-by-turn edit and delete.
 expert_mode: false
+
+# Timezone for the application. It is recommended to use standard timezone names like 'UTC' or 'Asia/Tokyo'.
+timezone: UTC

@@ -1,4 +1,6 @@
 from flask import Flask, render_template, abort, jsonify, request
+from datetime import timezone
+import zoneinfo
 
 import sys
 import yaml
@@ -47,7 +49,14 @@ app = Flask(__name__)
 project_root = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(project_root, 'setting.yml')
 settings = load_settings(config_path)
-history_manager = HistoryManager(os.path.join(project_root, 'sessions'))
+# Timezone initialization from setting.yml
+tz_name = settings.get('timezone', 'UTC')
+try:
+    local_tz = zoneinfo.ZoneInfo(tz_name)
+except zoneinfo.ZoneInfoNotFoundError:
+    print(f"Warning: Timezone '{tz_name}' from setting.yml not found. Using UTC.", file=sys.stderr)
+    local_tz = timezone.utc
+history_manager = HistoryManager(os.path.join(project_root, 'sessions'), local_tz)
 
 @app.route('/')
 def index():

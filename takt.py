@@ -249,6 +249,13 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
     final_response_data = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(session_manager.local_tz).isoformat()}
     session_manager.add_turn_to_session(session_id, final_response_data, token_count)
 
+    # Get and add any turns from the pool
+    pooled_turns = session_manager.history_manager.get_and_clear_pool(session_id)
+    if pooled_turns:
+        print(f"Found {len(pooled_turns)} items in the pool. Adding to session.")
+        for turn in pooled_turns:
+            session_manager.add_turn_to_session(session_id, turn)
+
     print("--- Response Received ---")
     print(model_response_text)
     print("-------------------------\n")

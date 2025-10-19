@@ -114,7 +114,7 @@ def verify_summary(
             "type": "model_response",
             "content": new_turn_content
         }
-        session_manager.add_turn_to_session(writing_session_id, new_turn)
+        session_manager.history_manager.add_to_pool(writing_session_id, new_turn)
 
         return {"status": "succeeded", "message": f"Result turn added to session {writing_session_id}."}
 

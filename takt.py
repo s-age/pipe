@@ -6,7 +6,7 @@ import warnings
 from pydantic.warnings import ArbitraryTypeWarning
 
 warnings.filterwarnings("ignore", category=ArbitraryTypeWarning)
-from src.utils import read_yaml_file
+from src.utils import read_yaml_file, read_text_file
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import zoneinfo
@@ -29,12 +29,12 @@ def check_and_show_warning(project_root: str) -> bool:
     if os.path.exists(unsealed_path):
         return True  # Already agreed
 
-    if not os.path.exists(sealed_path):
-        return True  # No warning file, proceed
+    warning_content = read_text_file(sealed_path)
+    if not warning_content:
+        return True  # No warning file or empty file, proceed
 
     print("--- IMPORTANT NOTICE ---")
-    with open(sealed_path, "r", encoding="utf-8") as f:
-        print(f.read())
+    print(warning_content)
     print("------------------------")
 
     while True:

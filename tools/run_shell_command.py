@@ -10,15 +10,16 @@ def run_shell_command(
 ) -> dict:
     try:
         # Determine the directory to run the command in
-    if directory:
-        target_directory = os.path.abspath(directory)
-        if not os.path.isdir(target_directory):
-            return {"error": f"Directory does not exist: {directory}"}
-        if not target_directory.startswith(project_root + os.sep):
-            return {"error": f"Running commands outside project root is not allowed: {directory}"}
-        cwd = target_directory
-    else:
-        cwd = project_root
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        if directory:
+            target_directory = os.path.abspath(directory)
+            if not os.path.isdir(target_directory):
+                return {"error": f"Directory does not exist: {directory}"}
+            if not target_directory.startswith(project_root):
+                return {"error": f"Running commands outside project root is not allowed: {directory}"}
+            cwd = target_directory
+        else:
+            cwd = project_root
 
         # Execute the command
         process = subprocess.run(

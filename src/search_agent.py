@@ -4,6 +4,7 @@ import google.genai as genai
 from google.genai import types
 import sys
 import yaml
+from src.utils import read_yaml_file
 
 def call_gemini_api_with_grounding(settings: dict, instruction: str) -> types.GenerateContentResponse:
     model_name = settings.get('search_model')
@@ -52,8 +53,7 @@ if __name__ == "__main__":
     query = sys.argv[1]
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 
-    with open(os.path.join(project_root, "setting.yml"), "r") as f:
-        settings = yaml.safe_load(f)
+    settings = read_yaml_file(os.path.join(project_root, "setting.yml"))
 
     try:
         response = call_gemini_api_with_grounding(

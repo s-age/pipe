@@ -11,7 +11,7 @@ import warnings
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
 # Local imports
-from src.utils import read_yaml_file
+from src.utils import read_yaml_file, append_to_text_file
 from src.utils.datetime import get_current_timestamp
 from session_manager import SessionManager
 
@@ -335,8 +335,7 @@ def main():
             pass
         except Exception:
             # Log other exceptions to a file to not interfere with stdio
-            with open("mcp_server_error.log", "a") as f:
-                f.write(traceback.format_exc() + "\n")
+            append_to_text_file("mcp_server_error.log", traceback.format_exc() + "\n")
 
 if __name__ == "__main__":
     main()

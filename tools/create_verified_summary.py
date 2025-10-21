@@ -25,6 +25,17 @@ def create_verified_summary(
     if not session_manager:
         return {"error": "This tool requires a session_manager."}
 
+    # === Role Check ===
+    session_data = session_manager.get_session(session_id)
+    if not session_data:
+        return {"error": f"Session with ID {session_id} not found."}
+    
+    active_roles = session_data.get('roles', [])
+    # The role file might be 'roles/compresser.md', so we check for the substring 'compresser'
+    if not any('compresser' in role for role in active_roles):
+        return {"error": "This tool can only be executed by an agent with the 'compresser' role."}
+    # === End of Role Check ===
+
     try:
         # === Step 1: Generate Summary ===
         start_index = start_turn - 1

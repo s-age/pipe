@@ -56,6 +56,13 @@ def check_and_show_warning(project_root: str) -> bool:
 
 
 def _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
+    session_id = args.session
+    if session_id:
+        pool = session_manager.history_manager.get_pool(session_id)
+        if pool and len(pool) >= 7:
+            print(f"Warning: The number of items in the session pool ({len(pool)}) has reached the limit (7). Halting further processing to prevent potential infinite loops.", file=sys.stderr)
+            return
+
     model_response_text = ""
     # The index of the user_task turn just added.
     new_turns_start_index = len(session_data_for_prompt['turns']) - 1

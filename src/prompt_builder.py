@@ -7,6 +7,7 @@ import sys
 import os
 
 from jinja2 import Environment, FileSystemLoader
+from src.utils import read_text_file
 
 class PromptBuilder:
     """Constructs a structured prompt object for the LLM."""
@@ -33,8 +34,7 @@ class PromptBuilder:
         for rel_path in self.session_data.get('roles', []):
             path = os.path.join(self.project_root, rel_path.strip())
             if os.path.isfile(path):
-                with open(path, "r", encoding="utf-8") as f:
-                    content.append(f.read())
+                content.append(read_text_file(path))
         return content
 
     def _build_hyperparameters_section(self) -> dict:
@@ -93,8 +93,7 @@ class PromptBuilder:
                 file_path = ref.get('path')
                 if os.path.isfile(file_path):
                     try:
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            content = f.read()
+                        content = read_text_file(file_path)
                         file_references_content.append({
                             "path": os.path.relpath(file_path, self.project_root),
                             "content": content

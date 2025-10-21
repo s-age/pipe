@@ -39,7 +39,7 @@ def locked_json_read_modify_write(lock_path: str, file_path: str, modifier_func:
         if os.path.exists(file_path):
             # Avoid race condition by opening file for read first
             content = ""
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             
             if content:
@@ -82,7 +82,7 @@ def read_text_file(file_path: str) -> str:
     """Reads a text file and returns its content as a string."""
     if not os.path.exists(file_path):
         return ""
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         return f.read()
 
 def locked_json_write(lock_path: str, file_path: str, data_to_write: dict):
@@ -102,7 +102,7 @@ def locked_json_read(lock_path: str, file_path: str, default_data=None):
     with FileLock(lock_path):
         if not os.path.exists(file_path):
             return default_data
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             try:
                 content = f.read()
                 if not content:
@@ -110,3 +110,18 @@ def locked_json_read(lock_path: str, file_path: str, default_data=None):
                 return json.loads(content)
             except json.JSONDecodeError:
                 return default_data
+
+def append_to_text_file(file_path: str, content: str):
+    """Appends a string to a text file."""
+    with open(file_path, "a", encoding="utf-8") as f:
+        f.write(content)
+
+def read_json_file(file_path: str) -> dict:
+    """Reads a JSON file and returns its content as a dictionary."""
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"JSON file not found: {file_path}")
+    with open(file_path, "r", encoding="utf-8") as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid JSON in file: {file_path}")

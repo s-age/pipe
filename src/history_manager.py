@@ -245,6 +245,17 @@ class HistoryManager:
 
         locked_json_read_modify_write(session_lock_path, session_path, modifier)
 
+    def get_pool(self, session_id: str) -> list:
+        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_lock_path = self._get_session_lock_path(session_id)
+        
+        session_data = locked_json_read(session_lock_path, session_path)
+        
+        if session_data:
+            return session_data.get('pools', [])
+        
+        return []
+
     def get_and_clear_pool(self, session_id: str) -> list:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
@@ -298,14 +309,16 @@ class HistoryManager:
             if fnmatch.fnmatch(filename, f"{session_id}-*.json"):
                 os.remove(os.path.join(backup_dir, filename))
 
-        with FileLock(self._index_lock_path):
-            with open(self.index_path, "r+", encoding="utf-8") as f:
-                index_data = json.load(f)
-                if session_id in index_data["sessions"]:
-                    del index_data["sessions"][session_id]
-                f.seek(0)
-                json.dump(index_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        def modifier(data):
+            if session_id in data.get("sessions", {}):
+                del data["sessions"][session_id]
+        
+        locked_json_read_modify_write(
+            self._index_lock_path,
+            self.index_path,
+            modifier,
+            default_data={"sessions": {}}
+        )
 
     def _update_index(self, session_id: str, purpose: str = None, created_at: str = None):
         def modifier(data):

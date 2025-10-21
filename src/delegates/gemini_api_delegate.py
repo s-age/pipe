@@ -75,8 +75,10 @@ def run(args, settings, session_data_for_prompt, project_root, api_mode, local_t
             "response": response_string,
             "timestamp": get_current_timestamp(local_tz)
         }
-        session_data_for_prompt['turns'].append(model_turn)
-        session_manager.history_manager.add_to_pool(session_id, model_turn)
+        session_manager.add_turn_to_session(session_id, model_turn)
+        reloaded_session_data = session_manager.history_manager.get_session(session_id)
+        if reloaded_session_data:
+            session_data_for_prompt['turns'] = reloaded_session_data['turns']
 
         tool_result = execute_tool_call(function_call, session_manager, session_id, settings, project_root)
         
@@ -107,7 +109,9 @@ def run(args, settings, session_data_for_prompt, project_root, api_mode, local_t
             "response": formatted_response,
             "timestamp": get_current_timestamp(local_tz)
         }
-        session_data_for_prompt['turns'].append(tool_turn)
-        session_manager.history_manager.add_to_pool(session_id, tool_turn)
+        session_manager.add_turn_to_session(session_id, tool_turn)
+        reloaded_session_data = session_manager.history_manager.get_session(session_id)
+        if reloaded_session_data:
+            session_data_for_prompt['turns'] = reloaded_session_data['turns']
 
     return model_response_text, token_count

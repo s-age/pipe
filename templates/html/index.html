@@ -177,9 +177,10 @@
                             <ul id="todos-list" style="list-style: none; padding-left: 0;">
                                 {% for todo in session_data.todos %}
                                     <li style="margin-bottom: 10px;">
-                                        <input type="checkbox" class="todo-checkbox" data-index="{{ loop.index0 }}" {% if todo.checked %}checked{% endif %} style="margin-right: 8px;">
-                                        <strong style="display: inline;">{{ todo.title }}</strong>
-                                        <p style="margin-left: 25px; color: #6c757d;">{{ todo.description }}</p>
+                                        <label style="cursor: pointer;">
+                                            <input type="checkbox" class="todo-checkbox" data-index="{{ loop.index0 }}" {% if todo.checked %}checked{% endif %} style="margin-right: 8px;">
+                                            <strong style="display: inline;">{{ todo.item }}</strong>
+                                        </label>
                                     </li>
                                 {% endfor %}
                             </ul>

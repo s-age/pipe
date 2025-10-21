@@ -15,6 +15,9 @@ def call_gemini_cli(settings: dict, session_data: dict, project_root: str, instr
     
     final_prompt = builder.build()
 
+    # Sanitize the prompt string to remove any surrogate characters before passing to subprocess
+    final_prompt = final_prompt.encode('utf-8', 'replace').decode('utf-8')
+
     command = ['gemini', '-m', model_name, '--debug', '-p', final_prompt]
     if settings.get('yolo', False):
         command.insert(1, '-y')

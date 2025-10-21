@@ -6,13 +6,14 @@ from google.genai import types
 
 from src.prompt_builder import PromptBuilder
 from src.token_manager import TokenManager
+from src.utils import read_json_file
 
 def load_tools(project_root: str) -> list:
     tools_path = os.path.join(project_root, "tools.json")
-    if not os.path.exists(tools_path):
+    try:
+        return read_json_file(tools_path)
+    except (FileNotFoundError, ValueError):
         return []
-    with open(tools_path, "r") as f:
-        return json.load(f)
 
 def call_gemini_api(settings: dict, session_data: dict, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool) -> types.GenerateContentResponse:
 

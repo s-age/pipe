@@ -9,34 +9,14 @@ import fnmatch
 from contextlib import contextmanager
 import fnmatch
 
-from datetime import datetime, timezone
+from datetime import timezone
 import zoneinfo
 from typing import Optional
 
-@contextmanager
-def FileLock(lock_file_path: str):
-    """A simple file-based lock context manager for process-safe file operations."""
-    retry_interval = 0.1
-    timeout = 10.0
-    start_time = time.monotonic()
+from src.utils.datetime import get_current_timestamp
+from src.utils.file import FileLock, locked_json_read_modify_write, locked_json_write, locked_json_read
 
-    while True:
-        try:
-            fd = os.open(lock_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.close(fd)
-            break
-        except FileExistsError:
-            if time.monotonic() - start_time >= timeout:
-                raise TimeoutError(f"Could not acquire lock on {lock_file_path} within {timeout} seconds.")
-            time.sleep(retry_interval)
-    
-    try:
-        yield
-    finally:
-        try:
-            os.remove(lock_file_path)
-        except OSError:
-            pass
+
 
 class HistoryManager:
     """Manages history sessions, encapsulating all file I/O with file locks."""
@@ -54,13 +34,18 @@ class HistoryManager:
     def _initialize(self):
         os.makedirs(self.sessions_dir, exist_ok=True)
         os.makedirs(os.path.join(self.sessions_dir, 'backups'), exist_ok=True)
-        with FileLock(self._index_lock_path):
-            if not os.path.exists(self.index_path):
-                with open(self.index_path, "w", encoding="utf-8") as f:
-                    json.dump({"sessions": {}}, f, indent=2, ensure_ascii=False)
+        # The index file is now created on demand by the _update_index function
+        # if it doesn't exist. This just ensures the directories are present.
+        if not os.path.exists(self.index_path):
+            locked_json_read_modify_write(
+                self._index_lock_path,
+                self.index_path,
+                lambda data: data, # No-op modifier to just create the file
+                default_data={"sessions": {}}
+            )
 
     def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0) -> str:
-        timestamp = datetime.now(self.timezone_obj).isoformat()
+        timestamp = get_current_timestamp(self.timezone_obj)
         identity_str = json.dumps({"purpose": purpose, "background": background, "roles": roles, "multi_step_reasoning_enabled": multi_step_reasoning_enabled, "timestamp": timestamp}, sort_keys=True)
         session_id = self._generate_hash(identity_str)
         
@@ -80,9 +65,7 @@ class HistoryManager:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
 
-        with FileLock(session_lock_path):
-            with open(session_path, "w", encoding="utf-8") as f:
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
+        locked_json_write(session_lock_path, session_path, session_data)
 
         self._update_index(session_id, purpose, timestamp)
         return session_id
@@ -91,137 +74,103 @@ class HistoryManager:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
 
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                turn_with_meta = turn_data.copy()
-                turn_with_meta['timestamp'] = datetime.now(self.timezone_obj).isoformat()
-                session_data["turns"].append(turn_with_meta)
-                if token_count is not None:
-                    session_data["token_count"] = token_count
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        def modifier(data):
+            turn_with_meta = turn_data.copy()
+            if 'timestamp' not in turn_with_meta:
+                turn_with_meta['timestamp'] = get_current_timestamp(self.timezone_obj)
+            data.setdefault("turns", []).append(turn_with_meta)
+            if token_count is not None:
+                data["token_count"] = token_count
         
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
         self._update_index(session_id)
 
     def update_turns(self, session_id: str, turns: list):
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
 
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{{session_id}}' not found.")
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                session_data["turns"] = turns
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        def modifier(data):
+            data["turns"] = turns
         
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
         self._update_index(session_id)
 
     def update_references(self, session_id: str, references: list):
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
 
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                session_data["references"] = references
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        def modifier(data):
+            data["references"] = references
         
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
         self._update_index(session_id)
 
     def update_todos(self, session_id: str, todos: list):
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
 
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                session_data["todos"] = todos
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        def modifier(data):
+            data["todos"] = todos
+        
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
 
     def delete_todos(self, session_id: str):
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
 
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                return
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                if "todos" in session_data:
-                    del session_data["todos"]
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        def modifier(data):
+            if "todos" in data:
+                del data["todos"]
+
+        if not os.path.exists(session_path):
+            return
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
 
     def get_session(self, session_id: str) -> dict:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                return None
-            with open(session_path, "r", encoding="utf-8") as f:
-                session_data = json.load(f)
-                session_data.setdefault('references', [])
-                session_data.setdefault('pools', [])
-                return session_data
+        
+        session_data = locked_json_read(session_lock_path, session_path)
+        
+        if session_data:
+            session_data.setdefault('references', [])
+            session_data.setdefault('pools', [])
+        
+        return session_data
 
     def list_sessions(self) -> dict:
-        with FileLock(self._index_lock_path):
-            if not os.path.exists(self.index_path):
-                return {}
-            with open(self.index_path, "r", encoding="utf-8") as f:
-                return json.load(f).get("sessions", {})
+        index_data = locked_json_read(self._index_lock_path, self.index_path, default_data={})
+        return index_data.get("sessions", {})
 
     def delete_turn(self, session_id: str, turn_index: int):
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                if 0 <= turn_index < len(session_data["turns"]):
-                    del session_data["turns"][turn_index]
-                else:
-                    raise IndexError("Turn index out of range.")
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+
+        def modifier(data):
+            if 0 <= turn_index < len(data.get("turns", [])):
+                del data["turns"][turn_index]
+            else:
+                raise IndexError("Turn index out of range.")
+
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
         self._update_index(session_id)
 
     def edit_session_meta(self, session_id: str, new_meta_data: dict):
         self.backup_session(session_id)
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
-        with FileLock(session_lock_path):
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                if "purpose" in new_meta_data:
-                    session_data["purpose"] = new_meta_data["purpose"]
-                if "background" in new_meta_data:
-                    session_data["background"] = new_meta_data["background"]
-                if "multi_step_reasoning_enabled" in new_meta_data:
-                    session_data["multi_step_reasoning_enabled"] = new_meta_data["multi_step_reasoning_enabled"]
-                if "token_count" in new_meta_data:
-                    session_data["token_count"] = new_meta_data["token_count"]
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+
+        def modifier(data):
+            if "purpose" in new_meta_data:
+                data["purpose"] = new_meta_data["purpose"]
+            if "background" in new_meta_data:
+                data["background"] = new_meta_data["background"]
+            if "multi_step_reasoning_enabled" in new_meta_data:
+                data["multi_step_reasoning_enabled"] = new_meta_data["multi_step_reasoning_enabled"]
+            if "token_count" in new_meta_data:
+                data["token_count"] = new_meta_data["token_count"]
+
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
         
         # Call _update_index, passing purpose if it exists
         purpose_to_update = new_meta_data.get("purpose")
@@ -230,105 +179,95 @@ class HistoryManager:
     def get_session_turns(self, session_id: str) -> list[dict]:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                return []
-            with open(session_path, "r", encoding="utf-8") as f:
-                return json.load(f).get("turns", [])
+        session_data = locked_json_read(session_lock_path, session_path, default_data={})
+        return session_data.get("turns", [])
 
     def get_session_turns_range(self, session_id: str, start_index: int, end_index: int) -> list[dict]:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            with open(session_path, "r", encoding="utf-8") as f:
-                session_data = json.load(f)
-                turns = session_data.get("turns", [])
-                if not (0 <= start_index < len(turns) and 0 <= end_index < len(turns) and start_index <= end_index):
-                    raise IndexError("Turn indices are out of range.")
-                return turns[start_index:end_index + 1]
+        
+        session_data = locked_json_read(session_lock_path, session_path)
+        if not session_data:
+            raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
+            
+        turns = session_data.get("turns", [])
+        if not (0 <= start_index < len(turns) and 0 <= end_index < len(turns) and start_index <= end_index):
+            raise IndexError("Turn indices are out of range.")
+        return turns[start_index:end_index + 1]
 
     def replace_turn_range_with_summary(self, session_id: str, summary_text: str, start_index: int, end_index: int):
         self.backup_session(session_id)
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
+        
+        summary_turn = {
+            "type": "compressed_history",
+            "content": summary_text,
+            "timestamp": get_current_timestamp(self.timezone_obj)
+        }
+
+        def modifier(data):
+            turns = data.get("turns", [])
             
-            summary_turn = {
-                "type": "compressed_history",
-                "content": summary_text,
-                "timestamp": datetime.now(self.timezone_obj).isoformat()
-            }
+            if not (0 <= start_index < len(turns) and 0 <= end_index < len(turns) and start_index <= end_index):
+                raise IndexError("Turn indices are out of range for replacement.")
 
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                turns = session_data.get("turns", [])
-                
-                if not (0 <= start_index < len(turns) and 0 <= end_index < len(turns) and start_index <= end_index):
-                    raise IndexError("Turn indices are out of range for replacement.")
+            # Replace the specified range with the single summary turn
+            del turns[start_index:end_index + 1]
+            turns.insert(start_index, summary_turn)
+            
+            data["turns"] = turns
 
-                # Replace the specified range with the single summary turn
-                del turns[start_index:end_index + 1]
-                turns.insert(start_index, summary_turn)
-                
-                session_data["turns"] = turns
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
         self._update_index(session_id)
 
     def edit_turn(self, session_id: str, turn_index: int, new_turn_data: dict):
         self.backup_session(session_id)
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
-        with FileLock(session_lock_path):
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                if 0 <= turn_index < len(session_data["turns"]):
-                    original_turn = session_data["turns"][turn_index]
-                    original_turn.update(new_turn_data)
-                else:
-                    raise IndexError("Turn index out of range.")
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+
+        def modifier(data):
+            if 0 <= turn_index < len(data.get("turns", [])):
+                original_turn = data["turns"][turn_index]
+                original_turn.update(new_turn_data)
+            else:
+                raise IndexError("Turn index out of range.")
+
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
         self._update_index(session_id)
 
     def add_to_pool(self, session_id: str, pool_data: dict):
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
 
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                session_data.setdefault("pools", [])
-                session_data["pools"].append(pool_data)
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        def modifier(data):
+            data.setdefault("pools", []).append(pool_data)
+
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
+
+    def get_pool(self, session_id: str) -> list:
+        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_lock_path = self._get_session_lock_path(session_id)
+        
+        session_data = locked_json_read(session_lock_path, session_path)
+        
+        if session_data:
+            return session_data.get('pools', [])
+        
+        return []
 
     def get_and_clear_pool(self, session_id: str) -> list:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
 
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                pools = session_data.get("pools", [])
-                if pools:
-                    session_data["pools"] = []
-                    f.seek(0)
-                    json.dump(session_data, f, indent=2, ensure_ascii=False)
-                    f.truncate()
-                return pools
+        def modifier(data):
+            pools = data.get("pools", [])
+            if pools:
+                data["pools"] = []
+            return data, pools # Return tuple: (modified_data, value_to_return)
+
+        pools_to_return = locked_json_read_modify_write(session_lock_path, session_path, modifier)
+        return pools_to_return if pools_to_return is not None else []
 
     def backup_session(self, session_id: str) -> str:
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
@@ -336,7 +275,7 @@ class HistoryManager:
         with FileLock(session_lock_path):
             if not os.path.exists(session_path):
                 raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
+            timestamp = get_current_timestamp(timezone.utc, fmt='%Y%m%d%H%M%S')
             backup_path = os.path.join(self.sessions_dir, "backups", f"{session_id}-{timestamp}.json")
             import shutil
             shutil.copy2(session_path, backup_path)
@@ -345,20 +284,17 @@ class HistoryManager:
     def replace_turns_with_summary(self, session_id: str, summary_text: str):
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            summary_turn = {
-                "type": "condensed_history",
-                "content": summary_text,
-                "timestamp": datetime.now(self.timezone_obj).isoformat()
-            }
-            with open(session_path, "r+", encoding="utf-8") as f:
-                session_data = json.load(f)
-                session_data["turns"] = [summary_turn]
-                f.seek(0)
-                json.dump(session_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        
+        summary_turn = {
+            "type": "condensed_history",
+            "content": summary_text,
+            "timestamp": get_current_timestamp(self.timezone_obj)
+        }
+
+        def modifier(data):
+            data["turns"] = [summary_turn]
+
+        locked_json_read_modify_write(session_lock_path, session_path, modifier)
         self._update_index(session_id)
 
     def delete_session(self, session_id: str):
@@ -373,29 +309,33 @@ class HistoryManager:
             if fnmatch.fnmatch(filename, f"{session_id}-*.json"):
                 os.remove(os.path.join(backup_dir, filename))
 
-        with FileLock(self._index_lock_path):
-            with open(self.index_path, "r+", encoding="utf-8") as f:
-                index_data = json.load(f)
-                if session_id in index_data["sessions"]:
-                    del index_data["sessions"][session_id]
-                f.seek(0)
-                json.dump(index_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        def modifier(data):
+            if session_id in data.get("sessions", {}):
+                del data["sessions"][session_id]
+        
+        locked_json_read_modify_write(
+            self._index_lock_path,
+            self.index_path,
+            modifier,
+            default_data={"sessions": {}}
+        )
 
     def _update_index(self, session_id: str, purpose: str = None, created_at: str = None):
-        with FileLock(self._index_lock_path):
-            with open(self.index_path, "r+", encoding="utf-8") as f:
-                index_data = json.load(f)
-                if session_id not in index_data["sessions"]:
-                    index_data["sessions"][session_id] = {}
-                index_data["sessions"][session_id]['last_updated'] = datetime.now(self.timezone_obj).isoformat()
-                if created_at:
-                    index_data["sessions"][session_id]['created_at'] = created_at
-                if purpose:
-                    index_data["sessions"][session_id]['purpose'] = purpose
-                f.seek(0)
-                json.dump(index_data, f, indent=2, ensure_ascii=False)
-                f.truncate()
+        def modifier(data):
+            if session_id not in data["sessions"]:
+                data["sessions"][session_id] = {}
+            data["sessions"][session_id]['last_updated'] = get_current_timestamp(self.timezone_obj)
+            if created_at:
+                data["sessions"][session_id]['created_at'] = created_at
+            if purpose:
+                data["sessions"][session_id]['purpose'] = purpose
+        
+        locked_json_read_modify_write(
+            self._index_lock_path,
+            self.index_path,
+            modifier,
+            default_data={"sessions": {}}
+        )
 
     def _generate_hash(self, content: str) -> str:
         """Generates a SHA-256 hash for the given content."""
@@ -405,15 +345,13 @@ class HistoryManager:
         original_session_path = os.path.join(self.sessions_dir, f"{original_session_id}.json")
         original_session_lock_path = self._get_session_lock_path(original_session_id)
 
-        with FileLock(original_session_lock_path):
-            if not os.path.exists(original_session_path):
-                raise FileNotFoundError(f"Original session file for ID '{{original_session_id}}' not found.")
-            with open(original_session_path, "r", encoding="utf-8") as f:
-                original_data = json.load(f)
+        original_data = locked_json_read(original_session_lock_path, original_session_path)
+        if not original_data:
+            raise FileNotFoundError(f"Original session file for ID '{original_session_id}' not found.")
 
         # Create a new session based on the original data
         forked_purpose = f"Fork of: {original_data.get('purpose', 'Untitled')}"
-        timestamp = datetime.now(self.timezone_obj).isoformat()
+        timestamp = get_current_timestamp(self.timezone_obj)
         
         # Ensure fork_at_turn_index is valid and is a model_response
         original_turns = original_data.get('turns', [])
@@ -451,9 +389,7 @@ class HistoryManager:
         new_session_path = os.path.join(self.sessions_dir, f"{new_session_id}.json")
         new_session_lock_path = self._get_session_lock_path(new_session_id)
 
-        with FileLock(new_session_lock_path):
-            with open(new_session_path, "w", encoding="utf-8") as f:
-                json.dump(new_session_data, f, indent=2, ensure_ascii=False)
+        locked_json_write(new_session_lock_path, new_session_path, new_session_data)
 
         self._update_index(new_session_id, forked_purpose, timestamp)
         return new_session_id

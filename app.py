@@ -5,6 +5,7 @@ import zoneinfo
 import sys
 import yaml
 from src.history_manager import HistoryManager
+from src.utils import read_text_file, read_yaml_file
 import os
 
 def check_and_show_warning(project_root: str) -> bool:
@@ -15,12 +16,12 @@ def check_and_show_warning(project_root: str) -> bool:
     if os.path.exists(unsealed_path):
         return True  # Already agreed
 
-    if not os.path.exists(sealed_path):
-        return True  # No warning file, proceed
+    warning_content = read_text_file(sealed_path)
+    if not warning_content:
+        return True  # No warning file or empty file, proceed
 
     print("--- IMPORTANT NOTICE ---")
-    with open(sealed_path, "r", encoding="utf-8") as f:
-        print(f.read())
+    print(warning_content)
     print("------------------------")
 
     while True:
@@ -40,10 +41,10 @@ def check_and_show_warning(project_root: str) -> bool:
             return False
 
 def load_settings(config_path: str) -> dict:
-    if os.path.exists(config_path):
-        with open(config_path, 'r', encoding='utf-8') as f:
-            return yaml.safe_load(f)
-    return {}
+    try:
+        return read_yaml_file(config_path)
+    except FileNotFoundError:
+        return {}
 
 app = Flask(__name__)
 project_root = os.path.dirname(os.path.abspath(__file__))

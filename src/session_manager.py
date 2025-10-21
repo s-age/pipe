@@ -7,6 +7,7 @@ import os
 import sys
 
 from src.history_manager import HistoryManager
+from src.utils.datetime import get_current_timestamp
 
 class SessionManager:
     def __init__(self, sessions_dir: str):
@@ -47,7 +48,7 @@ class SessionManager:
             }
         
         if instruction:
-            session_data['turns'].append({"type": "user_task", "instruction": instruction, "timestamp": datetime.now(local_tz).isoformat()})
+            session_data['turns'].append({"type": "user_task", "instruction": instruction, "timestamp": get_current_timestamp(local_tz)})
 
         return session_data
 

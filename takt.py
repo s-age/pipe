@@ -6,7 +6,7 @@ import warnings
 from pydantic.warnings import ArbitraryTypeWarning
 
 warnings.filterwarnings("ignore", category=ArbitraryTypeWarning)
-from src.utils import read_yaml_file
+from src.utils import read_yaml_file, read_text_file
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import zoneinfo
@@ -18,6 +18,8 @@ from src.gemini_api import call_gemini_api, load_tools
 from src.gemini_cli import call_gemini_cli
 from src.prompt_builder import PromptBuilder
 from src.token_manager import TokenManager
+from src.utils.datetime import get_current_timestamp
+from src.dispatcher import dispatch_run
 
 def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
@@ -27,12 +29,12 @@ def check_and_show_warning(project_root: str) -> bool:
     if os.path.exists(unsealed_path):
         return True  # Already agreed
 
-    if not os.path.exists(sealed_path):
-        return True  # No warning file, proceed
+    warning_content = read_text_file(sealed_path)
+    if not warning_content:
+        return True  # No warning file or empty file, proceed
 
     print("--- IMPORTANT NOTICE ---")
-    with open(sealed_path, "r", encoding="utf-8") as f:
-        print(f.read())
+    print(warning_content)
     print("------------------------")
 
     while True:
@@ -53,189 +55,34 @@ def check_and_show_warning(project_root: str) -> bool:
 
 
 
-def execute_tool_call(tool_call, session_manager, session_id, settings, project_root):
-    """Dynamically imports and executes a tool function, passing context if needed."""
-    tool_name = tool_call.name
-    tool_args = dict(tool_call.args)
-    
-    print(f"Tool call: {tool_name}({tool_args})")
-
-    try:
-        tool_module = importlib.import_module(f"tools.{tool_name}")
-        importlib.reload(tool_module)  # Force reload to get the latest code
-        tool_function = getattr(tool_module, tool_name)
-        
-        # Inspect the tool function's signature
-        sig = inspect.signature(tool_function)
-        params = sig.parameters
-        
-        # Prepare the arguments to pass
-        final_args = tool_args.copy()
-        
-        if 'session_manager' in params:
-            final_args['session_manager'] = session_manager
-        if 'session_id' in params and 'session_id' not in tool_args:
-            final_args['session_id'] = session_id
-        if 'settings' in params:
-            final_args['settings'] = settings
-        if 'project_root' in params:
-            final_args['project_root'] = project_root
-
-        result = tool_function(**final_args)
-        return result
-    except Exception as e:
-        return {"error": f"Failed to execute tool {tool_name}: {e}"}
-
-def _compress(session_manager, args):
-    print("Compression logic not fully implemented in this refactor.")
-    pass
-
-def _dry_run(settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
-    print("\n--- Dry Run Mode ---")
-    token_manager = TokenManager(settings=settings)
-    builder = PromptBuilder(
-        settings=settings,
-        session_data=session_data_for_prompt,
-        project_root=project_root,
-        api_mode=api_mode,
-        multi_step_reasoning_enabled=enable_multi_step_reasoning
-    )
-    
-    json_prompt_str = builder.build()
-
-    tools = load_tools(project_root)
-
-    token_count = token_manager.count_tokens(json_prompt_str, tools=tools)
-    is_within_limit, message = token_manager.check_limit(token_count)
-    print(f"Token Count: {message}")
-    if not is_within_limit:
-        print("WARNING: Prompt exceeds context window limit.")
-
-    # For dry run, we print the JSON string that would be sent to the API
-    print(json_prompt_str)
-    
-    print("\n--- End of Dry Run ---")
-
-def _run_api(args, settings, session_data_for_prompt, project_root, api_mode, local_tz, enable_multi_step_reasoning, session_manager, session_id):
-    model_response_text = ""
-    token_count = 0  # Initialize token_count
-    while True:
-        response = call_gemini_api(
-            settings=settings,
-            session_data=session_data_for_prompt,
-            project_root=project_root,
-            instruction=args.instruction,
-            api_mode=api_mode,
-            multi_step_reasoning_enabled=enable_multi_step_reasoning
-        )
-
-        # Capture token_count from the API call
-        token_count = response.usage_metadata.prompt_token_count + response.usage_metadata.candidates_token_count
-
-        function_call = None
-        try:
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, 'function_call') and part.function_call:
-                    function_call = part.function_call
-                    break  # Found the first function call
-        except (IndexError, AttributeError):
-            function_call = None
-
-        if not function_call:
-            model_response_text = response.text
-            break
-
-        # Format the function call into a readable string
-        args_json_string = json.dumps(dict(function_call.args), ensure_ascii=False)
-        response_string = f"{function_call.name}({args_json_string})"
-
-        model_turn = {
-            "type": "function_calling",
-            "response": response_string,
-            "timestamp": datetime.now(local_tz).isoformat()
-        }
-        session_data_for_prompt['turns'].append(model_turn)
-        session_manager.history_manager.add_to_pool(session_id, model_turn)
-
-        tool_result = execute_tool_call(function_call, session_manager, session_id, settings, project_root)
-        
-        # After a tool call, session data on disk (like references) might have changed.
-        # We need to update our in-memory session_data_for_prompt to reflect those changes
-        # before building the next prompt.
-        reloaded_session_data = session_manager.history_manager.get_session(session_id)
-        if reloaded_session_data:
-            # Update references if they exist in the reloaded data
-            if 'references' in reloaded_session_data:
-                session_data_for_prompt['references'] = reloaded_session_data['references']
-            # Potentially update other session state modified by tools in the future
-
-        # Reformat the tool_result to include a status
-        # Check for a meaningful error message, not just the presence of the key.
-        if isinstance(tool_result, dict) and 'error' in tool_result and tool_result['error'] != '(none)':
-            formatted_response = {
-                "status": "failed",
-                "message": tool_result['error']
-            }
-        else:
-            # If the result is a dict and has a 'message' key, use that.
-            if isinstance(tool_result, dict) and 'message' in tool_result:
-                message_content = tool_result['message']
-            # Otherwise, use the whole tool_result as the content.
-            else:
-                message_content = tool_result
-
-            formatted_response = {
-                "status": "succeeded",
-                "message": message_content
-            }
-
-            tool_turn = {
-                "type": "tool_response",
-                "name": function_call.name,
-                "response": formatted_response,
-                "timestamp": datetime.now(local_tz).isoformat()
-            }
-            session_data_for_prompt['turns'].append(tool_turn)
-            session_manager.history_manager.add_to_pool(session_id, tool_turn)
-
-    return model_response_text, token_count
-
-def _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
-    import sys
-    command_to_print = ['gemini', '-m', settings.get('model'), '-p', '...'] # Simplified for logging
-    if settings.get('yolo', False):
-        command_to_print.insert(1, '-y')
-    if enable_multi_step_reasoning:
-        command_to_print.append('--multi-step-reasoning')
-    
-    response = call_gemini_cli(
-        settings=settings,
-        session_data=session_data_for_prompt,
-        project_root=project_root,
-        instruction=args.instruction,
-        api_mode=api_mode,
-        multi_step_reasoning_enabled=enable_multi_step_reasoning,
-        session_id=args.session
-    )
-    return response
-
 def _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
+    session_id = args.session
+    if session_id:
+        pool = session_manager.history_manager.get_pool(session_id)
+        if pool and len(pool) >= 7:
+            print(f"Warning: The number of items in the session pool ({len(pool)}) has reached the limit (7). Halting further processing to prevent potential infinite loops.", file=sys.stderr)
+            return
+
     model_response_text = ""
     # The index of the user_task turn just added.
     new_turns_start_index = len(session_data_for_prompt['turns']) - 1
 
     try:
-        if api_mode == 'gemini-api':
-            print("\nExecuting with Gemini API...")
-            model_response_text, token_count = _run_api(args, settings, session_data_for_prompt, project_root, api_mode, session_manager.local_tz, enable_multi_step_reasoning, session_manager, args.session)
-            if not model_response_text or not model_response_text.strip():
-                model_response_text = "API Error: Model stream ended with empty response text."
-        elif api_mode == 'gemini-cli':
-            model_response_text = _run_cli(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
-            token_count = None # CLI mode doesn't track token count in the same way
-        else:
-            print(f"Error: Unknown api_mode '{api_mode}'. Please check setting.yml", file=sys.stderr)
+        model_response_text, token_count = dispatch_run(
+            api_mode,
+            args,
+            settings,
+            session_data_for_prompt,
+            project_root,
+            enable_multi_step_reasoning,
+            session_manager
+        )
+        if model_response_text is None and token_count is None: # Error case from dispatcher
             return
+
+        # The empty response check is now universal for any delegate that might return empty text
+        if not model_response_text or not model_response_text.strip():
+            model_response_text = "API Error: Model stream ended with empty response text."
 
     except (ValueError, RuntimeError) as e:
         print(f"ERROR: {e}", file=sys.stderr)
@@ -253,7 +100,7 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
     pooled_turns = session_manager.history_manager.get_and_clear_pool(session_id)
     
     # 3. The final model response
-    final_model_turn = {"type": "model_response", "content": model_response_text, "timestamp": datetime.now(session_manager.local_tz).isoformat()}
+    final_model_turn = {"type": "model_response", "content": model_response_text, "timestamp": get_current_timestamp(session_manager.local_tz)}
 
     # Filter and order the turns according to the desired sequence
     turns_to_save = []
@@ -319,10 +166,7 @@ def main():
     
     session_manager = SessionManager(os.path.join(project_root, 'sessions'))
 
-    if args.compress:
-        _compress(session_manager, args)
-
-    elif args.fork:
+    if args.fork:
         if not args.at_turn:
             print("Error: --at-turn is required when using --fork.", file=sys.stderr)
             sys.exit(1)
@@ -351,9 +195,7 @@ def main():
             local_tz=session_manager.local_tz
         )
 
-        if args.dry_run:
-            _dry_run(settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
-            return
+
 
         # If not a dry run, proceed with session creation/continuation and execution
         if not session_id:

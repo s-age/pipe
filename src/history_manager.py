@@ -96,6 +96,7 @@ class HistoryManager:
         self._update_index(session_id)
 
     def update_references(self, session_id: str, references: list):
+        """Updates the references for a given session."""
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
         session_lock_path = self._get_session_lock_path(session_id)
 
@@ -103,7 +104,6 @@ class HistoryManager:
             data["references"] = references
         
         locked_json_read_modify_write(session_lock_path, session_path, modifier)
-        self._update_index(session_id)
 
     def update_todos(self, session_id: str, todos: list):
         session_path = os.path.join(self.sessions_dir, f"{session_id}.json")

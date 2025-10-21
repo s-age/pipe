@@ -124,6 +124,11 @@ def view_session(session_id):
     if not session_data:
         abort(404)
 
+    # Migrate references from list[str] to list[dict] if necessary
+    if session_data.get('references') and isinstance(session_data['references'][0], str):
+        session_data['references'] = [{'path': ref, 'disabled': False} for ref in session_data['references']]
+        history_manager.update_references(session_id, session_data['references'])
+
     turns = session_data.get("turns", [])
     # Reverse the turns for display
     turns.reverse()
@@ -223,6 +228,21 @@ def edit_todos_api(session_id):
 
         history_manager.update_todos(session_id, data['todos'])
         return jsonify({"success": True, "message": f"Session {session_id} todos updated."}), 200
+    except FileNotFoundError:
+        return jsonify({"success": False, "message": "Session not found."}), 404
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route('/api/session/<session_id>/references/edit', methods=['POST'])
+def edit_references_api(session_id):
+    try:
+        data = request.get_json()
+        if 'references' not in data:
+            return jsonify({"success": False, "message": "No references data provided."}), 400
+
+        history_manager.update_references(session_id, data['references'])
+        return jsonify({"success": True, "message": f"Session {session_id} references updated."}), 200
     except FileNotFoundError:
         return jsonify({"success": False, "message": "Session not found."}), 404
     except Exception as e:

@@ -21,10 +21,11 @@ from src.utils.file import FileLock, locked_json_read_modify_write, locked_json_
 class HistoryManager:
     """Manages history sessions, encapsulating all file I/O with file locks."""
 
-    def __init__(self, sessions_dir: str, timezone_obj: zoneinfo.ZoneInfo = timezone.utc):
+    def __init__(self, sessions_dir: str, timezone_obj: zoneinfo.ZoneInfo = timezone.utc, default_hyperparameters: dict = None):
         self.sessions_dir = sessions_dir
         self.index_path = os.path.join(sessions_dir, "index.json")
         self.timezone_obj = timezone_obj
+        self.default_hyperparameters = default_hyperparameters if default_hyperparameters is not None else {}
         self._index_lock_path = os.path.join(self.sessions_dir, "index.json.lock")
         self._initialize()
 
@@ -44,7 +45,7 @@ class HistoryManager:
                 default_data={"sessions": {}}
             )
 
-    def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0) -> str:
+    def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0, hyperparameters: dict = None) -> str:
         timestamp = get_current_timestamp(self.timezone_obj)
         identity_str = json.dumps({"purpose": purpose, "background": background, "roles": roles, "multi_step_reasoning_enabled": multi_step_reasoning_enabled, "timestamp": timestamp}, sort_keys=True)
         session_id = self._generate_hash(identity_str)
@@ -57,6 +58,7 @@ class HistoryManager:
             "roles": roles,
             "multi_step_reasoning_enabled": multi_step_reasoning_enabled,
             "token_count": token_count,
+            "hyperparameters": hyperparameters if hyperparameters is not None else self.default_hyperparameters,
             "references": [],
             "turns": [],
             "pools": []
@@ -169,6 +171,8 @@ class HistoryManager:
                 data["multi_step_reasoning_enabled"] = new_meta_data["multi_step_reasoning_enabled"]
             if "token_count" in new_meta_data:
                 data["token_count"] = new_meta_data["token_count"]
+            if "hyperparameters" in new_meta_data:
+                data["hyperparameters"] = new_meta_data["hyperparameters"]
 
         locked_json_read_modify_write(session_lock_path, session_path, modifier)
         

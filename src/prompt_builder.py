@@ -38,12 +38,25 @@ class PromptBuilder:
         return content
 
     def _build_hyperparameters_section(self) -> dict:
-        """Builds the hyperparameters section from settings."""
-        parameters_settings = self.settings.get('parameters', {})
+        """Builds the hyperparameters section from settings and session data."""
+        import copy
+
+        # 1. Start with a deep copy of the default parameters from settings
+        merged_params = copy.deepcopy(self.settings.get('parameters', {}))
+
+        # 2. Override with session-specific hyperparameters
+        if session_params := self.session_data.get('hyperparameters'):
+            for key, value_desc_pair in session_params.items():
+                if key in merged_params:
+                    # Ensure 'value' exists in the session data before overriding
+                    if 'value' in value_desc_pair:
+                        merged_params[key]['value'] = value_desc_pair['value']
+
+        # 3. Build the final structure for the prompt using the merged parameters
         params = {
-            "description": parameters_settings.get('description', "Hyperparameter settings for the model.")
+            "description": merged_params.get('description', "Hyperparameter settings for the model.")
         }
-        for key, value_desc_pair in parameters_settings.items():
+        for key, value_desc_pair in merged_params.items():
             if key != 'description':
                 params[key] = {
                     "type": "number",

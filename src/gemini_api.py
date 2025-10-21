@@ -32,14 +32,24 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: str, instr
     if not is_within_limit:
         raise ValueError("Prompt exceeds context window limit. Aborting.")
 
-    # Build GenerationConfig from settings
+    # Build GenerationConfig from settings, then override with session data
     gen_config_params = {}
+    # 1. Load defaults from settings
     if params := settings.get('parameters'):
         if temp := params.get('temperature'):
             gen_config_params['temperature'] = temp.get('value')
         if top_p := params.get('top_p'):
             gen_config_params['top_p'] = top_p.get('value')
         if top_k := params.get('top_k'):
+            gen_config_params['top_k'] = top_k.get('value')
+
+    # 2. Override with session-specific hyperparameters
+    if session_params := session_data.get('hyperparameters'):
+        if temp := session_params.get('temperature'):
+            gen_config_params['temperature'] = temp.get('value')
+        if top_p := session_params.get('top_p'):
+            gen_config_params['top_p'] = top_p.get('value')
+        if top_k := session_params.get('top_k'):
             gen_config_params['top_k'] = top_k.get('value')
     
     # tools.jsonからツールをロード

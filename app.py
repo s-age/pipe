@@ -57,7 +57,7 @@ try:
 except zoneinfo.ZoneInfoNotFoundError:
     print(f"Warning: Timezone '{tz_name}' from setting.yml not found. Using UTC.", file=sys.stderr)
     local_tz = timezone.utc
-history_manager = HistoryManager(os.path.join(project_root, 'sessions'), local_tz)
+history_manager = HistoryManager(os.path.join(project_root, 'sessions'), local_tz, default_hyperparameters=settings.get('parameters', {}))
 
 @app.route('/')
 def index():
@@ -75,7 +75,7 @@ def index():
 
 @app.route('/new_session')
 def new_session_form():
-    return render_template('html/new_session.html')
+    return render_template('html/new_session.html', settings=settings)
 
 @app.route('/api/session/new', methods=['POST'])
 def create_new_session_api():
@@ -86,13 +86,14 @@ def create_new_session_api():
         roles_str = data.get('roles', '')
         instruction = data.get('instruction')
         multi_step_reasoning_enabled = data.get('multi_step_reasoning_enabled', False)
+        hyperparameters = data.get('hyperparameters')
 
         if not all([purpose, background, instruction]):
             return jsonify({"success": False, "message": "Purpose, background, and first instruction are required."}), 400
         
         roles = [r.strip() for r in roles_str.split(',') if r.strip()]
 
-        session_id = history_manager.create_new_session(purpose, background, roles, multi_step_reasoning_enabled)
+        session_id = history_manager.create_new_session(purpose, background, roles, multi_step_reasoning_enabled, hyperparameters=hyperparameters)
         
         import subprocess # Moved import here to be within the function scope if not already global
         command = ['python3', 'takt.py', '--session', session_id, '--instruction', instruction]
@@ -123,6 +124,11 @@ def view_session(session_id):
     session_data = history_manager.get_session(session_id)
     if not session_data:
         abort(404)
+
+    # Ensure hyperparameters key exists for older sessions
+    if 'hyperparameters' not in session_data or not session_data['hyperparameters']:
+        session_data['hyperparameters'] = settings.get('parameters', {})
+        history_manager.edit_session_meta(session_id, {'hyperparameters': session_data['hyperparameters']})
 
     # Migrate references from list[str] to list[dict] if necessary
     if session_data.get('references') and isinstance(session_data['references'][0], str):
@@ -208,7 +214,7 @@ def edit_turn_api(session_id, turn_index):
 def edit_session_meta_api(session_id):
     try:
         new_meta_data = request.get_json()
-        if not new_meta_data or not any(k in new_meta_data for k in ['purpose', 'background', 'multi_step_reasoning_enabled', 'token_count']):
+        if not new_meta_data or not any(k in new_meta_data for k in ['purpose', 'background', 'multi_step_reasoning_enabled', 'token_count', 'hyperparameters']):
             return jsonify({"success": False, "message": "No data provided."}), 400
 
         history_manager.edit_session_meta(session_id, new_meta_data)

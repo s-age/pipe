@@ -56,6 +56,29 @@
                 <label for="multi-step-reasoning">Enable Multi-step Reasoning</label>
             </div>
 
+            <fieldset style="border: 1px solid #dee2e6; padding: 15px; border-radius: 4px; margin-bottom: 15px;">
+                <legend style="padding: 0 5px;">Hyperparameters</legend>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    {% if settings and settings.parameters %}
+                    <div>
+                        <label for="temperature">Temperature: <span id="temperature-value">{{ settings.parameters.temperature.value }}</span></label>
+                        <input type="range" id="temperature" name="temperature" min="0" max="2" step="0.1"
+                               value="{{ settings.parameters.temperature.value }}">
+                    </div>
+                    <div>
+                        <label for="top_p">Top P: <span id="top_p-value">{{ settings.parameters.top_p.value }}</span></label>
+                        <input type="range" id="top_p" name="top_p" min="0" max="1" step="0.1"
+                               value="{{ settings.parameters.top_p.value }}">
+                    </div>
+                    <div>
+                        <label for="top_k">Top K: <span id="top_k-value">{{ settings.parameters.top_k.value }}</span></label>
+                        <input type="range" id="top_k" name="top_k" min="1" max="50" step="1"
+                               value="{{ settings.parameters.top_k.value }}">
+                    </div>
+                    {% endif %}
+                </div>
+            </fieldset>
+
             <button type="submit" class="action-btn" id="create-session-btn">Create Session</button>
             <button type="button" class="action-btn cancel-btn" onclick="window.location.href='/'">Cancel</button>
         </form>
@@ -77,13 +100,22 @@
             const instruction = document.getElementById('instruction').value;
             const multi_step_reasoning_enabled = document.getElementById('multi-step-reasoning').checked;
 
+            const temperature = document.getElementById('temperature').value;
+            const top_p = document.getElementById('top_p').value;
+            const top_k = document.getElementById('top_k').value;
+
+            const hyperparameters = {};
+            if (temperature) hyperparameters.temperature = { value: parseFloat(temperature) };
+            if (top_p) hyperparameters.top_p = { value: parseFloat(top_p) };
+            if (top_k) hyperparameters.top_k = { value: parseInt(top_k, 10) };
+
             const errorMessageDiv = document.getElementById('error-message');
             errorMessageDiv.textContent = ''; // Clear previous errors
 
             fetch('/api/session/new', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ purpose, background, roles, instruction, multi_step_reasoning_enabled })
+                body: JSON.stringify({ purpose, background, roles, instruction, multi_step_reasoning_enabled, hyperparameters })
             })
             .then(response => {
                 if (!response.ok) {
@@ -105,6 +137,22 @@
             .finally(() => {
                 createButton.disabled = false; // Re-enable button
                 createButton.textContent = originalButtonText; // Restore button text
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sliders = [
+                { slider: 'temperature', value: 'temperature-value' },
+                { slider: 'top_p', value: 'top_p-value' },
+                { slider: 'top_k', value: 'top_k-value' }
+            ];
+
+            sliders.forEach(({ slider, value }) => {
+                const sliderEl = document.getElementById(slider);
+                const valueEl = document.getElementById(value);
+                if (sliderEl && valueEl) {
+                    sliderEl.addEventListener('input', () => valueEl.textContent = sliderEl.value);
+                }
             });
         });
     </script>

@@ -171,6 +171,16 @@
                         <p class="editable-meta" data-field="multi_step_reasoning_enabled">{{ "Enabled" if session_data.multi_step_reasoning_enabled else "Disabled" }}</p>
                     </div>
                     <div class="meta-item">
+                        <strong>Hyperparameters:</strong>
+                        {% if session_data.hyperparameters %}
+                            <p class="editable-meta" data-field="hyperparameters">
+                                Temp: {{ session_data.hyperparameters.temperature.value }},
+                                Top P: {{ session_data.hyperparameters.top_p.value }},
+                                Top K: {{ session_data.hyperparameters.top_k.value }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="meta-item">
                         <strong>Todos:</strong>
                         <button class="action-btn" id="delete-todos-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px; background-color: #dc3545;">Delete All</button>
                         {% if session_data.todos and session_data.todos|length > 0 %}
@@ -186,6 +196,24 @@
                             </ul>
                         {% else %}
                             <p>No todos for this session.</p>
+                        {% endif %}
+                    </div>
+                    <div class="meta-item">
+                        <strong>References:</strong>
+                        <button class="action-btn" id="toggle-references-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px;">Toggle All</button>
+                        {% if session_data.references and session_data.references|length > 0 %}
+                            <ul id="references-list" style="list-style: none; padding-left: 0;">
+                                {% for reference in session_data.references %}
+                                    <li style="margin-bottom: 10px;">
+                                        <label style="cursor: pointer; display: flex; align-items: center;">
+                                            <input type="checkbox" class="reference-checkbox" data-index="{{ loop.index0 }}" {% if not reference.disabled %}checked{% endif %} style="margin-right: 8px;">
+                                            <span style="word-break: break-all; {% if reference.disabled %}text-decoration: line-through; color: #888;{% endif %}">{{ reference.path }}</span>
+                                        </label>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>No references for this session.</p>
                         {% endif %}
                     </div>
                 </div>
@@ -477,12 +505,19 @@
                     purpose: viewContainer.querySelector('[data-field="purpose"]'),
                     background: viewContainer.querySelector('[data-field="background"]'),
                     multi_step_reasoning_enabled: viewContainer.querySelector('[data-field="multi_step_reasoning_enabled"]'),
+                    hyperparameters: viewContainer.querySelector('[data-field="hyperparameters"]')
                 };
 
                 const inputs = {
                     purpose: document.createElement('textarea'),
                     background: document.createElement('textarea'),
                     multi_step_reasoning_enabled: document.createElement('input'),
+                    hyperparameters: {
+                        container: document.createElement('div'),
+                        temperature: document.createElement('input'),
+                        top_p: document.createElement('input'),
+                        top_k: document.createElement('input')
+                    }
                 };
 
                 inputs.purpose.value = fields.purpose.textContent.trim();
@@ -490,14 +525,62 @@
                 inputs.multi_step_reasoning_enabled.type = 'checkbox';
                 inputs.multi_step_reasoning_enabled.checked = fields.multi_step_reasoning_enabled.textContent.trim() === 'Enabled';
 
+                const currentHyperparams = {{ session_data.hyperparameters | tojson | safe }};
+                const hpContainer = inputs.hyperparameters.container;
+                hpContainer.style.display = 'grid';
+                hpContainer.style.gap = '10px';
+
+                // Temperature
+                const tempLabel = document.createElement('label');
+                tempLabel.innerHTML = `Temperature: <span id="edit-temperature-value">${currentHyperparams.temperature.value}</span>`;
+                inputs.hyperparameters.temperature.type = 'range';
+                inputs.hyperparameters.temperature.min = '0';
+                inputs.hyperparameters.temperature.max = '2';
+                inputs.hyperparameters.temperature.step = '0.1';
+                inputs.hyperparameters.temperature.value = currentHyperparams.temperature.value;
+                inputs.hyperparameters.temperature.addEventListener('input', (e) => {
+                    document.getElementById('edit-temperature-value').textContent = e.target.value;
+                });
+                hpContainer.appendChild(tempLabel);
+                hpContainer.appendChild(inputs.hyperparameters.temperature);
+
+                // Top P
+                const topPLabel = document.createElement('label');
+                topPLabel.innerHTML = `Top P: <span id="edit-top_p-value">${currentHyperparams.top_p.value}</span>`;
+                inputs.hyperparameters.top_p.type = 'range';
+                inputs.hyperparameters.top_p.min = '0';
+                inputs.hyperparameters.top_p.max = '1';
+                inputs.hyperparameters.top_p.step = '0.1';
+                inputs.hyperparameters.top_p.value = currentHyperparams.top_p.value;
+                inputs.hyperparameters.top_p.addEventListener('input', (e) => {
+                    document.getElementById('edit-top_p-value').textContent = e.target.value;
+                });
+                hpContainer.appendChild(topPLabel);
+                hpContainer.appendChild(inputs.hyperparameters.top_p);
+
+                // Top K
+                const topKLabel = document.createElement('label');
+                topKLabel.innerHTML = `Top K: <span id="edit-top_k-value">${currentHyperparams.top_k.value}</span>`;
+                inputs.hyperparameters.top_k.type = 'range';
+                inputs.hyperparameters.top_k.min = '1';
+                inputs.hyperparameters.top_k.max = '50';
+                inputs.hyperparameters.top_k.step = '1';
+                inputs.hyperparameters.top_k.value = currentHyperparams.top_k.value;
+                inputs.hyperparameters.top_k.addEventListener('input', (e) => {
+                    document.getElementById('edit-top_k-value').textContent = e.target.value;
+                });
+                hpContainer.appendChild(topKLabel);
+                hpContainer.appendChild(inputs.hyperparameters.top_k);
+
                 const label = document.createElement('label');
                 label.textContent = ' Enable Multi-step Reasoning';
 
-                Object.values(fields).forEach(p => p.style.display = 'none');
+                Object.values(fields).forEach(p => { if(p) p.style.display = 'none'; });
                 fields.purpose.parentElement.appendChild(inputs.purpose);
                 fields.background.parentElement.appendChild(inputs.background);
                 fields.multi_step_reasoning_enabled.parentElement.appendChild(inputs.multi_step_reasoning_enabled);
                 fields.multi_step_reasoning_enabled.parentElement.appendChild(label);
+                if (fields.hyperparameters) fields.hyperparameters.parentElement.appendChild(hpContainer);
                 
                 editButton.style.display = 'none';
 
@@ -519,7 +602,12 @@
                 const payload = {
                     purpose: inputs.purpose.value,
                     background: inputs.background.value,
-                    multi_step_reasoning_enabled: inputs.multi_step_reasoning_enabled.checked
+                    multi_step_reasoning_enabled: inputs.multi_step_reasoning_enabled.checked,
+                    hyperparameters: {
+                        temperature: { value: parseFloat(inputs.hyperparameters.temperature.value) },
+                        top_p: { value: parseFloat(inputs.hyperparameters.top_p.value) },
+                        top_k: { value: parseInt(inputs.hyperparameters.top_k.value, 10) }
+                    }
                 };
 
                 fetch(`/api/session/${sessionId}/meta/edit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
@@ -591,26 +679,61 @@
                 });
             }
 
-            document.getElementById('delete-todos-btn')?.addEventListener('click', function() {
-                const sessionId = this.dataset.sessionId;
-                if (confirm('Are you sure you want to delete all todos for this session?')) {
-                    deleteTodos(sessionId);
+            document.getElementById('references-list')?.addEventListener('change', function(event) {
+                if (event.target.classList.contains('reference-checkbox')) {
+                    const sessionId = document.getElementById('current-session-id').value;
+                    let references = {{ session_data.references | tojson | safe if session_data.references else '[]' }};
+                    
+                    const checkbox = event.target;
+                    const index = parseInt(checkbox.dataset.index, 10);
+                    if (references[index]) {
+                        references[index].disabled = !checkbox.checked;
+                    }
+
+                    const label = checkbox.closest('label');
+                    const span = label.querySelector('span');
+                    if (checkbox.checked) {
+                        span.style.textDecoration = 'none';
+                        span.style.color = 'inherit';
+                    } else {
+                        span.style.textDecoration = 'line-through';
+                        span.style.color = '#888';
+                    }
+
+                    saveReferences(sessionId, references);
                 }
             });
 
-            function deleteTodos(sessionId) {
-                fetch(`/api/session/${sessionId}/todos`, {
-                    method: 'DELETE'
+            document.getElementById('toggle-references-btn')?.addEventListener('click', function() {
+                const sessionId = document.getElementById('current-session-id').value;
+                let references = {{ session_data.references | tojson | safe if session_data.references else '[]' }};
+                const shouldCheckAll = references.some(ref => ref.disabled);
+                references.forEach(ref => ref.disabled = !shouldCheckAll);
+                saveReferences(sessionId, references, true); // Pass true to reload
+            });
+
+            function saveReferences(sessionId, references, reload = false) {
+                const payload = { references };
+
+                fetch(`/api/session/${sessionId}/references/edit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 })
                 .then(handleResponse)
                 .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    } else {
+                    if (!data.success) {
                         throw new Error(data.message);
                     }
+                    console.log("References saved successfully.");
+                    if (reload) {
+                        window.location.reload();
+                    }
                 })
-                .catch(handleError);
+                .catch(error => {
+                    handleError(error);
+                    window.location.reload();
+                });
             }
 
         }); // End DOMContentLoaded

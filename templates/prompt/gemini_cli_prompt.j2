@@ -9,6 +9,7 @@
 {% from "advanced_reasoning_flow.j2" import render_advanced_reasoning_flow_macro %}
 {% from "todos.j2" import render_todos_macro %}
 {
+  "current_datetime": "{{ current_datetime }}",
   "description": {{ render_description_macro(session.description) }},
   "session_goal": {{ render_session_goal_macro(session.session_goal) }},
   "roles": {{ render_roles_macro(session.roles) }},

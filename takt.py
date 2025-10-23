@@ -134,6 +134,7 @@ def _parse_arguments():
     parser.add_argument('--background', type=str, help='The background context for the new session.')
     parser.add_argument('--roles', type=str, help='Comma-separated paths to role files for the new session.')
     parser.add_argument('--instruction', type=str, help='The specific instruction for the current task.')
+    parser.add_argument('--references', type=str, help='Comma-separated paths to reference files.')
     parser.add_argument('--multi-step-reasoning', action='store_true', help='Include multi-step reasoning process in the prompt.')
     parser.add_argument('--fork', type=str, metavar='SESSION_ID', help='The ID of the session to fork.')
     parser.add_argument('--at-turn', type=int, metavar='TURN_INDEX', help='The 1-based turn number to fork from. Required with --fork.')
@@ -149,6 +150,8 @@ def main():
 
     load_dotenv()
     config_path = os.path.join(project_root, 'setting.yml')
+    if not os.path.exists(config_path):
+        config_path = os.path.join(project_root, 'setting.default.yml')
     settings = read_yaml_file(config_path)
     
     args, parser = _parse_arguments()
@@ -188,7 +191,25 @@ def main():
             local_tz=session_manager.local_tz
         )
 
+        if args.dry_run:
+            if args.references:
+                references = [{'path': ref.strip(), 'disabled': False} for ref in args.references.split(',') if ref.strip()]
+                if 'references' not in session_data_for_prompt:
+                    session_data_for_prompt['references'] = []
+                
+                existing_paths = {ref['path'] for ref in session_data_for_prompt.get('references', [])}
+                new_references = [ref for ref in references if ref['path'] not in existing_paths]
+                session_data_for_prompt['references'].extend(new_references)
 
+            from src.delegates import dry_run_delegate
+            dry_run_delegate.run(
+                settings,
+                session_data_for_prompt,
+                project_root,
+                api_mode,
+                enable_multi_step_reasoning
+            )
+            return # Exit main function after dry run
 
         # If not a dry run, proceed with session creation/continuation and execution
         if not session_id:
@@ -213,6 +234,19 @@ def main():
             new_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_manager.local_tz)}
             session_manager.add_turn_to_session(session_id, new_turn)
             print(f"Conductor Agent: Continuing session: {session_id}", file=sys.stderr)
+
+        if args.references:
+            references = [{'path': ref.strip(), 'disabled': False} for ref in args.references.split(',') if ref.strip()]
+            if 'references' not in session_data_for_prompt:
+                session_data_for_prompt['references'] = []
+            
+            existing_paths = {ref['path'] for ref in session_data_for_prompt.get('references', [])}
+            new_references = [ref for ref in references if ref['path'] not in existing_paths]
+            session_data_for_prompt['references'].extend(new_references)
+
+            if not args.dry_run and new_references:
+                session_manager.history_manager.update_references(session_id, session_data_for_prompt['references'])
+                print(f"Added {len(new_references)} new references to session {session_id}.", file=sys.stderr)
 
         _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
 

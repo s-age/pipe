@@ -13,7 +13,7 @@
     data-session-turns-count="{% if current_session_id %}{{ session_data.turns | length }}{% else %}0{% endif %}"
     data-expert-mode="{{ expert_mode | tojson }}"
     data-current-session-id="{{ current_session_id }}"
-    data-session-data='{{ session_data | tojson | safe if session_data and session_data.turns else "{}" }}'
+    data-session-data='{{ session_data | tojson | safe }}'
 >
     <!-- Column 1: Session List -->
     <div id="sessions-column" class="column">

@@ -71,7 +71,8 @@ def index():
         key=lambda item: item[1].get('last_updated', ''),
         reverse=True
     )
-    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data={}, expert_mode=settings.get('expert_mode', False), settings=settings)
+    import json
+    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data=json.dumps({}), expert_mode=settings.get('expert_mode', False), settings=settings)
 
 @app.route('/new_session')
 def new_session_form():
@@ -84,6 +85,7 @@ def create_new_session_api():
         purpose = data.get('purpose')
         background = data.get('background')
         roles_str = data.get('roles', '')
+        references_str = data.get('references', '')
         instruction = data.get('instruction')
         multi_step_reasoning_enabled = data.get('multi_step_reasoning_enabled', False)
         hyperparameters = data.get('hyperparameters')
@@ -97,6 +99,8 @@ def create_new_session_api():
         
         import subprocess # Moved import here to be within the function scope if not already global
         command = ['python3', 'takt.py', '--session', session_id, '--instruction', instruction]
+        if references_str:
+            command.extend(['--references', references_str])
         if multi_step_reasoning_enabled:
             command.append('--multi-step-reasoning')
         process = subprocess.run(

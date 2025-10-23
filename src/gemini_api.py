@@ -1,3 +1,9 @@
+# This script utilizes the 'google-genai' library to interact with the Gemini API.
+# It is important to note that 'google-genai' is the newer, recommended library,
+# and should be used in place of the older 'google-generativeai' library to ensure
+# access to the latest features and improvements.
+# For reference, see: https://pypi.org/project/google-genai/
+
 import os
 import json
 

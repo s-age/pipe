@@ -1,3 +1,14 @@
+# This script acts as a wrapper for the official Google Gemini CLI tool.
+# Its main purpose is to construct a detailed prompt using the PromptBuilder
+# and then execute the 'gemini' command-line tool as a subprocess with
+# the generated prompt.
+#
+# This allows the application to leverage the functionality of the official CLI
+# while programmatically controlling the input and context.
+#
+# For more information on the underlying tool, see the official repository:
+# https://github.com/google-gemini/gemini-cli
+
 import json
 import subprocess
 import sys

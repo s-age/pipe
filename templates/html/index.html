@@ -525,7 +525,7 @@
                 inputs.multi_step_reasoning_enabled.type = 'checkbox';
                 inputs.multi_step_reasoning_enabled.checked = fields.multi_step_reasoning_enabled.textContent.trim() === 'Enabled';
 
-                const currentHyperparams = {{ session_data.hyperparameters | tojson | safe }};
+                const currentHyperparams = {{ session_data.hyperparameters | default({}) | tojson | safe }};
                 const hpContainer = inputs.hyperparameters.container;
                 hpContainer.style.display = 'grid';
                 hpContainer.style.gap = '10px';

@@ -35,142 +35,166 @@
         {% if current_session_id %}
         <div id="turns-column-header" style="position: sticky; top: 0; background-color: #f0f2f5; padding: 10px 20px; border-bottom: 1px solid #dee2e6; z-index: 5;">
             <h2>{{ session_data.purpose }} {% if context_limit > 0 and token_count is not none %}({{ ((context_limit - token_count) / context_limit * 100) | round(0, 'floor') }}% context left){% endif %}</h2>
+            <button class="action-btn delete-session-btn" data-session-id="{{ current_session_id }}">Delete Session</button>
         </div>
         {% endif %}
         {% if current_session_id %}
-        <section id="turns-list-section" style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
-            {% for turn in turns %}
-                <div class="turn {{ turn.type }}" id="turn-{{ loop.index0 }}">
-                                            <div class="turn-header">
-                                            <span>
-                                                <strong style="color: #007bff; margin-right: 10px;">{{ loop.index }}:</strong>
-                                                                            {% if turn.type == 'user_task' %}You
-                                                                            {% elif turn.type == 'model_response' %}Model
-                                                                            {% elif turn.type == 'function_calling' %}Function Calling
-                                                                            {% elif turn.type == 'tool_response' %}Tool Response
-                                                                            {% elif turn.type == 'compressed_history' %}Compressed
-                                                                            {% else %}Unknown{% endif %}                                                <span style="font-weight: normal; color: #999; margin-left: 10px;">{{ turn.timestamp.replace('T', ' ').split('.')[0] if turn.timestamp else '' }}</span>
-                                            </span>                        <div class="turn-header-controls">
-                            {% if turn.type == 'model_response' %}
-                            <button class="action-btn fork-btn" data-session-id="{{ current_session_id }}" data-fork-index="{{ loop.index0 }}">Fork</button>
-                            {% endif %}
-                            <button class="action-btn copy-turn-btn" data-turn-index="{{ loop.index0 }}">Copy</button>
-                            {% if expert_mode %}
-                            <button class="action-btn edit-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}" data-turn-type="{{ turn.type }}">Edit</button>
-                            <button class="action-btn delete-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}">Delete</button>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="turn-content">
-                        {% if turn.type == 'user_task' %}
-                            <pre class="editable" data-field="instruction">{{ turn.instruction }}</pre>
-                        {% elif turn.type == 'model_response' or turn.type == 'compressed_history' %}
-                            {% if turn.type == 'compressed_history' %}<p><strong><em>-- History Compressed --</em></strong></p>{% endif %}
-                            <div class="raw-markdown" style="display: none;">{{ turn.content }}</div>
-                            <div class="rendered-markdown markdown-body editable" data-field="content"></div>
-                        {% elif turn.type == 'function_calling' %}
-                            <pre>{{ turn.response }}</pre>
-                        {% elif turn.type == 'tool_response' %}
-                            <div class="tool-response-content">
-                                <strong>Status: </strong>
-                                <span class="status-{{ turn.response.status }}">{{ turn.response.status }}</span>
-                            </div>
-                        {% endif %}
-                    </div>
+        <section id="turns-list-section">
+
+        {% for turn in turns %}
+        <div class="turn {{ turn.type }}" id="turn-{{ loop.index0 }}">
+            <div class="turn-header">
+                <span>
+                    <strong style="color: #007bff; margin-right: 10px;">{{ loop.index }}:</strong>
+                    {% if turn.type == 'user_task' %}You
+                    {% elif turn.type == 'model_response' %}Model
+                    {% elif turn.type == 'function_calling' %}Function Calling
+                    {% elif turn.type == 'tool_response' %}Tool Response
+                    {% elif turn.type == 'compressed_history' %}Compressed
+                    {% else %}Unknown{% endif %}
+                    <span style="font-weight: normal; color: #999; margin-left: 10px;">{{ turn.timestamp.replace('T', ' ').split('.')[0] if turn.timestamp else '' }}</span>
+                </span>
+
+                <div class="turn-header-controls">
+                    {% if turn.type == 'model_response' %}
+                    <button class="action-btn fork-btn" data-session-id="{{ current_session_id }}" data-fork-index="{{ loop.index0 }}">Fork</button>
+                    {% endif %}
+                    <button class="action-btn copy-turn-btn" data-turn-index="{{ loop.index0 }}">Copy</button>
+                    {% if expert_mode %}
+                    <button class="action-btn edit-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}" data-turn-type="{{ turn.type }}">Edit</button>
+                    <button class="action-btn delete-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}">Delete</button>
+                    {% endif %}
                 </div>
-            {% endfor %}
-        {% else %}
-            <div class="welcome-message">
-                <h1>Welcome</h1>
-                <p>Select a session from the sidebar to view its details.</p>
             </div>
+
+            <div class="turn-content">
+                {% if turn.type == 'user_task' %}
+                    <pre class="editable" data-field="instruction">{{ turn.instruction }}</pre>
+                {% elif turn.type == 'model_response' or turn.type == 'compressed_history' %}
+                    {% if turn.type == 'compressed_history' %}<p><strong><em>-- History Compressed --</em></strong></p>{% endif %}
+                    <div class="raw-markdown" style="display: none;">{{ turn.content }}</div>
+                    <div class="rendered-markdown markdown-body editable" data-field="content"></div>
+                {% elif turn.type == 'function_calling' %}
+                    <pre>{{ turn.response }}</pre>
+                {% elif turn.type == 'tool_response' %}
+                    <div class="tool-response-content">
+                        <strong>Status: </strong>
+                        <span class="status-{{ turn.response.status }}">{{ turn.response.status }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        </section>
+        {% else %}
+        <div class="welcome-message">
+            <h1>Welcome</h1>
+            <p>Select a session from the sidebar to view its details.</p>
+        </div>
+        {% endif %}
+        
+        {% if current_session_id %}
+        <section class="new-instruction-control">
+            <textarea id="new-instruction-text" placeholder="Enter your instruction here..."></textarea>
+            <button class="action-btn send-instruction-btn" data-session-id="{{ current_session_id }}">Send Instruction</button>
+        </section>
         {% endif %}
     </div>
+
     <!-- Column 3: Meta & Actions -->
     <div id="meta-column" class="column">
         {% if current_session_id %}
-            <input type="hidden" id="current-session-id" value="{{ current_session_id }}">
-            <section style="flex: 5 0 0; display: flex; flex-direction: column; box-sizing: border-box; min-height: 0;">
-                <h3>Session Meta</h3>
-                <div class="session-meta" id="session-meta-view" style="flex: 1; overflow-y: auto;">
-                    <div class="meta-item">
-                        <strong>Purpose:</strong>
-                        <p class="editable-meta" data-field="purpose">{{ session_data.purpose }}</p>
-                    </div>
-                    <div class="meta-item">
-                        <strong>Background:</strong>
-                        <p class="editable-meta" data-field="background">{{ session_data.background }}</p>
-                    </div>
-                    <div class="meta-item">
-                        <strong>Roles:</strong>
-                        <p class="editable-meta" data-field="roles">{{ session_data.roles | join(', ') }}</p>
-                    </div>
-                    <div class="meta-item">
-                        <strong>Multi-step Reasoning:</strong>
-                        <p class="editable-meta" data-field="multi_step_reasoning_enabled">{{ "Enabled" if session_data.multi_step_reasoning_enabled else "Disabled" }}</p>
-                    </div>
-                    <div class="meta-item">
-                        <strong>Hyperparameters:</strong>
-                        {% if session_data.hyperparameters %}
-                            <p class="editable-meta" data-field="hyperparameters">
-                                Temp: {{ session_data.hyperparameters.temperature.value }},
-                                Top P: {{ session_data.hyperparameters.top_p.value }},
-                                Top K: {{ session_data.hyperparameters.top_k.value }}
-                            </p>
-                        {% endif %}
-                    </div>
-                    <div class="meta-item">
-                        <strong>Todos:</strong>
-                        <button class="action-btn" id="delete-todos-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px; background-color: #dc3545;">Delete All</button>
-                        {% if session_data.todos and session_data.todos|length > 0 %}
-                            <ul id="todos-list" style="list-style: none; padding-left: 0;">
-                                {% for todo in session_data.todos %}
-                                    <li style="margin-bottom: 10px;">
-                                        <label style="cursor: pointer;">
-                                            <input type="checkbox" class="todo-checkbox" data-index="{{ loop.index0 }}" {% if todo.checked %}checked{% endif %} style="margin-right: 8px;">
-                                            <strong style="display: inline;">{{ todo.item }}</strong>
-                                        </label>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p>No todos for this session.</p>
-                        {% endif %}
-                    </div>
-                    <div class="meta-item">
-                        <strong>References:</strong>
-                        <button class="action-btn" id="toggle-references-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px;">Toggle All</button>
-                        {% if session_data.references and session_data.references|length > 0 %}
-                            <ul id="references-list" style="list-style: none; padding-left: 0;">
-                                {% for reference in session_data.references %}
-                                    <li style="margin-bottom: 10px;">
-                                        <label style="cursor: pointer; display: flex; align-items: center;">
-                                            <input type="checkbox" class="reference-checkbox" data-index="{{ loop.index0 }}" {% if not reference.disabled %}checked{% endif %} style="margin-right: 8px;">
-                                            <span style="word-break: break-all; {% if reference.disabled %}text-decoration: line-through; color: #888;{% endif %}">{{ reference.path }}</span>
-                                        </label>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p>No references for this session.</p>
-                        {% endif %}
-                    </div>
+        <input type="hidden" id="current-session-id" value="{{ current_session_id }}">
+        <section style="flex: 5 0 0; display: flex; flex-direction: column; box-sizing: border-box; min-height: 0;">
+            <div class="session-meta" id="session-meta-view" style="flex: 1; overflow-y: auto;">
+                <div class="meta-item">
+                    <strong>Purpose:</strong>
+                    <input type="text" data-field="purpose" value="{{ session_data.purpose }}" style="width: 100%; box-sizing: border-box;">
                 </div>
-                <button class="action-btn edit-meta-btn" data-session-id="{{ current_session_id }}">Edit Meta</button>
-            </section>
-            <section style="flex: 1; box-sizing: border-box;">
-                <h3>Session Control</h3>
-                <div class="session-actions">
-                    <button class="action-btn delete-session-btn" data-session-id="{{ current_session_id }}">Delete Session</button>
+                <div class="meta-item">
+                    <strong>Background:</strong>
+                    <textarea data-field="background" style="width: 100%; box-sizing: border-box; min-height: 100px;">{{ session_data.background }}</textarea>
                 </div>
-            </section>
-            <section class="new-instruction-control" style="flex: 4; display: flex; flex-direction: column; box-sizing: border-box;">
-                <h3>New Instruction</h3>
-                <textarea id="new-instruction-text" placeholder="Enter your instruction here..." style="width: 100%; flex: 1; min-height: 80px; margin-bottom: 10px;"></textarea>
-                <button class="action-btn send-instruction-btn" data-session-id="{{ current_session_id }}">Send Instruction</button>
-            </section>
+                <div class="meta-item">
+                    <strong>Roles:</strong>
+                    <input type="text" data-field="roles" value="{{ session_data.roles | join(', ') }}" style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div class="meta-item">
+                    <label>
+                        <input type="checkbox" data-field="multi_step_reasoning_enabled" {% if session_data.multi_step_reasoning_enabled %}checked{% endif %}>
+                        <strong>Multi-step Reasoning</strong>
+                    </label>
+                </div>
+                <div class="meta-item">
+                    <strong>Hyperparameters:</strong>
+                    {% if session_data.hyperparameters %}
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label>Temperature:</label>
+                        <div>
+                            <input type="range" data-field="temperature" min="0" max="2" step="0.1" value="{{ session_data.hyperparameters.temperature.value }}">
+                            <span id="edit-temperature-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.temperature.value }}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label>Top P:</label>
+                        <div>
+                            <input type="range" data-field="top_p" min="0" max="1" step="0.1" value="{{ session_data.hyperparameters.top_p.value }}">
+                            <span id="edit-top_p-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.top_p.value }}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label>Top K:</label>
+                        <div>
+                            <input type="range" data-field="top_k" min="1" max="50" step="1" value="{{ session_data.hyperparameters.top_k.value }}">
+                            <span id="edit-top_k-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.top_k.value }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="meta-item">
+                    <strong>Todos:</strong>
+                    <button class="action-btn" id="delete-todos-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px; background-color: #dc3545;">Delete All</button>
+                    {% if session_data.todos and session_data.todos|length > 0 %}
+                    <ul id="todos-list" style="list-style: none; padding-left: 0;">
+                        {% for todo in session_data.todos %}
+                            <li style="margin-bottom: 10px;">
+                                <label style="cursor: pointer;">
+                                    <input type="checkbox" class="todo-checkbox" data-index="{{ loop.index0 }}" {% if todo.checked %}checked{% endif %} style="margin-right: 8px;">
+                                    <strong style="display: inline;">{{ todo.item }}</strong>
+                                </label>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p>No todos for this session.</p>
+                    {% endif %}
+                </div>
+
+                <div class="meta-item">
+                    <strong>References:</strong>
+                    <button class="action-btn" id="toggle-references-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px;">Toggle All</button>
+                    {% if session_data.references and session_data.references|length > 0 %}
+                    <ul id="references-list" style="list-style: none; padding-left: 0;">
+                        {% for reference in session_data.references %}
+                            <li style="margin-bottom: 10px;">
+                                <label style="cursor: pointer; display: flex; align-items: center;">
+                                    <input type="checkbox" class="reference-checkbox" data-index="{{ loop.index0 }}" {% if not reference.disabled %}checked{% endif %} style="margin-right: 8px;">
+                                    <span style="word-break: break-all; {% if reference.disabled %}text-decoration: line-through; color: #888;{% endif %}">{{ reference.path }}</span>
+                                </label>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p>No references for this session.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <button class="action-btn save-btn" id="save-meta-btn" data-session-id="{{ current_session_id }}">Save Meta</button>
+        </section>
         {% endif %}
     </div>
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

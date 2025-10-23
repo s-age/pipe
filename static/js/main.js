@@ -6,10 +6,11 @@ const sessionData = JSON.parse(document.body.dataset.sessionData || '{}');
 
 
 function isScrolledToBottom() {
-    const turnsColumn = document.getElementById('turns-column');
+    const turnsList = document.getElementById('turns-list-section');
+    if (!turnsList) return false;
     // 少しの誤差を許容するための閾値（例: 1px）
     const threshold = 1;
-    return turnsColumn.scrollHeight - turnsColumn.scrollTop - turnsColumn.clientHeight <= threshold;
+    return turnsList.scrollHeight - turnsList.scrollTop - turnsList.clientHeight <= threshold;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -62,8 +63,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
      function scrollToBottom() {
-        const turnsColumn = document.getElementById('turns-column');
-        turnsColumn.scrollTop = turnsColumn.scrollHeight;
+        const turnsList = document.getElementById('turns-list-section');
+        if (turnsList) {
+            turnsList.scrollTop = turnsList.scrollHeight;
+        }
     }
 
     function renderMarkdown() {
@@ -208,120 +211,30 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(handleError);
     }
 
-    function toggleMetaEdit(editButton, sessionId) {
+    function saveMetaEdit(sessionId) {
         const viewContainer = document.getElementById('session-meta-view');
-        const fields = {
-            purpose: viewContainer.querySelector('[data-field="purpose"]'),
-            background: viewContainer.querySelector('[data-field="background"]'),
-            multi_step_reasoning_enabled: viewContainer.querySelector('[data-field="multi_step_reasoning_enabled"]'),
-            hyperparameters: viewContainer.querySelector('[data-field="hyperparameters"]')
-        };
-
-        const inputs = {
-            purpose: document.createElement('textarea'),
-            background: document.createElement('textarea'),
-            multi_step_reasoning_enabled: document.createElement('input'),
-            hyperparameters: {
-                container: document.createElement('div'),
-                temperature: document.createElement('input'),
-                top_p: document.createElement('input'),
-                top_k: document.createElement('input')
-            }
-        };
-
-        inputs.purpose.value = fields.purpose.textContent.trim();
-        inputs.background.value = fields.background.textContent.trim();
-        inputs.multi_step_reasoning_enabled.type = 'checkbox';
-        inputs.multi_step_reasoning_enabled.checked = fields.multi_step_reasoning_enabled.textContent.trim() === 'Enabled';
-
-        const currentHyperparams = sessionData.hyperparameters || {};
-        const hpContainer = inputs.hyperparameters.container;
-        hpContainer.style.display = 'grid';
-        hpContainer.style.gap = '10px';
-
-        // Temperature
-        const tempLabel = document.createElement('label');
-        tempLabel.innerHTML = `Temperature: <span id="edit-temperature-value">${currentHyperparams.temperature.value}</span>`;
-        inputs.hyperparameters.temperature.type = 'range';
-        inputs.hyperparameters.temperature.min = '0';
-        inputs.hyperparameters.temperature.max = '2';
-        inputs.hyperparameters.temperature.step = '0.1';
-        inputs.hyperparameters.temperature.value = currentHyperparams.temperature.value;
-        inputs.hyperparameters.temperature.addEventListener('input', (e) => {
-            document.getElementById('edit-temperature-value').textContent = e.target.value;
-        });
-        hpContainer.appendChild(tempLabel);
-        hpContainer.appendChild(inputs.hyperparameters.temperature);
-
-        // Top P
-        const topPLabel = document.createElement('label');
-        topPLabel.innerHTML = `Top P: <span id="edit-top_p-value">${currentHyperparams.top_p.value}</span>`;
-        inputs.hyperparameters.top_p.type = 'range';
-        inputs.hyperparameters.top_p.min = '0';
-        inputs.hyperparameters.top_p.max = '1';
-        inputs.hyperparameters.top_p.step = '0.1';
-        inputs.hyperparameters.top_p.value = currentHyperparams.top_p.value;
-        inputs.hyperparameters.top_p.addEventListener('input', (e) => {
-            document.getElementById('edit-top_p-value').textContent = e.target.value;
-        });
-        hpContainer.appendChild(topPLabel);
-        hpContainer.appendChild(inputs.hyperparameters.top_p);
-
-        // Top K
-        const topKLabel = document.createElement('label');
-        topKLabel.innerHTML = `Top K: <span id="edit-top_k-value">${currentHyperparams.top_k.value}</span>`;
-        inputs.hyperparameters.top_k.type = 'range';
-        inputs.hyperparameters.top_k.min = '1';
-        inputs.hyperparameters.top_k.max = '50';
-        inputs.hyperparameters.top_k.step = '1';
-        inputs.hyperparameters.top_k.value = currentHyperparams.top_k.value;
-        inputs.hyperparameters.top_k.addEventListener('input', (e) => {
-            document.getElementById('edit-top_k-value').textContent = e.target.value;
-        });
-        hpContainer.appendChild(topKLabel);
-        hpContainer.appendChild(inputs.hyperparameters.top_k);
-
-        const label = document.createElement('label');
-        label.textContent = ' Enable Multi-step Reasoning';
-
-        Object.values(fields).forEach(p => { if(p) p.style.display = 'none'; });
-        fields.purpose.parentElement.appendChild(inputs.purpose);
-        fields.background.parentElement.appendChild(inputs.background);
-        fields.multi_step_reasoning_enabled.parentElement.appendChild(inputs.multi_step_reasoning_enabled);
-        fields.multi_step_reasoning_enabled.parentElement.appendChild(label);
-        if (fields.hyperparameters) fields.hyperparameters.parentElement.appendChild(hpContainer);
-        
-        editButton.style.display = 'none';
-
-        const saveButton = document.createElement('button');
-        saveButton.className = 'action-btn save-btn';
-        saveButton.textContent = 'Save Meta';
-        saveButton.onclick = () => saveMetaEdit(sessionId, inputs);
-
-        const cancelButton = document.createElement('button');
-        cancelButton.className = 'action-btn cancel-btn';
-        cancelButton.textContent = 'Cancel';
-        cancelButton.onclick = () => window.location.reload();
-
-        viewContainer.appendChild(saveButton);
-        viewContainer.appendChild(cancelButton);
-    }
-
-    function saveMetaEdit(sessionId, inputs) {
         const payload = {
-            purpose: inputs.purpose.value,
-            background: inputs.background.value,
-            multi_step_reasoning_enabled: inputs.multi_step_reasoning_enabled.checked,
+            purpose: viewContainer.querySelector('[data-field="purpose"]').value,
+            background: viewContainer.querySelector('[data-field="background"]').value,
+            roles: viewContainer.querySelector('[data-field="roles"]').value.split(',').map(s => s.trim()).filter(Boolean),
+            multi_step_reasoning_enabled: viewContainer.querySelector('[data-field="multi_step_reasoning_enabled"]').checked,
             hyperparameters: {
-                temperature: { value: parseFloat(inputs.hyperparameters.temperature.value) },
-                top_p: { value: parseFloat(inputs.hyperparameters.top_p.value) },
-                top_k: { value: parseInt(inputs.hyperparameters.top_k.value, 10) }
+                temperature: { value: parseFloat(viewContainer.querySelector('[data-field="temperature"]').value) },
+                top_p: { value: parseFloat(viewContainer.querySelector('[data-field="top_p"]').value) },
+                top_k: { value: parseInt(viewContainer.querySelector('[data-field="top_k"]').value, 10) }
             }
         };
 
         fetch(`/api/session/${sessionId}/meta/edit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(handleResponse)
-            .then(data => data.success ? window.location.reload() : Promise.reject(new Error(data.message)))
+            .then(data => {
+                if (data.success) {
+                    alert('Session meta saved successfully!');
+                    window.location.reload();
+                } else {
+                    throw new Error(data.message);
+                }
+            })
             .catch(handleError);
     }
 
@@ -623,14 +536,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial page load setup
     renderMarkdown();
     attachEventListenersToTurns();
-     scrollToBottom();
+    scrollToBottom();
+
+    // Update hyperparameter value displays on slider input
+    document.querySelectorAll('input[type="range"][data-field]').forEach(slider => {
+        const valueSpan = document.getElementById(`edit-${slider.dataset.field}-value`);
+        if (valueSpan) {
+            slider.addEventListener('input', (event) => {
+                valueSpan.textContent = event.target.value;
+            });
+        }
+    });
     
     document.getElementById('new-chat-button').addEventListener('click', () => window.location.href = '/new_session');
     
-    document.querySelectorAll('.edit-meta-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            toggleMetaEdit(this, this.dataset.sessionId);
-        });
+    document.getElementById('save-meta-btn')?.addEventListener('click', function() {
+        saveMetaEdit(this.dataset.sessionId);
     });
 
     document.querySelectorAll('.delete-session-btn, .send-instruction-btn').forEach(button => {

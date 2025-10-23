@@ -207,12 +207,12 @@ def main():
             first_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_manager.local_tz)}
             session_manager.add_turn_to_session(session_id, first_turn)
             
-            print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}")
+            print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}", file=sys.stderr)
         else:
             # For existing sessions, add the new instruction as a turn
             new_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_manager.local_tz)}
             session_manager.add_turn_to_session(session_id, new_turn)
-            print(f"Conductor Agent: Continuing session: {session_id}")
+            print(f"Conductor Agent: Continuing session: {session_id}", file=sys.stderr)
 
         _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
 

@@ -284,6 +284,10 @@ def fork_session_api(session_id, fork_index):
 
 @app.route('/api/session/<session_id>/instruction', methods=['POST'])
 def send_instruction_api(session_id):
+    from flask import Response, stream_with_context
+    import subprocess
+    import json
+
     try:
         new_data = request.get_json()
         instruction = new_data.get('instruction')
@@ -296,19 +300,41 @@ def send_instruction_api(session_id):
         
         enable_multi_step_reasoning = session_data.get('multi_step_reasoning_enabled', False)
 
-        import subprocess
-        command = ['python3', 'takt.py', '--session', session_id, '--instruction', instruction]
+        command = ['python3', '-u', 'takt.py', '--session', session_id, '--instruction', instruction]
         if enable_multi_step_reasoning:
             command.append('--multi-step-reasoning')
-        process = subprocess.run(
-            command, capture_output=True, text=True, check=True, encoding='utf-8'
-        )
-        llm_response = process.stdout.strip()
-        
-        return jsonify({"success": True, "message": "Instruction sent successfully.", "llm_response": llm_response}), 200
-    except subprocess.CalledProcessError as e:
-        return jsonify({"success": False, "message": "Conductor script failed.", "details": e.stderr}), 500
+
+        def generate():
+            process = subprocess.Popen(
+                command, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE, 
+                text=True, 
+                encoding='utf-8',
+                bufsize=1
+            )
+
+            # Stream stdout
+            for line in iter(process.stdout.readline, ''):
+                # SSE format: data: <content>\n\n
+                yield f"data: {json.dumps({'content': line})}\n\n"
+            
+            process.stdout.close()
+            stderr_output = process.stderr.read()
+            process.stderr.close()
+            
+            return_code = process.wait()
+
+            if return_code != 0:
+                yield f"data: {json.dumps({'error': stderr_output})}\n\n"
+            
+            # Signal the end of the stream
+            yield "event: end\ndata: \n\n"
+
+        return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
     except Exception as e:
+        # This part will catch errors before the stream starts
         return jsonify({"success": False, "message": str(e)}), 500
 
 

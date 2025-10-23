@@ -53,12 +53,10 @@ def run(args, settings, session_data_for_prompt, project_root, api_mode, local_t
         )
 
         response_chunks = []
-        print("--- Response Received ---")
         for chunk in stream:
             if chunk.text:
                 print(chunk.text, end='', flush=True)
             response_chunks.append(chunk)
-        print("\n-------------------------\n")
 
         if not response_chunks:
             # ストリームが空だった場合のエラーハンドリング

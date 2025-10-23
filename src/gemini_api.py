@@ -6,6 +6,7 @@
 
 import os
 import json
+import sys
 
 import google.genai as genai
 from google.genai import types
@@ -34,7 +35,7 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: str, instr
     token_count = token_manager.count_tokens(api_contents, tools=tools)
     
     is_within_limit, message = token_manager.check_limit(token_count)
-    print(f"Token Count: {message}")
+    print(f"Token Count: {message}", file=sys.stderr)
     if not is_within_limit:
         raise ValueError("Prompt exceeds context window limit. Aborting.")
 

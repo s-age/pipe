@@ -626,18 +626,90 @@
                 const originalButtonText = sendButton.textContent;
                 sendButton.textContent = 'Sending...';
 
-                fetch(`/api/session/${sessionId}/instruction`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ instruction }) })
-                    .then(handleResponse)
-                    .then(data => {
-                        if (data.success) {
-                            window.location.reload();
-                        }
-                    })
-                    .catch(handleError)
-                    .finally(() => {
-                        sendButton.disabled = false;
-                        sendButton.textContent = originalButtonText;
-                    });
+                const turnsList = document.getElementById('turns-list-section');
+                const placeholderTurn = document.createElement('div');
+                placeholderTurn.className = 'turn model_response';
+                placeholderTurn.innerHTML = `
+                    <div class="turn-header">
+                        <span><strong>...</strong>: Model</span>
+                    </div>
+                    <div class="turn-content">
+                        <div class="rendered-markdown markdown-body"></div>
+                    </div>
+                `;
+                turnsList.insertBefore(placeholderTurn, turnsList.firstChild);
+                const responseContainer = placeholderTurn.querySelector('.rendered-markdown');
+
+                let fullResponse = '';
+
+                fetch(`/api/session/${sessionId}/instruction`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instruction })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    function processStream() {
+                        reader.read().then(({ done, value }) => {
+                            if (done) {
+                                // Stream finished, reload to get the final state
+                                window.location.reload();
+                                return;
+                            }
+
+                            buffer += decoder.decode(value, { stream: true });
+                            
+                            let boundary = buffer.indexOf('\n\n');
+                            while (boundary !== -1) {
+                                const message = buffer.substring(0, boundary);
+                                buffer = buffer.substring(boundary + 2);
+
+                                if (message.startsWith('event: end')) {
+                                    reader.cancel();
+                                    window.location.reload();
+                                    return;
+                                }
+                                
+                                if (message.startsWith('data:')) {
+                                    try {
+                                        const data = JSON.parse(message.substring(5));
+                                        if (data.content) {
+                                            fullResponse += data.content;
+                                            responseContainer.innerHTML = marked.parse(fullResponse);
+                                        }
+                                        if (data.error) {
+                                            responseContainer.innerHTML = `<p style="color: red;"><strong>Error:</strong></p><pre>${data.error}</pre>`;
+                                            sendButton.disabled = false;
+                                            sendButton.textContent = originalButtonText;
+                                            reader.cancel();
+                                            return;
+                                        }
+                                    } catch (e) {
+                                        console.error("Failed to parse stream data:", e);
+                                    }
+                                }
+                                boundary = buffer.indexOf('\n\n');
+                            }
+                            processStream();
+                        }).catch(error => {
+                            handleError(error);
+                            sendButton.disabled = false;
+                            sendButton.textContent = originalButtonText;
+                        });
+                    }
+                    processStream();
+                })
+                .catch(error => {
+                    handleError(error);
+                    sendButton.disabled = false;
+                    sendButton.textContent = originalButtonText;
+                });
             }
 
             const newInstructionText = document.getElementById('new-instruction-text');

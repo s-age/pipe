@@ -21,8 +21,8 @@ def load_tools(project_root: str) -> list:
     except (FileNotFoundError, ValueError):
         return []
 
-def call_gemini_api(settings: dict, session_data: dict, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool) -> types.GenerateContentResponse:
-
+def call_gemini_api(settings: dict, session_data: dict, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool):
+    # (関数の前半部分は変更なし)
     token_manager = TokenManager(settings=settings)
 
     builder = PromptBuilder(settings=settings, session_data=session_data, project_root=project_root, api_mode=api_mode, multi_step_reasoning_enabled=multi_step_reasoning_enabled)
@@ -86,11 +86,11 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: str, instr
     client = genai.Client()
 
     try:
-        response = client.models.generate_content(
+        stream = client.models.generate_content_stream(
             contents=api_contents,
             config=config,
             model=token_manager.model_name
         )
-        return response
+        yield from stream
     except Exception as e:
         raise RuntimeError(f"Error during Gemini API execution: {e}")

@@ -120,9 +120,6 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
         current_token_count = token_count if turn is final_model_turn else None
         session_manager.add_turn_to_session(session_id, turn, current_token_count)
 
-    print("--- Response Received ---")
-    print(model_response_text)
-    print("-------------------------\n")
     print(f"Successfully added response to session {session_id}.")
 
 def _help(parser):

@@ -136,8 +136,6 @@ def view_session(session_id):
         history_manager.update_references(session_id, session_data['references'])
 
     turns = session_data.get("turns", [])
-    # Reverse the turns for display
-    turns.reverse()
     
     current_session_purpose = session_data.get('purpose', 'Session')
     multi_step_reasoning_enabled = session_data.get('multi_step_reasoning_enabled', False)
@@ -336,6 +334,23 @@ def send_instruction_api(session_id):
 
     except Exception as e:
         # This part will catch errors before the stream starts
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route('/api/session/<session_id>/turns', methods=['GET'])
+def get_session_turns_api(session_id):
+    """API endpoint to get turns from a specific index."""
+    try:
+        since_index = request.args.get('since', 0, type=int)
+        session_data = history_manager.get_session(session_id)
+        if not session_data:
+            return jsonify({"success": False, "message": "Session not found."}), 404
+        
+        all_turns = session_data.get("turns", [])
+        new_turns = all_turns[since_index:]
+        
+        return jsonify({"success": True, "turns": new_turns}), 200
+    except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
 

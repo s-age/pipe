@@ -236,6 +236,13 @@
     </div>
 
     <script>
+        const timezone = "{{ settings.get('timezone', 'UTC') }}";
+        {% if current_session_id %}
+        const sessionTurnsCount = {{ session_data.turns | length }};
+        {% else %}
+        const sessionTurnsCount = 0;
+        {% endif %}
+
         document.addEventListener('DOMContentLoaded', function() {
             if (window.marked) {
                 marked.setOptions({
@@ -627,19 +634,53 @@
                 sendButton.textContent = 'Sending...';
 
                 const turnsList = document.getElementById('turns-list-section');
-                const placeholderTurn = document.createElement('div');
-                placeholderTurn.className = 'turn model_response';
-                placeholderTurn.innerHTML = `
+                
+                const now = new Date();
+                const timestamp = new Intl.DateTimeFormat('sv-SE', {
+                    timeZone: timezone,
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                }).format(now);
+
+                // 1. Create and insert the user's turn immediately
+                const userTurnNumber = sessionTurnsCount + 1;
+                const userTurnPlaceholder = document.createElement('div');
+                userTurnPlaceholder.className = 'turn user_task';
+                userTurnPlaceholder.innerHTML = `
                     <div class="turn-header">
-                        <span><strong>...</strong>: Model</span>
+                        <span>
+                            <strong style="color: #007bff; margin-right: 10px;">${userTurnNumber}:</strong>
+                            You
+                            <span style="font-weight: normal; color: #999; margin-left: 10px;">${timestamp}</span>
+                        </span>
+                    </div>
+                    <div class="turn-content">
+                        <pre>${instruction}</pre>
+                    </div>
+                `;
+                turnsList.insertBefore(userTurnPlaceholder, turnsList.firstChild);
+
+                // 2. Create and insert the placeholder for the model's response
+                const modelTurnNumber = sessionTurnsCount + 2;
+                const modelTurnPlaceholder = document.createElement('div');
+                modelTurnPlaceholder.className = 'turn model_response';
+                modelTurnPlaceholder.innerHTML = `
+                    <div class="turn-header">
+                        <span>
+                            <strong style="color: #007bff; margin-right: 10px;">${modelTurnNumber}:</strong>
+                            Model
+                            <span style="font-weight: normal; color: #999; margin-left: 10px;">${timestamp}</span>
+                        </span>
                     </div>
                     <div class="turn-content">
                         <div class="rendered-markdown markdown-body"></div>
                     </div>
                 `;
-                turnsList.insertBefore(placeholderTurn, turnsList.firstChild);
-                const responseContainer = placeholderTurn.querySelector('.rendered-markdown');
-
+                turnsList.insertBefore(modelTurnPlaceholder, userTurnPlaceholder); // Insert model turn before user turn to appear below it
+                const responseContainer = modelTurnPlaceholder.querySelector('.rendered-markdown');
+                
+                // 3. Clear the input and start the fetch
+                instructionTextarea.value = '';
                 let fullResponse = '';
 
                 fetch(`/api/session/${sessionId}/instruction`, {
@@ -658,7 +699,6 @@
                     function processStream() {
                         reader.read().then(({ done, value }) => {
                             if (done) {
-                                // Stream finished, reload to get the final state
                                 window.location.reload();
                                 return;
                             }

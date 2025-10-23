@@ -1,6 +1,7 @@
 import os
 import importlib
 import fnmatch
+import sys
 
 
 # This dictionary will store the loaded tool functions
@@ -23,9 +24,9 @@ def load_tools():
             # Get the function from the module
             tool_function = getattr(module, tool_name)
             loaded_tools[tool_name] = tool_function
-            print(f"Loaded tool: {tool_name}")
+            print(f"Loaded tool: {tool_name}", file=sys.stderr)
         except Exception as e:
-            print(f"Error loading tool {tool_name}: {e}")
+            print(f"Error loading tool {tool_name}: {e}", file=sys.stderr)
 
 # Load tools when the package is imported
 load_tools()

@@ -71,7 +71,7 @@ def index():
         key=lambda item: item[1].get('last_updated', ''),
         reverse=True
     )
-    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data={}, expert_mode=settings.get('expert_mode', False))
+    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data={}, expert_mode=settings.get('expert_mode', False), settings=settings)
 
 @app.route('/new_session')
 def new_session_form():
@@ -155,7 +155,8 @@ def view_session(session_id):
                            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
                            token_count=token_count,
                            context_limit=context_limit,
-                           expert_mode=expert_mode)
+                           expert_mode=expert_mode,
+                           settings=settings)
 
 # --- API Endpoints for Deletion ---
 

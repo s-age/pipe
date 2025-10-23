@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src'
 from src.utils import read_yaml_file, append_to_text_file
 from src.utils.datetime import get_current_timestamp
 from session_manager import SessionManager
+import select
 
 # Suppress Pydantic's ArbitraryTypeWarning by matching the specific message
 warnings.filterwarnings("ignore", message=".*is not a Python type.*")
@@ -365,7 +366,25 @@ def main():
                         error_message = tool_result.get('error', 'Tool execution failed.')
                         response = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32000, "message": f"Tool '{tool_name}' failed: {error_message}"}}
                     else:
-                        response = {"jsonrpc": "2.0", "id": req_id, "result": {"status": "succeeded", "result": tool_result}}
+                        # Load settings to check api_mode and format response accordingly
+                        project_root = os.path.abspath(os.path.dirname(__file__))
+                        config_path = os.path.join(project_root, 'setting.yml')
+                        settings = read_yaml_file(config_path)
+                        api_mode = settings.get('api_mode', 'gemini-api')
+
+                        if api_mode == 'gemini-cli':
+                            # Transform the result to the format expected by the gemini-cli client
+                            transformed_result = {
+                                "isError": False,
+                                "content": [{
+                                    "type": "text",
+                                    "text": json.dumps(tool_result)
+                                }]
+                            }
+                            response = {"jsonrpc": "2.0", "id": req_id, "result": transformed_result}
+                        else:
+                            # Keep the original structure for other modes
+                            response = {"jsonrpc": "2.0", "id": req_id, "result": {"status": "succeeded", "result": tool_result}}
                 except Exception as e:
                     response = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32603, "message": str(e)}}
             elif method == "run_tool":

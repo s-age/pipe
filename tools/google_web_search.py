@@ -15,7 +15,6 @@ def google_web_search(query: str) -> Dict[str, Any]:
         # tools/google_web_search.pyから見たプロジェクトルートはPath(__file__).parent.parent
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
         command = f"PYTHONPATH={project_root} pyenv exec python {os.path.join(project_root, 'src', 'search_agent.py')} \"{query}\""
-        print(f"Executing search agent: {command}")
         
         # サブプロセスを実行し、出力をキャプチャ
         process = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)

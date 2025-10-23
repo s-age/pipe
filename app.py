@@ -71,7 +71,7 @@ def index():
         key=lambda item: item[1].get('last_updated', ''),
         reverse=True
     )
-    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data={}, expert_mode=settings.get('expert_mode', False))
+    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data={}, expert_mode=settings.get('expert_mode', False), settings=settings)
 
 @app.route('/new_session')
 def new_session_form():
@@ -136,8 +136,6 @@ def view_session(session_id):
         history_manager.update_references(session_id, session_data['references'])
 
     turns = session_data.get("turns", [])
-    # Reverse the turns for display
-    turns.reverse()
     
     current_session_purpose = session_data.get('purpose', 'Session')
     multi_step_reasoning_enabled = session_data.get('multi_step_reasoning_enabled', False)
@@ -155,7 +153,8 @@ def view_session(session_id):
                            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
                            token_count=token_count,
                            context_limit=context_limit,
-                           expert_mode=expert_mode)
+                           expert_mode=expert_mode,
+                           settings=settings)
 
 # --- API Endpoints for Deletion ---
 
@@ -284,6 +283,10 @@ def fork_session_api(session_id, fork_index):
 
 @app.route('/api/session/<session_id>/instruction', methods=['POST'])
 def send_instruction_api(session_id):
+    from flask import Response, stream_with_context
+    import subprocess
+    import json
+
     try:
         new_data = request.get_json()
         instruction = new_data.get('instruction')
@@ -296,18 +299,57 @@ def send_instruction_api(session_id):
         
         enable_multi_step_reasoning = session_data.get('multi_step_reasoning_enabled', False)
 
-        import subprocess
-        command = ['python3', 'takt.py', '--session', session_id, '--instruction', instruction]
+        command = ['python3', '-u', 'takt.py', '--session', session_id, '--instruction', instruction]
         if enable_multi_step_reasoning:
             command.append('--multi-step-reasoning')
-        process = subprocess.run(
-            command, capture_output=True, text=True, check=True, encoding='utf-8'
-        )
-        llm_response = process.stdout.strip()
+
+        def generate():
+            process = subprocess.Popen(
+                command, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE, 
+                text=True, 
+                encoding='utf-8',
+                bufsize=1
+            )
+
+            # Stream stdout
+            for line in iter(process.stdout.readline, ''):
+                # SSE format: data: <content>\n\n
+                yield f"data: {json.dumps({'content': line})}\n\n"
+            
+            process.stdout.close()
+            stderr_output = process.stderr.read()
+            process.stderr.close()
+            
+            return_code = process.wait()
+
+            if return_code != 0:
+                yield f"data: {json.dumps({'error': stderr_output})}\n\n"
+            
+            # Signal the end of the stream
+            yield "event: end\ndata: \n\n"
+
+        return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+    except Exception as e:
+        # This part will catch errors before the stream starts
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route('/api/session/<session_id>/turns', methods=['GET'])
+def get_session_turns_api(session_id):
+    """API endpoint to get turns from a specific index."""
+    try:
+        since_index = request.args.get('since', 0, type=int)
+        session_data = history_manager.get_session(session_id)
+        if not session_data:
+            return jsonify({"success": False, "message": "Session not found."}), 404
         
-        return jsonify({"success": True, "message": "Instruction sent successfully.", "llm_response": llm_response}), 200
-    except subprocess.CalledProcessError as e:
-        return jsonify({"success": False, "message": "Conductor script failed.", "details": e.stderr}), 500
+        all_turns = session_data.get("turns", [])
+        new_turns = all_turns[since_index:]
+        
+        return jsonify({"success": True, "turns": new_turns}), 200
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 

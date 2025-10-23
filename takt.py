@@ -91,10 +91,8 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
 
     session_id = args.session
 
-    # Collect all pieces of the turn history for this run
-    # 1. The user_task from the in-memory session data
+    # The user_task is already saved in the main function, so we only handle tool and model responses here.
     all_new_turns_in_memory = session_data_for_prompt['turns'][new_turns_start_index:]
-    user_turn = next((t for t in all_new_turns_in_memory if t.get('type') == 'user_task'), None)
 
     # 2. The tool-related turns from the pool on disk
     pooled_turns = session_manager.history_manager.get_and_clear_pool(session_id)
@@ -104,8 +102,6 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
 
     # Filter and order the turns according to the desired sequence
     turns_to_save = []
-    if user_turn:
-        turns_to_save.append(user_turn)
 
     # Add tool calls from the pool
     tool_call_turns = [t for t in pooled_turns if t.get('type') in ['function_calling', 'tool_response']]
@@ -124,10 +120,7 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
         current_token_count = token_count if turn is final_model_turn else None
         session_manager.add_turn_to_session(session_id, turn, current_token_count)
 
-    print("--- Response Received ---")
-    print(model_response_text)
-    print("-------------------------\n")
-    print(f"Successfully added response to session {session_id}.")
+    print(f"\nSuccessfully added response to session {session_id}.")
 
 def _help(parser):
     parser.print_help()
@@ -209,9 +202,17 @@ def main():
                 multi_step_reasoning_enabled=enable_multi_step_reasoning
             )
             args.session = session_id # Ensure args is updated for subsequent calls
-            print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}")
+            
+            # Add the first instruction as a user_task to the new session
+            first_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_manager.local_tz)}
+            session_manager.add_turn_to_session(session_id, first_turn)
+            
+            print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}", file=sys.stderr)
         else:
-            print(f"Conductor Agent: Continuing session: {session_id}")
+            # For existing sessions, add the new instruction as a turn
+            new_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_manager.local_tz)}
+            session_manager.add_turn_to_session(session_id, new_turn)
+            print(f"Conductor Agent: Continuing session: {session_id}", file=sys.stderr)
 
         _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
 

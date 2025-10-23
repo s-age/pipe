@@ -1,4 +1,4 @@
-google-genai==0.7.0
+google-genai==1.46.0
 PyYAML==6.0.3
 python-dotenv==1.1.1
 Flask==3.1.2

@@ -11,8 +11,6 @@ def execute_tool_call(tool_call, session_manager, session_id, settings, project_
     tool_name = tool_call.name
     tool_args = dict(tool_call.args)
     
-    print(f"Tool call: {tool_name}({tool_args})")
-
     try:
         tool_module = importlib.import_module(f"tools.{tool_name}")
         importlib.reload(tool_module)
@@ -43,7 +41,7 @@ def run(args, settings, session_data_for_prompt, project_root, api_mode, local_t
     model_response_text = ""
     token_count = 0
     while True:
-        response = call_gemini_api(
+        stream = call_gemini_api(
             settings=settings,
             session_data=session_data_for_prompt,
             project_root=project_root,
@@ -51,6 +49,30 @@ def run(args, settings, session_data_for_prompt, project_root, api_mode, local_t
             api_mode=api_mode,
             multi_step_reasoning_enabled=enable_multi_step_reasoning
         )
+
+        response_chunks = []
+        for chunk in stream:
+            if chunk.text:
+                print(chunk.text, end='', flush=True)
+            response_chunks.append(chunk)
+
+        if not response_chunks:
+            # ストリームが空だった場合のエラーハンドリング
+            model_response_text = "API Error: Model stream was empty."
+            break
+
+        # チャンクから完全なレスポンスを再構築
+        final_response = response_chunks[-1]
+        full_text = "".join(chunk.text for chunk in response_chunks if chunk.text)
+        if final_response.candidates:
+            if final_response.candidates[0].content and final_response.candidates[0].content.parts:
+                final_response.candidates[0].content.parts[0].text = full_text
+            else:
+                final_response.candidates[0].content = type(final_response.candidates[0].content)(parts=[type(final_response.candidates[0].content.parts[0])(text=full_text)])
+        else:
+            final_response.candidates.append(type(final_response.candidates[0])(content=type(final_response.candidates[0].content)(parts=[type(final_response.candidates[0].content.parts[0])(text=full_text)])))
+        
+        response = final_response # 後続処理のために変数名を合わせる
 
         token_count = response.usage_metadata.prompt_token_count + response.usage_metadata.candidates_token_count
 
@@ -66,6 +88,11 @@ def run(args, settings, session_data_for_prompt, project_root, api_mode, local_t
         if not function_call:
             model_response_text = response.text
             break
+
+        # Stream the tool call information to the client
+        args_json_string_for_display = json.dumps(dict(function_call.args), ensure_ascii=False, indent=2)
+        tool_call_markdown = f"```\nTool call: {function_call.name}\nArgs:\n{args_json_string_for_display}\n```\n"
+        print(tool_call_markdown, flush=True)
 
         args_json_string = json.dumps(dict(function_call.args), ensure_ascii=False)
         response_string = f"{function_call.name}({args_json_string})"
@@ -102,6 +129,10 @@ def run(args, settings, session_data_for_prompt, project_root, api_mode, local_t
                 "status": "succeeded",
                 "message": message_content
             }
+
+        # Stream the tool status to the client
+        status_markdown = f"```\nTool status: {formatted_response['status']}\n```\n"
+        print(status_markdown, flush=True)
 
         tool_turn = {
             "type": "tool_response",

@@ -1,5 +1,12 @@
+# This script utilizes the 'google-genai' library to interact with the Gemini API.
+# It is important to note that 'google-genai' is the newer, recommended library,
+# and should be used in place of the older 'google-generativeai' library to ensure
+# access to the latest features and improvements.
+# For reference, see: https://pypi.org/project/google-genai/
+
 import os
 import json
+import sys
 
 import google.genai as genai
 from google.genai import types
@@ -15,8 +22,8 @@ def load_tools(project_root: str) -> list:
     except (FileNotFoundError, ValueError):
         return []
 
-def call_gemini_api(settings: dict, session_data: dict, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool) -> types.GenerateContentResponse:
-
+def call_gemini_api(settings: dict, session_data: dict, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool):
+    # (関数の前半部分は変更なし)
     token_manager = TokenManager(settings=settings)
 
     builder = PromptBuilder(settings=settings, session_data=session_data, project_root=project_root, api_mode=api_mode, multi_step_reasoning_enabled=multi_step_reasoning_enabled)
@@ -28,7 +35,7 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: str, instr
     token_count = token_manager.count_tokens(api_contents, tools=tools)
     
     is_within_limit, message = token_manager.check_limit(token_count)
-    print(f"Token Count: {message}")
+    print(f"Token Count: {message}", file=sys.stderr)
     if not is_within_limit:
         raise ValueError("Prompt exceeds context window limit. Aborting.")
 
@@ -80,11 +87,11 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: str, instr
     client = genai.Client()
 
     try:
-        response = client.models.generate_content(
+        stream = client.models.generate_content_stream(
             contents=api_contents,
             config=config,
             model=token_manager.model_name
         )
-        return response
+        yield from stream
     except Exception as e:
         raise RuntimeError(f"Error during Gemini API execution: {e}")

@@ -1,3 +1,18 @@
+# This script implements a server that adheres to the Model Context Protocol (MCP).
+# MCP is an open-standard, JSON-RPC 2.0 based protocol designed to standardize
+# the communication between a client (typically hosting a large language model)
+# and a server that provides access to a set of tools or capabilities.
+#
+# The server operates over standard input and standard output, listening for
+# JSON-RPC requests from an MCP client. It dynamically discovers available tools
+# from the 'tools' directory, advertises them to the client via the 'initialize'
+# and 'tools/list' methods, and executes them upon receiving a 'tools/call' request.
+#
+# This allows an AI model to leverage external tools in a standardized way,
+# without needing custom integration for each tool.
+#
+# For more information on the Model Context Protocol, refer to its official specification.
+
 import os
 import sys
 import json
@@ -14,6 +29,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src'
 from src.utils import read_yaml_file, append_to_text_file
 from src.utils.datetime import get_current_timestamp
 from session_manager import SessionManager
+import select
 
 # Suppress Pydantic's ArbitraryTypeWarning by matching the specific message
 warnings.filterwarnings("ignore", message=".*is not a Python type.*")
@@ -25,7 +41,19 @@ SESSIONS_DIR = os.path.join(BASE_DIR, 'sessions')
 
 # --- Tool Definition Generation ---
 def get_tool_definitions():
-    """Scans the tools directory and builds a list of OpenAPI-compatible tool definitions."""
+    """
+    Scans the 'tools' directory to discover available tool scripts and generates
+    OpenAPI-compatible JSON schema definitions for each tool.
+
+    This function iterates through Python files in the TOOLS_DIR, dynamically
+    imports them as modules, and inspects the signature of the function matching
+    the file name. It uses type hints and docstrings to construct a schema
+    that describes the tool's name, purpose, input parameters, and required arguments.
+
+    This list of definitions is then sent to the MCP client during the 'initialize'
+    and 'tools/list' calls, allowing the client (and the AI model) to understand
+    what tools are available and how to use them.
+    """
     tool_defs = []
     type_mapping = {
         str: "string",
@@ -132,7 +160,22 @@ def get_latest_session_id():
         return None
 
 def execute_tool(tool_name, arguments):
-    """Dynamically imports and executes a tool function."""
+    """
+    Dynamically imports and executes a specified tool function with the given arguments.
+
+    This function handles the core logic of a 'tools/call' request. It performs the following steps:
+    1.  Retrieves the current session context.
+    2.  Logs the tool call initiation to the session's history pool.
+    3.  Validates the tool name and locates the corresponding Python file in the 'tools' directory.
+    4.  Dynamically imports the file as a module.
+    5.  Retrieves the tool function from the module.
+    6.  Prepares the final arguments for the function call by injecting necessary server-side
+        dependencies (e.g., `session_manager`, `settings`) into the arguments received
+        from the client.
+    7.  Executes the tool function with the prepared arguments.
+    8.  Logs the result (success or failure) of the tool execution to the history pool.
+    9.  Returns the result to the main loop to be sent back to the client.
+    """
     project_root = os.path.abspath(os.path.dirname(__file__))
     config_path = os.path.join(project_root, 'setting.yml')
     settings = read_yaml_file(config_path)
@@ -239,7 +282,28 @@ def prepare_tool_arguments(tool_function, client_arguments, session_manager, ses
 
 # --- Main Stdio Loop ---
 def main():
-    """Main loop to read from stdin, process JSON-RPC, and write to stdout."""
+    """
+    The main entry point and I/O loop for the MCP server.
+
+    This function continuously reads lines from standard input, expecting each line
+    to be a valid JSON-RPC 2.0 request object. It parses the request, determines
+    the requested method, and dispatches it to the appropriate handler.
+
+    Supported MCP methods:
+    - `initialize`: Responds with server capabilities and a list of all available tools.
+    - `tools/list`: Responds with a fresh list of available tools.
+    - `tools/call`: Executes a specific tool with provided arguments using the `execute_tool` function.
+    - `ping`: A simple health check method.
+    - `notifications/initialized`: A notification from the client that it has initialized.
+
+    For each request that requires a response, this function formats the response as a
+    JSON-RPC 2.0 object and writes it to standard output, followed by a newline and a flush,
+    ensuring the client receives it promptly.
+
+    The loop includes error handling to catch JSON decoding errors or exceptions during
+    tool execution, formatting them into standard JSON-RPC error responses. It also
+    logs unexpected server errors to a file to avoid polluting the stdio channel.
+    """
     import select
 
     while True:
@@ -302,7 +366,25 @@ def main():
                         error_message = tool_result.get('error', 'Tool execution failed.')
                         response = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32000, "message": f"Tool '{tool_name}' failed: {error_message}"}}
                     else:
-                        response = {"jsonrpc": "2.0", "id": req_id, "result": {"status": "succeeded", "result": tool_result}}
+                        # Load settings to check api_mode and format response accordingly
+                        project_root = os.path.abspath(os.path.dirname(__file__))
+                        config_path = os.path.join(project_root, 'setting.yml')
+                        settings = read_yaml_file(config_path)
+                        api_mode = settings.get('api_mode', 'gemini-api')
+
+                        if api_mode == 'gemini-cli':
+                            # Transform the result to the format expected by the gemini-cli client
+                            transformed_result = {
+                                "isError": False,
+                                "content": [{
+                                    "type": "text",
+                                    "text": json.dumps(tool_result)
+                                }]
+                            }
+                            response = {"jsonrpc": "2.0", "id": req_id, "result": transformed_result}
+                        else:
+                            # Keep the original structure for other modes
+                            response = {"jsonrpc": "2.0", "id": req_id, "result": {"status": "succeeded", "result": tool_result}}
                 except Exception as e:
                     response = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32603, "message": str(e)}}
             elif method == "run_tool":

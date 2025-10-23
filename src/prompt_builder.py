@@ -8,6 +8,7 @@ import os
 
 from jinja2 import Environment, FileSystemLoader
 from src.utils import read_text_file
+from src.utils.datetime import get_current_timestamp
 
 class PromptBuilder:
     """Constructs a structured prompt object for the LLM."""
@@ -130,6 +131,7 @@ class PromptBuilder:
         }
 
         context = {
+            "current_datetime": get_current_timestamp(self.template_env.globals.get('local_tz')),
             "session": {
                 "description": current_instruction,
                 "session_goal": {

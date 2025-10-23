@@ -38,14 +38,33 @@ def call_gemini_cli(settings: dict, session_data: dict, project_root: str, instr
         env['GEMINI_SESSION_ID'] = session_id
         
     try:
-        process = subprocess.run(
-            command, capture_output=True, text=True, check=True, encoding='utf-8', env=env
+        process = subprocess.Popen(
+            command, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True, 
+            encoding='utf-8', 
+            env=env,
+            bufsize=1
         )
-        model_response_text = process.stdout
-        if process.stderr:
-            print(f"Warning from gemini-cli: {process.stderr}", file=sys.stderr)
-        return model_response_text
+
+        model_response_text = []
+        for line in iter(process.stdout.readline, ''):
+            print(line, end='', flush=True)
+            model_response_text.append(line)
+        
+        process.stdout.close()
+        stderr_output = process.stderr.read()
+        process.stderr.close()
+
+        return_code = process.wait()
+
+        if return_code != 0:
+            raise RuntimeError(f"Error during gemini-cli execution: {stderr_output}")
+        
+        if stderr_output:
+            print(f"\nWarning from gemini-cli: {stderr_output}", file=sys.stderr)
+
+        return "".join(model_response_text)
     except FileNotFoundError:
         raise RuntimeError("Error: 'gemini' command not found. Make sure it's in your PATH.")
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Error during gemini-cli execution: {e.stderr}")

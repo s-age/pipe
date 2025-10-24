@@ -173,16 +173,7 @@ def delete_session_api(session_id):
 @app.route('/api/session/<session_id>/turn/<int:turn_index>', methods=['DELETE'])
 def delete_turn_api(session_id, turn_index):
     try:
-        # Since we reverse the turns for display, we need to convert the index back
-        session_data = history_manager.get_session(session_id)
-        if not session_data:
-            return jsonify({"success": False, "message": "Session not found."}), 404
-        
-        original_length = len(session_data.get("turns", []))
-        # The index from the frontend is for the reversed list
-        index_to_delete = original_length - 1 - turn_index
-
-        history_manager.delete_turn(session_id, index_to_delete)
+        history_manager.delete_turn(session_id, turn_index)
         return jsonify({"success": True, "message": f"Turn {turn_index} from session {session_id} deleted."}), 200
     except IndexError:
         return jsonify({"success": False, "message": "Turn index out of range."}), 400
@@ -197,16 +188,8 @@ def edit_turn_api(session_id, turn_index):
         if not new_data:
             return jsonify({"success": False, "message": "No data provided."}), 400
 
-        # Since we reverse the turns for display, we need to convert the index back
-        session_data = history_manager.get_session(session_id)
-        if not session_data:
-            return jsonify({"success": False, "message": "Session not found."}), 404
-        
-        original_length = len(session_data.get("turns", []))
-        index_to_edit = original_length - 1 - turn_index
-
-        history_manager.edit_turn(session_id, index_to_edit, new_data)
-        return jsonify({"success": True, "message": f"Turn {turn_index} from session {session_id} updated."}), 200
+        history_manager.edit_turn(session_id, turn_index, new_data)
+        return jsonify({"success": True, "message": f"Turn {turn_index + 1} from session {session_id} updated."}), 200
     except IndexError:
         return jsonify({"success": False, "message": "Turn index out of range."}), 400
     except Exception as e:

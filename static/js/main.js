@@ -176,7 +176,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function exitEditMode(editButton, contentDiv, textarea, controls) {
         const editableElement = contentDiv.querySelector('.editable');
         editableElement.style.display = 'block';
-        if (editableElement.previousElementSibling) editableElement.previousElementSibling.style.display = 'block';
         
         textarea.remove();
         const buttonContainer = controls.parentElement.querySelector('div[style="text-align: right;"]');

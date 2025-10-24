@@ -2,7 +2,7 @@ const timezone = document.body.dataset.timezone || 'UTC';
 const sessionTurnsCount = parseInt(document.body.dataset.sessionTurnsCount || '0');
 const expertMode = document.body.dataset.expertMode === 'true';
 const currentSessionId = document.body.dataset.currentSessionId;
-const sessionData = JSON.parse(document.body.dataset.sessionData || '{}');
+let sessionData = JSON.parse(document.body.dataset.sessionData || '{}');
 
 
 function isScrolledToBottom() {
@@ -502,25 +502,83 @@ document.addEventListener('DOMContentLoaded', function() {
         return turnElement;
     }
 
+    function updateRightColumn(sessionData) {
+        // Update TODOs
+        const todosList = document.getElementById('todos-list');
+        if (todosList) {
+            todosList.innerHTML = ''; // Clear existing list
+            if (sessionData.todos && sessionData.todos.length > 0) {
+                sessionData.todos.forEach((todo, index) => {
+                    const li = document.createElement('li');
+                    li.style.marginBottom = '10px';
+                    li.innerHTML = `
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" class="todo-checkbox" data-index="${index}" ${todo.checked ? 'checked' : ''} style="margin-right: 8px;">
+                            <strong style="display: inline;">${todo.title}</strong>
+                        </label>
+                    `;
+                    todosList.appendChild(li);
+                });
+            }
+        }
+
+        // Update References
+        const referencesList = document.getElementById('references-list');
+        if (referencesList) {
+            referencesList.innerHTML = ''; // Clear existing list
+            if (sessionData.references && sessionData.references.length > 0) {
+                sessionData.references.forEach((ref, index) => {
+                    const li = document.createElement('li');
+                    li.style.marginBottom = '10px';
+                    const textDecoration = ref.disabled ? 'line-through' : 'none';
+                    const color = ref.disabled ? '#888' : 'inherit';
+                    li.innerHTML = `
+                        <label>
+                            <input type="checkbox" class="reference-checkbox" data-index="${index}" ${!ref.disabled ? 'checked' : ''}>
+                            <span style="text-decoration: ${textDecoration}; color: ${color};">${ref.path}</span>
+                        </label>
+                    `;
+                    referencesList.appendChild(li);
+                });
+            }
+        }
+    }
+
      function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
-        fetch(`/api/session/${sessionId}/turns?since=${startIndex}`)
-            .then(handleResponse)
-            .then(data => {
-                if (data.success && data.turns.length > 0) {
-                    // Clear placeholders
-                    placeholders.forEach(p => p.remove());
+        const fetchSessionData = fetch(`/api/session/${sessionId}`).then(handleResponse);
+        const fetchSessionList = fetch('/api/sessions').then(handleResponse);
 
-                    const turnsList = document.getElementById('turns-list-section');
+        Promise.all([fetchSessionData, fetchSessionList])
+            .then(([sessionResult, sessionsResult]) => {
+                // Update session list (left column)
+                if (sessionsResult.success && sessionsResult.sessions) {
+                    document.body.dataset.sessions = JSON.stringify(sessionsResult.sessions);
+                    buildSessionTree();
+                }
 
-                    data.turns.forEach((turn, i) => {
-                        const turnIndex = startIndex + i;
-                        const newTurnElement = createTurnElement(turn, turnIndex, expertMode);
-                        turnsList.appendChild(newTurnElement);
-                    });
+                // Update turns (main column)
+                if (sessionResult.success && sessionResult.session) {
+                    sessionData = sessionResult.session; // Update global sessionData
+                    document.body.dataset.sessionData = JSON.stringify(sessionData); // Sync dataset
+                    
+                    // Always update right column if session data is fetched
+                    updateRightColumn(sessionData);
 
-                    // Re-attach event listeners to new buttons
-                    attachEventListenersToTurns();
-                    scrollToBottom();
+                    const newTurns = sessionData.turns.slice(startIndex);
+                    
+                    if (newTurns.length > 0) {
+                        placeholders.forEach(p => p.remove());
+                        const turnsList = document.getElementById('turns-list-section');
+
+                        newTurns.forEach((turn, i) => {
+                            const turnIndex = startIndex + i;
+                            const newTurnElement = createTurnElement(turn, turnIndex, expertMode);
+                            turnsList.appendChild(newTurnElement);
+                        });
+
+                        attachEventListenersToTurns();
+                        scrollToBottom();
+                    }
                 }
             })
             .catch(handleError)
@@ -620,6 +678,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const newInstructionText = document.getElementById('new-instruction-text');
     if (newInstructionText) newInstructionText.focus();
 
+    document.getElementById('delete-todos-btn')?.addEventListener('click', function() {
+        const sessionId = this.dataset.sessionId;
+        if (confirm('Are you sure you want to delete all todos for this session?')) {
+            fetch(`/api/session/${sessionId}/todos`, { method: 'DELETE' })
+                .then(handleResponse)
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(handleError);
+        }
+    });
+
     document.getElementById('todos-list')?.addEventListener('change', function(event) {
         if (event.target.classList.contains('todo-checkbox')) {
             const checkbox = event.target;
@@ -633,7 +707,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function saveTodos(sessionId, todos) {
+
+
+
+    function saveTodos(sessionId, todos, reload = false) {
         const payload = { todos };
 
         fetch(`/api/session/${sessionId}/todos/edit`, {
@@ -647,6 +724,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(data.message);
             }
             console.log("Todos saved successfully.");
+            if (reload) {
+                window.location.reload();
+            }
         })
         .catch(error => {
             handleError(error);

@@ -155,7 +155,7 @@
                             <li style="margin-bottom: 10px;">
                                 <label style="cursor: pointer;">
                                     <input type="checkbox" class="todo-checkbox" data-index="{{ loop.index0 }}" {% if todo.checked %}checked{% endif %} style="margin-right: 8px;">
-                                    <strong style="display: inline;">{{ todo.item }}</strong>
+                                    <strong style="display: inline;">{{ todo.title }}</strong>
                                 </label>
                             </li>
                         {% endfor %}

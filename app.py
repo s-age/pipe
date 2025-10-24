@@ -167,13 +167,23 @@ def view_session(session_id):
 
 # --- API Endpoints for Deletion ---
 
-@app.route('/api/session/<path:session_id>', methods=['DELETE'])
-def delete_session_api(session_id):
-    try:
-        history_manager.delete_session(session_id)
-        return jsonify({"success": True, "message": f"Session {session_id} deleted."}), 200
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+@app.route('/api/session/<path:session_id>', methods=['GET', 'DELETE'])
+def session_api(session_id):
+    if request.method == 'GET':
+        try:
+            session_data = history_manager.get_session(session_id)
+            if not session_data:
+                return jsonify({"success": False, "message": "Session not found."}), 404
+            return jsonify({"success": True, "session": session_data}), 200
+        except Exception as e:
+            return jsonify({"success": False, "message": str(e)}), 500
+            
+    if request.method == 'DELETE':
+        try:
+            history_manager.delete_session(session_id)
+            return jsonify({"success": True, "message": f"Session {session_id} deleted."}), 200
+        except Exception as e:
+            return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route('/api/session/<path:session_id>/turn/<int:turn_index>', methods=['DELETE'])
 def delete_turn_api(session_id, turn_index):

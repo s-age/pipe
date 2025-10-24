@@ -503,24 +503,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
      function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
-        fetch(`/api/session/${sessionId}/turns?since=${startIndex}`)
+        fetch(`/api/session/${sessionId}`)
             .then(handleResponse)
             .then(data => {
-                if (data.success && data.turns.length > 0) {
-                    // Clear placeholders
-                    placeholders.forEach(p => p.remove());
+                if (data.success && data.session && data.session.turns) {
+                    const newTurns = data.session.turns.splice(startIndex);
+                    
+                    if (newTurns.length > 0) {
+                        placeholders.forEach(p => p.remove());
+                        const turnsList = document.getElementById('turns-list-section');
 
-                    const turnsList = document.getElementById('turns-list-section');
+                        newTurns.forEach((turn, i) => {
+                            const turnIndex = startIndex + i;
+                            const newTurnElement = createTurnElement(turn, turnIndex, expertMode);
+                            turnsList.appendChild(newTurnElement);
+                        });
 
-                    data.turns.forEach((turn, i) => {
-                        const turnIndex = startIndex + i;
-                        const newTurnElement = createTurnElement(turn, turnIndex, expertMode);
-                        turnsList.appendChild(newTurnElement);
-                    });
-
-                    // Re-attach event listeners to new buttons
-                    attachEventListenersToTurns();
-                    scrollToBottom();
+                        attachEventListenersToTurns();
+                        scrollToBottom();
+                    }
                 }
             })
             .catch(handleError)

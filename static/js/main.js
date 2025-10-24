@@ -516,7 +516,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             <input type="checkbox" class="todo-checkbox" data-index="${index}" ${todo.checked ? 'checked' : ''} style="margin-right: 8px;">
                             <strong style="display: inline;">${todo.title}</strong>
                         </label>
-                        <button class="delete-todo-btn" data-index="${index}" style="float: right; background: none; border: none; color: #dc3545; cursor: pointer;">X</button>
                     `;
                     todosList.appendChild(li);
                 });
@@ -679,6 +678,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const newInstructionText = document.getElementById('new-instruction-text');
     if (newInstructionText) newInstructionText.focus();
 
+    document.getElementById('delete-todos-btn')?.addEventListener('click', function() {
+        const sessionId = this.dataset.sessionId;
+        if (confirm('Are you sure you want to delete all todos for this session?')) {
+            fetch(`/api/session/${sessionId}/todos`, { method: 'DELETE' })
+                .then(handleResponse)
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(handleError);
+        }
+    });
+
     document.getElementById('todos-list')?.addEventListener('change', function(event) {
         if (event.target.classList.contains('todo-checkbox')) {
             const checkbox = event.target;
@@ -692,19 +707,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('todos-list')?.addEventListener('click', function(event) {
-        const button = event.target.closest('.delete-todo-btn');
-        if (button) {
-            const index = parseInt(button.dataset.index, 10);
-            const sessionId = document.getElementById('current-session-id').value;
-            let todos = sessionData.todos || [];
 
-            if (todos[index] && confirm(`Are you sure you want to delete this todo: "${todos[index].text}"?`)) {
-                todos.splice(index, 1);
-                saveTodos(sessionId, todos, true);
-            }
-        }
-    });
+
 
     function saveTodos(sessionId, todos, reload = false) {
         const payload = { todos };

@@ -633,7 +633,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function saveTodos(sessionId, todos) {
+    document.getElementById('todos-list')?.addEventListener('click', function(event) {
+        const button = event.target.closest('.delete-todo-btn');
+        if (button) {
+            const index = parseInt(button.dataset.index, 10);
+            const sessionId = document.getElementById('current-session-id').value;
+            let todos = sessionData.todos || [];
+
+            if (todos[index] && confirm(`Are you sure you want to delete this todo: "${todos[index].text}"?`)) {
+                todos.splice(index, 1);
+                saveTodos(sessionId, todos, true);
+            }
+        }
+    });
+
+    function saveTodos(sessionId, todos, reload = false) {
         const payload = { todos };
 
         fetch(`/api/session/${sessionId}/todos/edit`, {
@@ -647,6 +661,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(data.message);
             }
             console.log("Todos saved successfully.");
+            if (reload) {
+                window.location.reload();
+            }
         })
         .catch(error => {
             handleError(error);

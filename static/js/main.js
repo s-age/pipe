@@ -14,6 +14,8 @@ function isScrolledToBottom() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    buildSessionTree();
+
     if (window.marked) {
         marked.setOptions({
             breaks: true,
@@ -60,6 +62,60 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleError(error) {
         console.error('Error:', error);
         alert('An error occurred: ' + error.message);
+    }
+
+    function buildSessionTree() {
+        const sessions = JSON.parse(document.body.dataset.sessions || '[]');
+        const tree = {};
+
+        // Build a tree structure from the flat list
+        sessions.forEach(([id, meta]) => {
+            const parts = id.split('/');
+            let currentLevel = tree;
+            parts.forEach((part, index) => {
+                if (!currentLevel[part]) {
+                    currentLevel[part] = { meta: null, children: {} };
+                }
+                if (index === parts.length - 1) {
+                    currentLevel[part].meta = meta;
+                    currentLevel[part].id = id;
+                }
+                currentLevel = currentLevel[part].children;
+            });
+        });
+
+        const container = document.getElementById('session-list-container');
+        if (container) {
+            container.innerHTML = ''; // Clear existing
+            const rootUl = createNode(tree, 0);
+            container.appendChild(rootUl);
+        }
+    }
+
+    function createNode(branch, level) {
+        const ul = document.createElement('ul');
+        if (level > 0) {
+            ul.style.paddingLeft = '20px';
+        }
+
+        for (const key in branch) {
+            const node = branch[key];
+            const li = document.createElement('li');
+            
+            if (node.meta) {
+                const a = document.createElement('a');
+                a.href = `/session/${node.id}`;
+                a.className = node.id === currentSessionId ? 'active' : '';
+                a.innerHTML = `${node.meta.purpose} <span class="session-id">${node.id}</span>`;
+                li.appendChild(a);
+            }
+
+            if (Object.keys(node.children).length > 0) {
+                li.appendChild(createNode(node.children, level + 1));
+            }
+            ul.appendChild(li);
+        }
+        return ul;
     }
 
      function scrollToBottom() {

@@ -29,8 +29,19 @@ class HistoryManager:
         self._index_lock_path = os.path.join(self.sessions_dir, "index.json.lock")
         self._initialize()
 
+    def _get_session_path(self, session_id: str, create_dirs: bool = False) -> str:
+        """Constructs the file path for a session, handling nested IDs."""
+        # Replace '/' with os-specific separator and ensure the path is within the sessions_dir
+        safe_path_parts = [part for part in session_id.split('/') if part not in ('', '.', '..')]
+        final_path = os.path.join(self.sessions_dir, *safe_path_parts)
+        
+        if create_dirs:
+            os.makedirs(os.path.dirname(final_path), exist_ok=True)
+            
+        return f"{final_path}.json"
+
     def _get_session_lock_path(self, session_id: str) -> str:
-        return os.path.join(self.sessions_dir, f"{session_id}.json.lock")
+        return f"{self._get_session_path(session_id)}.lock"
 
     def _initialize(self):
         os.makedirs(self.sessions_dir, exist_ok=True)
@@ -45,10 +56,17 @@ class HistoryManager:
                 default_data={"sessions": {}}
             )
 
-    def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0, hyperparameters: dict = None) -> str:
+    def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0, hyperparameters: dict = None, parent_id: str = None) -> str:
+        if parent_id:
+            parent_session_path = self._get_session_path(parent_id)
+            if not os.path.exists(parent_session_path):
+                raise FileNotFoundError(f"Parent session with ID '{parent_id}' not found.")
+
         timestamp = get_current_timestamp(self.timezone_obj)
         identity_str = json.dumps({"purpose": purpose, "background": background, "roles": roles, "multi_step_reasoning_enabled": multi_step_reasoning_enabled, "timestamp": timestamp}, sort_keys=True)
-        session_id = self._generate_hash(identity_str)
+        session_hash = self._generate_hash(identity_str)
+        
+        session_id = f"{parent_id}/{session_hash}" if parent_id else session_hash
         
         session_data = {
             "session_id": session_id,
@@ -64,7 +82,7 @@ class HistoryManager:
             "pools": []
         }
 
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id, create_dirs=True)
         session_lock_path = self._get_session_lock_path(session_id)
 
         locked_json_write(session_lock_path, session_path, session_data)
@@ -73,7 +91,7 @@ class HistoryManager:
         return session_id
 
     def add_turn_to_session(self, session_id: str, turn_data: dict, token_count: Optional[int] = None):
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -88,7 +106,7 @@ class HistoryManager:
         self._update_index(session_id)
 
     def update_turns(self, session_id: str, turns: list):
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -99,7 +117,7 @@ class HistoryManager:
 
     def update_references(self, session_id: str, references: list):
         """Updates the references for a given session."""
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -108,7 +126,7 @@ class HistoryManager:
         locked_json_read_modify_write(session_lock_path, session_path, modifier)
 
     def update_todos(self, session_id: str, todos: list):
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -117,7 +135,7 @@ class HistoryManager:
         locked_json_read_modify_write(session_lock_path, session_path, modifier)
 
     def delete_todos(self, session_id: str):
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -129,7 +147,7 @@ class HistoryManager:
         locked_json_read_modify_write(session_lock_path, session_path, modifier)
 
     def get_session(self, session_id: str) -> dict:
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
         
         session_data = locked_json_read(session_lock_path, session_path)
@@ -145,7 +163,7 @@ class HistoryManager:
         return index_data.get("sessions", {})
 
     def delete_turn(self, session_id: str, turn_index: int):
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -159,7 +177,7 @@ class HistoryManager:
 
     def edit_session_meta(self, session_id: str, new_meta_data: dict):
         self.backup_session(session_id)
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -181,13 +199,13 @@ class HistoryManager:
         self._update_index(session_id, purpose=purpose_to_update)
 
     def get_session_turns(self, session_id: str) -> list[dict]:
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
         session_data = locked_json_read(session_lock_path, session_path, default_data={})
         return session_data.get("turns", [])
 
     def get_session_turns_range(self, session_id: str, start_index: int, end_index: int) -> list[dict]:
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
         
         session_data = locked_json_read(session_lock_path, session_path)
@@ -201,7 +219,7 @@ class HistoryManager:
 
     def replace_turn_range_with_summary(self, session_id: str, summary_text: str, start_index: int, end_index: int):
         self.backup_session(session_id)
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
         
         summary_turn = {
@@ -227,7 +245,7 @@ class HistoryManager:
 
     def edit_turn(self, session_id: str, turn_index: int, new_turn_data: dict):
         self.backup_session(session_id)
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -241,7 +259,7 @@ class HistoryManager:
         self._update_index(session_id)
 
     def add_to_pool(self, session_id: str, pool_data: dict):
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -250,7 +268,7 @@ class HistoryManager:
         locked_json_read_modify_write(session_lock_path, session_path, modifier)
 
     def get_pool(self, session_id: str) -> list:
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
         
         session_data = locked_json_read(session_lock_path, session_path)
@@ -261,7 +279,7 @@ class HistoryManager:
         return []
 
     def get_and_clear_pool(self, session_id: str) -> list:
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
 
         def modifier(data):
@@ -274,19 +292,20 @@ class HistoryManager:
         return pools_to_return if pools_to_return is not None else []
 
     def backup_session(self, session_id: str) -> str:
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
         with FileLock(session_lock_path):
             if not os.path.exists(session_path):
                 raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
             timestamp = get_current_timestamp(timezone.utc, fmt='%Y%m%d%H%M%S')
-            backup_path = os.path.join(self.sessions_dir, "backups", f"{session_id}-{timestamp}.json")
+            backup_filename = f"{session_id.replace('/', '__')}-{timestamp}.json"
+            backup_path = os.path.join(self.sessions_dir, "backups", backup_filename)
             import shutil
             shutil.copy2(session_path, backup_path)
             return backup_path
 
     def replace_turns_with_summary(self, session_id: str, summary_text: str):
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
         session_lock_path = self._get_session_lock_path(session_id)
         
         summary_turn = {
@@ -302,20 +321,30 @@ class HistoryManager:
         self._update_index(session_id)
 
     def delete_session(self, session_id: str):
-        session_path = os.path.join(self.sessions_dir, f"{session_id}.json")
+        session_path = self._get_session_path(session_id)
+        session_dir = os.path.join(self.sessions_dir, session_id)
         session_lock_path = self._get_session_lock_path(session_id)
+        
         with FileLock(session_lock_path):
+            # Recursively delete the associated directory if it exists
+            if os.path.isdir(session_dir):
+                import shutil
+                shutil.rmtree(session_dir)
+
             if os.path.exists(session_path):
                 os.remove(session_path)
 
         backup_dir = os.path.join(self.sessions_dir, "backups")
         for filename in os.listdir(backup_dir):
-            if fnmatch.fnmatch(filename, f"{session_id}-*.json"):
+            if fnmatch.fnmatch(filename, f"{session_id.replace('/', '__')}-*.json"):
                 os.remove(os.path.join(backup_dir, filename))
 
         def modifier(data):
-            if session_id in data.get("sessions", {}):
-                del data["sessions"][session_id]
+            # Also remove any child sessions from the index
+            sessions_to_delete = [sid for sid in data.get("sessions", {}) if sid == session_id or sid.startswith(f"{session_id}/")]
+            for sid in sessions_to_delete:
+                if sid in data["sessions"]:
+                    del data["sessions"][sid]
         
         locked_json_read_modify_write(
             self._index_lock_path,
@@ -346,7 +375,7 @@ class HistoryManager:
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
     def fork_session(self, original_session_id: str, fork_at_turn_index: int) -> Optional[str]:
-        original_session_path = os.path.join(self.sessions_dir, f"{original_session_id}.json")
+        original_session_path = self._get_session_path(original_session_id)
         original_session_lock_path = self._get_session_lock_path(original_session_id)
 
         original_data = locked_json_read(original_session_lock_path, original_session_path)
@@ -376,7 +405,8 @@ class HistoryManager:
             "fork_at_turn": fork_at_turn_index,
             "timestamp": timestamp
         }, sort_keys=True)
-        new_session_id = self._generate_hash(identity_str)
+        new_session_id_suffix = self._generate_hash(identity_str)
+        new_session_id = f"{original_session_id}/{new_session_id_suffix}"
 
         new_session_data = {
             "session_id": new_session_id,
@@ -390,7 +420,7 @@ class HistoryManager:
             "turns": forked_turns
         }
 
-        new_session_path = os.path.join(self.sessions_dir, f"{new_session_id}.json")
+        new_session_path = self._get_session_path(new_session_id, create_dirs=True)
         new_session_lock_path = self._get_session_lock_path(new_session_id)
 
         locked_json_write(new_session_lock_path, new_session_path, new_session_data)

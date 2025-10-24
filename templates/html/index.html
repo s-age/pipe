@@ -14,20 +14,14 @@
     data-expert-mode="{{ expert_mode | tojson }}"
     data-current-session-id="{{ current_session_id }}"
     data-session-data='{{ session_data | tojson | safe }}'
+    data-sessions='{{ sessions | tojson | safe }}'
 >
     <!-- Column 1: Session List -->
     <div id="sessions-column" class="column">
         <h2>Sessions</h2>
         <button class="action-btn save-btn" style="width: 100%; margin-bottom: 15px;" id="new-chat-button">+ New Chat</button>
-        <ul>
-            {% for session_id, meta in sessions %}
-            <li>
-                <a href="{{ url_for('view_session', session_id=session_id) }}" class="{{ 'active' if session_id == current_session_id else '' }}">
-                    {{ meta.purpose }}
-                    <span class="session-id">{{ session_id }}</span>
-                </a>
-            </li>
-            {% endfor %}
+        <ul id="session-list-container">
+            <!-- Session tree will be built by JavaScript -->
         </ul>
     </div>
     <!-- Column 2: Turns List -->

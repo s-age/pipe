@@ -133,6 +133,7 @@ def _parse_arguments():
     parser.add_argument('--purpose', type=str, help='The overall purpose of the new session.')
     parser.add_argument('--background', type=str, help='The background context for the new session.')
     parser.add_argument('--roles', type=str, help='Comma-separated paths to role files for the new session.')
+    parser.add_argument('--parent', type=str, help='The ID of the parent session.')
     parser.add_argument('--instruction', type=str, help='The specific instruction for the current task.')
     parser.add_argument('--references', type=str, help='Comma-separated paths to reference files.')
     parser.add_argument('--multi-step-reasoning', action='store_true', help='Include multi-step reasoning process in the prompt.')
@@ -216,11 +217,12 @@ def main():
             # Create new session first if it doesn't exist
             if not all([args.purpose, args.background]):
                 raise ValueError("A new session requires --purpose and --background for the first instruction.")
-            session_id = session_manager.create_new_session(
+            session_id = session_manager.history_manager.create_new_session(
                 purpose=args.purpose,
                 background=args.background,
                 roles=roles,
-                multi_step_reasoning_enabled=enable_multi_step_reasoning
+                multi_step_reasoning_enabled=enable_multi_step_reasoning,
+                parent_id=args.parent
             )
             args.session = session_id # Ensure args is updated for subsequent calls
             

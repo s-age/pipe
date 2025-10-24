@@ -65,18 +65,15 @@ def index():
     Serves the main HTML page for viewing conversation history.
     """
     sessions_index = history_manager.list_sessions()
-    # 最終更新日時でセッションをソート
-    sorted_sessions = sorted(
-        sessions_index.items(),
-        key=lambda item: item[1].get('last_updated', ''),
-        reverse=True
-    )
-    import json
+    # Sort by session_id to ensure parent sessions come before children
+    sorted_sessions = sorted(sessions_index.items())
     return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data=json.dumps({}), expert_mode=settings.get('expert_mode', False), settings=settings)
 
 @app.route('/new_session')
 def new_session_form():
-    return render_template('html/new_session.html', settings=settings)
+    sessions_index = history_manager.list_sessions()
+    sorted_sessions = sorted(sessions_index.items())
+    return render_template('html/new_session.html', settings=settings, sessions=sorted_sessions)
 
 @app.route('/api/session/new', methods=['POST'])
 def create_new_session_api():
@@ -85,6 +82,7 @@ def create_new_session_api():
         purpose = data.get('purpose')
         background = data.get('background')
         roles_str = data.get('roles', '')
+        parent_id = data.get('parent')
         references_str = data.get('references', '')
         instruction = data.get('instruction')
         multi_step_reasoning_enabled = data.get('multi_step_reasoning_enabled', False)
@@ -95,9 +93,16 @@ def create_new_session_api():
         
         roles = [r.strip() for r in roles_str.split(',') if r.strip()]
 
-        session_id = history_manager.create_new_session(purpose, background, roles, multi_step_reasoning_enabled, hyperparameters=hyperparameters)
+        session_id = history_manager.create_new_session(
+            purpose=purpose,
+            background=background,
+            roles=roles,
+            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
+            hyperparameters=hyperparameters,
+            parent_id=parent_id
+        )
         
-        import subprocess # Moved import here to be within the function scope if not already global
+        import subprocess
         command = ['python3', 'takt.py', '--session', session_id, '--instruction', instruction]
         if references_str:
             command.extend(['--references', references_str])
@@ -113,7 +118,7 @@ def create_new_session_api():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/session/<session_id>')
+@app.route('/session/<path:session_id>')
 def view_session(session_id):
     sessions_index = history_manager.list_sessions()
     if session_id not in sessions_index:
@@ -162,7 +167,7 @@ def view_session(session_id):
 
 # --- API Endpoints for Deletion ---
 
-@app.route('/api/session/<session_id>', methods=['DELETE'])
+@app.route('/api/session/<path:session_id>', methods=['DELETE'])
 def delete_session_api(session_id):
     try:
         history_manager.delete_session(session_id)
@@ -170,7 +175,7 @@ def delete_session_api(session_id):
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<session_id>/turn/<int:turn_index>', methods=['DELETE'])
+@app.route('/api/session/<path:session_id>/turn/<int:turn_index>', methods=['DELETE'])
 def delete_turn_api(session_id, turn_index):
     try:
         history_manager.delete_turn(session_id, turn_index)
@@ -181,7 +186,7 @@ def delete_turn_api(session_id, turn_index):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<session_id>/turn/<int:turn_index>/edit', methods=['POST'])
+@app.route('/api/session/<path:session_id>/turn/<int:turn_index>/edit', methods=['POST'])
 def edit_turn_api(session_id, turn_index):
     try:
         new_data = request.get_json()
@@ -196,7 +201,7 @@ def edit_turn_api(session_id, turn_index):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<session_id>/meta/edit', methods=['POST'])
+@app.route('/api/session/<path:session_id>/meta/edit', methods=['POST'])
 def edit_session_meta_api(session_id):
     try:
         new_meta_data = request.get_json()
@@ -211,7 +216,7 @@ def edit_session_meta_api(session_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<session_id>/todos/edit', methods=['POST'])
+@app.route('/api/session/<path:session_id>/todos/edit', methods=['POST'])
 def edit_todos_api(session_id):
     try:
         data = request.get_json()
@@ -226,7 +231,7 @@ def edit_todos_api(session_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<session_id>/references/edit', methods=['POST'])
+@app.route('/api/session/<path:session_id>/references/edit', methods=['POST'])
 def edit_references_api(session_id):
     try:
         data = request.get_json()
@@ -241,7 +246,7 @@ def edit_references_api(session_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<session_id>/todos', methods=['DELETE'])
+@app.route('/api/session/<path:session_id>/todos', methods=['DELETE'])
 def delete_todos_api(session_id):
     try:
         history_manager.delete_todos(session_id)
@@ -252,7 +257,7 @@ def delete_todos_api(session_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<session_id>/fork/<int:fork_index>', methods=['POST'])
+@app.route('/api/session/<path:session_id>/fork/<int:fork_index>', methods=['POST'])
 def fork_session_api(session_id, fork_index):
     try:
         new_session_id = history_manager.fork_session(session_id, fork_index)
@@ -268,7 +273,7 @@ def fork_session_api(session_id, fork_index):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<session_id>/instruction', methods=['POST'])
+@app.route('/api/session/<path:session_id>/instruction', methods=['POST'])
 def send_instruction_api(session_id):
     from flask import Response, stream_with_context
     import subprocess
@@ -324,7 +329,7 @@ def send_instruction_api(session_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<session_id>/turns', methods=['GET'])
+@app.route('/api/session/<path:session_id>/turns', methods=['GET'])
 def get_session_turns_api(session_id):
     """API endpoint to get turns from a specific index."""
     try:

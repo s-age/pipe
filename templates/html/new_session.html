@@ -35,7 +35,7 @@
         .error-message { color: #dc3545; margin-top: 10px; }
     </style>
 </head>
-<body data-settings="{{ settings | tojson | safe }}">
+<body data-settings='{{ settings | tojson | safe }}' data-sessions='{{ sessions | tojson | safe }}'>
     <div class="container">
         <h1>Create New Chat Session</h1>
         <form id="new-session-form">
@@ -47,6 +47,11 @@
 
             <label for="roles">Roles (comma-separated paths, e.g., roles/engineer.md):</label>
             <input type="text" id="roles" name="roles">
+
+            <label for="parent">Parent Session (optional):</label>
+            <select id="parent" name="parent" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ced4da; border-radius: 4px; font-size: 1em;">
+                <option value="">None</option>
+            </select>
 
             <label for="references">References (comma-separated paths):</label>
             <input type="text" id="references" name="references">
@@ -89,69 +94,26 @@
     </div>
 
     <script>
-        document.getElementById('new-session-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const createButton = document.getElementById('create-session-btn');
-            createButton.disabled = true; // Disable button
-            const originalButtonText = createButton.textContent;
-            createButton.textContent = 'Creating...'; // Change button text
-
-            const purpose = document.getElementById('purpose').value;
-            const background = document.getElementById('background').value;
-            const roles = document.getElementById('roles').value;
-            const references = document.getElementById('references').value;
-            const instruction = document.getElementById('instruction').value;
-            const multi_step_reasoning_enabled = document.getElementById('multi-step-reasoning').checked;
-
-            const temperature = document.getElementById('temperature').value;
-            const top_p = document.getElementById('top_p').value;
-            const top_k = document.getElementById('top_k').value;
-
-            const hyperparameters = {};
-            if (temperature) hyperparameters.temperature = { value: parseFloat(temperature) };
-            if (top_p) hyperparameters.top_p = { value: parseFloat(top_p) };
-            if (top_k) hyperparameters.top_k = { value: parseInt(top_k, 10) };
-
-            const errorMessageDiv = document.getElementById('error-message');
-            errorMessageDiv.textContent = ''; // Clear previous errors
-
-            fetch('/api/session/new', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ purpose, background, roles, references, instruction, multi_step_reasoning_enabled, hyperparameters })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.message || 'Server error'); });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    window.location.href = `/session/${data.session_id}`;
-                } else {
-                    errorMessageDiv.textContent = data.message || 'Failed to create session.';
-                }
-            })
-            .catch(error => {
-                errorMessageDiv.textContent = 'An error occurred: ' + error.message;
-                console.error('Error:', error);
-            })
-            .finally(() => {
-                createButton.disabled = false; // Re-enable button
-                createButton.textContent = originalButtonText; // Restore button text
-            });
-        });
-
         document.addEventListener('DOMContentLoaded', function() {
+            // Populate parent session dropdown
+            const sessions = JSON.parse(document.body.dataset.sessions || '[]');
+            const parentSelect = document.getElementById('parent');
+            if (sessions && parentSelect) {
+                sessions.forEach(([id, meta]) => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = `${meta.purpose} (${id})`;
+                    parentSelect.appendChild(option);
+                });
+            }
+
+            // Initialize sliders
             const settings = JSON.parse(document.body.dataset.settings || '{}');
             const sliders = [
                 { slider: 'temperature', value: 'temperature-value' },
                 { slider: 'top_p', value: 'top_p-value' },
                 { slider: 'top_k', value: 'top_k-value' }
             ];
-
             sliders.forEach(({ slider, value }) => {
                 const sliderEl = document.getElementById(slider);
                 const valueEl = document.getElementById(value);
@@ -160,6 +122,63 @@
                     valueEl.textContent = settings.parameters[slider].value;
                     sliderEl.addEventListener('input', () => valueEl.textContent = sliderEl.value);
                 }
+            });
+
+            // Handle form submission
+            document.getElementById('new-session-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const createButton = document.getElementById('create-session-btn');
+                createButton.disabled = true;
+                const originalButtonText = createButton.textContent;
+                createButton.textContent = 'Creating...';
+
+                const purpose = document.getElementById('purpose').value;
+                const background = document.getElementById('background').value;
+                const roles = document.getElementById('roles').value;
+                const parent = document.getElementById('parent').value;
+                const references = document.getElementById('references').value;
+                const instruction = document.getElementById('instruction').value;
+                const multi_step_reasoning_enabled = document.getElementById('multi-step-reasoning').checked;
+
+                const temperature = document.getElementById('temperature').value;
+                const top_p = document.getElementById('top_p').value;
+                const top_k = document.getElementById('top_k').value;
+
+                const hyperparameters = {};
+                if (temperature) hyperparameters.temperature = { value: parseFloat(temperature) };
+                if (top_p) hyperparameters.top_p = { value: parseFloat(top_p) };
+                if (top_k) hyperparameters.top_k = { value: parseInt(top_k, 10) };
+
+                const errorMessageDiv = document.getElementById('error-message');
+                errorMessageDiv.textContent = '';
+
+                fetch('/api/session/new', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ purpose, background, roles, parent, references, instruction, multi_step_reasoning_enabled, hyperparameters })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.message || 'Server error'); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = `/session/${data.session_id}`;
+                    } else {
+                        errorMessageDiv.textContent = data.message || 'Failed to create session.';
+                    }
+                })
+                .catch(error => {
+                    errorMessageDiv.textContent = 'An error occurred: ' + error.message;
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    createButton.disabled = false;
+                    createButton.textContent = originalButtonText;
+                });
             });
         });
     </script>

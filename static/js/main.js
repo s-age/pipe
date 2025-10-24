@@ -558,9 +558,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 // Update turns (main column)
-                if (sessionResult.success && sessionResult.session && sessionResult.session.turns) {
+                if (sessionResult.success && sessionResult.session) {
                     sessionData = sessionResult.session; // Update global sessionData
                     document.body.dataset.sessionData = JSON.stringify(sessionData); // Sync dataset
+                    
+                    // Always update right column if session data is fetched
+                    updateRightColumn(sessionData);
+
                     const newTurns = sessionData.turns.slice(startIndex);
                     
                     if (newTurns.length > 0) {
@@ -572,8 +576,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             const newTurnElement = createTurnElement(turn, turnIndex, expertMode);
                             turnsList.appendChild(newTurnElement);
                         });
-
-                        updateRightColumn(sessionData);
 
                         attachEventListenersToTurns();
                         scrollToBottom();

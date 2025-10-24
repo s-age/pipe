@@ -546,11 +546,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
      function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
-        fetch(`/api/session/${sessionId}`)
-            .then(handleResponse)
-            .then(data => {
-                if (data.success && data.session && data.session.turns) {
-                    sessionData = data.session; // Update global sessionData
+        const fetchSessionData = fetch(`/api/session/${sessionId}`).then(handleResponse);
+        const fetchSessionList = fetch('/api/sessions').then(handleResponse);
+
+        Promise.all([fetchSessionData, fetchSessionList])
+            .then(([sessionResult, sessionsResult]) => {
+                // Update session list (left column)
+                if (sessionsResult.success && sessionsResult.sessions) {
+                    document.body.dataset.sessions = JSON.stringify(sessionsResult.sessions);
+                    buildSessionTree();
+                }
+
+                // Update turns (main column)
+                if (sessionResult.success && sessionResult.session && sessionResult.session.turns) {
+                    sessionData = sessionResult.session; // Update global sessionData
                     document.body.dataset.sessionData = JSON.stringify(sessionData); // Sync dataset
                     const newTurns = sessionData.turns.slice(startIndex);
                     

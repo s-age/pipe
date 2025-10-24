@@ -167,6 +167,22 @@ def view_session(session_id):
 
 # --- API Endpoints for Deletion ---
 
+@app.route('/api/sessions', methods=['GET'])
+def get_sessions_api():
+    """API endpoint to get the list of all sessions."""
+    try:
+        sessions_index = history_manager.list_sessions()
+        # Sort by last_updated to show the most recent sessions first
+        sorted_sessions = sorted(
+            sessions_index.items(),
+            key=lambda item: item[1].get('last_updated', ''),
+            reverse=True
+        )
+        return jsonify({"success": True, "sessions": sorted_sessions}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
 @app.route('/api/session/<path:session_id>', methods=['GET', 'DELETE'])
 def session_api(session_id):
     if request.method == 'GET':

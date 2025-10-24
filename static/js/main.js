@@ -2,7 +2,7 @@ const timezone = document.body.dataset.timezone || 'UTC';
 const sessionTurnsCount = parseInt(document.body.dataset.sessionTurnsCount || '0');
 const expertMode = document.body.dataset.expertMode === 'true';
 const currentSessionId = document.body.dataset.currentSessionId;
-const sessionData = JSON.parse(document.body.dataset.sessionData || '{}');
+let sessionData = JSON.parse(document.body.dataset.sessionData || '{}');
 
 
 function isScrolledToBottom() {
@@ -502,12 +502,57 @@ document.addEventListener('DOMContentLoaded', function() {
         return turnElement;
     }
 
+    function updateRightColumn(sessionData) {
+        // Update TODOs
+        const todosList = document.getElementById('todos-list');
+        if (todosList) {
+            todosList.innerHTML = ''; // Clear existing list
+            if (sessionData.todos && sessionData.todos.length > 0) {
+                sessionData.todos.forEach((todo, index) => {
+                    const li = document.createElement('li');
+                    li.style.marginBottom = '10px';
+                    li.innerHTML = `
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" class="todo-checkbox" data-index="${index}" ${todo.checked ? 'checked' : ''} style="margin-right: 8px;">
+                            <strong style="display: inline;">${todo.title}</strong>
+                        </label>
+                        <button class="delete-todo-btn" data-index="${index}" style="float: right; background: none; border: none; color: #dc3545; cursor: pointer;">X</button>
+                    `;
+                    todosList.appendChild(li);
+                });
+            }
+        }
+
+        // Update References
+        const referencesList = document.getElementById('references-list');
+        if (referencesList) {
+            referencesList.innerHTML = ''; // Clear existing list
+            if (sessionData.references && sessionData.references.length > 0) {
+                sessionData.references.forEach((ref, index) => {
+                    const li = document.createElement('li');
+                    li.style.marginBottom = '10px';
+                    const textDecoration = ref.disabled ? 'line-through' : 'none';
+                    const color = ref.disabled ? '#888' : 'inherit';
+                    li.innerHTML = `
+                        <label>
+                            <input type="checkbox" class="reference-checkbox" data-index="${index}" ${!ref.disabled ? 'checked' : ''}>
+                            <span style="text-decoration: ${textDecoration}; color: ${color};">${ref.path}</span>
+                        </label>
+                    `;
+                    referencesList.appendChild(li);
+                });
+            }
+        }
+    }
+
      function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
         fetch(`/api/session/${sessionId}`)
             .then(handleResponse)
             .then(data => {
                 if (data.success && data.session && data.session.turns) {
-                    const newTurns = data.session.turns.splice(startIndex);
+                    sessionData = data.session; // Update global sessionData
+                    document.body.dataset.sessionData = JSON.stringify(sessionData); // Sync dataset
+                    const newTurns = sessionData.turns.slice(startIndex);
                     
                     if (newTurns.length > 0) {
                         placeholders.forEach(p => p.remove());
@@ -518,6 +563,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             const newTurnElement = createTurnElement(turn, turnIndex, expertMode);
                             turnsList.appendChild(newTurnElement);
                         });
+
+                        updateRightColumn(sessionData);
 
                         attachEventListenersToTurns();
                         scrollToBottom();

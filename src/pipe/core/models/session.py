@@ -6,7 +6,6 @@ from pipe.core.models.todo import TodoItem
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.reference import Reference
 from pipe.core.collections.turns import TurnCollection
-from pipe.core.collections.references import ReferenceCollection
 
 class Session(BaseModel):
     session_id: str
@@ -17,7 +16,7 @@ class Session(BaseModel):
     multi_step_reasoning_enabled: bool = False
     token_count: int = 0
     hyperparameters: Optional[Hyperparameters] = None
-    references: ReferenceCollection = Field(default_factory=ReferenceCollection)
+    references: List[Reference] = Field(default_factory=list)
     turns: TurnCollection = Field(default_factory=TurnCollection)
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: Optional[List[TodoItem]] = None

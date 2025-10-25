@@ -10,6 +10,7 @@ from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.todos import TodoCollection
+from pipe.core.collections.roles import RoleCollection
 from pipe.core.utils.file import read_text_file
 from pipe.core.utils.datetime import get_current_timestamp
 
@@ -29,14 +30,6 @@ class PromptBuilder:
             lstrip_blocks=True
         )
         self.template_env.filters['tojson'] = json.dumps
-
-    def _load_roles(self) -> list[str]:
-        content = []
-        for rel_path in self.session_data.roles:
-            path = os.path.join(self.project_root, rel_path.strip())
-            if os.path.isfile(path):
-                content.append(read_text_file(path))
-        return content
 
     def _build_hyperparameters_section(self) -> dict:
         import copy
@@ -85,7 +78,7 @@ class PromptBuilder:
         
         roles_data = {
             "description": "The following are the roles for this session.",
-            "definitions": self._load_roles()
+            "definitions": RoleCollection(self.session_data.roles).get_for_prompt(self.project_root)
         }
 
         reference_collection = ReferenceCollection(self.session_data.references)

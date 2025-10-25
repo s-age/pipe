@@ -118,9 +118,6 @@ def create_new_session_api():
             command, capture_output=True, text=True, check=True, encoding='utf-8'
         )
         
-        # Reload the session collection to reflect the changes made by the subprocess
-        session_service.reload_collection()
-        
         return jsonify({"success": True, "session_id": session_id}), 200
     except subprocess.CalledProcessError as e:
         return jsonify({"success": False, "message": "Conductor script failed during initial instruction processing.", "details": e.stderr}), 500
@@ -209,16 +206,12 @@ def session_api(session_id):
 @app.route('/api/session/<path:session_id>/turn/<int:turn_index>', methods=['DELETE'])
 def delete_turn_api(session_id, turn_index):
     try:
-        session = session_service.get_session(session_id)
-        if not session:
-            return jsonify({"success": False, "message": "Session not found."}), 404
-        
-        if 0 <= turn_index < len(session.turns):
-            del session.turns[turn_index]
-            session_service._save_session(session)
-            return jsonify({"success": True, "message": f"Turn {turn_index} from session {session_id} deleted."}), 200
-        else:
-            return jsonify({"success": False, "message": "Turn index out of range."}), 400
+        session_service.delete_turn(session_id, turn_index)
+        return jsonify({"success": True, "message": f"Turn {turn_index} from session {session_id} deleted."}), 200
+    except FileNotFoundError:
+        return jsonify({"success": False, "message": "Session not found."}), 404
+    except IndexError:
+        return jsonify({"success": False, "message": "Turn index out of range."}), 400
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -229,28 +222,14 @@ def edit_turn_api(session_id, turn_index):
         if not new_data:
             return jsonify({"success": False, "message": "No data provided."}), 400
 
-        session = session_service.get_session(session_id)
-        if not session:
-            return jsonify({"success": False, "message": "Session not found."}), 404
-
-        if 0 <= turn_index < len(session.turns):
-            original_turn = session.turns[turn_index]
-            if original_turn.type not in ["user_task", "model_response"]:
-                return jsonify({"success": False, "message": f"Editing turns of type '{original_turn.type}' is not allowed."}), 403
-
-            turn_as_dict = original_turn.model_dump()
-            turn_as_dict.update(new_data)
-            
-            from pipe.core.models.turn import UserTaskTurn, ModelResponseTurn
-            if original_turn.type == "user_task":
-                session.turns[turn_index] = UserTaskTurn(**turn_as_dict)
-            elif original_turn.type == "model_response":
-                session.turns[turn_index] = ModelResponseTurn(**turn_as_dict)
-
-            session_service._save_session(session)
-            return jsonify({"success": True, "message": f"Turn {turn_index + 1} from session {session_id} updated."}), 200
-        else:
-            return jsonify({"success": False, "message": "Turn index out of range."}), 400
+        session_service.edit_turn(session_id, turn_index, new_data)
+        return jsonify({"success": True, "message": f"Turn {turn_index + 1} from session {session_id} updated."}), 200
+    except FileNotFoundError:
+        return jsonify({"success": False, "message": "Session not found."}), 404
+    except IndexError:
+        return jsonify({"success": False, "message": "Turn index out of range."}), 400
+    except ValueError as e:
+        return jsonify({"success": False, "message": str(e)}), 403
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 

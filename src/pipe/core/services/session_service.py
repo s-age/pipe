@@ -304,6 +304,52 @@ class SessionService:
         collection.delete(session_id)
         collection.save()
 
+    def delete_turn(self, session_id: str, turn_index: int):
+        """Deletes a specific turn from a session."""
+        session = self._fetch_session(session_id)
+        if not session:
+            raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
+        
+        if not (0 <= turn_index < len(session.turns)):
+            raise IndexError("Turn index out of range.")
+            
+        del session.turns[turn_index]
+        self._save_session(session)
+        
+        # Update the index to reflect the change
+        collection = self.list_sessions()
+        collection.update(session_id)
+        collection.save()
+
+    def edit_turn(self, session_id: str, turn_index: int, new_data: dict):
+        """Edits a specific turn in a session."""
+        session = self._fetch_session(session_id)
+        if not session:
+            raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
+
+        if not (0 <= turn_index < len(session.turns)):
+            raise IndexError("Turn index out of range.")
+
+        original_turn = session.turns[turn_index]
+        if original_turn.type not in ["user_task", "model_response"]:
+            raise ValueError(f"Editing turns of type '{original_turn.type}' is not allowed.")
+
+        turn_as_dict = original_turn.model_dump()
+        turn_as_dict.update(new_data)
+        
+        if original_turn.type == "user_task":
+            session.turns[turn_index] = UserTaskTurn(**turn_as_dict)
+        elif original_turn.type == "model_response":
+            from pipe.core.models.turn import ModelResponseTurn
+            session.turns[turn_index] = ModelResponseTurn(**turn_as_dict)
+
+        self._save_session(session)
+
+        # Update the index to reflect the change
+        collection = self.list_sessions()
+        collection.update(session_id)
+        collection.save()
+
 
     def _generate_hash(self, content: str) -> str:
         return hashlib.sha256(content.encode("utf-8")).hexdigest()

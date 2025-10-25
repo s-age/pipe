@@ -86,7 +86,16 @@ class PromptBuilder:
             "definitions": self._load_roles()
         }
 
-        file_references_content = list(self.session_data.references.get_for_prompt(self.project_root))
+        file_references_content = []
+        for ref in self.session_data.references:
+            if not ref.disabled:
+                full_path = os.path.join(self.project_root, ref.path)
+                content = read_text_file(full_path)
+                if content is not None:
+                    file_references_content.append({
+                        "file_path": ref.path,
+                        "content": content
+                    })
 
         context = {
             "current_datetime": get_current_timestamp(self.template_env.globals.get('local_tz')),

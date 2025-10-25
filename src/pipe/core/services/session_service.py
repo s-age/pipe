@@ -48,14 +48,9 @@ class SessionService:
             "top_k": self.settings.parameters.top_k.model_dump()
         }
         self.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
-
-        self._index_lock_path = os.path.join(self.sessions_dir, "index.json.lock")
         
         self.history_service = HistoryService(self.sessions_dir, self.timezone_obj)
         self._initialize()
-        
-        index_data = locked_json_read(self._index_lock_path, self.index_path, default_data={"sessions": {}})
-        self.session_collection = SessionCollection({}, self.timezone_obj, index_data)
 
     def _fetch_session(self, session_id: str) -> Optional[Session]:
         """Loads a single session from its JSON file, applying data migrations if necessary."""
@@ -88,9 +83,8 @@ class SessionService:
         return self._fetch_session(session_id)
 
     def list_sessions(self) -> SessionCollection:
-        index_data = locked_json_read(self._index_lock_path, self.index_path, default_data={"sessions": {}})
-        self.session_collection = SessionCollection({}, self.timezone_obj, index_data)
-        return self.session_collection
+        """Loads and returns the latest session collection from disk."""
+        return SessionCollection(self.index_path, self.timezone_obj)
 
     def prepare_session_for_takt(self, args: TaktArgs):
         session_id = args.session
@@ -155,8 +149,6 @@ class SessionService:
     def _initialize(self):
         os.makedirs(self.sessions_dir, exist_ok=True)
         os.makedirs(self.backups_dir, exist_ok=True)
-        if not os.path.exists(self.index_path):
-            locked_json_write(self._index_lock_path, self.index_path, {"sessions": {}})
 
     def _save_session(self, session: Session):
         session_path = self._get_session_path(session.session_id, create_dirs=True)
@@ -191,7 +183,11 @@ class SessionService:
         )
 
         self._save_session(session)
-        self._update_index(session_id, purpose, timestamp)
+        
+        collection = self.list_sessions()
+        collection.update(session_id, purpose, timestamp)
+        collection.save()
+        
         return session_id
 
     def edit_session_meta(self, session_id: str, new_meta_data: dict):
@@ -212,7 +208,10 @@ class SessionService:
             session.hyperparameters = new_meta_data["hyperparameters"]
 
         self._save_session(session)
-        self._update_index(session_id, purpose=session.purpose)
+
+        collection = self.list_sessions()
+        collection.update(session_id, purpose=session.purpose)
+        collection.save()
 
     def update_references(self, session_id: str, references: List[Reference]):
         session = self._fetch_session(session_id)
@@ -289,12 +288,11 @@ class SessionService:
         # Backup before deleting
         self.backup_session(session_id)
         
-        # Get all child session IDs before deleting from collection
-        all_session_ids = list(self.session_collection.sessions.keys())
-        child_ids = [sid for sid in all_session_ids if sid.startswith(f"{session_id}/")]
+        collection = self.list_sessions()
+        child_ids = [sid for sid in collection if sid.startswith(f"{session_id}/")]
         all_ids_to_delete = [session_id] + child_ids
 
-        # Delete files and update index
+        # Delete session files
         for sid in all_ids_to_delete:
             session_path = self._get_session_path(sid)
             session_lock_path = self._get_session_lock_path(sid)
@@ -302,26 +300,10 @@ class SessionService:
                 if os.path.exists(session_path):
                     os.remove(session_path)
 
-        def modifier(data):
-            for sid in all_ids_to_delete:
-                if sid in data.get("sessions", {}):
-                    del data["sessions"][sid]
-        
-        locked_json_read_modify_write(self._index_lock_path, self.index_path, modifier, default_data={"sessions": {}})
+        # Update and save the index
+        collection.delete(session_id)
+        collection.save()
 
-    def _update_index(self, session_id: str, purpose: str = None, created_at: str = None):
-        def modifier(data):
-            if "sessions" not in data:
-                data["sessions"] = {}
-            if session_id not in data["sessions"]:
-                data["sessions"][session_id] = {}
-            data["sessions"][session_id]['last_updated'] = get_current_timestamp(self.timezone_obj)
-            if created_at:
-                data["sessions"][session_id]['created_at'] = created_at
-            if purpose:
-                data["sessions"][session_id]['purpose'] = purpose
-        
-        locked_json_read_modify_write(self._index_lock_path, self.index_path, modifier, default_data={"sessions": {}})
 
     def _generate_hash(self, content: str) -> str:
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
@@ -377,11 +359,17 @@ class SessionService:
         if session:
             session.turns.append(turn_data)
             self._save_session(session)
-            self._update_index(session_id)
+            
+            collection = self.list_sessions()
+            collection.update(session_id)
+            collection.save()
 
     def update_token_count(self, session_id: str, token_count: int):
         session = self._fetch_session(session_id)
         if session:
             session.token_count = token_count
             self._save_session(session)
-            self._update_index(session_id)
+
+            collection = self.list_sessions()
+            collection.update(session_id)
+            collection.save()

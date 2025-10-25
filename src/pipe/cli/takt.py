@@ -88,7 +88,6 @@ def _run(session_service: SessionService, args: TaktArgs):
     # Signal the end of the stream to the web UI, ensuring it's on a new line.
     print("\n", flush=True)
     print("event: end", flush=True)
-    print("data: \n", flush=True)
 
 def _help(parser):
     parser.print_help()

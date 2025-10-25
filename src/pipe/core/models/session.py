@@ -8,6 +8,11 @@ from pipe.core.models.reference import Reference
 from pipe.core.collections.turns import TurnCollection
 
 class Session(BaseModel):
+    """
+    Represents a single user session, corresponding to a unique session file (e.g., `${session_id}.json`).
+    This class is responsible for holding the detailed state of a conversation, including turns, references, and metadata.
+    It does not manage the collection of all sessions or the index file.
+    """
     session_id: str
     created_at: str
     purpose: Optional[str] = None

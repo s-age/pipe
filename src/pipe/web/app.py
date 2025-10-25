@@ -73,13 +73,13 @@ session_service = SessionService(project_root, settings)
 def index():
     sessions_collection = session_service.list_sessions()
     sorted_sessions = sessions_collection.get_sorted_by_last_updated()
-    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data=json.dumps({}), expert_mode=settings.expert_mode, settings=settings)
+    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data=json.dumps({}), expert_mode=settings.expert_mode, settings=settings.model_dump())
 
 @app.route('/new_session')
 def new_session_form():
     sessions_collection = session_service.list_sessions()
     sorted_sessions = sessions_collection.get_sorted_by_last_updated()
-    return render_template('html/new_session.html', settings=settings, sessions=sorted_sessions)
+    return render_template('html/new_session.html', settings=settings.model_dump(), sessions=sorted_sessions)
 
 @app.route('/api/session/new', methods=['POST'])
 def create_new_session_api():
@@ -173,7 +173,7 @@ def view_session(session_id):
                            token_count=token_count,
                            context_limit=context_limit,
                            expert_mode=expert_mode,
-                           settings=settings)
+                           settings=settings.model_dump())
 
 @app.route('/api/sessions', methods=['GET'])
 def get_sessions_api():

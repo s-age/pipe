@@ -71,14 +71,14 @@ session_service = SessionService(project_root, settings)
 
 @app.route('/')
 def index():
-    sessions_index = session_service.list_sessions()
-    sorted_sessions = sorted(sessions_index.items())
+    sessions_collection = session_service.list_sessions()
+    sorted_sessions = sessions_collection.get_sorted_by_last_updated()
     return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data=json.dumps({}), expert_mode=settings.expert_mode, settings=settings)
 
 @app.route('/new_session')
 def new_session_form():
-    sessions_index = session_service.list_sessions()
-    sorted_sessions = sorted(sessions_index.items())
+    sessions_collection = session_service.list_sessions()
+    sorted_sessions = sessions_collection.get_sorted_by_last_updated()
     return render_template('html/new_session.html', settings=settings, sessions=sorted_sessions)
 
 @app.route('/api/session/new', methods=['POST'])
@@ -129,15 +129,11 @@ def create_new_session_api():
 
 @app.route('/session/<path:session_id>')
 def view_session(session_id):
-    sessions_index = session_service.list_sessions()
-    if session_id not in sessions_index:
+    sessions_collection = session_service.list_sessions()
+    if session_id not in sessions_collection:
         abort(404)
 
-    sorted_sessions = sorted(
-        sessions_index.items(),
-        key=lambda item: item[1].get('last_updated', ''),
-        reverse=True
-    )
+    sorted_sessions = sessions_collection.get_sorted_by_last_updated()
     
     session_data = session_service.get_session(session_id)
     if not session_data:
@@ -185,12 +181,8 @@ def view_session(session_id):
 @app.route('/api/sessions', methods=['GET'])
 def get_sessions_api():
     try:
-        sessions_index = session_service.list_sessions()
-        sorted_sessions = sorted(
-            sessions_index.items(),
-            key=lambda item: item[1].get('last_updated', ''),
-            reverse=True
-        )
+        sessions_collection = session_service.list_sessions()
+        sorted_sessions = sessions_collection.get_sorted_by_last_updated()
         return jsonify({"success": True, "sessions": sorted_sessions}), 200
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500

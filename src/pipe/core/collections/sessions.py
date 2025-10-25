@@ -11,81 +11,57 @@ class SessionCollection:
     Manages a collection of Session objects in memory and provides collection-level operations.
     This class is designed to be independent of the storage layer.
     """
-    def __init__(self, sessions: Dict[str, Session], timezone_obj):
-        self._sessions: Dict[str, Session] = sessions
+    def __init__(self, sessions: Dict[str, Session], timezone_obj, index_data: Dict):
+        self._sessions: Dict[str, Session] = sessions # This will be empty initially
         self.timezone_obj = timezone_obj
+        self._index_data = index_data
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self._sessions)
+        return iter(self._index_data.get('sessions', {}))
 
     def __len__(self) -> int:
-        return len(self._sessions)
+        return len(self._index_data.get('sessions', {}))
 
-    def find(self, session_id: str) -> Optional[Session]:
-        """Finds a session by its ID."""
-        return self._sessions.get(session_id)
+    def find(self, session_id: str) -> Optional[dict]:
+        """Finds a session's metadata by its ID from the index."""
+        return self._index_data.get('sessions', {}).get(session_id)
 
     def add(self, session: Session):
         """Adds a new session to the collection."""
-        if session.session_id in self._sessions:
+        if 'sessions' not in self._index_data:
+            self._index_data['sessions'] = {}
+        if session.session_id in self._index_data['sessions']:
             raise ValueError(f"Session with ID '{session.session_id}' already exists.")
-        self._sessions[session.session_id] = session
+        self._index_data['sessions'][session.session_id] = {
+            "purpose": session.purpose,
+            "created_at": session.created_at,
+            "last_updated": get_current_timestamp(self.timezone_obj)
+        }
 
     def delete(self, session_id: str) -> bool:
         """Deletes a session from the collection. Returns True if successful."""
-        if session_id in self._sessions:
-            del self._sessions[session_id]
+        if 'sessions' in self._index_data and session_id in self._index_data['sessions']:
+            del self._index_data['sessions'][session_id]
             # Also delete children sessions
-            children_to_delete = [sid for sid in self._sessions if sid.startswith(f"{session_id}/")]
+            children_to_delete = [sid for sid in self._index_data['sessions'] if sid.startswith(f"{session_id}/")]
             for child_id in children_to_delete:
-                del self._sessions[child_id]
+                del self._index_data['sessions'][child_id]
             return True
         return False
 
-    def fork(self, original_session_id: str, fork_index: int, default_hyperparameters) -> Session:
+    def get_sorted_by_last_updated(self) -> list[tuple[str, dict]]:
         """
-        Creates a new forked session object from an existing session.
-        This method returns the new Session object but does not add it to the collection itself.
-        The caller (e.g., SessionService) is responsible for adding it.
+        Returns a list of (session_id, session_meta) tuples,
+        sorted by 'last_updated' in descending order.
         """
-        original_session = self.find(original_session_id)
-        if not original_session:
-            raise FileNotFoundError(f"Original session with ID '{original_session_id}' not found.")
-
-        if not (0 <= fork_index < len(original_session.turns)):
-            raise IndexError("fork_index is out of range.")
-        
-        fork_turn = original_session.turns[fork_index]
-        if fork_turn.type != "model_response":
-            raise ValueError(f"Forking is only allowed from a 'model_response' turn. Turn {fork_index + 1} is of type '{fork_turn.type}'.")
-
-        timestamp = get_current_timestamp(self.timezone_obj)
-        forked_purpose = f"Fork of: {original_session.purpose}"
-        forked_turns = original_session.turns[:fork_index + 1]
-
-        identity_str = json.dumps({
-            "purpose": forked_purpose, 
-            "original_id": original_session_id,
-            "fork_at_turn": fork_index,
-            "timestamp": timestamp
-        }, sort_keys=True)
-        new_session_id_suffix = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
-
-        parent_path = original_session_id.rsplit('/', 1)[0] if '/' in original_session_id else None
-        new_session_id = f"{parent_path}/{new_session_id_suffix}" if parent_path else new_session_id_suffix
-
-        new_session = Session(
-            session_id=new_session_id,
-            created_at=timestamp,
-            purpose=forked_purpose,
-            background=original_session.background,
-            roles=original_session.roles,
-            multi_step_reasoning_enabled=original_session.multi_step_reasoning_enabled,
-            hyperparameters=original_session.hyperparameters or default_hyperparameters,
-            references=original_session.references,
-            turns=forked_turns
+        if not self._index_data or 'sessions' not in self._index_data:
+            return []
+            
+        return sorted(
+            self._index_data['sessions'].items(),
+            key=lambda item: item[1].get('last_updated', ''),
+            reverse=True
         )
-        return new_session
 
     def list_all(self) -> Dict[str, Session]:
         """Returns the entire dictionary of sessions."""

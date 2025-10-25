@@ -4,7 +4,7 @@ import inspect
 import sys
 
 from pipe.core.models.session import Session
-from pipe.core.models.turn import FunctionCallingTurn, ToolResponseTurn
+from pipe.core.models.turn import FunctionCallingTurn, ToolResponseTurn, ModelResponseTurn
 from pipe.core.gemini_api import call_gemini_api
 from pipe.core.utils.datetime import get_current_timestamp
 

@@ -54,26 +54,10 @@ class SessionService:
         self.history_service = HistoryService(self.sessions_dir, self.timezone_obj)
         self._initialize()
         
-        # Load all sessions into the collection
-        all_sessions = self._load_all_sessions()
-        self.session_collection = SessionCollection(all_sessions, self.timezone_obj)
-
-    def reload_collection(self):
-        """Reloads all sessions from disk into the session collection."""
-        all_sessions = self._load_all_sessions()
-        self.session_collection = SessionCollection(all_sessions, self.timezone_obj)
-
-    def _load_all_sessions(self) -> Dict[str, Session]:
-        """Loads all sessions from their JSON files based on the index."""
-        sessions = {}
         index_data = locked_json_read(self._index_lock_path, self.index_path, default_data={"sessions": {}})
-        for session_id in index_data.get("sessions", {}):
-            session = self._load_session_from_file(session_id)
-            if session:
-                sessions[session_id] = session
-        return sessions
+        self.session_collection = SessionCollection({}, self.timezone_obj, index_data)
 
-    def _load_session_from_file(self, session_id: str) -> Optional[Session]:
+    def _fetch_session(self, session_id: str) -> Optional[Session]:
         """Loads a single session from its JSON file, applying data migrations if necessary."""
         session_path = self._get_session_path(session_id)
         if not os.path.exists(session_path):
@@ -98,6 +82,15 @@ class SessionService:
         # --- End of Data Migration ---
 
         return Session.model_validate(data)
+
+    def get_session(self, session_id: str) -> Optional[Session]:
+        """Loads a specific session."""
+        return self._fetch_session(session_id)
+
+    def list_sessions(self) -> SessionCollection:
+        index_data = locked_json_read(self._index_lock_path, self.index_path, default_data={"sessions": {}})
+        self.session_collection = SessionCollection({}, self.timezone_obj, index_data)
+        return self.session_collection
 
     def prepare_session_for_takt(self, args: TaktArgs):
         session_id = args.session
@@ -176,7 +169,7 @@ class SessionService:
 
     def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0, hyperparameters: dict = None, parent_id: str = None) -> str:
         if parent_id:
-            parent_session = self.session_collection.find(parent_id)
+            parent_session = self._fetch_session(parent_id)
             if not parent_session:
                  raise FileNotFoundError(f"Parent session with ID '{parent_id}' not found.")
 
@@ -197,22 +190,13 @@ class SessionService:
             hyperparameters=hyperparameters if hyperparameters is not None else self.default_hyperparameters
         )
 
-        self.session_collection.add(session)
         self._save_session(session)
         self._update_index(session_id, purpose, timestamp)
         return session_id
 
-    def get_session(self, session_id: str) -> Optional[Session]:
-        return self.session_collection.find(session_id)
-
-    def list_sessions(self) -> dict:
-        # This now just returns the data from the index file for compatibility with web UI
-        # A better approach would be to have the web UI consume a list of Session objects
-        return locked_json_read(self._index_lock_path, self.index_path, default_data={}).get("sessions", {})
-
     def edit_session_meta(self, session_id: str, new_meta_data: dict):
         self.backup_session(session_id)
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         if not session:
             return
 
@@ -231,13 +215,13 @@ class SessionService:
         self._update_index(session_id, purpose=session.purpose)
 
     def update_references(self, session_id: str, references: List[Reference]):
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         if session:
             session.references = references
             self._save_session(session)
 
     def add_references(self, session_id: str, file_paths: list[str]):
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         if not session:
             raise ValueError(f"Session ID '{session_id}' not found.")
 
@@ -258,29 +242,29 @@ class SessionService:
             self._save_session(session)
 
     def update_todos(self, session_id: str, todos: list):
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         if session:
             session.todos = todos
             self._save_session(session)
 
     def delete_todos(self, session_id: str):
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         if session:
             session.todos = None
             self._save_session(session)
 
     def add_to_pool(self, session_id: str, pool_data: Turn):
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         if session:
             session.pools.append(pool_data)
             self._save_session(session)
 
     def get_pool(self, session_id: str) -> List[Turn]:
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         return session.pools if session else []
 
     def get_and_clear_pool(self, session_id: str) -> List[Turn]:
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         if not session:
             return []
         
@@ -306,25 +290,24 @@ class SessionService:
         self.backup_session(session_id)
         
         # Get all child session IDs before deleting from collection
-        child_ids = [sid for sid in self.session_collection.list_all() if sid.startswith(f"{session_id}/")]
+        all_session_ids = list(self.session_collection.sessions.keys())
+        child_ids = [sid for sid in all_session_ids if sid.startswith(f"{session_id}/")]
         all_ids_to_delete = [session_id] + child_ids
 
-        # Delete from collection
-        if self.session_collection.delete(session_id):
-            # Delete files and update index
-            for sid in all_ids_to_delete:
-                session_path = self._get_session_path(sid)
-                session_lock_path = self._get_session_lock_path(sid)
-                with FileLock(session_lock_path):
-                    if os.path.exists(session_path):
-                        os.remove(session_path)
+        # Delete files and update index
+        for sid in all_ids_to_delete:
+            session_path = self._get_session_path(sid)
+            session_lock_path = self._get_session_lock_path(sid)
+            with FileLock(session_lock_path):
+                if os.path.exists(session_path):
+                    os.remove(session_path)
 
-            def modifier(data):
-                for sid in all_ids_to_delete:
-                    if sid in data.get("sessions", {}):
-                        del data["sessions"][sid]
-            
-            locked_json_read_modify_write(self._index_lock_path, self.index_path, modifier, default_data={"sessions": {}})
+        def modifier(data):
+            for sid in all_ids_to_delete:
+                if sid in data.get("sessions", {}):
+                    del data["sessions"][sid]
+        
+        locked_json_read_modify_write(self._index_lock_path, self.index_path, modifier, default_data={"sessions": {}})
 
     def _update_index(self, session_id: str, purpose: str = None, created_at: str = None):
         def modifier(data):
@@ -346,23 +329,58 @@ class SessionService:
     def fork_session(self, session_id: str, fork_index: int) -> Optional[str]:
         self.backup_session(session_id)
         
-        new_session = self.session_collection.fork(session_id, fork_index, self.default_hyperparameters)
+        original_session = self._fetch_session(session_id)
+        if not original_session:
+            raise FileNotFoundError(f"Original session with ID '{original_session_id}' not found.")
+
+        if not (0 <= fork_index < len(original_session.turns)):
+            raise IndexError("fork_index is out of range.")
         
-        self.session_collection.add(new_session)
+        fork_turn = original_session.turns[fork_index]
+        if fork_turn.type != "model_response":
+            raise ValueError(f"Forking is only allowed from a 'model_response' turn. Turn {fork_index + 1} is of type '{fork_turn.type}'.")
+
+        timestamp = get_current_timestamp(self.timezone_obj)
+        forked_purpose = f"Fork of: {original_session.purpose}"
+        forked_turns = original_session.turns[:fork_index + 1]
+
+        identity_str = json.dumps({
+            "purpose": forked_purpose, 
+            "original_id": session_id,
+            "fork_at_turn": fork_index,
+            "timestamp": timestamp
+        }, sort_keys=True)
+        new_session_id_suffix = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
+
+        parent_path = session_id.rsplit('/', 1)[0] if '/' in session_id else None
+        new_session_id = f"{parent_path}/{new_session_id_suffix}" if parent_path else new_session_id_suffix
+
+        new_session = Session(
+            session_id=new_session_id,
+            created_at=timestamp,
+            purpose=forked_purpose,
+            background=original_session.background,
+            roles=original_session.roles,
+            multi_step_reasoning_enabled=original_session.multi_step_reasoning_enabled,
+            hyperparameters=original_session.hyperparameters or self.default_hyperparameters,
+            references=original_session.references,
+            turns=forked_turns
+        )
+        
         self._save_session(new_session)
         self._update_index(new_session.session_id, new_session.purpose, new_session.created_at)
         
         return new_session.session_id
 
     def add_turn_to_session(self, session_id: str, turn_data: Turn):
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         if session:
             session.turns.append(turn_data)
             self._save_session(session)
             self._update_index(session_id)
 
     def update_token_count(self, session_id: str, token_count: int):
-        session = self.get_session(session_id)
+        session = self._fetch_session(session_id)
         if session:
             session.token_count = token_count
             self._save_session(session)

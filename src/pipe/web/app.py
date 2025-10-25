@@ -136,19 +136,28 @@ def view_session(session_id):
     if not session_data:
         abort(404)
 
-    if 'hyperparameters' not in session_data or not session_data['hyperparameters']:
-        session_data['hyperparameters'] = settings.get('parameters', {})
-        session_service.edit_session_meta(session_id, {'hyperparameters': session_data['hyperparameters']})
+    # Populate missing hyperparameters with defaults from settings
+    defaults = settings.get('parameters', {})
+    if not session_data.hyperparameters:
+        from pipe.core.models.hyperparameters import Hyperparameters
+        session_data.hyperparameters = Hyperparameters()
 
-    if session_data.get('references') and isinstance(session_data['references'][0], str):
-        session_data['references'] = [{'path': ref, 'disabled': False} for ref in session_data['references']]
-        session_service.update_references(session_id, session_data['references'])
+    for param_name in ['temperature', 'top_p', 'top_k']:
+        if getattr(session_data.hyperparameters, param_name) is None:
+            if default_value := defaults.get(param_name):
+                from pipe.core.models.hyperparameters import HyperparameterValue
+                setattr(session_data.hyperparameters, param_name, HyperparameterValue(**default_value))
 
-    turns = session_data.get("turns", [])
+    if session_data.references and isinstance(session_data.references[0], str):
+        from pipe.core.models.reference import Reference
+        session_data.references = [Reference(path=ref, disabled=False) for ref in session_data.references]
+        session_service.update_references(session_id, session_data.references)
+
+    turns = session_data.turns
     
-    current_session_purpose = session_data.get('purpose', 'Session')
-    multi_step_reasoning_enabled = session_data.get('multi_step_reasoning_enabled', False)
-    token_count = session_data.get('token_count', 0)
+    current_session_purpose = session_data.purpose
+    multi_step_reasoning_enabled = session_data.multi_step_reasoning_enabled
+    token_count = session_data.token_count
     context_limit = settings.get('context_limit', 1000000)
     expert_mode = settings.get('expert_mode', False)
 
@@ -156,7 +165,7 @@ def view_session(session_id):
                            sessions=sorted_sessions,
                            current_session_id=session_id,
                            current_session_purpose=current_session_purpose,
-                           session_data=session_data,
+                           session_data=session_data.model_dump(),
                            turns=turns,
                            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
                            token_count=token_count,
@@ -184,7 +193,7 @@ def session_api(session_id):
             session_data = session_service.get_session(session_id)
             if not session_data:
                 return jsonify({"success": False, "message": "Session not found."} ), 404
-            return jsonify({"success": True, "session": session_data}), 200
+            return jsonify({"success": True, "session": session_data.model_dump()}), 200
         except Exception as e:
             return jsonify({"success": False, "message": str(e)}), 500
             
@@ -198,10 +207,16 @@ def session_api(session_id):
 @app.route('/api/session/<path:session_id>/turn/<int:turn_index>', methods=['DELETE'])
 def delete_turn_api(session_id, turn_index):
     try:
-        session_service.history_manager.delete_turn(session_id, turn_index)
-        return jsonify({"success": True, "message": f"Turn {turn_index} from session {session_id} deleted."} ), 200
-    except IndexError:
-        return jsonify({"success": False, "message": "Turn index out of range."} ), 400
+        session = session_service.get_session(session_id)
+        if not session:
+            return jsonify({"success": False, "message": "Session not found."}), 404
+        
+        if 0 <= turn_index < len(session.turns):
+            del session.turns[turn_index]
+            session_service._save_session(session)
+            return jsonify({"success": True, "message": f"Turn {turn_index} from session {session_id} deleted."}), 200
+        else:
+            return jsonify({"success": False, "message": "Turn index out of range."}), 400
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -210,12 +225,30 @@ def edit_turn_api(session_id, turn_index):
     try:
         new_data = request.get_json()
         if not new_data:
-            return jsonify({"success": False, "message": "No data provided."} ), 400
+            return jsonify({"success": False, "message": "No data provided."}), 400
 
-        session_service.history_manager.edit_turn(session_id, turn_index, new_data)
-        return jsonify({"success": True, "message": f"Turn {turn_index + 1} from session {session_id} updated."} ), 200
-    except IndexError:
-        return jsonify({"success": False, "message": "Turn index out of range."} ), 400
+        session = session_service.get_session(session_id)
+        if not session:
+            return jsonify({"success": False, "message": "Session not found."}), 404
+
+        if 0 <= turn_index < len(session.turns):
+            original_turn = session.turns[turn_index]
+            if original_turn.type not in ["user_task", "tool_response"]:
+                return jsonify({"success": False, "message": f"Editing turns of type '{original_turn.type}' is not allowed."}), 403
+
+            turn_as_dict = original_turn.model_dump()
+            turn_as_dict.update(new_data)
+            
+            from pipe.core.models.turn import UserTaskTurn, ToolResponseTurn
+            if original_turn.type == "user_task":
+                session.turns[turn_index] = UserTaskTurn(**turn_as_dict)
+            elif original_turn.type == "tool_response":
+                session.turns[turn_index] = ToolResponseTurn(**turn_as_dict)
+
+            session_service._save_session(session)
+            return jsonify({"success": True, "message": f"Turn {turn_index + 1} from session {session_id} updated."}), 200
+        else:
+            return jsonify({"success": False, "message": "Turn index out of range."}), 400
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -307,7 +340,7 @@ def send_instruction_api(session_id):
         if not session_data:
             return jsonify({"success": False, "message": "Session not found."} ), 404
         
-        enable_multi_step_reasoning = session_data.get('multi_step_reasoning_enabled', False)
+        enable_multi_step_reasoning = session_data.multi_step_reasoning_enabled
 
         # Use sys.executable to ensure the command runs with the same Python interpreter
         # that is running the Flask app. Use the 'takt' entry point.
@@ -352,7 +385,7 @@ def get_session_turns_api(session_id):
         if not session_data:
             return jsonify({"success": False, "message": "Session not found."} ), 404
         
-        all_turns = session_data.get("turns", [])
+        all_turns = [turn.model_dump() for turn in session_data.turns]
         new_turns = all_turns[since_index:]
         
         return jsonify({"success": True, "turns": new_turns}), 200

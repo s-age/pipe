@@ -12,7 +12,8 @@ class TestHistoryService(unittest.TestCase):
         """Set up a temporary directory for testing."""
         self.test_dir = tempfile.mkdtemp()
         self.session_service = SessionService(self.test_dir)
-        self.history_service = self.session_service.history_manager
+        # Instantiate HistoryService directly
+        self.history_service = HistoryService(self.test_dir, self.session_service.timezone_obj)
         self.session_id = self.session_service.create_new_session("test_purpose", "test_background", [], False)
 
     def tearDown(self):

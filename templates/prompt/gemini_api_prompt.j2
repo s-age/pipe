@@ -21,16 +21,7 @@
   , "todos": {{ render_todos_macro(session.todos) }}{% endif %}
   {% if session.file_references %}
   , "file_references": {{ render_file_references_macro(session.file_references) }}{% endif %}
-  {% if session.todos %}
-  , "todos": [
-    {% for todo in session.todos %}
-    {
-      "title": "{{ todo.title }}",
-      "description": "{{ todo.description }}",
-      "checked": {{ "true" if todo.checked else "false" }}
-    }{{ "," if not loop.last }}
-    {% endfor %}
-  ]{% endif %}
+
   {% if session.constraints.processing_config.multi_step_reasoning_active %}
   , "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.constraints.processing_config.multi_step_reasoning_active) }}
   {% endif %}

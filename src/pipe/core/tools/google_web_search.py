@@ -1,29 +1,33 @@
 from typing import Dict
-import subprocess
 import sys
 import os
+from pipe.core.search_agent import call_gemini_api_with_grounding
+from pipe.core.utils.file import read_yaml_file
 
-def google_web_search(query: str) -> Dict[str, str]:
+def google_web_search(query: str, project_root: str = None) -> Dict[str, str]:
     """
     Performs a web search using Google Search and returns the results by executing a search agent.
     """
     if not query:
         return {"error": "google_web_search called without a query."}
     
+    if not project_root:
+        return {"error": "google_web_search requires project_root."}
+
     try:
-        # pyenv exec python src/search_agent.py "$query" を実行
-        # tools/google_web_search.pyから見たプロジェクトルートはPath(__file__).parent.parent
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-        command = f"PYTHONPATH={project_root} pyenv exec python {os.path.join(project_root, 'src', 'search_agent.py')} \"{query}\""
+        settings = read_yaml_file(os.path.join(project_root, "setting.yml"))
+
+        response = call_gemini_api_with_grounding(
+            settings=settings,
+            instruction=query,
+            project_root=project_root
+        )
         
-        # サブプロセスを実行し、出力をキャプチャ
-        process = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
-        
-        if process.stderr:
-            print(f"Search agent stderr: {process.stderr}", file=sys.stderr)
-        
-        return {"content": process.stdout.strip()}
-    except subprocess.CalledProcessError as e:
-        return {"error": f"Failed to execute search agent: {e.stderr.strip()}"}
+        if response.candidates:
+            content = "".join(part.text for part in response.candidates[0].content.parts if part.text)
+            return {"content": content}
+        else:
+            return {"content": "No response from model."}
+
     except Exception as e:
         return {"error": f"Failed to execute search agent: {e}"}

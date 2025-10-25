@@ -54,10 +54,10 @@
                     <button class="action-btn fork-btn" data-session-id="{{ current_session_id }}" data-fork-index="{{ loop.index0 }}">Fork</button>
                     {% endif %}
                     <button class="action-btn copy-turn-btn" data-turn-index="{{ loop.index0 }}">Copy</button>
-                    {% if expert_mode %}
+                    {% if expert_mode and (turn.type == 'user_task' or turn.type == 'model_response') %}
                     <button class="action-btn edit-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}" data-turn-type="{{ turn.type }}">Edit</button>
-                    <button class="action-btn delete-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}">Delete</button>
                     {% endif %}
+                    <button class="action-btn delete-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}">Delete</button>
                 </div>
             </div>
 
@@ -126,22 +126,22 @@
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <label>Temperature:</label>
                         <div>
-                            <input type="range" data-field="temperature" min="0" max="2" step="0.1" value="{{ session_data.hyperparameters.temperature.value }}">
-                            <span id="edit-temperature-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.temperature.value }}</span>
+                            <input type="range" data-field="temperature" min="0" max="2" step="0.1" value="{{ session_data.hyperparameters.temperature.value if session_data.hyperparameters.temperature else 0 }}">
+                            <span id="edit-temperature-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.temperature.value if session_data.hyperparameters.temperature else 0 }}</span>
                         </div>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <label>Top P:</label>
                         <div>
-                            <input type="range" data-field="top_p" min="0" max="1" step="0.1" value="{{ session_data.hyperparameters.top_p.value }}">
-                            <span id="edit-top_p-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.top_p.value }}</span>
+                            <input type="range" data-field="top_p" min="0" max="1" step="0.1" value="{{ session_data.hyperparameters.top_p.value if session_data.hyperparameters.top_p else 0 }}">
+                            <span id="edit-top_p-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.top_p.value if session_data.hyperparameters.top_p else 0 }}</span>
                         </div>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <label>Top K:</label>
                         <div>
-                            <input type="range" data-field="top_k" min="1" max="50" step="1" value="{{ session_data.hyperparameters.top_k.value }}">
-                            <span id="edit-top_k-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.top_k.value }}</span>
+                            <input type="range" data-field="top_k" min="1" max="50" step="1" value="{{ session_data.hyperparameters.top_k.value if session_data.hyperparameters.top_k else 0 }}">
+                            <span id="edit-top_k-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.top_k.value if session_data.hyperparameters.top_k else 0 }}</span>
                         </div>
                     </div>
                     {% endif %}
@@ -150,6 +150,7 @@
                     <strong>Todos:</strong>
                     <button class="action-btn" id="delete-todos-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px; background-color: #dc3545;">Delete All</button>
                     <ul id="todos-list" style="list-style: none; padding-left: 0; display: {% if not session_data.todos or session_data.todos|length == 0 %}none{% else %}block{% endif %};">
+                        {% if session_data.todos %}
                         {% for todo in session_data.todos %}
                             <li style="margin-bottom: 10px;">
                                 <label style="cursor: pointer;">
@@ -158,6 +159,7 @@
                                 </label>
                             </li>
                         {% endfor %}
+                        {% endif %}
                     </ul>
                     <p id="no-todos-message" style="display: {% if not session_data.todos or session_data.todos|length == 0 %}block{% else %}none{% endif %};">No todos for this session.</p>
                 </div>

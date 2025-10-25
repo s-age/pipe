@@ -4,9 +4,9 @@ import google.genai as genai
 from google.genai import types
 import sys
 import yaml
-from src.utils import read_yaml_file
+from pipe.core.utils.file import read_yaml_file
 
-def call_gemini_api_with_grounding(settings: dict, instruction: str) -> types.GenerateContentResponse:
+def call_gemini_api_with_grounding(settings: dict, instruction: str, project_root: str) -> types.GenerateContentResponse:
     model_name = settings.get('search_model')
     if not model_name:
         raise ValueError("'search_model' not found in setting.yml")
@@ -51,14 +51,15 @@ if __name__ == "__main__":
         sys.exit(1)
 
     query = sys.argv[1]
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
     settings = read_yaml_file(os.path.join(project_root, "setting.yml"))
 
     try:
         response = call_gemini_api_with_grounding(
             settings=settings,
-            instruction=query
+            instruction=query,
+            project_root=project_root
         )
         if response.candidates:
             for part in response.candidates[0].content.parts:

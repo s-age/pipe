@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, List, Optional
 from pydantic import BaseModel
 from typing_extensions import Literal
 
@@ -22,5 +22,14 @@ class ToolResponseTurn(BaseModel):
     name: str
     response: Dict[str, Any]
     timestamp: str
+
+class CompressedHistoryTurn(BaseModel):
+    type: Literal["compressed_history"]
+    content: str
+    original_turns_range: List[int]
+    timestamp: str
+
+Turn = Union[UserTaskTurn, ModelResponseTurn, FunctionCallingTurn, ToolResponseTurn, CompressedHistoryTurn]
+
 
 Turn = Union[UserTaskTurn, ModelResponseTurn, FunctionCallingTurn, ToolResponseTurn]

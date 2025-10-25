@@ -18,10 +18,11 @@ from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.services.history_service import HistoryService
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import FileLock, locked_json_read_modify_write, locked_json_write, locked_json_read
-
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
+from pipe.core.collections.sessions import SessionCollection
+from pipe.core.collections.turns import TurnCollection
 
 class SessionService:
     def __init__(self, project_root: str, settings: Settings):
@@ -52,6 +53,51 @@ class SessionService:
         
         self.history_service = HistoryService(self.sessions_dir, self.timezone_obj)
         self._initialize()
+        
+        # Load all sessions into the collection
+        all_sessions = self._load_all_sessions()
+        self.session_collection = SessionCollection(all_sessions, self.timezone_obj)
+
+    def reload_collection(self):
+        """Reloads all sessions from disk into the session collection."""
+        all_sessions = self._load_all_sessions()
+        self.session_collection = SessionCollection(all_sessions, self.timezone_obj)
+
+    def _load_all_sessions(self) -> Dict[str, Session]:
+        """Loads all sessions from their JSON files based on the index."""
+        sessions = {}
+        index_data = locked_json_read(self._index_lock_path, self.index_path, default_data={"sessions": {}})
+        for session_id in index_data.get("sessions", {}):
+            session = self._load_session_from_file(session_id)
+            if session:
+                sessions[session_id] = session
+        return sessions
+
+    def _load_session_from_file(self, session_id: str) -> Optional[Session]:
+        """Loads a single session from its JSON file, applying data migrations if necessary."""
+        session_path = self._get_session_path(session_id)
+        if not os.path.exists(session_path):
+            return None
+        
+        with open(session_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # --- Data Migration ---
+        # Ensure all turns in 'turns' and 'pools' have a timestamp.
+        session_creation_time = data.get('created_at', get_current_timestamp(self.timezone_obj))
+        for turn_list_key in ['turns', 'pools']:
+            if turn_list_key in data and isinstance(data[turn_list_key], list):
+                for turn_data in data[turn_list_key]:
+                    if isinstance(turn_data, dict):
+                        # Migrate missing timestamps
+                        if 'timestamp' not in turn_data:
+                            turn_data['timestamp'] = session_creation_time
+                        # Migrate missing original_turns_range for compressed_history
+                        if turn_data.get('type') == 'compressed_history' and 'original_turns_range' not in turn_data:
+                            turn_data['original_turns_range'] = [0, 0]
+        # --- End of Data Migration ---
+
+        return Session.model_validate(data)
 
     def prepare_session_for_takt(self, args: TaktArgs):
         session_id = args.session
@@ -120,7 +166,7 @@ class SessionService:
             locked_json_write(self._index_lock_path, self.index_path, {"sessions": {}})
 
     def _save_session(self, session: Session):
-        session_path = self._get_session_path(session.session_id)
+        session_path = self._get_session_path(session.session_id, create_dirs=True)
         session_lock_path = self._get_session_lock_path(session.session_id)
         json_string = session.model_dump_json(indent=2)
         
@@ -130,10 +176,9 @@ class SessionService:
 
     def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0, hyperparameters: dict = None, parent_id: str = None) -> str:
         if parent_id:
-            parent_session_path = self._get_session_path(parent_id)
-            parent_dir_path = os.path.join(self.sessions_dir, *[part for part in parent_id.split('/') if part not in ('', '.', '..')])
-            if not os.path.exists(parent_session_path) and not os.path.isdir(parent_dir_path):
-                raise FileNotFoundError(f"Parent session with ID '{parent_id}' not found.")
+            parent_session = self.session_collection.find(parent_id)
+            if not parent_session:
+                 raise FileNotFoundError(f"Parent session with ID '{parent_id}' not found.")
 
         timestamp = get_current_timestamp(self.timezone_obj)
         identity_str = json.dumps({"purpose": purpose, "background": background, "roles": roles, "multi_step_reasoning_enabled": multi_step_reasoning_enabled, "timestamp": timestamp}, sort_keys=True)
@@ -152,55 +197,17 @@ class SessionService:
             hyperparameters=hyperparameters if hyperparameters is not None else self.default_hyperparameters
         )
 
+        self.session_collection.add(session)
         self._save_session(session)
         self._update_index(session_id, purpose, timestamp)
         return session_id
 
-    def get_or_create_session_data(
-        self,
-        session_id: Optional[str],
-        purpose: Optional[str],
-        background: Optional[str],
-        roles: Optional[list[str]],
-        multi_step_reasoning_enabled: bool,
-        instruction: Optional[str],
-    ) -> Session | Dict:
-        if session_id:
-            session = self.get_session(session_id)
-            if not session:
-                raise ValueError(f"Session ID '{session_id}' not found.")
-            session.multi_step_reasoning_enabled = multi_step_reasoning_enabled
-            if instruction:
-                session.turns.append(UserTaskTurn(type="user_task", instruction=instruction, timestamp=get_current_timestamp(self.timezone_obj)))
-            return session
-        else:
-            if not all([purpose, background]):
-                raise ValueError("A new session requires purpose and background.")
-            
-            turns = []
-            if instruction:
-                turns.append({"type": "user_task", "instruction": instruction, "timestamp": get_current_timestamp(self.timezone_obj)})
-
-            return {
-                "purpose": purpose,
-                "background": background,
-                "roles": roles if roles is not None else [],
-                "multi_step_reasoning_enabled": multi_step_reasoning_enabled,
-                "turns": turns
-            }
-
     def get_session(self, session_id: str) -> Optional[Session]:
-        session_path = self._get_session_path(session_id)
-        session_lock_path = self._get_session_lock_path(session_id)
-        
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                return None
-            with open(session_path, 'r', encoding='utf-8') as f:
-                json_string = f.read()
-                return Session.model_validate_json(json_string)
+        return self.session_collection.find(session_id)
 
     def list_sessions(self) -> dict:
+        # This now just returns the data from the index file for compatibility with web UI
+        # A better approach would be to have the web UI consume a list of Session objects
         return locked_json_read(self._index_lock_path, self.index_path, default_data={}).get("sessions", {})
 
     def edit_session_meta(self, session_id: str, new_meta_data: dict):
@@ -295,30 +302,34 @@ class SessionService:
         shutil.copy2(session_path, backup_path)
 
     def delete_session(self, session_id: str):
-        session_path = self._get_session_path(session_id)
-        session_dir = os.path.join(self.sessions_dir, session_id)
-        session_lock_path = self._get_session_lock_path(session_id)
+        # Backup before deleting
+        self.backup_session(session_id)
         
-        with FileLock(session_lock_path):
-            if os.path.isdir(session_dir):
-                shutil.rmtree(session_dir)
-            if os.path.exists(session_path):
-                os.remove(session_path)
+        # Get all child session IDs before deleting from collection
+        child_ids = [sid for sid in self.session_collection.list_all() if sid.startswith(f"{session_id}/")]
+        all_ids_to_delete = [session_id] + child_ids
 
-        for filename in os.listdir(self.backups_dir):
-            if fnmatch.fnmatch(filename, f"{session_id.replace('/', '__')}-*.json"):
-                os.remove(os.path.join(self.backups_dir, filename))
+        # Delete from collection
+        if self.session_collection.delete(session_id):
+            # Delete files and update index
+            for sid in all_ids_to_delete:
+                session_path = self._get_session_path(sid)
+                session_lock_path = self._get_session_lock_path(sid)
+                with FileLock(session_lock_path):
+                    if os.path.exists(session_path):
+                        os.remove(session_path)
 
-        def modifier(data):
-            sessions_to_delete = [sid for sid in data.get("sessions", {}) if sid == session_id or sid.startswith(f"{session_id}/")]
-            for sid in sessions_to_delete:
-                if sid in data["sessions"]:
-                    del data["sessions"][sid]
-        
-        locked_json_read_modify_write(self._index_lock_path, self.index_path, modifier, default_data={"sessions": {}})
+            def modifier(data):
+                for sid in all_ids_to_delete:
+                    if sid in data.get("sessions", {}):
+                        del data["sessions"][sid]
+            
+            locked_json_read_modify_write(self._index_lock_path, self.index_path, modifier, default_data={"sessions": {}})
 
     def _update_index(self, session_id: str, purpose: str = None, created_at: str = None):
         def modifier(data):
+            if "sessions" not in data:
+                data["sessions"] = {}
             if session_id not in data["sessions"]:
                 data["sessions"][session_id] = {}
             data["sessions"][session_id]['last_updated'] = get_current_timestamp(self.timezone_obj)
@@ -334,52 +345,14 @@ class SessionService:
 
     def fork_session(self, session_id: str, fork_index: int) -> Optional[str]:
         self.backup_session(session_id)
-        original_session = self.get_session(session_id)
-        if not original_session:
-            raise FileNotFoundError(f"Original session file for ID '{session_id}' not found.")
-
-        forked_purpose = f"Fork of: {original_session.purpose}"
-        timestamp = get_current_timestamp(self.timezone_obj)
         
-        if not (0 <= fork_index < len(original_session.turns)):
-            raise IndexError("fork_index is out of range.")
+        new_session = self.session_collection.fork(session_id, fork_index, self.default_hyperparameters)
         
-        fork_turn = original_session.turns[fork_index]
-        if fork_turn.type != "model_response":
-            raise ValueError(f"Forking is only allowed from a 'model_response' turn. Turn {fork_index + 1} is of type '{fork_turn.type}'.")
-
-        forked_turns = original_session.turns[:fork_index + 1]
-
-        identity_str = json.dumps({
-            "purpose": forked_purpose, 
-            "original_id": session_id,
-            "fork_at_turn": fork_index,
-            "timestamp": timestamp
-        }, sort_keys=True)
-        new_session_id_suffix = self._generate_hash(identity_str)
-
-        parent_path = None
-        if '/' in session_id:
-            parent_path = session_id.rsplit('/', 1)[0]
-        
-        new_session_id = f"{parent_path}/{new_session_id_suffix}" if parent_path else new_session_id_suffix
-
-        new_session = Session(
-            session_id=new_session_id,
-            created_at=timestamp,
-            purpose=forked_purpose,
-            background=original_session.background,
-            roles=original_session.roles,
-            multi_step_reasoning_enabled=original_session.multi_step_reasoning_enabled,
-            token_count=0,
-            hyperparameters=original_session.hyperparameters if original_session.hyperparameters else self.default_hyperparameters,
-            references=original_session.references,
-            turns=forked_turns
-        )
-
+        self.session_collection.add(new_session)
         self._save_session(new_session)
-        self._update_index(new_session_id, forked_purpose, timestamp)
-        return new_session_id
+        self._update_index(new_session.session_id, new_session.purpose, new_session.created_at)
+        
+        return new_session.session_id
 
     def add_turn_to_session(self, session_id: str, turn_data: Turn):
         session = self.get_session(session_id)

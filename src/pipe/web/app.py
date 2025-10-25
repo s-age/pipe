@@ -118,6 +118,9 @@ def create_new_session_api():
             command, capture_output=True, text=True, check=True, encoding='utf-8'
         )
         
+        # Reload the session collection to reflect the changes made by the subprocess
+        session_service.reload_collection()
+        
         return jsonify({"success": True, "session_id": session_id}), 200
     except subprocess.CalledProcessError as e:
         return jsonify({"success": False, "message": "Conductor script failed during initial instruction processing.", "details": e.stderr}), 500
@@ -157,8 +160,10 @@ def view_session(session_id):
         session_data.references = [Reference(path=ref, disabled=False) for ref in session_data.references]
         session_service.update_references(session_id, session_data.references)
 
-    turns = session_data.turns
-    
+    # Use the model's own method to get a serializable dictionary
+    session_data_for_template = session_data.to_dict()
+    turns_list = session_data_for_template['turns']
+
     current_session_purpose = session_data.purpose
     multi_step_reasoning_enabled = session_data.multi_step_reasoning_enabled
     token_count = session_data.token_count
@@ -169,8 +174,8 @@ def view_session(session_id):
                            sessions=sorted_sessions,
                            current_session_id=session_id,
                            current_session_purpose=current_session_purpose,
-                           session_data=session_data.model_dump(),
-                           turns=turns,
+                           session_data=session_data_for_template,
+                           turns=turns_list,
                            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
                            token_count=token_count,
                            context_limit=context_limit,
@@ -197,7 +202,8 @@ def session_api(session_id):
             session_data = session_service.get_session(session_id)
             if not session_data:
                 return jsonify({"success": False, "message": "Session not found."} ), 404
-            return jsonify({"success": True, "session": session_data.model_dump()}), 200
+            
+            return jsonify({"success": True, "session": session_data.to_dict()}), 200
         except Exception as e:
             return jsonify({"success": False, "message": str(e)}), 500
             

@@ -19,5 +19,22 @@ class Session(BaseModel):
     hyperparameters: Optional[Hyperparameters] = None
     references: ReferenceCollection = Field(default_factory=ReferenceCollection)
     turns: TurnCollection = Field(default_factory=TurnCollection)
-    pools: List[Turn] = []
+    pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: Optional[List[TodoItem]] = None
+
+    def to_dict(self) -> dict:
+        """Returns a dictionary representation of the session suitable for templates."""
+        return {
+            "session_id": self.session_id,
+            "created_at": self.created_at,
+            "purpose": self.purpose,
+            "background": self.background,
+            "roles": self.roles,
+            "multi_step_reasoning_enabled": self.multi_step_reasoning_enabled,
+            "token_count": self.token_count,
+            "hyperparameters": self.hyperparameters.model_dump() if self.hyperparameters else None,
+            "references": [r.model_dump() for r in self.references],
+            "turns": [t.model_dump() for t in self.turns],
+            "pools": [p.model_dump() for p in self.pools],
+            "todos": [t.model_dump() for t in self.todos] if self.todos else [],
+        }

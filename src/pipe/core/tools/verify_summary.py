@@ -102,10 +102,17 @@ def verify_summary(
             final_turn_content = f"Rejected: {rejected_text}\n\n## REJECTED REASON\n\nVerification response was not in the expected format:\n{response_text}"
 
         # Create the turn with the complete content
-        final_turn = {"type": "model_response", "content": final_turn_content}
+        from pipe.core.models.turn import ModelResponseTurn
+        from pipe.core.utils.datetime import get_current_timestamp
+        
+        final_turn = ModelResponseTurn(
+            type="model_response", 
+            content=final_turn_content,
+            timestamp=get_current_timestamp(session_service.timezone_obj)
+        )
         
         # Add to the verifier session for logging
-        session_service.history_manager.add_turn_to_session(verifier_session_id, final_turn)
+        session_service.add_turn_to_session(verifier_session_id, final_turn)
 
         # Also add the result to the original session's pool so the calling agent can see it.
         session_service.add_to_pool(session_id, final_turn)

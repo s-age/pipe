@@ -1,9 +1,10 @@
 from collections import UserList
 from typing import List, Iterator, Any, Callable, Dict
+import typing
 
 from pydantic_core import core_schema
 
-from pipe.core.models.turn import Turn, ToolResponseTurn
+from pipe.core.models.turn import Turn, ToolResponseTurn, UserTaskTurn, ModelResponseTurn, FunctionCallingTurn, CompressedHistoryTurn
 
 class TurnCollection(UserList):
     """
@@ -11,7 +12,7 @@ class TurnCollection(UserList):
     """
     def __init__(self, data: List[Turn] = None):
         initialized_data = data if data is not None else []
-        super().__init__(item for item in initialized_data if isinstance(item, Turn))
+        super().__init__(initialized_data)
 
     def get_for_prompt(self) -> Iterator[Turn]:
         """
@@ -35,13 +36,32 @@ class TurnCollection(UserList):
     def __get_pydantic_core_schema__(
         cls, source_type: Any, handler: Callable[[Any], core_schema.CoreSchema]
     ) -> core_schema.CoreSchema:
-        # This defines how to validate the items within the list.
-        items_schema = handler(Turn)
+        # Define the schema for the items in the list, which is a discriminated union.
+        
+        # Explicitly list all subtypes of Turn to avoid import-order issues with typing.get_args(Turn)
+        turn_subtypes = [
+            UserTaskTurn,
+            ModelResponseTurn,
+            FunctionCallingTurn,
+            ToolResponseTurn,
+            CompressedHistoryTurn,
+        ]
+        
+        choices = {
+            typing.get_args(t.__annotations__['type'])[0]: handler(t)
+            for t in turn_subtypes
+        }
+
+        turn_schema = core_schema.tagged_union_schema(
+            choices=choices,
+            discriminator='type',
+        )
+        items_schema = core_schema.list_schema(turn_schema)
 
         # This defines a schema that validates a list of the items defined above,
         # and then converts that list into an instance of our class.
         list_to_collection_schema = core_schema.chain_schema([
-            core_schema.list_schema(items_schema),
+            items_schema,
             core_schema.no_info_plain_validator_function(cls),
         ])
 
@@ -57,7 +77,7 @@ class TurnCollection(UserList):
                 ]
             ),
             # This defines how to serialize our class back to a JSON-compatible type (a list).
-            serialization=core_schema.plain_serializer_function_ser_schema(lambda instance: instance.data),
+            serialization=core_schema.plain_serializer_function_ser_schema(lambda instance: [t.model_dump() for t in instance.data]),
         )
 
     @classmethod

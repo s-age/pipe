@@ -13,7 +13,7 @@ class ReferenceCollection(UserList):
     """
     def __init__(self, data: List[Reference] = None):
         initialized_data = data if data is not None else []
-        super().__init__(item for item in initialized_data if isinstance(item, Reference))
+        super().__init__(initialized_data)
 
     def get_for_prompt(self, project_root: str) -> Iterator[dict]:
         """
@@ -79,7 +79,7 @@ class ReferenceCollection(UserList):
                 ]
             ),
             # This defines how to serialize our class back to a JSON-compatible type (a list).
-            serialization=core_schema.plain_serializer_function_ser_schema(lambda instance: instance.data),
+            serialization=core_schema.plain_serializer_function_ser_schema(lambda instance: [r.model_dump() for r in instance.data]),
         )
 
     @classmethod

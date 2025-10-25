@@ -140,4 +140,11 @@ def run(args, settings, session_data: Session, project_root, api_mode, timezone_
         session_service.add_to_pool(session_id, tool_turn)
         session_data.turns.append(tool_turn)
 
-    return model_response_text, token_count, intermediate_turns
+    final_model_turn = ModelResponseTurn(
+        type="model_response",
+        content=model_response_text,
+        timestamp=get_current_timestamp(timezone_obj)
+    )
+    intermediate_turns.append(final_model_turn)
+
+    return "", token_count, intermediate_turns

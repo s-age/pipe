@@ -70,32 +70,25 @@ def _run(session_service: SessionService, args: TaktArgs):
     model_response_text = ""
     
     try:
-        model_response_text, token_count, intermediate_turns = dispatch_run(session_service, args)
-        if model_response_text is None and token_count is None:
+        _, token_count, turns_to_save = dispatch_run(session_service, args)
+        if turns_to_save is None and token_count is None:
             return
-
-        if not model_response_text or not model_response_text.strip():
-            model_response_text = "API Error: Model stream ended with empty response text."
 
     except (ValueError, RuntimeError) as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return
     
-    final_model_turn = ModelResponseTurn(
-        type="model_response",
-        content=model_response_text,
-        timestamp=get_current_timestamp(session_service.timezone_obj)
-    )
-
-    turns_to_save = intermediate_turns + [final_model_turn]
-
     for turn in turns_to_save:
         session_service.add_turn_to_session(session_id, turn)
 
     if token_count is not None:
         session_service.update_token_count(session_id, token_count)
 
-    print(f"\nSuccessfully added response to session {session_id}.")
+    print(f"\nSuccessfully added response to session {session_id}.", file=sys.stderr)
+    # Signal the end of the stream to the web UI, ensuring it's on a new line.
+    print("\n", flush=True)
+    print("event: end", flush=True)
+    print("data: \n", flush=True)
 
 def _help(parser):
     parser.print_help()

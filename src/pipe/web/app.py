@@ -379,8 +379,7 @@ def send_instruction_api(session_id):
 
             if return_code != 0:
                 yield f"data: {json.dumps({'error': stderr_output})}\n\n"
-            
-            yield "event: end\ndata: \n\n"
+
 
         return Response(stream_with_context(generate()), mimetype='text/event-stream')
 

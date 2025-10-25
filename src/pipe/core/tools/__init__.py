@@ -20,7 +20,7 @@ def load_tools():
                 continue
         try:
             # Import the module dynamically
-            module = importlib.import_module(f"tools.{tool_name}")
+            module = importlib.import_module(f".{tool_name}", __package__)
             # Get the function from the module
             tool_function = getattr(module, tool_name)
             loaded_tools[tool_name] = tool_function

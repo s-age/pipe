@@ -15,6 +15,7 @@ import importlib.util
 import inspect
 from typing import get_type_hints, Union, get_args, List, Dict
 
+from pipe.core.models.session import Session
 from pipe.core.prompt_builder import PromptBuilder
 from pipe.core.token_manager import TokenManager
 from pipe.core.utils.file import read_json_file
@@ -113,7 +114,7 @@ def load_tools(project_root: str) -> list:
     
     return tool_defs
 
-def call_gemini_api(settings: dict, session_data: dict, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool):
+def call_gemini_api(settings: dict, session_data: Session, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool):
     # (関数の前半部分は変更なし)
     token_manager = TokenManager(settings=settings)
 
@@ -142,13 +143,13 @@ def call_gemini_api(settings: dict, session_data: dict, project_root: str, instr
             gen_config_params['top_k'] = top_k.get('value')
 
     # 2. Override with session-specific hyperparameters
-    if session_params := session_data.get('hyperparameters'):
-        if temp := session_params.get('temperature'):
-            gen_config_params['temperature'] = temp.get('value')
-        if top_p := session_params.get('top_p'):
-            gen_config_params['top_p'] = top_p.get('value')
-        if top_k := session_params.get('top_k'):
-            gen_config_params['top_k'] = top_k.get('value')
+    if session_params := session_data.hyperparameters:
+        if temp := session_params.temperature:
+            gen_config_params['temperature'] = temp.value
+        if top_p := session_params.top_p:
+            gen_config_params['top_p'] = top_p.value
+        if top_k := session_params.top_k:
+            gen_config_params['top_k'] = top_k.value
     
     # tools.jsonからツールをロード
     loaded_tools_data = load_tools(project_root)

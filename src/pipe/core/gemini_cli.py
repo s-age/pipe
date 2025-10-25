@@ -17,7 +17,9 @@ import os
 
 from pipe.core.prompt_builder import PromptBuilder
 
-def call_gemini_cli(settings: dict, session_data: dict, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool, session_id: str = None) -> str:
+from pipe.core.models.session import Session
+
+def call_gemini_cli(settings: dict, session_data: Session, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool, session_id: str = None) -> str:
     model_name = settings.get('model')
     if not model_name:
         raise ValueError("'model' not found in setting.yml")

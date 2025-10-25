@@ -1,7 +1,9 @@
 import sys
 from pipe.core.gemini_cli import call_gemini_cli
 
-def run(args, settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
+from pipe.core.models.session import Session
+
+def run(args, settings, session_data: Session, project_root, api_mode, enable_multi_step_reasoning):
     """The delegate function for running in gemini-cli mode."""
     command_to_print = ['gemini', '-m', settings.get('model'), '-p', '...'] # Simplified for logging
     if settings.get('yolo', False):
@@ -11,7 +13,7 @@ def run(args, settings, session_data_for_prompt, project_root, api_mode, enable_
     
     response = call_gemini_cli(
         settings=settings,
-        session_data=session_data_for_prompt,
+        session_data=session_data,
         project_root=project_root,
         instruction=args.instruction,
         api_mode=api_mode,

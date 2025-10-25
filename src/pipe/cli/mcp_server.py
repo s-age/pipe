@@ -175,7 +175,7 @@ def execute_tool(tool_name, arguments):
     8.  Logs the result (success or failure) of the tool execution to the history pool.
     9.  Returns the result to the main loop to be sent back to the client.
     """
-    project_root = os.path.abspath(os.path.dirname(__file__))
+    project_root = BASE_DIR
     config_path = os.path.join(project_root, 'setting.yml')
     settings = read_yaml_file(config_path)
 
@@ -303,8 +303,7 @@ def main():
     tool execution, formatting them into standard JSON-RPC error responses. It also
     logs unexpected server errors to a file to avoid polluting the stdio channel.
     """
-    import select
-
+    sys.path.insert(0, BASE_DIR)
     while True:
         try:
             # Wait for input on stdin for 10 seconds

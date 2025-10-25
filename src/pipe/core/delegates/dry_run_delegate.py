@@ -2,13 +2,15 @@ from pipe.core.token_manager import TokenManager
 from pipe.core.prompt_builder import PromptBuilder
 from pipe.core.gemini_api import load_tools
 
-def run(settings, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
+from pipe.core.models.session import Session
+
+def run(settings, session_data: Session, project_root, api_mode, enable_multi_step_reasoning):
     """The delegate function for running in dry-run mode."""
     print("\n--- Dry Run Mode ---")
     token_manager = TokenManager(settings=settings)
     builder = PromptBuilder(
         settings=settings,
-        session_data=session_data_for_prompt,
+        session_data=session_data,
         project_root=project_root,
         api_mode=api_mode,
         multi_step_reasoning_enabled=enable_multi_step_reasoning

@@ -4,6 +4,9 @@ import sys
 import json
 import warnings
 
+# Ignore specific warnings from the genai library
+warnings.filterwarnings("ignore", message=".*there are non-text parts in the response.*")
+
 from pipe.core.utils.file import read_yaml_file, read_text_file
 from dotenv import load_dotenv
 from datetime import datetime, timezone
@@ -12,6 +15,8 @@ import importlib
 import inspect
 
 from pipe.core.services.session_service import SessionService
+from pipe.core.models.session import Session, Reference
+from pipe.core.models.turn import UserTaskTurn, ModelResponseTurn, FunctionCallingTurn, ToolResponseTurn, Turn
 from pipe.core.gemini_api import call_gemini_api, load_tools
 from pipe.core.gemini_cli import call_gemini_cli
 from pipe.core.prompt_builder import PromptBuilder
@@ -25,11 +30,11 @@ def check_and_show_warning(project_root: str) -> bool:
     unsealed_path = os.path.join(project_root, "unsealed.txt")
 
     if os.path.exists(unsealed_path):
-        return True  # Already agreed
+        return True
 
     warning_content = read_text_file(sealed_path)
     if not warning_content:
-        return True  # No warning file or empty file, proceed
+        return True
 
     print("--- IMPORTANT NOTICE ---")
     print(warning_content)
@@ -51,9 +56,7 @@ def check_and_show_warning(project_root: str) -> bool:
             print("\nOperation cancelled. Exiting.")
             return False
 
-
-
-def _run(args, settings, session_service, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
+def _run(args, settings, session_service, session_data: Session, project_root, api_mode, enable_multi_step_reasoning):
     session_id = args.session
     if session_id:
         pool = session_service.get_pool(session_id)
@@ -62,57 +65,37 @@ def _run(args, settings, session_service, session_data_for_prompt, project_root,
             return
 
     model_response_text = ""
-    # The index of the user_task turn just added.
-    new_turns_start_index = len(session_data_for_prompt['turns']) - 1
-
+    
     try:
-        model_response_text, token_count = dispatch_run(
+        model_response_text, token_count, intermediate_turns = dispatch_run(
             api_mode,
             args,
             settings,
-            session_data_for_prompt,
+            session_data,
             project_root,
             enable_multi_step_reasoning,
             session_service
         )
-        if model_response_text is None and token_count is None: # Error case from dispatcher
+        if model_response_text is None and token_count is None:
             return
 
-        # The empty response check is now universal for any delegate that might return empty text
         if not model_response_text or not model_response_text.strip():
             model_response_text = "API Error: Model stream ended with empty response text."
 
     except (ValueError, RuntimeError) as e:
         print(f"ERROR: {e}", file=sys.stderr)
-        session_data_for_prompt['turns'].pop()
         return
 
     session_id = args.session
-
-    # The user_task is already saved in the main function, so we only handle tool and model responses here.
-    all_new_turns_in_memory = session_data_for_prompt['turns'][new_turns_start_index:]
-
-    # 2. The tool-related turns from the pool on disk
-    pooled_turns = session_service.get_and_clear_pool(session_id)
     
-    # 3. The final model response
-    final_model_turn = {"type": "model_response", "content": model_response_text, "timestamp": get_current_timestamp(session_service.timezone_obj)}
+    final_model_turn = ModelResponseTurn(
+        type="model_response",
+        content=model_response_text,
+        timestamp=get_current_timestamp(session_service.timezone_obj)
+    )
 
-    # Filter and order the turns according to the desired sequence
-    turns_to_save = []
+    turns_to_save = intermediate_turns + [final_model_turn]
 
-    # Add tool calls from the pool
-    tool_call_turns = [t for t in pooled_turns if t.get('type') in ['function_calling', 'tool_response']]
-    turns_to_save.extend(tool_call_turns)
-
-    # Add the final model response
-    turns_to_save.append(final_model_turn)
-
-    # Add any model responses from the pool (e.g., from verify_summary)
-    pooled_model_turns = [t for t in pooled_turns if t.get('type') == 'model_response']
-    turns_to_save.extend(pooled_model_turns)
-
-    # Now, save all the collected and ordered turns to the session file
     for turn in turns_to_save:
         session_service.add_turn_to_session(session_id, turn)
 
@@ -167,7 +150,6 @@ def main():
             print("Error: --at-turn is required when using --fork.", file=sys.stderr)
             sys.exit(1)
         try:
-            # Convert 1-based turn number to 0-based index
             fork_index = args.at_turn - 1
             new_session_id = session_service.fork_session(args.fork, fork_index)
             print(f"Successfully forked session {args.fork} at turn {args.at_turn}.")
@@ -178,10 +160,14 @@ def main():
 
     elif args.instruction:
         session_id = args.session
+        if session_id:
+            session_id = session_id.strip().rstrip('.')
+            args.session = session_id
+            
         roles = args.roles.split(',') if args.roles else []
         enable_multi_step_reasoning = args.multi_step_reasoning
 
-        session_data_for_prompt = session_service.get_or_create_session_data(
+        session_or_dict = session_service.get_or_create_session_data(
             session_id=session_id,
             purpose=args.purpose,
             background=args.background,
@@ -189,30 +175,41 @@ def main():
             multi_step_reasoning_enabled=enable_multi_step_reasoning,
             instruction=args.instruction
         )
+        
+        if isinstance(session_or_dict, dict):
+            session = Session(
+                session_id="temp_session",
+                created_at=get_current_timestamp(session_service.timezone_obj),
+                token_count=0,
+                hyperparameters={},
+                references=[],
+                **session_or_dict
+            )
+        else:
+            session = session_or_dict
+
+        if args.references:
+            references = [Reference(path=ref.strip(), disabled=False) for ref in args.references.split(',') if ref.strip()]
+            existing_paths = {ref.path for ref in session.references}
+            new_references = [ref for ref in references if ref.path not in existing_paths]
+            session.references.extend(new_references)
+
+            if not args.dry_run and new_references and session_id:
+                session_service.add_references(session_id, [ref.path for ref in new_references])
+                print(f"Added {len(new_references)} new references to session {session_id}.", file=sys.stderr)
 
         if args.dry_run:
-            if args.references:
-                references = [{'path': ref.strip(), 'disabled': False} for ref in args.references.split(',') if ref.strip()]
-                if 'references' not in session_data_for_prompt:
-                    session_data_for_prompt['references'] = []
-                
-                existing_paths = {ref['path'] for ref in session_data_for_prompt.get('references', [])}
-                new_references = [ref for ref in references if ref['path'] not in existing_paths]
-                session_data_for_prompt['references'].extend(new_references)
-
             from pipe.core.delegates import dry_run_delegate
             dry_run_delegate.run(
                 settings,
-                session_data_for_prompt,
+                session,
                 project_root,
                 api_mode,
                 enable_multi_step_reasoning
             )
-            return # Exit main function after dry run
+            return
 
-        # If not a dry run, proceed with session creation/continuation and execution
         if not session_id:
-            # Create new session first if it doesn't exist
             if not all([args.purpose, args.background]):
                 raise ValueError("A new session requires --purpose and --background for the first instruction.")
             session_id = session_service.create_new_session(
@@ -222,33 +219,18 @@ def main():
                 multi_step_reasoning_enabled=enable_multi_step_reasoning,
                 parent_id=args.parent
             )
-            args.session = session_id # Ensure args is updated for subsequent calls
+            args.session = session_id
             
-            # Add the first instruction as a user_task to the new session
-            first_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_service.timezone_obj)}
+            first_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(session_service.timezone_obj))
             session_service.add_turn_to_session(session_id, first_turn)
             
             print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}", file=sys.stderr)
         else:
-            # For existing sessions, add the new instruction as a turn
-            new_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_service.timezone_obj)}
+            new_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(session_service.timezone_obj))
             session_service.add_turn_to_session(session_id, new_turn)
             print(f"Conductor Agent: Continuing session: {session_id}", file=sys.stderr)
 
-        if args.references:
-            references = [{'path': ref.strip(), 'disabled': False} for ref in args.references.split(',') if ref.strip()]
-            if 'references' not in session_data_for_prompt:
-                session_data_for_prompt['references'] = []
-            
-            existing_paths = {ref['path'] for ref in session_data_for_prompt.get('references', [])}
-            new_references = [ref for ref in references if ref['path'] not in existing_paths]
-            session_data_for_prompt['references'].extend(new_references)
-
-            if not args.dry_run and new_references:
-                session_service.update_references(session_id, session_data_for_prompt['references'])
-                print(f"Added {len(new_references)} new references to session {session_id}.", file=sys.stderr)
-
-        _run(args, settings, session_service, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)
+        _run(args, settings, session_service, session, project_root, api_mode, enable_multi_step_reasoning)
 
     else:
         _help(parser)

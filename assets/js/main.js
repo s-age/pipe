@@ -175,6 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function toggleEdit(editButton, sessionId, turnIndex, turnType) {
+        if (turnType !== 'user_task' && turnType !== 'model_response') {
+            alert(`Editing turns of type '${turnType}' is not allowed.`);
+            return;
+        }
         const turnElement = document.getElementById(`turn-${turnIndex}`);
         const contentDiv = turnElement.querySelector('.turn-content');
         const controls = editButton.parentElement;

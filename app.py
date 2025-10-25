@@ -283,9 +283,14 @@ def delete_todos_api(session_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route('/api/session/<path:session_id>/fork/<int:fork_index>', methods=['POST'])
-def fork_session_api(session_id, fork_index):
+@app.route('/api/session/fork/<int:fork_index>', methods=['POST'])
+def fork_session_api(fork_index):
     try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        if not session_id:
+            return jsonify({"success": False, "message": "session_id not provided in request body."}), 400
+
         new_session_id = history_manager.fork_session(session_id, fork_index)
         if new_session_id:
             return jsonify({"success": True, "new_session_id": new_session_id}), 200

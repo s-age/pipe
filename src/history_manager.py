@@ -8,8 +8,8 @@ import time
 import fnmatch
 from contextlib import contextmanager
 import fnmatch
-
-from datetime import timezone
+import shutil
+from datetime import datetime, timezone
 import zoneinfo
 from typing import Optional
 
@@ -23,6 +23,7 @@ class HistoryManager:
 
     def __init__(self, sessions_dir: str, timezone_obj: zoneinfo.ZoneInfo = timezone.utc, default_hyperparameters: dict = None):
         self.sessions_dir = sessions_dir
+        self.backups_dir = os.path.join(sessions_dir, 'backups')
         self.index_path = os.path.join(sessions_dir, "index.json")
         self.timezone_obj = timezone_obj
         self.default_hyperparameters = default_hyperparameters if default_hyperparameters is not None else {}
@@ -291,18 +292,22 @@ class HistoryManager:
         pools_to_return = locked_json_read_modify_write(session_lock_path, session_path, modifier)
         return pools_to_return if pools_to_return is not None else []
 
-    def backup_session(self, session_id: str) -> str:
+    def backup_session(self, session_id: str):
+        """Creates a timestamped backup of a session file."""
+        import hashlib
         session_path = self._get_session_path(session_id)
-        session_lock_path = self._get_session_lock_path(session_id)
-        with FileLock(session_lock_path):
-            if not os.path.exists(session_path):
-                raise FileNotFoundError(f"Session file for ID '{session_id}' not found.")
-            timestamp = get_current_timestamp(timezone.utc, fmt='%Y%m%d%H%M%S')
-            backup_filename = f"{session_id.replace('/', '__')}-{timestamp}.json"
-            backup_path = os.path.join(self.sessions_dir, "backups", backup_filename)
-            import shutil
-            shutil.copy2(session_path, backup_path)
-            return backup_path
+        if not os.path.exists(session_path):
+            return
+
+        # Create a stable, fixed-length filename using a hash of the session_id
+        session_hash = hashlib.sha256(session_id.encode('utf-8')).hexdigest()
+        
+        timestamp = datetime.now(self.timezone_obj).strftime('%Y%m%d%H%M%S')
+        backup_filename = f"{session_hash}-{timestamp}.json"
+        backup_path = os.path.join(self.backups_dir, backup_filename)
+        
+        os.makedirs(self.backups_dir, exist_ok=True)
+        shutil.copy2(session_path, backup_path)
 
     def replace_turns_with_summary(self, session_id: str, summary_text: str):
         session_path = self._get_session_path(session_id)
@@ -374,39 +379,51 @@ class HistoryManager:
         """Generates a SHA-256 hash for the given content."""
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
-    def fork_session(self, original_session_id: str, fork_at_turn_index: int) -> Optional[str]:
-        original_session_path = self._get_session_path(original_session_id)
-        original_session_lock_path = self._get_session_lock_path(original_session_id)
+    def fork_session(self, session_id: str, fork_index: int) -> Optional[str]:
+        """Forks a session at a specific turn index."""
+        session_path = self._get_session_path(session_id)
+        if not os.path.exists(session_path):
+            return None
+        original_session_lock_path = self._get_session_lock_path(session_id)
 
-        original_data = locked_json_read(original_session_lock_path, original_session_path)
+        original_data = locked_json_read(original_session_lock_path, session_path)
         if not original_data:
-            raise FileNotFoundError(f"Original session file for ID '{original_session_id}' not found.")
+            raise FileNotFoundError(f"Original session file for ID '{session_id}' not found.")
 
         # Create a new session based on the original data
         forked_purpose = f"Fork of: {original_data.get('purpose', 'Untitled')}"
         timestamp = get_current_timestamp(self.timezone_obj)
         
-        # Ensure fork_at_turn_index is valid and is a model_response
+        # Ensure fork_index is valid and is a model_response
         original_turns = original_data.get('turns', [])
-        if not (0 <= fork_at_turn_index < len(original_turns)):
-            raise IndexError("fork_at_turn_index is out of range.")
+        if not (0 <= fork_index < len(original_turns)):
+            raise IndexError("fork_index is out of range.")
         
-        fork_turn = original_turns[fork_at_turn_index]
+        fork_turn = original_turns[fork_index]
         if fork_turn.get("type") != "model_response":
-            raise ValueError(f"Forking is only allowed from a 'model_response' turn. Turn {fork_at_turn_index + 1} is of type '{fork_turn.get('type')}''.")
+            raise ValueError(f"Forking is only allowed from a 'model_response' turn. Turn {fork_index + 1} is of type '{fork_turn.get('type')}''.")
 
         # Slice the history
-        forked_turns = original_turns[:fork_at_turn_index + 1]
+        forked_turns = original_turns[:fork_index + 1]
 
         # Generate a new unique ID for the forked session
         identity_str = json.dumps({
             "purpose": forked_purpose, 
-            "original_id": original_session_id,
-            "fork_at_turn": fork_at_turn_index,
+            "original_id": session_id,
+            "fork_at_turn": fork_index,
             "timestamp": timestamp
         }, sort_keys=True)
         new_session_id_suffix = self._generate_hash(identity_str)
-        new_session_id = f"{original_session_id}/{new_session_id_suffix}"
+
+        # Create a sibling session instead of a child
+        parent_path = None
+        if '/' in session_id:
+            parent_path = session_id.rsplit('/', 1)[0]
+        
+        if parent_path:
+            new_session_id = f"{parent_path}/{new_session_id_suffix}"
+        else:
+            new_session_id = new_session_id_suffix
 
         new_session_data = {
             "session_id": new_session_id,

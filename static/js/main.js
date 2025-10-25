@@ -45,9 +45,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function forkSession(sessionId, forkIndex) {
-        if (!confirm(`Are you sure you want to fork this session at turn index ${forkIndex}?`)) return;
+        if (!confirm(`Are you sure you want to fork this session at turn index ${forkIndex + 1}?`)) return;
 
-        fetch(`/api/session/${sessionId}/fork/${forkIndex}`, { method: 'POST' })
+        fetch(`/api/session/fork/${forkIndex}`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId })
+        })
             .then(handleResponse)
             .then(data => {
                 if (data.success && data.new_session_id) {

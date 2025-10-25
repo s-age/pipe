@@ -23,7 +23,7 @@ def dispatch_run(api_mode, args, settings, session_data_for_prompt, project_root
             session_data_for_prompt,
             project_root,
             api_mode,
-            session_manager.local_tz,
+            session_manager.timezone_obj,
             enable_multi_step_reasoning,
             session_manager,
             args.session

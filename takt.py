@@ -58,7 +58,7 @@ def check_and_show_warning(project_root: str) -> bool:
 def _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning):
     session_id = args.session
     if session_id:
-        pool = session_manager.history_manager.get_pool(session_id)
+        pool = session_manager.get_pool(session_id)
         if pool and len(pool) >= 7:
             print(f"Warning: The number of items in the session pool ({len(pool)}) has reached the limit (7). Halting further processing to prevent potential infinite loops.", file=sys.stderr)
             return
@@ -95,10 +95,10 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
     all_new_turns_in_memory = session_data_for_prompt['turns'][new_turns_start_index:]
 
     # 2. The tool-related turns from the pool on disk
-    pooled_turns = session_manager.history_manager.get_and_clear_pool(session_id)
+    pooled_turns = session_manager.get_and_clear_pool(session_id)
     
     # 3. The final model response
-    final_model_turn = {"type": "model_response", "content": model_response_text, "timestamp": get_current_timestamp(session_manager.local_tz)}
+    final_model_turn = {"type": "model_response", "content": model_response_text, "timestamp": get_current_timestamp(session_manager.timezone_obj)}
 
     # Filter and order the turns according to the desired sequence
     turns_to_save = []
@@ -116,9 +116,10 @@ def _run(args, settings, session_manager, session_data_for_prompt, project_root,
 
     # Now, save all the collected and ordered turns to the session file
     for turn in turns_to_save:
-        # The final model turn is the only one that should update the token count
-        current_token_count = token_count if turn is final_model_turn else None
-        session_manager.add_turn_to_session(session_id, turn, current_token_count)
+        session_manager.add_turn_to_session(session_id, turn)
+
+    if token_count is not None:
+        session_manager.update_token_count(session_id, token_count)
 
     print(f"\nSuccessfully added response to session {session_id}.")
 
@@ -170,7 +171,7 @@ def main():
         try:
             # Convert 1-based turn number to 0-based index
             fork_index = args.at_turn - 1
-            new_session_id = session_manager.history_manager.fork_session(args.fork, fork_index)
+            new_session_id = session_manager.fork_session(args.fork, fork_index)
             print(f"Successfully forked session {args.fork} at turn {args.at_turn}.")
             print(f"New session created: {new_session_id}")
         except (FileNotFoundError, IndexError) as e:
@@ -188,8 +189,7 @@ def main():
             background=args.background,
             roles=roles,
             multi_step_reasoning_enabled=enable_multi_step_reasoning,
-            instruction=args.instruction,
-            local_tz=session_manager.local_tz
+            instruction=args.instruction
         )
 
         if args.dry_run:
@@ -217,7 +217,7 @@ def main():
             # Create new session first if it doesn't exist
             if not all([args.purpose, args.background]):
                 raise ValueError("A new session requires --purpose and --background for the first instruction.")
-            session_id = session_manager.history_manager.create_new_session(
+            session_id = session_manager.create_new_session(
                 purpose=args.purpose,
                 background=args.background,
                 roles=roles,
@@ -227,13 +227,13 @@ def main():
             args.session = session_id # Ensure args is updated for subsequent calls
             
             # Add the first instruction as a user_task to the new session
-            first_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_manager.local_tz)}
+            first_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_manager.timezone_obj)}
             session_manager.add_turn_to_session(session_id, first_turn)
             
             print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}", file=sys.stderr)
         else:
             # For existing sessions, add the new instruction as a turn
-            new_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_manager.local_tz)}
+            new_turn = {"type": "user_task", "instruction": args.instruction, "timestamp": get_current_timestamp(session_manager.timezone_obj)}
             session_manager.add_turn_to_session(session_id, new_turn)
             print(f"Conductor Agent: Continuing session: {session_id}", file=sys.stderr)
 
@@ -247,7 +247,7 @@ def main():
             session_data_for_prompt['references'].extend(new_references)
 
             if not args.dry_run and new_references:
-                session_manager.history_manager.update_references(session_id, session_data_for_prompt['references'])
+                session_manager.update_references(session_id, session_data_for_prompt['references'])
                 print(f"Added {len(new_references)} new references to session {session_id}.", file=sys.stderr)
 
         _run(args, settings, session_manager, session_data_for_prompt, project_root, api_mode, enable_multi_step_reasoning)

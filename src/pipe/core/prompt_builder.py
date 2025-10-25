@@ -8,6 +8,8 @@ import os
 from jinja2 import Environment, FileSystemLoader
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
+from pipe.core.collections.references import ReferenceCollection
+from pipe.core.collections.todos import TodoCollection
 from pipe.core.utils.file import read_text_file
 from pipe.core.utils.datetime import get_current_timestamp
 
@@ -86,16 +88,8 @@ class PromptBuilder:
             "definitions": self._load_roles()
         }
 
-        file_references_content = []
-        for ref in self.session_data.references:
-            if not ref.disabled:
-                full_path = os.path.join(self.project_root, ref.path)
-                content = read_text_file(full_path)
-                if content is not None:
-                    file_references_content.append({
-                        "file_path": ref.path,
-                        "content": content
-                    })
+        reference_collection = ReferenceCollection(self.session_data.references)
+        file_references_content = list(reference_collection.get_for_prompt(self.project_root))
 
         context = {
             "current_datetime": get_current_timestamp(self.template_env.globals.get('local_tz')),
@@ -122,7 +116,7 @@ class PromptBuilder:
                     },
                     "hyperparameters": self._build_hyperparameters_section()
                 },
-                "todos": [todo.model_dump() for todo in self.session_data.todos] if self.session_data.todos else [],
+                "todos": TodoCollection(self.session_data.todos).get_for_prompt(),
                 "settings": self.settings.model_dump()
             }
         }

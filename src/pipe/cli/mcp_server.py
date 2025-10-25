@@ -38,6 +38,8 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '
 TOOLS_DIR = os.path.join(BASE_DIR, 'src', 'pipe', 'core', 'tools')
 SESSIONS_DIR = os.path.join(BASE_DIR, 'sessions')
 
+from pipe.core.models.settings import Settings
+
 # --- Tool Definition Generation ---
 def get_tool_definitions():
     """
@@ -177,10 +179,11 @@ def execute_tool(tool_name, arguments):
     """
     project_root = BASE_DIR
     config_path = os.path.join(project_root, 'setting.yml')
-    settings = read_yaml_file(config_path)
+    settings_dict = read_yaml_file(config_path)
+    settings = Settings(**settings_dict)
 
     session_id = get_latest_session_id()
-    session_service = SessionService(SESSIONS_DIR)
+    session_service = SessionService(project_root, settings)
 
     # Log the start of the tool call to the pool
     if session_id:
@@ -365,10 +368,11 @@ def main():
                         response = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32000, "message": f"Tool '{tool_name}' failed: {error_message}"}}
                     else:
                         # Load settings to check api_mode and format response accordingly
-                        project_root = os.path.abspath(os.path.dirname(__file__))
+                        project_root = BASE_DIR
                         config_path = os.path.join(project_root, 'setting.yml')
-                        settings = read_yaml_file(config_path)
-                        api_mode = settings.get('api_mode', 'gemini-api')
+                        settings_dict = read_yaml_file(config_path)
+                        settings = Settings(**settings_dict)
+                        api_mode = settings.api_mode
 
                         if api_mode == 'gemini-cli':
                             # Transform the result to the format expected by the gemini-cli client

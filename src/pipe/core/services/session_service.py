@@ -19,24 +19,86 @@ from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import FileLock, locked_json_read_modify_write, locked_json_write, locked_json_read
 
 from pipe.core.models.hyperparameters import Hyperparameters
+from pipe.core.models.args import TaktArgs
+from pipe.core.models.settings import Settings
 
 class SessionService:
-    def __init__(self, sessions_dir: str, default_hyperparameters: dict = None):
-        tz_name = os.getenv('TIMEZONE', 'UTC')
+    def __init__(self, project_root: str, settings: Settings):
+        self.project_root = project_root
+        self.settings = settings
+        self.current_session: Optional[Session] = None
+        self.current_session_id: Optional[str] = None
+
+        tz_name = settings.timezone
         try:
             self.timezone_obj = zoneinfo.ZoneInfo(tz_name)
         except zoneinfo.ZoneInfoNotFoundError:
             print(f"Warning: Timezone '{tz_name}' not found. Using UTC.", file=sys.stderr)
             self.timezone_obj = timezone.utc
 
-        self.sessions_dir = sessions_dir
-        self.backups_dir = os.path.join(sessions_dir, 'backups')
-        self.index_path = os.path.join(sessions_dir, "index.json")
-        self.default_hyperparameters = Hyperparameters(**(default_hyperparameters or {}))
+        self.sessions_dir = os.path.join(project_root, 'sessions')
+        self.backups_dir = os.path.join(self.sessions_dir, 'backups')
+        self.index_path = os.path.join(self.sessions_dir, "index.json")
+        
+        default_hyperparameters_dict = {
+            "temperature": self.settings.parameters.temperature.model_dump(),
+            "top_p": self.settings.parameters.top_p.model_dump(),
+            "top_k": self.settings.parameters.top_k.model_dump()
+        }
+        self.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
+
         self._index_lock_path = os.path.join(self.sessions_dir, "index.json.lock")
         
-        self.history_service = HistoryService(sessions_dir, self.timezone_obj)
+        self.history_service = HistoryService(self.sessions_dir, self.timezone_obj)
         self._initialize()
+
+    def prepare_session_for_takt(self, args: TaktArgs):
+        session_id = args.session
+        if session_id:
+            session_id = session_id.strip().rstrip('.')
+        
+        session = None
+        if session_id:
+            session = self.get_session(session_id)
+            if not session:
+                raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
+        
+        if not session:  # New session
+            if not all([args.purpose, args.background]):
+                raise ValueError("A new session requires --purpose and --background for the first instruction.")
+            
+            session_id = self.create_new_session(
+                purpose=args.purpose,
+                background=args.background,
+                roles=args.roles,
+                multi_step_reasoning_enabled=args.multi_step_reasoning,
+                parent_id=args.parent
+            )
+            
+            first_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(self.timezone_obj))
+            self.add_turn_to_session(session_id, first_turn)
+            
+            print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}", file=sys.stderr)
+            session = self.get_session(session_id)
+        
+        else:  # Existing session
+            new_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(self.timezone_obj))
+            self.add_turn_to_session(session_id, new_turn)
+            print(f"Conductor Agent: Continuing session: {session_id}", file=sys.stderr)
+            session = self.get_session(session_id)
+
+        if args.references:
+            references = [Reference(path=ref.strip(), disabled=False) for ref in args.references if ref.strip()]
+            existing_paths = {ref.path for ref in session.references}
+            new_references = [ref for ref in references if ref.path not in existing_paths]
+            
+            if new_references:
+                self.add_references(session_id, [ref.path for ref in new_references])
+                session.references.extend(new_references)
+                print(f"Added {len(new_references)} new references to session {session_id}.", file=sys.stderr)
+
+        self.current_session = session
+        self.current_session_id = session_id
 
     def _get_session_path(self, session_id: str, create_dirs: bool = False) -> str:
         safe_path_parts = [part for part in session_id.split('/') if part not in ('', '.', '..')]

@@ -2,9 +2,9 @@ from typing import Dict
 import sys
 import os
 from pipe.core.search_agent import call_gemini_api_with_grounding
-from pipe.core.utils.file import read_yaml_file
+from pipe.core.models.settings import Settings
 
-def google_web_search(query: str, project_root: str = None) -> Dict[str, str]:
+def google_web_search(query: str, settings: Settings, project_root: str = None) -> Dict[str, str]:
     """
     Performs a web search using Google Search and returns the results by executing a search agent.
     """
@@ -15,8 +15,6 @@ def google_web_search(query: str, project_root: str = None) -> Dict[str, str]:
         return {"error": "google_web_search requires project_root."}
 
     try:
-        settings = read_yaml_file(os.path.join(project_root, "setting.yml"))
-
         response = call_gemini_api_with_grounding(
             settings=settings,
             instruction=query,

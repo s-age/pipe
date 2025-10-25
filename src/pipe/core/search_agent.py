@@ -5,9 +5,10 @@ from google.genai import types
 import sys
 import yaml
 from pipe.core.utils.file import read_yaml_file
+from pipe.core.models.settings import Settings
 
-def call_gemini_api_with_grounding(settings: dict, instruction: str, project_root: str) -> types.GenerateContentResponse:
-    model_name = settings.get('search_model')
+def call_gemini_api_with_grounding(settings: Settings, instruction: str, project_root: str) -> types.GenerateContentResponse:
+    model_name = settings.search_model
     if not model_name:
         raise ValueError("'search_model' not found in setting.yml")
 
@@ -17,14 +18,11 @@ def call_gemini_api_with_grounding(settings: dict, instruction: str, project_roo
 
     all_tools = [types.Tool(google_search=types.GoogleSearch())]
 
-    gen_config_params = {}
-    if params := settings.get('parameters'):
-        if temp := params.get('temperature'):
-            gen_config_params['temperature'] = temp.get('value')
-        if top_p := params.get('top_p'):
-            gen_config_params['top_p'] = top_p.get('value')
-        if top_k := params.get('top_k'):
-            gen_config_params['top_k'] = top_k.get('value')
+    gen_config_params = {
+        'temperature': settings.parameters.temperature.value,
+        'top_p': settings.parameters.top_p.value,
+        'top_k': settings.parameters.top_k.value
+    }
 
     config = types.GenerateContentConfig(
         tools=all_tools,
@@ -53,7 +51,8 @@ if __name__ == "__main__":
     query = sys.argv[1]
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-    settings = read_yaml_file(os.path.join(project_root, "setting.yml"))
+    settings_dict = read_yaml_file(os.path.join(project_root, "setting.yml"))
+    settings = Settings(**settings_dict)
 
     try:
         response = call_gemini_api_with_grounding(

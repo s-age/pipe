@@ -8,6 +8,8 @@ from pipe.core.services.session_service import SessionService
 from pipe.core.utils.file import read_text_file, read_yaml_file
 import os
 
+from pipe.core.models.settings import Settings
+
 def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
     sealed_path = os.path.join(project_root, "sealed.txt")
@@ -56,20 +58,22 @@ assets_dir = os.path.join(project_root, 'assets')
 app = Flask(__name__, template_folder=template_dir, static_folder=assets_dir)
 
 config_path = os.path.join(project_root, 'setting.yml')
-settings = load_settings(config_path)
-tz_name = settings.get('timezone', 'UTC')
+settings_dict = load_settings(config_path)
+settings = Settings(**settings_dict)
+
+tz_name = settings.timezone
 try:
     local_tz = zoneinfo.ZoneInfo(tz_name)
 except zoneinfo.ZoneInfoNotFoundError:
     print(f"Warning: Timezone '{tz_name}' from setting.yml not found. Using UTC.", file=sys.stderr)
     local_tz = timezone.utc
-session_service = SessionService(os.path.join(project_root, 'sessions'), default_hyperparameters=settings.get('parameters', {}))
+session_service = SessionService(project_root, settings)
 
 @app.route('/')
 def index():
     sessions_index = session_service.list_sessions()
     sorted_sessions = sorted(sessions_index.items())
-    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data=json.dumps({}), expert_mode=settings.get('expert_mode', False), settings=settings)
+    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data=json.dumps({}), expert_mode=settings.expert_mode, settings=settings)
 
 @app.route('/new_session')
 def new_session_form():
@@ -137,16 +141,16 @@ def view_session(session_id):
         abort(404)
 
     # Populate missing hyperparameters with defaults from settings
-    defaults = settings.get('parameters', {})
+    defaults = settings.parameters
     if not session_data.hyperparameters:
         from pipe.core.models.hyperparameters import Hyperparameters
         session_data.hyperparameters = Hyperparameters()
 
     for param_name in ['temperature', 'top_p', 'top_k']:
         if getattr(session_data.hyperparameters, param_name) is None:
-            if default_value := defaults.get(param_name):
+            if default_value := getattr(defaults, param_name, None):
                 from pipe.core.models.hyperparameters import HyperparameterValue
-                setattr(session_data.hyperparameters, param_name, HyperparameterValue(**default_value))
+                setattr(session_data.hyperparameters, param_name, HyperparameterValue(**default_value.model_dump()))
 
     if session_data.references and isinstance(session_data.references[0], str):
         from pipe.core.models.reference import Reference
@@ -158,8 +162,8 @@ def view_session(session_id):
     current_session_purpose = session_data.purpose
     multi_step_reasoning_enabled = session_data.multi_step_reasoning_enabled
     token_count = session_data.token_count
-    context_limit = settings.get('context_limit', 1000000)
-    expert_mode = settings.get('expert_mode', False)
+    context_limit = settings.context_limit
+    expert_mode = settings.expert_mode
 
     return render_template('html/index.html',
                            sessions=sorted_sessions,
@@ -233,17 +237,17 @@ def edit_turn_api(session_id, turn_index):
 
         if 0 <= turn_index < len(session.turns):
             original_turn = session.turns[turn_index]
-            if original_turn.type not in ["user_task", "tool_response"]:
+            if original_turn.type not in ["user_task", "model_response"]:
                 return jsonify({"success": False, "message": f"Editing turns of type '{original_turn.type}' is not allowed."}), 403
 
             turn_as_dict = original_turn.model_dump()
             turn_as_dict.update(new_data)
             
-            from pipe.core.models.turn import UserTaskTurn, ToolResponseTurn
+            from pipe.core.models.turn import UserTaskTurn, ModelResponseTurn
             if original_turn.type == "user_task":
                 session.turns[turn_index] = UserTaskTurn(**turn_as_dict)
-            elif original_turn.type == "tool_response":
-                session.turns[turn_index] = ToolResponseTurn(**turn_as_dict)
+            elif original_turn.type == "model_response":
+                session.turns[turn_index] = ModelResponseTurn(**turn_as_dict)
 
             session_service._save_session(session)
             return jsonify({"success": True, "message": f"Turn {turn_index + 1} from session {session_id} updated."}), 200

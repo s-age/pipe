@@ -7,13 +7,14 @@ import sys
 import os
 from jinja2 import Environment, FileSystemLoader
 from pipe.core.models.session import Session
+from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file
 from pipe.core.utils.datetime import get_current_timestamp
 
 class PromptBuilder:
     """Constructs a structured prompt object for the LLM."""
 
-    def __init__(self, settings: dict, session_data: Session, project_root: str, api_mode: str, multi_step_reasoning_enabled: bool = False):
+    def __init__(self, settings: Settings, session_data: Session, project_root: str, api_mode: str, multi_step_reasoning_enabled: bool = False):
         self.settings = settings
         self.session_data = session_data
         self.project_root = project_root
@@ -37,7 +38,7 @@ class PromptBuilder:
 
     def _build_hyperparameters_section(self) -> dict:
         import copy
-        merged_params = copy.deepcopy(self.settings.get('parameters', {}))
+        merged_params = self.settings.parameters.model_dump()
 
         if self.session_data.hyperparameters:
             session_params = self.session_data.hyperparameters.model_dump()
@@ -45,14 +46,13 @@ class PromptBuilder:
                 if key in merged_params and value_desc_pair and 'value' in value_desc_pair:
                     merged_params[key]['value'] = value_desc_pair['value']
 
-        params = {"description": merged_params.get('description', "Hyperparameter settings for the model.")}
+        params = {"description": "Hyperparameter settings for the model."}
         for key, value_desc_pair in merged_params.items():
-            if key != 'description':
-                params[key] = {
-                    "type": "number",
-                    "value": value_desc_pair.get('value'),
-                    "description": value_desc_pair.get('description')
-                }
+            params[key] = {
+                "type": "number",
+                "value": value_desc_pair.get('value'),
+                "description": value_desc_pair.get('description')
+            }
         return params
 
     def build(self) -> str:
@@ -93,9 +93,6 @@ class PromptBuilder:
                 except Exception as e:
                     print(f"Warning: Could not read referenced file {ref.path}: {e}", file=sys.stderr)
 
-        constraints_settings = self.settings.get('constraints', {})
-        processing_config_settings = constraints_settings.get('processing_config', {})
-        
         context = {
             "current_datetime": get_current_timestamp(self.template_env.globals.get('local_tz')),
             "session": {
@@ -113,16 +110,16 @@ class PromptBuilder:
                 },
                 "current_task": current_task_turn.model_dump() if current_task_turn else {},
                 "constraints": {
-                    "description": constraints_settings.get('description'),
-                    "language": self.settings.get('language', 'Japanese'),
+                    "description": "Constraints for the model.",
+                    "language": self.settings.language,
                     "processing_config": {
-                        "description": processing_config_settings.get('description'),
+                        "description": "Configuration for processing.",
                         "multi_step_reasoning_active": self.multi_step_reasoning_enabled
                     },
                     "hyperparameters": self._build_hyperparameters_section()
                 },
                 "todos": [todo.model_dump() for todo in self.session_data.todos] if self.session_data.todos else [],
-                "settings": self.settings
+                "settings": self.settings.model_dump()
             }
         }
         

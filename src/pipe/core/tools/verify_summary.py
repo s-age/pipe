@@ -2,6 +2,7 @@ import json
 import os
 from typing import Dict, Any
 
+from pipe.core.models.settings import Settings
 from pipe.core.gemini_api import call_gemini_api
 from pipe.core.gemini_cli import call_gemini_cli
 
@@ -10,7 +11,7 @@ def verify_summary(
     start_turn: int,
     end_turn: int,
     summary_text: str,
-    settings: dict,
+    settings: Settings,
     project_root: str,
     session_service=None
 ) -> Dict[str, Any]:
@@ -21,8 +22,8 @@ def verify_summary(
     if not session_service:
         return {"error": "This tool requires a session_service."}
 
-    language = settings.get('language', 'english')
-    api_mode = settings.get('api_mode', 'gemini-api')
+    language = settings.language
+    api_mode = settings.api_mode
 
     try:
         # === Step 1: Prepare the data for the verifier agent ===
@@ -30,7 +31,7 @@ def verify_summary(
         if not original_session_data:
             return {"error": f"Session with ID {session_id} not found."}
 
-        original_turns = original_session_data.get("turns", [])
+        original_turns = original_session_data.turns
         temp_turns = list(original_turns)
         summary_turn = {"type": "compressed_history", "content": summary_text, "original_turns_range": [start_turn, end_turn]}
         
@@ -77,7 +78,7 @@ def verify_summary(
         )
 
         verifier_session_data = session_service.get_session(verifier_session_id)
-        verifier_session_data['turns'].append({"type": "user_task", "instruction": verifier_instruction})
+        verifier_session_data.turns.append({"type": "user_task", "instruction": verifier_instruction})
 
         if api_mode == 'gemini-api':
             response = call_gemini_api(settings=settings, session_data=verifier_session_data, project_root=project_root, instruction=verifier_instruction, api_mode=api_mode, multi_step_reasoning_enabled=True)

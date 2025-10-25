@@ -16,6 +16,7 @@ import inspect
 from typing import get_type_hints, Union, get_args, List, Dict
 
 from pipe.core.models.session import Session
+from pipe.core.models.settings import Settings
 from pipe.core.prompt_builder import PromptBuilder
 from pipe.core.token_manager import TokenManager
 from pipe.core.utils.file import read_json_file
@@ -114,7 +115,7 @@ def load_tools(project_root: str) -> list:
     
     return tool_defs
 
-def call_gemini_api(settings: dict, session_data: Session, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool):
+def call_gemini_api(settings: Settings, session_data: Session, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool):
     # (関数の前半部分は変更なし)
     token_manager = TokenManager(settings=settings)
 
@@ -132,15 +133,11 @@ def call_gemini_api(settings: dict, session_data: Session, project_root: str, in
         raise ValueError("Prompt exceeds context window limit. Aborting.")
 
     # Build GenerationConfig from settings, then override with session data
-    gen_config_params = {}
-    # 1. Load defaults from settings
-    if params := settings.get('parameters'):
-        if temp := params.get('temperature'):
-            gen_config_params['temperature'] = temp.get('value')
-        if top_p := params.get('top_p'):
-            gen_config_params['top_p'] = top_p.get('value')
-        if top_k := params.get('top_k'):
-            gen_config_params['top_k'] = top_k.get('value')
+    gen_config_params = {
+        'temperature': settings.parameters.temperature.value,
+        'top_p': settings.parameters.top_p.value,
+        'top_k': settings.parameters.top_k.value
+    }
 
     # 2. Override with session-specific hyperparameters
     if session_params := session_data.hyperparameters:

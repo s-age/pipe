@@ -23,6 +23,8 @@ from pipe.core.prompt_builder import PromptBuilder
 from pipe.core.token_manager import TokenManager
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.dispatcher import dispatch_run
+from pipe.core.models.args import TaktArgs
+from pipe.core.models.settings import Settings
 
 def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
@@ -56,8 +58,9 @@ def check_and_show_warning(project_root: str) -> bool:
             print("\nOperation cancelled. Exiting.")
             return False
 
-def _run(args, settings, session_service, session_data: Session, project_root, api_mode, enable_multi_step_reasoning):
-    session_id = args.session
+def _run(session_service: SessionService, args: TaktArgs):
+    session_id = session_service.current_session_id
+    
     if session_id:
         pool = session_service.get_pool(session_id)
         if pool and len(pool) >= 7:
@@ -67,15 +70,7 @@ def _run(args, settings, session_service, session_data: Session, project_root, a
     model_response_text = ""
     
     try:
-        model_response_text, token_count, intermediate_turns = dispatch_run(
-            api_mode,
-            args,
-            settings,
-            session_data,
-            project_root,
-            enable_multi_step_reasoning,
-            session_service
-        )
+        model_response_text, token_count, intermediate_turns = dispatch_run(session_service, args)
         if model_response_text is None and token_count is None:
             return
 
@@ -85,8 +80,6 @@ def _run(args, settings, session_service, session_data: Session, project_root, a
     except (ValueError, RuntimeError) as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return
-
-    session_id = args.session
     
     final_model_turn = ModelResponseTurn(
         type="model_response",
@@ -109,7 +102,6 @@ def _help(parser):
 
 def _parse_arguments():
     parser = argparse.ArgumentParser(description="A task-oriented chat agent for context engineering.")
-    parser.add_argument('--compress', action='store_true', help='Compress the history of a session into a summary.')
     parser.add_argument('--dry-run', action='store_true', help='Build and print the prompt without executing.')
     parser.add_argument('--session', type=str, help='The ID of the session to continue, edit, or compress.')
     parser.add_argument('--purpose', type=str, help='The overall purpose of the new session.')
@@ -135,15 +127,17 @@ def main():
     config_path = os.path.join(project_root, 'setting.yml')
     if not os.path.exists(config_path):
         config_path = os.path.join(project_root, 'setting.default.yml')
-    settings = read_yaml_file(config_path)
     
-    args, parser = _parse_arguments()
+    settings_dict = read_yaml_file(config_path)
+    settings = Settings(**settings_dict)
+    
+    parsed_args, parser = _parse_arguments()
+    args = TaktArgs.from_parsed_args(parsed_args)
 
-    api_mode = settings.get('api_mode')
-    if not api_mode:
-        raise ValueError("'api_mode' not found in setting.yml")
+    if args.api_mode:
+        settings.api_mode = args.api_mode
     
-    session_service = SessionService(os.path.join(project_root, 'sessions'))
+    session_service = SessionService(project_root, settings)
 
     if args.fork:
         if not args.at_turn:
@@ -159,78 +153,14 @@ def main():
             sys.exit(1)
 
     elif args.instruction:
-        session_id = args.session
-        if session_id:
-            session_id = session_id.strip().rstrip('.')
-            args.session = session_id
-            
-        roles = args.roles.split(',') if args.roles else []
-        enable_multi_step_reasoning = args.multi_step_reasoning
-
-        session_or_dict = session_service.get_or_create_session_data(
-            session_id=session_id,
-            purpose=args.purpose,
-            background=args.background,
-            roles=roles,
-            multi_step_reasoning_enabled=enable_multi_step_reasoning,
-            instruction=args.instruction
-        )
-        
-        if isinstance(session_or_dict, dict):
-            session = Session(
-                session_id="temp_session",
-                created_at=get_current_timestamp(session_service.timezone_obj),
-                token_count=0,
-                hyperparameters={},
-                references=[],
-                **session_or_dict
-            )
-        else:
-            session = session_or_dict
-
-        if args.references:
-            references = [Reference(path=ref.strip(), disabled=False) for ref in args.references.split(',') if ref.strip()]
-            existing_paths = {ref.path for ref in session.references}
-            new_references = [ref for ref in references if ref.path not in existing_paths]
-            session.references.extend(new_references)
-
-            if not args.dry_run and new_references and session_id:
-                session_service.add_references(session_id, [ref.path for ref in new_references])
-                print(f"Added {len(new_references)} new references to session {session_id}.", file=sys.stderr)
+        session_service.prepare_session_for_takt(args)
 
         if args.dry_run:
             from pipe.core.delegates import dry_run_delegate
-            dry_run_delegate.run(
-                settings,
-                session,
-                project_root,
-                api_mode,
-                enable_multi_step_reasoning
-            )
+            dry_run_delegate.run(session_service)
             return
 
-        if not session_id:
-            if not all([args.purpose, args.background]):
-                raise ValueError("A new session requires --purpose and --background for the first instruction.")
-            session_id = session_service.create_new_session(
-                purpose=args.purpose,
-                background=args.background,
-                roles=roles,
-                multi_step_reasoning_enabled=enable_multi_step_reasoning,
-                parent_id=args.parent
-            )
-            args.session = session_id
-            
-            first_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(session_service.timezone_obj))
-            session_service.add_turn_to_session(session_id, first_turn)
-            
-            print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}", file=sys.stderr)
-        else:
-            new_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(session_service.timezone_obj))
-            session_service.add_turn_to_session(session_id, new_turn)
-            print(f"Conductor Agent: Continuing session: {session_id}", file=sys.stderr)
-
-        _run(args, settings, session_service, session, project_root, api_mode, enable_multi_step_reasoning)
+        _run(session_service, args)
 
     else:
         _help(parser)

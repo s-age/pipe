@@ -3,6 +3,7 @@ import subprocess
 import sys
 import os
 from typing import Dict, Any
+from pipe.core.models.settings import Settings
 from pipe.core.gemini_api import call_gemini_api
 from pipe.core.gemini_cli import call_gemini_cli
 from pipe.core.tools.verify_summary import verify_summary
@@ -13,7 +14,7 @@ def create_verified_summary(
     end_turn: int,
     policy: str,
     target_length: int,
-    settings: dict,
+    settings: Settings,
     project_root: str,
     session_service=None
 ) -> Dict[str, Any]:
@@ -21,7 +22,7 @@ def create_verified_summary(
     Generates a summary and then calls the verify_summary tool to perform
     verification and handle subsequent actions.
     """
-    api_mode = settings.get('api_mode', 'gemini-api')
+    api_mode = settings.api_mode
     if not session_service:
         return {"error": "This tool requires a session_service."}
 
@@ -30,7 +31,7 @@ def create_verified_summary(
     if not session_data:
         return {"error": f"Session with ID {session_id} not found."}
     
-    active_roles = session_data.get('roles', [])
+    active_roles = session_data.roles
     # The role file might be 'roles/compresser.md', so we check for the substring 'compresser'
     if not any('compresser' in role for role in active_roles):
         return {"error": "This tool can only be executed by an agent with the 'compresser' role."}

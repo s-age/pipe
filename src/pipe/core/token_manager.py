@@ -6,18 +6,20 @@ import os
 import google.genai as genai
 from google.genai import types
 
+from pipe.core.models.settings import Settings
+
 class TokenManager:
     """Handles token counting using the google-genai library."""
 
-    def __init__(self, settings: dict):
+    def __init__(self, settings: Settings):
         """
         Initializes the TokenManager.
 
         Args:
-            settings: The settings dictionary containing model configuration.
+            settings: The Settings model instance.
         """
-        self.model_name = settings.get('token_manager', {}).get('model', "gemini-2.5-flash")
-        self.limit = settings.get('token_manager', {}).get('limit', 1000000)
+        self.model_name = settings.model
+        self.limit = settings.context_limit
         try:
             self.client = genai.Client()
         except Exception as e:

@@ -1,21 +1,23 @@
-from typing import List, Optional
 from pydantic import BaseModel, Field
+from typing import Optional, List
 
-from .hyperparameters import Hyperparameters
-from .reference import Reference
-from .todo import TodoItem
-from .turn import Turn
+from pipe.core.models.turn import Turn
+from pipe.core.models.todo import TodoItem
+from pipe.core.models.hyperparameters import Hyperparameters
+from pipe.core.models.reference import Reference
+from pipe.core.collections.turns import TurnCollection
+from pipe.core.collections.references import ReferenceCollection
 
 class Session(BaseModel):
     session_id: str
     created_at: str
-    purpose: str
-    background: str
-    roles: List[str]
-    multi_step_reasoning_enabled: bool
-    token_count: int
-    hyperparameters: Hyperparameters
-    references: List[Reference]
-    turns: List[Turn]
-    pools: List[Turn] = Field(default_factory=list)
+    purpose: Optional[str] = None
+    background: Optional[str] = None
+    roles: List[str] = []
+    multi_step_reasoning_enabled: bool = False
+    token_count: int = 0
+    hyperparameters: Optional[Hyperparameters] = None
+    references: ReferenceCollection = Field(default_factory=ReferenceCollection)
+    turns: TurnCollection = Field(default_factory=TurnCollection)
+    pools: List[Turn] = []
     todos: Optional[List[TodoItem]] = None

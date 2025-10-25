@@ -11,7 +11,8 @@ from datetime import datetime, timezone
 import zoneinfo
 from typing import Optional, List, Dict, Any
 
-from pipe.core.models.session import Session, Reference
+from pipe.core.models.session import Session
+from pipe.core.models.reference import Reference
 from pipe.core.models.turn import Turn, UserTaskTurn
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.services.history_service import HistoryService
@@ -148,10 +149,7 @@ class SessionService:
             roles=roles,
             multi_step_reasoning_enabled=multi_step_reasoning_enabled,
             token_count=token_count,
-            hyperparameters=hyperparameters if hyperparameters is not None else self.default_hyperparameters,
-            references=[],
-            turns=[],
-            pools=[]
+            hyperparameters=hyperparameters if hyperparameters is not None else self.default_hyperparameters
         )
 
         self._save_session(session)

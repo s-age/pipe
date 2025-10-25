@@ -63,7 +63,11 @@ class PromptBuilder:
         else:
             raise ValueError(f"Unknown api_mode: {self.api_mode}")
 
-        history_turns = self.session_data.turns[:-1] if self.session_data.turns else []
+        history_turns_iterable = self.session_data.turns.get_for_prompt()
+        history_turns = list(reversed(list(history_turns_iterable))) # Reverse the reversed iterator to get chronological order
+        
+        # The last turn is the current task, which is not part of the history.
+        # The collection filtering logic applies to history, so we handle the current task separately.
         current_task_turn = self.session_data.turns[-1] if self.session_data.turns else None
         
         current_instruction = ""
@@ -71,6 +75,7 @@ class PromptBuilder:
             if hasattr(current_task_turn, 'instruction') and current_task_turn.instruction:
                 current_instruction = current_task_turn.instruction
             else:
+                # Search backwards for the most recent instruction if the last turn doesn't have one
                 for turn in reversed(self.session_data.turns):
                     if hasattr(turn, 'instruction') and turn.instruction:
                         current_instruction = turn.instruction
@@ -81,17 +86,7 @@ class PromptBuilder:
             "definitions": self._load_roles()
         }
 
-        file_references_content = []
-        for ref in self.session_data.references:
-            if not ref.disabled and os.path.isfile(ref.path):
-                try:
-                    content = read_text_file(ref.path)
-                    file_references_content.append({
-                        "path": os.path.relpath(ref.path, self.project_root),
-                        "content": content
-                    })
-                except Exception as e:
-                    print(f"Warning: Could not read referenced file {ref.path}: {e}", file=sys.stderr)
+        file_references_content = list(self.session_data.references.get_for_prompt(self.project_root))
 
         context = {
             "current_datetime": get_current_timestamp(self.template_env.globals.get('local_tz')),

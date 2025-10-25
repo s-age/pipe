@@ -1,6 +1,9 @@
+import os
+import json
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
+from pipe.core.utils.file import locked_json_write
 from pipe.core.models.turn import Turn
 from pipe.core.models.todo import TodoItem
 from pipe.core.models.hyperparameters import Hyperparameters
@@ -10,7 +13,7 @@ from pipe.core.collections.turns import TurnCollection
 class Session(BaseModel):
     """
     Represents a single user session, corresponding to a unique session file (e.g., `${session_id}.json`).
-    This class is responsible for holding the detailed state of a conversation, including turns, references, and metadata.
+    This class is responsible for holding the detailed state of a conversation and persisting itself to a file.
     It does not manage the collection of all sessions or the index file.
     """
     session_id: str
@@ -25,6 +28,11 @@ class Session(BaseModel):
     turns: TurnCollection = Field(default_factory=TurnCollection)
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: Optional[List[TodoItem]] = None
+
+    def save(self, session_path: str, lock_path: str):
+        """Saves the session to a JSON file using a locked write utility."""
+        os.makedirs(os.path.dirname(session_path), exist_ok=True)
+        locked_json_write(lock_path, session_path, self.model_dump())
 
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the session suitable for templates."""

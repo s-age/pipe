@@ -151,13 +151,9 @@ class SessionService:
         os.makedirs(self.backups_dir, exist_ok=True)
 
     def _save_session(self, session: Session):
-        session_path = self._get_session_path(session.session_id, create_dirs=True)
+        session_path = self._get_session_path(session.session_id)
         session_lock_path = self._get_session_lock_path(session.session_id)
-        json_string = session.model_dump_json(indent=2)
-        
-        with FileLock(session_lock_path):
-            with open(session_path, 'w', encoding='utf-8') as f:
-                f.write(json_string)
+        session.save(session_path, session_lock_path)
 
     def create_new_session(self, purpose: str, background: str, roles: list, multi_step_reasoning_enabled: bool = False, token_count: int = 0, hyperparameters: dict = None, parent_id: str = None) -> str:
         if parent_id:

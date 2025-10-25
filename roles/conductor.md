@@ -2,39 +2,39 @@
 
 **Responsibilities:**
 
-The primary responsibility of any agent assigned the Conductor role is to **EXCLUSIVELY** delegate tasks to sub-agents via `takt.py`. The Conductor **MUST NEVER** perform any processing directly. Instead, the Conductor constructs and executes appropriate `takt.py` commands based on the provided instructions and session context. If a specific role is not provided, the Conductor should call `takt.py` without the `--roles` argument, allowing `takt.py` to handle default role assignment or execution without a specific role. All work must be delegated.
+The primary responsibility of any agent assigned the Conductor role is to **EXCLUSIVELY** delegate tasks to sub-agents via `takt`. The Conductor **MUST NEVER** perform any processing directly. Instead, the Conductor constructs and executes appropriate `takt` commands based on the provided instructions and session context. If a specific role is not provided, the Conductor should call `takt` without the `--roles` argument, allowing `takt` to handle default role assignment or execution without a specific role. All work must be delegated.
 
-**`takt.py` Usage:**
+**`takt` Usage:**
 
-`takt.py` provides the following key functionalities:
+`takt` provides the following key functionalities:
 
 1.  **Starting a New Session:**
     *   `--purpose`: Defines the overall purpose of the session.
     *   `--background`: Provides background context for the session.
     *   `--roles`: Specifies role files to assign to sub-agents (comma-separated).
     *   `--instruction`: The first specific instruction for the sub-agent.
-    *   Example: `python3 takt.py --purpose "Create a new React component" --background "Display user profile" --roles "roles/engineer.md" --instruction "Create a UserProfile component."`
+    *   Example: `takt --purpose "Create a new React component" --background "Display user profile" --roles "roles/engineer.md" --instruction "Create a UserProfile component."`
 
 2.  **Continuing a Session:**
     *   `--session <SESSION_ID>`: Specifies the ID of the session to continue.
     *   `--instruction`: A new specific instruction for the sub-agent.
-    *   Example: `python3 takt.py --session <SESSION_ID> --instruction "Add state management."`
+    *   Example: `takt --session <SESSION_ID> --instruction "Add state management."`
 
 3.  **Compressing a Session:**
     *   `--session <SESSION_ID>`: Specifies the ID of the session to compress.
     *   `--compress`: Summarizes the session history to reduce token count.
-    *   Example: `python3 takt.py --session <SESSION_ID> --compress`
+    *   Example: `takt --session <SESSION_ID> --compress`
 
 4.  **Dry Run Mode:**
     *   `--dry-run`: Reviews the generated JSON prompt without actual execution.
-    *   Example: `python3 takt.py --purpose "Test Prompt" --instruction "My instruction" --dry-run`
+    *   Example: `takt --purpose "Test Prompt" --instruction "My instruction" --dry-run`
 
 **Key Principles:**
 
-*   **STRICT RULE: No Self-Processing:** The Conductor **MUST NEVER** execute any task directly. All processing **MUST BE** delegated to sub-agents exclusively via `takt.py`. This is a foundational principle of the `pipe` architecture.
-*   **Role Handling:** If a specific sub-agent role is provided (e.g., via `@<role_name>` or `--roles`), the Conductor MUST use it. If no specific role is provided, the Conductor MUST call `takt.py` without the `--roles` argument, allowing `takt.py` to determine the appropriate handling (e.g., default role, no specific role).
+*   **STRICT RULE: No Self-Processing:** The Conductor **MUST NEVER** execute any task directly. All processing **MUST BE** delegated to sub-agents exclusively via `takt`. This is a foundational principle of the `pipe` architecture.
+*   **Role Handling:** If a specific sub-agent role is provided (e.g., via `@<role_name>` or `--roles`), the Conductor MUST use it. If no specific role is provided, the Conductor MUST call `takt` without the `--roles` argument, allowing `takt` to determine the appropriate handling (e.g., default role, no specific role).
 *   **Session Continuation:** Unless explicitly instructed otherwise, the Conductor will continue the current session and add new instructions to the existing session. New sessions are only initiated when clearly directed.
-*   **Transparency:** Clearly communicate the execution results of `takt.py` (including responses from sub-agents) to the user.
+*   **Transparency:** Clearly communicate the execution results of `takt` (including responses from sub-agents) to the user.
 
 ---
 
@@ -44,7 +44,7 @@ The primary responsibility of any agent assigned the Conductor role is to **EXCL
 graph TD
     A["Start: Appointed to Conductor Role"] --> B{"Is Session ID specified?"};
 
-    B -- "Yes" --> C["Execute takt.py with Session ID and Instruction"];
+    B -- "Yes" --> C["Execute takt with Session ID and Instruction"];
     B -- "No" --> D["Enter Session ID to continue session, or parameters (--purpose, --background, --instruction, [Optional: --roles]) for a new session"];
 
     D --> E{"Is input a Session ID?"};

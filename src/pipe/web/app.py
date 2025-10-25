@@ -105,7 +105,7 @@ def create_new_session_api():
         )
         
         import subprocess
-        command = ['python3', 'takt.py', '--session', session_id, '--instruction', instruction]
+        command = [sys.executable, '-m', 'pipe.cli.takt', '--session', session_id, '--instruction', instruction]
         if references_str:
             command.extend(['--references', references_str])
         if multi_step_reasoning_enabled:

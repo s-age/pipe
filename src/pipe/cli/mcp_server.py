@@ -230,7 +230,7 @@ def execute_tool(tool_name, arguments):
         # Log the end of the tool call to the pool
         if session_id:
             try:
-                # Format the response similarly to takt.py
+                # Format the response similarly to takt
                 if isinstance(result, dict) and 'error' in result and result['error'] != '(none)':
                     formatted_response = {"status": "failed", "message": result['error']}
                 else:

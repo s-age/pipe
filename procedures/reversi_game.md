@@ -27,7 +27,7 @@ a.  **Find Next Game Number**:
     *   Construct the new game state filename: `games/reversi_XXX.json`.
 
 b.  **Create Player Agents**:
-    *   **Black Player**: Use `run_shell_command` to execute `takt.py` and create a new session for the Black player. The purpose should be "Reversi Black Player" and the role must be `roles/games/reversi_player.md`. The initial instruction should be "You are the Black player ('B'). Wait for instructions.". Capture the new session ID for the Black player from the command output.
+    *   **Black Player**: Use `run_shell_command` to execute `takt` and create a new session for the Black player. The purpose should be "Reversi Black Player" and the role must be `roles/games/reversi_player.md`. The initial instruction should be "You are the Black player ('B'). Wait for instructions.". Capture the new session ID for the Black player from the command output.
     *   **White Player**: Repeat the process to create a new session for the White player. The purpose should be "Reversi White Player". Capture its session ID.
 
 c.  **Create Initial Game State**:
@@ -67,7 +67,7 @@ a.  **Read Current State**:
     *   Use `read_file` to load the current game state from its JSON file. Identify the `current_player`, their corresponding `session_id` (`player_b_session_id` or `player_w_session_id`), and the current `board`.
 
 b.  **Invoke Player Sub-agent**:
-    *   Use `run_shell_command` to call `takt.py` with the correct player's session ID (`--session <player_session_id>`).
+    *   Use `run_shell_command` to call `takt` with the correct player's session ID (`--session <player_session_id>`).
     *   The instruction must provide the current `board` and the player's `color`.
         **Example Instruction:**
         `You are player 'B'. The current board is:

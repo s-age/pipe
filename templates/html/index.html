@@ -149,8 +149,7 @@
                 <div class="meta-item">
                     <strong>Todos:</strong>
                     <button class="action-btn" id="delete-todos-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px; background-color: #dc3545;">Delete All</button>
-                    {% if session_data.todos and session_data.todos|length > 0 %}
-                    <ul id="todos-list" style="list-style: none; padding-left: 0;">
+                    <ul id="todos-list" style="list-style: none; padding-left: 0; display: {% if not session_data.todos or session_data.todos|length == 0 %}none{% else %}block{% endif %};">
                         {% for todo in session_data.todos %}
                             <li style="margin-bottom: 10px;">
                                 <label style="cursor: pointer;">
@@ -160,16 +159,13 @@
                             </li>
                         {% endfor %}
                     </ul>
-                    {% else %}
-                    <p>No todos for this session.</p>
-                    {% endif %}
+                    <p id="no-todos-message" style="display: {% if not session_data.todos or session_data.todos|length == 0 %}block{% else %}none{% endif %};">No todos for this session.</p>
                 </div>
 
                 <div class="meta-item">
                     <strong>References:</strong>
                     <button class="action-btn" id="toggle-references-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px;">Toggle All</button>
-                    {% if session_data.references and session_data.references|length > 0 %}
-                    <ul id="references-list" style="list-style: none; padding-left: 0;">
+                    <ul id="references-list" style="list-style: none; padding-left: 0; display: {% if not session_data.references or session_data.references|length == 0 %}none{% else %}block{% endif %};">
                         {% for reference in session_data.references %}
                             <li style="margin-bottom: 10px;">
                                 <label style="cursor: pointer; display: flex; align-items: center;">
@@ -179,9 +175,7 @@
                             </li>
                         {% endfor %}
                     </ul>
-                    {% else %}
-                    <p>No references for this session.</p>
-                    {% endif %}
+                    <p id="no-references-message" style="display: {% if not session_data.references or session_data.references|length == 0 %}block{% else %}none{% endif %};">No references for this session.</p>
                 </div>
             </div>
             <button class="action-btn save-btn" id="save-meta-btn" data-session-id="{{ current_session_id }}">Save Meta</button>

@@ -509,9 +509,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateRightColumn(sessionData) {
         // Update TODOs
         const todosList = document.getElementById('todos-list');
-        if (todosList) {
+        const noTodosMessage = document.getElementById('no-todos-message');
+        if (todosList && noTodosMessage) {
             todosList.innerHTML = ''; // Clear existing list
             if (sessionData.todos && sessionData.todos.length > 0) {
+                todosList.style.display = 'block';
+                noTodosMessage.style.display = 'none';
                 sessionData.todos.forEach((todo, index) => {
                     const li = document.createElement('li');
                     li.style.marginBottom = '10px';
@@ -523,14 +526,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     todosList.appendChild(li);
                 });
+            } else {
+                todosList.style.display = 'none';
+                noTodosMessage.style.display = 'block';
             }
         }
 
         // Update References
         const referencesList = document.getElementById('references-list');
-        if (referencesList) {
+        const noReferencesMessage = document.getElementById('no-references-message');
+        if (referencesList && noReferencesMessage) {
             referencesList.innerHTML = ''; // Clear existing list
             if (sessionData.references && sessionData.references.length > 0) {
+                referencesList.style.display = 'block';
+                noReferencesMessage.style.display = 'none';
                 sessionData.references.forEach((ref, index) => {
                     const li = document.createElement('li');
                     li.style.marginBottom = '10px';
@@ -544,6 +553,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     referencesList.appendChild(li);
                 });
+            } else {
+                referencesList.style.display = 'none';
+                noReferencesMessage.style.display = 'block';
             }
         }
     }

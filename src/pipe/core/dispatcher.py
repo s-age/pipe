@@ -29,6 +29,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
 
     # Decrement TTL for all active references before calling the delegate
     session_service.decrement_all_references_ttl_in_session(session_id)
+    session_service.expire_old_tool_responses(session_id)
 
     token_count = 0
     turns_to_save = []

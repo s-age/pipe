@@ -150,6 +150,9 @@ class SessionService:
         os.makedirs(self.backups_dir, exist_ok=True)
 
     def _save_session(self, session: Session):
+        # Ensure the pool is always cleared before saving.
+        session.pools = TurnCollection()
+
         if session.references:
             # Delegate sorting to the ReferenceCollection
             ref_collection = ReferenceCollection(session.references)
@@ -448,3 +451,43 @@ class SessionService:
             collection = self.list_sessions()
             collection.update(session_id)
             collection.save()
+
+    def expire_old_tool_responses(self, session_id: str):
+        """
+        Expires the message content of old tool_response turns to save tokens,
+        while preserving the 'succeeded' status. This uses a safe rebuild pattern.
+        """
+        session = self._fetch_session(session_id)
+        if not session or not session.turns:
+            return
+
+        user_tasks = [turn for turn in session.turns if turn.type == 'user_task']
+        if len(user_tasks) <= 3:
+            return
+
+        expiration_threshold_timestamp = user_tasks[-3].timestamp
+
+        new_turns = []
+        modified = False
+        for turn in session.turns:
+            # Check if the turn is a candidate for expiration
+            if (turn.type == 'tool_response' and 
+                turn.timestamp < expiration_threshold_timestamp and
+                isinstance(turn.response, dict) and 
+                turn.response.get('status') == 'succeeded'): # Only expire successful responses
+                
+                # Create a deep copy to modify
+                modified_turn = turn.model_copy(deep=True)
+                
+                # Only change the message, keep the status
+                modified_turn.response['message'] = "This tool response has expired to save tokens."
+                
+                new_turns.append(modified_turn)
+                modified = True
+            else:
+                # Add the original turn if no modification is needed
+                new_turns.append(turn)
+        
+        if modified:
+            session.turns = TurnCollection(new_turns)
+            self._save_session(session)

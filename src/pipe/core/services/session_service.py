@@ -420,14 +420,21 @@ class SessionService:
     def add_turn_to_session(self, session_id: str, turn_data: Turn):
         session = self._fetch_session(session_id)
         if session:
-            # Merge pooled turns before adding the new turn
-            if session.pools:
-                session.turns.extend(session.pools)
-                session.pools = TurnCollection()  # Clear the pool
-
             session.turns.append(turn_data)
             self._save_session(session)
             
+            collection = self.list_sessions()
+            collection.update(session_id)
+            collection.save()
+
+    def merge_pool_into_turns(self, session_id: str):
+        """Merges all turns from the pool into the main turns list and clears the pool."""
+        session = self._fetch_session(session_id)
+        if session and session.pools:
+            session.turns.extend(session.pools)
+            session.pools = TurnCollection()  # Clear the pool
+            self._save_session(session)
+
             collection = self.list_sessions()
             collection.update(session_id)
             collection.save()

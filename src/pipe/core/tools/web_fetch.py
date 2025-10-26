@@ -34,7 +34,11 @@ def web_fetch(prompt: str) -> Dict[str, str]:
                 lines = (line.strip() for line in text.splitlines())
                 clean_text = '\n'.join(line for line in lines if line)
 
-                all_content.append(f"--- Content from {url} ---\n{clean_text}")
+                success_message = (
+                    f"Successfully fetched and parsed content from the URL. "
+                    f"Here is the extracted text:\n\n---\n\n{clean_text}"
+                )
+                all_content.append(success_message)
 
             except httpx.HTTPStatusError as e:
                 all_content.append(f"--- Error fetching {url} ---\nHTTP Error: {e.response.status_code} {e.response.reason_phrase}")
@@ -43,4 +47,4 @@ def web_fetch(prompt: str) -> Dict[str, str]:
             except Exception as e:
                 all_content.append(f"--- Error fetching {url} ---\nAn unexpected error occurred: {e}")
 
-    return {"content": "\n\n".join(all_content)}
+    return {"message": "\n\n".join(all_content)}

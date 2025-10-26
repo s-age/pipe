@@ -25,10 +25,10 @@ class TestWebFetchTool(unittest.TestCase):
         result = web_fetch(prompt)
 
         # Assertions
-        self.assertIn("content", result)
+        self.assertIn("message", result)
         self.assertNotIn("error", result)
-        self.assertIn("--- Content from https://example.com/test ---", result["content"])
-        self.assertIn("<h1>Test Page</h1>", result["content"])
+        self.assertIn("Successfully fetched and parsed content", result["message"])
+        self.assertIn("Test Page", result["message"])
         mock_context_manager.__enter__.return_value.get.assert_called_once_with("https://example.com/test", timeout=10.0)
 
     def test_web_fetch_no_url_in_prompt(self):
@@ -71,9 +71,9 @@ class TestWebFetchTool(unittest.TestCase):
         prompt = "Get data from http://example.com/notfound"
         result = web_fetch(prompt)
 
-        self.assertIn("content", result)
-        self.assertIn("--- Error fetching http://example.com/notfound ---", result["content"])
-        self.assertIn("HTTP Error: 404 Not Found", result["content"])
+        self.assertIn("message", result)
+        self.assertIn("--- Error fetching http://example.com/notfound ---", result["message"])
+        self.assertIn("HTTP Error: 404 Not Found", result["message"])
 
 if __name__ == '__main__':
     unittest.main()

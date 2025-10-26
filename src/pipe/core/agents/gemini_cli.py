@@ -45,11 +45,12 @@ def call_gemini_cli(session_service: SessionService) -> str:
     # Sanitize the prompt string to remove any surrogate characters before passing to subprocess
     final_prompt = final_prompt.encode('utf-8', 'replace').decode('utf-8')
 
-    command = ['gemini', '-m', model_name, '--debug', '-p', final_prompt]
+    command = ['gemini', '-m', model_name, '-p', final_prompt]
     if settings.yolo:
         command.insert(1, '-y')
     
     env = os.environ.copy()
+    env['PYTHONUNBUFFERED'] = "1"  # Force unbuffered output for streaming
     if session_id:
         env['GEMINI_SESSION_ID'] = session_id
         

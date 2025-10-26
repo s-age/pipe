@@ -1,0 +1,65 @@
+# `src/pipe/core` - The Heart of the Machine
+
+## Overview
+
+You are now in the core of `pipe`. This directory is not merely a collection of modules; it is the physical manifestation of a philosophy. A philosophy built on the principle of **absolute, uncompromising control** over the LLM interaction context. Every component here serves a single purpose: to deconstruct the ephemeral nature of AI conversation into a deterministic, auditable, and infinitely malleable state machine.
+
+Forget black boxes. Forget entrusting the model's memory to the model itself. Here, we forge the context. We control the flow. We are the ghost in the machine.
+
+## Core Components
+
+Each subdirectory is a specialized organ, performing a distinct function with fanatical precision. Understand their roles, and you will understand the system.
+
+-   **`agents/`**: Wrappers of chaos. These modules are the sole point of contact with external AI services (like the Gemini API or the `gemini-cli` tool). They exist to translate our deterministic, structured world into the language of the outside, and to translate the outside's probabilistic responses back into our control.
+
+-   **`collections/`**: The logicians. A model object like a `Reference` or a `Turn` is just data. A `Collection` is where that data becomes intelligent. These classes encapsulate the *business logic* for lists of models—implementing TTL decay, sorting heuristics, and other rules that define how the context behaves over time.
+
+-   **`delegates/`**: The orchestrators. When the `dispatcher` points, a `delegate` acts. Each delegate is a high-level workflow, orchestrating the complex dance between `services` and `agents` to fulfill a command, whether it's running a prompt, forking a session, or displaying help.
+
+-   **`models/`**: The atomic structure. Defined with Pydantic, these are the immutable data blueprints of our universe. From the `Session` itself to a single `Turn`, every piece of state is rigorously structured and validated here.
+
+-   **`services/`**: The central nervous system. Services like `SessionService` and `PromptService` are the powerful, cross-cutting monoliths that manage the application's core state and capabilities. `SessionService` is the master of persistence; `PromptService` is the grand architect of the final, structured prompt.
+
+-   **`tools/`**: The hands of the AI. These are the executable capabilities we grant to the model. Each file is a self-contained function that the AI can invoke, from reading a file (`read_file`) to searching the web. They are the model's only way to interact with the world beyond its immediate context.
+
+-   **`utils/`**: The fundamental constants. Pure, deterministic helper functions for universal needs like datetime manipulation and file I/O.
+
+## `takt` Command Options
+
+The `takt` command is the primary entrypoint for manipulating the state machine. Every command is a precise instruction to alter the session's state vector.
+
+-   `--session <SESSION_ID>`: Target a specific session by its ID. If omitted, a new session is created.
+    -   *Example*: `takt --session 22176081d1... --instruction "Continue the analysis."`
+
+-   `--instruction "<INSTRUCTION>"`: The primary task for the AI to execute in the current turn.
+    -   *Example*: `takt --instruction "Refactor the User class to be immutable."`
+
+-   `--purpose "<PURPOSE>"` and `--background "<BACKGROUND>"`: Provides the high-level `session_goal` for a *new* session. Required for session creation.
+    -   *Example*: `takt --purpose "Develop a CLI tool" --background "The tool is for parsing log files." --instruction "Start by designing the data models."`
+
+-   `--references <PATH_1> <PATH_2>`: Attach file paths to the context. The AI can then read these files using tools. Paths are relative to the project root.
+    -   *Example*: `takt --references src/main.py tests/test_main.py --instruction "Review the code and identify potential bugs."`
+
+-   `--roles <ROLE_1> <ROLE_2>`: Define the personas for the session by providing paths to role definition files.
+    -   *Example*: `takt --roles roles/engineer.md roles/reviewer.md --instruction "Debate the pros and cons of this architecture."`
+
+-   `--multi-step-reasoning`: Instructs the AI to use a more complex, chain-of-thought reasoning process.
+    -   *Example*: `takt --multi-step-reasoning --instruction "Analyze the root cause of the performance degradation."`
+
+-   `--dry-run`: A read-only mode. Constructs and prints the final JSON prompt that *would* be sent, but does not execute it or modify session state. Essential for debugging the context architecture.
+    -   *Example*: `takt --dry-run --instruction "Show me the prompt for this."`
+
+-   `--fork <SESSION_ID> --at-turn <TURN_INDEX>`: Forks an existing session at a specific turn index, creating a new history branch. `--at-turn` is mandatory when forking.
+    -   *Example*: `takt --fork 22176081d1... --at-turn 5`
+
+## Developer Guide: Integrating a New Agent
+
+Integrating a new AI provider or execution mode is a matter of conforming to the system's architecture.
+
+1.  **Forge the Agent**: In `agents/`, create your new agent file (e.g., `anthropic_agent.py`). It must contain a primary function that accepts the necessary context (like a `SessionService` instance) and returns the AI's response. This is where you handle API calls, authentication, and response parsing.
+
+2.  **Appoint the Delegate**: In `delegates/`, create a corresponding delegate (e.g., `anthropic_delegate.py`). Its `run` function will be called by the dispatcher. This delegate is responsible for preparing the data for your new agent, calling it, and formatting the agent's raw output into the `Turn` models our system understands.
+
+3.  **Inform the Dispatcher**: In `dispatcher.py`, add a new `elif` condition for your `api_mode`. When `settings.api_mode` matches your new agent's name (e.g., `'anthropic'`), it must import and call your new delegate's `run` function.
+
+4.  **Declare in Settings**: In `setting.default.yml`, add your new `api_mode` name as a potential value. This makes the system aware of its existence. A user can then select it in their personal `setting.yml` to activate the entire chain.

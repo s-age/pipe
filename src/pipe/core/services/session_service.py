@@ -407,6 +407,11 @@ class SessionService:
     def add_turn_to_session(self, session_id: str, turn_data: Turn):
         session = self._fetch_session(session_id)
         if session:
+            # Merge pooled turns before adding the new turn
+            if session.pools:
+                session.turns.extend(session.pools)
+                session.pools = TurnCollection()  # Clear the pool
+
             session.turns.append(turn_data)
             self._save_session(session)
             

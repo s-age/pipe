@@ -1,17 +1,22 @@
 # This script implements a server that adheres to the Model Context Protocol (MCP).
 # MCP is an open-standard, JSON-RPC 2.0 based protocol designed to standardize
-# the communication between a client (typically hosting a large language model)
-# and a server that provides access to a set of tools or capabilities.
+# the communication between a client (e.g., a large language model) and a server
+# that provides access to a set of tools.
 #
-# The server operates over standard input and standard output, listening for
-# JSON-RPC requests from an MCP client. It dynamically discovers available tools
-# from the 'tools' directory, advertises them to the client via the 'initialize'
-# and 'tools/list' methods, and executes them upon receiving a 'tools/call' request.
+# The server operates over standard input/output and has several key responsibilities:
+# 1.  **Tool Discovery:** It dynamically discovers and exposes all available tools
+#     from the `src/pipe/core/tools` directory.
+# 2.  **MCP Communication:** It listens for JSON-RPC requests from an MCP client,
+#     advertises the tools via the 'initialize' and 'tools/list' methods, and
+#     executes them upon receiving a 'tools/call' request.
+# 3.  **Automatic Logging:** It automatically logs all tool calls (`function_calling`)
+#     and their results (`tool_response`) to the active session's history pool,
+#     ensuring complete transparency of agent actions.
 #
-# This allows an AI model to leverage external tools in a standardized way,
-# without needing custom integration for each tool.
+# This architecture allows an AI model to leverage external tools in a standardized way.
 #
-# For more information on the Model Context Protocol, refer to its official specification.
+# For more on the tool architecture, see `src/pipe/core/tools/README.md`.
+# For more on the MCP protocol itself, refer to its official specification.
 
 import os
 import sys

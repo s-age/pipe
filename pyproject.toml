@@ -1,0 +1,19 @@
+[project]
+name = "pipe"
+version = "0.1.0"
+description = "A task-oriented chat agent for context engineering."
+dependencies = [
+    "google-generativeai==0.5.4",
+    "PyYAML==6.0.1",
+    "python-dotenv==1.0.1",
+    "Flask==3.0.3",
+    "cryptography==42.0.5",
+    "json5==0.9.14",
+    "pydantic==2.6.4"
+]
+
+[project.scripts]
+takt = "pipe.cli.takt:main"
+
+[tool.setuptools.packages.find]
+where = ["src", "tests"]

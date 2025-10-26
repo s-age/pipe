@@ -9,29 +9,21 @@
 {% from "advanced_reasoning_flow.j2" import render_advanced_reasoning_flow_macro %}
 {% from "todos.j2" import render_todos_macro %}
 {
-  "current_datetime": "{{ current_datetime }}",
   "description": {{ render_description_macro(session.description) }},
+  "main_instruction": {{ render_main_instruction_macro() }},
+  {% if session.constraints.processing_config.multi_step_reasoning_active %}
+  "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.constraints.processing_config.multi_step_reasoning_active) }},
+  {% endif %}
+  "current_task": {{ render_current_task_macro(session.current_task) }},
+  {% if session.todos %}
+  "todos": {{ render_todos_macro(session.todos) }},
+  {% endif %}
+  "current_datetime": "{{ session.current_datetime }}",
   "session_goal": {{ render_session_goal_macro(session.session_goal) }},
   "roles": {{ render_roles_macro(session.roles) }},
   "constraints": {{ render_constraints_macro(session.constraints) }},
-  "main_instruction": {{ render_main_instruction_macro() }},
-  "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }},
-  "current_task": {{ render_current_task_macro(session.current_task) }}
-  {% if session.todos %}
-  , "todos": {{ render_todos_macro(session.todos) }}{% endif %}
+  "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }}{% if session.file_references %},{% endif %}
   {% if session.file_references %}
-  , "file_references": {{ render_file_references_macro(session.file_references) }}{% endif %}
-  {% if session.todos %}
-  , "todos": [
-    {% for todo in session.todos %}
-    {
-      "title": "{{ todo.title }}",
-      "description": "{{ todo.description }}",
-      "checked": {{ "true" if todo.checked else "false" }}
-    }{{ "," if not loop.last }}
-    {% endfor %}
-  ]{% endif %}
-  {% if session.constraints.processing_config.multi_step_reasoning_active %}
-  , "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.constraints.processing_config.multi_step_reasoning_active) }}
+  "file_references": {{ render_file_references_macro(session.file_references) }}
   {% endif %}
 }

@@ -9,19 +9,21 @@
 {% from "advanced_reasoning_flow.j2" import render_advanced_reasoning_flow_macro %}
 {% from "todos.j2" import render_todos_macro %}
 {
-  "current_datetime": "{{ current_datetime }}",
   "description": {{ render_description_macro(session.description) }},
+  "main_instruction": {{ render_main_instruction_macro() }},
+  {% if session.multi_step_reasoning_enabled %}
+  "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.multi_step_reasoning_enabled) }},
+  {% endif %}
+  "current_task": {{ render_current_task_macro(session.current_task) }},
+  {% if session.todos %}
+  "todos": {{ render_todos_macro(session.todos) }},
+  {% endif %}
+  "current_datetime": "{{ session.current_datetime }}",
   "session_goal": {{ render_session_goal_macro(session.session_goal) }},
   "roles": {{ render_roles_macro(session.roles) }},
   "constraints": {{ render_constraints_macro(session.constraints) }},
-  "main_instruction": {{ render_main_instruction_macro() }},
-  "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }},
-  "current_task": {{ render_current_task_macro(session.current_task) }}
-  {% if session.todos %}
-  , "todos": {{ render_todos_macro(session.todos) }}{% endif %}
+  "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }}{% if session.file_references %},{% endif %}
   {% if session.file_references %}
-  , "file_references": {{ render_file_references_macro(session.file_references) }}{% endif %}
-  {% if session.multi_step_reasoning_enabled %}
-  , "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.multi_step_reasoning_enabled) }}
+  "file_references": {{ render_file_references_macro(session.file_references) }}
   {% endif %}
 }

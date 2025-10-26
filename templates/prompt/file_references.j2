@@ -1,13 +1,12 @@
 {% macro render_file_references_macro(data) %}
 {
   "description": "Content of files referenced in the session.",
-  "files": [
-    {% for file in data %}
-    {
-      "path": {{ file.path | tojson }},
-      "content": {{ file.content | tojson }}
-    }{% if not loop.last %},{% endif %}
-    {% endfor %}
-  ]
-}
+          "files": [
+          {% for file in data %}
+          {
+            "path": {{ file.path | tojson }},
+            "content": {{ file.content | tojson }}
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]}
 {% endmacro %}

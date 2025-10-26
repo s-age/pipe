@@ -41,7 +41,7 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
   * **Language Support:** Allows specifying the language for agent responses.
   * **YOLO Mode:** Automatically accept all actions (aka YOLO mode, see [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0) for more details).
   * **In-Session Todos:** Manage a simple todo list directly within the session's metadata.
-  * **Advanced Agent-driven Compression:**
+  * **Advanced Agent-driven Compression**:
     *   A specialized `Compresser` agent can perform **partial compression** on any session's history.
     *   Precisely control the compression by specifying a **turn range**, a **summarization policy** (what to keep), and a **target character count**.
     *   Before applying the compression, a `Reviewer` agent automatically **verifies** that the summarized history maintains a natural conversational flow, preventing context loss.
@@ -54,10 +54,10 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
 
 1. **Prerequisites:** Python 3.x and `gemini-cli` installed in your PATH.
     Python 3.12 or higher is required. For Python versions below 3.9, please use `gemini-cli` from the `python-3.9-deprecated` branch: [python-3.9-deprecated](https://github.com/s-age/pipe/tree/python-3.9-deprecated).
-2.  **Install Dependencies:** `pip3 install -r requirements.txt`
+2.  **Install Dependencies:** `pip install -e .`
 3.  **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
     *   For consistency with `.env.default`, add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
-    *   For CLI usage, ensure `GOOGLE_API_KEY` is set in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`) as `takt.py` expects this variable.
+    *   For CLI usage, ensure `GOOGLE_API_KEY` is set in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`) as `takt` expects this variable.
 
 ## Integration with `gemini-cli` (One-Time Setup)
 
@@ -66,7 +66,7 @@ To use advanced features like agent-driven **Compression** and session **Forking
 Execute the following command once:
 
 ```bash
-gemini mcp add pipe_tools "python /path/to/pipe/mcp_server.py"
+gemini mcp add pipe_tools "python -m pipe.cli.mcp_server" --working-dir /path/to/pipe
 ```
 *(Replace `/path/to/pipe` with the actual absolute path to this project's directory.)*
 
@@ -93,9 +93,9 @@ This route is ideal for **automation, scripting, and CLI-focused developers** wh
 
 ```bash
 # Start New Session Example
-python3 takt.py --purpose "Create a new React component" --background "..." --roles "roles/engineer.md" --instruction "Create a 'UserProfile' component."
+takt --purpose "Create a new React component" --background "..." --roles "roles/engineer.md" --instruction "Create a 'UserProfile' component."
 
-python3 takt.py --session <SESSION_ID> --instruction "Now, add a state for loading."
+takt --session <SESSION_ID> --instruction "Now, add a state for loading."
 ```
 
 ### 2. Route 2: Web UI (Management & Human-in-the-Loop)
@@ -113,7 +113,7 @@ This is best for users seeking **intuitive visual management** and **direct mani
 **Example (Start Server):**
 
 ```bash
-python3 app.py
+flask --app pipe.web.app run --host=0.0.0.0 --port=5001
 ```
 
 *(Navigate to `http://127.0.0.1:5001` in your browser)*
@@ -133,7 +133,7 @@ This is for **advanced AI system builders** leveraging **pipe's** full context c
 > **[IMPORTANT] The following command examples are not intended to be executed directly in the user's terminal. They are used as instructions to an already launched parent agent (such as Gemini) to assign the Conductor role and delegate tasks.**
 
 ```bash
-Act as @roles/conductor.md python3 takt.py --session <SESSION_ID> --instruction "Now, add a state for loading."
+Act as @roles/conductor.md takt --session <SESSION_ID> --instruction "Now, add a state for loading."
 ```
 
 ### 4. Route 4: Agent-driven Workflows (Compression & Verification)
@@ -153,7 +153,7 @@ The `pipe` framework supports agent-driven meta-tasks like history management. T
 
 ```bash
 # Start a new session to manage other sessions
-python3 takt.py --purpose "Compress a long-running session" --role "roles/compresser.md" --instruction "I want to compress session <TARGET_SESSION_ID>."
+takt --purpose "Compress a long-running session" --role "roles/compresser.md" --instruction "I want to compress session <TARGET_SESSION_ID>."
 ```
 
 The agent will then interactively guide you through the specification and verification process to perform the compression safely.
@@ -212,11 +212,11 @@ This single line of instruction causes the agent to initiate a game of Reversi, 
 
 ## Dry Run Output Example
 
-When running `takt.py` with the `--dry-run` flag, the generated JSON prompt is displayed. This JSON object represents the structured input that would be sent to the AI sub-agent. It can be useful for understanding how `pipe` constructs its prompts or for direct experimentation with AI models.
+When running `takt` with the `--dry-run` flag, the generated JSON prompt is displayed. This JSON object represents the structured input that would be sent to the AI sub-agent. It can be useful for understanding how `pipe` constructs its prompts or for direct experimentation with AI models.
 
 Here's an example of a generated prompt:
 
-Note that the JSON presented here is pretty-printed for readability; the actual output from `takt.py --dry-run` is a single-line JSON string.
+Note that the JSON presented here is pretty-printed for readability; the actual output from `takt --dry-run` is a single-line JSON string.
 
 ```json
 {
@@ -258,7 +258,8 @@ Note that the JSON presented here is pretty-printed for readability; the actual 
   },
   "main_instruction": {
     "description": "When you receive JSON data, process your thoughts according to the following",
-    "flowchart": "```mermaid\ngraph TD\n    A[\"Start\"] --> B[\"Step 1: Identify Task from 'current_task'\"];\n    B --> C[\"Step 2: Gather Context (History & Constraints)\"];\n    C --> D[\"Step 3: Summarize Context & Plan\"];\n    D --> E{\"Decision: Does the task require external information or actions (e.g., web search, file access, URL fetching, shell commands)?\"};\n    E -- YES --> F[\"Step 4a: Execute Tool\"];\n    E -- NO --> G[\"Step 4b: Execute Thinking Process (Conditionally Advanced)\"];\n    F --> G;\n    G --> H[\"Step 5: Generate Final Response\"];\n    H --> I[\"End\"];\n```"
+    "flowchart": "```mermaid\ngraph TD\n    A[\"Start\"] --> B[\"Step 1: Identify Task from 'current_task'\"];\n    B --> C[\"Step 2: Gather Context (History & Constraints)\"];\n    C --> D[\"Step 3: Summarize Context & Plan\"];\n    D --> E{\"Decision: Does the task require external information or actions (e.g., web search, file access, URL fetching, shell commands)?\"};
+    E -- YES --> F[\"Step 4a: Execute Tool\"];\n    E -- NO --> G[\"Step 4b: Execute Thinking Process (Conditionally Advanced)\"];\n    F --> G;\n    G --> H[\"Step 5: Generate Final Response\"];\n    H --> I[\"End\"];\n```"
   },
   "conversation_history": {
     "description": "Historical record of past interactions in this session, in chronological order.",
@@ -309,7 +310,9 @@ Note that the JSON presented here is pretty-printed for readability; the actual 
   },
   "reasoning_process": {
     "description": "The detailed, multi-step internal thinking process...",
-    "flowchart": "```mermaid\ngraph TD\n    A([\"Start: JSON Input\"]) --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Derive general principles behind the task (Step-Back)\"];\n    C --> D[\"Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    D --> E[\"Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context\"];\n    E --> F[\"Step 5: Based on the summarized information, think and plan for response generation\"];\n    F --> G{\"Decision: Are there any contradictions or leaps in logic?\"};\n    G -- NO --> E;\n    G -- YES --> H[\"Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)\"];\n    H --> I[\"Step 7: Generate the final response based on the plan\"];\n    I --> J{\"Decision: Does it meet the initial requirements (format/purpose)?\"};\n    J -- NO --> F;\n    J -- YES --> K([\"End: Output Response\"]);\n```"
+    "flowchart": "```mermaid\ngraph TD\n    A([\"Start: JSON Input\"]) --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Derive general principles behind the task (Step-Back)\"];\n    C --> D[\"Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    D --> E[\"Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context\"];\n    E --> F[\"Step 5: Based on the summarized information, think and plan for response generation\"];\n    F --> G{\"Decision: Are there any contradictions or leaps in logic?\"};
+    G -- NO --> E;\n    G -- YES --> H[\"Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)\"];\n    H --> I[\"Step 7: Generate the final response based on the plan\"];\n    I --> J{\"Decision: Does it meet the initial requirements (format/purpose)?\"};
+    J -- NO --> F;\n    J -- YES --> K([\"End: Output Response\"]);\n```"
   }
 }
 ```

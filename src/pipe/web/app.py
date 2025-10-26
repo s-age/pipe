@@ -321,6 +321,13 @@ def send_instruction_api(session_id):
         if not session_data:
             return jsonify({"success": False, "message": "Session not found."} ), 404
         
+        # Pre-flight check for pool size before starting the subprocess
+        if session_data.pools and len(session_data.pools) >= 7:
+            error_message = f"Too many tasks in the processing pool (limit is 7). Please wait for the current tasks to complete before adding a new one."
+            def error_generate():
+                yield f"data: {json.dumps({'error': error_message})}\n\n"
+            return Response(stream_with_context(error_generate()), mimetype='text/event-stream', status=400)
+
         enable_multi_step_reasoning = session_data.multi_step_reasoning_enabled
 
         # Use sys.executable to ensure the command runs with the same Python interpreter

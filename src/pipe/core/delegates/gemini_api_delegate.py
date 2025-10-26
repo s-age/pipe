@@ -136,7 +136,11 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
         if isinstance(tool_result, dict) and 'error' in tool_result and tool_result['error'] != '(none)':
             formatted_response = {"status": "failed", "message": tool_result['error']}
         else:
-            message_content = tool_result.get('message') if isinstance(tool_result, dict) and 'message' in tool_result else tool_result
+            # Handle different successful tool return formats
+            if isinstance(tool_result, dict):
+                message_content = tool_result.get('message', tool_result.get('content', tool_result))
+            else:
+                message_content = tool_result
             formatted_response = {"status": "succeeded", "message": message_content}
 
         status_markdown = f"```\nTool status: {formatted_response['status']}\n```\n"

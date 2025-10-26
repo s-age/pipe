@@ -6,7 +6,7 @@ import tempfile
 import shutil
 
 from pipe.core.services.session_service import SessionService
-from pipe.core.gemini_cli import call_gemini_cli
+from pipe.core.agents.gemini_cli import call_gemini_cli
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
 
@@ -43,7 +43,7 @@ class TestGeminiCliIntegration(unittest.TestCase):
         """Clean up the temporary sessions directory."""
         shutil.rmtree(self.temp_sessions_dir)
 
-    @patch('pipe.core.gemini_cli.subprocess.Popen')
+    @patch('pipe.core.agents.gemini_cli.subprocess.Popen')
     def test_call_gemini_cli_with_real_session_service(self, mock_popen):
         """
         Tests that call_gemini_cli works correctly with a real, prepared SessionService instance.

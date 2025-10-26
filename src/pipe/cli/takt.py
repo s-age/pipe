@@ -17,8 +17,8 @@ import inspect
 from pipe.core.services.session_service import SessionService
 from pipe.core.models.session import Session, Reference
 from pipe.core.models.turn import UserTaskTurn, ModelResponseTurn, FunctionCallingTurn, ToolResponseTurn, Turn
-from pipe.core.gemini_api import call_gemini_api, load_tools
-from pipe.core.gemini_cli import call_gemini_cli
+from pipe.core.agents.gemini_api import call_gemini_api, load_tools
+from pipe.core.agents.gemini_cli import call_gemini_cli
 from pipe.core.token_manager import TokenManager
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.dispatcher import dispatch_run

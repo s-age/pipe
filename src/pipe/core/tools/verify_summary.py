@@ -3,8 +3,8 @@ import os
 from typing import Dict, Any
 
 from pipe.core.models.settings import Settings
-from pipe.core.gemini_api import call_gemini_api
-from pipe.core.gemini_cli import call_gemini_cli
+from pipe.core.agents.gemini_api import call_gemini_api
+from pipe.core.agents.gemini_cli import call_gemini_cli
 
 def verify_summary(
     session_id: str, # This is the ID of the session being summarized

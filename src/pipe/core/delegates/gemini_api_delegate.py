@@ -7,7 +7,7 @@ from pipe.core.models.session import Session
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.models.turn import FunctionCallingTurn, ToolResponseTurn, ModelResponseTurn
-from pipe.core.gemini_api import call_gemini_api
+from pipe.core.agents.gemini_api import call_gemini_api
 from pipe.core.utils.datetime import get_current_timestamp
 
 def execute_tool_call(tool_call, session_service, session_id, settings, project_root):

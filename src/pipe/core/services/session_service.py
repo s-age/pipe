@@ -209,10 +209,10 @@ class SessionService:
         collection.update(session_id, purpose=session.purpose)
         collection.save()
 
-    def update_references(self, session_id: str, references: List[Reference]):
+    def update_references(self, session_id: str, references: list):
         session = self._fetch_session(session_id)
         if session:
-            session.references = references
+            session.references = [Reference(**ref) for ref in references]
             self._save_session(session)
 
     def add_references(self, session_id: str, file_paths: list[str]):
@@ -241,7 +241,8 @@ class SessionService:
     def update_todos(self, session_id: str, todos: list):
         session = self._fetch_session(session_id)
         if session:
-            session.todos = todos
+            from pipe.core.models.todo import TodoItem
+            session.todos = [TodoItem(**todo) for todo in todos]
             self._save_session(session)
 
     def delete_todos(self, session_id: str):

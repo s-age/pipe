@@ -13,13 +13,13 @@ def search_file_content(
         compiled_pattern = re.compile(pattern)
         project_root = os.getcwd()
 
-        search_path = project_root
-        if path:
-            abs_path = os.path.join(project_root, path)
-            if not os.path.isdir(abs_path):
-                return {"content": f"Error: Search path '{path}' is not a directory."}
-            search_path = abs_path
+        search_path = path if path else project_root
+        if not os.path.isabs(search_path):
+            search_path = os.path.abspath(os.path.join(project_root, search_path))
 
+        if not os.path.isdir(search_path):
+            return {"content": f"Error: Search path '{path}' is not a directory."}
+            
         # Use glob to find files, filtered by include pattern if provided
         if include:
             glob_pattern = os.path.join(search_path, include)
@@ -35,7 +35,7 @@ def search_file_content(
                         for line_num, line in enumerate(f, 1):
                             if compiled_pattern.search(line):
                                 matches.append({
-                                    "file_path": os.path.relpath(filepath, project_root),
+                                    "file_path": os.path.relpath(filepath, search_path),
                                     "line_number": line_num,
                                     "line_content": line.strip()
                                 })

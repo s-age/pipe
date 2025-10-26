@@ -3,13 +3,17 @@ import os
 from typing import Dict
 import difflib
 
-def write_file(file_path: str, content: str) -> Dict[str, str]:
+def write_file(file_path: str, content: str, project_root: str = None) -> Dict[str, str]:
     """
     Writes content to a specified file.
     """
     try:
         target_path = os.path.abspath(file_path)
-        project_root = os.path.abspath(os.getcwd())
+        
+        if project_root:
+            project_root = os.path.abspath(project_root)
+        else:
+            project_root = os.path.abspath(os.getcwd())
 
         # Filesystem Safety Check
         BLOCKED_PATHS = [

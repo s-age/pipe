@@ -22,6 +22,7 @@ from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
 from pipe.core.collections.sessions import SessionCollection
 from pipe.core.collections.turns import TurnCollection
+from pipe.core.collections.references import ReferenceCollection
 
 class SessionService:
     def __init__(self, project_root: str, settings: Settings):
@@ -85,7 +86,7 @@ class SessionService:
         """Loads and returns the latest session collection from disk."""
         return SessionCollection(self.index_path, self.timezone_obj)
 
-    def prepare_session_for_takt(self, args: TaktArgs):
+    def prepare_session_for_takt(self, args: TaktArgs, is_dry_run: bool = False):
         session_id = args.session
         if session_id:
             session_id = session_id.strip().rstrip('.')
@@ -108,27 +109,25 @@ class SessionService:
                 parent_id=args.parent
             )
             
-            first_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(self.timezone_obj))
-            self.add_turn_to_session(session_id, first_turn)
+            if not is_dry_run:
+                first_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(self.timezone_obj))
+                self.add_turn_to_session(session_id, first_turn)
             
             print(f"Conductor Agent: Creating new session...\nNew session created: {session_id}", file=sys.stderr)
             session = self.get_session(session_id)
         
         else:  # Existing session
-            new_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(self.timezone_obj))
-            self.add_turn_to_session(session_id, new_turn)
+            if not is_dry_run:
+                new_turn = UserTaskTurn(type="user_task", instruction=args.instruction, timestamp=get_current_timestamp(self.timezone_obj))
+                self.add_turn_to_session(session_id, new_turn)
             print(f"Conductor Agent: Continuing session: {session_id}", file=sys.stderr)
             session = self.get_session(session_id)
 
         if args.references:
-            references = [Reference(path=ref.strip(), disabled=False) for ref in args.references if ref.strip()]
-            existing_paths = {ref.path for ref in session.references}
-            new_references = [ref for ref in references if ref.path not in existing_paths]
-            
-            if new_references:
-                self.add_references(session_id, [ref.path for ref in new_references])
-                session.references.extend(new_references)
-                print(f"Added {len(new_references)} new references to session {session_id}.", file=sys.stderr)
+            for ref_path in args.references:
+                if ref_path.strip():
+                    self.add_reference_to_session(session_id, ref_path.strip())
+            session = self.get_session(session_id) # Re-fetch session to get updated references
 
         self.current_session = session
         self.current_session_id = session_id
@@ -151,6 +150,11 @@ class SessionService:
         os.makedirs(self.backups_dir, exist_ok=True)
 
     def _save_session(self, session: Session):
+        if session.references:
+            # Delegate sorting to the ReferenceCollection
+            ref_collection = ReferenceCollection(session.references)
+            ref_collection.sort_by_ttl()
+
         session_path = self._get_session_path(session.session_id)
         session_lock_path = self._get_session_lock_path(session.session_id)
         session.save(session_path, session_lock_path)
@@ -216,28 +220,37 @@ class SessionService:
             session.references = [Reference(**r) if isinstance(r, dict) else r for r in references]
             self._save_session(session)
 
-    def add_references(self, session_id: str, file_paths: list[str]):
+    def add_reference_to_session(self, session_id: str, file_path: str):
         session = self._fetch_session(session_id)
         if not session:
-            raise ValueError(f"Session ID '{session_id}' not found.")
+            return
+        
+        abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
+        if not os.path.isfile(abs_path):
+            print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
+            return
 
-        existing_paths = {ref.path for ref in session.references}
-        added_count = 0
-        for file_path in file_paths:
-            # Resolve the path relative to the project root
-            abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
-            if not os.path.isfile(abs_path):
-                print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
-                continue
+        ref_collection = ReferenceCollection(session.references)
+        ref_collection.add(file_path)
+        self._save_session(session)
 
-            # Store the original, relative path in the reference object
-            if file_path not in existing_paths:
-                session.references.append(Reference(path=file_path, disabled=False))
-                existing_paths.add(file_path)
-                added_count += 1
+    def update_reference_ttl_in_session(self, session_id: str, file_path: str, new_ttl: int):
+        session = self._fetch_session(session_id)
+        if not session:
+            return
+        
+        ref_collection = ReferenceCollection(session.references)
+        ref_collection.update_ttl(file_path, new_ttl)
+        self._save_session(session)
 
-        if added_count > 0:
-            self._save_session(session)
+    def decrement_all_references_ttl_in_session(self, session_id: str):
+        session = self._fetch_session(session_id)
+        if not session:
+            return
+        
+        ref_collection = ReferenceCollection(session.references)
+        ref_collection.decrement_all_ttl()
+        self._save_session(session)
 
     def update_todos(self, session_id: str, todos: list):
         session = self._fetch_session(session_id)

@@ -549,11 +549,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     li.style.marginBottom = '10px';
                     const textDecoration = ref.disabled ? 'line-through' : 'none';
                     const color = ref.disabled ? '#888' : 'inherit';
+                    const ttl = ref.ttl !== null ? ref.ttl : 3;
+
                     li.innerHTML = `
-                        <label>
-                            <input type="checkbox" class="reference-checkbox" data-index="${index}" ${!ref.disabled ? 'checked' : ''}>
-                            <span style="text-decoration: ${textDecoration}; color: ${color};">${ref.path}</span>
-                        </label>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <label style="cursor: pointer; display: flex; align-items: center; flex-grow: 1;">
+                                <input type="checkbox" class="reference-checkbox" data-index="${index}" ${!ref.disabled ? 'checked' : ''} style="margin-right: 8px;">
+                                <span style="word-break: break-all; text-decoration: ${textDecoration}; color: ${color};">${ref.path}</span>
+                            </label>
+                            <div class="ttl-controls" style="display: flex; align-items: center; margin-left: 10px;">
+                                <button class="ttl-btn" data-index="${index}" data-action="decrement">-</button>
+                                <span class="ttl-value" style="padding: 0 8px; font-weight: bold;">${ttl}</span>
+                                <button class="ttl-btn" data-index="${index}" data-action="increment">+</button>
+                            </div>
+                        </div>
                     `;
                     referencesList.appendChild(li);
                 });
@@ -775,14 +784,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('toggle-references-btn')?.addEventListener('click', function() {
-        const sessionId = document.getElementById('current-session-id').value;
-        let references = sessionData.references || [];
-        const shouldCheckAll = references.some(ref => ref.disabled);
-        references.forEach(ref => ref.disabled = !shouldCheckAll);
-        saveReferences(sessionId, references, true); // Pass true to reload
-    });
-
     function saveReferences(sessionId, references, reload = false) {
         const payload = { references };
 
@@ -805,5 +806,56 @@ document.addEventListener('DOMContentLoaded', function() {
             handleError(error);
             window.location.reload();
         });
+    }
+
+    document.getElementById('meta-column')?.addEventListener('click', function(event) {
+        if (event.target.classList.contains('ttl-btn')) {
+            const button = event.target;
+            const index = parseInt(button.dataset.index, 10);
+            const action = button.dataset.action;
+            const sessionId = document.getElementById('current-session-id').value;
+            
+            const ttlSpan = button.parentElement.querySelector('.ttl-value');
+            let currentTtl = parseInt(ttlSpan.textContent, 10);
+
+            let newTtl;
+            if (action === 'increment') {
+                newTtl = currentTtl + 1;
+            } else {
+                newTtl = Math.max(0, currentTtl - 1); // TTL cannot be negative
+            }
+
+            updateReferenceTtl(sessionId, index, newTtl, ttlSpan);
+        }
+    });
+
+    function updateReferenceTtl(sessionId, index, newTtl, ttlSpanElement) {
+        fetch(`/api/session/${sessionId}/references/ttl/${index}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ttl: newTtl })
+        })
+        .then(handleResponse)
+        .then(data => {
+            if (data.success) {
+                ttlSpanElement.textContent = newTtl;
+                // Also update the disabled state visually if TTL becomes 0
+                const listItem = ttlSpanElement.closest('li');
+                const checkbox = listItem.querySelector('.reference-checkbox');
+                const span = listItem.querySelector('span[style*="word-break"]');
+                if (newTtl === 0) {
+                    checkbox.checked = false;
+                    span.style.textDecoration = 'line-through';
+                    span.style.color = '#888';
+                } else {
+                    checkbox.checked = true;
+                    span.style.textDecoration = 'none';
+                    span.style.color = 'inherit';
+                }
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(handleError);
     }
 });

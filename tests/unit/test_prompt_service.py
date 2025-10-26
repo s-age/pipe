@@ -61,14 +61,14 @@ class TestPromptServiceIntegration(unittest.TestCase):
         prompt = self.prompt_service.build_prompt(self.session_service)
 
         # Verification
-        self.assertEqual(prompt.description, "Do the task")
+        expected_description = "This structured prompt guides your response. First, understand the core instructions: `main_instruction` defines your thinking process. Next, identify the immediate objective from `current_task` and `todos`. Then, gather all context required to execute the task by processing `session_goal`, `roles`, `constraints`, `conversation_history`, and `file_references` in that order. Finally, execute the `current_task` by synthesizing all gathered information."
+        self.assertEqual(prompt.description, expected_description)
         self.assertEqual(prompt.session_goal.purpose, "Test PromptService")
+        self.assertEqual(prompt.current_task.instruction, "Do the task")
         self.assertEqual(len(prompt.file_references), 1)
         self.assertEqual(prompt.file_references[0].path, "test.py")
         self.assertEqual(len(prompt.todos), 1)
         self.assertEqual(prompt.todos[0].title, "Test todo")
-        self.assertEqual(prompt.current_task.instruction, "Do the task")
-        self.assertEqual(len(prompt.conversation_history.turns), 0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -92,7 +92,7 @@ class PromptService:
         # 4. Assemble the final Prompt object
         prompt_data = {
             "current_datetime": get_current_timestamp(zoneinfo.ZoneInfo(settings.timezone)),
-            "description": current_instruction,
+            "description": "This structured prompt guides your response. First, understand the core instructions: `main_instruction` defines your thinking process. Next, identify the immediate objective from `current_task` and `todos`. Then, gather all context required to execute the task by processing `session_goal`, `roles`, `constraints`, `conversation_history`, and `file_references` in that order. Finally, execute the `current_task` by synthesizing all gathered information.",
             "session_goal": PromptSessionGoal(
                 description="This section outlines the goal of the current session.",
                 purpose=session_data.purpose,

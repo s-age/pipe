@@ -70,7 +70,7 @@ class TestReferenceCollection(unittest.TestCase):
         prompt_data = list(collection.get_for_prompt(self.project_root.name))
         
         # It should only return the valid file within the project root
-        self.assertEqual(len(prompt_data), 1)
+        self.assertEqual(len(prompt_data), 1, "Should ignore files outside the project root.")
         self.assertEqual(prompt_data[0]['path'], os.path.relpath(self.file1_path, self.project_root.name))
 
     def test_get_for_prompt_handles_nonexistent_files_gracefully(self):
@@ -103,6 +103,81 @@ class TestReferenceCollection(unittest.TestCase):
         
         self.assertEqual(len(prompt_data), 1)
         self.assertEqual(prompt_data[0]['path'], os.path.relpath(self.file1_path, self.project_root.name))
+
+class TestReferenceCollectionTTL(unittest.TestCase):
+
+    def test_add_new_reference(self):
+        references = []
+        collection = ReferenceCollection(references)
+        collection.add("new_file.txt")
+        self.assertEqual(len(references), 1)
+        self.assertEqual(references[0].path, "new_file.txt")
+        self.assertEqual(references[0].ttl, 3)
+        self.assertFalse(references[0].disabled)
+
+    def test_add_existing_reference(self):
+        references = [Reference(path="existing.txt", disabled=True, ttl=0)]
+        collection = ReferenceCollection(references)
+        collection.add("existing.txt")
+        self.assertEqual(len(references), 1) # Should not add a duplicate
+        self.assertEqual(references[0].ttl, 0) # Should not modify existing
+
+    def test_update_ttl(self):
+        references = [Reference(path="file.txt", disabled=True, ttl=0)]
+        collection = ReferenceCollection(references)
+        
+        # Update TTL to a positive value
+        collection.update_ttl("file.txt", 5)
+        self.assertEqual(references[0].ttl, 5)
+        self.assertFalse(references[0].disabled)
+
+        # Update TTL to zero
+        collection.update_ttl("file.txt", 0)
+        self.assertEqual(references[0].ttl, 0)
+        self.assertTrue(references[0].disabled)
+
+    def test_decrement_all_ttl(self):
+        references = [
+            Reference(path="file1.txt", disabled=False, ttl=3),
+            Reference(path="file2.txt", disabled=False, ttl=1),
+            Reference(path="file3.txt", disabled=False, ttl=None), # Should be treated as 3
+            Reference(path="file4.txt", disabled=True, ttl=5), # Should be ignored
+        ]
+        collection = ReferenceCollection(references)
+        collection.decrement_all_ttl()
+
+        self.assertEqual(references[0].ttl, 2)
+        self.assertFalse(references[0].disabled)
+
+        self.assertEqual(references[1].ttl, 0)
+        self.assertTrue(references[1].disabled)
+
+        self.assertEqual(references[2].ttl, 2)
+        self.assertFalse(references[2].disabled)
+        
+        self.assertEqual(references[3].ttl, 5) # Ignored
+        self.assertTrue(references[3].disabled)
+
+    def test_sort_by_ttl(self):
+        references = [
+            Reference(path="disabled_low_ttl.txt", disabled=True, ttl=1),
+            Reference(path="active_low_ttl.txt", disabled=False, ttl=2),
+            Reference(path="active_high_ttl.txt", disabled=False, ttl=5),
+            Reference(path="active_none_ttl.txt", disabled=False, ttl=None), # Treated as 3
+            Reference(path="disabled_high_ttl.txt", disabled=True, ttl=10),
+        ]
+        collection = ReferenceCollection(references)
+        collection.sort_by_ttl()
+
+        paths = [ref.path for ref in references]
+        expected_order = [
+            "active_high_ttl.txt",
+            "active_none_ttl.txt",
+            "active_low_ttl.txt",
+            "disabled_high_ttl.txt",
+            "disabled_low_ttl.txt",
+        ]
+        self.assertEqual(paths, expected_order)
 
 if __name__ == '__main__':
     unittest.main()

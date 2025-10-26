@@ -2,7 +2,7 @@ import unittest
 import os
 import tempfile
 import shutil
-
+from unittest.mock import MagicMock, patch
 from pipe.core.tools.read_file import read_file
 from pipe.core.services.session_service import SessionService
 from pipe.core.models.settings import Settings
@@ -64,6 +64,24 @@ class TestReadFileTool(unittest.TestCase):
 
         self.assertIn("error", result)
         self.assertIn("File not found", result["error"])
+
+    def test_read_file_calls_correct_session_service_methods(self):
+        """
+        Tests that read_file calls the correct service methods for adding and updating a reference.
+        """
+        mock_session_service = MagicMock(spec=SessionService)
+        
+        # Make os.path.getsize return a non-zero value
+        with patch('os.path.getsize', return_value=10):
+            read_file(
+                absolute_path=self.test_file_path,
+                session_service=mock_session_service,
+                session_id="mock_session_id"
+            )
+
+        # Verify that the correct methods were called in order
+        mock_session_service.add_reference_to_session.assert_called_once_with("mock_session_id", self.test_file_path)
+        mock_session_service.update_reference_ttl_in_session.assert_called_once_with("mock_session_id", self.test_file_path, 3)
 
 if __name__ == '__main__':
     unittest.main()

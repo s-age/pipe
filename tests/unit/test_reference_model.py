@@ -1,4 +1,5 @@
 import unittest
+from pydantic import ValidationError
 from pipe.core.models.reference import Reference
 
 class TestReferenceModel(unittest.TestCase):
@@ -9,16 +10,17 @@ class TestReferenceModel(unittest.TestCase):
         """
         ref_data = {
             "path": "src/main.py",
-            "disabled": True
+            "disabled": True,
+            "ttl": 5
         }
         reference = Reference(**ref_data)
         self.assertEqual(reference.path, "src/main.py")
         self.assertTrue(reference.disabled)
+        self.assertEqual(reference.ttl, 5)
 
     def test_reference_creation_with_defaults(self):
         """
-        Tests that a Reference object uses the default value for 'disabled'
-        when it is not provided.
+        Tests that a Reference object uses default values for 'disabled' and 'ttl'.
         """
         ref_data = {
             "path": "README.md"
@@ -26,6 +28,20 @@ class TestReferenceModel(unittest.TestCase):
         reference = Reference(**ref_data)
         self.assertEqual(reference.path, "README.md")
         self.assertFalse(reference.disabled, "The 'disabled' field should default to False")
+        self.assertIsNone(reference.ttl, "The 'ttl' field should default to None")
+
+    def test_reference_ttl_validation(self):
+        """
+        Tests that the 'ttl' field only accepts integers.
+        """
+        # Valid cases
+        Reference(path="a.txt", ttl=10)
+        Reference(path="b.txt", ttl=0)
+        Reference(path="c.txt", ttl=None)
+
+        # Invalid case
+        with self.assertRaises(ValidationError):
+            Reference(path="d.txt", ttl="not-an-integer")
 
 if __name__ == '__main__':
     unittest.main()

@@ -83,8 +83,10 @@ class TestGeminiCliIntegration(unittest.TestCase):
         prompt_string = command[command.index('-p') + 1]
         prompt_data = json.loads(prompt_string)
         
+        expected_description = "This structured prompt guides your response. First, understand the core instructions: `main_instruction` defines your thinking process. Next, identify the immediate objective from `current_task` and `todos`. Then, gather all context required to execute the task by processing `session_goal`, `roles`, `constraints`, `conversation_history`, and `file_references` in that order. Finally, execute the `current_task` by synthesizing all gathered information."
+        
         self.assertEqual(prompt_data['session_goal']['purpose'], "Test CLI call")
-        self.assertEqual(prompt_data['description'], "Test instruction")
+        self.assertEqual(prompt_data['description'], expected_description)
         self.assertEqual(prompt_data['current_task']['instruction'], "Test instruction")
 
 if __name__ == '__main__':

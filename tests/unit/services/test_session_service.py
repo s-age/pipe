@@ -83,7 +83,7 @@ class TestSessionService(unittest.TestCase):
         with open(ref_path, "w") as f: f.write("ref content")
 
         # Add a reference
-        self.session_service.add_references(session_id, ["ref1.txt"])
+        self.session_service.add_reference_to_session(session_id, "ref1.txt")
         session = self.session_service.get_session(session_id)
         self.assertEqual(len(session.references), 1)
         self.assertEqual(session.references[0].path, "ref1.txt")
@@ -165,6 +165,75 @@ class TestSessionService(unittest.TestCase):
         
         with self.assertRaises(ValueError):
             self.session_service.fork_session(session_id, fork_index=0)
+
+    def test_add_reference_to_session(self):
+        """Tests that add_reference_to_session adds new but not duplicate references."""
+        session_id = self.session_service.create_new_session("Test", "BG", [])
+        ref_path = os.path.join(self.project_root, "ref.txt")
+        with open(ref_path, "w") as f: f.write("content")
+
+        # Add new reference
+        self.session_service.add_reference_to_session(session_id, "ref.txt")
+        session = self.session_service.get_session(session_id)
+        self.assertEqual(len(session.references), 1)
+        self.assertEqual(session.references[0].path, "ref.txt")
+        self.assertEqual(session.references[0].ttl, 3)
+
+        # Try to add the same reference again
+        self.session_service.add_reference_to_session(session_id, "ref.txt")
+        session = self.session_service.get_session(session_id)
+        self.assertEqual(len(session.references), 1) # Should not add duplicate
+
+    def test_update_reference_ttl_in_session(self):
+        """Tests updating the TTL for a reference."""
+        session_id = self.session_service.create_new_session("Test", "BG", [])
+        ref_path = os.path.join(self.project_root, "ref.txt")
+        with open(ref_path, "w") as f: f.write("content")
+        self.session_service.add_reference_to_session(session_id, "ref.txt")
+
+        # Update TTL
+        self.session_service.update_reference_ttl_in_session(session_id, "ref.txt", 5)
+        session = self.session_service.get_session(session_id)
+        self.assertEqual(session.references[0].ttl, 5)
+        self.assertFalse(session.references[0].disabled)
+
+        # Update TTL to 0
+        self.session_service.update_reference_ttl_in_session(session_id, "ref.txt", 0)
+        session = self.session_service.get_session(session_id)
+        self.assertEqual(session.references[0].ttl, 0)
+        self.assertTrue(session.references[0].disabled)
+
+    def test_save_session_sorts_references(self):
+        """Tests that _save_session correctly sorts references by TTL."""
+        from pipe.core.models.reference import Reference
+        session_id = self.session_service.create_new_session("Test", "BG", [])
+        session = self.session_service.get_session(session_id)
+        session.references = [
+            Reference(path="ref1.txt", disabled=False, ttl=2),
+            Reference(path="ref2.txt", disabled=True, ttl=5),
+            Reference(path="ref3.txt", disabled=False, ttl=None), # treated as 3
+            Reference(path="ref4.txt", disabled=False, ttl=5),
+        ]
+        self.session_service._save_session(session)
+
+        # Re-fetch and check order
+        saved_session = self.session_service.get_session(session_id)
+        paths = [ref.path for ref in saved_session.references]
+        expected_order = ["ref4.txt", "ref3.txt", "ref1.txt", "ref2.txt"]
+        self.assertEqual(paths, expected_order)
+
+    def test_prepare_session_for_takt_dry_run(self):
+        """Tests that prepare_session_for_takt does not add a turn in dry_run mode."""
+        from pipe.core.models.args import TaktArgs
+        args = TaktArgs(purpose="Test", background="BG", instruction="Dry run task")
+        
+        # Call with is_dry_run = True
+        self.session_service.prepare_session_for_takt(args, is_dry_run=True)
+        session_id = self.session_service.current_session_id
+        session = self.session_service.get_session(session_id)
+
+        # The session is created, but the initial turn is NOT added
+        self.assertEqual(len(session.turns), 0)
 
 if __name__ == '__main__':
     unittest.main()

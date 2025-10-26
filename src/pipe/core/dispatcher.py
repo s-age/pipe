@@ -27,6 +27,9 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         dry_run_delegate.run(session_service, prompt_service)
         return
 
+    # Decrement TTL for all active references before calling the delegate
+    session_service.decrement_all_references_ttl_in_session(session_id)
+
     token_count = 0
     turns_to_save = []
 
@@ -66,7 +69,7 @@ def dispatch(args: TaktArgs, session_service: SessionService, parser: argparse.A
         fork_delegate.run(args, session_service)
     
     elif args.instruction:
-        session_service.prepare_session_for_takt(args)
+        session_service.prepare_session_for_takt(args, is_dry_run=args.dry_run)
         _dispatch_run(args, session_service)
 
     else:

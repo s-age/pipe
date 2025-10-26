@@ -11,14 +11,17 @@ from .prompts.todo import PromptTodo
 
 # Top-level model corresponding to gemini_api_prompt.j2
 class Prompt(BaseModel):
-    current_datetime: str
+    # Core instructions and immediate task
     description: str
+    main_instruction: str
+    reasoning_process: Optional[Dict[str, Any]] = None
+    current_task: PromptCurrentTask
+    todos: Optional[List[PromptTodo]] = None
+    
+    # Contextual information
+    current_datetime: str
     session_goal: PromptSessionGoal
     roles: PromptRoles
     constraints: PromptConstraints
-    main_instruction: str
     conversation_history: PromptConversationHistory
-    current_task: PromptCurrentTask
-    todos: Optional[List[PromptTodo]] = None
     file_references: Optional[List[PromptFileReference]] = None
-    reasoning_process: Optional[Dict[str, Any]] = None

@@ -55,19 +55,94 @@ class TestDispatcher(unittest.TestCase):
         dispatch(args, self.session_service, self.mock_parser)
         mock_help_run.assert_called_once_with(self.mock_parser)
 
-    @patch('pipe.core.delegates.dry_run_delegate.run')
-    @patch('pipe.core.delegates.gemini_api_delegate.run')
-    def test_dispatch_run_handles_dry_run(self, mock_gemini_run, mock_dry_run):
-        """Tests that _dispatch_run correctly routes to the dry_run_delegate."""
-        from pipe.core.dispatcher import _dispatch_run
-        
-        args = TaktArgs(instruction="Do something", dry_run=True, purpose="p", background="b")
-        self.session_service.prepare_session_for_takt(args) # Prepare the service state
-        
-        _dispatch_run(args, self.session_service)
-        
-        mock_dry_run.assert_called_once()
-        mock_gemini_run.assert_not_called()
+        @patch('pipe.core.delegates.dry_run_delegate.run')
 
-if __name__ == '__main__':
-    unittest.main()
+        @patch('pipe.core.delegates.gemini_api_delegate.run')
+
+        def test_dispatch_run_handles_dry_run(self, mock_gemini_run, mock_dry_run):
+
+            """Tests that _dispatch_run correctly routes to the dry_run_delegate."""
+
+            from pipe.core.dispatcher import _dispatch_run
+
+            
+
+            args = TaktArgs(instruction="Do something", dry_run=True, purpose="p", background="b")
+
+            self.session_service.prepare_session_for_takt(args, is_dry_run=True) # Prepare the service state
+
+            
+
+            _dispatch_run(args, self.session_service)
+
+            
+
+            mock_dry_run.assert_called_once()
+
+            mock_gemini_run.assert_not_called()
+
+    
+
+        @patch('pipe.core.delegates.gemini_api_delegate.run')
+
+        def test_dispatch_run_decrements_ttl(self, mock_gemini_run):
+
+            """Tests that _dispatch_run calls the TTL decrement method on a normal run."""
+
+            from pipe.core.dispatcher import _dispatch_run
+
+            
+
+            args = TaktArgs(instruction="Do something", purpose="p", background="b")
+
+            # Use a mock for session_service to easily assert calls
+
+            mock_session_service = MagicMock(spec=self.session_service)
+
+            mock_session_service.settings.api_mode = 'gemini-api'
+
+            
+
+            _dispatch_run(args, mock_session_service)
+
+            
+
+            mock_session_service.decrement_all_references_ttl_in_session.assert_called_once()
+
+            mock_gemini_run.assert_called_once()
+
+    
+
+        @patch('pipe.core.delegates.dry_run_delegate.run')
+
+        def test_dispatch_run_does_not_decrement_ttl_on_dry_run(self, mock_dry_run):
+
+            """Tests that _dispatch_run does NOT call the TTL decrement method on a dry run."""
+
+            from pipe.core.dispatcher import _dispatch_run
+
+            
+
+            args = TaktArgs(instruction="Do something", dry_run=True, purpose="p", background="b")
+
+            # Use a mock for session_service to easily assert calls
+
+            mock_session_service = MagicMock(spec=self.session_service)
+
+            
+
+            _dispatch_run(args, mock_session_service)
+
+            
+
+            mock_session_service.decrement_all_references_ttl_in_session.assert_not_called()
+
+            mock_dry_run.assert_called_once()
+
+    
+
+    if __name__ == '__main__':
+
+        unittest.main()
+
+    

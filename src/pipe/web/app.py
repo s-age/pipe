@@ -275,6 +275,29 @@ def edit_references_api(session_id):
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+@app.route('/api/session/<path:session_id>/references/ttl/<int:reference_index>', methods=['POST'])
+def edit_reference_ttl_api(session_id, reference_index):
+    try:
+        data = request.get_json()
+        new_ttl = data.get('ttl')
+
+        if new_ttl is None or not isinstance(new_ttl, int) or new_ttl < 0:
+            return jsonify({"success": False, "message": "A valid, non-negative integer 'ttl' is required."}), 400
+
+        session = session_service.get_session(session_id)
+        if not session:
+            return jsonify({"success": False, "message": "Session not found."}), 404
+
+        if not (0 <= reference_index < len(session.references)):
+            return jsonify({"success": False, "message": "Reference index out of range."}), 400
+
+        file_path = session.references[reference_index].path
+        session_service.update_reference_ttl_in_session(session_id, file_path, new_ttl)
+        
+        return jsonify({"success": True, "message": f"TTL for reference {reference_index} updated."}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
 @app.route('/api/session/<path:session_id>/todos', methods=['DELETE'])
 def delete_todos_api(session_id):
     try:

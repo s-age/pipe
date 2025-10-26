@@ -41,7 +41,8 @@ class TestPromptService(unittest.TestCase):
 
         prompt = self.prompt_service.build_prompt(self.session_service)
 
-        self.assertEqual(prompt.description, "Test Instruction")
+        expected_description = "This structured prompt guides your response. First, understand the core instructions: `main_instruction` defines your thinking process. Next, identify the immediate objective from `current_task` and `todos`. Then, gather all context required to execute the task by processing `session_goal`, `roles`, `constraints`, `conversation_history`, and `file_references` in that order. Finally, execute the `current_task` by synthesizing all gathered information."
+        self.assertEqual(prompt.description, expected_description)
         self.assertEqual(prompt.session_goal.purpose, "Test Purpose")
         self.assertEqual(prompt.session_goal.background, "Test BG")
         self.assertEqual(prompt.current_task.instruction, "Test Instruction")
@@ -163,6 +164,43 @@ class TestPromptService(unittest.TestCase):
         self.assertEqual(len(prompt.conversation_history.turns), 2) 
         self.assertEqual(prompt.conversation_history.turns[0]['instruction'], "First")
         self.assertEqual(prompt.conversation_history.turns[1]['content'], "First response")
+
+    def test_build_prompt_property_order(self):
+        """Tests that the prompt properties are in the correct logical (cognitive) order."""
+        # Setup a session with all optional components to ensure they are ordered correctly
+        ref_file_path = os.path.join(self.project_root, "ref.txt")
+        with open(ref_file_path, "w") as f: f.write("ref content")
+        args = TaktArgs(
+            purpose="Test Order", background="BG", instruction="Test Instruction",
+            references=["ref.txt"], multi_step_reasoning=True
+        )
+        self.session_service.prepare_session_for_takt(args)
+        session_id = self.session_service.current_session_id
+        todos = [TodoItem(title="My Todo", checked=False)]
+        self.session_service.update_todos(session_id, todos)
+        self.session_service.current_session = self.session_service.get_session(session_id)
+
+        prompt = self.prompt_service.build_prompt(self.session_service)
+        
+        # Pydantic's model_dump preserves field order from the model definition
+        prompt_dict = prompt.model_dump(exclude_none=True)
+        actual_order = list(prompt_dict.keys())
+
+        expected_order = [
+            "description",
+            "main_instruction",
+            "reasoning_process",
+            "current_task",
+            "todos",
+            "current_datetime",
+            "session_goal",
+            "roles",
+            "constraints",
+            "conversation_history",
+            "file_references"
+        ]
+        
+        self.assertEqual(actual_order, expected_order)
 
 if __name__ == '__main__':
     unittest.main()

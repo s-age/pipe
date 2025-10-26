@@ -17,9 +17,11 @@ from typing import get_type_hints, Union, get_args, List, Dict
 
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
-from pipe.core.prompt_builder import PromptBuilder
+from pipe.core.services.session_service import SessionService
+from pipe.core.services.prompt_service import PromptService
 from pipe.core.token_manager import TokenManager
 from pipe.core.utils.file import read_json_file
+from jinja2 import Environment, FileSystemLoader
 
 def load_tools(project_root: str) -> list:
     """
@@ -115,17 +117,32 @@ def load_tools(project_root: str) -> list:
     
     return tool_defs
 
-def call_gemini_api(settings: Settings, session_data: Session, project_root: str, instruction: str, api_mode: str, multi_step_reasoning_enabled: bool):
-    # (関数の前半部分は変更なし)
+def call_gemini_api(session_service: SessionService, prompt_service: PromptService):
+    settings = session_service.settings
+    session_data = session_service.current_session
+    project_root = session_service.project_root
+    multi_step_reasoning_enabled = session_data.multi_step_reasoning_enabled
+    
     token_manager = TokenManager(settings=settings)
 
-    builder = PromptBuilder(settings=settings, session_data=session_data, project_root=project_root, api_mode=api_mode, multi_step_reasoning_enabled=multi_step_reasoning_enabled)
+    # 1. Build the Prompt model using the service
+    prompt_model = prompt_service.build_prompt(session_service)
+
+    # 2. Render the Prompt model to a JSON string using the template
+    template_env = Environment(
+        loader=FileSystemLoader(os.path.join(prompt_service.project_root, 'templates', 'prompt')),
+        trim_blocks=True,
+        lstrip_blocks=True
+    )
+    template = template_env.get_template('gemini_api_prompt.j2')
     
-    api_contents = builder.build()
+    context = prompt_model.model_dump()
+    
+    api_contents_string = template.render(session=context)
 
     tools = load_tools(project_root)
 
-    token_count = token_manager.count_tokens(api_contents, tools=tools)
+    token_count = token_manager.count_tokens(api_contents_string, tools=tools)
     
     is_within_limit, message = token_manager.check_limit(token_count)
     print(f"Token Count: {message}", file=sys.stderr)
@@ -177,7 +194,7 @@ def call_gemini_api(settings: Settings, session_data: Session, project_root: str
 
     try:
         stream = client.models.generate_content_stream(
-            contents=api_contents,
+            contents=api_contents_string,
             config=config,
             model=token_manager.model_name
         )

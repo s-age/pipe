@@ -15,7 +15,6 @@ from pipe.core.models.session import Session
 from pipe.core.models.reference import Reference
 from pipe.core.models.turn import Turn, UserTaskTurn
 from pipe.core.models.hyperparameters import Hyperparameters
-from pipe.core.services.history_service import HistoryService
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import FileLock, locked_json_read_modify_write, locked_json_write, locked_json_read
 from pipe.core.models.hyperparameters import Hyperparameters
@@ -30,6 +29,7 @@ class SessionService:
         self.settings = settings
         self.current_session: Optional[Session] = None
         self.current_session_id: Optional[str] = None
+        self.current_instruction: Optional[str] = None
 
         tz_name = settings.timezone
         try:
@@ -49,7 +49,6 @@ class SessionService:
         }
         self.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
         
-        self.history_service = HistoryService(self.sessions_dir, self.timezone_obj)
         self._initialize()
 
     def _fetch_session(self, session_id: str) -> Optional[Session]:
@@ -133,6 +132,7 @@ class SessionService:
 
         self.current_session = session
         self.current_session_id = session_id
+        self.current_instruction = args.instruction
 
     def _get_session_path(self, session_id: str, create_dirs: bool = False) -> str:
         safe_path_parts = [part for part in session_id.split('/') if part not in ('', '.', '..')]
@@ -223,14 +223,16 @@ class SessionService:
         existing_paths = {ref.path for ref in session.references}
         added_count = 0
         for file_path in file_paths:
-            abs_path = os.path.abspath(file_path)
+            # Resolve the path relative to the project root
+            abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
             if not os.path.isfile(abs_path):
                 print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
                 continue
 
-            if abs_path not in existing_paths:
-                session.references.append(Reference(path=abs_path, disabled=False))
-                existing_paths.add(abs_path)
+            # Store the original, relative path in the reference object
+            if file_path not in existing_paths:
+                session.references.append(Reference(path=file_path, disabled=False))
+                existing_paths.add(file_path)
                 added_count += 1
 
         if added_count > 0:

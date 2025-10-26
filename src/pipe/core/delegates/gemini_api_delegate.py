@@ -4,6 +4,8 @@ import inspect
 import sys
 
 from pipe.core.models.session import Session
+from pipe.core.services.session_service import SessionService
+from pipe.core.services.prompt_service import PromptService
 from pipe.core.models.turn import FunctionCallingTurn, ToolResponseTurn, ModelResponseTurn
 from pipe.core.gemini_api import call_gemini_api
 from pipe.core.utils.datetime import get_current_timestamp
@@ -50,19 +52,23 @@ def execute_tool_call(tool_call, session_service, session_id, settings, project_
         return {"error": f"Failed to execute tool {tool_name}: {e}"}
 
 
-def run(args, settings, session_data: Session, project_root, api_mode, timezone_obj, enable_multi_step_reasoning, session_service, session_id):
+def run(args, session_service: SessionService, prompt_service: PromptService):
     """The delegate function for running in gemini-api mode."""
     model_response_text = ""
     token_count = 0
     intermediate_turns = []
+    
+    settings = session_service.settings
+    session_data = session_service.current_session
+    project_root = session_service.project_root
+    session_id = session_service.current_session_id
+    timezone_obj = session_service.timezone_obj
+    enable_multi_step_reasoning = session_data.multi_step_reasoning_enabled
+
     while True:
         stream = call_gemini_api(
-            settings=settings,
-            session_data=session_data,
-            project_root=project_root,
-            instruction=args.instruction,
-            api_mode=api_mode,
-            multi_step_reasoning_enabled=enable_multi_step_reasoning
+            session_service,
+            prompt_service
         )
 
         response_chunks = []

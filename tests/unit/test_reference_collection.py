@@ -45,7 +45,7 @@ class TestReferenceCollection(unittest.TestCase):
         prompt_data = list(collection.get_for_prompt(self.project_root.name))
         
         self.assertEqual(len(prompt_data), 1)
-        self.assertEqual(prompt_data[0]['file_path'], os.path.relpath(self.file1_path, self.project_root.name))
+        self.assertEqual(prompt_data[0]['path'], os.path.relpath(self.file1_path, self.project_root.name))
         self.assertEqual(prompt_data[0]['content'], "This is file 1.")
 
     def test_get_for_prompt_with_empty_list(self):
@@ -71,7 +71,7 @@ class TestReferenceCollection(unittest.TestCase):
         
         # It should only return the valid file within the project root
         self.assertEqual(len(prompt_data), 1)
-        self.assertEqual(prompt_data[0]['file_path'], os.path.relpath(self.file1_path, self.project_root.name))
+        self.assertEqual(prompt_data[0]['path'], os.path.relpath(self.file1_path, self.project_root.name))
 
     def test_get_for_prompt_handles_nonexistent_files_gracefully(self):
         """
@@ -102,7 +102,7 @@ class TestReferenceCollection(unittest.TestCase):
             prompt_data = list(collection.get_for_prompt(self.project_root.name))
         
         self.assertEqual(len(prompt_data), 1)
-        self.assertEqual(prompt_data[0]['file_path'], os.path.relpath(self.file1_path, self.project_root.name))
+        self.assertEqual(prompt_data[0]['path'], os.path.relpath(self.file1_path, self.project_root.name))
 
 if __name__ == '__main__':
     unittest.main()

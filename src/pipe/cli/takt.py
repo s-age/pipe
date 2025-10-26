@@ -19,7 +19,6 @@ from pipe.core.models.session import Session, Reference
 from pipe.core.models.turn import UserTaskTurn, ModelResponseTurn, FunctionCallingTurn, ToolResponseTurn, Turn
 from pipe.core.gemini_api import call_gemini_api, load_tools
 from pipe.core.gemini_cli import call_gemini_cli
-from pipe.core.prompt_builder import PromptBuilder
 from pipe.core.token_manager import TokenManager
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.dispatcher import dispatch_run
@@ -146,12 +145,6 @@ def main():
 
     elif args.instruction:
         session_service.prepare_session_for_takt(args)
-
-        if args.dry_run:
-            from pipe.core.delegates import dry_run_delegate
-            dry_run_delegate.run(session_service)
-            return
-
         _run(session_service, args)
 
     else:

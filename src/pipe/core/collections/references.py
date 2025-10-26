@@ -40,6 +40,6 @@ class ReferenceCollection:
                 if content is not None:
                     # For the prompt, we provide the original relative path.
                     yield {
-                        "file_path": ref.path,
+                        "path": ref.path,
                         "content": content
                     }

@@ -17,11 +17,14 @@ class TurnCollection(UserList):
     def get_for_prompt(self) -> Iterator[Turn]:
         """
         Yields turns for prompt generation, applying filtering rules.
-        - Only the last 3 'tool_response' turns are included.
+        - The last turn (current task) is excluded.
+        - Only the last 3 'tool_response' turns from the history are included.
         """
         tool_response_count = 0
+        history = self.data[:-1] # Exclude the last turn
+
         # Iterate in reverse to easily count the last 3 tool_responses
-        for turn in reversed(self.data):
+        for turn in reversed(history):
             if isinstance(turn, ToolResponseTurn):
                 tool_response_count += 1
                 if tool_response_count > 3:

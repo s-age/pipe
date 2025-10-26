@@ -9,6 +9,15 @@ from pipe.core.utils.file import read_text_file, read_yaml_file
 import os
 
 from pipe.core.models.settings import Settings
+from pipe.web.requests.sessions.new_session import NewSessionRequest
+from pipe.web.requests.sessions.edit_turn import EditTurnRequest
+from pipe.web.requests.sessions.edit_session_meta import EditSessionMetaRequest
+from pipe.web.requests.sessions.edit_todos import EditTodosRequest
+from pipe.web.requests.sessions.edit_references import EditReferencesRequest
+from pipe.web.requests.sessions.edit_reference_ttl import EditReferenceTtlRequest
+from pipe.web.requests.sessions.fork_session import ForkSessionRequest
+from pipe.web.requests.sessions.send_instruction import SendInstructionRequest
+from pydantic import ValidationError
 
 def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
@@ -84,41 +93,36 @@ def new_session_form():
 @app.route('/api/session/new', methods=['POST'])
 def create_new_session_api():
     try:
-        data = request.get_json()
-        purpose = data.get('purpose')
-        background = data.get('background')
-        roles_str = data.get('roles', '')
-        parent_id = data.get('parent')
-        references_str = data.get('references', '')
-        instruction = data.get('instruction')
-        multi_step_reasoning_enabled = data.get('multi_step_reasoning_enabled', False)
-        hyperparameters = data.get('hyperparameters')
+        # Validate request body using the Pydantic model
+        request_data = NewSessionRequest(**request.get_json())
 
-        if not all([purpose, background, instruction]):
-            return jsonify({"success": False, "message": "Purpose, background, and first instruction are required."}), 400
-        
-        roles = [r.strip() for r in roles_str.split(',') if r.strip()]
+        roles = [r.strip() for r in request_data.roles.split(',') if r.strip()]
 
         session_id = session_service.create_new_session(
-            purpose=purpose,
-            background=background,
+            purpose=request_data.purpose,
+            background=request_data.background,
             roles=roles,
-            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
-            hyperparameters=hyperparameters,
-            parent_id=parent_id
+            multi_step_reasoning_enabled=request_data.multi_step_reasoning_enabled,
+            hyperparameters=request_data.hyperparameters,
+            parent_id=request_data.parent
         )
         
         import subprocess
-        command = [sys.executable, '-m', 'pipe.cli.takt', '--session', session_id, '--instruction', instruction]
-        if references_str:
-            command.extend(['--references', references_str])
-        if multi_step_reasoning_enabled:
+        command = [sys.executable, '-m', 'pipe.cli.takt', '--session', session_id, '--instruction', request_data.instruction]
+        if request_data.references:
+            command.extend(['--references', request_data.references])
+        if request_data.multi_step_reasoning_enabled:
             command.append('--multi-step-reasoning')
+        
         process = subprocess.run(
             command, capture_output=True, text=True, check=True, encoding='utf-8'
         )
         
         return jsonify({"success": True, "session_id": session_id}), 200
+
+    except ValidationError as e:
+        # Pydantic validation failed
+        return jsonify({"success": False, "message": str(e)}), 422
     except subprocess.CalledProcessError as e:
         return jsonify({"success": False, "message": "Conductor script failed during initial instruction processing.", "details": e.stderr}), 500
     except Exception as e:
@@ -236,12 +240,11 @@ def edit_turn_api(session_id, turn_index):
 @app.route('/api/session/<path:session_id>/meta/edit', methods=['POST'])
 def edit_session_meta_api(session_id):
     try:
-        new_meta_data = request.get_json()
-        if not new_meta_data or not any(k in new_meta_data for k in ['purpose', 'background', 'multi_step_reasoning_enabled', 'token_count', 'hyperparameters']):
-            return jsonify({"success": False, "message": "No data provided."} ), 400
-
-        session_service.edit_session_meta(session_id, new_meta_data)
+        request_data = EditSessionMetaRequest(**request.get_json())
+        session_service.edit_session_meta(session_id, request_data.model_dump(exclude_unset=True))
         return jsonify({"success": True, "message": f"Session {session_id} metadata updated."} ), 200
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except FileNotFoundError:
         return jsonify({"success": False, "message": "Session not found."} ), 404
     except Exception as e:
@@ -250,12 +253,11 @@ def edit_session_meta_api(session_id):
 @app.route('/api/session/<path:session_id>/todos/edit', methods=['POST'])
 def edit_todos_api(session_id):
     try:
-        data = request.get_json()
-        if 'todos' not in data:
-            return jsonify({"success": False, "message": "No todos data provided."} ), 400
-
-        session_service.update_todos(session_id, data['todos'])
+        request_data = EditTodosRequest(**request.get_json())
+        session_service.update_todos(session_id, request_data.todos)
         return jsonify({"success": True, "message": f"Session {session_id} todos updated."} ), 200
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except FileNotFoundError:
         return jsonify({"success": False, "message": "Session not found."} ), 404
     except Exception as e:
@@ -264,12 +266,11 @@ def edit_todos_api(session_id):
 @app.route('/api/session/<path:session_id>/references/edit', methods=['POST'])
 def edit_references_api(session_id):
     try:
-        data = request.get_json()
-        if 'references' not in data:
-            return jsonify({"success": False, "message": "No references data provided."} ), 400
-
-        session_service.update_references(session_id, data['references'])
+        request_data = EditReferencesRequest(**request.get_json())
+        session_service.update_references(session_id, request_data.references)
         return jsonify({"success": True, "message": f"Session {session_id} references updated."} ), 200
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except FileNotFoundError:
         return jsonify({"success": False, "message": "Session not found."} ), 404
     except Exception as e:
@@ -278,11 +279,8 @@ def edit_references_api(session_id):
 @app.route('/api/session/<path:session_id>/references/ttl/<int:reference_index>', methods=['POST'])
 def edit_reference_ttl_api(session_id, reference_index):
     try:
-        data = request.get_json()
-        new_ttl = data.get('ttl')
-
-        if new_ttl is None or not isinstance(new_ttl, int) or new_ttl < 0:
-            return jsonify({"success": False, "message": "A valid, non-negative integer 'ttl' is required."}), 400
+        request_data = EditReferenceTtlRequest(**request.get_json())
+        new_ttl = request_data.ttl
 
         session = session_service.get_session(session_id)
         if not session:
@@ -295,6 +293,8 @@ def edit_reference_ttl_api(session_id, reference_index):
         session_service.update_reference_ttl_in_session(session_id, file_path, new_ttl)
         
         return jsonify({"success": True, "message": f"TTL for reference {reference_index} updated."}), 200
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -311,16 +311,16 @@ def delete_todos_api(session_id):
 @app.route('/api/session/fork/<int:fork_index>', methods=['POST'])
 def fork_session_api(fork_index):
     try:
-        data = request.get_json()
-        session_id = data.get('session_id')
-        if not session_id:
-            return jsonify({"success": False, "message": "session_id not provided in request body."} ), 400
+        request_data = ForkSessionRequest(**request.get_json())
+        session_id = request_data.session_id
 
         new_session_id = session_service.fork_session(session_id, fork_index)
         if new_session_id:
             return jsonify({"success": True, "new_session_id": new_session_id}), 200
         else:
             return jsonify({"success": False, "message": "Failed to fork session."} ), 500
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except FileNotFoundError:
         return jsonify({"success": False, "message": "Session not found."} ), 404
     except IndexError:
@@ -335,10 +335,8 @@ def send_instruction_api(session_id):
     import json
 
     try:
-        new_data = request.get_json()
-        instruction = new_data.get('instruction')
-        if not instruction:
-            return jsonify({"success": False, "message": "No instruction provided."} ), 400
+        request_data = SendInstructionRequest(**request.get_json())
+        instruction = request_data.instruction
 
         session_data = session_service.get_session(session_id)
         if not session_data:
@@ -383,7 +381,8 @@ def send_instruction_api(session_id):
 
 
         return Response(stream_with_context(generate()), mimetype='text/event-stream')
-
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 

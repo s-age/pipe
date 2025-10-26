@@ -24,6 +24,7 @@ from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.dispatcher import dispatch
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
+from pipe.core.validators.sessions import new_session as new_session_validator
 
 def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
@@ -97,6 +98,10 @@ def main():
     session_service = SessionService(project_root, settings)
 
     try:
+        # Validate arguments for a new session at the endpoint
+        if not args.session and args.instruction:
+            new_session_validator.validate(args.purpose, args.background)
+
         dispatch(args, session_service, parser)
     except (ValueError, FileNotFoundError, IndexError) as e:
         print(e, file=sys.stderr)

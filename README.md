@@ -52,8 +52,7 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
 
 ## Setup & Installation
 
-1. **Prerequisites:** Python 3.x and `gemini-cli` installed in your PATH.
-    Python 3.12 or higher is required. For Python versions below 3.9, please use `gemini-cli` from the `python-3.9-deprecated` branch: [python-3.9-deprecated](https://github.com/s-age/pipe/tree/python-3.9-deprecated).
+1. **Prerequisites:** Python 3.12 or higher and `gemini-cli` installed in your PATH.
 2.  **Install Dependencies:** `pip install -e .`
 3.  **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
     *   For consistency with `.env.default`, add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
@@ -220,21 +219,49 @@ Note that the JSON presented here is pretty-printed for readability; the actual 
 
 ```json
 {
-  "description": "Summarize foo.txt, again",
+  "description": "This structured prompt guides your response. First, understand the core instructions: `main_instruction` defines your thinking process. Next, identify the immediate objective from `current_task` and `todos`. Then, gather all context required to execute the task by processing `session_goal`, `roles`, `constraints`, `conversation_history`, and `file_references` in that order. Finally, execute the `current_task` by synthesizing all gathered information.",
+  "main_instruction": "Your main instruction is to be helpful and follow all previous instructions.",
+  "reasoning_process": {
+    "description": "Think step-by-step to achieve the goal."
+  },
+  "current_task": {
+    "type": "model_response",
+    "instruction": null,
+    "response": null,
+    "name": null,
+    "content": "Setup is complete. Awaiting the next command.\n",
+    "original_turns_range": null,
+    "timestamp": "2025-10-26T20:36:04.540328+09:00"
+  },
+  "todos": [
+    {
+      "title": "test1",
+      "description": "",
+      "checked": false
+    },
+    {
+      "title": "test2",
+      "description": "",
+      "checked": false
+    }
+  ],
+  "current_datetime": "2025-10-26T20:36:51.067644+09:00",
   "session_goal": {
     "description": "This section outlines the goal of the current session.",
-    "purpose": "Tool Test",
-    "background": "Tool Test"
+    "purpose": "Generate dry-run output for README",
+    "background": "To demonstrate the prompt structure in the project's main README file."
   },
   "roles": {
     "description": "The following are the roles for this session.",
-    "definitions": []
+    "definitions": [
+      "**Role: Conductor**\n\n**Responsibilities:**\n\nThe primary responsibility of any agent assigned the Conductor role is to **EXCLUSIVELY** delegate tasks to sub-agents via `takt`. The Conductor **MUST NEVER** perform any processing directly. Instead, the Conductor constructs and executes appropriate `takt` commands based on the provided instructions and session context. If a specific role is not provided, the Conductor should call `takt` without the `--roles` argument, allowing `takt` to handle default role assignment or execution without a specific role. All work must be delegated.\n\n**`takt` Usage:**\n\n`takt` provides the following key functionalities:\n\n1.  **Starting a New Session:**\n    *   `--purpose`: Defines the overall purpose of the session.\n    *   `--background`: Provides background context for the session.\n    *   `--roles`: Specifies role files to assign to sub-agents (comma-separated).\n    *   `--instruction`: The first specific instruction for the sub-agent.\n    *   Example: `takt --purpose \"Create a new React component\" --background \"Display user profile\" --roles \"roles/engineer.md\" --instruction \"Create a UserProfile component.\"`\n\n2.  **Continuing a Session:**\n    *   `--session <SESSION_ID>`: Specifies the ID of the session to continue.\n    *   `--instruction`: A new specific instruction for the sub-agent.\n    *   Example: `takt --session <SESSION_ID> --instruction \"Add state management.\"`\n\n3.  **Compressing a Session:**\n    *   `--session <SESSION_ID>`: Specifies the ID of the session to compress.\n    *   `--compress`: Summarizes the session history to reduce token count.\n    *   Example: `takt --session <SESSION_ID> --compress`\n\n4.  **Dry Run Mode:**\n    *   `--dry-run`: Reviews the generated JSON prompt without actual execution.\n    *   Example: `takt --purpose \"Test Prompt\" --instruction \"My instruction\" --dry-run`\n\n**Key Principles:**\n\n*   **STRICT RULE: No Self-Processing:** The Conductor **MUST NEVER** execute any task directly. All processing **MUST BE** delegated to sub-agents exclusively via `takt`. This is a foundational principle of the `pipe` architecture.\n*   **Role Handling:** If a specific sub-agent role is provided (e.g., via `@<role_name>` or `--roles`), the Conductor MUST use it. If no specific role is provided, the Conductor MUST call `takt` without the `--roles` argument, allowing `takt` to determine the appropriate handling (e.g., default role, no specific role).\n*   **Session Continuation:** Unless explicitly instructed otherwise, the Conductor will continue the current session and add new instructions to the existing session. New sessions are only initiated when clearly directed.\n*   **Transparency:** Clearly communicate the execution results of `takt` (including responses from sub-agents) to the user.\n\n---\n\n## Conductor Workflow Flowchart\n\n```mermaid\ngraph TD\n    A[\"Start: Appointed to Conductor Role\"] --> B{\"Is Session ID specified?\"};\n\n    B -- \"Yes\" --> C[\"Execute takt with Session ID and Instruction\"];\n    B -- \"No\" --> D[\"Enter Session ID to continue session, or parameters (--purpose, --background, --instruction, [Optional: --roles]) for a new session\"];\n\n    D --> E{\"Is input a Session ID?\"};\n\n    E -- \"Yes\" --> G{\"Is Session ID valid?\"};\n    E -- \"No\" --> F{\"Is it an instruction to start a new session?\"};\n\n    G -- \"Yes\" --> C;\n    G -- \"No\" --> I[\"Response: Session ID is invalid. Please enter Session ID again\"];\n    I --> D;\n\n    F -- \"Yes\" --> J{\"Are parameters (--purpose, --background, --instruction) clear?\"};\n    F -- \"No\" --> K[\"Response: Please enter Session ID or parameters for a new session\"];\n    K --> D;\n\n    J -- \"Yes\" --> C;\n    J -- \"No\" --> D;\n\n    C --> L{\"What is the next instruction?\"};\n    L -- \"Continue current session\" --> C;\n    L -- \"Another Session ID or New Session\" --> B;\n    L -- \"End\" --> M[\"End\"];\n```"
+    ]
   },
   "constraints": {
-    "description": null,
-    "language": "English",
+    "description": "Constraints for the model.",
+    "language": "japanese",
     "processing_config": {
-      "description": null,
+      "description": "Configuration for processing.",
       "multi_step_reasoning_active": true
     },
     "hyperparameters": {
@@ -251,68 +278,26 @@ Note that the JSON presented here is pretty-printed for readability; the actual 
       },
       "top_k": {
         "type": "number",
-        "value": 5,
+        "value": 5.0,
         "description": "Limit the generation to the top 5 most likely tokens at each step."
       }
     }
-  },
-  "main_instruction": {
-    "description": "When you receive JSON data, process your thoughts according to the following",
-    "flowchart": "```mermaid\ngraph TD\n    A[\"Start\"] --> B[\"Step 1: Identify Task from 'current_task'\"];\n    B --> C[\"Step 2: Gather Context (History & Constraints)\"];\n    C --> D[\"Step 3: Summarize Context & Plan\"];\n    D --> E{\"Decision: Does the task require external information or actions (e.g., web search, file access, URL fetching, shell commands)?\"};
-    E -- YES --> F[\"Step 4a: Execute Tool\"];\n    E -- NO --> G[\"Step 4b: Execute Thinking Process (Conditionally Advanced)\"];\n    F --> G;\n    G --> H[\"Step 5: Generate Final Response\"];\n    H --> I[\"End\"];\n```"
   },
   "conversation_history": {
     "description": "Historical record of past interactions in this session, in chronological order.",
     "turns": [
       {
         "type": "user_task",
-        "instruction": "Summarize foo.txt"
-      },
-      {
-        "type": "function_calling",
-        "response": "read_file({\"absolute_path\": \"foo.txt\"})"
-      },
-      {
-        "type": "tool_response",
-        "instruction": "Summarize foo.txt",
-        "name": "read_file",
-        "response": {
-          "status": "succeeded",
-          "message": "File '/Users/s-age/gitrepos/pipe/foo.txt' has been added to the session references."
-        }
-      },
-      {
-        "type": "model_response",
-        "content": "The file contains the word 'foo'."
-      },
-      {
-        "type": "user_task",
-        "instruction": "Summarize foo.txt, again"
-      },
-      {
-        "type": "model_response",
-        "content": "The file contains the word 'foo'."
+        "instruction": "This is the initial instruction to set up the session.",
+        "timestamp": "2025-10-26T20:35:58.210075+09:00"
       }
     ]
   },
-  "current_task": {
-    "description": "The specific task that the AI sub-agent must currently execute.",
-    "instruction": "Summarize foo.txt, again"
-  },
-  "file_references": {
-    "description": "Content of files referenced in the session.",
-    "files": [
-      {
-        "path": "foo.txt",
-        "content": "foo\n"
-      }
-    ]
-  },
-  "reasoning_process": {
-    "description": "The detailed, multi-step internal thinking process...",
-    "flowchart": "```mermaid\ngraph TD\n    A([\"Start: JSON Input\"]) --> B[\"Step 1: Read 'current_task.instruction' to identify task objective\"];\n    B --> C[\"Step 2: Derive general principles behind the task (Step-Back)\"];\n    C --> D[\"Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'\"];\n    D --> E[\"Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context\"];\n    E --> F[\"Step 5: Based on the summarized information, think and plan for response generation\"];\n    F --> G{\"Decision: Are there any contradictions or leaps in logic?\"};
-    G -- NO --> E;\n    G -- YES --> H[\"Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)\"];\n    H --> I[\"Step 7: Generate the final response based on the plan\"];\n    I --> J{\"Decision: Does it meet the initial requirements (format/purpose)?\"};
-    J -- NO --> F;\n    J -- YES --> K([\"End: Output Response\"]);\n```"
-  }
+  "file_references": [
+    {
+      "path": "foo.txt",
+      "content": "bar"
+    }
+  ]
 }
 ```

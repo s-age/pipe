@@ -15,5 +15,15 @@ dependencies = [
 [project.scripts]
 takt = "pipe.cli.takt:main"
 
+[project.optional-dependencies]
+test = [
+    "pytest==8.4.2",
+]
+
 [tool.setuptools.packages.find]
 where = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]

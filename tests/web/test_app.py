@@ -97,7 +97,7 @@ class TestAppApi(unittest.TestCase):
                     data=json.dumps(payload),
                     content_type='application/json'
                 )
-                self.assertEqual(response.status_code, 400)
+                self.assertEqual(response.status_code, 422)
 
 if __name__ == '__main__':
     unittest.main()

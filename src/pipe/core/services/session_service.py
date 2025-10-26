@@ -266,7 +266,7 @@ class SessionService:
             return []
         
         pools_to_return = session.pools.copy()
-        session.pools = []
+        session.pools = TurnCollection()
         self._save_session(session)
         return pools_to_return
 
@@ -394,7 +394,10 @@ class SessionService:
         )
         
         self._save_session(new_session)
-        self._update_index(new_session.session_id, new_session.purpose, new_session.created_at)
+        
+        collection = self.list_sessions()
+        collection.update(new_session.session_id, new_session.purpose, new_session.created_at)
+        collection.save()
         
         return new_session.session_id
 

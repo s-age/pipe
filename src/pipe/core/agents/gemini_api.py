@@ -19,7 +19,7 @@ from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.prompt_service import PromptService
-from pipe.core.token_manager import TokenManager
+from pipe.core.services.token_service import TokenService
 from pipe.core.utils.file import read_json_file
 from jinja2 import Environment, FileSystemLoader
 
@@ -123,7 +123,7 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
     project_root = session_service.project_root
     multi_step_reasoning_enabled = session_data.multi_step_reasoning_enabled
     
-    token_manager = TokenManager(settings=settings)
+    token_service = TokenService(settings=settings)
 
     # 1. Build the Prompt model using the service
     prompt_model = prompt_service.build_prompt(session_service)
@@ -142,9 +142,9 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
 
     tools = load_tools(project_root)
 
-    token_count = token_manager.count_tokens(api_contents_string, tools=tools)
+    token_count = token_service.count_tokens(api_contents_string, tools=tools)
     
-    is_within_limit, message = token_manager.check_limit(token_count)
+    is_within_limit, message = token_service.check_limit(token_count)
     print(f"Token Count: {message}", file=sys.stderr)
     if not is_within_limit:
         raise ValueError("Prompt exceeds context window limit. Aborting.")
@@ -196,7 +196,7 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
         stream = client.models.generate_content_stream(
             contents=api_contents_string,
             config=config,
-            model=token_manager.model_name
+            model=token_service.model_name
         )
         yield from stream
     except Exception as e:

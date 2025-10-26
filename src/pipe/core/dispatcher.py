@@ -1,42 +1,74 @@
+"""
+Dispatches commands to the appropriate delegates based on arguments.
+"""
+import argparse
 import sys
-
-from pipe.core.models.session import Session
+from pipe.core.models.args import TaktArgs
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.prompt_service import PromptService
-from pipe.core.models.args import TaktArgs
 
-def dispatch_run(session_service: SessionService, args: TaktArgs):
+def _dispatch_run(args: TaktArgs, session_service: SessionService):
     """
-    Dispatches the execution to the correct delegate based on the api_mode.
+    Private function to handle the actual run dispatch based on api_mode.
+    This logic was previously in the old dispatch_run and _run functions.
     """
+    session_id = session_service.current_session_id
+    if session_id:
+        pool = session_service.get_pool(session_id)
+        if pool and len(pool) >= 7:
+            print(f"Warning: The number of items in the session pool ({len(pool)}) has reached the limit (7). Halting further processing.", file=sys.stderr)
+            return
+
     api_mode = session_service.settings.api_mode
-    settings = session_service.settings
-    session_data = session_service.current_session
-    project_root = session_service.project_root
-    enable_multi_step_reasoning = session_data.multi_step_reasoning_enabled
-
-    # Instantiate the PromptService
-    prompt_service = PromptService(project_root)
+    prompt_service = PromptService(session_service.project_root)
 
     if args.dry_run:
         from .delegates import dry_run_delegate
-        dry_run_delegate.run(
-            session_service,
-            prompt_service
-        )
-        return None, None, []
+        dry_run_delegate.run(session_service, prompt_service)
+        return
+
+    token_count = 0
+    turns_to_save = []
 
     if api_mode == 'gemini-api':
         from .delegates import gemini_api_delegate
-        return gemini_api_delegate.run(
-            args,
-            session_service,
-            prompt_service
-        )
+        _, token_count, turns_to_save = gemini_api_delegate.run(args, session_service, prompt_service)
     elif api_mode == 'gemini-cli':
         from .delegates import gemini_cli_delegate
-        model_response_text = gemini_cli_delegate.run(
-            args,
-            session_service
+        from pipe.core.models.turn import ModelResponseTurn
+        from pipe.core.utils.datetime import get_current_timestamp
+        model_response_text = gemini_cli_delegate.run(args, session_service)
+        final_turn = ModelResponseTurn(
+            type="model_response",
+            content=model_response_text,
+            timestamp=get_current_timestamp(session_service.timezone_obj)
         )
-        return model_response_text, None, []
+        turns_to_save = [final_turn]
+    else:
+        raise ValueError(f"Error: Unknown api_mode '{api_mode}'.")
+
+    for turn in turns_to_save:
+        session_service.add_turn_to_session(session_id, turn)
+
+    if token_count is not None:
+        session_service.update_token_count(session_id, token_count)
+
+    print(f"\nSuccessfully added response to session {session_id}.\n", file=sys.stderr)
+    print("\n", flush=True)
+    print("event: end", flush=True)
+
+def dispatch(args: TaktArgs, session_service: SessionService, parser: argparse.ArgumentParser):
+    """
+    Acts as the main router for the application's command flow.
+    """
+    if args.fork:
+        from .delegates import fork_delegate
+        fork_delegate.run(args, session_service)
+    
+    elif args.instruction:
+        session_service.prepare_session_for_takt(args)
+        _dispatch_run(args, session_service)
+
+    else:
+        from .delegates import help_delegate
+        help_delegate.run(parser)

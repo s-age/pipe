@@ -8,12 +8,12 @@ from google.genai import types
 
 from pipe.core.models.settings import Settings
 
-class TokenManager:
+class TokenService:
     """Handles token counting using the google-genai library."""
 
     def __init__(self, settings: Settings):
         """
-        Initializes the TokenManager.
+        Initializes the TokenService.
 
         Args:
             settings: The Settings model instance.
@@ -38,7 +38,7 @@ class TokenManager:
             The total number of tokens, or a fallback estimation if an error occurs.
         """
         if not self.client:
-            print("TokenManager: Client not initialized, cannot count tokens.")
+            print("TokenService: Client not initialized, cannot count tokens.")
             return 0
         try:
             response = self.client.models.count_tokens(model=self.model_name, contents=contents)

@@ -80,7 +80,7 @@ class TurnCollection(UserList):
                 ]
             ),
             # This defines how to serialize our class back to a JSON-compatible type (a list).
-            serialization=core_schema.plain_serializer_function_ser_schema(lambda instance: [t.model_dump() for t in instance.data]),
+            serialization=core_schema.plain_serializer_function_ser_schema(lambda instance: [t.model_dump() for t in instance]),
         )
 
     @classmethod

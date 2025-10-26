@@ -72,9 +72,14 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
         )
 
         response_chunks = []
+        full_text_parts = []
         for chunk in stream:
-            if chunk.text:
-                print(chunk.text, end='', flush=True)
+            # Correctly iterate through parts to find text for streaming
+            if chunk.candidates and chunk.candidates[0].content and chunk.candidates[0].content.parts:
+                for part in chunk.candidates[0].content.parts:
+                    if part.text:
+                        print(part.text, end='', flush=True)
+                        full_text_parts.append(part.text)
             response_chunks.append(chunk)
 
         if not response_chunks:
@@ -82,8 +87,10 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
             break
 
         final_response = response_chunks[-1]
-        full_text = "".join(chunk.text for chunk in response_chunks if chunk.text)
+        full_text = "".join(full_text_parts)
         if final_response.candidates and final_response.candidates[0].content and final_response.candidates[0].content.parts:
+            # This is to ensure the final response object has the complete text,
+            # though the primary text source is now full_text_parts.
             final_response.candidates[0].content.parts[0].text = full_text
         
         response = final_response

@@ -19,9 +19,9 @@ from pipe.core.models.session import Session, Reference
 from pipe.core.models.turn import UserTaskTurn, ModelResponseTurn, FunctionCallingTurn, ToolResponseTurn, Turn
 from pipe.core.agents.gemini_api import call_gemini_api, load_tools
 from pipe.core.agents.gemini_cli import call_gemini_cli
-from pipe.core.token_manager import TokenManager
+from pipe.core.services.token_service import TokenService
 from pipe.core.utils.datetime import get_current_timestamp
-from pipe.core.dispatcher import dispatch_run
+from pipe.core.dispatcher import dispatch
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
 
@@ -56,40 +56,6 @@ def check_and_show_warning(project_root: str) -> bool:
         except (KeyboardInterrupt, EOFError):
             print("\nOperation cancelled. Exiting.")
             return False
-
-def _run(session_service: SessionService, args: TaktArgs):
-    session_id = session_service.current_session_id
-    
-    if session_id:
-        pool = session_service.get_pool(session_id)
-        if pool and len(pool) >= 7:
-            print(f"Warning: The number of items in the session pool ({len(pool)}) has reached the limit (7). Halting further processing to prevent potential infinite loops.", file=sys.stderr)
-            return
-
-    model_response_text = ""
-    
-    try:
-        _, token_count, turns_to_save = dispatch_run(session_service, args)
-        if turns_to_save is None and token_count is None:
-            return
-
-    except (ValueError, RuntimeError) as e:
-        print(f"ERROR: {e}", file=sys.stderr)
-        return
-    
-    for turn in turns_to_save:
-        session_service.add_turn_to_session(session_id, turn)
-
-    if token_count is not None:
-        session_service.update_token_count(session_id, token_count)
-
-    print(f"\nSuccessfully added response to session {session_id}.", file=sys.stderr)
-    # Signal the end of the stream to the web UI, ensuring it's on a new line.
-    print("\n", flush=True)
-    print("event: end", flush=True)
-
-def _help(parser):
-    parser.print_help()
 
 def _parse_arguments():
     parser = argparse.ArgumentParser(description="A task-oriented chat agent for context engineering.")
@@ -130,25 +96,11 @@ def main():
     
     session_service = SessionService(project_root, settings)
 
-    if args.fork:
-        if not args.at_turn:
-            print("Error: --at-turn is required when using --fork.", file=sys.stderr)
-            sys.exit(1)
-        try:
-            fork_index = args.at_turn - 1
-            new_session_id = session_service.fork_session(args.fork, fork_index)
-            print(f"Successfully forked session {args.fork} at turn {args.at_turn}.")
-            print(f"New session created: {new_session_id}")
-        except (FileNotFoundError, IndexError) as e:
-            print(f"Error: {e}", file=sys.stderr)
-            sys.exit(1)
-
-    elif args.instruction:
-        session_service.prepare_session_for_takt(args)
-        _run(session_service, args)
-
-    else:
-        _help(parser)
+    try:
+        dispatch(args, session_service, parser)
+    except (ValueError, FileNotFoundError, IndexError) as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

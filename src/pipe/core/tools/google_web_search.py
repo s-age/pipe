@@ -1,7 +1,7 @@
 from typing import Dict
 import sys
 import os
-from pipe.core.search_agent import call_gemini_api_with_grounding
+from pipe.core.agents.search_agent import call_gemini_api_with_grounding
 from pipe.core.models.settings import Settings
 
 def google_web_search(query: str, settings: Settings, project_root: str = None) -> Dict[str, str]:

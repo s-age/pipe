@@ -17,6 +17,16 @@ class TaktArgs:
     at_turn: Optional[int] = None
     api_mode: Optional[str] = None
 
+    def to_turn(self, timestamp: str):
+        """Converts args to a UserTaskTurn."""
+        from pipe.core.models.turn import UserTaskTurn
+        return UserTaskTurn(
+            type="user_task",
+            instruction=self.instruction,
+            timestamp=timestamp
+        )
+
+
     @classmethod
     def from_parsed_args(cls, parsed_args):
         """Creates an instance from argparse's parsed arguments."""

@@ -1,10 +1,19 @@
 import unittest
+import tempfile
+import os
+import json
 from pipe.core.models.session import Session
 from pipe.core.models.reference import Reference
 from pipe.core.models.todo import TodoItem
 from pipe.core.collections.turns import TurnCollection
 
 class TestSessionModel(unittest.TestCase):
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
 
     def test_session_creation_from_dict(self):
         """
@@ -72,6 +81,34 @@ class TestSessionModel(unittest.TestCase):
         self.assertIsInstance(session.turns, TurnCollection)
         self.assertEqual(len(session.turns), 0)
         self.assertIsNone(session.todos)
+
+    def test_save_session_to_file(self):
+        """
+        Tests that the save() method correctly persists the session data to a JSON file.
+        """
+        session_path = os.path.join(self.temp_dir.name, "test_session.json")
+        lock_path = f"{session_path}.lock"
+        
+        session = Session(
+            session_id="save-test-123",
+            created_at="2025-10-26T13:00:00Z",
+            purpose="Test the save method",
+            references=[Reference(path="app.py", disabled=False)]
+        )
+        
+        # Save the session
+        session.save(session_path, lock_path)
+        
+        # Verify the file was created and contains the correct data
+        self.assertTrue(os.path.exists(session_path))
+        
+        with open(session_path, 'r') as f:
+            saved_data = json.load(f)
+            
+        self.assertEqual(saved_data['session_id'], "save-test-123")
+        self.assertEqual(saved_data['purpose'], "Test the save method")
+        self.assertEqual(len(saved_data['references']), 1)
+        self.assertEqual(saved_data['references'][0]['path'], "app.py")
 
 if __name__ == '__main__':
     unittest.main()

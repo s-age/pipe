@@ -41,26 +41,34 @@ def create_verified_summary(
         # === Step 1: Generate Summary ===
         start_index = start_turn - 1
         end_index = end_turn - 1
-        turns_to_summarize = session_service.history_manager.get_session_turns_range(session_id, start_index, end_index)
+        
+        session_to_summarize = session_service.get_session(session_id)
+        if not session_to_summarize:
+             return {"error": f"Session with ID {session_id} not found."}
+        
+        turns_to_summarize = session_to_summarize.turns[start_index:end_index + 1]
         if not turns_to_summarize:
             return {"error": "No turns found in the specified range."}
 
+        turns_json = json.dumps([t.model_dump() for t in turns_to_summarize], indent=2, ensure_ascii=False)
         summarizer_instruction = (
-            f"You are a summarization agent. Based on the provided conversation turns and policy, create a concise summary.\n\n"
+            "You are a summarization agent. Based on the provided conversation turns and policy, create a concise summary.\n\n"
             f"Policy: {policy}\n"
             f"Target Length: Approximately {target_length} characters.\n\n"
-            "--- CONVERSATION TURNS ---
-"
-            f"{json.dumps(turns_to_summarize, indent=2, ensure_ascii=False)}"
+            "---\n"
+            "CONVERSATION TURNS\n"
+            f"{turns_json}"
         )
-        summarizer_session_data = {"turns": [{"type": "user_task", "instruction": summarizer_instruction}]}
+        summarizer_session_data = Session(session_id="temp-summarizer", created_at="", turns=[{"type": "user_task", "instruction": summarizer_instruction}])
         
         if api_mode == 'gemini-api':
-            summary_response = call_gemini_api(settings=settings, session_data=summarizer_session_data, project_root=project_root, instruction=summarizer_instruction, api_mode=api_mode, multi_step_reasoning_enabled=False)
-            summary_text = summary_response.text.strip()
+            # This is a simplified call; the real implementation would need a full SessionService setup
+            # For now, we assume a direct call is possible for summarization
+            # This part needs to be refactored to use the delegate pattern properly
+            return {"error": "Summarization via gemini-api is not fully implemented in this tool yet."}
         elif api_mode == 'gemini-cli':
-            summary_response = call_gemini_cli(settings=settings, session_data=summarizer_session_data, project_root=project_root, instruction=summarizer_instruction, api_mode=api_mode, multi_step_reasoning_enabled=False)
-            summary_text = summary_response.strip()
+            # This is also a simplified call
+            return {"error": "Summarization via gemini-cli is not fully implemented in this tool yet."}
         else:
             raise ValueError(f"Unsupported api_mode: {api_mode}")
 

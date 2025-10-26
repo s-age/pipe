@@ -1,5 +1,6 @@
 import unittest
 from pipe.core.collections.prompts.turn_collection import PromptTurnCollection
+from pipe.core.models.turn import UserTaskTurn, ModelResponseTurn
 
 class TestPromptTurnCollection(unittest.TestCase):
 
@@ -9,8 +10,8 @@ class TestPromptTurnCollection(unittest.TestCase):
         (Current implementation does not yet filter by token count).
         """
         turns = [
-            {"type": "user_task", "instruction": "Hello"},
-            {"type": "model_response", "content": "Hi there!"}
+            UserTaskTurn(type="user_task", instruction="Hello", timestamp="2023-01-01T12:00:00Z"),
+            ModelResponseTurn(type="model_response", content="Hi there!", timestamp="2023-01-01T12:01:00Z")
         ]
         
         collection = PromptTurnCollection(turns)

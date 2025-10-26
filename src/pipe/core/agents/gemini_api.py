@@ -15,12 +15,9 @@ import importlib.util
 import inspect
 from typing import get_type_hints, Union, get_args, List, Dict
 
-from pipe.core.models.session import Session
-from pipe.core.models.settings import Settings
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.token_service import TokenService
-from pipe.core.utils.file import read_json_file
 from jinja2 import Environment, FileSystemLoader
 
 def load_tools(project_root: str) -> list:
@@ -121,7 +118,6 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
     settings = session_service.settings
     session_data = session_service.current_session
     project_root = session_service.project_root
-    multi_step_reasoning_enabled = session_data.multi_step_reasoning_enabled
     
     token_service = TokenService(settings=settings)
 

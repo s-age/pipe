@@ -6,6 +6,7 @@
 
 import importlib.util
 import inspect
+import logging
 import os
 import sys
 from typing import Any, Union, get_args, get_type_hints
@@ -16,6 +17,17 @@ from jinja2 import Environment, FileSystemLoader
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.token_service import TokenService
+
+# Configure logging
+log_file_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "debug.log")
+)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    filename=log_file_path,
+    filemode="w",  # Overwrite the log file on each run
+)
 
 
 def load_tools(project_root: str) -> list:
@@ -161,6 +173,7 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
     api_contents_string = template.render(session=context)
 
     tools = load_tools(project_root)
+    logging.debug(f"Tools loaded by load_tools: {[tool['name'] for tool in tools]}")
 
     token_count = token_service.count_tokens(api_contents_string, tools=tools)
 
@@ -209,6 +222,10 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
     # GoogleSearchツールを追加 (GroundingとFunction Callingは両立しないため、
     # Function Callingツールのみを渡す)
     all_tools: list[Any] = converted_tools  # 既存ツールのみを渡す
+    logging.debug(
+        "Final tools passed to Gemini API: "
+        f"{[func.name for tool in all_tools for func in tool.function_declarations]}"
+    )
 
     config = types.GenerateContentConfig(
         tools=all_tools,  # <-- 統合したツールを渡す

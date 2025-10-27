@@ -1,75 +1,69 @@
+import os
+import subprocess
 import unittest
 from unittest.mock import MagicMock, patch
 
-from pipe.core.models.settings import Settings
 from pipe.core.tools.google_web_search import google_web_search
 
 
 class TestGoogleWebSearchTool(unittest.TestCase):
-    def setUp(self):
-        settings_data = {
-            "model": "test-model",
-            "search_model": "test-search-model",
-            "context_limit": 10000,
-            "api_mode": "gemini-api",
-            "language": "en",
-            "yolo": False,
-            "expert_mode": False,
-            "timezone": "UTC",
-            "parameters": {
-                "temperature": {"value": 0.5, "description": "t"},
-                "top_p": {"value": 0.9, "description": "p"},
-                "top_k": {"value": 40, "description": "k"},
-            },
-        }
-        self.settings = Settings(**settings_data)
-        self.project_root = "/fake/project/root"
-
-    @patch("pipe.core.tools.google_web_search.call_gemini_api_with_grounding")
-    def test_google_web_search_calls_api_and_returns_text(self, mock_call_api):
+    @patch("pipe.core.tools.google_web_search.subprocess.run")
+    def test_google_web_search_executes_agent_and_returns_output(
+        self, mock_subprocess_run
+    ):
         """
-        Tests that the google_web_search tool calls the grounding API
-        and returns the text from the response.
+        Tests that the google_web_search tool executes the search agent
+        and returns its stdout.
         """
-        # 1. Setup: Mock the API to return a response with text
-        mock_response = MagicMock()
-        mock_part = MagicMock()
-        mock_part.text = "This is the search result."
-        mock_response.candidates = [MagicMock()]
-        mock_response.candidates[0].content.parts = [mock_part]
-        mock_call_api.return_value = mock_response
+        # 1. Setup: Mock the subprocess.run to return a successful result
+        mock_process = MagicMock()
+        mock_process.stdout = "This is the search result."
+        mock_process.stderr = ""
+        mock_subprocess_run.return_value = mock_process
 
         query = "What is the capital of France?"
 
         # 2. Run the tool
-        result = google_web_search(
-            query=query, settings=self.settings, project_root=self.project_root
-        )
+        result = google_web_search(query=query)
 
         # 3. Assertions
-        mock_call_api.assert_called_once_with(
-            settings=self.settings, instruction=query, project_root=self.project_root
+        self.assertTrue(mock_subprocess_run.called)
+
+        # Construct the expected command for assertion
+        project_root = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "..")
+        )
+        src_path = os.path.join(project_root, "src")
+        agent_path = os.path.join(src_path, "pipe", "core", "agents", "search_agent.py")
+        expected_command = (
+            f'PYTHONPATH={src_path} pyenv exec python {agent_path} "{query}"'
+        )
+
+        mock_subprocess_run.assert_called_once_with(
+            expected_command, shell=True, capture_output=True, text=True, check=True
         )
 
         self.assertIn("content", result)
         self.assertEqual(result["content"], "This is the search result.")
 
-    @patch("pipe.core.tools.google_web_search.call_gemini_api_with_grounding")
-    def test_google_web_search_handles_api_error(self, mock_call_api):
+    @patch("pipe.core.tools.google_web_search.subprocess.run")
+    def test_google_web_search_handles_subprocess_error(self, mock_subprocess_run):
         """
-        Tests that the tool handles exceptions from the API call gracefully.
+        Tests that the tool handles exceptions from the subprocess call gracefully.
         """
-        # 1. Setup: Mock the API to raise an exception
-        mock_call_api.side_effect = RuntimeError("API Failure")
+        # 1. Setup: Mock the subprocess.run to raise an exception
+        mock_subprocess_run.side_effect = subprocess.CalledProcessError(
+            returncode=1, cmd="test command", stderr="Subprocess Failure"
+        )
 
         # 2. Run the tool
-        result = google_web_search(
-            query="test query", settings=self.settings, project_root=self.project_root
-        )
+        result = google_web_search(query="test query")
 
         # 3. Assertions
         self.assertIn("error", result)
-        self.assertIn("API Failure", result["error"])
+        self.assertIn(
+            "Failed to execute search agent: Subprocess Failure", result["error"]
+        )
 
 
 if __name__ == "__main__":

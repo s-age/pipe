@@ -70,6 +70,7 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
     timezone_obj = session_service.timezone_obj
 
     while True:
+        session_service.merge_pool_into_turns(session_id)
         stream = call_gemini_api(session_service, prompt_service)
 
         response_chunks = []
@@ -180,10 +181,8 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
         )
         intermediate_turns.append(model_turn)
         intermediate_turns.append(tool_turn)
-
-    # Merge all tool-related turns that were accumulated in the pool during the loop.
-    # This ensures they are correctly ordered before the final model_response.
-    session_service.merge_pool_into_turns(session_id)
+        session_data.turns.append(model_turn)
+        session_data.turns.append(tool_turn)
 
     final_model_turn = ModelResponseTurn(
         type="model_response",

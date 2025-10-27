@@ -1,11 +1,19 @@
 import os
 import sys
+import warnings
 from typing import Any
 
 import google.genai as genai
 from google.genai import types
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_yaml_file
+
+# Suppress specific UserWarning from pydantic
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message="Field name.*shadows an attribute in parent.*",
+)
 
 
 def call_gemini_api_with_grounding(
@@ -50,7 +58,7 @@ if __name__ == "__main__":
 
     query = sys.argv[1]
     project_root = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..")
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
     )
 
     settings_dict = read_yaml_file(os.path.join(project_root, "setting.yml"))

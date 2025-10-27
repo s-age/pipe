@@ -1,16 +1,15 @@
-from typing import List, Dict
 from pipe.core.models.todo import TodoItem
 
+
 def edit_todos(
-    todos: List[TodoItem],
-    session_service=None,
-    session_id=None
-) -> Dict[str, str]:
+    todos: list[TodoItem], session_service=None, session_id=None
+) -> dict[str, str]:
     """
     Edits the list of TODO items directly within the session data.
 
     Example:
-    edit_todos(todos=[{"title": "test1", "description": "", "checked": False}, {"title": "test2", "description": "", "checked": False}])
+    edit_todos(todos=[{"title": "test1", "description": "", "checked": False},
+    {"title": "test2", "description": "", "checked": False}])
     """
     if not session_service or not session_id:
         return {"error": "This tool requires an active session."}

@@ -1,32 +1,40 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from pipe.core.services.token_service import TokenService
 from pipe.core.models.settings import Settings
+from pipe.core.services.token_service import TokenService
+
 
 class TestTokenService(unittest.TestCase):
-
     def setUp(self):
         """Set up a dummy Settings object for the service."""
         settings_data = {
-            "model": "gemini-test", "search_model": "gemini-test", "context_limit": 1000,
-            "api_mode": "gemini-api", "language": "en", "yolo": False, "expert_mode": False, "timezone": "UTC",
+            "model": "gemini-test",
+            "search_model": "gemini-test",
+            "context_limit": 1000,
+            "api_mode": "gemini-api",
+            "language": "en",
+            "yolo": False,
+            "expert_mode": False,
+            "timezone": "UTC",
             "parameters": {
                 "temperature": {"value": 0.1, "description": "t"},
                 "top_p": {"value": 0.2, "description": "p"},
-                "top_k": {"value": 10, "description": "k"}
-            }
+                "top_k": {"value": 10, "description": "k"},
+            },
         }
         self.settings = Settings(**settings_data)
 
-    @patch('google.genai.Client')
+    @patch("google.genai.Client")
     def test_count_tokens_success(self, mock_genai_client):
         """
         Tests the happy path where the API call to count_tokens succeeds.
         """
         # Configure the mock client and its return value
         mock_client_instance = MagicMock()
-        mock_client_instance.models.count_tokens.return_value = MagicMock(total_tokens=123)
+        mock_client_instance.models.count_tokens.return_value = MagicMock(
+            total_tokens=123
+        )
         mock_genai_client.return_value = mock_client_instance
 
         token_service = TokenService(self.settings)
@@ -36,7 +44,7 @@ class TestTokenService(unittest.TestCase):
         self.assertEqual(token_count, 123)
         mock_client_instance.models.count_tokens.assert_called_once()
 
-    @patch('google.genai.Client')
+    @patch("google.genai.Client")
     def test_count_tokens_api_error_fallback(self, mock_genai_client):
         """
         Tests the fallback mechanism when the API call to count_tokens fails.
@@ -47,7 +55,9 @@ class TestTokenService(unittest.TestCase):
         mock_genai_client.return_value = mock_client_instance
 
         token_service = TokenService(self.settings)
-        test_prompt = "This is a test prompt with some considerable length to test the fallback."
+        test_prompt = (
+            "This is a test prompt with some considerable length to test the fallback."
+        )
         token_count = token_service.count_tokens(test_prompt)
 
         # Assert that the service returned the fallback estimation
@@ -59,7 +69,7 @@ class TestTokenService(unittest.TestCase):
         """
         Tests the check_limit method for both within-limit and over-limit cases.
         """
-        token_service = TokenService(self.settings) # No API call, so no mock needed
+        token_service = TokenService(self.settings)  # No API call, so no mock needed
 
         # Case 1: Within limit
         is_within, message = token_service.check_limit(500)
@@ -71,5 +81,6 @@ class TestTokenService(unittest.TestCase):
         self.assertFalse(is_within)
         self.assertEqual(message, "1500 / 1000 tokens")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

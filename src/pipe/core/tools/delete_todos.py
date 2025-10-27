@@ -1,6 +1,4 @@
-from typing import Dict
-
-def delete_todos(session_service=None, session_id=None) -> Dict[str, str]:
+def delete_todos(session_service=None, session_id=None) -> dict[str, str]:
     """
     Deletes the list of TODO items from the current session data.
     """

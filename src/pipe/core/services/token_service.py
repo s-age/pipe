@@ -2,11 +2,9 @@
 Manages token counting using the official Google Generative AI library.
 """
 
-import os
 import google.genai as genai
-from google.genai import types
-
 from pipe.core.models.settings import Settings
+
 
 class TokenService:
     """Handles token counting using the google-genai library."""
@@ -20,6 +18,7 @@ class TokenService:
         """
         self.model_name = settings.model
         self.limit = settings.context_limit
+        self.client: genai.Client | None = None
         try:
             self.client = genai.Client()
         except Exception as e:
@@ -41,8 +40,10 @@ class TokenService:
             print("TokenService: Client not initialized, cannot count tokens.")
             return 0
         try:
-            response = self.client.models.count_tokens(model=self.model_name, contents=contents)
-            return response.total_tokens
+            response = self.client.models.count_tokens(
+                model=self.model_name, contents=contents
+            )
+            return response.total_tokens if response.total_tokens is not None else 0
         except Exception as e:
             print(f"Error counting tokens via API: {e}")
             # As a rough fallback, estimate based on characters.
@@ -50,7 +51,14 @@ class TokenService:
             if isinstance(contents, str):
                 estimated_tokens = len(contents) // 4
             elif isinstance(contents, list):
-                estimated_tokens = sum(len(part.get('text', '')) for content in contents for part in content.get('parts', [])) // 4
+                estimated_tokens = (
+                    sum(
+                        len(part.get("text", ""))
+                        for content in contents
+                        for part in content.get("parts", [])
+                    )
+                    // 4
+                )
             print(f"Using rough fallback estimation: {estimated_tokens} tokens.")
             return estimated_tokens
 

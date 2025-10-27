@@ -1,15 +1,16 @@
+import difflib
 import os
 
-from typing import Dict
-import difflib
 
-def write_file(file_path: str, content: str, project_root: str = None) -> Dict[str, str]:
+def write_file(
+    file_path: str, content: str, project_root: str | None = None
+) -> dict[str, str]:
     """
     Writes content to a specified file.
     """
     try:
         target_path = os.path.abspath(file_path)
-        
+
         if project_root:
             project_root = os.path.abspath(project_root)
         else:
@@ -30,24 +31,30 @@ def write_file(file_path: str, content: str, project_root: str = None) -> Dict[s
 
         # Ensure the target path is not a blocked path or within a blocked directory
         for blocked_path in BLOCKED_PATHS:
-            if target_path == blocked_path or target_path.startswith(blocked_path + os.sep):
-                return {"error": f"Operation on sensitive path {file_path} is not allowed."}
+            if target_path == blocked_path or target_path.startswith(
+                blocked_path + os.sep
+            ):
+                return {
+                    "error": f"Operation on sensitive path {file_path} is not allowed."
+                }
 
         # Ensure the target path is within the project root
         if not target_path.startswith(project_root + os.sep):
-            return {"error": f"Writing outside project root is not allowed: {file_path}"}
+            return {
+                "error": f"Writing outside project root is not allowed: {file_path}"
+            }
 
         # Create parent directories if they don't exist
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
 
         original_content = ""
         if os.path.exists(target_path):
-            with open(target_path, 'r', encoding='utf-8') as f:
+            with open(target_path, encoding="utf-8") as f:
                 original_content = f.read()
 
-        with open(target_path, 'w', encoding='utf-8') as f:
+        with open(target_path, "w", encoding="utf-8") as f:
             f.write(content)
-        
+
         diff = ""
         if original_content:
             diff_lines = difflib.unified_diff(
@@ -55,7 +62,7 @@ def write_file(file_path: str, content: str, project_root: str = None) -> Dict[s
                 content.splitlines(keepends=True),
                 fromfile=f"a/{file_path}",
                 tofile=f"b/{file_path}",
-                lineterm=''
+                lineterm="",
             )
             diff = "\n".join(list(diff_lines))
 

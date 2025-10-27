@@ -1,19 +1,24 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Dict
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class HyperparameterValue(BaseModel):
     """Represents the value and description of a hyperparameter."""
+
     value: float
     description: str
 
+
 class Parameters(BaseModel):
     """Container for model hyperparameters."""
+
     temperature: HyperparameterValue
-    top_p: HyperparameterValue = Field(..., alias='top_p')
-    top_k: HyperparameterValue = Field(..., alias='top_k')
+    top_p: HyperparameterValue = Field(..., alias="top_p")
+    top_k: HyperparameterValue = Field(..., alias="top_k")
+
 
 class Settings(BaseModel):
     """Represents the application settings loaded from setting.yml."""
+
     model: str = "gemini-2.5-flash"
     search_model: str = "gemini-2.5-flash"
     context_limit: int = 1000000

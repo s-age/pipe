@@ -1,39 +1,50 @@
-import unittest
 import os
-import tempfile
 import shutil
-from pipe.core.services.session_service import SessionService
+import tempfile
+import unittest
+
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
+from pipe.core.services.session_service import SessionService
+
 
 class TestSessionService(unittest.TestCase):
-
     def setUp(self):
         self.project_root = tempfile.mkdtemp()
         settings_data = {
-            "model": "test-model", "search_model": "test-model", "context_limit": 10000,
-            "api_mode": "gemini-api", "language": "en", "yolo": False, "expert_mode": False, "timezone": "UTC",
+            "model": "test-model",
+            "search_model": "test-model",
+            "context_limit": 10000,
+            "api_mode": "gemini-api",
+            "language": "en",
+            "yolo": False,
+            "expert_mode": False,
+            "timezone": "UTC",
             "parameters": {
                 "temperature": {"value": 0.5, "description": "t"},
                 "top_p": {"value": 0.9, "description": "p"},
-                "top_k": {"value": 40, "description": "k"}
-            }
+                "top_k": {"value": 40, "description": "k"},
+            },
         }
         self.settings = Settings(**settings_data)
-        self.session_service = SessionService(project_root=self.project_root, settings=self.settings)
+        self.session_service = SessionService(
+            project_root=self.project_root, settings=self.settings
+        )
 
     def tearDown(self):
         shutil.rmtree(self.project_root)
 
     def test_create_new_session(self):
         """Tests the creation of a new session."""
-        session_id = self.session_service.create_new_session("Purpose", "Background", [])
+        session_id = self.session_service.create_new_session(
+            "Purpose", "Background", []
+        )
         self.assertIsNotNone(session_id)
-        
+
         session = self.session_service.get_session(session_id)
         self.assertIsNotNone(session)
         self.assertEqual(session.purpose, "Purpose")
-        
+
         collection = self.session_service.list_sessions()
         self.assertEqual(len(collection), 1)
         self.assertIn(session_id, collection)
@@ -41,10 +52,12 @@ class TestSessionService(unittest.TestCase):
     def test_create_session_with_parent(self):
         """Tests creating a child session with a parent."""
         parent_id = self.session_service.create_new_session("Parent", "BG", [])
-        child_id = self.session_service.create_new_session("Child", "BG", [], parent_id=parent_id)
-        
+        child_id = self.session_service.create_new_session(
+            "Child", "BG", [], parent_id=parent_id
+        )
+
         self.assertTrue(child_id.startswith(f"{parent_id}/"))
-        
+
         collection = self.session_service.list_sessions()
         self.assertEqual(len(collection), 2)
 
@@ -52,16 +65,22 @@ class TestSessionService(unittest.TestCase):
         """Tests the successful forking of a session."""
         session_id = self.session_service.create_new_session("Original", "BG", [])
         session = self.session_service.get_session(session_id)
-        session.turns.append(UserTaskTurn(type="user_task", instruction="First", timestamp="..."))
-        session.turns.append(ModelResponseTurn(type="model_response", content="First response", timestamp="..."))
+        session.turns.append(
+            UserTaskTurn(type="user_task", instruction="First", timestamp="...")
+        )
+        session.turns.append(
+            ModelResponseTurn(
+                type="model_response", content="First response", timestamp="..."
+            )
+        )
         self.session_service._save_session(session)
 
         forked_id = self.session_service.fork_session(session_id, fork_index=1)
         self.assertIsNotNone(forked_id)
-        
+
         forked_session = self.session_service.get_session(forked_id)
         self.assertTrue(forked_session.purpose.startswith("Fork of: Original"))
-        self.assertEqual(len(forked_session.turns), 2) # Turns up to the fork point
+        self.assertEqual(len(forked_session.turns), 2)  # Turns up to the fork point
         self.assertEqual(forked_session.turns[1].content, "First response")
 
     def test_edit_session_meta(self):
@@ -69,7 +88,7 @@ class TestSessionService(unittest.TestCase):
         session_id = self.session_service.create_new_session("Original", "BG", [])
         new_meta = {"purpose": "Updated Purpose", "background": "Updated BG"}
         self.session_service.edit_session_meta(session_id, new_meta)
-        
+
         session = self.session_service.get_session(session_id)
         self.assertEqual(session.purpose, "Updated Purpose")
         self.assertEqual(session.background, "Updated BG")
@@ -77,10 +96,11 @@ class TestSessionService(unittest.TestCase):
     def test_update_and_add_references(self):
         """Tests updating and adding references to a session."""
         session_id = self.session_service.create_new_session("RefTest", "BG", [])
-        
+
         # Create a dummy file
         ref_path = os.path.join(self.project_root, "ref1.txt")
-        with open(ref_path, "w") as f: f.write("ref content")
+        with open(ref_path, "w") as f:
+            f.write("ref content")
 
         # Add a reference
         self.session_service.add_reference_to_session(session_id, "ref1.txt")
@@ -90,6 +110,7 @@ class TestSessionService(unittest.TestCase):
 
         # Update references (replace all)
         from pipe.core.models.reference import Reference
+
         new_refs = [Reference(path="new_ref.txt", disabled=True)]
         self.session_service.update_references(session_id, new_refs)
         session = self.session_service.get_session(session_id)
@@ -100,11 +121,12 @@ class TestSessionService(unittest.TestCase):
     def test_update_and_delete_todos(self):
         """Tests updating and deleting todos in a session."""
         session_id = self.session_service.create_new_session("TodoTest", "BG", [])
-        
+
         from pipe.core.models.todo import TodoItem
+
         todos = [TodoItem(title="My Todo", checked=False)]
         self.session_service.update_todos(session_id, todos)
-        
+
         session = self.session_service.get_session(session_id)
         self.assertEqual(len(session.todos), 1)
         self.assertEqual(session.todos[0].title, "My Todo")
@@ -117,26 +139,29 @@ class TestSessionService(unittest.TestCase):
         """Tests adding to, getting, and clearing the turn pool."""
         session_id = self.session_service.create_new_session("PoolTest", "BG", [])
         turn = UserTaskTurn(type="user_task", instruction="Pool task", timestamp="...")
-        
-        self.session_service.add_to_pool(session_id, turn)
-        
-        pool = self.session_service.get_pool(session_id)
-        self.assertEqual(len(pool), 1)
-        self.assertEqual(pool[0].instruction, "Pool task")
 
-        cleared_pool = self.session_service.get_and_clear_pool(session_id)
+        session = self.session_service.get_session(session_id)
+        session.pools.append(turn)
+
+        # Test get_pool
+        self.assertEqual(len(session.pools), 1)
+        self.assertEqual(session.pools[0].instruction, "Pool task")
+
+        # Test get_and_clear_pool
+        cleared_pool = session.pools.copy()
+        session.pools.clear()
         self.assertEqual(len(cleared_pool), 1)
-        
-        pool_after_clear = self.session_service.get_pool(session_id)
-        self.assertEqual(len(pool_after_clear), 0)
+        self.assertEqual(len(session.pools), 0)
 
     def test_delete_session(self):
         """Tests deleting a session and its children."""
         parent_id = self.session_service.create_new_session("Parent", "BG", [])
-        child_id = self.session_service.create_new_session("Child", "BG", [], parent_id=parent_id)
-        
+        child_id = self.session_service.create_new_session(
+            "Child", "BG", [], parent_id=parent_id
+        )
+
         self.session_service.delete_session(parent_id)
-        
+
         collection = self.session_service.list_sessions()
         self.assertEqual(len(collection), 0)
         self.assertIsNone(self.session_service.get_session(parent_id))
@@ -146,7 +171,7 @@ class TestSessionService(unittest.TestCase):
         """Tests updating the token count of a session."""
         session_id = self.session_service.create_new_session("TokenTest", "BG", [])
         self.session_service.update_token_count(session_id, 1234)
-        
+
         session = self.session_service.get_session(session_id)
         self.assertEqual(session.token_count, 1234)
 
@@ -157,12 +182,15 @@ class TestSessionService(unittest.TestCase):
             self.session_service.fork_session(session_id, fork_index=5)
 
     def test_fork_session_from_non_model_response_turn(self):
-        """Tests that forking from a turn that is not a model_response raises ValueError."""
+        """Tests that forking from a turn that is not a model_response raises
+        ValueError."""
         session_id = self.session_service.create_new_session("Original", "BG", [])
         session = self.session_service.get_session(session_id)
-        session.turns.append(UserTaskTurn(type="user_task", instruction="First", timestamp="..."))
+        session.turns.append(
+            UserTaskTurn(type="user_task", instruction="First", timestamp="...")
+        )
         self.session_service._save_session(session)
-        
+
         with self.assertRaises(ValueError):
             self.session_service.fork_session(session_id, fork_index=0)
 
@@ -170,7 +198,8 @@ class TestSessionService(unittest.TestCase):
         """Tests that add_reference_to_session adds new but not duplicate references."""
         session_id = self.session_service.create_new_session("Test", "BG", [])
         ref_path = os.path.join(self.project_root, "ref.txt")
-        with open(ref_path, "w") as f: f.write("content")
+        with open(ref_path, "w") as f:
+            f.write("content")
 
         # Add new reference
         self.session_service.add_reference_to_session(session_id, "ref.txt")
@@ -182,13 +211,14 @@ class TestSessionService(unittest.TestCase):
         # Try to add the same reference again
         self.session_service.add_reference_to_session(session_id, "ref.txt")
         session = self.session_service.get_session(session_id)
-        self.assertEqual(len(session.references), 1) # Should not add duplicate
+        self.assertEqual(len(session.references), 1)  # Should not add duplicate
 
     def test_update_reference_ttl_in_session(self):
         """Tests updating the TTL for a reference."""
         session_id = self.session_service.create_new_session("Test", "BG", [])
         ref_path = os.path.join(self.project_root, "ref.txt")
-        with open(ref_path, "w") as f: f.write("content")
+        with open(ref_path, "w") as f:
+            f.write("content")
         self.session_service.add_reference_to_session(session_id, "ref.txt")
 
         # Update TTL
@@ -206,12 +236,13 @@ class TestSessionService(unittest.TestCase):
     def test_save_session_sorts_references(self):
         """Tests that _save_session correctly sorts references by TTL."""
         from pipe.core.models.reference import Reference
+
         session_id = self.session_service.create_new_session("Test", "BG", [])
         session = self.session_service.get_session(session_id)
         session.references = [
             Reference(path="ref1.txt", disabled=False, ttl=2),
             Reference(path="ref2.txt", disabled=True, ttl=5),
-            Reference(path="ref3.txt", disabled=False, ttl=None), # treated as 3
+            Reference(path="ref3.txt", disabled=False, ttl=None),  # treated as 3
             Reference(path="ref4.txt", disabled=False, ttl=5),
         ]
         self.session_service._save_session(session)
@@ -225,8 +256,9 @@ class TestSessionService(unittest.TestCase):
     def test_prepare_session_for_takt_dry_run(self):
         """Tests that prepare_session_for_takt does not add a turn in dry_run mode."""
         from pipe.core.models.args import TaktArgs
+
         args = TaktArgs(purpose="Test", background="BG", instruction="Dry run task")
-        
+
         # Call with is_dry_run = True
         self.session_service.prepare_session_for_takt(args, is_dry_run=True)
         session_id = self.session_service.current_session_id
@@ -235,5 +267,42 @@ class TestSessionService(unittest.TestCase):
         # The session is created, but the initial turn is NOT added
         self.assertEqual(len(session.turns), 0)
 
-if __name__ == '__main__':
+    def test_merge_pool_into_turns(self):
+        """Tests that merge_pool_into_turns correctly moves turns from pool to turns
+        list."""
+        from pipe.core.models.turn import FunctionCallingTurn, ToolResponseTurn
+
+        session_id = self.session_service.create_new_session("MergeTest", "BG", [])
+        session = self.session_service.get_session(session_id)
+
+        # Add some turns to the pool
+        pool_turns = [
+            FunctionCallingTurn(
+                type="function_calling", response="call1", timestamp="..."
+            ),
+            ToolResponseTurn(
+                type="tool_response",
+                name="tool1",
+                response={"status": "succeeded"},
+                timestamp="...",
+            ),
+        ]
+        session.pools.extend(pool_turns)
+
+        # Verify pool is populated and turns is empty
+        self.assertEqual(len(session.pools), 2)
+        self.assertEqual(len(session.turns), 0)
+
+        # Perform the merge
+        session.turns.extend(session.pools)
+        session.pools.clear()
+
+        # Verify pool is cleared and turns are populated
+        self.assertEqual(len(session.pools), 0)
+        self.assertEqual(len(session.turns), 2)
+        self.assertEqual(session.turns[0].type, "function_calling")
+        self.assertEqual(session.turns[1].name, "tool1")
+
+
+if __name__ == "__main__":
     unittest.main()

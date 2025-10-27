@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import List
+
 import os
 
 from pipe.core.utils.file import read_text_file
+
 
 class RoleCollection:
     """
@@ -10,10 +11,11 @@ class RoleCollection:
     This class is used as a transient logic container, primarily for loading
     the content of role files to be included in a prompt.
     """
-    def __init__(self, role_paths: List[str]):
+
+    def __init__(self, role_paths: list[str]):
         self._role_paths = role_paths if role_paths is not None else []
 
-    def get_for_prompt(self, project_root: str) -> List[str]:
+    def get_for_prompt(self, project_root: str) -> list[str]:
         """
         Loads the content of each role file.
         """

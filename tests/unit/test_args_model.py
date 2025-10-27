@@ -1,9 +1,10 @@
-import unittest
 import argparse
+import unittest
+
 from pipe.core.models.args import TaktArgs
 
-class TestArgsModel(unittest.TestCase):
 
+class TestArgsModel(unittest.TestCase):
     def test_taktargs_creation_from_parsed_args(self):
         """
         Tests that TaktArgs is correctly created from an argparse.Namespace object.
@@ -21,11 +22,11 @@ class TestArgsModel(unittest.TestCase):
             multi_step_reasoning=True,
             fork="fork-session",
             at_turn=5,
-            api_mode=None # Ensure None is handled correctly
+            api_mode=None,  # Ensure None is handled correctly
         )
-        
+
         takt_args = TaktArgs.from_parsed_args(parsed_args)
-        
+
         self.assertTrue(takt_args.dry_run)
         self.assertEqual(takt_args.session, "test-session")
         self.assertEqual(takt_args.purpose, "Test purpose")
@@ -54,11 +55,11 @@ class TestArgsModel(unittest.TestCase):
             multi_step_reasoning=False,
             fork=None,
             at_turn=None,
-            api_mode=None
+            api_mode=None,
         )
-        
+
         takt_args = TaktArgs.from_parsed_args(parsed_args)
-        
+
         self.assertFalse(takt_args.dry_run)
         self.assertIsNone(takt_args.session)
         self.assertIsNone(takt_args.purpose)
@@ -66,5 +67,6 @@ class TestArgsModel(unittest.TestCase):
         self.assertEqual(takt_args.references, [])
         self.assertEqual(takt_args.instruction, "Minimal instruction")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

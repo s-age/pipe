@@ -1,10 +1,11 @@
 """
 A utility module for centralized datetime operations.
 """
-from datetime import datetime, timezone
-import zoneinfo
 
-def get_current_timestamp(tz: zoneinfo.ZoneInfo = timezone.utc, fmt: str = None) -> str:
+from datetime import UTC, datetime, tzinfo
+
+
+def get_current_timestamp(tz: tzinfo = UTC, fmt: str | None = None) -> str:
     """
     Returns the current time as a timezone-aware formatted string.
 

@@ -1,29 +1,25 @@
 import argparse
 import os
 import sys
-import json
 import warnings
 
-# Ignore specific warnings from the genai library
-warnings.filterwarnings("ignore", message=".*there are non-text parts in the response.*")
-
-from pipe.core.utils.file import read_yaml_file, read_text_file
 from dotenv import load_dotenv
-from datetime import datetime, timezone
-import zoneinfo
-import importlib
-import inspect
-
-from pipe.core.services.session_service import SessionService
-from pipe.core.models.session import Session, Reference
-from pipe.core.models.turn import UserTaskTurn, ModelResponseTurn, FunctionCallingTurn, ToolResponseTurn, Turn
-from pipe.core.agents.gemini_api import call_gemini_api, load_tools
-from pipe.core.agents.gemini_cli import call_gemini_cli
-from pipe.core.services.token_service import TokenService
-from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.dispatcher import dispatch
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
+from pipe.core.services.session_service import SessionService
+from pipe.core.utils.file import read_text_file, read_yaml_file
+from pipe.core.validators.sessions import new_session as new_session_validator
+
+# Ignore specific warnings from the genai library
+warnings.filterwarnings(
+    "ignore", message=".*there are non-text parts in the response.*"
+)
+# Ignore Pydantic warnings about 'Operation' class from google-genai
+warnings.filterwarnings(
+    "ignore", message='Field name ".*" shadows an attribute in parent "Operation";'
+)
+
 
 def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
@@ -43,7 +39,9 @@ def check_and_show_warning(project_root: str) -> bool:
 
     while True:
         try:
-            response = input("Do you agree to the terms above? (yes/no): ").lower().strip()
+            response = (
+                input("Do you agree to the terms above? (yes/no): ").lower().strip()
+            )
             if response == "yes":
                 os.rename(sealed_path, unsealed_path)
                 print("Thank you. Proceeding...")
@@ -57,50 +55,96 @@ def check_and_show_warning(project_root: str) -> bool:
             print("\nOperation cancelled. Exiting.")
             return False
 
+
 def _parse_arguments():
-    parser = argparse.ArgumentParser(description="A task-oriented chat agent for context engineering.")
-    parser.add_argument('--dry-run', action='store_true', help='Build and print the prompt without executing.')
-    parser.add_argument('--session', type=str, help='The ID of the session to continue, edit, or compress.')
-    parser.add_argument('--purpose', type=str, help='The overall purpose of the new session.')
-    parser.add_argument('--background', type=str, help='The background context for the new session.')
-    parser.add_argument('--roles', type=str, help='Comma-separated paths to role files for the new session.')
-    parser.add_argument('--parent', type=str, help='The ID of the parent session.')
-    parser.add_argument('--instruction', type=str, help='The specific instruction for the current task.')
-    parser.add_argument('--references', type=str, help='Comma-separated paths to reference files.')
-    parser.add_argument('--multi-step-reasoning', action='store_true', help='Include multi-step reasoning process in the prompt.')
-    parser.add_argument('--fork', type=str, metavar='SESSION_ID', help='The ID of the session to fork.')
-    parser.add_argument('--at-turn', type=int, metavar='TURN_INDEX', help='The 1-based turn number to fork from. Required with --fork.')
-    parser.add_argument('--api-mode', type=str, help='Specify the API mode (e.g., gemini-api, gemini-cli).')
-    
+    parser = argparse.ArgumentParser(
+        description="A task-oriented chat agent for context engineering."
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Build and print the prompt without executing.",
+    )
+    parser.add_argument(
+        "--session",
+        type=str,
+        help="The ID of the session to continue, edit, or compress.",
+    )
+    parser.add_argument(
+        "--purpose", type=str, help="The overall purpose of the new session."
+    )
+    parser.add_argument(
+        "--background", type=str, help="The background context for the new session."
+    )
+    parser.add_argument(
+        "--roles",
+        type=str,
+        help="Comma-separated paths to role files for the new session.",
+    )
+    parser.add_argument("--parent", type=str, help="The ID of the parent session.")
+    parser.add_argument(
+        "--instruction", type=str, help="The specific instruction for the current task."
+    )
+    parser.add_argument(
+        "--references", type=str, help="Comma-separated paths to reference files."
+    )
+    parser.add_argument(
+        "--multi-step-reasoning",
+        action="store_true",
+        help="Include multi-step reasoning process in the prompt.",
+    )
+    parser.add_argument(
+        "--fork", type=str, metavar="SESSION_ID", help="The ID of the session to fork."
+    )
+    parser.add_argument(
+        "--at-turn",
+        type=int,
+        metavar="TURN_INDEX",
+        help="The 1-based turn number to fork from. Required with --fork.",
+    )
+    parser.add_argument(
+        "--api-mode",
+        type=str,
+        help="Specify the API mode (e.g., gemini-api, gemini-cli).",
+    )
+
     args = parser.parse_args()
     return args, parser
 
+
 def main():
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    project_root = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "..")
+    )
     if not check_and_show_warning(project_root):
         sys.exit(1)
 
     load_dotenv()
-    config_path = os.path.join(project_root, 'setting.yml')
+    config_path = os.path.join(project_root, "setting.yml")
     if not os.path.exists(config_path):
-        config_path = os.path.join(project_root, 'setting.default.yml')
-    
+        config_path = os.path.join(project_root, "setting.default.yml")
+
     settings_dict = read_yaml_file(config_path)
     settings = Settings(**settings_dict)
-    
+
     parsed_args, parser = _parse_arguments()
     args = TaktArgs.from_parsed_args(parsed_args)
 
     if args.api_mode:
         settings.api_mode = args.api_mode
-    
+
     session_service = SessionService(project_root, settings)
 
     try:
+        # Validate arguments for a new session at the endpoint
+        if not args.session and args.instruction:
+            new_session_validator.validate(args.purpose, args.background)
+
         dispatch(args, session_service, parser)
     except (ValueError, FileNotFoundError, IndexError) as e:
         print(e, file=sys.stderr)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

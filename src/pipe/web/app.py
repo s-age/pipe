@@ -1,14 +1,21 @@
-from flask import Flask, render_template, abort, jsonify, request
-from datetime import timezone
-import zoneinfo
 import json
+import os
 import sys
-import yaml
+import zoneinfo
+
+from flask import Flask, abort, jsonify, render_template, request
+from pipe.core.models.settings import Settings
 from pipe.core.services.session_service import SessionService
 from pipe.core.utils.file import read_text_file, read_yaml_file
-import os
+from pipe.web.requests.sessions.edit_reference_ttl import EditReferenceTtlRequest
+from pipe.web.requests.sessions.edit_references import EditReferencesRequest
+from pipe.web.requests.sessions.edit_session_meta import EditSessionMetaRequest
+from pipe.web.requests.sessions.edit_todos import EditTodosRequest
+from pipe.web.requests.sessions.fork_session import ForkSessionRequest
+from pipe.web.requests.sessions.new_session import NewSessionRequest
+from pipe.web.requests.sessions.send_instruction import SendInstructionRequest
+from pydantic import ValidationError
 
-from pipe.core.models.settings import Settings
 
 def check_and_show_warning(project_root: str) -> bool:
     """Checks for the warning file, displays it, and gets user consent."""
@@ -28,7 +35,9 @@ def check_and_show_warning(project_root: str) -> bool:
 
     while True:
         try:
-            response = input("Do you agree to the terms above? (yes/no): ").lower().strip()
+            response = (
+                input("Do you agree to the terms above? (yes/no): ").lower().strip()
+            )
             if response == "yes":
                 os.rename(sealed_path, unsealed_path)
                 print("Thank you. Proceeding...")
@@ -42,22 +51,26 @@ def check_and_show_warning(project_root: str) -> bool:
             print("\nOperation cancelled. Exiting.")
             return False
 
+
 def load_settings(config_path: str) -> dict:
     try:
         return read_yaml_file(config_path)
     except FileNotFoundError:
         return {}
 
+
 # Correctly determine the project root, which is three levels up from the current script
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+project_root = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..")
+)
 
 # Define paths for templates and static assets relative to the corrected project root
-template_dir = os.path.join(project_root, 'templates')
-assets_dir = os.path.join(project_root, 'assets')
+template_dir = os.path.join(project_root, "templates")
+assets_dir = os.path.join(project_root, "assets")
 
 app = Flask(__name__, template_folder=template_dir, static_folder=assets_dir)
 
-config_path = os.path.join(project_root, 'setting.yml')
+config_path = os.path.join(project_root, "setting.yml")
 settings_dict = load_settings(config_path)
 settings = Settings(**settings_dict)
 
@@ -65,73 +78,103 @@ tz_name = settings.timezone
 try:
     local_tz = zoneinfo.ZoneInfo(tz_name)
 except zoneinfo.ZoneInfoNotFoundError:
-    print(f"Warning: Timezone '{tz_name}' from setting.yml not found. Using UTC.", file=sys.stderr)
-    local_tz = timezone.utc
+    print(
+        f"Warning: Timezone '{tz_name}' from setting.yml not found. Using UTC.",
+        file=sys.stderr,
+    )
+    local_tz = zoneinfo.ZoneInfo("UTC")
 session_service = SessionService(project_root, settings)
 
-@app.route('/')
+
+@app.route("/")
 def index():
     sessions_collection = session_service.list_sessions()
     sorted_sessions = sessions_collection.get_sorted_by_last_updated()
-    return render_template('html/index.html', sessions=sorted_sessions, current_session_id=None, session_data=json.dumps({}), expert_mode=settings.expert_mode, settings=settings.model_dump())
+    return render_template(
+        "html/index.html",
+        sessions=sorted_sessions,
+        current_session_id=None,
+        session_data=json.dumps({}),
+        expert_mode=settings.expert_mode,
+        settings=settings.model_dump(),
+    )
 
-@app.route('/new_session')
+
+@app.route("/new_session")
 def new_session_form():
     sessions_collection = session_service.list_sessions()
     sorted_sessions = sessions_collection.get_sorted_by_last_updated()
-    return render_template('html/new_session.html', settings=settings.model_dump(), sessions=sorted_sessions)
+    return render_template(
+        "html/new_session.html",
+        settings=settings.model_dump(),
+        sessions=sorted_sessions,
+    )
 
-@app.route('/api/session/new', methods=['POST'])
+
+@app.route("/api/session/new", methods=["POST"])
 def create_new_session_api():
     try:
-        data = request.get_json()
-        purpose = data.get('purpose')
-        background = data.get('background')
-        roles_str = data.get('roles', '')
-        parent_id = data.get('parent')
-        references_str = data.get('references', '')
-        instruction = data.get('instruction')
-        multi_step_reasoning_enabled = data.get('multi_step_reasoning_enabled', False)
-        hyperparameters = data.get('hyperparameters')
+        # Validate request body using the Pydantic model
+        request_data = NewSessionRequest(**request.get_json())
 
-        if not all([purpose, background, instruction]):
-            return jsonify({"success": False, "message": "Purpose, background, and first instruction are required."}), 400
-        
-        roles = [r.strip() for r in roles_str.split(',') if r.strip()]
+        roles = [r.strip() for r in request_data.roles.split(",") if r.strip()]
 
         session_id = session_service.create_new_session(
-            purpose=purpose,
-            background=background,
+            purpose=request_data.purpose,
+            background=request_data.background,
             roles=roles,
-            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
-            hyperparameters=hyperparameters,
-            parent_id=parent_id
+            multi_step_reasoning_enabled=request_data.multi_step_reasoning_enabled,
+            hyperparameters=request_data.hyperparameters,
+            parent_id=request_data.parent,
         )
-        
+
         import subprocess
-        command = [sys.executable, '-m', 'pipe.cli.takt', '--session', session_id, '--instruction', instruction]
-        if references_str:
-            command.extend(['--references', references_str])
-        if multi_step_reasoning_enabled:
-            command.append('--multi-step-reasoning')
-        process = subprocess.run(
-            command, capture_output=True, text=True, check=True, encoding='utf-8'
+
+        command = [
+            sys.executable,
+            "-m",
+            "pipe.cli.takt",
+            "--session",
+            session_id,
+            "--instruction",
+            request_data.instruction,
+        ]
+        if request_data.references:
+            command.extend(["--references", request_data.references])
+        if request_data.multi_step_reasoning_enabled:
+            command.append("--multi-step-reasoning")
+
+        subprocess.run(
+            command, capture_output=True, text=True, check=True, encoding="utf-8"
         )
-        
+
         return jsonify({"success": True, "session_id": session_id}), 200
+
+    except ValidationError as e:
+        # Pydantic validation failed
+        return jsonify({"success": False, "message": str(e)}), 422
     except subprocess.CalledProcessError as e:
-        return jsonify({"success": False, "message": "Conductor script failed during initial instruction processing.", "details": e.stderr}), 500
+        return jsonify(
+            {
+                "success": False,
+                "message": (
+                    "Conductor script failed during initial instruction processing."
+                ),
+                "details": e.stderr,
+            }
+        ), 500
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/session/<path:session_id>')
+
+@app.route("/session/<path:session_id>")
 def view_session(session_id):
     sessions_collection = session_service.list_sessions()
     if session_id not in sessions_collection:
         abort(404)
 
     sorted_sessions = sessions_collection.get_sorted_by_last_updated()
-    
+
     session_data = session_service.get_session(session_id)
     if not session_data:
         abort(404)
@@ -140,22 +183,31 @@ def view_session(session_id):
     defaults = settings.parameters
     if not session_data.hyperparameters:
         from pipe.core.models.hyperparameters import Hyperparameters
+
         session_data.hyperparameters = Hyperparameters()
 
-    for param_name in ['temperature', 'top_p', 'top_k']:
+    for param_name in ["temperature", "top_p", "top_k"]:
         if getattr(session_data.hyperparameters, param_name) is None:
             if default_value := getattr(defaults, param_name, None):
                 from pipe.core.models.hyperparameters import HyperparameterValue
-                setattr(session_data.hyperparameters, param_name, HyperparameterValue(**default_value.model_dump()))
+
+                setattr(
+                    session_data.hyperparameters,
+                    param_name,
+                    HyperparameterValue(**default_value.model_dump()),
+                )
 
     if session_data.references and isinstance(session_data.references[0], str):
         from pipe.core.models.reference import Reference
-        session_data.references = [Reference(path=ref, disabled=False) for ref in session_data.references]
+
+        session_data.references = [
+            Reference(path=ref, disabled=False) for ref in session_data.references
+        ]
         session_service.update_references(session_id, session_data.references)
 
     # Use the model's own method to get a serializable dictionary
     session_data_for_template = session_data.to_dict()
-    turns_list = session_data_for_template['turns']
+    turns_list = session_data_for_template["turns"]
 
     current_session_purpose = session_data.purpose
     multi_step_reasoning_enabled = session_data.multi_step_reasoning_enabled
@@ -163,19 +215,22 @@ def view_session(session_id):
     context_limit = settings.context_limit
     expert_mode = settings.expert_mode
 
-    return render_template('html/index.html',
-                           sessions=sorted_sessions,
-                           current_session_id=session_id,
-                           current_session_purpose=current_session_purpose,
-                           session_data=session_data_for_template,
-                           turns=turns_list,
-                           multi_step_reasoning_enabled=multi_step_reasoning_enabled,
-                           token_count=token_count,
-                           context_limit=context_limit,
-                           expert_mode=expert_mode,
-                           settings=settings.model_dump())
+    return render_template(
+        "html/index.html",
+        sessions=sorted_sessions,
+        current_session_id=session_id,
+        current_session_purpose=current_session_purpose,
+        session_data=session_data_for_template,
+        turns=turns_list,
+        multi_step_reasoning_enabled=multi_step_reasoning_enabled,
+        token_count=token_count,
+        context_limit=context_limit,
+        expert_mode=expert_mode,
+        settings=settings.model_dump(),
+    )
 
-@app.route('/api/sessions', methods=['GET'])
+
+@app.route("/api/sessions", methods=["GET"])
 def get_sessions_api():
     try:
         sessions_collection = session_service.list_sessions()
@@ -184,30 +239,39 @@ def get_sessions_api():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>', methods=['GET', 'DELETE'])
+
+@app.route("/api/session/<path:session_id>", methods=["GET", "DELETE"])
 def session_api(session_id):
-    if request.method == 'GET':
+    if request.method == "GET":
         try:
             session_data = session_service.get_session(session_id)
             if not session_data:
-                return jsonify({"success": False, "message": "Session not found."} ), 404
-            
+                return jsonify({"success": False, "message": "Session not found."}), 404
+
             return jsonify({"success": True, "session": session_data.to_dict()}), 200
         except Exception as e:
             return jsonify({"success": False, "message": str(e)}), 500
-            
-    if request.method == 'DELETE':
+
+    if request.method == "DELETE":
         try:
             session_service.delete_session(session_id)
-            return jsonify({"success": True, "message": f"Session {session_id} deleted."} ), 200
+            return jsonify(
+                {"success": True, "message": f"Session {session_id} deleted."}
+            ), 200
         except Exception as e:
             return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>/turn/<int:turn_index>', methods=['DELETE'])
+
+@app.route("/api/session/<path:session_id>/turn/<int:turn_index>", methods=["DELETE"])
 def delete_turn_api(session_id, turn_index):
     try:
         session_service.delete_turn(session_id, turn_index)
-        return jsonify({"success": True, "message": f"Turn {turn_index} from session {session_id} deleted."}), 200
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Turn {turn_index} from session {session_id} deleted.",
+            }
+        ), 200
     except FileNotFoundError:
         return jsonify({"success": False, "message": "Session not found."}), 404
     except IndexError:
@@ -215,7 +279,10 @@ def delete_turn_api(session_id, turn_index):
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>/turn/<int:turn_index>/edit', methods=['POST'])
+
+@app.route(
+    "/api/session/<path:session_id>/turn/<int:turn_index>/edit", methods=["POST"]
+)
 def edit_turn_api(session_id, turn_index):
     try:
         new_data = request.get_json()
@@ -223,7 +290,12 @@ def edit_turn_api(session_id, turn_index):
             return jsonify({"success": False, "message": "No data provided."}), 400
 
         session_service.edit_turn(session_id, turn_index, new_data)
-        return jsonify({"success": True, "message": f"Turn {turn_index + 1} from session {session_id} updated."}), 200
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Turn {turn_index + 1} from session {session_id} updated.",
+            }
+        ), 200
     except FileNotFoundError:
         return jsonify({"success": False, "message": "Session not found."}), 404
     except IndexError:
@@ -233,178 +305,226 @@ def edit_turn_api(session_id, turn_index):
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>/meta/edit', methods=['POST'])
+
+@app.route("/api/session/<path:session_id>/meta/edit", methods=["POST"])
 def edit_session_meta_api(session_id):
     try:
-        new_meta_data = request.get_json()
-        if not new_meta_data or not any(k in new_meta_data for k in ['purpose', 'background', 'multi_step_reasoning_enabled', 'token_count', 'hyperparameters']):
-            return jsonify({"success": False, "message": "No data provided."} ), 400
-
-        session_service.edit_session_meta(session_id, new_meta_data)
-        return jsonify({"success": True, "message": f"Session {session_id} metadata updated."} ), 200
+        request_data = EditSessionMetaRequest(**request.get_json())
+        session_service.edit_session_meta(
+            session_id, request_data.model_dump(exclude_unset=True)
+        )
+        return jsonify(
+            {"success": True, "message": f"Session {session_id} metadata updated."}
+        ), 200
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except FileNotFoundError:
-        return jsonify({"success": False, "message": "Session not found."} ), 404
+        return jsonify({"success": False, "message": "Session not found."}), 404
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>/todos/edit', methods=['POST'])
+
+@app.route("/api/session/<path:session_id>/todos/edit", methods=["POST"])
 def edit_todos_api(session_id):
     try:
-        data = request.get_json()
-        if 'todos' not in data:
-            return jsonify({"success": False, "message": "No todos data provided."} ), 400
-
-        session_service.update_todos(session_id, data['todos'])
-        return jsonify({"success": True, "message": f"Session {session_id} todos updated."} ), 200
+        request_data = EditTodosRequest(**request.get_json())
+        session_service.update_todos(session_id, request_data.todos)
+        return jsonify(
+            {"success": True, "message": f"Session {session_id} todos updated."}
+        ), 200
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except FileNotFoundError:
-        return jsonify({"success": False, "message": "Session not found."} ), 404
+        return jsonify({"success": False, "message": "Session not found."}), 404
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>/references/edit', methods=['POST'])
+
+@app.route("/api/session/<path:session_id>/references/edit", methods=["POST"])
 def edit_references_api(session_id):
     try:
-        data = request.get_json()
-        if 'references' not in data:
-            return jsonify({"success": False, "message": "No references data provided."} ), 400
-
-        session_service.update_references(session_id, data['references'])
-        return jsonify({"success": True, "message": f"Session {session_id} references updated."} ), 200
+        request_data = EditReferencesRequest(**request.get_json())
+        session_service.update_references(session_id, request_data.references)
+        return jsonify(
+            {"success": True, "message": f"Session {session_id} references updated."}
+        ), 200
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except FileNotFoundError:
-        return jsonify({"success": False, "message": "Session not found."} ), 404
+        return jsonify({"success": False, "message": "Session not found."}), 404
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>/references/ttl/<int:reference_index>', methods=['POST'])
+
+@app.route(
+    "/api/session/<path:session_id>/references/ttl/<int:reference_index>",
+    methods=["POST"],
+)
 def edit_reference_ttl_api(session_id, reference_index):
     try:
-        data = request.get_json()
-        new_ttl = data.get('ttl')
-
-        if new_ttl is None or not isinstance(new_ttl, int) or new_ttl < 0:
-            return jsonify({"success": False, "message": "A valid, non-negative integer 'ttl' is required."}), 400
+        request_data = EditReferenceTtlRequest(**request.get_json())
+        new_ttl = request_data.ttl
 
         session = session_service.get_session(session_id)
         if not session:
             return jsonify({"success": False, "message": "Session not found."}), 404
 
         if not (0 <= reference_index < len(session.references)):
-            return jsonify({"success": False, "message": "Reference index out of range."}), 400
+            return jsonify(
+                {"success": False, "message": "Reference index out of range."}
+            ), 400
 
         file_path = session.references[reference_index].path
         session_service.update_reference_ttl_in_session(session_id, file_path, new_ttl)
-        
-        return jsonify({"success": True, "message": f"TTL for reference {reference_index} updated."}), 200
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"TTL for reference {reference_index} updated.",
+            }
+        ), 200
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>/todos', methods=['DELETE'])
+
+@app.route("/api/session/<path:session_id>/todos", methods=["DELETE"])
 def delete_todos_api(session_id):
     try:
         session_service.delete_todos(session_id)
-        return jsonify({"success": True, "message": f"Todos deleted from session {session_id}."} ), 200
+        return jsonify(
+            {"success": True, "message": f"Todos deleted from session {session_id}."}
+        ), 200
     except FileNotFoundError:
-        return jsonify({"success": False, "message": "Session not found."} ), 404
+        return jsonify({"success": False, "message": "Session not found."}), 404
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/fork/<int:fork_index>', methods=['POST'])
+
+@app.route("/api/session/fork/<int:fork_index>", methods=["POST"])
 def fork_session_api(fork_index):
     try:
-        data = request.get_json()
-        session_id = data.get('session_id')
-        if not session_id:
-            return jsonify({"success": False, "message": "session_id not provided in request body."} ), 400
+        request_data = ForkSessionRequest(**request.get_json())
+        session_id = request_data.session_id
 
         new_session_id = session_service.fork_session(session_id, fork_index)
         if new_session_id:
             return jsonify({"success": True, "new_session_id": new_session_id}), 200
         else:
-            return jsonify({"success": False, "message": "Failed to fork session."} ), 500
+            return jsonify(
+                {"success": False, "message": "Failed to fork session."}
+            ), 500
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except FileNotFoundError:
-        return jsonify({"success": False, "message": "Session not found."} ), 404
+        return jsonify({"success": False, "message": "Session not found."}), 404
     except IndexError:
-        return jsonify({"success": False, "message": "Fork turn index out of range."} ), 400
+        return jsonify(
+            {"success": False, "message": "Fork turn index out of range."}
+        ), 400
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>/instruction', methods=['POST'])
+
+@app.route("/api/session/<path:session_id>/instruction", methods=["POST"])
 def send_instruction_api(session_id):
-    from flask import Response, stream_with_context
-    import subprocess
     import json
+    import subprocess
+
+    from flask import Response, stream_with_context
 
     try:
-        new_data = request.get_json()
-        instruction = new_data.get('instruction')
-        if not instruction:
-            return jsonify({"success": False, "message": "No instruction provided."} ), 400
+        request_data = SendInstructionRequest(**request.get_json())
+        instruction = request_data.instruction
 
         session_data = session_service.get_session(session_id)
         if not session_data:
-            return jsonify({"success": False, "message": "Session not found."} ), 404
-        
+            return jsonify({"success": False, "message": "Session not found."}), 404
+
         # Pre-flight check for pool size before starting the subprocess
         if session_data.pools and len(session_data.pools) >= 7:
-            error_message = f"Too many tasks in the processing pool (limit is 7). Please wait for the current tasks to complete before adding a new one."
+            error_message = (
+                "Too many tasks in the processing pool (limit is 7). Please wait for "
+                "the current tasks to complete before adding a new one."
+            )
+
             def error_generate():
                 yield f"data: {json.dumps({'error': error_message})}\n\n"
-            return Response(stream_with_context(error_generate()), mimetype='text/event-stream', status=400)
+
+            return Response(
+                stream_with_context(error_generate()),
+                mimetype="text/event-stream",
+                status=400,
+            )
 
         enable_multi_step_reasoning = session_data.multi_step_reasoning_enabled
 
         # Use sys.executable to ensure the command runs with the same Python interpreter
         # that is running the Flask app. Use the 'takt' entry point.
-        command = [sys.executable, '-m', 'pipe.cli.takt', '--session', session_id, '--instruction', instruction]
+        command = [
+            sys.executable,
+            "-m",
+            "pipe.cli.takt",
+            "--session",
+            session_id,
+            "--instruction",
+            instruction,
+        ]
         if enable_multi_step_reasoning:
-            command.append('--multi-step-reasoning')
+            command.append("--multi-step-reasoning")
 
         def generate():
             process = subprocess.Popen(
-                command, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.PIPE, 
-                text=True, 
-                encoding='utf-8',
-                bufsize=1
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                bufsize=1,
             )
 
-            for line in iter(process.stdout.readline, ''):
-                yield f"data: {json.dumps({'content': line})}\n\n"
-            
-            process.stdout.close()
-            stderr_output = process.stderr.read()
-            process.stderr.close()
-            
+            if process.stdout:
+                for line in iter(process.stdout.readline, ""):
+                    yield f"data: {json.dumps({'content': line})}\n\n"
+                process.stdout.close()
+
+            stderr_output = ""
+            if process.stderr:
+                stderr_output = process.stderr.read()
+                process.stderr.close()
+
             return_code = process.wait()
 
             if return_code != 0:
                 yield f"data: {json.dumps({'error': stderr_output})}\n\n"
 
-
-        return Response(stream_with_context(generate()), mimetype='text/event-stream')
-
+        return Response(stream_with_context(generate()), mimetype="text/event-stream")
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-@app.route('/api/session/<path:session_id>/turns', methods=['GET'])
+
+@app.route("/api/session/<path:session_id>/turns", methods=["GET"])
 def get_session_turns_api(session_id):
     try:
-        since_index = request.args.get('since', 0, type=int)
+        since_index = request.args.get("since", 0, type=int)
         session_data = session_service.get_session(session_id)
         if not session_data:
-            return jsonify({"success": False, "message": "Session not found."} ), 404
-        
+            return jsonify({"success": False, "message": "Session not found."}), 404
+
         all_turns = [turn.model_dump() for turn in session_data.turns]
         new_turns = all_turns[since_index:]
-        
+
         return jsonify({"success": True, "turns": new_turns}), 200
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     project_root_for_check = os.path.dirname(os.path.abspath(__file__))
     if check_and_show_warning(project_root_for_check):
-        app.run(host='0.0.0.0', port=5001, debug=False)
+        app.run(host="0.0.0.0", port=5001, debug=False)
     else:
         sys.exit(1)

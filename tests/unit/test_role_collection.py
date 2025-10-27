@@ -1,15 +1,15 @@
-import unittest
 import os
 import tempfile
+import unittest
 
 from pipe.core.collections.roles import RoleCollection
 
-class TestRoleCollection(unittest.TestCase):
 
+class TestRoleCollection(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory to act as the project root
         self.project_root = tempfile.TemporaryDirectory()
-        
+
         # Create some dummy role files for testing
         self.role1_path_rel = "roles/engineer.md"
         self.role2_path_rel = "roles/reviewer.md"
@@ -17,12 +17,12 @@ class TestRoleCollection(unittest.TestCase):
 
         self.role1_path_abs = os.path.join(self.project_root.name, self.role1_path_rel)
         self.role2_path_abs = os.path.join(self.project_root.name, self.role2_path_rel)
-        
+
         os.makedirs(os.path.dirname(self.role1_path_abs), exist_ok=True)
-        
+
         with open(self.role1_path_abs, "w") as f:
             f.write("You are a senior software engineer.")
-            
+
         with open(self.role2_path_abs, "w") as f:
             f.write("You are a meticulous code reviewer.")
 
@@ -32,20 +32,22 @@ class TestRoleCollection(unittest.TestCase):
 
     def test_get_for_prompt_with_valid_roles(self):
         """
-        Tests that get_for_prompt correctly loads and returns the content of specified role files.
+        Tests that get_for_prompt correctly loads and returns the content of
+        specified role files.
         """
         role_paths = [self.role1_path_rel, self.role2_path_rel]
         collection = RoleCollection(role_paths)
-        
+
         prompt_data = collection.get_for_prompt(self.project_root.name)
-        
+
         self.assertEqual(len(prompt_data), 2)
         self.assertIn("You are a senior software engineer.", prompt_data)
         self.assertIn("You are a meticulous code reviewer.", prompt_data)
 
     def test_get_for_prompt_with_empty_list(self):
         """
-        Tests that get_for_prompt returns an empty list when initialized with an empty list.
+        Tests that get_for_prompt returns an empty list when initialized with an
+        empty list.
         """
         collection = RoleCollection([])
         prompt_data = collection.get_for_prompt(self.project_root.name)
@@ -58,11 +60,12 @@ class TestRoleCollection(unittest.TestCase):
         """
         role_paths = [self.role1_path_rel, self.non_existent_path_rel]
         collection = RoleCollection(role_paths)
-        
+
         prompt_data = collection.get_for_prompt(self.project_root.name)
-        
+
         self.assertEqual(len(prompt_data), 1)
         self.assertEqual(prompt_data[0], "You are a senior software engineer.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

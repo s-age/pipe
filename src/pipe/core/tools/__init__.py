@@ -1,16 +1,17 @@
-import os
-import importlib
 import fnmatch
+import importlib
+import os
 import sys
-
 
 # This dictionary will store the loaded tool functions
 loaded_tools = {}
 
+
 def load_tools():
     """
     Dynamically loads all Python files in the 'tools' directory as tool functions.
-    Each file is expected to define a single function with the same name as the file (without .py extension).
+    Each file is expected to define a single function with the same name as the
+    file (without .py extension).
     """
     tools_dir = os.path.dirname(os.path.abspath(__file__))
     for filename in os.listdir(tools_dir):
@@ -27,6 +28,7 @@ def load_tools():
             print(f"Loaded tool: {tool_name}", file=sys.stderr)
         except Exception as e:
             print(f"Error loading tool {tool_name}: {e}", file=sys.stderr)
+
 
 # Load tools when the package is imported
 load_tools()

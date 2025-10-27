@@ -1,15 +1,16 @@
 import unittest
-from pipe.core.models.hyperparameters import HyperparameterValue, Hyperparameters
+
+from pipe.core.models.hyperparameters import Hyperparameters, HyperparameterValue
+
 
 class TestHyperparametersModel(unittest.TestCase):
-
     def test_hyperparameter_value_creation(self):
         """
         Tests the creation of a HyperparameterValue instance.
         """
         value_data = {
             "value": 0.8,
-            "description": "This should be ignored by the model"
+            "description": "This should be ignored by the model",
         }
         hp_value = HyperparameterValue(**value_data)
         self.assertEqual(hp_value.value, 0.8)
@@ -23,10 +24,10 @@ class TestHyperparametersModel(unittest.TestCase):
         hyperparameters_data = {
             "temperature": {"value": 0.9, "description": "Temp desc"},
             "top_p": {"value": 0.95, "description": "TopP desc"},
-            "top_k": {"value": 40, "description": "TopK desc"}
+            "top_k": {"value": 40, "description": "TopK desc"},
         }
         hyperparams = Hyperparameters(**hyperparameters_data)
-        
+
         self.assertIsInstance(hyperparams.temperature, HyperparameterValue)
         self.assertEqual(hyperparams.temperature.value, 0.9)
         self.assertEqual(hyperparams.top_p.value, 0.95)
@@ -41,7 +42,7 @@ class TestHyperparametersModel(unittest.TestCase):
             "temperature": {"value": 0.7, "description": "Only temp"}
         }
         hyperparams = Hyperparameters(**hyperparameters_data)
-        
+
         self.assertEqual(hyperparams.temperature.value, 0.7)
         self.assertIsNone(hyperparams.top_p)
         self.assertIsNone(hyperparams.top_k)
@@ -52,10 +53,11 @@ class TestHyperparametersModel(unittest.TestCase):
         resulting in all fields being None.
         """
         hyperparams = Hyperparameters()
-        
+
         self.assertIsNone(hyperparams.temperature)
         self.assertIsNone(hyperparams.top_p)
         self.assertIsNone(hyperparams.top_k)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

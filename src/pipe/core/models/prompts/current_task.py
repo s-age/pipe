@@ -1,11 +1,13 @@
+from typing import Any
+
 from pydantic import BaseModel
-from typing import Optional, Any, List
+
 
 class PromptCurrentTask(BaseModel):
     type: str
-    instruction: Optional[str] = None
-    response: Optional[Any] = None
-    name: Optional[str] = None
-    content: Optional[str] = None
-    original_turns_range: Optional[List[int]] = None
+    instruction: str | None = None
+    response: Any | None = None
+    name: str | None = None
+    content: str | None = None
+    original_turns_range: list[int] | None = None
     timestamp: str

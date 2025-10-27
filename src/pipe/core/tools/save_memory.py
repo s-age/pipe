@@ -1,6 +1,4 @@
-from typing import Dict
-
-def save_memory(fact: str) -> Dict[str, str]:
+def save_memory(fact: str) -> dict[str, str]:
     """
     Saves specific information to long-term memory.
     """

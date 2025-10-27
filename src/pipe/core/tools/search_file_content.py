@@ -1,13 +1,12 @@
-import re
-import os
 import glob as std_glob
+import os
+import re
 
-from typing import Optional
 
 def search_file_content(
     pattern: str,
-    include: Optional[str] = None,
-    path: Optional[str] = None,
+    include: str | None = None,
+    path: str | None = None,
 ) -> dict:
     try:
         compiled_pattern = re.compile(pattern)
@@ -19,7 +18,7 @@ def search_file_content(
 
         if not os.path.isdir(search_path):
             return {"content": f"Error: Search path '{path}' is not a directory."}
-            
+
         # Use glob to find files, filtered by include pattern if provided
         if include:
             glob_pattern = os.path.join(search_path, include)
@@ -31,19 +30,25 @@ def search_file_content(
             filepath = filepath_str
             if os.path.isfile(filepath):
                 try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
+                    with open(filepath, encoding="utf-8") as f:
                         for line_num, line in enumerate(f, 1):
                             if compiled_pattern.search(line):
-                                matches.append({
-                                    "file_path": os.path.relpath(filepath, search_path),
-                                    "line_number": line_num,
-                                    "line_content": line.strip()
-                                })
+                                matches.append(
+                                    {
+                                        "file_path": os.path.relpath(
+                                            filepath, search_path
+                                        ),
+                                        "line_number": line_num,
+                                        "line_content": line.strip(),
+                                    }
+                                )
                 except UnicodeDecodeError:
                     # Skip binary files or files with encoding issues
                     continue
                 except Exception as file_e:
-                    matches.append({"error": f"Error reading file {filepath}: {str(file_e)}"})
+                    matches.append(
+                        {"error": f"Error reading file {filepath}: {str(file_e)}"}
+                    )
 
         if not matches:
             return {"content": "No matches found."}

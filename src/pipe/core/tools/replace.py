@@ -1,9 +1,10 @@
-import os
-import os
-from typing import Dict
 import difflib
+import os
 
-def replace(file_path: str, instruction: str, old_string: str, new_string: str) -> Dict[str, str]:
+
+def replace(
+    file_path: str, instruction: str, old_string: str, new_string: str
+) -> dict[str, str]:
     """
     Replaces text within a file.
     """
@@ -25,10 +26,17 @@ def replace(file_path: str, instruction: str, old_string: str, new_string: str) 
 
         for blocked_path in BLOCKED_PATHS:
             if target_path == blocked_path or target_path.startswith(blocked_path):
-                return {"error": f"Operation on sensitive path {file_path} is not allowed."}
+                return {
+                    "error": f"Operation on sensitive path {file_path} is not allowed."
+                }
 
         if not target_path.startswith(project_root):
-            return {"error": f"Modifying files outside project root is not allowed: {file_path}"}
+            return {
+                "error": (
+                    "Modifying files outside project root is not allowed: "
+                    f"{file_path}"
+                )
+            }
 
         if not os.path.exists(target_path):
             return {"error": f"File not found: {file_path}"}
@@ -36,19 +44,22 @@ def replace(file_path: str, instruction: str, old_string: str, new_string: str) 
             return {"error": f"Path is not a file: {file_path}"}
 
         # Read content
-        with open(target_path, 'r', encoding='utf-8') as f:
+        with open(target_path, encoding="utf-8") as f:
             original_content = f.read()
 
         # Perform simple string replacement (first occurrence only)
         if old_string not in original_content:
-            return {"status": "failed", "message": f"Old string not found in file: {file_path}"}
+            return {
+                "status": "failed",
+                "message": f"Old string not found in file: {file_path}",
+            }
 
         new_content = original_content.replace(old_string, new_string, 1)
 
         # Write back modified content
-        with open(target_path, 'w', encoding='utf-8') as f:
+        with open(target_path, "w", encoding="utf-8") as f:
             f.write(new_content)
-        
+
         diff = ""
         if original_content != new_content:
             diff_lines = difflib.unified_diff(
@@ -56,7 +67,7 @@ def replace(file_path: str, instruction: str, old_string: str, new_string: str) 
                 new_content.splitlines(keepends=True),
                 fromfile=f"a/{file_path}",
                 tofile=f"b/{file_path}",
-                lineterm=''
+                lineterm="",
             )
             diff = "\n".join(list(diff_lines))
 

@@ -1,33 +1,34 @@
 import os
-import json
-from pydantic import BaseModel, Field
-from typing import Optional, List
 
-from pipe.core.utils.file import locked_json_write
-from pipe.core.models.turn import Turn
-from pipe.core.models.todo import TodoItem
+from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.reference import Reference
-from pipe.core.collections.turns import TurnCollection
+from pipe.core.models.todo import TodoItem
+from pipe.core.utils.file import locked_json_write
+from pydantic import BaseModel, Field
+
 
 class Session(BaseModel):
     """
-    Represents a single user session, corresponding to a unique session file (e.g., `${session_id}.json`).
-    This class is responsible for holding the detailed state of a conversation and persisting itself to a file.
+    Represents a single user session, corresponding to a unique session file
+    (e.g., `${session_id}.json`).
+    This class is responsible for holding the detailed state of a conversation and
+    persisting itself to a file.
     It does not manage the collection of all sessions or the index file.
     """
+
     session_id: str
     created_at: str
-    purpose: Optional[str] = None
-    background: Optional[str] = None
-    roles: List[str] = []
+    purpose: str | None = None
+    background: str | None = None
+    roles: list[str] = []
     multi_step_reasoning_enabled: bool = False
     token_count: int = 0
-    hyperparameters: Optional[Hyperparameters] = None
-    references: List[Reference] = Field(default_factory=list)
+    hyperparameters: Hyperparameters | None = None
+    references: list[Reference] = Field(default_factory=list)
     turns: TurnCollection = Field(default_factory=TurnCollection)
     pools: TurnCollection = Field(default_factory=TurnCollection)
-    todos: Optional[List[TodoItem]] = None
+    todos: list[TodoItem] | None = None
 
     def save(self, session_path: str, lock_path: str):
         """Saves the session to a JSON file using a locked write utility."""
@@ -44,7 +45,9 @@ class Session(BaseModel):
             "roles": self.roles,
             "multi_step_reasoning_enabled": self.multi_step_reasoning_enabled,
             "token_count": self.token_count,
-            "hyperparameters": self.hyperparameters.model_dump() if self.hyperparameters else None,
+            "hyperparameters": self.hyperparameters.model_dump()
+            if self.hyperparameters
+            else None,
             "references": [r.model_dump() for r in self.references],
             "turns": [t.model_dump() for t in self.turns],
             "pools": [p.model_dump() for p in self.pools],

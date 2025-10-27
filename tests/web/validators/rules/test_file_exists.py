@@ -1,9 +1,14 @@
-import unittest
 import os
-from src.pipe.web.validators.rules.file_exists import validate_file_exists, validate_comma_separated_files, validate_space_separated_files
+import unittest
+
+from src.pipe.web.validators.rules.file_exists import (
+    validate_comma_separated_files,
+    validate_file_exists,
+    validate_space_separated_files,
+)
+
 
 class TestFileValidators(unittest.TestCase):
-
     def setUp(self):
         # Create dummy files for testing
         self.existing_file1 = "test_file1.tmp"
@@ -36,7 +41,9 @@ class TestFileValidators(unittest.TestCase):
         try:
             validate_comma_separated_files(paths)
         except ValueError:
-            self.fail("validate_comma_separated_files() raised ValueError unexpectedly!")
+            self.fail(
+                "validate_comma_separated_files() raised ValueError unexpectedly!"
+            )
 
     def test_validate_comma_separated_files_failure(self):
         """Tests that comma-separated validation fails if one file is missing."""
@@ -50,7 +57,9 @@ class TestFileValidators(unittest.TestCase):
         try:
             validate_space_separated_files(paths)
         except ValueError:
-            self.fail("validate_space_separated_files() raised ValueError unexpectedly!")
+            self.fail(
+                "validate_space_separated_files() raised ValueError unexpectedly!"
+            )
 
     def test_validate_space_separated_files_with_quotes_success(self):
         """Tests validation of space-separated files with quotes."""
@@ -58,7 +67,10 @@ class TestFileValidators(unittest.TestCase):
         try:
             validate_space_separated_files(paths)
         except ValueError:
-            self.fail("validate_space_separated_files() with quotes raised ValueError unexpectedly!")
+            self.fail(
+                "validate_space_separated_files() with quotes raised ValueError "
+                "unexpectedly!"
+            )
 
     def test_validate_space_separated_files_failure(self):
         """Tests that space-separated validation fails if one file is missing."""
@@ -66,5 +78,6 @@ class TestFileValidators(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_space_separated_files(paths)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

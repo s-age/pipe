@@ -1,21 +1,22 @@
-import unittest
 import json
+import unittest
+
 from pipe.core.models.turn import (
-    UserTaskTurn,
-    ModelResponseTurn,
+    CompressedHistoryTurn,
     FunctionCallingTurn,
+    ModelResponseTurn,
     ToolResponseTurn,
-    CompressedHistoryTurn
+    UserTaskTurn,
 )
 
-class TestTurnModels(unittest.TestCase):
 
+class TestTurnModels(unittest.TestCase):
     def test_user_task_turn_creation(self):
         """Tests the creation of a UserTaskTurn."""
         data = {
             "type": "user_task",
             "instruction": "Please help me with this task.",
-            "timestamp": "2025-10-26T20:00:00Z"
+            "timestamp": "2025-10-26T20:00:00Z",
         }
         turn = UserTaskTurn(**data)
         self.assertEqual(turn.type, "user_task")
@@ -27,7 +28,7 @@ class TestTurnModels(unittest.TestCase):
         data = {
             "type": "model_response",
             "content": "Here is the information you requested.",
-            "timestamp": "2025-10-26T20:01:00Z"
+            "timestamp": "2025-10-26T20:01:00Z",
         }
         turn = ModelResponseTurn(**data)
         self.assertEqual(turn.type, "model_response")
@@ -35,11 +36,13 @@ class TestTurnModels(unittest.TestCase):
 
     def test_function_calling_turn_creation(self):
         """Tests the creation of a FunctionCallingTurn."""
-        func_call_str = json.dumps({"tool_name": "read_file", "args": {"path": "test.txt"}})
+        func_call_str = json.dumps(
+            {"tool_name": "read_file", "args": {"path": "test.txt"}}
+        )
         data = {
             "type": "function_calling",
             "response": func_call_str,
-            "timestamp": "2025-10-26T20:02:00Z"
+            "timestamp": "2025-10-26T20:02:00Z",
         }
         turn = FunctionCallingTurn(**data)
         self.assertEqual(turn.type, "function_calling")
@@ -52,7 +55,7 @@ class TestTurnModels(unittest.TestCase):
             "type": "tool_response",
             "name": "read_file",
             "response": tool_response_dict,
-            "timestamp": "2025-10-26T20:03:00Z"
+            "timestamp": "2025-10-26T20:03:00Z",
         }
         turn = ToolResponseTurn(**data)
         self.assertEqual(turn.type, "tool_response")
@@ -65,12 +68,15 @@ class TestTurnModels(unittest.TestCase):
             "type": "compressed_history",
             "content": "The user asked for help and the model responded.",
             "original_turns_range": [1, 5],
-            "timestamp": "2025-10-26T20:04:00Z"
+            "timestamp": "2025-10-26T20:04:00Z",
         }
         turn = CompressedHistoryTurn(**data)
         self.assertEqual(turn.type, "compressed_history")
-        self.assertEqual(turn.content, "The user asked for help and the model responded.")
+        self.assertEqual(
+            turn.content, "The user asked for help and the model responded."
+        )
         self.assertEqual(turn.original_turns_range, [1, 5])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

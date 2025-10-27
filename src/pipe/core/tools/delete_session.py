@@ -1,6 +1,4 @@
-from typing import Dict
-
-def delete_session(session_id: str, session_service=None) -> Dict[str, str]:
+def delete_session(session_id: str, session_service=None) -> dict[str, str]:
     """
     Deletes a specified session, including its session file and any backups.
     """

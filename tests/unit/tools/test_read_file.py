@@ -1,27 +1,36 @@
-import unittest
 import os
-import tempfile
 import shutil
+import tempfile
+import unittest
 from unittest.mock import MagicMock, patch
-from pipe.core.tools.read_file import read_file
-from pipe.core.services.session_service import SessionService
+
 from pipe.core.models.settings import Settings
+from pipe.core.services.session_service import SessionService
+from pipe.core.tools.read_file import read_file
+
 
 class TestReadFileTool(unittest.TestCase):
-
     def setUp(self):
         self.project_root = tempfile.mkdtemp()
         settings_data = {
-            "model": "test-model", "search_model": "test-model", "context_limit": 10000,
-            "api_mode": "gemini-api", "language": "en", "yolo": False, "expert_mode": False, "timezone": "UTC",
+            "model": "test-model",
+            "search_model": "test-model",
+            "context_limit": 10000,
+            "api_mode": "gemini-api",
+            "language": "en",
+            "yolo": False,
+            "expert_mode": False,
+            "timezone": "UTC",
             "parameters": {
                 "temperature": {"value": 0.5, "description": "t"},
                 "top_p": {"value": 0.9, "description": "p"},
-                "top_k": {"value": 40, "description": "k"}
-            }
+                "top_k": {"value": 40, "description": "k"},
+            },
         }
         self.settings = Settings(**settings_data)
-        self.session_service = SessionService(project_root=self.project_root, settings=self.settings)
+        self.session_service = SessionService(
+            project_root=self.project_root, settings=self.settings
+        )
         self.session_id = self.session_service.create_new_session("Test", "Test", [])
 
         # Create a dummy file for the tool to read
@@ -34,12 +43,13 @@ class TestReadFileTool(unittest.TestCase):
 
     def test_read_file_adds_reference_to_session(self):
         """
-        Tests that the read_file tool correctly adds a file path to the session's references.
+        Tests that the read_file tool correctly adds a file path to the session's
+        references.
         """
         result = read_file(
             absolute_path=self.test_file_path,
             session_service=self.session_service,
-            session_id=self.session_id
+            session_id=self.session_id,
         )
 
         self.assertIn("message", result)
@@ -59,7 +69,7 @@ class TestReadFileTool(unittest.TestCase):
         result = read_file(
             absolute_path=non_existent_path,
             session_service=self.session_service,
-            session_id=self.session_id
+            session_id=self.session_id,
         )
 
         self.assertIn("error", result)
@@ -67,21 +77,27 @@ class TestReadFileTool(unittest.TestCase):
 
     def test_read_file_calls_correct_session_service_methods(self):
         """
-        Tests that read_file calls the correct service methods for adding and updating a reference.
+        Tests that read_file calls the correct service methods for adding and
+        updating a reference.
         """
         mock_session_service = MagicMock(spec=SessionService)
-        
+
         # Make os.path.getsize return a non-zero value
-        with patch('os.path.getsize', return_value=10):
+        with patch("os.path.getsize", return_value=10):
             read_file(
                 absolute_path=self.test_file_path,
                 session_service=mock_session_service,
-                session_id="mock_session_id"
+                session_id="mock_session_id",
             )
 
         # Verify that the correct methods were called in order
-        mock_session_service.add_reference_to_session.assert_called_once_with("mock_session_id", self.test_file_path)
-        mock_session_service.update_reference_ttl_in_session.assert_called_once_with("mock_session_id", self.test_file_path, 3)
+        mock_session_service.add_reference_to_session.assert_called_once_with(
+            "mock_session_id", self.test_file_path
+        )
+        mock_session_service.update_reference_ttl_in_session.assert_called_once_with(
+            "mock_session_id", self.test_file_path, 3
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

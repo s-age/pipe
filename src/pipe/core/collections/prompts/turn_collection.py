@@ -1,15 +1,19 @@
-from typing import List, Dict, Any
+from typing import Any
+
+from pipe.core.models.turn import Turn
+
 
 class PromptTurnCollection:
     """
     Manages a collection of conversation turns for the prompt and handles logic
     for constraining the history size to fit within context limits.
     """
-    def __init__(self, turns: List[Dict[str, Any]], token_limit: int = 400000):
+
+    def __init__(self, turns: list[Turn], token_limit: int = 400000):
         self._turns = turns
         self.token_limit = token_limit
 
-    def get_turns(self) -> List[Dict[str, Any]]:
+    def get_turns(self) -> list[dict[str, Any]]:
         """
         Returns the turns for the prompt, constrained by the token limit.
 

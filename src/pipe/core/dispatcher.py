@@ -1,11 +1,14 @@
 """
 Dispatches commands to the appropriate delegates based on arguments.
 """
+
 import argparse
 import sys
+
 from pipe.core.models.args import TaktArgs
-from pipe.core.services.session_service import SessionService
 from pipe.core.services.prompt_service import PromptService
+from pipe.core.services.session_service import SessionService
+
 
 def _dispatch_run(args: TaktArgs, session_service: SessionService):
     """
@@ -16,7 +19,11 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     if session_id:
         pool = session_service.get_pool(session_id)
         if pool and len(pool) >= 7:
-            print(f"Warning: The number of items in the session pool ({len(pool)}) has reached the limit (7). Halting further processing.", file=sys.stderr)
+            print(
+                f"Warning: The number of items in the session pool ({len(pool)}) "
+                "has reached the limit (7). Halting further processing.",
+                file=sys.stderr,
+            )
             return
 
     api_mode = session_service.settings.api_mode
@@ -24,6 +31,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
 
     if args.dry_run:
         from .delegates import dry_run_delegate
+
         dry_run_delegate.run(session_service, prompt_service)
         return
 
@@ -34,18 +42,27 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     token_count = 0
     turns_to_save = []
 
-    if api_mode == 'gemini-api':
+    if api_mode == "gemini-api":
         from .delegates import gemini_api_delegate
-        _, token_count, turns_to_save = gemini_api_delegate.run(args, session_service, prompt_service)
-    elif api_mode == 'gemini-cli':
-        from .delegates import gemini_cli_delegate
+
+        _, token_count, turns_to_save = gemini_api_delegate.run(
+            args, session_service, prompt_service
+        )
+    elif api_mode == "gemini-cli":
         from pipe.core.models.turn import ModelResponseTurn
         from pipe.core.utils.datetime import get_current_timestamp
+
+        from .delegates import gemini_cli_delegate
+
+        # Explicitly merge any tool calls from the pool into the main turns history
+        # before calling the agent.
+        session_service.merge_pool_into_turns(session_id)
+
         model_response_text = gemini_cli_delegate.run(args, session_service)
         final_turn = ModelResponseTurn(
             type="model_response",
             content=model_response_text,
-            timestamp=get_current_timestamp(session_service.timezone_obj)
+            timestamp=get_current_timestamp(session_service.timezone_obj),
         )
         turns_to_save = [final_turn]
     else:
@@ -61,18 +78,23 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     print("\n", flush=True)
     print("event: end", flush=True)
 
-def dispatch(args: TaktArgs, session_service: SessionService, parser: argparse.ArgumentParser):
+
+def dispatch(
+    args: TaktArgs, session_service: SessionService, parser: argparse.ArgumentParser
+):
     """
     Acts as the main router for the application's command flow.
     """
     if args.fork:
         from .delegates import fork_delegate
+
         fork_delegate.run(args, session_service)
-    
+
     elif args.instruction:
         session_service.prepare_session_for_takt(args, is_dry_run=args.dry_run)
         _dispatch_run(args, session_service)
 
     else:
         from .delegates import help_delegate
+
         help_delegate.run(parser)

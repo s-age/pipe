@@ -1,9 +1,13 @@
-import os
-import os
-from typing import List, Optional, Dict, Any
 import fnmatch
+import os
+from typing import Any
 
-def list_directory(path: str, file_filtering_options: Optional[Dict[str, Any]] = None, ignore: Optional[List[str]] = None) -> Dict[str, Any]:
+
+def list_directory(
+    path: str,
+    file_filtering_options: dict[str, Any] | None = None,
+    ignore: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Lists the names of files and subdirectories directly within a specified directory.
     """
@@ -35,4 +39,3 @@ def list_directory(path: str, file_filtering_options: Optional[Dict[str, Any]] =
         return {"files": sorted(files), "directories": sorted(directories)}
     except Exception as e:
         return {"error": f"Failed to list directory {path}: {str(e)}"}
-

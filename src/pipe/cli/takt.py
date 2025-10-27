@@ -6,6 +6,8 @@ import warnings
 
 # Ignore specific warnings from the genai library
 warnings.filterwarnings("ignore", message=".*there are non-text parts in the response.*")
+# Ignore Pydantic warnings about 'Operation' class from google-genai
+warnings.filterwarnings("ignore", message='Field name ".*" shadows an attribute in parent "Operation";')
 
 from pipe.core.utils.file import read_yaml_file, read_text_file
 from dotenv import load_dotenv

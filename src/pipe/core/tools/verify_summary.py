@@ -61,11 +61,12 @@ def verify_summary(
             "replacement and respond with 'Approved:' or 'Rejected:'."
         )
 
-        verifier_session_id = session_service.create_new_session(
+        verifier_session = session_service.create_new_session(
             purpose=verifier_purpose,
             background=verifier_background,
             roles=["roles/reviewer.md"],  # Using a dedicated reviewer role
         )
+        verifier_session_id = verifier_session.session_id
 
         # Add the prepared history to the new verifier session
         session_service.history_manager.update_turns(verifier_session_id, temp_turns)

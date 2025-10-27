@@ -55,38 +55,19 @@ class SessionService:
         }
         self.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
 
+        # --- Setup the Session class (Active Record style) ---
+        Session.setup(
+            sessions_dir=self.sessions_dir,
+            timezone_obj=self.timezone_obj,
+            default_hyperparameters=self.default_hyperparameters,
+        )
+        # ----------------------------------------------------
+
         self._initialize()
 
     def _fetch_session(self, session_id: str) -> Session | None:
-        """Loads a single session from its JSON file, applying data migrations if
-        necessary."""
-        session_path = self._get_session_path(session_id)
-        try:
-            data = read_json_file(session_path)
-        except (FileNotFoundError, ValueError):
-            return None
-
-        # --- Data Migration ---
-        # Ensure all turns in 'turns' and 'pools' have a timestamp.
-        session_creation_time = data.get(
-            "created_at", get_current_timestamp(self.timezone_obj)
-        )
-        for turn_list_key in ["turns", "pools"]:
-            if turn_list_key in data and isinstance(data[turn_list_key], list):
-                for turn_data in data[turn_list_key]:
-                    if isinstance(turn_data, dict):
-                        # Migrate missing timestamps
-                        if "timestamp" not in turn_data:
-                            turn_data["timestamp"] = session_creation_time
-                        # Migrate missing original_turns_range for compressed_history
-                        if (
-                            turn_data.get("type") == "compressed_history"
-                            and "original_turns_range" not in turn_data
-                        ):
-                            turn_data["original_turns_range"] = [0, 0]
-        # --- End of Data Migration ---
-
-        return Session.model_validate(data)
+        """Loads a single session from its JSON file."""
+        return Session.find(session_id)
 
     def get_session(self, session_id: str) -> Session | None:
         """Loads a specific session."""
@@ -114,13 +95,14 @@ class SessionService:
                     "instruction."
                 )
 
-            session_id = self.create_new_session(
+            session = self.create_new_session(
                 purpose=args.purpose,
                 background=args.background,
                 roles=args.roles,
                 multi_step_reasoning_enabled=args.multi_step_reasoning,
                 parent_id=args.parent,
             )
+            session_id = session.session_id
 
             if not is_dry_run:
                 first_turn = UserTaskTurn(
@@ -176,20 +158,7 @@ class SessionService:
         os.makedirs(self.backups_dir, exist_ok=True)
 
     def _save_session(self, session: Session):
-        if session.references:
-            # Delegate sorting to the ReferenceCollection
-            ref_collection = ReferenceCollection(session.references)
-            ref_collection.sort_by_ttl()
-
-        session_path = self._get_session_path(session.session_id)
-        session_lock_path = self._get_session_lock_path(session.session_id)
-
-        # Ensure the directory exists before trying to write the file
-        os.makedirs(os.path.dirname(session_path), exist_ok=True)
-
-        locked_json_write(
-            session_lock_path, session_path, session.model_dump(mode="json")
-        )
+        session.save()
 
     def create_new_session(
         self,
@@ -200,49 +169,22 @@ class SessionService:
         token_count: int = 0,
         hyperparameters: dict | None = None,
         parent_id: str | None = None,
-    ) -> str:
-        if parent_id:
-            parent_session = self._fetch_session(parent_id)
-            if not parent_session:
-                raise FileNotFoundError(
-                    f"Parent session with ID '{parent_id}' not found."
-                )
-
-        timestamp = get_current_timestamp(self.timezone_obj)
-        identity_str = json.dumps(
-            {
-                "purpose": purpose,
-                "background": background,
-                "roles": roles,
-                "multi_step_reasoning_enabled": multi_step_reasoning_enabled,
-                "timestamp": timestamp,
-            },
-            sort_keys=True,
-        )
-        session_hash = self._generate_hash(identity_str)
-
-        session_id = f"{parent_id}/{session_hash}" if parent_id else session_hash
-
-        session = Session(
-            session_id=session_id,
-            created_at=timestamp,
+    ) -> Session:
+        session = Session.create(
             purpose=purpose,
             background=background,
             roles=roles,
             multi_step_reasoning_enabled=multi_step_reasoning_enabled,
             token_count=token_count,
-            hyperparameters=hyperparameters
-            if hyperparameters is not None
-            else self.default_hyperparameters,
+            hyperparameters=hyperparameters,
+            parent_id=parent_id,
         )
 
-        self._save_session(session)
-
         collection = self.list_sessions()
-        collection.update(session_id, purpose, timestamp)
+        collection.update(session.session_id, session.purpose, session.created_at)
         collection.save()
 
-        return session_id
+        return session
 
     def edit_session_meta(self, session_id: str, new_meta_data: dict):
         self.backup_session(session_id)
@@ -250,20 +192,7 @@ class SessionService:
         if not session:
             return
 
-        if "purpose" in new_meta_data:
-            session.purpose = new_meta_data["purpose"]
-        if "background" in new_meta_data:
-            session.background = new_meta_data["background"]
-        if "multi_step_reasoning_enabled" in new_meta_data:
-            session.multi_step_reasoning_enabled = new_meta_data[
-                "multi_step_reasoning_enabled"
-            ]
-        if "token_count" in new_meta_data:
-            session.token_count = new_meta_data["token_count"]
-        if "hyperparameters" in new_meta_data:
-            session.hyperparameters = new_meta_data["hyperparameters"]
-
-        self._save_session(session)
+        session.edit_meta(new_meta_data)
 
         collection = self.list_sessions()
         collection.update(session_id, purpose=session.purpose)

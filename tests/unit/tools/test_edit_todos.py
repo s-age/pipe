@@ -29,7 +29,8 @@ class TestEditTodosTool(unittest.TestCase):
         self.session_service = SessionService(
             project_root=self.project_root, settings=self.settings
         )
-        self.session_id = self.session_service.create_new_session("Test", "Test", [])
+        session = self.session_service.create_new_session("Test", "Test", [])
+        self.session_id = session.session_id
 
     def tearDown(self):
         shutil.rmtree(self.project_root)

@@ -30,7 +30,8 @@ class TestDeleteTodosTool(unittest.TestCase):
         self.session_service = SessionService(
             project_root=self.project_root, settings=self.settings
         )
-        self.session_id = self.session_service.create_new_session("Test", "Test", [])
+        session = self.session_service.create_new_session("Test", "Test", [])
+        self.session_id = session.session_id
 
         # Add some initial todos to the session
         initial_todos = [

@@ -36,14 +36,15 @@ class TestSessionService(unittest.TestCase):
 
     def test_create_new_session(self):
         """Tests the creation of a new session."""
-        session_id = self.session_service.create_new_session(
+        session = self.session_service.create_new_session(
             "Purpose", "Background", []
         )
-        self.assertIsNotNone(session_id)
-
-        session = self.session_service.get_session(session_id)
         self.assertIsNotNone(session)
-        self.assertEqual(session.purpose, "Purpose")
+        session_id = session.session_id
+
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertIsNotNone(fetched_session)
+        self.assertEqual(fetched_session.purpose, "Purpose")
 
         collection = self.session_service.list_sessions()
         self.assertEqual(len(collection), 1)
@@ -51,10 +52,12 @@ class TestSessionService(unittest.TestCase):
 
     def test_create_session_with_parent(self):
         """Tests creating a child session with a parent."""
-        parent_id = self.session_service.create_new_session("Parent", "BG", [])
-        child_id = self.session_service.create_new_session(
+        parent_session = self.session_service.create_new_session("Parent", "BG", [])
+        parent_id = parent_session.session_id
+        child_session = self.session_service.create_new_session(
             "Child", "BG", [], parent_id=parent_id
         )
+        child_id = child_session.session_id
 
         self.assertTrue(child_id.startswith(f"{parent_id}/"))
 
@@ -63,8 +66,8 @@ class TestSessionService(unittest.TestCase):
 
     def test_fork_session_success(self):
         """Tests the successful forking of a session."""
-        session_id = self.session_service.create_new_session("Original", "BG", [])
-        session = self.session_service.get_session(session_id)
+        session = self.session_service.create_new_session("Original", "BG", [])
+        session_id = session.session_id
         session.turns.append(
             UserTaskTurn(type="user_task", instruction="First", timestamp="...")
         )
@@ -85,17 +88,19 @@ class TestSessionService(unittest.TestCase):
 
     def test_edit_session_meta(self):
         """Tests editing a session's metadata."""
-        session_id = self.session_service.create_new_session("Original", "BG", [])
+        session = self.session_service.create_new_session("Original", "BG", [])
+        session_id = session.session_id
         new_meta = {"purpose": "Updated Purpose", "background": "Updated BG"}
         self.session_service.edit_session_meta(session_id, new_meta)
 
-        session = self.session_service.get_session(session_id)
-        self.assertEqual(session.purpose, "Updated Purpose")
-        self.assertEqual(session.background, "Updated BG")
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertEqual(fetched_session.purpose, "Updated Purpose")
+        self.assertEqual(fetched_session.background, "Updated BG")
 
     def test_update_and_add_references(self):
         """Tests updating and adding references to a session."""
-        session_id = self.session_service.create_new_session("RefTest", "BG", [])
+        session = self.session_service.create_new_session("RefTest", "BG", [])
+        session_id = session.session_id
 
         # Create a dummy file
         ref_path = os.path.join(self.project_root, "ref1.txt")
@@ -104,61 +109,65 @@ class TestSessionService(unittest.TestCase):
 
         # Add a reference
         self.session_service.add_reference_to_session(session_id, "ref1.txt")
-        session = self.session_service.get_session(session_id)
-        self.assertEqual(len(session.references), 1)
-        self.assertEqual(session.references[0].path, "ref1.txt")
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertEqual(len(fetched_session.references), 1)
+        self.assertEqual(fetched_session.references[0].path, "ref1.txt")
 
         # Update references (replace all)
         from pipe.core.models.reference import Reference
 
         new_refs = [Reference(path="new_ref.txt", disabled=True)]
         self.session_service.update_references(session_id, new_refs)
-        session = self.session_service.get_session(session_id)
-        self.assertEqual(len(session.references), 1)
-        self.assertEqual(session.references[0].path, "new_ref.txt")
-        self.assertTrue(session.references[0].disabled)
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertEqual(len(fetched_session.references), 1)
+        self.assertEqual(fetched_session.references[0].path, "new_ref.txt")
+        self.assertTrue(fetched_session.references[0].disabled)
 
     def test_update_and_delete_todos(self):
         """Tests updating and deleting todos in a session."""
-        session_id = self.session_service.create_new_session("TodoTest", "BG", [])
+        session = self.session_service.create_new_session("TodoTest", "BG", [])
+        session_id = session.session_id
 
         from pipe.core.models.todo import TodoItem
 
         todos = [TodoItem(title="My Todo", checked=False)]
         self.session_service.update_todos(session_id, todos)
 
-        session = self.session_service.get_session(session_id)
-        self.assertEqual(len(session.todos), 1)
-        self.assertEqual(session.todos[0].title, "My Todo")
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertEqual(len(fetched_session.todos), 1)
+        self.assertEqual(fetched_session.todos[0].title, "My Todo")
 
         self.session_service.delete_todos(session_id)
-        session = self.session_service.get_session(session_id)
-        self.assertIsNone(session.todos)
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertIsNone(fetched_session.todos)
 
     def test_pool_operations(self):
         """Tests adding to, getting, and clearing the turn pool."""
-        session_id = self.session_service.create_new_session("PoolTest", "BG", [])
+        session = self.session_service.create_new_session("PoolTest", "BG", [])
+        session_id = session.session_id
         turn = UserTaskTurn(type="user_task", instruction="Pool task", timestamp="...")
 
-        session = self.session_service.get_session(session_id)
-        session.pools.append(turn)
+        fetched_session = self.session_service.get_session(session_id)
+        fetched_session.pools.append(turn)
 
         # Test get_pool
-        self.assertEqual(len(session.pools), 1)
-        self.assertEqual(session.pools[0].instruction, "Pool task")
+        self.assertEqual(len(fetched_session.pools), 1)
+        self.assertEqual(fetched_session.pools[0].instruction, "Pool task")
 
         # Test get_and_clear_pool
-        cleared_pool = session.pools.copy()
-        session.pools.clear()
+        cleared_pool = fetched_session.pools.copy()
+        fetched_session.pools.clear()
         self.assertEqual(len(cleared_pool), 1)
-        self.assertEqual(len(session.pools), 0)
+        self.assertEqual(len(fetched_session.pools), 0)
 
     def test_delete_session(self):
         """Tests deleting a session and its children."""
-        parent_id = self.session_service.create_new_session("Parent", "BG", [])
-        child_id = self.session_service.create_new_session(
+        parent_session = self.session_service.create_new_session("Parent", "BG", [])
+        parent_id = parent_session.session_id
+        child_session = self.session_service.create_new_session(
             "Child", "BG", [], parent_id=parent_id
         )
+        child_id = child_session.session_id
 
         self.session_service.delete_session(parent_id)
 
@@ -169,53 +178,58 @@ class TestSessionService(unittest.TestCase):
 
     def test_update_token_count(self):
         """Tests updating the token count of a session."""
-        session_id = self.session_service.create_new_session("TokenTest", "BG", [])
+        session = self.session_service.create_new_session("TokenTest", "BG", [])
+        session_id = session.session_id
         self.session_service.update_token_count(session_id, 1234)
 
-        session = self.session_service.get_session(session_id)
-        self.assertEqual(session.token_count, 1234)
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertEqual(fetched_session.token_count, 1234)
 
     def test_fork_session_index_out_of_range(self):
         """Tests that forking with an out-of-range index raises IndexError."""
-        session_id = self.session_service.create_new_session("Original", "BG", [])
+        session = self.session_service.create_new_session("Original", "BG", [])
+        session_id = session.session_id
         with self.assertRaises(IndexError):
             self.session_service.fork_session(session_id, fork_index=5)
 
     def test_fork_session_from_non_model_response_turn(self):
         """Tests that forking from a turn that is not a model_response raises
         ValueError."""
-        session_id = self.session_service.create_new_session("Original", "BG", [])
-        session = self.session_service.get_session(session_id)
-        session.turns.append(
+        session = self.session_service.create_new_session("Original", "BG", [])
+        session_id = session.session_id
+        fetched_session = self.session_service.get_session(session_id)
+        fetched_session.turns.append(
             UserTaskTurn(type="user_task", instruction="First", timestamp="...")
         )
-        self.session_service._save_session(session)
+        self.session_service._save_session(fetched_session)
 
         with self.assertRaises(ValueError):
             self.session_service.fork_session(session_id, fork_index=0)
 
     def test_add_reference_to_session(self):
         """Tests that add_reference_to_session adds new but not duplicate references."""
-        session_id = self.session_service.create_new_session("Test", "BG", [])
+        session = self.session_service.create_new_session("Test", "BG", [])
+        session_id = session.session_id
         ref_path = os.path.join(self.project_root, "ref.txt")
         with open(ref_path, "w") as f:
             f.write("content")
 
         # Add new reference
         self.session_service.add_reference_to_session(session_id, "ref.txt")
-        session = self.session_service.get_session(session_id)
-        self.assertEqual(len(session.references), 1)
-        self.assertEqual(session.references[0].path, "ref.txt")
-        self.assertEqual(session.references[0].ttl, 3)
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertEqual(len(fetched_session.references), 1)
+        self.assertEqual(fetched_session.references[0].path, "ref.txt")
+        self.assertEqual(fetched_session.references[0].ttl, 3)
 
         # Try to add the same reference again
         self.session_service.add_reference_to_session(session_id, "ref.txt")
-        session = self.session_service.get_session(session_id)
-        self.assertEqual(len(session.references), 1)  # Should not add duplicate
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertEqual(len(fetched_session.references), 1)  # Should not add duplicate
 
     def test_update_reference_ttl_in_session(self):
         """Tests updating the TTL for a reference."""
-        session_id = self.session_service.create_new_session("Test", "BG", [])
+        session = self.session_service.create_new_session("Test", "BG", [])
+        session_id = session.session_id
         ref_path = os.path.join(self.project_root, "ref.txt")
         with open(ref_path, "w") as f:
             f.write("content")
@@ -223,29 +237,30 @@ class TestSessionService(unittest.TestCase):
 
         # Update TTL
         self.session_service.update_reference_ttl_in_session(session_id, "ref.txt", 5)
-        session = self.session_service.get_session(session_id)
-        self.assertEqual(session.references[0].ttl, 5)
-        self.assertFalse(session.references[0].disabled)
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertEqual(fetched_session.references[0].ttl, 5)
+        self.assertFalse(fetched_session.references[0].disabled)
 
         # Update TTL to 0
         self.session_service.update_reference_ttl_in_session(session_id, "ref.txt", 0)
-        session = self.session_service.get_session(session_id)
-        self.assertEqual(session.references[0].ttl, 0)
-        self.assertTrue(session.references[0].disabled)
+        fetched_session = self.session_service.get_session(session_id)
+        self.assertEqual(fetched_session.references[0].ttl, 0)
+        self.assertTrue(fetched_session.references[0].disabled)
 
     def test_save_session_sorts_references(self):
         """Tests that _save_session correctly sorts references by TTL."""
         from pipe.core.models.reference import Reference
 
-        session_id = self.session_service.create_new_session("Test", "BG", [])
-        session = self.session_service.get_session(session_id)
-        session.references = [
+        session = self.session_service.create_new_session("Test", "BG", [])
+        session_id = session.session_id
+        fetched_session = self.session_service.get_session(session_id)
+        fetched_session.references = [
             Reference(path="ref1.txt", disabled=False, ttl=2),
             Reference(path="ref2.txt", disabled=True, ttl=5),
             Reference(path="ref3.txt", disabled=False, ttl=None),  # treated as 3
             Reference(path="ref4.txt", disabled=False, ttl=5),
         ]
-        self.session_service._save_session(session)
+        self.session_service._save_session(fetched_session)
 
         # Re-fetch and check order
         saved_session = self.session_service.get_session(session_id)
@@ -272,8 +287,9 @@ class TestSessionService(unittest.TestCase):
         list."""
         from pipe.core.models.turn import FunctionCallingTurn, ToolResponseTurn
 
-        session_id = self.session_service.create_new_session("MergeTest", "BG", [])
-        session = self.session_service.get_session(session_id)
+        session = self.session_service.create_new_session("MergeTest", "BG", [])
+        session_id = session.session_id
+        fetched_session = self.session_service.get_session(session_id)
 
         # Add some turns to the pool
         pool_turns = [
@@ -287,21 +303,21 @@ class TestSessionService(unittest.TestCase):
                 timestamp="...",
             ),
         ]
-        session.pools.extend(pool_turns)
+        fetched_session.pools.extend(pool_turns)
 
         # Verify pool is populated and turns is empty
-        self.assertEqual(len(session.pools), 2)
-        self.assertEqual(len(session.turns), 0)
+        self.assertEqual(len(fetched_session.pools), 2)
+        self.assertEqual(len(fetched_session.turns), 0)
 
         # Perform the merge
-        session.turns.extend(session.pools)
-        session.pools.clear()
+        fetched_session.turns.extend(fetched_session.pools)
+        fetched_session.pools.clear()
 
         # Verify pool is cleared and turns are populated
-        self.assertEqual(len(session.pools), 0)
-        self.assertEqual(len(session.turns), 2)
-        self.assertEqual(session.turns[0].type, "function_calling")
-        self.assertEqual(session.turns[1].name, "tool1")
+        self.assertEqual(len(fetched_session.pools), 0)
+        self.assertEqual(len(fetched_session.turns), 2)
+        self.assertEqual(fetched_session.turns[0].type, "function_calling")
+        self.assertEqual(fetched_session.turns[1].name, "tool1")
 
 
 if __name__ == "__main__":

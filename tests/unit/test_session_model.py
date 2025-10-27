@@ -80,9 +80,6 @@ class TestSessionModel(unittest.TestCase):
         """
         Tests that the save() method correctly persists the session data to a JSON file.
         """
-        session_path = os.path.join(self.temp_dir.name, "test_session.json")
-        lock_path = f"{session_path}.lock"
-
         session = Session(
             session_id="save-test-123",
             created_at="2025-10-26T13:00:00Z",
@@ -90,8 +87,13 @@ class TestSessionModel(unittest.TestCase):
             references=[Reference(path="app.py", disabled=False)],
         )
 
+        # Configure the session class with the temporary directory
+        Session.sessions_dir = self.temp_dir.name
+        session.session_id = "test_session"  # Overwrite to match the path
+        session_path = os.path.join(self.temp_dir.name, "test_session.json")
+
         # Save the session
-        session.save(session_path, lock_path)
+        session.save()
 
         # Verify the file was created and contains the correct data
         self.assertTrue(os.path.exists(session_path))
@@ -99,7 +101,7 @@ class TestSessionModel(unittest.TestCase):
         with open(session_path) as f:
             saved_data = json.load(f)
 
-        self.assertEqual(saved_data["session_id"], "save-test-123")
+        self.assertEqual(saved_data["session_id"], "test_session")
         self.assertEqual(saved_data["purpose"], "Test the save method")
         self.assertEqual(len(saved_data["references"]), 1)
         self.assertEqual(saved_data["references"][0]["path"], "app.py")

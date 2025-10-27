@@ -22,6 +22,8 @@ from pipe.core.models.turn import Turn, UserTaskTurn
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import (
     FileLock,
+    locked_json_write,
+    read_json_file,
 )
 
 
@@ -59,11 +61,10 @@ class SessionService:
         """Loads a single session from its JSON file, applying data migrations if
         necessary."""
         session_path = self._get_session_path(session_id)
-        if not os.path.exists(session_path):
+        try:
+            data = read_json_file(session_path)
+        except (FileNotFoundError, ValueError):
             return None
-
-        with open(session_path, encoding="utf-8") as f:
-            data = json.load(f)
 
         # --- Data Migration ---
         # Ensure all turns in 'turns' and 'pools' have a timestamp.
@@ -159,14 +160,11 @@ class SessionService:
         self.current_session_id = session_id
         self.current_instruction = args.instruction
 
-    def _get_session_path(self, session_id: str, create_dirs: bool = False) -> str:
+    def _get_session_path(self, session_id: str) -> str:
         safe_path_parts = [
             part for part in session_id.split("/") if part not in ("", ".", "..")
         ]
         final_path = os.path.join(self.sessions_dir, *safe_path_parts)
-
-        if create_dirs:
-            os.makedirs(os.path.dirname(final_path), exist_ok=True)
 
         return f"{final_path}.json"
 
@@ -185,7 +183,13 @@ class SessionService:
 
         session_path = self._get_session_path(session.session_id)
         session_lock_path = self._get_session_lock_path(session.session_id)
-        session.save(session_path, session_lock_path)
+
+        # Ensure the directory exists before trying to write the file
+        os.makedirs(os.path.dirname(session_path), exist_ok=True)
+
+        locked_json_write(
+            session_lock_path, session_path, session.model_dump(mode="json")
+        )
 
     def create_new_session(
         self,

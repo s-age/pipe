@@ -4,12 +4,14 @@ version = "0.1.0"
 description = "A task-oriented chat agent for context engineering."
 dependencies = [
     "google-generativeai==0.5.4",
-    "PyYAML==6.0.1",
-    "python-dotenv==1.0.1",
-    "Flask==3.0.3",
-    "cryptography==42.0.5",
-    "json5==0.9.14",
-    "pydantic==2.6.4"
+    "PyYAML==6.0.3",
+    "python-dotenv==1.1.1",
+    "Flask==3.1.2",
+    "cryptography==46.0.2",
+    "json5==0.9.25",
+    "pydantic==2.6.4",
+    "beautifulsoup4==4.12.3",
+    "httpx<1.0.0,>=0.28.1"
 ]
 
 [project.scripts]
@@ -21,6 +23,7 @@ test = [
 ]
 
 [tool.setuptools.packages.find]
+include = ["pipe*", "tests*"]
 where = ["src", "tests"]
 
 [tool.pytest.ini_options]

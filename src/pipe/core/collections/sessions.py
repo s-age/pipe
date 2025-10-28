@@ -5,6 +5,7 @@ import zoneinfo
 from collections.abc import Iterator
 
 from pipe.core.models.session import Session
+from pipe.core.models.turn import Turn
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import locked_json_read, locked_json_write
 
@@ -97,6 +98,116 @@ class SessionCollection:
                 del self._index_data["sessions"][child_id]
             return True
         return False
+
+    def add_turn(self, session: Session, turn_data: Turn):
+        session.turns.append(turn_data)
+        session.save()
+        self.update(session.session_id)
+        self.save()
+
+    def edit_turn(self, session: Session, turn_index: int, new_data: dict):
+        from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
+
+        if not (0 <= turn_index < len(session.turns)):
+            raise IndexError("Turn index out of range.")
+
+        original_turn = session.turns[turn_index]
+        if original_turn.type not in ["user_task", "model_response"]:
+            raise ValueError(
+                f"Editing turns of type '{original_turn.type}' is not allowed."
+            )
+
+        turn_as_dict = original_turn.model_dump()
+        turn_as_dict.update(new_data)
+
+        if original_turn.type == "user_task":
+            session.turns[turn_index] = UserTaskTurn(**turn_as_dict)
+        elif original_turn.type == "model_response":
+            session.turns[turn_index] = ModelResponseTurn(**turn_as_dict)
+
+        session.save()
+        self.update(session.session_id)
+        self.save()
+
+    def delete_turn(self, session: Session, turn_index: int):
+        if not (0 <= turn_index < len(session.turns)):
+            raise IndexError("Turn index out of range.")
+
+        del session.turns[turn_index]
+        session.save()
+        self.update(session.session_id)
+        self.save()
+
+    def merge_pool(self, session: Session):
+        from pipe.core.collections.turns import TurnCollection
+
+        if session.pools:
+            session.turns.extend(session.pools)
+            session.pools = TurnCollection()
+            session.save()
+            self.update(session.session_id)
+            self.save()
+
+    def fork(self, original_session: Session, fork_index: int) -> Session:
+        import hashlib
+        import json
+
+        from pipe.core.collections.turns import TurnCollection
+
+        if not (0 <= fork_index < len(original_session.turns)):
+            raise IndexError("fork_index is out of range.")
+
+        fork_turn = original_session.turns[fork_index]
+        if fork_turn.type != "model_response":
+            raise ValueError(
+                "Forking is only allowed from a 'model_response' turn. "
+                f"Turn {fork_index + 1} is of type '{fork_turn.type}'."
+            )
+
+        timestamp = get_current_timestamp(self.timezone_obj)
+        forked_purpose = f"Fork of: {original_session.purpose}"
+        forked_turns = TurnCollection(original_session.turns[: fork_index + 1])
+
+        identity_str = json.dumps(
+            {
+                "purpose": forked_purpose,
+                "original_id": original_session.session_id,
+                "fork_at_turn": fork_index,
+                "timestamp": timestamp,
+            },
+            sort_keys=True,
+        )
+        new_session_id_suffix = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
+
+        parent_path = (
+            original_session.session_id.rsplit("/", 1)[0]
+            if "/" in original_session.session_id
+            else None
+        )
+        new_session_id = (
+            f"{parent_path}/{new_session_id_suffix}"
+            if parent_path
+            else new_session_id_suffix
+        )
+
+        new_session = Session(
+            session_id=new_session_id,
+            created_at=timestamp,
+            purpose=forked_purpose,
+            background=original_session.background,
+            roles=original_session.roles,
+            multi_step_reasoning_enabled=original_session.multi_step_reasoning_enabled,
+            hyperparameters=original_session.hyperparameters
+            or Session.default_hyperparameters,
+            references=original_session.references,
+            turns=forked_turns,
+        )
+
+        new_session.save()
+        self.update(new_session.session_id, new_session.purpose, new_session.created_at)
+        self.save()
+
+        return new_session
 
     def get_sorted_by_last_updated(self) -> list[tuple[str, dict]]:
         """

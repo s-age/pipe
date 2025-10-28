@@ -3,7 +3,6 @@ Manages the overall session, excluding conversation_history.
 """
 
 import hashlib
-import json
 import os
 import sys
 import zoneinfo
@@ -291,16 +290,8 @@ class SessionService:
         if not session:
             raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
 
-        if not (0 <= turn_index < len(session.turns)):
-            raise IndexError("Turn index out of range.")
-
-        del session.turns[turn_index]
-        self._save_session(session)
-
-        # Update the index to reflect the change
         collection = self.list_sessions()
-        collection.update(session_id)
-        collection.save()
+        collection.delete_turn(session, turn_index)
 
     def edit_turn(self, session_id: str, turn_index: int, new_data: dict):
         """Edits a specific turn in a session."""
@@ -308,31 +299,8 @@ class SessionService:
         if not session:
             raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
 
-        if not (0 <= turn_index < len(session.turns)):
-            raise IndexError("Turn index out of range.")
-
-        original_turn = session.turns[turn_index]
-        if original_turn.type not in ["user_task", "model_response"]:
-            raise ValueError(
-                f"Editing turns of type '{original_turn.type}' is not allowed."
-            )
-
-        turn_as_dict = original_turn.model_dump()
-        turn_as_dict.update(new_data)
-
-        if original_turn.type == "user_task":
-            session.turns[turn_index] = UserTaskTurn(**turn_as_dict)
-        elif original_turn.type == "model_response":
-            from pipe.core.models.turn import ModelResponseTurn
-
-            session.turns[turn_index] = ModelResponseTurn(**turn_as_dict)
-
-        self._save_session(session)
-
-        # Update the index to reflect the change
         collection = self.list_sessions()
-        collection.update(session_id)
-        collection.save()
+        collection.edit_turn(session, turn_index, new_data)
 
     def _generate_hash(self, content: str) -> str:
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
@@ -344,83 +312,23 @@ class SessionService:
                 f"Original session with ID '{session_id}' not found."
             )
 
-        if not (0 <= fork_index < len(original_session.turns)):
-            raise IndexError("fork_index is out of range.")
-
-        fork_turn = original_session.turns[fork_index]
-        if fork_turn.type != "model_response":
-            raise ValueError(
-                "Forking is only allowed from a 'model_response' turn. "
-                f"Turn {fork_index + 1} is of type '{fork_turn.type}'."
-            )
-
-        timestamp = get_current_timestamp(self.timezone_obj)
-        forked_purpose = f"Fork of: {original_session.purpose}"
-        forked_turns = original_session.turns[: fork_index + 1]
-
-        identity_str = json.dumps(
-            {
-                "purpose": forked_purpose,
-                "original_id": session_id,
-                "fork_at_turn": fork_index,
-                "timestamp": timestamp,
-            },
-            sort_keys=True,
-        )
-        new_session_id_suffix = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
-
-        parent_path = session_id.rsplit("/", 1)[0] if "/" in session_id else None
-        new_session_id = (
-            f"{parent_path}/{new_session_id_suffix}"
-            if parent_path
-            else new_session_id_suffix
-        )
-
-        new_session = Session(
-            session_id=new_session_id,
-            created_at=timestamp,
-            purpose=forked_purpose,
-            background=original_session.background,
-            roles=original_session.roles,
-            multi_step_reasoning_enabled=original_session.multi_step_reasoning_enabled,
-            hyperparameters=original_session.hyperparameters
-            or self.default_hyperparameters,
-            references=original_session.references,
-            turns=forked_turns,
-        )
-
-        self._save_session(new_session)
-
         collection = self.list_sessions()
-        collection.update(
-            new_session.session_id, new_session.purpose, new_session.created_at
-        )
-        collection.save()
-
+        new_session = collection.fork(original_session, fork_index)
         return new_session.session_id
 
     def add_turn_to_session(self, session_id: str, turn_data: Turn):
         session = self._fetch_session(session_id)
         if session:
-            session.turns.append(turn_data)
-            self._save_session(session)
-
             collection = self.list_sessions()
-            collection.update(session_id)
-            collection.save()
+            collection.add_turn(session, turn_data)
 
     def merge_pool_into_turns(self, session_id: str):
         """Merges all turns from the pool into the main turns list and clears the
         pool."""
         session = self._fetch_session(session_id)
-        if session and session.pools:
-            session.turns.extend(session.pools)
-            session.pools = TurnCollection()  # Clear the pool immediately after merge
-            self._save_session(session)
-
+        if session:
             collection = self.list_sessions()
-            collection.update(session_id)
-            collection.save()
+            collection.merge_pool(session)
 
     def update_token_count(self, session_id: str, token_count: int):
         session = self._fetch_session(session_id)

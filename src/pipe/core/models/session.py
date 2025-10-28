@@ -52,6 +52,10 @@ class Session(BaseModel):
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: list[TodoItem] | None = None
 
+    @property
+    def file_path(self) -> str:
+        return self._get_session_path()
+
     @classmethod
     def setup(
         cls,
@@ -219,6 +223,8 @@ class Session(BaseModel):
             self.purpose = new_meta_data["purpose"]
         if "background" in new_meta_data:
             self.background = new_meta_data["background"]
+        if "roles" in new_meta_data:
+            self.roles = new_meta_data["roles"]
         if "multi_step_reasoning_enabled" in new_meta_data:
             self.multi_step_reasoning_enabled = new_meta_data[
                 "multi_step_reasoning_enabled"
@@ -226,7 +232,7 @@ class Session(BaseModel):
         if "token_count" in new_meta_data:
             self.token_count = new_meta_data["token_count"]
         if "hyperparameters" in new_meta_data:
-            self.hyperparameters = new_meta_data["hyperparameters"]
+            self.hyperparameters = Hyperparameters(**new_meta_data["hyperparameters"])
 
         self.save()
 

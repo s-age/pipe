@@ -247,17 +247,20 @@ class TestSessionService(unittest.TestCase):
 
     def test_save_session_sorts_references(self):
         """Tests that _save_session correctly sorts references by TTL."""
+        from pipe.core.collections.references import ReferenceCollection
         from pipe.core.models.reference import Reference
 
         session = self.session_service.create_new_session("Test", "BG", [])
         session_id = session.session_id
         fetched_session = self.session_service.get_session(session_id)
-        fetched_session.references = [
-            Reference(path="ref1.txt", disabled=False, ttl=2),
-            Reference(path="ref2.txt", disabled=True, ttl=5),
-            Reference(path="ref3.txt", disabled=False, ttl=None),  # treated as 3
-            Reference(path="ref4.txt", disabled=False, ttl=5),
-        ]
+        fetched_session.references = ReferenceCollection(
+            [
+                Reference(path="ref1.txt", disabled=False, ttl=2),
+                Reference(path="ref2.txt", disabled=True, ttl=5),
+                Reference(path="ref3.txt", disabled=False, ttl=None),  # treated as 3
+                Reference(path="ref4.txt", disabled=False, ttl=5),
+            ]
+        )
         self.session_service._save_session(fetched_session)
 
         # Re-fetch and check order

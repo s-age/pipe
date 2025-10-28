@@ -12,7 +12,6 @@ from pipe.core.collections.sessions import SessionCollection
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.hyperparameters import Hyperparameters
-from pipe.core.models.reference import Reference
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import Turn, UserTaskTurn
@@ -194,10 +193,7 @@ class SessionService:
     def update_references(self, session_id: str, references: list):
         session = self._fetch_session(session_id)
         if session:
-            # Handle both dicts and Reference objects
-            session.references = [
-                Reference(**r) if isinstance(r, dict) else r for r in references
-            ]
+            session.references = ReferenceCollection(references)
             self._save_session(session)
 
     def add_reference_to_session(self, session_id: str, file_path: str):
@@ -210,8 +206,7 @@ class SessionService:
             print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
             return
 
-        ref_collection = ReferenceCollection(session.references)
-        ref_collection.add(file_path)
+        session.references.add(file_path)
         self._save_session(session)
 
     def update_reference_ttl_in_session(
@@ -221,8 +216,7 @@ class SessionService:
         if not session:
             return
 
-        ref_collection = ReferenceCollection(session.references)
-        ref_collection.update_ttl(file_path, new_ttl)
+        session.references.update_ttl(file_path, new_ttl)
         self._save_session(session)
 
     def decrement_all_references_ttl_in_session(self, session_id: str):
@@ -230,8 +224,7 @@ class SessionService:
         if not session:
             return
 
-        ref_collection = ReferenceCollection(session.references)
-        ref_collection.decrement_all_ttl()
+        session.references.decrement_all_ttl()
         self._save_session(session)
 
     def update_todos(self, session_id: str, todos: list):

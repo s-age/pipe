@@ -7,7 +7,6 @@ from typing import ClassVar
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.hyperparameters import Hyperparameters
-from pipe.core.models.reference import Reference
 from pipe.core.models.todo import TodoItem
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import (
@@ -47,7 +46,7 @@ class Session(BaseModel):
     multi_step_reasoning_enabled: bool = False
     token_count: int = 0
     hyperparameters: Hyperparameters | None = None
-    references: list[Reference] = Field(default_factory=list)
+    references: ReferenceCollection = Field(default_factory=ReferenceCollection)
     turns: TurnCollection = Field(default_factory=TurnCollection)
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: list[TodoItem] | None = None

@@ -1,0 +1,28 @@
+{
+  "name": "pipe",
+  "version": "1.0.0",
+  "description": "[![License: CC0-1.0](https://img.shields.io/badge/License-CC0--1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/) # pipe: A Clean Jailbreak from LLM Obfuscation",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:e2e": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s-age/pipe.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/s-age/pipe/issues"
+  },
+  "homepage": "https://github.com/s-age/pipe#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}

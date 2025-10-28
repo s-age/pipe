@@ -44,3 +44,10 @@ instance/
 sealed.txt
 unsealed.txt
 setting.yml
+
+# Node
+node_modules/
+
+# Playwright
+playwright-report/
+test-results/

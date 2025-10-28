@@ -555,7 +555,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <label style="cursor: pointer; display: flex; align-items: center; flex-grow: 1;">
                                 <input type="checkbox" class="reference-checkbox" data-index="${index}" ${!ref.disabled ? 'checked' : ''} style="margin-right: 8px;">
-                                <span style="word-break: break-all; text-decoration: ${textDecoration}; color: ${color};">${ref.path}</span>
+                                <span data-testid="reference-path" style="word-break: break-all; text-decoration: ${textDecoration}; color: ${color};">${ref.path}</span>
                             </label>
                             <div class="ttl-controls" style="display: flex; align-items: center; margin-left: 10px;">
                                 <button class="ttl-btn" data-index="${index}" data-action="decrement">-</button>

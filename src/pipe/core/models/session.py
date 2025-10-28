@@ -2,7 +2,6 @@ import hashlib
 import json
 import os
 import zoneinfo
-from datetime import datetime
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
@@ -11,7 +10,7 @@ from pipe.core.models.reference import Reference
 from pipe.core.models.todo import TodoItem
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import locked_json_write, read_json_file
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Session(BaseModel):

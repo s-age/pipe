@@ -36,9 +36,7 @@ class TestSessionService(unittest.TestCase):
 
     def test_create_new_session(self):
         """Tests the creation of a new session."""
-        session = self.session_service.create_new_session(
-            "Purpose", "Background", []
-        )
+        session = self.session_service.create_new_session("Purpose", "Background", [])
         self.assertIsNotNone(session)
         session_id = session.session_id
 

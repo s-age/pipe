@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from io import StringIO
 from unittest.mock import patch
 
 from pipe.core.collections.references import ReferenceCollection
@@ -94,6 +95,62 @@ class TestReferenceCollection(unittest.TestCase):
         self.assertEqual(len(prompt_data), 1)
         self.assertEqual(prompt_data[0]["path"], rel_path)
         self.assertEqual(prompt_data[0]["content"], "file content")
+
+    def test_get_for_prompt_skips_outside_project_root(self):
+        """
+        Tests that get_for_prompt skips references outside the project root.
+        """
+        dangerous_path = "../../../etc/passwd"
+        collection = ReferenceCollection(
+            [Reference(path=dangerous_path, disabled=False)]
+        )
+
+        with patch("sys.stderr", new_callable=StringIO) as mock_stderr:
+            prompt_data = list(collection.get_for_prompt(self.project_root.name))
+            self.assertEqual(len(prompt_data), 0)
+            expected_warning = (
+                f"Warning: Reference path '{dangerous_path}' is outside the "
+                "project root. Skipping.\n"
+            )
+            self.assertEqual(mock_stderr.getvalue(), expected_warning)
+
+    @patch("pipe.core.collections.references.read_text_file", return_value=None)
+    def test_get_for_prompt_skips_unreadable_file(self, mock_read):
+        """
+        Tests that get_for_prompt skips files that return None from read_text_file.
+        """
+        collection = ReferenceCollection(
+            [Reference(path="unreadable.txt", disabled=False)]
+        )
+
+        with patch("sys.stderr", new_callable=StringIO) as mock_stderr:
+            prompt_data = list(collection.get_for_prompt(self.project_root.name))
+            self.assertEqual(len(prompt_data), 0)
+            full_path = os.path.abspath(
+                os.path.join(self.project_root.name, "unreadable.txt")
+            )
+            expected_warning = (
+                f"Warning: Reference file not found or could not be read: {full_path}\n"
+            )
+            self.assertEqual(mock_stderr.getvalue(), expected_warning)
+
+    @patch(
+        "pipe.core.collections.references.read_text_file",
+        side_effect=Exception("Test error"),
+    )
+    def test_get_for_prompt_handles_exception(self, mock_read):
+        """
+        Tests that get_for_prompt handles exceptions during file processing.
+        """
+        collection = ReferenceCollection([Reference(path="error.txt", disabled=False)])
+
+        with patch("sys.stderr", new_callable=StringIO) as mock_stderr:
+            prompt_data = list(collection.get_for_prompt(self.project_root.name))
+            self.assertEqual(len(prompt_data), 0)
+            expected_warning = (
+                "Warning: Could not process reference file error.txt: Test error\n"
+            )
+            self.assertEqual(mock_stderr.getvalue(), expected_warning)
 
 
 if __name__ == "__main__":

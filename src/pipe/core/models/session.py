@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import hashlib
 import json
 import os
 import sys
 import zoneinfo
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
@@ -18,10 +20,7 @@ from pipe.core.utils.file import (
     locked_json_write,
     read_json_file,
 )
-from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    from pipe.core.models.args import TaktArgs
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 
 class Session(BaseModel):
@@ -33,15 +32,29 @@ class Session(BaseModel):
     It does not manage the collection of all sessions or the index file.
     """
 
+    if TYPE_CHECKING:
+        from pipe.core.models.args import TaktArgs
+        from pipe.core.models.prompt import Prompt
+        from pipe.core.models.settings import Settings
+
     # --- Pydantic Configuration ---
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    # --- Class Variables for Configuration ---
+    # --- Class Variables for Configuration (used by factories) ---
     sessions_dir: ClassVar[str | None] = None
     backups_dir: ClassVar[str | None] = None
     timezone_obj: ClassVar[zoneinfo.ZoneInfo | None] = None
     default_hyperparameters: ClassVar[Hyperparameters | None] = None
+    reference_ttl: ClassVar[int] = 3
 
+    # --- Private Instance Attributes for self-contained persistence ---
+    _sessions_dir: str | None = PrivateAttr(None)
+    _backups_dir: str | None = PrivateAttr(None)
+    _timezone_obj: zoneinfo.ZoneInfo | None = PrivateAttr(None)
+    _default_hyperparameters: Hyperparameters | None = PrivateAttr(None)
+    _reference_ttl: int = PrivateAttr(3)
+
+    # --- Public Fields ---
     session_id: str
     created_at: str
     purpose: str | None = None
@@ -55,6 +68,20 @@ class Session(BaseModel):
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: list[TodoItem] | None = None
 
+    def model_post_init(self, __context: Any) -> None:
+        """Initializes instance-specific configurations after the model is created."""
+        # Populate private attributes from class variables. This ensures that
+        # instances created by factories or direct instantiation are self-contained.
+        self._sessions_dir = self.__class__.sessions_dir
+        self._backups_dir = self.__class__.backups_dir
+        self._timezone_obj = self.__class__.timezone_obj
+        self._default_hyperparameters = self.__class__.default_hyperparameters
+        self._reference_ttl = self.__class__.reference_ttl
+
+        # Configure the reference collection with the instance-specific TTL
+        if self.references:
+            self.references.default_ttl = self._reference_ttl
+
     @property
     def file_path(self) -> str:
         return self._get_session_path()
@@ -64,25 +91,32 @@ class Session(BaseModel):
         cls,
         sessions_dir: str,
         backups_dir: str,
-        timezone_name: str,
-        default_hyperparameters: Hyperparameters,
+        settings: Settings,
     ):
-        """Injects necessary configurations into the Session class."""
+        """Injects necessary configurations into the Session class from settings."""
         cls.sessions_dir = sessions_dir
         cls.backups_dir = backups_dir
         try:
-            cls.timezone_obj = zoneinfo.ZoneInfo(timezone_name)
+            cls.timezone_obj = zoneinfo.ZoneInfo(settings.timezone)
         except zoneinfo.ZoneInfoNotFoundError:
             cls.timezone_obj = zoneinfo.ZoneInfo("UTC")
-        cls.default_hyperparameters = default_hyperparameters
+
+        cls.reference_ttl = settings.reference_ttl
+
+        default_hyperparameters_dict = {
+            "temperature": settings.parameters.temperature.model_dump(),
+            "top_p": settings.parameters.top_p.model_dump(),
+            "top_k": settings.parameters.top_k.model_dump(),
+        }
+        cls.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
 
     def _get_session_path(self) -> str:
-        if not self.__class__.sessions_dir:
-            raise ValueError("Session.sessions_dir is not configured.")
+        if not self._sessions_dir:
+            raise ValueError("Session._sessions_dir is not configured.")
         safe_path_parts = [
             part for part in self.session_id.split("/") if part not in ("", ".", "..")
         ]
-        final_path = os.path.join(self.__class__.sessions_dir, *safe_path_parts)
+        final_path = os.path.join(self._sessions_dir, *safe_path_parts)
         return f"{final_path}.json"
 
     def _get_lock_path(self) -> str:
@@ -102,17 +136,19 @@ class Session(BaseModel):
 
     def backup(self):
         """Creates a timestamped backup of the session file."""
-        if not self.__class__.backups_dir or not self.__class__.timezone_obj:
-            raise ValueError("Session.backups_dir is not configured.")
+        if not self._backups_dir or not self._timezone_obj:
+            raise ValueError(
+                "Session._backups_dir or ._timezone_obj is not configured."
+            )
 
         session_path = self._get_session_path()
         if not os.path.exists(session_path):
             return
 
         session_hash = hashlib.sha256(self.session_id.encode("utf-8")).hexdigest()
-        timestamp = get_current_timestamp(self.__class__.timezone_obj).replace(":", "")
+        timestamp = get_current_timestamp(self._timezone_obj).replace(":", "")
         backup_filename = f"{session_hash}-{timestamp}.json"
-        backup_path = os.path.join(self.__class__.backups_dir, backup_filename)
+        backup_path = os.path.join(self._backups_dir, backup_filename)
 
         copy_file(session_path, backup_path)
 
@@ -135,7 +171,7 @@ class Session(BaseModel):
         return f"{final_path}.json"
 
     @classmethod
-    def find(cls, session_id: str) -> "Session | None":
+    def find(cls, session_id: str) -> Session | None:
         """Loads a single session from its JSON file, applying data migrations if
         necessary."""
         if not cls.sessions_dir or not cls.timezone_obj:
@@ -178,7 +214,7 @@ class Session(BaseModel):
         token_count: int = 0,
         hyperparameters: dict | None = None,
         parent_id: str | None = None,
-    ) -> "Session":
+    ) -> Session:
         if not cls.timezone_obj or not cls.default_hyperparameters:
             raise ValueError("Session class is not configured.")
 
@@ -261,9 +297,9 @@ class Session(BaseModel):
     @classmethod
     def prepare(
         cls,
-        args: "TaktArgs",
+        args: TaktArgs,
         is_dry_run: bool = False,
-    ) -> "Session":
+    ) -> Session:
         """
         Finds an existing session based on args or creates a new one,
         then applies initial turns and references from args.

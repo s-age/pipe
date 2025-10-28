@@ -87,8 +87,8 @@ class TestSessionModel(unittest.TestCase):
             references=[Reference(path="app.py", disabled=False)],
         )
 
-        # Configure the session class with the temporary directory
-        Session.sessions_dir = self.temp_dir.name
+        # Configure the session instance with the temporary directory
+        session._sessions_dir = self.temp_dir.name
         session.session_id = "test_session"  # Overwrite to match the path
         session_path = os.path.join(self.temp_dir.name, "test_session.json")
 

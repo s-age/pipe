@@ -2,9 +2,12 @@ import json
 import os
 import tempfile
 import unittest
-from unittest.mock import Mock
+from io import StringIO
+from unittest.mock import Mock, patch
 
 from pipe.core.collections.sessions import SessionCollection
+from pipe.core.collections.turns import TurnCollection
+from pipe.core.models.turn import ToolResponseTurn, UserTaskTurn
 
 
 class TestSessionCollection(unittest.TestCase):
@@ -108,6 +111,137 @@ class TestSessionCollection(unittest.TestCase):
         with open(self.index_path) as f:
             data = json.load(f)
         self.assertEqual(data, self.initial_data)
+
+    def test_add_duplicate_session_raises_error(self):
+        """Tests that adding a session with an existing ID raises a ValueError."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.session_id = "session1"  # This ID already exists
+        with self.assertRaises(ValueError):
+            collection.add(mock_session)
+
+    def test_invalid_timezone_falls_back_to_utc(self):
+        """Tests that an invalid timezone name results in a fallback to UTC and a
+        warning."""
+        with patch("sys.stderr", new_callable=StringIO) as mock_stderr:
+            collection = SessionCollection(self.index_path, "Invalid/Timezone")
+            self.assertEqual(collection.timezone_obj.key, "UTC")
+            self.assertEqual(
+                mock_stderr.getvalue(),
+                "Warning: Timezone 'Invalid/Timezone' not found. Using UTC.\n",
+            )
+
+    def test_edit_turn_success(self):
+        """Tests that a turn can be successfully edited."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.session_id = "session1"
+        mock_session.turns = TurnCollection(
+            [UserTaskTurn(type="user_task", instruction="Original", timestamp="1")]
+        )
+
+        collection.edit_turn(mock_session, 0, {"instruction": "Updated"})
+
+        self.assertEqual(mock_session.turns[0].instruction, "Updated")
+        mock_session.save.assert_called_once()
+
+    def test_edit_turn_index_error(self):
+        """Tests that editing a turn with an out-of-bounds index raises IndexError."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.session_id = "session1"
+        mock_session.turns = TurnCollection()
+
+        with self.assertRaises(IndexError):
+            collection.edit_turn(mock_session, 0, {"instruction": "Updated"})
+
+    def test_edit_turn_value_error(self):
+        """Tests that editing a non-editable turn type raises ValueError."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.session_id = "session1"
+        mock_session.turns = TurnCollection(
+            [
+                ToolResponseTurn(
+                    type="tool_response",
+                    name="t",
+                    response={},
+                    timestamp="1",
+                )
+            ]
+        )
+
+        with self.assertRaises(ValueError):
+            collection.edit_turn(mock_session, 0, {"response": {}})
+
+    def test_delete_turn_success(self):
+        """Tests that a turn can be successfully deleted."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.session_id = "session1"
+        mock_session.turns = TurnCollection(
+            [UserTaskTurn(type="user_task", instruction="To be deleted", timestamp="1")]
+        )
+
+        collection.delete_turn(mock_session, 0)
+
+        self.assertEqual(len(mock_session.turns), 0)
+        mock_session.save.assert_called_once()
+
+    def test_delete_turn_index_error(self):
+        """Tests that deleting a turn with an out-of-bounds index raises IndexError."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.session_id = "session1"
+        mock_session.turns = TurnCollection()
+
+        with self.assertRaises(IndexError):
+            collection.delete_turn(mock_session, 0)
+
+    def test_merge_pool_with_items(self):
+        """Tests that merge_pool moves turns from the pool to the main turn list."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.session_id = "session1"
+        mock_session.turns = TurnCollection(
+            [UserTaskTurn(type="user_task", instruction="1", timestamp="1")]
+        )
+        mock_session.pools = TurnCollection(
+            [UserTaskTurn(type="user_task", instruction="2", timestamp="2")]
+        )
+
+        collection.merge_pool(mock_session)
+
+        self.assertEqual(len(mock_session.turns), 2)
+        self.assertEqual(len(mock_session.pools), 0)
+        self.assertEqual(mock_session.turns[1].instruction, "2")
+        mock_session.save.assert_called_once()
+
+    def test_merge_pool_empty(self):
+        """Tests that merge_pool does nothing if the pool is empty."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.session_id = "session1"
+        mock_session.turns = TurnCollection(
+            [UserTaskTurn(type="user_task", instruction="1", timestamp="1")]
+        )
+        mock_session.pools = TurnCollection()
+
+        collection.merge_pool(mock_session)
+
+        self.assertEqual(len(mock_session.turns), 1)
+        mock_session.save.assert_not_called()
+
+    def test_get_sorted_by_last_updated_empty(self):
+        """Tests that get_sorted_by_last_updated returns an empty list when there are
+        no sessions."""
+        # Create an empty index file
+        with open(self.index_path, "w") as f:
+            json.dump({"sessions": {}}, f)
+
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        sorted_sessions = collection.get_sorted_by_last_updated()
+        self.assertEqual(sorted_sessions, [])
 
 
 if __name__ == "__main__":

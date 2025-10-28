@@ -1,6 +1,7 @@
 import shutil
 import tempfile
 import unittest
+from unittest.mock import MagicMock
 
 from pipe.core.models.settings import Settings
 from pipe.core.services.session_service import SessionService
@@ -58,6 +59,31 @@ class TestEditTodosTool(unittest.TestCase):
         self.assertEqual(len(session.todos), 2)
         self.assertEqual(session.todos[0].title, "New Task 1")
         self.assertTrue(session.todos[1].checked)
+
+    def test_edit_todos_no_session_service(self):
+        """
+        Tests that an error is returned if session_service is not provided.
+        """
+        result = edit_todos(todos=[], session_id=self.session_id)
+        self.assertIn("error", result)
+        self.assertEqual(result["error"], "This tool requires an active session.")
+
+    def test_edit_todos_failure(self):
+        """
+        Tests that the tool returns an error if the session_service raises an exception.
+        """
+        mock_session_service = MagicMock()
+        error_message = "Test exception"
+        mock_session_service.update_todos.side_effect = Exception(error_message)
+
+        result = edit_todos(
+            todos=[], session_service=mock_session_service, session_id=self.session_id
+        )
+
+        self.assertIn("error", result)
+        self.assertEqual(
+            result["error"], f"Failed to update todos in session: {error_message}"
+        )
 
 
 if __name__ == "__main__":

@@ -10,7 +10,6 @@ import zoneinfo
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.sessions import SessionCollection
 from pipe.core.models.args import TaktArgs
-from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import Turn
@@ -37,19 +36,11 @@ class SessionService:
         self.backups_dir = os.path.join(self.sessions_dir, "backups")
         self.index_path = os.path.join(self.sessions_dir, "index.json")
 
-        default_hyperparameters_dict = {
-            "temperature": self.settings.parameters.temperature.model_dump(),
-            "top_p": self.settings.parameters.top_p.model_dump(),
-            "top_k": self.settings.parameters.top_k.model_dump(),
-        }
-        self.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
-
         # --- Setup the Session class (Active Record style) ---
         Session.setup(
             sessions_dir=self.sessions_dir,
             backups_dir=self.backups_dir,
-            timezone_name=self.settings.timezone,
-            default_hyperparameters=self.default_hyperparameters,
+            settings=self.settings,
         )
         # ----------------------------------------------------
 
@@ -57,10 +48,7 @@ class SessionService:
 
     def _fetch_session(self, session_id: str) -> Session | None:
         """Loads a single session from its JSON file."""
-        session = Session.find(session_id)
-        if session:
-            session.references.default_ttl = self.settings.reference_ttl
-        return session
+        return Session.find(session_id)
 
     def get_session(self, session_id: str) -> Session | None:
         """Loads a specific session."""
@@ -72,7 +60,6 @@ class SessionService:
 
     def prepare_session_for_takt(self, args: TaktArgs, is_dry_run: bool = False):
         session = Session.prepare(args, is_dry_run)
-        session.references.default_ttl = self.settings.reference_ttl
 
         # Update the session index
         collection = self.list_sessions()
@@ -120,7 +107,6 @@ class SessionService:
             hyperparameters=hyperparameters,
             parent_id=parent_id,
         )
-        session.references.default_ttl = self.settings.reference_ttl
 
         collection = self.list_sessions()
         collection.update(session.session_id, session.purpose, session.created_at)

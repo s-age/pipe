@@ -112,6 +112,9 @@ class ReferenceCollection(UserList):
         core_schema: core_schema.CoreSchema,
         handler: Callable[[Any], dict[str, Any]],
     ) -> dict[str, Any]:
-        json_schema = handler(core_schema)
-        json_schema.update(type="array", items={"$ref": "#/definitions/Reference"})
-        return json_schema
+        # handler(core_schema) will generate the schema for the inner items
+        # and add them to the definitions.
+        field_schema = handler(core_schema)
+
+        # Then we can reference the schema for the inner items.
+        return {"type": "array", "items": field_schema.get("items")}

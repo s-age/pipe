@@ -108,9 +108,9 @@ class TurnCollection(UserList):
         core_schema: core_schema.CoreSchema,
         handler: Callable[[Any], dict[str, Any]],
     ) -> dict[str, Any]:
-        json_schema = handler(core_schema)
-        json_schema.update(type="array", items={"$ref": "#/definitions/Turn"})
-        return json_schema
+        # The handler already produces the array schema for the UserList.
+        # We just need to return it.
+        return handler(core_schema)
 
     def expire_old_tool_responses(self, expiration_threshold: int = 3) -> bool:
         """

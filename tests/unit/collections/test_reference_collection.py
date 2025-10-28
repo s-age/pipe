@@ -152,6 +152,29 @@ class TestReferenceCollection(unittest.TestCase):
             )
             self.assertEqual(mock_stderr.getvalue(), expected_warning)
 
+    def test_pydantic_json_schema(self):
+        """
+        Tests the __get_pydantic_json_schema__ method for correct schema generation.
+        """
+        from pydantic import BaseModel, Field
+
+        class TestModel(BaseModel):
+            references: ReferenceCollection = Field(default_factory=ReferenceCollection)
+
+        schema = TestModel.model_json_schema()
+
+        defs_key = "$defs" if "$defs" in schema else "definitions"
+        self.assertIn(defs_key, schema)
+        self.assertIn("Reference", schema[defs_key])
+
+        props = schema["properties"]
+        self.assertIn("references", props)
+        self.assertEqual(props["references"]["type"], "array")
+
+        # Pydantic v2 uses '$defs', v1 uses 'definitions'
+        ref_path = f"#/{defs_key}/Reference"
+        self.assertEqual(props["references"]["items"]["$ref"], ref_path)
+
 
 if __name__ == "__main__":
     unittest.main()

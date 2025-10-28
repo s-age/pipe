@@ -243,6 +243,187 @@ class TestSessionCollection(unittest.TestCase):
         sorted_sessions = collection.get_sorted_by_last_updated()
         self.assertEqual(sorted_sessions, [])
 
+    def test_iterator(self):
+        """Tests that the iterator yields the correct session IDs."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        session_ids = list(collection)
+        self.assertEqual(len(session_ids), 2)
+        self.assertIn("session1", session_ids)
+        self.assertIn("session1/child1", session_ids)
+
+    def test_find_nonexistent(self):
+        """Tests that find returns None for a non-existent session."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        self.assertIsNone(collection.find("nonexistent"))
+
+    @patch("pipe.core.collections.sessions.Session")
+    def test_fork_session_success(self, MockSession):
+        """Tests that a session can be forked successfully."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+
+        # Mock the original session with all attributes accessed by the fork method
+        original_session = Mock()
+        original_session.session_id = "original_session"
+        original_session.purpose = "Original"
+        original_session.background = "Background info"
+        original_session.roles = {"user": "Test User"}
+        original_session.multi_step_reasoning_enabled = False
+        original_session.hyperparameters = {"temperature": 0.5}
+        original_session.references = []
+        original_session.turns = TurnCollection(
+            [
+                UserTaskTurn(type="user_task", instruction="Step 1", timestamp="1"),
+                Mock(type="model_response"),  # The turn to fork from
+            ]
+        )
+
+        # The fork method creates a new Session instance. We mock what that
+        # instance will look like when it's returned.
+        forked_session_instance = Mock()
+        forked_session_instance.session_id = "forked_session_id"
+        forked_session_instance.purpose = "Fork of: Original"
+        forked_session_instance.created_at = "2025-10-29T12:00:00Z"
+        forked_session_instance.turns = TurnCollection(original_session.turns[:2])
+        MockSession.return_value = forked_session_instance
+
+        # Execute the fork
+        new_session = collection.fork(original_session, 1)
+
+        # Assertions
+        self.assertEqual(new_session, forked_session_instance)
+        self.assertIn(new_session.session_id, collection._index_data["sessions"])
+        self.assertTrue(new_session.purpose.startswith("Fork of:"))
+        self.assertEqual(len(new_session.turns), 2)
+        new_session.save.assert_called_once()
+
+        # Verify that the session was correctly added to the index
+        collection.save()
+        with open(self.index_path) as f:
+            data = json.load(f)
+        self.assertIn(forked_session_instance.session_id, data["sessions"])
+        self.assertEqual(
+            data["sessions"][forked_session_instance.session_id]["purpose"],
+            forked_session_instance.purpose,
+        )
+
+    def test_fork_session_index_error(self):
+        """Tests that forking with an out-of-bounds index raises IndexError."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.turns = TurnCollection()
+        with self.assertRaises(IndexError):
+            collection.fork(mock_session, 0)
+
+    def test_fork_session_value_error(self):
+        """Tests that forking from a non-model_response turn raises ValueError."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.turns = TurnCollection(
+            [UserTaskTurn(type="user_task", instruction="1", timestamp="1")]
+        )
+        with self.assertRaises(ValueError):
+            collection.fork(mock_session, 0)
+
+    def test_len_with_no_sessions_key(self):
+        """Tests that __len__ returns 0 if 'sessions' key is missing."""
+        with open(self.index_path, "w") as f:
+            json.dump({}, f)
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        self.assertEqual(len(collection), 0)
+
+    def test_find_with_no_sessions_key(self):
+        """Tests that find returns None if 'sessions' key is missing."""
+        with open(self.index_path, "w") as f:
+            json.dump({}, f)
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        self.assertIsNone(collection.find("session1"))
+
+    def test_delete_with_no_sessions_key(self):
+        """Tests that delete returns False if 'sessions' key is missing."""
+        with open(self.index_path, "w") as f:
+            json.dump({}, f)
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        self.assertFalse(collection.delete("session1"))
+
+    def test_edit_model_response_turn(self):
+        """Tests that a model_response turn can be successfully edited."""
+        from pipe.core.models.turn import ModelResponseTurn
+
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        mock_session = Mock()
+        mock_session.session_id = "session1"
+        original_turn = ModelResponseTurn(
+            type="model_response", content="Original", timestamp="1"
+        )
+        mock_session.turns = TurnCollection([original_turn])
+
+        collection.edit_turn(mock_session, 0, {"content": "Updated"})
+
+        self.assertIsInstance(mock_session.turns[0], ModelResponseTurn)
+        self.assertEqual(mock_session.turns[0].content, "Updated")
+        mock_session.save.assert_called_once()
+
+    @patch("pipe.core.collections.sessions.Session")
+    def test_fork_session_no_parent(self, MockSession):
+        """Tests forking a session that does not have a parent path."""
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        original_session = Mock()
+        original_session.session_id = "root_session"  # No '/' in the ID
+        original_session.purpose = "Root"
+        original_session.background = ""
+        original_session.roles = {}
+        original_session.multi_step_reasoning_enabled = False
+        original_session.hyperparameters = {}
+        original_session.references = []
+        original_session.turns = TurnCollection([Mock(type="model_response")])
+
+        forked_session_instance = Mock()
+        forked_session_instance.session_id = "a_new_forked_id"
+        forked_session_instance.purpose = "Fork of: Root"
+        forked_session_instance.created_at = "2025-01-05T00:00:00Z"
+        MockSession.return_value = forked_session_instance
+
+        new_session = collection.fork(original_session, 0)
+
+        self.assertNotIn("/", new_session.session_id)
+        self.assertIn(new_session.session_id, collection)
+
+    def test_operations_on_index_without_sessions_key(self):
+        """
+        Tests that methods depending on the 'sessions' key work correctly when
+        the key is initially missing from the index file.
+        """
+        # Setup: Create an index file with an empty JSON object
+        with open(self.index_path, "w") as f:
+            json.dump({}, f)
+
+        # Test get_sorted_by_last_updated (covers line 218)
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        self.assertEqual(collection.get_sorted_by_last_updated(), [])
+
+        # Test add method (covers line 61)
+        mock_session = Mock()
+        mock_session.session_id = "new_session"
+        mock_session.purpose = "A purpose"
+        mock_session.created_at = "2025-01-01T00:00:00Z"
+        collection.add(mock_session)
+        self.assertIn("sessions", collection._index_data)
+        self.assertIn("new_session", collection._index_data["sessions"])
+
+        # Setup for update test: re-create empty index
+        with open(self.index_path, "w") as f:
+            json.dump({}, f)
+
+        # Test update method (covers line 72)
+        collection = SessionCollection(self.index_path, self.timezone_name)
+        collection.update("another_session", purpose="Another purpose")
+        self.assertIn("sessions", collection._index_data)
+        self.assertIn("another_session", collection._index_data["sessions"])
+        self.assertEqual(
+            collection._index_data["sessions"]["another_session"]["purpose"],
+            "Another purpose",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

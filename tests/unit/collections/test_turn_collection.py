@@ -132,6 +132,56 @@ class TestTurnCollection(unittest.TestCase):
         self.assertEqual(len(prompt_turns), 1)
         self.assertEqual(prompt_turns[0].instruction, "first")
 
+    def test_pydantic_json_schema(self):
+        """
+        Tests the __get_pydantic_json_schema__ method for correct schema generation.
+        """
+        from pydantic import BaseModel, Field
+
+        class TestModel(BaseModel):
+            turns: TurnCollection = Field(default_factory=TurnCollection)
+
+        schema = TestModel.model_json_schema()
+
+        defs_key = "$defs" if "$defs" in schema else "definitions"
+        self.assertIn(defs_key, schema)
+        # Pydantic v2 generates schemas for each subtype in the union,
+        # not the union type itself.
+        self.assertIn("UserTaskTurn", schema[defs_key])
+        self.assertIn("ModelResponseTurn", schema[defs_key])
+
+        props = schema["properties"]
+        self.assertIn("turns", props)
+        self.assertEqual(props["turns"]["type"], "array")
+
+        items_schema = props["turns"]["items"]
+        self.assertIn("oneOf", items_schema)
+
+        # Check that at least one of the refs is correct
+        one_of_refs = [item["$ref"] for item in items_schema["oneOf"]]
+        self.assertIn(f"#/{defs_key}/UserTaskTurn", one_of_refs)
+
+    def test_expire_old_tool_responses_no_change_due_to_status(self):
+        """
+        Tests that no turns are expired if their status is not 'succeeded'.
+        """
+        turns = TurnCollection(
+            [
+                UserTaskTurn(type="user_task", instruction="1", timestamp="1"),
+                ToolResponseTurn(
+                    type="tool_response",
+                    name="t",
+                    response={"status": "failed"},
+                    timestamp="2",
+                ),
+                UserTaskTurn(type="user_task", instruction="2", timestamp="3"),
+                UserTaskTurn(type="user_task", instruction="3", timestamp="4"),
+                UserTaskTurn(type="user_task", instruction="4", timestamp="5"),
+            ]
+        )
+        modified = turns.expire_old_tool_responses()
+        self.assertFalse(modified)
+
 
 if __name__ == "__main__":
     unittest.main()

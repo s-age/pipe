@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pipe.core.models.session import Session
 from pipe.core.models.todo import TodoItem
 
 
@@ -12,8 +13,20 @@ class TodoCollection:
     sorting, filtering, and preparing them for prompts.
     """
 
-    def __init__(self, todos: list[TodoItem]):
+    def __init__(self, todos: list[TodoItem] | None):
         self._todos = todos if todos is not None else []
+
+    @staticmethod
+    def update_in_session(session: Session, todos_data: list[dict | TodoItem]):
+        """Updates the todos list in a session object. Does not save."""
+        session.todos = [
+            TodoItem(**t) if isinstance(t, dict) else t for t in todos_data
+        ]
+
+    @staticmethod
+    def delete_in_session(session: Session):
+        """Deletes all todos from a session object. Does not save."""
+        session.todos = None
 
     def get_for_prompt(self) -> list[dict]:
         """

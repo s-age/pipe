@@ -1,7 +1,7 @@
 import typing
 from collections import UserList
 from collections.abc import Callable, Iterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pipe.core.models.turn import (
     CompressedHistoryTurn,
@@ -12,6 +12,9 @@ from pipe.core.models.turn import (
     UserTaskTurn,
 )
 from pydantic_core import core_schema
+
+if TYPE_CHECKING:
+    from pipe.core.models.session import Session
 
 
 class TurnCollection(UserList):
@@ -108,3 +111,42 @@ class TurnCollection(UserList):
         json_schema = handler(core_schema)
         json_schema.update(type="array", items={"$ref": "#/definitions/Turn"})
         return json_schema
+
+    @staticmethod
+    def expire_old_tool_responses(session: "Session") -> bool:
+        """
+        Expires the message content of old tool_response turns to save tokens,
+        while preserving the 'succeeded' status. This uses a safe rebuild pattern.
+        Returns True if any turns were modified.
+        """
+        if not session or not session.turns:
+            return False
+
+        user_tasks = [turn for turn in session.turns if turn.type == "user_task"]
+        if len(user_tasks) <= 3:
+            return False
+
+        expiration_threshold_timestamp = user_tasks[-3].timestamp
+
+        new_turns = []
+        modified = False
+        for turn in session.turns:
+            if (
+                turn.type == "tool_response"
+                and turn.timestamp < expiration_threshold_timestamp
+                and isinstance(turn.response, dict)
+                and turn.response.get("status") == "succeeded"
+            ):
+                modified_turn = turn.model_copy(deep=True)
+                modified_turn.response["message"] = (
+                    "This tool response has expired to save tokens."
+                )
+                new_turns.append(modified_turn)
+                modified = True
+            else:
+                new_turns.append(turn)
+
+        if modified:
+            session.turns = TurnCollection(new_turns)
+
+        return modified

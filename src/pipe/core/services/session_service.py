@@ -237,22 +237,25 @@ class SessionService:
     def update_todos(self, session_id: str, todos: list):
         session = self._fetch_session(session_id)
         if session:
-            from pipe.core.models.todo import TodoItem
+            from pipe.core.collections.todos import TodoCollection
 
-            # Handle both dicts and TodoItem objects
-            session.todos = [TodoItem(**t) if isinstance(t, dict) else t for t in todos]
+            TodoCollection.update_in_session(session, todos)
             self._save_session(session)
 
     def delete_todos(self, session_id: str):
         session = self._fetch_session(session_id)
         if session:
-            session.todos = None
+            from pipe.core.collections.todos import TodoCollection
+
+            TodoCollection.delete_in_session(session)
             self._save_session(session)
 
     def add_to_pool(self, session_id: str, pool_data: Turn):
         session = self._fetch_session(session_id)
         if session:
-            session.pools.append(pool_data)
+            from pipe.core.collections.pools import PoolCollection
+
+            PoolCollection.add(session, pool_data)
             self._save_session(session)
 
     def get_pool(self, session_id: str) -> list[Turn]:
@@ -264,8 +267,9 @@ class SessionService:
         if not session:
             return []
 
-        pools_to_return = session.pools.copy()
-        session.pools = TurnCollection()
+        from pipe.core.collections.pools import PoolCollection
+
+        pools_to_return = PoolCollection.get_and_clear(session)
         self._save_session(session)
         return pools_to_return
 
@@ -342,43 +346,9 @@ class SessionService:
 
     def expire_old_tool_responses(self, session_id: str):
         """
-        Expires the message content of old tool_response turns to save tokens,
-        while preserving the 'succeeded' status. This uses a safe rebuild pattern.
+        Expires the message content of old tool_response turns to save tokens.
         """
         session = self._fetch_session(session_id)
-        if not session or not session.turns:
-            return
-
-        user_tasks = [turn for turn in session.turns if turn.type == "user_task"]
-        if len(user_tasks) <= 3:
-            return
-
-        expiration_threshold_timestamp = user_tasks[-3].timestamp
-
-        new_turns = []
-        modified = False
-        for turn in session.turns:
-            # Check if the turn is a candidate for expiration
-            if (
-                turn.type == "tool_response"
-                and turn.timestamp < expiration_threshold_timestamp
-                and isinstance(turn.response, dict)
-                and turn.response.get("status") == "succeeded"
-            ):  # Only expire successful responses
-                # Create a deep copy to modify
-                modified_turn = turn.model_copy(deep=True)
-
-                # Only change the message, keep the status
-                modified_turn.response["message"] = (
-                    "This tool response has expired to save tokens."
-                )
-
-                new_turns.append(modified_turn)
-                modified = True
-            else:
-                # Add the original turn if no modification is needed
-                new_turns.append(turn)
-
-        if modified:
-            session.turns = TurnCollection(new_turns)
-            self._save_session(session)
+        if session:
+            if TurnCollection.expire_old_tool_responses(session):
+                self._save_session(session)

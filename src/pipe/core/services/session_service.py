@@ -34,7 +34,7 @@ class SessionService:
             )
             self.timezone_obj = zoneinfo.ZoneInfo("UTC")
 
-        self.sessions_dir = os.path.join(project_root, "sessions")
+        self.sessions_dir = os.path.join(project_root, settings.sessions_path)
         self.backups_dir = os.path.join(self.sessions_dir, "backups")
         self.index_path = os.path.join(self.sessions_dir, "index.json")
 
@@ -58,7 +58,10 @@ class SessionService:
 
     def _fetch_session(self, session_id: str) -> Session | None:
         """Loads a single session from its JSON file."""
-        return Session.find(session_id)
+        session = Session.find(session_id)
+        if session:
+            session.references.default_ttl = self.settings.reference_ttl
+        return session
 
     def get_session(self, session_id: str) -> Session | None:
         """Loads a specific session."""
@@ -70,6 +73,7 @@ class SessionService:
 
     def prepare_session_for_takt(self, args: TaktArgs, is_dry_run: bool = False):
         session = Session.prepare(args, is_dry_run)
+        session.references.default_ttl = self.settings.reference_ttl
 
         # Update the session index
         collection = self.list_sessions()
@@ -117,6 +121,7 @@ class SessionService:
             hyperparameters=hyperparameters,
             parent_id=parent_id,
         )
+        session.references.default_ttl = self.settings.reference_ttl
 
         collection = self.list_sessions()
         collection.update(session.session_id, session.purpose, session.created_at)
@@ -289,5 +294,7 @@ class SessionService:
         """
         session = self._fetch_session(session_id)
         if session:
-            if TurnCollection.expire_old_tool_responses(session):
+            if TurnCollection.expire_old_tool_responses(
+                session, self.settings.tool_response_expiration
+            ):
                 self._save_session(session)

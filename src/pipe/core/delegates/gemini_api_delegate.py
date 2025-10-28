@@ -62,14 +62,16 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
     model_response_text = ""
     token_count = 0
     intermediate_turns = []
+    tool_call_count = 0
 
     settings = session_service.settings
+    max_tool_calls = settings.max_tool_calls
     session_data = session_service.current_session
     project_root = session_service.project_root
     session_id = session_service.current_session_id
     timezone_obj = session_service.timezone_obj
 
-    while True:
+    while tool_call_count < max_tool_calls:
         session_service.merge_pool_into_turns(session_id)
         stream = call_gemini_api(session_service, prompt_service)
 
@@ -124,6 +126,13 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
 
         if not function_call:
             model_response_text = full_text
+            break
+
+        tool_call_count += 1
+        if tool_call_count >= max_tool_calls:
+            model_response_text = (
+                "Error: Maximum number of tool calls reached. Halting execution."
+            )
             break
 
         args_json_string_for_display = json.dumps(

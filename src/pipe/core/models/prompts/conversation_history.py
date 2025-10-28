@@ -11,11 +11,13 @@ class PromptConversationHistory(BaseModel):
     turns: list[dict[str, Any]]
 
     @classmethod
-    def build(cls, turns: "TurnCollection") -> "PromptConversationHistory":  # noqa: F821
+    def build(
+        cls, turns: "TurnCollection", tool_response_limit: int = 3
+    ) -> "PromptConversationHistory":  # noqa: F821
         """Builds the PromptConversationHistory component."""
         from pipe.core.collections.prompts.turn_collection import PromptTurnCollection
 
-        history_turns = list(reversed(list(turns.get_for_prompt())))
+        history_turns = list(reversed(list(turns.get_for_prompt(tool_response_limit))))
         return cls(
             description=(
                 "Historical record of past interactions in this session, in "

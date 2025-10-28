@@ -26,20 +26,20 @@ class TurnCollection(UserList):
         initialized_data = data if data is not None else []
         super().__init__(initialized_data)
 
-    def get_for_prompt(self) -> Iterator[Turn]:
+    def get_for_prompt(self, tool_response_limit: int = 3) -> Iterator[Turn]:
         """
         Yields turns for prompt generation, applying filtering rules.
         - The last turn (current task) is excluded.
-        - Only the last 3 'tool_response' turns from the history are included.
+        - Only the last N 'tool_response' turns from the history are included.
         """
         tool_response_count = 0
         history = self.data[:-1]  # Exclude the last turn
 
-        # Iterate in reverse to easily count the last 3 tool_responses
+        # Iterate in reverse to easily count the last N tool_responses
         for turn in reversed(history):
             if isinstance(turn, ToolResponseTurn):
                 tool_response_count += 1
-                if tool_response_count > 3:
+                if tool_response_count > tool_response_limit:
                     continue
             yield turn
 
@@ -113,7 +113,9 @@ class TurnCollection(UserList):
         return json_schema
 
     @staticmethod
-    def expire_old_tool_responses(session: "Session") -> bool:
+    def expire_old_tool_responses(
+        session: "Session", expiration_threshold: int = 3
+    ) -> bool:
         """
         Expires the message content of old tool_response turns to save tokens,
         while preserving the 'succeeded' status. This uses a safe rebuild pattern.
@@ -123,10 +125,10 @@ class TurnCollection(UserList):
             return False
 
         user_tasks = [turn for turn in session.turns if turn.type == "user_task"]
-        if len(user_tasks) <= 3:
+        if len(user_tasks) <= expiration_threshold:
             return False
 
-        expiration_threshold_timestamp = user_tasks[-3].timestamp
+        expiration_threshold_timestamp = user_tasks[-expiration_threshold].timestamp
 
         new_turns = []
         modified = False

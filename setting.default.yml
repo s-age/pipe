@@ -6,6 +6,9 @@ context_limit: 1000000
 # API mode: 'gemini-api' for direct API calls, 'gemini-cli' for CLI interaction.
 api_mode: gemini-api
 
+# Max tool calls to prevent infinite loops
+max_tool_calls: 10
+
 # The language hint for the model
 language: "English"
 
@@ -26,6 +29,15 @@ parameters:
 
 # Expert mode: If true, shows advanced/destructive UI controls like turn-by-turn edit and delete.
 expert_mode: false
+
+# Path to the directory where session files are stored.
+sessions_path: "sessions"
+
+# Default Time-To-Live (TTL) for new file references.
+reference_ttl: 3
+
+# Number of user turns after which old tool responses are expired.
+tool_response_expiration: 3
 
 # Timezone for the application. It is recommended to use standard timezone names like 'UTC' or 'Asia/Tokyo'.
 timezone: UTC

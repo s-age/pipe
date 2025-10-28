@@ -307,7 +307,9 @@ class Session(BaseModel):
         todos_for_prompt = TodoCollection(self.todos).get_for_prompt()
         prompt_todos = [PromptTodo(**todo) for todo in todos_for_prompt]
 
-        conversation_history = PromptConversationHistory.build(self.turns)
+        conversation_history = PromptConversationHistory.build(
+            self.turns, settings.tool_response_expiration
+        )
 
         current_task_turn_data = self.turns[-1].model_dump()
         current_task = PromptCurrentTask(**current_task_turn_data)

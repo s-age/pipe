@@ -10,14 +10,15 @@ from pydantic_core import core_schema
 
 
 class ReferenceCollection(UserList):
-    def __init__(self, data: list | None = None):
+    def __init__(self, data: list | None = None, default_ttl: int = 3):
         initialized_data = data if data is not None else []
         super().__init__(initialized_data)
+        self.default_ttl = default_ttl
         self.sort_by_ttl()
 
     def add(self, path: str):
         if not any(ref.path == path for ref in self.data):
-            self.data.append(Reference(path=path, disabled=False, ttl=3))
+            self.data.append(Reference(path=path, disabled=False, ttl=self.default_ttl))
             self.sort_by_ttl()
 
     def update_ttl(self, path: str, new_ttl: int):
@@ -31,7 +32,7 @@ class ReferenceCollection(UserList):
     def decrement_all_ttl(self):
         for ref in self.data:
             if not ref.disabled:
-                current_ttl = ref.ttl if ref.ttl is not None else 3
+                current_ttl = ref.ttl if ref.ttl is not None else self.default_ttl
                 current_ttl -= 1
                 ref.ttl = current_ttl
                 if current_ttl <= 0:
@@ -73,7 +74,10 @@ class ReferenceCollection(UserList):
 
     def sort_by_ttl(self):
         self.data.sort(
-            key=lambda ref: (not ref.disabled, ref.ttl if ref.ttl is not None else 3),
+            key=lambda ref: (
+                not ref.disabled,
+                ref.ttl if ref.ttl is not None else self.default_ttl,
+            ),
             reverse=True,
         )
 

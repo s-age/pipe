@@ -25,8 +25,12 @@ class Settings(BaseModel):
     api_mode: str = "gemini-api"
     language: str = "English"
     yolo: bool = False
+    max_tool_calls: int = 10
     parameters: Parameters
     expert_mode: bool = False
+    sessions_path: str = "sessions"
+    reference_ttl: int = 3
+    tool_response_expiration: int = 3
     timezone: str = "UTC"
 
     model_config = ConfigDict(populate_by_name=True)

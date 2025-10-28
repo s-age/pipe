@@ -22,8 +22,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from pipe.core.models.args import TaktArgs
-    from pipe.core.models.prompt import Prompt
-    from pipe.core.models.settings import Settings
 
 
 class Session(BaseModel):
@@ -259,97 +257,6 @@ class Session(BaseModel):
             "pools": [p.model_dump() for p in self.pools],
             "todos": [t.model_dump() for t in self.todos] if self.todos else [],
         }
-
-    def to_prompt(self, settings: "Settings", project_root: str) -> "Prompt":
-        """Builds and returns a Prompt object from this session's data."""
-        from pipe.core.collections.todos import TodoCollection
-        from pipe.core.models.prompt import Prompt
-        from pipe.core.models.prompts.constraints import (
-            PromptConstraints,
-            PromptHyperparameters,
-        )
-        from pipe.core.models.prompts.conversation_history import (
-            PromptConversationHistory,
-        )
-        from pipe.core.models.prompts.current_task import PromptCurrentTask
-        from pipe.core.models.prompts.file_reference import PromptFileReference
-        from pipe.core.models.prompts.roles import PromptRoles
-        from pipe.core.models.prompts.session_goal import PromptSessionGoal
-        from pipe.core.models.prompts.todo import PromptTodo
-
-        # 1. Build Hyperparameters
-        merged_params = settings.parameters.model_dump()
-        if self.hyperparameters:
-            session_params = self.hyperparameters.model_dump()
-            for key, value_desc_pair in session_params.items():
-                if (
-                    key in merged_params
-                    and value_desc_pair
-                    and "value" in value_desc_pair
-                ):
-                    merged_params[key]["value"] = value_desc_pair["value"]
-
-        hyperparameters = PromptHyperparameters.from_merged_params(merged_params)
-
-        # 2. Build Constraints
-        constraints = PromptConstraints.build(
-            settings, hyperparameters, self.multi_step_reasoning_enabled
-        )
-
-        # 3. Build other prompt components
-        roles = PromptRoles.build(self.roles, project_root)
-
-        references_with_content = list(self.references.get_for_prompt(project_root))
-        prompt_references = [
-            PromptFileReference(**ref) for ref in references_with_content
-        ]
-
-        todos_for_prompt = TodoCollection(self.todos).get_for_prompt()
-        prompt_todos = [PromptTodo(**todo) for todo in todos_for_prompt]
-
-        conversation_history = PromptConversationHistory.build(
-            self.turns, settings.tool_response_expiration
-        )
-
-        current_task_turn_data = self.turns[-1].model_dump()
-        current_task = PromptCurrentTask(**current_task_turn_data)
-
-        # 4. Assemble the final Prompt object
-        prompt_data = {
-            "current_datetime": get_current_timestamp(
-                zoneinfo.ZoneInfo(settings.timezone)
-            ),
-            "description": (
-                "This structured prompt guides your response. First, understand the "
-                "core instructions: `main_instruction` defines your thinking "
-                "process. Next, identify the immediate objective from `current_task` "
-                "and `todos`. Then, gather all context required to execute the task "
-                "by processing `session_goal`, `roles`, `constraints`, "
-                "`conversation_history`, and `file_references` in that order. "
-                "Finally, execute the `current_task` by synthesizing all gathered "
-                "information."
-            ),
-            "session_goal": PromptSessionGoal.build(
-                purpose=self.purpose, background=self.background
-            ),
-            "roles": roles,
-            "constraints": constraints,
-            "main_instruction": (
-                "Your main instruction is to be helpful and follow all previous "
-                "instructions."
-            ),
-            "conversation_history": conversation_history,
-            "current_task": current_task,
-            "todos": prompt_todos if prompt_todos else None,
-            "file_references": prompt_references if prompt_references else None,
-            "reasoning_process": {
-                "description": "Think step-by-step to achieve the goal."
-            }
-            if self.multi_step_reasoning_enabled
-            else None,
-        }
-
-        return Prompt(**prompt_data)
 
     @classmethod
     def prepare(

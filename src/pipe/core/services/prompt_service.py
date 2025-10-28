@@ -23,4 +23,4 @@ class PromptService:
         if not current_session:
             raise ValueError("Cannot build prompt without a current session.")
 
-        return current_session.to_prompt(settings, self.project_root)
+        return Prompt.from_session(current_session, settings, self.project_root)

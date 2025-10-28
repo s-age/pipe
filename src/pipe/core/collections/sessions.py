@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import sys
+import zoneinfo
 from collections.abc import Iterator
-from datetime import tzinfo
 
 from pipe.core.models.session import Session
 from pipe.core.utils.datetime import get_current_timestamp
@@ -21,13 +22,20 @@ class SessionCollection:
     def __init__(
         self,
         index_path: str,
-        timezone_obj: tzinfo,
+        timezone_name: str,
         purpose: str | None = None,
         created_at: str | None = None,
     ):
         self.index_path = index_path
         self.lock_path = f"{index_path}.lock"
-        self.timezone_obj = timezone_obj
+        try:
+            self.timezone_obj = zoneinfo.ZoneInfo(timezone_name)
+        except zoneinfo.ZoneInfoNotFoundError:
+            print(
+                f"Warning: Timezone '{timezone_name}' not found. Using UTC.",
+                file=sys.stderr,
+            )
+            self.timezone_obj = zoneinfo.ZoneInfo("UTC")
         self._index_data = locked_json_read(
             self.lock_path, self.index_path, default_data={"sessions": {}}
         )

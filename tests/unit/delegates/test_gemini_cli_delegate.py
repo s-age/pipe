@@ -1,9 +1,9 @@
 import unittest
-import zoneinfo
 from unittest.mock import MagicMock, patch
 
 from pipe.core.delegates import gemini_cli_delegate
 from pipe.core.models.args import TaktArgs
+from pipe.core.models.settings import HyperparameterValue, Parameters, Settings
 from pipe.core.services.session_service import SessionService
 
 
@@ -15,9 +15,16 @@ class TestGeminiCliDelegate(unittest.TestCase):
         call_gemini_cli function with the right arguments.
         """
         # 1. Setup Mocks
+        mock_settings = Settings(
+            parameters=Parameters(
+                temperature=HyperparameterValue(value=0.5, description=""),
+                top_p=HyperparameterValue(value=0.5, description=""),
+                top_k=HyperparameterValue(value=0.5, description=""),
+            )
+        )
         mock_session_service = MagicMock(spec=SessionService)
         mock_session_service.current_session_id = "test_session"
-        mock_session_service.timezone_obj = zoneinfo.ZoneInfo("UTC")
+        mock_session_service.settings = mock_settings
         mock_call_gemini_cli.return_value = "Mocked response"
         args = TaktArgs(instruction="Test instruction")
 

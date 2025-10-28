@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import zoneinfo
+from typing import ClassVar
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
@@ -26,9 +27,9 @@ class Session(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # --- Class Variables for Configuration ---
-    sessions_dir: str | None = None
-    timezone_obj: zoneinfo.ZoneInfo | None = None
-    default_hyperparameters: Hyperparameters | None = None
+    sessions_dir: ClassVar[str | None] = None
+    timezone_obj: ClassVar[zoneinfo.ZoneInfo | None] = None
+    default_hyperparameters: ClassVar[Hyperparameters | None] = None
 
     session_id: str
     created_at: str
@@ -47,12 +48,15 @@ class Session(BaseModel):
     def setup(
         cls,
         sessions_dir: str,
-        timezone_obj: zoneinfo.ZoneInfo,
+        timezone_name: str,
         default_hyperparameters: Hyperparameters,
     ):
         """Injects necessary configurations into the Session class."""
         cls.sessions_dir = sessions_dir
-        cls.timezone_obj = timezone_obj
+        try:
+            cls.timezone_obj = zoneinfo.ZoneInfo(timezone_name)
+        except zoneinfo.ZoneInfoNotFoundError:
+            cls.timezone_obj = zoneinfo.ZoneInfo("UTC")
         cls.default_hyperparameters = default_hyperparameters
 
     def _get_session_path(self) -> str:

@@ -56,7 +56,7 @@ class SessionService:
         # --- Setup the Session class (Active Record style) ---
         Session.setup(
             sessions_dir=self.sessions_dir,
-            timezone_obj=self.timezone_obj,
+            timezone_name=self.settings.timezone,
             default_hyperparameters=self.default_hyperparameters,
         )
         # ----------------------------------------------------
@@ -73,7 +73,7 @@ class SessionService:
 
     def list_sessions(self) -> SessionCollection:
         """Loads and returns the latest session collection from disk."""
-        return SessionCollection(self.index_path, self.timezone_obj)
+        return SessionCollection(self.index_path, self.settings.timezone)
 
     def prepare_session_for_takt(self, args: TaktArgs, is_dry_run: bool = False):
         session_id = args.session

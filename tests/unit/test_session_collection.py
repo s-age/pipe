@@ -2,7 +2,6 @@ import json
 import os
 import tempfile
 import unittest
-import zoneinfo
 from unittest.mock import Mock
 
 from pipe.core.collections.sessions import SessionCollection
@@ -12,7 +11,7 @@ class TestSessionCollection(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.index_path = os.path.join(self.temp_dir.name, "index.json")
-        self.timezone_obj = zoneinfo.ZoneInfo("UTC")
+        self.timezone_name = "UTC"
 
         # Initial data for some tests
         self.initial_data = {
@@ -38,7 +37,7 @@ class TestSessionCollection(unittest.TestCase):
     def test_initial_load_and_find(self):
         """Tests that the collection correctly loads data from an existing index
         file."""
-        collection = SessionCollection(self.index_path, self.timezone_obj)
+        collection = SessionCollection(self.index_path, self.timezone_name)
         session_meta = collection.find("session1")
         self.assertIsNotNone(session_meta)
         self.assertEqual(session_meta["purpose"], "Test session 1")
@@ -46,7 +45,7 @@ class TestSessionCollection(unittest.TestCase):
 
     def test_add_session_and_save(self):
         """Tests that a new session can be added and saved to the index file."""
-        collection = SessionCollection(self.index_path, self.timezone_obj)
+        collection = SessionCollection(self.index_path, self.timezone_name)
 
         # Mock a Session object, as SessionCollection only needs metadata from it
         mock_session = Mock()
@@ -68,7 +67,7 @@ class TestSessionCollection(unittest.TestCase):
 
     def test_update_session_and_save(self):
         """Tests that an existing session's metadata can be updated and saved."""
-        collection = SessionCollection(self.index_path, self.timezone_obj)
+        collection = SessionCollection(self.index_path, self.timezone_name)
 
         collection.update("session1", purpose="Updated purpose")
         collection.save()
@@ -86,7 +85,7 @@ class TestSessionCollection(unittest.TestCase):
     def test_delete_session_and_children_and_save(self):
         """Tests that deleting a session also removes its children and saves the
         result."""
-        collection = SessionCollection(self.index_path, self.timezone_obj)
+        collection = SessionCollection(self.index_path, self.timezone_name)
 
         result = collection.delete("session1")
         self.assertTrue(result)
@@ -101,7 +100,7 @@ class TestSessionCollection(unittest.TestCase):
 
     def test_delete_nonexistent_session(self):
         """Tests that attempting to delete a non-existent session fails gracefully."""
-        collection = SessionCollection(self.index_path, self.timezone_obj)
+        collection = SessionCollection(self.index_path, self.timezone_name)
         result = collection.delete("nonexistent")
         self.assertFalse(result)
 

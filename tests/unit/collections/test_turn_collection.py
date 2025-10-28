@@ -40,7 +40,7 @@ class TestTurnCollection(unittest.TestCase):
             ]
         )
 
-        modified = TurnCollection.expire_old_tool_responses(mock_session)
+        modified = mock_session.turns.expire_old_tool_responses()
 
         self.assertTrue(modified)
         self.assertEqual(len(mock_session.turns), 6)
@@ -66,7 +66,7 @@ class TestTurnCollection(unittest.TestCase):
             ]
         )
 
-        modified = TurnCollection.expire_old_tool_responses(mock_session)
+        modified = mock_session.turns.expire_old_tool_responses()
         self.assertFalse(modified)
 
 

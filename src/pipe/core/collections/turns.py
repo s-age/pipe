@@ -14,7 +14,7 @@ from pipe.core.models.turn import (
 from pydantic_core import core_schema
 
 if TYPE_CHECKING:
-    from pipe.core.models.session import Session
+    pass
 
 
 class TurnCollection(UserList):
@@ -112,19 +112,16 @@ class TurnCollection(UserList):
         json_schema.update(type="array", items={"$ref": "#/definitions/Turn"})
         return json_schema
 
-    @staticmethod
-    def expire_old_tool_responses(
-        session: "Session", expiration_threshold: int = 3
-    ) -> bool:
+    def expire_old_tool_responses(self, expiration_threshold: int = 3) -> bool:
         """
         Expires the message content of old tool_response turns to save tokens,
         while preserving the 'succeeded' status. This uses a safe rebuild pattern.
         Returns True if any turns were modified.
         """
-        if not session or not session.turns:
+        if not self.data:
             return False
 
-        user_tasks = [turn for turn in session.turns if turn.type == "user_task"]
+        user_tasks = [turn for turn in self.data if turn.type == "user_task"]
         if len(user_tasks) <= expiration_threshold:
             return False
 
@@ -132,7 +129,7 @@ class TurnCollection(UserList):
 
         new_turns = []
         modified = False
-        for turn in session.turns:
+        for turn in self.data:
             if (
                 turn.type == "tool_response"
                 and turn.timestamp < expiration_threshold_timestamp
@@ -149,6 +146,6 @@ class TurnCollection(UserList):
                 new_turns.append(turn)
 
         if modified:
-            session.turns = TurnCollection(new_turns)
+            self.data = new_turns
 
         return modified

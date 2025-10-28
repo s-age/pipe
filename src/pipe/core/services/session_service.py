@@ -9,7 +9,6 @@ import zoneinfo
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.sessions import SessionCollection
-from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session
@@ -294,7 +293,7 @@ class SessionService:
         """
         session = self._fetch_session(session_id)
         if session:
-            if TurnCollection.expire_old_tool_responses(
-                session, self.settings.tool_response_expiration
+            if session.turns.expire_old_tool_responses(
+                self.settings.tool_response_expiration
             ):
                 self._save_session(session)

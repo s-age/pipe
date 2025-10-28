@@ -14,8 +14,7 @@ from pipe.core.models.args import TaktArgs
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
-from pipe.core.models.turn import Turn, UserTaskTurn
-from pipe.core.utils.datetime import get_current_timestamp
+from pipe.core.models.turn import Turn
 
 
 class SessionService:
@@ -70,68 +69,15 @@ class SessionService:
         return SessionCollection(self.index_path, self.settings.timezone)
 
     def prepare_session_for_takt(self, args: TaktArgs, is_dry_run: bool = False):
-        session_id = args.session
-        if session_id:
-            session_id = session_id.strip().rstrip(".")
+        session = Session.prepare(args, is_dry_run)
 
-        session = None
-        if session_id:
-            session = self.get_session(session_id)
-            if not session:
-                raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
-
-        if not session:  # New session
-            if not all([args.purpose, args.background]):
-                raise ValueError(
-                    "A new session requires --purpose and --background for the first "
-                    "instruction."
-                )
-
-            session = self.create_new_session(
-                purpose=args.purpose,
-                background=args.background,
-                roles=args.roles,
-                multi_step_reasoning_enabled=args.multi_step_reasoning,
-                parent_id=args.parent,
-            )
-            session_id = session.session_id
-
-            if not is_dry_run:
-                first_turn = UserTaskTurn(
-                    type="user_task",
-                    instruction=args.instruction,
-                    timestamp=get_current_timestamp(self.timezone_obj),
-                )
-                self.add_turn_to_session(session_id, first_turn)
-
-            print(
-                "Conductor Agent: Creating new session...\n"
-                f"New session created: {session_id}",
-                file=sys.stderr,
-            )
-            session = self.get_session(session_id)
-
-        else:  # Existing session
-            if not is_dry_run:
-                new_turn = UserTaskTurn(
-                    type="user_task",
-                    instruction=args.instruction,
-                    timestamp=get_current_timestamp(self.timezone_obj),
-                )
-                self.add_turn_to_session(session_id, new_turn)
-            print(f"Conductor Agent: Continuing session: {session_id}", file=sys.stderr)
-            session = self.get_session(session_id)
-
-        if args.references:
-            for ref_path in args.references:
-                if ref_path.strip():
-                    self.add_reference_to_session(session_id, ref_path.strip())
-            session = self.get_session(
-                session_id
-            )  # Re-fetch session to get updated references
+        # Update the session index
+        collection = self.list_sessions()
+        collection.update(session.session_id, session.purpose, session.created_at)
+        collection.save()
 
         self.current_session = session
-        self.current_session_id = session_id
+        self.current_session_id = session.session_id
         self.current_instruction = args.instruction
 
     def _get_session_path(self, session_id: str) -> str:

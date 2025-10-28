@@ -10,7 +10,14 @@ from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.reference import Reference
 from pipe.core.models.todo import TodoItem
 from pipe.core.utils.datetime import get_current_timestamp
-from pipe.core.utils.file import locked_json_write, read_json_file
+from pipe.core.utils.file import (
+    FileLock,
+    copy_file,
+    create_directory,
+    delete_file,
+    locked_json_write,
+    read_json_file,
+)
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -28,6 +35,7 @@ class Session(BaseModel):
 
     # --- Class Variables for Configuration ---
     sessions_dir: ClassVar[str | None] = None
+    backups_dir: ClassVar[str | None] = None
     timezone_obj: ClassVar[zoneinfo.ZoneInfo | None] = None
     default_hyperparameters: ClassVar[Hyperparameters | None] = None
 
@@ -48,11 +56,13 @@ class Session(BaseModel):
     def setup(
         cls,
         sessions_dir: str,
+        backups_dir: str,
         timezone_name: str,
         default_hyperparameters: Hyperparameters,
     ):
         """Injects necessary configurations into the Session class."""
         cls.sessions_dir = sessions_dir
+        cls.backups_dir = backups_dir
         try:
             cls.timezone_obj = zoneinfo.ZoneInfo(timezone_name)
         except zoneinfo.ZoneInfoNotFoundError:
@@ -80,8 +90,31 @@ class Session(BaseModel):
         session_path = self._get_session_path()
         lock_path = self._get_lock_path()
 
-        os.makedirs(os.path.dirname(session_path), exist_ok=True)
+        create_directory(os.path.dirname(session_path))
         locked_json_write(lock_path, session_path, self.model_dump(mode="json"))
+
+    def backup(self):
+        """Creates a timestamped backup of the session file."""
+        if not self.__class__.backups_dir or not self.__class__.timezone_obj:
+            raise ValueError("Session.backups_dir is not configured.")
+
+        session_path = self._get_session_path()
+        if not os.path.exists(session_path):
+            return
+
+        session_hash = hashlib.sha256(self.session_id.encode("utf-8")).hexdigest()
+        timestamp = get_current_timestamp(self.__class__.timezone_obj).replace(":", "")
+        backup_filename = f"{session_hash}-{timestamp}.json"
+        backup_path = os.path.join(self.__class__.backups_dir, backup_filename)
+
+        copy_file(session_path, backup_path)
+
+    def destroy(self):
+        """Deletes the session's JSON file and lock file."""
+        session_path = self._get_session_path()
+        lock_path = self._get_lock_path()
+        with FileLock(lock_path):
+            delete_file(session_path)
 
     @classmethod
     def _get_path_for_id(cls, session_id: str) -> str:

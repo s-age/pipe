@@ -5,10 +5,8 @@ Manages the overall session, excluding conversation_history.
 import hashlib
 import json
 import os
-import shutil
 import sys
 import zoneinfo
-from datetime import datetime
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.sessions import SessionCollection
@@ -20,9 +18,6 @@ from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import Turn, UserTaskTurn
 from pipe.core.utils.datetime import get_current_timestamp
-from pipe.core.utils.file import (
-    FileLock,
-)
 
 
 class SessionService:
@@ -56,6 +51,7 @@ class SessionService:
         # --- Setup the Session class (Active Record style) ---
         Session.setup(
             sessions_dir=self.sessions_dir,
+            backups_dir=self.backups_dir,
             timezone_name=self.settings.timezone,
             default_hyperparameters=self.default_hyperparameters,
         )
@@ -185,11 +181,11 @@ class SessionService:
         return session
 
     def edit_session_meta(self, session_id: str, new_meta_data: dict):
-        self.backup_session(session_id)
         session = self._fetch_session(session_id)
         if not session:
             return
 
+        session.backup()
         session.edit_meta(new_meta_data)
 
         collection = self.list_sessions()
@@ -274,33 +270,16 @@ class SessionService:
         self._save_session(session)
         return pools_to_return
 
-    def backup_session(self, session_id: str):
-        session_path = self._get_session_path(session_id)
-        if not os.path.exists(session_path):
-            return
-
-        session_hash = hashlib.sha256(session_id.encode("utf-8")).hexdigest()
-        timestamp = datetime.now(self.timezone_obj).strftime("%Y%m%d%H%M%S")
-        backup_filename = f"{session_hash}-{timestamp}.json"
-        backup_path = os.path.join(self.backups_dir, backup_filename)
-
-        shutil.copy2(session_path, backup_path)
-
     def delete_session(self, session_id: str):
-        # Backup before deleting
-        self.backup_session(session_id)
-
         collection = self.list_sessions()
         child_ids = [sid for sid in collection if sid.startswith(f"{session_id}/")]
         all_ids_to_delete = [session_id] + child_ids
 
-        # Delete session files
         for sid in all_ids_to_delete:
-            session_path = self._get_session_path(sid)
-            session_lock_path = self._get_session_lock_path(sid)
-            with FileLock(session_lock_path):
-                if os.path.exists(session_path):
-                    os.remove(session_path)
+            session = self._fetch_session(sid)
+            if session:
+                session.backup()
+                session.destroy()
 
         # Update and save the index
         collection.delete(session_id)
@@ -359,8 +338,6 @@ class SessionService:
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
     def fork_session(self, session_id: str, fork_index: int) -> str | None:
-        self.backup_session(session_id)
-
         original_session = self._fetch_session(session_id)
         if not original_session:
             raise FileNotFoundError(

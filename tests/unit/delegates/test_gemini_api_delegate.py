@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from pipe.core.delegates import gemini_api_delegate
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
+from pipe.core.models.turn import UserTaskTurn
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 
@@ -169,6 +170,54 @@ class TestGeminiApiDelegate(unittest.TestCase):
             self.assertEqual(turns_to_save[1].type, "tool_response")
             self.assertEqual(turns_to_save[2].type, "model_response")
             self.assertEqual(turns_to_save[2].content, "Tool executed successfully.")
+
+    def test_run_merges_pool_into_turns(self):
+        """Tests that the delegate merges the turn pool before calling the API."""
+        with (
+            patch(
+                "pipe.core.delegates.gemini_api_delegate.call_gemini_api"
+            ) as mock_call_api,
+            patch.object(
+                self.session_service, "merge_pool_into_turns"
+            ) as mock_merge_pool,
+        ):
+            # 1. Setup: Mock the API to return a simple text stream to exit the loop
+            mock_part = MagicMock()
+            mock_part.text = "Final response."
+            delattr(mock_part, "function_call")  # Ensure no function call
+
+            mock_response = MagicMock()
+            mock_response.candidates = [MagicMock()]
+            mock_response.candidates[0].content.parts = [mock_part]
+            mock_response.usage_metadata.prompt_token_count = 10
+            mock_response.usage_metadata.candidates_token_count = 5
+            mock_call_api.return_value = iter([mock_response])
+
+            # 2. Prepare session with items in the pool
+            args = TaktArgs(
+                instruction="Test pool merge", purpose="Test", background="Test"
+            )
+            self.session_service.prepare_session_for_takt(args)
+
+            # Add a dummy turn to the pool
+            dummy_turn_in_pool = UserTaskTurn(
+                type="user_task",
+                instruction="This was in the pool",
+                timestamp="dummy_timestamp",
+            )
+            self.session_service.current_session.pools.append(dummy_turn_in_pool)
+
+            # 3. Run the delegate
+            gemini_api_delegate.run(args, self.session_service, self.prompt_service)
+
+            # 4. Assertions
+            # Verify that merge_pool_into_turns was called before the API call
+            mock_merge_pool.assert_called_once_with(
+                self.session_service.current_session_id
+            )
+
+            # Verify the API was called after the merge attempt
+            mock_call_api.assert_called_once()
 
 
 if __name__ == "__main__":

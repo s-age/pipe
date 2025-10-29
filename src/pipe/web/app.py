@@ -119,7 +119,7 @@ def create_new_session_api():
 
         roles = [r.strip() for r in request_data.roles.split(",") if r.strip()]
 
-        session_id = session_service.create_new_session(
+        session = session_service.create_new_session(
             purpose=request_data.purpose,
             background=request_data.background,
             roles=roles,
@@ -127,6 +127,7 @@ def create_new_session_api():
             hyperparameters=request_data.hyperparameters,
             parent_id=request_data.parent,
         )
+        session_id = session.session_id
 
         import subprocess
 

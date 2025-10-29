@@ -35,6 +35,16 @@ class TestTodoModel(unittest.TestCase):
             todo_item.checked, "The 'checked' field should default to False"
         )
 
+    def test_todo_creation_with_item_key(self):
+        """
+        Tests that the model_validator correctly maps 'item' to 'title'.
+        """
+        todo_data = {"item": "Buy milk"}
+        todo_item = TodoItem(**todo_data)
+        self.assertEqual(todo_item.title, "Buy milk")
+        self.assertEqual(todo_item.description, "")
+        self.assertFalse(todo_item.checked)
+
 
 if __name__ == "__main__":
     unittest.main()

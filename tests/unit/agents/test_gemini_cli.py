@@ -17,7 +17,7 @@ class TestGeminiCliIntegration(unittest.TestCase):
         but redirect the sessions directory to a temporary location."""
         # Use the real project root to find templates
         self.project_root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..")
+            os.path.join(os.path.dirname(__file__), "..", "..", "..")
         )
 
         # Create a temporary directory for sessions

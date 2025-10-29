@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import time
 from collections.abc import Callable
 from contextlib import contextmanager
@@ -144,3 +145,19 @@ def read_json_file(file_path: str) -> dict:
             return json.load(f)
         except json.JSONDecodeError:
             raise ValueError(f"Invalid JSON in file: {file_path}")
+
+
+def create_directory(path: str):
+    """Creates a directory if it doesn't exist."""
+    os.makedirs(path, exist_ok=True)
+
+
+def copy_file(source: str, destination: str):
+    """Copies a file from source to destination."""
+    shutil.copy2(source, destination)
+
+
+def delete_file(path: str):
+    """Deletes a file if it exists."""
+    if os.path.exists(path):
+        os.remove(path)

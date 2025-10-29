@@ -16,15 +16,6 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     This logic was previously in the old dispatch_run and _run functions.
     """
     session_id = session_service.current_session_id
-    if session_id:
-        pool = session_service.get_pool(session_id)
-        if pool and len(pool) >= 7:
-            print(
-                f"Warning: The number of items in the session pool ({len(pool)}) "
-                "has reached the limit (7). Halting further processing.",
-                file=sys.stderr,
-            )
-            return
 
     api_mode = session_service.settings.api_mode
     prompt_service = PromptService(session_service.project_root)

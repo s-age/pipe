@@ -31,7 +31,8 @@ class TestReadFileTool(unittest.TestCase):
         self.session_service = SessionService(
             project_root=self.project_root, settings=self.settings
         )
-        self.session_id = self.session_service.create_new_session("Test", "Test", [])
+        session = self.session_service.create_new_session("Test", "Test", [])
+        self.session_id = session.session_id
 
         # Create a dummy file for the tool to read
         self.test_file_path = os.path.join(self.project_root, "test.txt")

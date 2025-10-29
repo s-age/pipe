@@ -1,7 +1,7 @@
 import typing
 from collections import UserList
 from collections.abc import Callable, Iterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pipe.core.models.turn import (
     CompressedHistoryTurn,
@@ -13,6 +13,9 @@ from pipe.core.models.turn import (
 )
 from pydantic_core import core_schema
 
+if TYPE_CHECKING:
+    pass
+
 
 class TurnCollection(UserList):
     """
@@ -23,20 +26,20 @@ class TurnCollection(UserList):
         initialized_data = data if data is not None else []
         super().__init__(initialized_data)
 
-    def get_for_prompt(self) -> Iterator[Turn]:
+    def get_for_prompt(self, tool_response_limit: int = 3) -> Iterator[Turn]:
         """
         Yields turns for prompt generation, applying filtering rules.
         - The last turn (current task) is excluded.
-        - Only the last 3 'tool_response' turns from the history are included.
+        - Only the last N 'tool_response' turns from the history are included.
         """
         tool_response_count = 0
         history = self.data[:-1]  # Exclude the last turn
 
-        # Iterate in reverse to easily count the last 3 tool_responses
+        # Iterate in reverse to easily count the last N tool_responses
         for turn in reversed(history):
             if isinstance(turn, ToolResponseTurn):
                 tool_response_count += 1
-                if tool_response_count > 3:
+                if tool_response_count > tool_response_limit:
                     continue
             yield turn
 
@@ -105,6 +108,44 @@ class TurnCollection(UserList):
         core_schema: core_schema.CoreSchema,
         handler: Callable[[Any], dict[str, Any]],
     ) -> dict[str, Any]:
-        json_schema = handler(core_schema)
-        json_schema.update(type="array", items={"$ref": "#/definitions/Turn"})
-        return json_schema
+        # The handler already produces the array schema for the UserList.
+        # We just need to return it.
+        return handler(core_schema)
+
+    def expire_old_tool_responses(self, expiration_threshold: int = 3) -> bool:
+        """
+        Expires the message content of old tool_response turns to save tokens,
+        while preserving the 'succeeded' status. This uses a safe rebuild pattern.
+        Returns True if any turns were modified.
+        """
+        if not self.data:
+            return False
+
+        user_tasks = [turn for turn in self.data if turn.type == "user_task"]
+        if len(user_tasks) <= expiration_threshold:
+            return False
+
+        expiration_threshold_timestamp = user_tasks[-expiration_threshold].timestamp
+
+        new_turns = []
+        modified = False
+        for turn in self.data:
+            if (
+                turn.type == "tool_response"
+                and turn.timestamp < expiration_threshold_timestamp
+                and isinstance(turn.response, dict)
+                and turn.response.get("status") == "succeeded"
+            ):
+                modified_turn = turn.model_copy(deep=True)
+                modified_turn.response["message"] = (
+                    "This tool response has expired to save tokens."
+                )
+                new_turns.append(modified_turn)
+                modified = True
+            else:
+                new_turns.append(turn)
+
+        if modified:
+            self.data = new_turns
+
+        return modified

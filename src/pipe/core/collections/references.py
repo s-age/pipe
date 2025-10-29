@@ -1,66 +1,53 @@
 import os
 import sys
+from collections import UserList
+from collections.abc import Callable
+from typing import Any
 
 from pipe.core.models.reference import Reference
 from pipe.core.utils.file import read_text_file
+from pydantic_core import core_schema
 
 
-class ReferenceCollection:
-    def __init__(self, references: list[Reference]):
-        self._references = references
+class ReferenceCollection(UserList):
+    def __init__(self, data: list | None = None, default_ttl: int = 3):
+        initialized_data = data if data is not None else []
+        super().__init__(initialized_data)
+        self.default_ttl = default_ttl
+        self.sort_by_ttl()
 
     def add(self, path: str):
-        """
-        Adds a new reference with a default TTL of 3 if it doesn't already exist.
-        If the reference exists, it does nothing.
-        """
-        if not any(ref.path == path for ref in self._references):
-            self._references.append(Reference(path=path, disabled=False, ttl=3))
+        if not any(ref.path == path for ref in self.data):
+            self.data.append(Reference(path=path, disabled=False, ttl=self.default_ttl))
+            self.sort_by_ttl()
 
     def update_ttl(self, path: str, new_ttl: int):
-        """
-        Updates the TTL of an existing reference and sets its disabled state
-        accordingly.
-        If the reference does not exist, it does nothing.
-        """
-        for ref in self._references:
+        for ref in self.data:
             if ref.path == path:
                 ref.ttl = new_ttl
-                ref.disabled = False if new_ttl > 0 else True
+                ref.disabled = new_ttl <= 0
                 break
+        self.sort_by_ttl()
 
     def decrement_all_ttl(self):
-        """
-        Decrements the TTL of all active references. If TTL drops to 0 or below,
-        the reference is disabled and TTL is set to 0.
-        """
-        for ref in self._references:
+        for ref in self.data:
             if not ref.disabled:
-                # Use default TTL of 3 for backward compatibility if ttl is None
-                current_ttl = ref.ttl if ref.ttl is not None else 3
-
+                current_ttl = ref.ttl if ref.ttl is not None else self.default_ttl
                 current_ttl -= 1
                 ref.ttl = current_ttl
-
                 if current_ttl <= 0:
                     ref.disabled = True
-                    ref.ttl = 0  # Set to 0 to preserve the expired state
+                    ref.ttl = 0
+        self.sort_by_ttl()
 
     def get_for_prompt(self, project_root: str):
-        """
-        Generator that yields active references with their file content for the prompt.
-        Ensures that files are within the project root for security.
-        """
         abs_project_root = os.path.abspath(project_root)
-
-        for ref in self._references:
+        for ref in self.data:
             if not ref.disabled:
                 try:
                     full_path = os.path.abspath(
                         os.path.join(abs_project_root, ref.path)
                     )
-
-                    # Security Check: Ensure the file is within the project root
                     if os.path.commonpath([abs_project_root]) != os.path.commonpath(
                         [abs_project_root, full_path]
                     ):
@@ -70,7 +57,6 @@ class ReferenceCollection:
                             file=sys.stderr,
                         )
                         continue
-
                     content = read_text_file(full_path)
                     if content is not None:
                         yield {"path": ref.path, "content": content}
@@ -80,7 +66,6 @@ class ReferenceCollection:
                             f"{full_path}",
                             file=sys.stderr,
                         )
-
                 except Exception as e:
                     print(
                         f"Warning: Could not process reference file {ref.path}: {e}",
@@ -88,16 +73,48 @@ class ReferenceCollection:
                     )
 
     def sort_by_ttl(self):
-        """
-        Sorts the internal list of references.
-        Active references come first, then sorted by TTL descending.
-        """
-        self._references.sort(
-            key=lambda ref: (not ref.disabled, ref.ttl if ref.ttl is not None else 3),
+        self.data.sort(
+            key=lambda ref: (
+                not ref.disabled,
+                ref.ttl if ref.ttl is not None else self.default_ttl,
+            ),
             reverse=True,
         )
 
-    @property
-    def references(self) -> list[Reference]:
-        """Returns the underlying list of references."""
-        return self._references
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: Callable[[Any], core_schema.CoreSchema]
+    ) -> core_schema.CoreSchema:
+        reference_schema = handler(Reference)
+        items_schema = core_schema.list_schema(reference_schema)
+        list_to_collection_schema = core_schema.chain_schema(
+            [
+                items_schema,
+                core_schema.no_info_plain_validator_function(cls),
+            ]
+        )
+        return core_schema.json_or_python_schema(
+            json_schema=list_to_collection_schema,
+            python_schema=core_schema.union_schema(
+                [
+                    core_schema.is_instance_schema(cls),
+                    list_to_collection_schema,
+                ]
+            ),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda instance: [t.model_dump() for t in instance]
+            ),
+        )
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls,
+        core_schema: core_schema.CoreSchema,
+        handler: Callable[[Any], dict[str, Any]],
+    ) -> dict[str, Any]:
+        # handler(core_schema) will generate the schema for the inner items
+        # and add them to the definitions.
+        field_schema = handler(core_schema)
+
+        # Then we can reference the schema for the inner items.
+        return {"type": "array", "items": field_schema.get("items")}

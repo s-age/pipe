@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock
 
 from pipe.core.collections.todos import TodoCollection
 from pipe.core.models.todo import TodoItem
@@ -43,6 +44,39 @@ class TestTodoCollection(unittest.TestCase):
         collection = TodoCollection(None)
         prompt_data = collection.get_for_prompt()
         self.assertEqual(len(prompt_data), 0)
+
+    def test_update_in_session(self):
+        """
+        Tests that the static method update_in_session correctly updates the todos
+        on a mock session object.
+        """
+        mock_session = Mock()
+        mock_session.todos = []
+
+        todos_data = [
+            {"title": "From dict", "checked": False},
+            TodoItem(title="From object", checked=True),
+        ]
+
+        TodoCollection.update_in_session(mock_session, todos_data)
+
+        self.assertEqual(len(mock_session.todos), 2)
+        self.assertIsInstance(mock_session.todos[0], TodoItem)
+        self.assertEqual(mock_session.todos[0].title, "From dict")
+        self.assertIsInstance(mock_session.todos[1], TodoItem)
+        self.assertEqual(mock_session.todos[1].title, "From object")
+
+    def test_delete_in_session(self):
+        """
+        Tests that the static method delete_in_session sets the todos attribute
+        on a mock session object to None.
+        """
+        mock_session = Mock()
+        mock_session.todos = [TodoItem(title="A todo", checked=False)]
+
+        TodoCollection.delete_in_session(mock_session)
+
+        self.assertIsNone(mock_session.todos)
 
 
 if __name__ == "__main__":

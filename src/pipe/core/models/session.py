@@ -1,11 +1,26 @@
-import os
+from __future__ import annotations
 
+import hashlib
+import json
+import os
+import sys
+import zoneinfo
+from typing import TYPE_CHECKING, Any, ClassVar
+
+from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.hyperparameters import Hyperparameters
-from pipe.core.models.reference import Reference
 from pipe.core.models.todo import TodoItem
-from pipe.core.utils.file import locked_json_write
-from pydantic import BaseModel, Field
+from pipe.core.utils.datetime import get_current_timestamp
+from pipe.core.utils.file import (
+    FileLock,
+    copy_file,
+    create_directory,
+    delete_file,
+    locked_json_write,
+    read_json_file,
+)
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 
 class Session(BaseModel):
@@ -17,6 +32,29 @@ class Session(BaseModel):
     It does not manage the collection of all sessions or the index file.
     """
 
+    if TYPE_CHECKING:
+        from pipe.core.models.args import TaktArgs
+        from pipe.core.models.prompt import Prompt
+        from pipe.core.models.settings import Settings
+
+    # --- Pydantic Configuration ---
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    # --- Class Variables for Configuration (used by factories) ---
+    sessions_dir: ClassVar[str | None] = None
+    backups_dir: ClassVar[str | None] = None
+    timezone_obj: ClassVar[zoneinfo.ZoneInfo | None] = None
+    default_hyperparameters: ClassVar[Hyperparameters | None] = None
+    reference_ttl: ClassVar[int] = 3
+
+    # --- Private Instance Attributes for self-contained persistence ---
+    _sessions_dir: str | None = PrivateAttr(None)
+    _backups_dir: str | None = PrivateAttr(None)
+    _timezone_obj: zoneinfo.ZoneInfo | None = PrivateAttr(None)
+    _default_hyperparameters: Hyperparameters | None = PrivateAttr(None)
+    _reference_ttl: int = PrivateAttr(3)
+
+    # --- Public Fields ---
     session_id: str
     created_at: str
     purpose: str | None = None
@@ -25,15 +63,217 @@ class Session(BaseModel):
     multi_step_reasoning_enabled: bool = False
     token_count: int = 0
     hyperparameters: Hyperparameters | None = None
-    references: list[Reference] = Field(default_factory=list)
+    references: ReferenceCollection = Field(default_factory=ReferenceCollection)
     turns: TurnCollection = Field(default_factory=TurnCollection)
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: list[TodoItem] | None = None
 
-    def save(self, session_path: str, lock_path: str):
+    def model_post_init(self, __context: Any) -> None:
+        """Initializes instance-specific configurations after the model is created."""
+        # Populate private attributes from class variables. This ensures that
+        # instances created by factories or direct instantiation are self-contained.
+        self._sessions_dir = self.__class__.sessions_dir
+        self._backups_dir = self.__class__.backups_dir
+        self._timezone_obj = self.__class__.timezone_obj
+        self._default_hyperparameters = self.__class__.default_hyperparameters
+        self._reference_ttl = self.__class__.reference_ttl
+
+        # Configure the reference collection with the instance-specific TTL
+        if self.references:
+            self.references.default_ttl = self._reference_ttl
+
+    @property
+    def file_path(self) -> str:
+        return self._get_session_path()
+
+    @classmethod
+    def setup(
+        cls,
+        sessions_dir: str,
+        backups_dir: str,
+        settings: Settings,
+    ):
+        """Injects necessary configurations into the Session class from settings."""
+        cls.sessions_dir = sessions_dir
+        cls.backups_dir = backups_dir
+        try:
+            cls.timezone_obj = zoneinfo.ZoneInfo(settings.timezone)
+        except zoneinfo.ZoneInfoNotFoundError:
+            cls.timezone_obj = zoneinfo.ZoneInfo("UTC")
+
+        cls.reference_ttl = settings.reference_ttl
+
+        default_hyperparameters_dict = {
+            "temperature": settings.parameters.temperature.model_dump(),
+            "top_p": settings.parameters.top_p.model_dump(),
+            "top_k": settings.parameters.top_k.model_dump(),
+        }
+        cls.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
+
+    def _get_session_path(self) -> str:
+        if not self._sessions_dir:
+            raise ValueError("Session._sessions_dir is not configured.")
+        safe_path_parts = [
+            part for part in self.session_id.split("/") if part not in ("", ".", "..")
+        ]
+        final_path = os.path.join(self._sessions_dir, *safe_path_parts)
+        return f"{final_path}.json"
+
+    def _get_lock_path(self) -> str:
+        return f"{self._get_session_path()}.lock"
+
+    def save(self):
         """Saves the session to a JSON file using a locked write utility."""
-        os.makedirs(os.path.dirname(session_path), exist_ok=True)
-        locked_json_write(lock_path, session_path, self.model_dump())
+        if self.references:
+            ref_collection = ReferenceCollection(self.references)
+            ref_collection.sort_by_ttl()
+
+        session_path = self._get_session_path()
+        lock_path = self._get_lock_path()
+
+        create_directory(os.path.dirname(session_path))
+        locked_json_write(lock_path, session_path, self.model_dump(mode="json"))
+
+    def backup(self):
+        """Creates a timestamped backup of the session file."""
+        if not self._backups_dir or not self._timezone_obj:
+            raise ValueError(
+                "Session._backups_dir or ._timezone_obj is not configured."
+            )
+
+        session_path = self._get_session_path()
+        if not os.path.exists(session_path):
+            return
+
+        session_hash = hashlib.sha256(self.session_id.encode("utf-8")).hexdigest()
+        timestamp = get_current_timestamp(self._timezone_obj).replace(":", "")
+        backup_filename = f"{session_hash}-{timestamp}.json"
+        backup_path = os.path.join(self._backups_dir, backup_filename)
+
+        copy_file(session_path, backup_path)
+
+    def destroy(self):
+        """Deletes the session's JSON file and lock file."""
+        session_path = self._get_session_path()
+        lock_path = self._get_lock_path()
+        with FileLock(lock_path):
+            delete_file(session_path)
+
+    @classmethod
+    def _get_path_for_id(cls, session_id: str) -> str:
+        """A static utility to get a session path without needing an instance."""
+        if not cls.sessions_dir:
+            raise ValueError("Session.sessions_dir is not configured.")
+        safe_path_parts = [
+            part for part in session_id.split("/") if part not in ("", ".", "..")
+        ]
+        final_path = os.path.join(cls.sessions_dir, *safe_path_parts)
+        return f"{final_path}.json"
+
+    @classmethod
+    def find(cls, session_id: str) -> Session | None:
+        """Loads a single session from its JSON file, applying data migrations if
+        necessary."""
+        if not cls.sessions_dir or not cls.timezone_obj:
+            raise ValueError("Session class is not configured.")
+
+        session_path = cls._get_path_for_id(session_id)
+
+        try:
+            data = read_json_file(session_path)
+        except (FileNotFoundError, ValueError):
+            return None
+
+        # --- Data Migration ---
+        session_creation_time = data.get(
+            "created_at", get_current_timestamp(cls.timezone_obj)
+        )
+        for turn_list_key in ["turns", "pools"]:
+            if turn_list_key in data and isinstance(data[turn_list_key], list):
+                for turn_data in data[turn_list_key]:
+                    if isinstance(turn_data, dict):
+                        if "timestamp" not in turn_data:
+                            turn_data["timestamp"] = session_creation_time
+                        if (
+                            turn_data.get("type") == "compressed_history"
+                            and "original_turns_range" not in turn_data
+                        ):
+                            turn_data["original_turns_range"] = [0, 0]
+        # --- End of Data Migration ---
+
+        instance = cls.model_validate(data)
+        return instance
+
+    @classmethod
+    def create(
+        cls,
+        purpose: str,
+        background: str,
+        roles: list,
+        multi_step_reasoning_enabled: bool = False,
+        token_count: int = 0,
+        hyperparameters: dict | None = None,
+        parent_id: str | None = None,
+    ) -> Session:
+        if not cls.timezone_obj or not cls.default_hyperparameters:
+            raise ValueError("Session class is not configured.")
+
+        if parent_id:
+            parent_session = cls.find(parent_id)
+            if not parent_session:
+                raise FileNotFoundError(
+                    f"Parent session with ID '{parent_id}' not found."
+                )
+
+        timestamp = get_current_timestamp(cls.timezone_obj)
+        identity_str = json.dumps(
+            {
+                "purpose": purpose,
+                "background": background,
+                "roles": roles,
+                "multi_step_reasoning_enabled": multi_step_reasoning_enabled,
+                "timestamp": timestamp,
+            },
+            sort_keys=True,
+        )
+        session_hash = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
+
+        session_id = f"{parent_id}/{session_hash}" if parent_id else session_hash
+
+        session = cls(
+            session_id=session_id,
+            created_at=timestamp,
+            purpose=purpose,
+            background=background,
+            roles=roles,
+            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
+            token_count=token_count,
+            hyperparameters=hyperparameters
+            if hyperparameters is not None
+            else cls.default_hyperparameters,
+        )
+
+        session.save()
+        return session
+
+    def edit_meta(self, new_meta_data: dict):
+        """Updates metadata and saves the session."""
+        if "purpose" in new_meta_data:
+            self.purpose = new_meta_data["purpose"]
+        if "background" in new_meta_data:
+            self.background = new_meta_data["background"]
+        if "roles" in new_meta_data:
+            self.roles = new_meta_data["roles"]
+        if "multi_step_reasoning_enabled" in new_meta_data:
+            self.multi_step_reasoning_enabled = new_meta_data[
+                "multi_step_reasoning_enabled"
+            ]
+        if "token_count" in new_meta_data:
+            self.token_count = new_meta_data["token_count"]
+        if "hyperparameters" in new_meta_data:
+            self.hyperparameters = Hyperparameters(**new_meta_data["hyperparameters"])
+
+        self.save()
 
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the session suitable for templates."""
@@ -53,3 +293,62 @@ class Session(BaseModel):
             "pools": [p.model_dump() for p in self.pools],
             "todos": [t.model_dump() for t in self.todos] if self.todos else [],
         }
+
+    @classmethod
+    def prepare(
+        cls,
+        args: TaktArgs,
+        is_dry_run: bool = False,
+    ) -> Session:
+        """
+        Finds an existing session based on args or creates a new one,
+        then applies initial turns and references from args.
+        """
+        from pipe.core.models.turn import UserTaskTurn
+
+        session_id = args.session.strip().rstrip(".") if args.session else None
+
+        if session_id:
+            session = cls.find(session_id)
+            if not session:
+                raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
+
+            if not is_dry_run and args.instruction:
+                new_turn = UserTaskTurn(
+                    type="user_task",
+                    instruction=args.instruction,
+                    timestamp=get_current_timestamp(cls.timezone_obj),
+                )
+                session.turns.append(new_turn)
+            print(f"Continuing session: {session.session_id}", file=sys.stderr)
+        else:
+            if not all([args.purpose, args.background]):
+                raise ValueError(
+                    "A new session requires --purpose and --background for the first "
+                    "instruction."
+                )
+
+            session = cls.create(
+                purpose=args.purpose,
+                background=args.background,
+                roles=args.roles or [],
+                multi_step_reasoning_enabled=args.multi_step_reasoning,
+                parent_id=args.parent,
+            )
+
+            if not is_dry_run and args.instruction:
+                first_turn = UserTaskTurn(
+                    type="user_task",
+                    instruction=args.instruction,
+                    timestamp=get_current_timestamp(cls.timezone_obj),
+                )
+                session.turns.append(first_turn)
+            print(f"New session created: {session.session_id}", file=sys.stderr)
+
+        if args.references:
+            for ref_path in args.references:
+                if ref_path.strip():
+                    session.references.add(ref_path.strip())
+
+        session.save()
+        return session

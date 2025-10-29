@@ -51,6 +51,9 @@
             <label for="parent">Parent Session (optional):</label>
             <select id="parent" name="parent" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ced4da; border-radius: 4px; font-size: 1em;">
                 <option value="">None</option>
+                {% for id, meta in sessions %}
+                <option value="{{ id }}">{{ meta.purpose }}</option>
+                {% endfor %}
             </select>
 
             <label for="references">References (comma-separated paths):</label>
@@ -95,18 +98,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Populate parent session dropdown
-            const sessions = JSON.parse(document.body.dataset.sessions || '[]');
-            const parentSelect = document.getElementById('parent');
-            if (sessions && parentSelect) {
-                sessions.forEach(([id, meta]) => {
-                    const option = document.createElement('option');
-                    option.value = id;
-                    option.textContent = `${meta.purpose} (${id})`;
-                    parentSelect.appendChild(option);
-                });
-            }
-
             // Initialize sliders
             const settings = JSON.parse(document.body.dataset.settings || '{}');
             const sliders = [

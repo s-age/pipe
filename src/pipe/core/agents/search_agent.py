@@ -10,9 +10,7 @@ from pipe.core.utils.file import read_yaml_file
 
 # Suppress specific UserWarning from pydantic
 warnings.filterwarnings(
-    "ignore",
-    category=UserWarning,
-    message="Field name.*shadows an attribute in parent.*",
+    "ignore", message='Field name ".*" shadows an attribute in parent "Operation";'
 )
 
 

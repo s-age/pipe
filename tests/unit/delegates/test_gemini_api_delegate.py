@@ -2,12 +2,13 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from pipe.core.delegates import gemini_api_delegate
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import UserTaskTurn
+from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 
@@ -39,10 +40,13 @@ class TestGeminiApiDelegate(unittest.TestCase):
             },
         }
         self.settings = Settings(**settings_data)
+        self.mock_repository = Mock(spec=SessionRepository)
 
         # Instantiate services with the real project root
         self.session_service = SessionService(
-            project_root=self.project_root, settings=self.settings
+            project_root=self.project_root,
+            settings=self.settings,
+            repository=self.mock_repository,
         )
         self.prompt_service = PromptService(project_root=self.project_root)
 
@@ -91,7 +95,7 @@ class TestGeminiApiDelegate(unittest.TestCase):
 
             # 2. Prepare session
             args = TaktArgs(instruction="Say hello", purpose="Test", background="Test")
-            self.session_service.prepare_session_for_takt(args)
+            self.session_service.prepare(args)
 
             # 3. Run the delegate
             _, token_count, turns_to_save = gemini_api_delegate.run(
@@ -153,7 +157,7 @@ class TestGeminiApiDelegate(unittest.TestCase):
             args = TaktArgs(
                 instruction="Use the test tool", purpose="Test", background="Test"
             )
-            self.session_service.prepare_session_for_takt(args)
+            self.session_service.prepare(args)
 
             # 3. Run the delegate
             _, token_count, turns_to_save = gemini_api_delegate.run(
@@ -197,7 +201,7 @@ class TestGeminiApiDelegate(unittest.TestCase):
             args = TaktArgs(
                 instruction="Test pool merge", purpose="Test", background="Test"
             )
-            self.session_service.prepare_session_for_takt(args)
+            self.session_service.prepare(args)
 
             # Add a dummy turn to the pool
             dummy_turn_in_pool = UserTaskTurn(

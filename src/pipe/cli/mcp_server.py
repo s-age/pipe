@@ -32,8 +32,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src"
 
 import select
 
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
-from pipe.core.services.session_service import SessionService
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import append_to_text_file, read_yaml_file
 
@@ -221,7 +221,8 @@ def execute_tool(tool_name, arguments):
     settings = Settings(**settings_dict)
 
     session_id = get_latest_session_id()
-    session_service = SessionService(project_root, settings)
+    factory = ServiceFactory(project_root, settings)
+    session_service = factory.create_session_service()
 
     # Log the start of the tool call to the pool
     if session_id:
@@ -345,7 +346,7 @@ def prepare_tool_arguments(
     final_arguments = client_arguments.copy()
 
     # ツール関数が定義しているパラメーターに基づいてサーバー引数を注入
-    if "session_service" in params:
+    if session_service and "session_service" in params:
         final_arguments["session_service"] = session_service
 
     # session_id はクライアントから指定されていない場合のみ注入する

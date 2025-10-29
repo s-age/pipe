@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import sys
 import zoneinfo
 from typing import TYPE_CHECKING, Any, ClassVar
 
@@ -11,14 +10,11 @@ from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.todo import TodoItem
+from pipe.core.models.turn import Turn
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import (
     FileLock,
-    copy_file,
-    create_directory,
     delete_file,
-    locked_json_write,
-    read_json_file,
 )
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
@@ -122,36 +118,6 @@ class Session(BaseModel):
     def _get_lock_path(self) -> str:
         return f"{self._get_session_path()}.lock"
 
-    def save(self):
-        """Saves the session to a JSON file using a locked write utility."""
-        if self.references:
-            ref_collection = ReferenceCollection(self.references)
-            ref_collection.sort_by_ttl()
-
-        session_path = self._get_session_path()
-        lock_path = self._get_lock_path()
-
-        create_directory(os.path.dirname(session_path))
-        locked_json_write(lock_path, session_path, self.model_dump(mode="json"))
-
-    def backup(self):
-        """Creates a timestamped backup of the session file."""
-        if not self._backups_dir or not self._timezone_obj:
-            raise ValueError(
-                "Session._backups_dir or ._timezone_obj is not configured."
-            )
-
-        session_path = self._get_session_path()
-        if not os.path.exists(session_path):
-            return
-
-        session_hash = hashlib.sha256(self.session_id.encode("utf-8")).hexdigest()
-        timestamp = get_current_timestamp(self._timezone_obj).replace(":", "")
-        backup_filename = f"{session_hash}-{timestamp}.json"
-        backup_path = os.path.join(self._backups_dir, backup_filename)
-
-        copy_file(session_path, backup_path)
-
     def destroy(self):
         """Deletes the session's JSON file and lock file."""
         session_path = self._get_session_path()
@@ -159,102 +125,45 @@ class Session(BaseModel):
         with FileLock(lock_path):
             delete_file(session_path)
 
-    @classmethod
-    def _get_path_for_id(cls, session_id: str) -> str:
-        """A static utility to get a session path without needing an instance."""
-        if not cls.sessions_dir:
-            raise ValueError("Session.sessions_dir is not configured.")
-        safe_path_parts = [
-            part for part in session_id.split("/") if part not in ("", ".", "..")
-        ]
-        final_path = os.path.join(cls.sessions_dir, *safe_path_parts)
-        return f"{final_path}.json"
+    def fork(self, fork_index: int, timezone_obj: zoneinfo.ZoneInfo) -> Session:
+        """Creates a new, in-memory Session object by forking this one."""
+        from pipe.core.collections.turns import TurnCollection
 
-    @classmethod
-    def find(cls, session_id: str) -> Session | None:
-        """Loads a single session from its JSON file, applying data migrations if
-        necessary."""
-        if not cls.sessions_dir or not cls.timezone_obj:
-            raise ValueError("Session class is not configured.")
+        timestamp = get_current_timestamp(timezone_obj)
+        forked_purpose = f"Fork of: {self.purpose}"
+        forked_turns = TurnCollection(self.turns[: fork_index + 1])
 
-        session_path = cls._get_path_for_id(session_id)
-
-        try:
-            data = read_json_file(session_path)
-        except (FileNotFoundError, ValueError):
-            return None
-
-        # --- Data Migration ---
-        session_creation_time = data.get(
-            "created_at", get_current_timestamp(cls.timezone_obj)
-        )
-        for turn_list_key in ["turns", "pools"]:
-            if turn_list_key in data and isinstance(data[turn_list_key], list):
-                for turn_data in data[turn_list_key]:
-                    if isinstance(turn_data, dict):
-                        if "timestamp" not in turn_data:
-                            turn_data["timestamp"] = session_creation_time
-                        if (
-                            turn_data.get("type") == "compressed_history"
-                            and "original_turns_range" not in turn_data
-                        ):
-                            turn_data["original_turns_range"] = [0, 0]
-        # --- End of Data Migration ---
-
-        instance = cls.model_validate(data)
-        return instance
-
-    @classmethod
-    def create(
-        cls,
-        purpose: str,
-        background: str,
-        roles: list,
-        multi_step_reasoning_enabled: bool = False,
-        token_count: int = 0,
-        hyperparameters: dict | None = None,
-        parent_id: str | None = None,
-    ) -> Session:
-        if not cls.timezone_obj or not cls.default_hyperparameters:
-            raise ValueError("Session class is not configured.")
-
-        if parent_id:
-            parent_session = cls.find(parent_id)
-            if not parent_session:
-                raise FileNotFoundError(
-                    f"Parent session with ID '{parent_id}' not found."
-                )
-
-        timestamp = get_current_timestamp(cls.timezone_obj)
         identity_str = json.dumps(
             {
-                "purpose": purpose,
-                "background": background,
-                "roles": roles,
-                "multi_step_reasoning_enabled": multi_step_reasoning_enabled,
+                "purpose": forked_purpose,
+                "original_id": self.session_id,
+                "fork_at_turn": fork_index,
                 "timestamp": timestamp,
             },
             sort_keys=True,
         )
-        session_hash = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
+        new_session_id_suffix = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
 
-        session_id = f"{parent_id}/{session_hash}" if parent_id else session_hash
-
-        session = cls(
-            session_id=session_id,
-            created_at=timestamp,
-            purpose=purpose,
-            background=background,
-            roles=roles,
-            multi_step_reasoning_enabled=multi_step_reasoning_enabled,
-            token_count=token_count,
-            hyperparameters=hyperparameters
-            if hyperparameters is not None
-            else cls.default_hyperparameters,
+        parent_path = (
+            self.session_id.rsplit("/", 1)[0] if "/" in self.session_id else None
+        )
+        new_session_id = (
+            f"{parent_path}/{new_session_id_suffix}"
+            if parent_path
+            else new_session_id_suffix
         )
 
-        session.save()
-        return session
+        return Session(
+            session_id=new_session_id,
+            created_at=timestamp,
+            purpose=forked_purpose,
+            background=self.background,
+            roles=self.roles,
+            multi_step_reasoning_enabled=self.multi_step_reasoning_enabled,
+            hyperparameters=self.hyperparameters,
+            references=self.references,
+            turns=forked_turns,
+        )
 
     def edit_meta(self, new_meta_data: dict):
         """Updates metadata and saves the session."""
@@ -272,8 +181,6 @@ class Session(BaseModel):
             self.token_count = new_meta_data["token_count"]
         if "hyperparameters" in new_meta_data:
             self.hyperparameters = Hyperparameters(**new_meta_data["hyperparameters"])
-
-        self.save()
 
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the session suitable for templates."""
@@ -294,61 +201,41 @@ class Session(BaseModel):
             "todos": [t.model_dump() for t in self.todos] if self.todos else [],
         }
 
-    @classmethod
-    def prepare(
-        cls,
-        args: TaktArgs,
-        is_dry_run: bool = False,
-    ) -> Session:
-        """
-        Finds an existing session based on args or creates a new one,
-        then applies initial turns and references from args.
-        """
-        from pipe.core.models.turn import UserTaskTurn
+    def add_turn(self, turn_data: Turn):
+        """Adds a turn to the session's history."""
+        self.turns.append(turn_data)
 
-        session_id = args.session.strip().rstrip(".") if args.session else None
+    def edit_turn(self, turn_index: int, new_data: dict):
+        """Edits a specific turn in the session's history."""
+        from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
 
-        if session_id:
-            session = cls.find(session_id)
-            if not session:
-                raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
+        if not (0 <= turn_index < len(self.turns)):
+            raise IndexError("Turn index out of range.")
 
-            if not is_dry_run and args.instruction:
-                new_turn = UserTaskTurn(
-                    type="user_task",
-                    instruction=args.instruction,
-                    timestamp=get_current_timestamp(cls.timezone_obj),
-                )
-                session.turns.append(new_turn)
-            print(f"Continuing session: {session.session_id}", file=sys.stderr)
-        else:
-            if not all([args.purpose, args.background]):
-                raise ValueError(
-                    "A new session requires --purpose and --background for the first "
-                    "instruction."
-                )
-
-            session = cls.create(
-                purpose=args.purpose,
-                background=args.background,
-                roles=args.roles or [],
-                multi_step_reasoning_enabled=args.multi_step_reasoning,
-                parent_id=args.parent,
+        original_turn = self.turns[turn_index]
+        if original_turn.type not in ["user_task", "model_response"]:
+            raise ValueError(
+                f"Editing turns of type '{original_turn.type}' is not allowed."
             )
 
-            if not is_dry_run and args.instruction:
-                first_turn = UserTaskTurn(
-                    type="user_task",
-                    instruction=args.instruction,
-                    timestamp=get_current_timestamp(cls.timezone_obj),
-                )
-                session.turns.append(first_turn)
-            print(f"New session created: {session.session_id}", file=sys.stderr)
+        turn_as_dict = original_turn.model_dump()
+        turn_as_dict.update(new_data)
 
-        if args.references:
-            for ref_path in args.references:
-                if ref_path.strip():
-                    session.references.add(ref_path.strip())
+        if original_turn.type == "user_task":
+            self.turns[turn_index] = UserTaskTurn(**turn_as_dict)
+        elif original_turn.type == "model_response":
+            self.turns[turn_index] = ModelResponseTurn(**turn_as_dict)
 
-        session.save()
-        return session
+    def delete_turn(self, turn_index: int):
+        """Deletes a specific turn from the session's history."""
+        if not (0 <= turn_index < len(self.turns)):
+            raise IndexError("Turn index out of range.")
+        del self.turns[turn_index]
+
+    def merge_pool(self):
+        """Merges the turn pool into the main history."""
+        from pipe.core.collections.turns import TurnCollection
+
+        if self.pools:
+            self.turns.extend(self.pools)
+            self.pools = TurnCollection()

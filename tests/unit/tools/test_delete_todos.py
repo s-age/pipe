@@ -1,10 +1,11 @@
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 from pipe.core.models.settings import Settings
 from pipe.core.models.todo import TodoItem
+from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_service import SessionService
 from pipe.core.tools.delete_todos import delete_todos
 
@@ -28,8 +29,11 @@ class TestDeleteTodosTool(unittest.TestCase):
             },
         }
         self.settings = Settings(**settings_data)
+        self.mock_repository = Mock(spec=SessionRepository)
         self.session_service = SessionService(
-            project_root=self.project_root, settings=self.settings
+            project_root=self.project_root,
+            settings=self.settings,
+            repository=self.mock_repository,
         )
         session = self.session_service.create_new_session("Test", "Test", [])
         self.session_id = session.session_id

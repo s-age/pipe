@@ -5,9 +5,9 @@ import warnings
 
 from dotenv import load_dotenv
 from pipe.core.dispatcher import dispatch
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
-from pipe.core.services.session_service import SessionService
 from pipe.core.utils.file import read_text_file, read_yaml_file
 from pipe.core.validators.sessions import new_session as new_session_validator
 
@@ -133,7 +133,7 @@ def main():
     if args.api_mode:
         settings.api_mode = args.api_mode
 
-    session_service = SessionService(project_root, settings)
+    session_service = ServiceFactory(project_root, settings).create_session_service()
 
     try:
         # Validate arguments for a new session at the endpoint

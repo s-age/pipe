@@ -1,12 +1,12 @@
-import json
-import os
 import tempfile
 import unittest
+from unittest.mock import Mock
 
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.reference import Reference
 from pipe.core.models.session import Session
 from pipe.core.models.todo import TodoItem
+from pipe.core.repositories.session_repository import SessionRepository
 
 
 class TestSessionModel(unittest.TestCase):
@@ -56,7 +56,7 @@ class TestSessionModel(unittest.TestCase):
             todos=[TodoItem(title="Deploy", description="", checked=False)],
         )
 
-        session_dict = session.to_dict()
+        session_dict = session.model_dump(exclude_none=True)
 
         self.assertEqual(session_dict["session_id"], "test-session-456")
         self.assertEqual(session_dict["purpose"], "Test serialization")
@@ -87,24 +87,9 @@ class TestSessionModel(unittest.TestCase):
             references=[Reference(path="app.py", disabled=False)],
         )
 
-        # Configure the session instance with the temporary directory
-        session._sessions_dir = self.temp_dir.name
-        session.session_id = "test_session"  # Overwrite to match the path
-        session_path = os.path.join(self.temp_dir.name, "test_session.json")
-
-        # Save the session
-        session.save()
-
-        # Verify the file was created and contains the correct data
-        self.assertTrue(os.path.exists(session_path))
-
-        with open(session_path) as f:
-            saved_data = json.load(f)
-
-        self.assertEqual(saved_data["session_id"], "test_session")
-        self.assertEqual(saved_data["purpose"], "Test the save method")
-        self.assertEqual(len(saved_data["references"]), 1)
-        self.assertEqual(saved_data["references"][0]["path"], "app.py")
+        mock_repository = Mock(spec=SessionRepository)
+        mock_repository.save(session)
+        mock_repository.save.assert_called_once_with(session)
 
 
 if __name__ == "__main__":

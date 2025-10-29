@@ -2,9 +2,11 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest.mock import Mock
 
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
+from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_service import SessionService
 
 
@@ -27,9 +29,44 @@ class TestSessionService(unittest.TestCase):
             },
         }
         self.settings = Settings(**settings_data)
+        self.mock_repository = Mock(spec=SessionRepository)
         self.session_service = SessionService(
-            project_root=self.project_root, settings=self.settings
+            project_root=self.project_root,
+            settings=self.settings,
+            repository=self.mock_repository,
         )
+
+        # In-memory session storage for testing
+        self.sessions: dict = {}
+
+        def save_session(session):
+            self.sessions[session.session_id] = session
+
+        def find_session(session_id):
+            return self.sessions.get(session_id)
+
+        def get_index():
+            return {
+                "sessions": {
+                    sid: s.model_dump(exclude_none=True)
+                    for sid, s in self.sessions.items()
+                }
+            }
+
+        def delete_session(session_id):
+            if session_id in self.sessions:
+                del self.sessions[session_id]
+            # Also remove children
+            children_to_delete = [
+                sid for sid in self.sessions if sid.startswith(f"{session_id}/")
+            ]
+            for sid in children_to_delete:
+                del self.sessions[sid]
+
+        self.mock_repository.save.side_effect = save_session
+        self.mock_repository.find.side_effect = find_session
+        self.mock_repository.get_index.side_effect = get_index
+        self.mock_repository.delete.side_effect = delete_session
 
     def tearDown(self):
         shutil.rmtree(self.project_root)
@@ -270,13 +307,13 @@ class TestSessionService(unittest.TestCase):
         self.assertEqual(paths, expected_order)
 
     def test_prepare_session_for_takt_dry_run(self):
-        """Tests that prepare_session_for_takt does not add a turn in dry_run mode."""
+        """Tests that prepare does not add a turn in dry_run mode."""
         from pipe.core.models.args import TaktArgs
 
         args = TaktArgs(purpose="Test", background="BG", instruction="Dry run task")
 
         # Call with is_dry_run = True
-        self.session_service.prepare_session_for_takt(args, is_dry_run=True)
+        self.session_service.prepare(args, is_dry_run=True)
         session_id = self.session_service.current_session_id
         session = self.session_service.get_session(session_id)
 

@@ -82,7 +82,7 @@ def dispatch(
         fork_delegate.run(args, session_service)
 
     elif args.instruction:
-        session_service.prepare_session_for_takt(args, is_dry_run=args.dry_run)
+        session_service.prepare(args, is_dry_run=args.dry_run)
         _dispatch_run(args, session_service)
 
     else:

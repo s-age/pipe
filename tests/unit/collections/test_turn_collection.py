@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock
 
 from pipe.core.collections.turns import TurnCollection
+from pipe.core.domains.turns import expire_old_tool_responses, get_turns_for_prompt
 from pipe.core.models.turn import ToolResponseTurn, UserTaskTurn
 
 
@@ -40,7 +41,7 @@ class TestTurnCollection(unittest.TestCase):
             ]
         )
 
-        modified = mock_session.turns.expire_old_tool_responses()
+        modified = expire_old_tool_responses(mock_session.turns)
 
         self.assertTrue(modified)
         self.assertEqual(len(mock_session.turns), 6)
@@ -73,7 +74,7 @@ class TestTurnCollection(unittest.TestCase):
             ]
         )
 
-        modified = mock_session.turns.expire_old_tool_responses()
+        modified = expire_old_tool_responses(mock_session.turns)
         self.assertFalse(modified)
         self.assertEqual(mock_session.turns[1].response["message"], "old")
 
@@ -82,12 +83,12 @@ class TestTurnCollection(unittest.TestCase):
         Tests that the method returns False for an empty collection.
         """
         turns = TurnCollection()
-        modified = turns.expire_old_tool_responses()
+        modified = expire_old_tool_responses(turns)
         self.assertFalse(modified)
 
-    def test_get_for_prompt_limits_tool_responses(self):
+    def test_get_turns_for_prompt_limits_tool_responses(self):
         """
-        Tests that get_for_prompt correctly limits the number of tool responses.
+        Tests that get_turns_for_prompt correctly limits the number of tool responses.
         """
         turns = TurnCollection(
             [
@@ -108,7 +109,7 @@ class TestTurnCollection(unittest.TestCase):
         )
 
         # Default limit is 3
-        prompt_turns = list(turns.get_for_prompt())
+        prompt_turns = list(get_turns_for_prompt(turns))
 
         # Should get t4, t3, t2 in reverse order of yield
         self.assertEqual(len(prompt_turns), 3)
@@ -116,9 +117,9 @@ class TestTurnCollection(unittest.TestCase):
         self.assertEqual(prompt_turns[1].name, "t3")
         self.assertEqual(prompt_turns[2].name, "t2")
 
-    def test_get_for_prompt_excludes_last_turn(self):
+    def test_get_turns_for_prompt_excludes_last_turn(self):
         """
-        Tests that get_for_prompt excludes the last turn (current task).
+        Tests that get_turns_for_prompt excludes the last turn (current task).
         """
         turns = TurnCollection(
             [
@@ -127,39 +128,10 @@ class TestTurnCollection(unittest.TestCase):
             ]
         )
 
-        prompt_turns = list(turns.get_for_prompt())
+        prompt_turns = list(get_turns_for_prompt(turns))
 
         self.assertEqual(len(prompt_turns), 1)
         self.assertEqual(prompt_turns[0].instruction, "first")
-
-    def test_pydantic_json_schema(self):
-        """
-        Tests the __get_pydantic_json_schema__ method for correct schema generation.
-        """
-        from pydantic import BaseModel, Field
-
-        class TestModel(BaseModel):
-            turns: TurnCollection = Field(default_factory=TurnCollection)
-
-        schema = TestModel.model_json_schema()
-
-        defs_key = "$defs" if "$defs" in schema else "definitions"
-        self.assertIn(defs_key, schema)
-        # Pydantic v2 generates schemas for each subtype in the union,
-        # not the union type itself.
-        self.assertIn("UserTaskTurn", schema[defs_key])
-        self.assertIn("ModelResponseTurn", schema[defs_key])
-
-        props = schema["properties"]
-        self.assertIn("turns", props)
-        self.assertEqual(props["turns"]["type"], "array")
-
-        items_schema = props["turns"]["items"]
-        self.assertIn("oneOf", items_schema)
-
-        # Check that at least one of the refs is correct
-        one_of_refs = [item["$ref"] for item in items_schema["oneOf"]]
-        self.assertIn(f"#/{defs_key}/UserTaskTurn", one_of_refs)
 
     def test_expire_old_tool_responses_no_change_due_to_status(self):
         """
@@ -179,7 +151,7 @@ class TestTurnCollection(unittest.TestCase):
                 UserTaskTurn(type="user_task", instruction="4", timestamp="5"),
             ]
         )
-        modified = turns.expire_old_tool_responses()
+        modified = expire_old_tool_responses(turns)
         self.assertFalse(modified)
 
 

@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import unittest
+import zoneinfo
 from unittest.mock import patch
 
 from pipe.core.collections.sessions import SessionCollection
@@ -17,6 +18,7 @@ class TestSessionCollectionExtensions(unittest.TestCase):
         self.sessions_dir = self.temp_dir.name
         self.index_path = os.path.join(self.sessions_dir, "index.json")
         self.timezone_name = "UTC"
+        self.timezone_obj = zoneinfo.ZoneInfo(self.timezone_name)
 
         # Mock Session static variables
         Session.sessions_dir = self.sessions_dir
@@ -55,7 +57,7 @@ class TestSessionCollectionExtensions(unittest.TestCase):
                 ]
             ),
         )
-        self.session.save()
+        # self.session.save() is removed
 
         # Create an initial index
         self.initial_data = {
@@ -70,7 +72,7 @@ class TestSessionCollectionExtensions(unittest.TestCase):
         with open(self.index_path, "w") as f:
             json.dump(self.initial_data, f)
 
-        self.collection = SessionCollection(self.index_path, self.timezone_name)
+        self.collection = SessionCollection(self.initial_data, self.timezone_name)
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -81,56 +83,34 @@ class TestSessionCollectionExtensions(unittest.TestCase):
             instruction="A new task",
             timestamp="2025-01-01T00:03:00Z",
         )
-        self.collection.add_turn(self.session, new_turn)
-
-        reloaded_session = Session.find(self.session_id)
-        self.assertEqual(len(reloaded_session.turns), 3)
-        self.assertEqual(reloaded_session.turns[-1].instruction, "A new task")
-
-        # Check if index is updated
-        with open(self.index_path) as f:
-            index_data = json.load(f)
-        self.assertNotEqual(
-            index_data["sessions"][self.session_id]["last_updated"],
-            self.initial_data["sessions"][self.session_id]["last_updated"],
-        )
+        self.session.add_turn(new_turn)
+        self.assertEqual(len(self.session.turns), 3)
+        self.assertEqual(self.session.turns[-1].instruction, "A new task")
 
     def test_edit_turn(self):
         new_data = {"instruction": "Updated instruction"}
-        self.collection.edit_turn(self.session, 0, new_data)
-
-        reloaded_session = Session.find(self.session_id)
-        self.assertEqual(reloaded_session.turns[0].instruction, "Updated instruction")
+        self.session.edit_turn(0, new_data)
+        self.assertEqual(self.session.turns[0].instruction, "Updated instruction")
 
     def test_delete_turn(self):
-        self.collection.delete_turn(self.session, 0)
-
-        reloaded_session = Session.find(self.session_id)
-        self.assertEqual(len(reloaded_session.turns), 1)
-        self.assertEqual(reloaded_session.turns[0].type, "model_response")
+        self.session.delete_turn(0)
+        self.assertEqual(len(self.session.turns), 1)
+        self.assertEqual(self.session.turns[0].type, "model_response")
 
     def test_merge_pool(self):
-        self.collection.merge_pool(self.session)
+        self.session.merge_pool()
+        self.assertEqual(len(self.session.turns), 3)
+        self.assertEqual(len(self.session.pools), 0)
+        self.assertEqual(self.session.turns[-1].instruction, "Pool task")
 
-        reloaded_session = Session.find(self.session_id)
-        self.assertEqual(len(reloaded_session.turns), 3)
-        self.assertEqual(len(reloaded_session.pools), 0)
-        self.assertEqual(reloaded_session.turns[-1].instruction, "Pool task")
-
-    @patch("pipe.core.collections.sessions.get_current_timestamp")
+    @patch("pipe.core.models.session.get_current_timestamp")
     def test_fork(self, mock_get_current_timestamp):
         mock_get_current_timestamp.return_value = "2025-01-02T00:00:00Z"
-        new_session = self.collection.fork(self.session, 1)
+        new_session = self.session.fork(1, self.timezone_obj)
 
         self.assertIsNotNone(new_session)
-        self.assertTrue(os.path.exists(new_session.file_path))
         self.assertEqual(len(new_session.turns), 2)
         self.assertTrue(new_session.purpose.startswith("Fork of:"))
-
-        # Check if the new session is in the index
-        with open(self.index_path) as f:
-            index_data = json.load(f)
-        self.assertIn(new_session.session_id, index_data["sessions"])
 
 
 if __name__ == "__main__":

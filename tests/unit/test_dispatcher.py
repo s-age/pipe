@@ -3,11 +3,12 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from pipe.core.dispatcher import dispatch
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
+from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_service import SessionService
 
 
@@ -32,8 +33,11 @@ class TestDispatcher(unittest.TestCase):
             },
         }
         self.settings = Settings(**settings_data)
+        self.mock_repository = Mock(spec=SessionRepository)
         self.session_service = SessionService(
-            project_root=self.project_root, settings=self.settings
+            project_root=self.project_root,
+            settings=self.settings,
+            repository=self.mock_repository,
         )
         self.mock_parser = MagicMock(spec=argparse.ArgumentParser)
 
@@ -73,7 +77,7 @@ class TestDispatcher(unittest.TestCase):
         args = TaktArgs(
             instruction="Do something", dry_run=True, purpose="p", background="b"
         )
-        self.session_service.prepare_session_for_takt(args, is_dry_run=True)
+        self.session_service.prepare(args, is_dry_run=True)
         _dispatch_run(args, self.session_service)
         mock_dry_run.assert_called_once()
         mock_gemini_run.assert_not_called()
@@ -85,7 +89,13 @@ class TestDispatcher(unittest.TestCase):
 
         self.session_service.settings.api_mode = "gemini-api"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
-        self.session_service.prepare_session_for_takt(args, is_dry_run=False)
+        # Create a mock session with a mock references collection
+        mock_session = MagicMock()
+        from pipe.core.collections.references import ReferenceCollection
+
+        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
+        self.mock_repository.find.return_value = mock_session
+        self.session_service.prepare(args, is_dry_run=False)
         _dispatch_run(args, self.session_service)
         mock_gemini_api_run.assert_called_once()
 
@@ -96,7 +106,13 @@ class TestDispatcher(unittest.TestCase):
 
         self.session_service.settings.api_mode = "gemini-cli"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
-        self.session_service.prepare_session_for_takt(args, is_dry_run=False)
+        # Create a mock session with a mock references collection
+        mock_session = MagicMock()
+        from pipe.core.collections.references import ReferenceCollection
+
+        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
+        self.mock_repository.find.return_value = mock_session
+        self.session_service.prepare(args, is_dry_run=False)
         _dispatch_run(args, self.session_service)
         mock_gemini_cli_run.assert_called_once()
 
@@ -106,7 +122,13 @@ class TestDispatcher(unittest.TestCase):
 
         self.session_service.settings.api_mode = "unknown-api"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
-        self.session_service.prepare_session_for_takt(args, is_dry_run=False)
+        # Create a mock session with a mock references collection
+        mock_session = MagicMock()
+        from pipe.core.collections.references import ReferenceCollection
+
+        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
+        self.mock_repository.find.return_value = mock_session
+        self.session_service.prepare(args, is_dry_run=False)
         with self.assertRaises(ValueError):
             _dispatch_run(args, self.session_service)
 

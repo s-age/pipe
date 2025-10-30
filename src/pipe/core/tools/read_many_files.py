@@ -22,7 +22,7 @@ def read_many_files(
 
     try:
         resolved_files = []
-        project_root = os.getcwd()
+        project_root = session_service.project_root
 
         default_excludes = [
             "**/.git/**",
@@ -74,7 +74,7 @@ def read_many_files(
         # Remove duplicates
         unique_files = sorted(list(set(resolved_files)))
 
-        session_service.add_references(session_id, unique_files)
+        session_service.add_multiple_references(session_id, unique_files)
 
         return {
             "message": f"Added {len(unique_files)} files to the session references."

@@ -3,11 +3,12 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from pipe.core.agents.gemini_cli import call_gemini_cli
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
+from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_service import SessionService
 
 
@@ -40,10 +41,13 @@ class TestGeminiCliIntegration(unittest.TestCase):
             },
         }
         self.settings = Settings(**settings_data)
+        self.mock_repository = Mock(spec=SessionRepository)
 
         # Instantiate the real service, then override the sessions path
         self.session_service = SessionService(
-            project_root=self.project_root, settings=self.settings
+            project_root=self.project_root,
+            settings=self.settings,
+            repository=self.mock_repository,
         )
         self.session_service.sessions_dir = self.temp_sessions_dir
         self.session_service.index_path = os.path.join(
@@ -62,7 +66,7 @@ class TestGeminiCliIntegration(unittest.TestCase):
         """
         # Mock the subprocess call
         mock_process = MagicMock()
-        mock_process.stdout.readline.return_value = ""
+        mock_process.stdout.readline.side_effect = ["some output\n", ""]
         mock_process.wait.return_value = 0
         mock_popen.return_value = mock_process
 
@@ -72,7 +76,7 @@ class TestGeminiCliIntegration(unittest.TestCase):
         )
 
         # 2. Prepare the session service, which sets up the internal state
-        self.session_service.prepare_session_for_takt(args)
+        self.session_service.prepare(args)
 
         # 3. Call the function to be tested
         call_gemini_cli(self.session_service)
@@ -107,6 +111,49 @@ class TestGeminiCliIntegration(unittest.TestCase):
         self.assertEqual(prompt_data["session_goal"]["purpose"], "Test CLI call")
         self.assertEqual(prompt_data["description"], expected_description)
         self.assertEqual(prompt_data["current_task"]["instruction"], "Test instruction")
+
+    def test_missing_model_setting(self):
+        """Tests that a ValueError is raised if the model is not set."""
+        self.settings.model = None
+        args = TaktArgs(
+            instruction="Test", purpose="Test Purpose", background="Test Background"
+        )
+        self.session_service.prepare(args)
+
+        with self.assertRaisesRegex(ValueError, "'model' not found in settings"):
+            call_gemini_cli(self.session_service)
+
+    @patch("pipe.core.agents.gemini_cli.subprocess.Popen")
+    def test_subprocess_error(self, mock_popen):
+        """Tests that a RuntimeError is raised if the subprocess fails."""
+        mock_process = MagicMock()
+        mock_process.stdout.readline.side_effect = ["some output\n", ""]
+        mock_process.wait.return_value = 1  # Simulate an error
+        mock_process.stderr.read.return_value = "An error occurred"
+        mock_popen.return_value = mock_process
+
+        args = TaktArgs(
+            instruction="Test", purpose="Test Purpose", background="Test Background"
+        )
+        self.session_service.prepare(args)
+
+        with self.assertRaisesRegex(
+            RuntimeError, "Error during gemini-cli execution: An error occurred"
+        ):
+            call_gemini_cli(self.session_service)
+
+    @patch("pipe.core.agents.gemini_cli.subprocess.Popen")
+    def test_command_not_found(self, mock_popen):
+        """Tests that a RuntimeError is raised if the gemini command is not found."""
+        mock_popen.side_effect = FileNotFoundError
+
+        args = TaktArgs(
+            instruction="Test", purpose="Test Purpose", background="Test Background"
+        )
+        self.session_service.prepare(args)
+
+        with self.assertRaisesRegex(RuntimeError, "Error: 'gemini' command not found"):
+            call_gemini_cli(self.session_service)
 
 
 if __name__ == "__main__":

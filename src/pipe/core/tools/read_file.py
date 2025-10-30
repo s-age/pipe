@@ -24,10 +24,18 @@ def read_file(
         return {"error": f"Path is not a file: {abs_path}"}
 
     try:
+        session = session_service.get_session(session_id)
+        if not session:
+            return {"error": f"Session with ID {session_id} not found."}
+
+        from pipe.core.domains.references import add_reference, update_reference_ttl
+
         # First, ensure the reference exists with a default TTL if it's new.
-        session_service.add_reference_to_session(session_id, abs_path)
+        add_reference(session.references, abs_path, session.references.default_ttl)
         # Then, explicitly update the TTL to 3 to reset it if it already existed.
-        session_service.update_reference_ttl_in_session(session_id, abs_path, 3)
+        update_reference_ttl(session.references, abs_path, 3)
+
+        session_service._save_session(session)
 
         # Check if the file is empty and tailor the message
         if os.path.getsize(abs_path) == 0:

@@ -15,8 +15,13 @@ def edit_todos(
         return {"error": "This tool requires an active session."}
 
     try:
-        # Access the history_manager through the session_service
-        session_service.update_todos(session_id, todos)
+        session = session_service.get_session(session_id)
+        if not session:
+            return {"error": f"Session with ID {session_id} not found."}
+        from pipe.core.domains.todos import update_todos_in_session
+
+        update_todos_in_session(session, todos)
+        session_service._save_session(session)
         return {"message": f"Todos successfully updated in session {session_id}."}
     except Exception as e:
         return {"error": f"Failed to update todos in session: {e}"}

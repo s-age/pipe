@@ -4,8 +4,8 @@ import sys
 import zoneinfo
 
 from flask import Flask, abort, jsonify, render_template, request
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
-from pipe.core.services.session_service import SessionService
 from pipe.core.utils.file import read_text_file, read_yaml_file
 from pipe.web.requests.sessions.edit_reference_ttl import EditReferenceTtlRequest
 from pipe.web.requests.sessions.edit_references import EditReferencesRequest
@@ -83,7 +83,8 @@ except zoneinfo.ZoneInfoNotFoundError:
         file=sys.stderr,
     )
     local_tz = zoneinfo.ZoneInfo("UTC")
-session_service = SessionService(project_root, settings)
+
+session_service = ServiceFactory(project_root, settings).create_session_service()
 
 
 @app.route("/")

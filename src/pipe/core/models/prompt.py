@@ -38,7 +38,8 @@ class Prompt(BaseModel):
         cls, session: "Session", settings: "Settings", project_root: str
     ) -> "Prompt":
         """Builds and returns a Prompt object from a session's data."""
-        from pipe.core.collections.todos import TodoCollection
+        from pipe.core.domains.references import get_references_for_prompt
+        from pipe.core.domains.todos import get_todos_for_prompt
         from pipe.core.models.prompts.constraints import PromptHyperparameters
         from pipe.core.utils.datetime import get_current_timestamp
 
@@ -64,13 +65,16 @@ class Prompt(BaseModel):
         # 3. Build other prompt components
         roles = PromptRoles.build(session.roles, project_root)
 
-        references_with_content = list(session.references.get_for_prompt(project_root))
+        references_with_content = list(
+            get_references_for_prompt(session.references, project_root)
+        )
         prompt_references = [
             PromptFileReference(**ref) for ref in references_with_content
         ]
 
-        todos_for_prompt = TodoCollection(session.todos).get_for_prompt()
-        prompt_todos = [PromptTodo(**todo) for todo in todos_for_prompt]
+        prompt_todos = [
+            PromptTodo(**todo) for todo in get_todos_for_prompt(session.todos)
+        ]
 
         conversation_history = PromptConversationHistory.build(
             session.turns, settings.tool_response_expiration

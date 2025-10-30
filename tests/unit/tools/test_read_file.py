@@ -2,9 +2,11 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
+from pipe.core.collections.references import ReferenceCollection
 from pipe.core.models.settings import Settings
+from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_service import SessionService
 from pipe.core.tools.read_file import read_file
 
@@ -28,8 +30,11 @@ class TestReadFileTool(unittest.TestCase):
             },
         }
         self.settings = Settings(**settings_data)
+        self.mock_repository = Mock(spec=SessionRepository)
         self.session_service = SessionService(
-            project_root=self.project_root, settings=self.settings
+            project_root=self.project_root,
+            settings=self.settings,
+            repository=self.mock_repository,
         )
         session = self.session_service.create_new_session("Test", "Test", [])
         self.session_id = session.session_id
@@ -38,6 +43,11 @@ class TestReadFileTool(unittest.TestCase):
         self.test_file_path = os.path.join(self.project_root, "test.txt")
         with open(self.test_file_path, "w") as f:
             f.write("hello world")
+
+        # Setup mock repository to return a session with a valid references collection
+        self.mock_session = Mock()
+        self.mock_session.references = ReferenceCollection()
+        self.mock_repository.find.return_value = self.mock_session
 
     def tearDown(self):
         shutil.rmtree(self.project_root)
@@ -82,22 +92,32 @@ class TestReadFileTool(unittest.TestCase):
         updating a reference.
         """
         mock_session_service = MagicMock(spec=SessionService)
+        mock_session = MagicMock()
+        mock_session.references.default_ttl = 3
+        mock_session_service.get_session.return_value = mock_session
 
-        # Make os.path.getsize return a non-zero value
         with patch("os.path.getsize", return_value=10):
-            read_file(
-                absolute_path=self.test_file_path,
-                session_service=mock_session_service,
-                session_id="mock_session_id",
-            )
+            with patch(
+                "pipe.core.domains.references.add_reference"
+            ) as mock_add_reference:
+                with patch(
+                    "pipe.core.domains.references.update_reference_ttl"
+                ) as mock_update_reference_ttl:
+                    read_file(
+                        absolute_path=self.test_file_path,
+                        session_service=mock_session_service,
+                        session_id="mock_session_id",
+                    )
 
-        # Verify that the correct methods were called in order
-        mock_session_service.add_reference_to_session.assert_called_once_with(
-            "mock_session_id", self.test_file_path
-        )
-        mock_session_service.update_reference_ttl_in_session.assert_called_once_with(
-            "mock_session_id", self.test_file_path, 3
-        )
+                    mock_add_reference.assert_called_once_with(
+                        mock_session.references, self.test_file_path, 3
+                    )
+                    mock_update_reference_ttl.assert_called_once_with(
+                        mock_session.references, self.test_file_path, 3
+                    )
+                    mock_session_service._save_session.assert_called_once_with(
+                        mock_session
+                    )
 
 
 if __name__ == "__main__":

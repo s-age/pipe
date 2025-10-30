@@ -15,13 +15,16 @@ class PromptConversationHistory(BaseModel):
         cls, turns: "TurnCollection", tool_response_limit: int = 3
     ) -> "PromptConversationHistory":  # noqa: F821
         """Builds the PromptConversationHistory component."""
-        from pipe.core.collections.prompts.turn_collection import PromptTurnCollection
+        from pipe.core.domains.turns import get_turns_for_prompt
 
-        history_turns = list(reversed(list(turns.get_for_prompt(tool_response_limit))))
+        history_turns = [
+            turn.model_dump()
+            for turn in reversed(list(get_turns_for_prompt(turns, tool_response_limit)))
+        ]
         return cls(
             description=(
                 "Historical record of past interactions in this session, in "
                 "chronological order."
             ),
-            turns=PromptTurnCollection(history_turns).get_turns(),
+            turns=history_turns,
         )

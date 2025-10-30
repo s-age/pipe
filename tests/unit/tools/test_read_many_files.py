@@ -1,46 +1,55 @@
 import os
+import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock
 
+from pipe.core.models.settings import Settings
+from pipe.core.repositories.session_repository import SessionRepository
+from pipe.core.services.session_service import SessionService
 from pipe.core.tools.read_many_files import read_many_files
 
 
 class TestReadManyFilesTool(unittest.TestCase):
     def setUp(self):
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.test_path = self.temp_dir.name
-
-        # Create a nested structure
-        self.dir1 = os.path.join(self.test_path, "dir1")
-        self.git_dir = os.path.join(self.test_path, ".git")
-        os.makedirs(self.dir1)
-        os.makedirs(self.git_dir)
-
-        self.file1 = os.path.join(self.dir1, "file1.txt")
-        self.file2 = os.path.join(self.dir1, "file2.log")
-        self.ignored_file = os.path.join(self.git_dir, "config")
-
-        with open(self.file1, "w") as f:
-            f.write("file1")
-        with open(self.file2, "w") as f:
-            f.write("file2")
-        with open(self.ignored_file, "w") as f:
-            f.write("ignored")
-
-        self.mock_session_service = MagicMock()
+        self.project_root = tempfile.mkdtemp()
         self.session_id = "test_session"
 
-        self.getcwd_patcher = patch("os.getcwd", return_value=self.test_path)
-        self.mock_getcwd = self.getcwd_patcher.start()
+        # Create dummy files and directories for testing
+        self.dir1 = os.path.join(self.project_root, "dir1")
+        os.makedirs(self.dir1)
+        self.file1 = os.path.join(self.dir1, "file1.txt")
+        with open(self.file1, "w") as f:
+            f.write("content1")
+        self.file2 = os.path.join(self.dir1, "file2.log")
+        with open(self.file2, "w") as f:
+            f.write("content2")
+        self.file3 = os.path.join(self.project_root, "file3.md")
+        with open(self.file3, "w") as f:
+            f.write("content3")
+
+        settings_data = {
+            "model": "test-model",
+            "search_model": "test-model",
+            "context_limit": 10000,
+            "api_mode": "gemini-api",
+            "language": "en",
+            "yolo": False,
+            "expert_mode": False,
+            "timezone": "UTC",
+            "parameters": {
+                "temperature": {"value": 0.5, "description": "t"},
+                "top_p": {"value": 0.9, "description": "p"},
+                "top_k": {"value": 40, "description": "k"},
+            },
+        }
+        self.settings = Settings(**settings_data)
+        self.mock_repository = Mock(spec=SessionRepository)
+        self.mock_session_service = MagicMock(spec=SessionService)
+        self.mock_session_service.project_root = self.project_root
 
     def tearDown(self):
-        self.getcwd_patcher.stop()
-        self.temp_dir.cleanup()
-
-    def test_no_session_service(self):
-        result = read_many_files(paths=["*"])
-        self.assertIn("error", result)
+        shutil.rmtree(self.project_root)
 
     def test_simple_glob(self):
         read_many_files(
@@ -48,7 +57,7 @@ class TestReadManyFilesTool(unittest.TestCase):
             session_service=self.mock_session_service,
             session_id=self.session_id,
         )
-        self.mock_session_service.add_references.assert_called_once_with(
+        self.mock_session_service.add_multiple_references.assert_called_once_with(
             self.session_id, [os.path.abspath(self.file1)]
         )
 
@@ -59,10 +68,12 @@ class TestReadManyFilesTool(unittest.TestCase):
             session_service=self.mock_session_service,
             session_id=self.session_id,
         )
-        self.mock_session_service.add_references.assert_called_once()
-        called_args = self.mock_session_service.add_references.call_args[0][1]
-        self.assertIn(os.path.abspath(self.file1), called_args)
-        self.assertIn(os.path.abspath(self.file2), called_args)
+        expected_files = sorted(
+            [os.path.abspath(self.file1), os.path.abspath(self.file2)]
+        )
+        self.mock_session_service.add_multiple_references.assert_called_once_with(
+            self.session_id, expected_files
+        )
 
     def test_default_excludes(self):
         read_many_files(
@@ -71,9 +82,14 @@ class TestReadManyFilesTool(unittest.TestCase):
             session_service=self.mock_session_service,
             session_id=self.session_id,
         )
-        self.mock_session_service.add_references.assert_called_once()
-        called_args = self.mock_session_service.add_references.call_args[0][1]
-        self.assertNotIn(os.path.abspath(self.ignored_file), called_args)
+        # Only file1.txt and file3.md should be included, file2.log is excluded
+        # by default
+        expected_files = sorted(
+            [os.path.abspath(self.file1), os.path.abspath(self.file3)]
+        )
+        self.mock_session_service.add_multiple_references.assert_called_once_with(
+            self.session_id, expected_files
+        )
 
     def test_custom_exclude(self):
         read_many_files(
@@ -83,7 +99,7 @@ class TestReadManyFilesTool(unittest.TestCase):
             session_service=self.mock_session_service,
             session_id=self.session_id,
         )
-        self.mock_session_service.add_references.assert_called_once_with(
+        self.mock_session_service.add_multiple_references.assert_called_once_with(
             self.session_id, [os.path.abspath(self.file1)]
         )
 
@@ -95,29 +111,36 @@ class TestReadManyFilesTool(unittest.TestCase):
             session_service=self.mock_session_service,
             session_id=self.session_id,
         )
-        self.mock_session_service.add_references.assert_called_once_with(
+        self.mock_session_service.add_multiple_references.assert_called_once_with(
             self.session_id, [os.path.abspath(self.file2)]
         )
 
     def test_no_files_found(self):
         result = read_many_files(
-            paths=["*.nonexistent"],
+            paths=["non_existent_dir/*"],
             session_service=self.mock_session_service,
             session_id=self.session_id,
         )
-        self.assertEqual(result, {"message": "No files found matching the criteria."})
+        self.assertIn("message", result)
+        self.assertEqual(result["message"], "No files found matching the criteria.")
+        self.mock_session_service.add_multiple_references.assert_not_called()
 
-    @patch(
-        "pipe.core.tools.read_many_files.std_glob.glob",
-        side_effect=Exception("Test error"),
-    )
-    def test_general_exception(self, mock_glob):
+    def test_no_session_service(self):
+        result = read_many_files(paths=["dir1/*.txt"], session_id=self.session_id)
+        self.assertIn("error", result)
+        self.assertEqual(result["error"], "This tool requires an active session.")
+
+    def test_error_handling(self):
+        self.mock_session_service.add_multiple_references.side_effect = Exception(
+            "Test error"
+        )
         result = read_many_files(
-            paths=["*"],
+            paths=["dir1/*.txt"],
             session_service=self.mock_session_service,
             session_id=self.session_id,
         )
         self.assertIn("error", result)
+        self.assertIn("Test error", result["error"])
 
 
 if __name__ == "__main__":

@@ -131,8 +131,9 @@ class TestReadManyFilesTool(unittest.TestCase):
         self.assertEqual(result["error"], "This tool requires an active session.")
 
     def test_error_handling(self):
-        self.mock_session_service.add_multiple_references.side_effect = \
-            Exception("Test error")
+        self.mock_session_service.add_multiple_references.side_effect = Exception(
+            "Test error"
+        )
         result = read_many_files(
             paths=["dir1/*.txt"],
             session_service=self.mock_session_service,

@@ -79,8 +79,7 @@ def get_references_for_prompt(
 
 def sort_references_by_ttl(references_collection: "ReferenceCollection"):
     references_collection.sort(
-        key=lambda ref:
-        (
+        key=lambda ref: (
             not ref.disabled,
             ref.ttl if ref.ttl is not None else references_collection.default_ttl,
         ),

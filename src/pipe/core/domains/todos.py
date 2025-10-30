@@ -9,9 +9,7 @@ if TYPE_CHECKING:
 
 def update_todos_in_session(session: "Session", todos_data: list[dict | TodoItem]):
     """Updates the todos list in a session object. Does not save."""
-    session.todos = [
-        TodoItem(**t) if isinstance(t, dict) else t for t in todos_data
-    ]
+    session.todos = [TodoItem(**t) if isinstance(t, dict) else t for t in todos_data]
 
 
 def delete_todos_in_session(session: "Session"):

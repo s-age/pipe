@@ -111,7 +111,7 @@ class SessionService:
                     add_reference(
                         session.references,
                         ref_path.strip(),
-                        session.references.default_ttl
+                        session.references.default_ttl,
                     )
 
         self.repository.save(session)
@@ -180,9 +180,7 @@ class SessionService:
 
         abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
         if not os.path.isfile(abs_path):
-            print(
-                f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr
-            )
+            print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
             return
 
         from pipe.core.domains.references import add_reference
@@ -223,9 +221,9 @@ class SessionService:
             abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
             if not os.path.isfile(abs_path):
                 print(
-                f"Warning: Path is not a file, skipping: {abs_path}",
-                file=sys.stderr
-            )
+                    f"Warning: Path is not a file, skipping: {abs_path}",
+                    file=sys.stderr,
+                )
                 continue
             add_reference(session.references, file_path, session.references.default_ttl)
         self._save_session(session)

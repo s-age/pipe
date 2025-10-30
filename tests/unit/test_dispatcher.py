@@ -92,6 +92,7 @@ class TestDispatcher(unittest.TestCase):
         # Create a mock session with a mock references collection
         mock_session = MagicMock()
         from pipe.core.collections.references import ReferenceCollection
+
         mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
         self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
@@ -108,6 +109,7 @@ class TestDispatcher(unittest.TestCase):
         # Create a mock session with a mock references collection
         mock_session = MagicMock()
         from pipe.core.collections.references import ReferenceCollection
+
         mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
         self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
@@ -123,6 +125,7 @@ class TestDispatcher(unittest.TestCase):
         # Create a mock session with a mock references collection
         mock_session = MagicMock()
         from pipe.core.collections.references import ReferenceCollection
+
         mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
         self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)

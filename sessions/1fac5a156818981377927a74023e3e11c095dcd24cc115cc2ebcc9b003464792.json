@@ -1,0 +1,30 @@
+{
+  "session_id": "1fac5a156818981377927a74023e3e11c095dcd24cc115cc2ebcc9b003464792",
+  "created_at": "2025-10-28T12:32:52.708378+00:00",
+  "purpose": "Test CLI call",
+  "background": "BG",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.1
+    },
+    "top_p": {
+      "value": 0.2
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Test instruction",
+      "timestamp": "2025-10-28T12:32:52.709289+00:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

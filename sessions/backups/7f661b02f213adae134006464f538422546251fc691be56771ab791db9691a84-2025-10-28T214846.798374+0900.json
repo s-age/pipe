@@ -1,0 +1,52 @@
+{
+  "session_id": "e4144a87f9920825640d19d1c952ec5c9d0e2f900a838daad718b2fe03de0104",
+  "created_at": "2025-10-28T21:48:39.583661+09:00",
+  "purpose": "Fork of: e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search edited",
+      "timestamp": "2025-10-28T21:48:17.293475+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-28T21:48:19.920699+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "Flask is a popular, lightweight web framework for Python, designed to make building web applications quick and easy. It is often referred to as a \"microframework\" because it provides the essentials for web development without imposing many restrictions or including built-in features like an ORM (Object Relational Manager) or extensive validation tools. This minimalistic approach gives developers flexibility and control over their application's structure and the choice of tools and libraries they want to use.\n\nKey features and characteristics of Flask include:\n*   **Microframework Design** Flask keeps its core simple and extensible, allowing developers to add functionality through various community-provided extensions.\n*   **Built on Werkzeug and Jinja2** Flask is based on the Werkzeug WSGI toolkit, which handles HTTP requests and responses, and the Jinja2 templating engine, which allows for dynamic HTML content.\n*   **Development Server and Debugger** It comes with a built-in development server and a fast debugger, streamlining the development and testing process.\n*   **URL Routing** Flask provides an efficient routing system that maps URL patterns to Python functions, enabling clean and intuitive URL structures.\n*   **WSGI Compliant** Flask is compliant with the Web Server Gateway Interface (WSGI) standard, meaning it can run on any WSGI-compatible web server.\n*   **Secure Cookies and Session Management** It supports secure cookies and session management, which are crucial for maintaining user sessions and handling authentication securely.\n*   **Extensibility** Flask's modular design and rich ecosystem of extensions allow for easy integration of additional functionalities like database support (e.g., with Flask-SQLAlchemy), authentication, caching, and more.\n*   **RESTful API Support** Flask is a popular choice for building RESTful APIs, supporting various HTTP methods like GET, POST, PUT, and DELETE.\n*   **Community and Documentation** Flask has a vibrant and active community, along with extensive documentation, making it easier for developers to find help and resources.\n\nFlask was created by Armin Ronacher of Pocoo, an international group of Python enthusiasts, and was initially conceived as an April Fool's joke that gained enough popularity to become a serious application. It is widely used for various web development tasks, from small prototypes and APIs to larger, more complex applications, and is also utilized in data science for creating web interfaces and visualization tools."
+      },
+      "timestamp": "2025-10-28T21:48:32.407420+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

@@ -1,0 +1,1377 @@
+{
+    "sessions": {
+        "7ddd57a36d5685ecb05de2b4e4bfd01dbacd24a2f7c82d250cf73588cc335bd5": {
+            "last_updated": "2025-10-19T17:45:00.191615+09:00",
+            "created_at": "2025-10-19T15:22:02.973938+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d1"
+        },
+        "0add9434b20c7876a6ae79e5bc98dee6a47a9c03ac90350bfe86c2983ce9647c": {
+            "last_updated": "2025-10-19T16:06:17.705689+09:00",
+            "created_at": "2025-10-19T16:05:42.054133+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "0d6203309699bbd76a407c0e0fce85ceffc4c22b96d8b018def23b1559959ec3": {
+            "last_updated": "2025-10-19T16:15:39.740753+09:00",
+            "created_at": "2025-10-19T16:15:04.872800+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "1ab757ef2394d5c270f9eb74b075a07b11ecd5dec66963954076bd28b756329f": {
+            "last_updated": "2025-10-19T17:14:58.845267+09:00",
+            "created_at": "2025-10-19T17:13:37.032352+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "61f11a084b4ada8df7f2bce02ca4fbee30e438ef6c200cdc87a95516c095342d": {
+            "last_updated": "2025-10-19T17:18:28.623887+09:00",
+            "created_at": "2025-10-19T17:17:49.766917+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "3a60f400b9bce3522449ec14c5a28db069561362b3e23edca1f554ef230f3c82": {
+            "last_updated": "2025-10-19T18:48:10.295142+09:00",
+            "created_at": "2025-10-19T18:14:38.023793+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "bc80762b89868d9a2fd266f4ba5c2c1ff6a597bbe6d4139b678fc97295dc2373": {
+            "last_updated": "2025-10-19T18:41:45.572002+09:00",
+            "created_at": "2025-10-19T18:16:13.280884+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "5ffff3d982fe53258e27262eebfc87e5256de61cec49d92bc36f8fe85bfd66af": {
+            "last_updated": "2025-10-19T18:49:50.697657+09:00",
+            "created_at": "2025-10-19T18:49:39.329848+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "cf3dbd50a418cb9cb9e309e001fc4084d0029c9d59e822e28e55bcdeb294e633": {
+            "last_updated": "2025-10-19T18:55:59.709864+09:00",
+            "created_at": "2025-10-19T18:55:31.202970+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "445e70bec37a5afc7d887cd33b975252daf6b39425b2be7efbae3037b0332647": {
+            "last_updated": "2025-10-22T08:40:30.474583+09:00",
+            "created_at": "2025-10-19T19:18:22.871317+09:00",
+            "purpose": "\u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "cb7ea9482983cdbbefde3350ba9bafb50668d5829198077232ffee61e0385e99": {
+            "last_updated": "2025-10-19T19:29:33.871078+09:00",
+            "created_at": "2025-10-19T19:29:33.866661+09:00",
+            "purpose": "Fork of: \u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "d3b5272123d68d090cb78c77ada6a9d03d1624c5bbb2060bcd0ab5d88bdf356a": {
+            "last_updated": "2025-10-24T20:41:35.305150+09:00",
+            "created_at": "2025-10-19T19:30:02.078499+09:00",
+            "purpose": "Fork of: Fork of: \u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "66e8f1b95243fe5975719bcc498bc7645345d66c2ba89d877d9ab1cb24fc6092": {
+            "last_updated": "2025-10-22T19:43:30.865990+09:00",
+            "created_at": "2025-10-20T13:15:32.233949+09:00",
+            "purpose": "Fork of: Fork of: Fork of: \u5727\u7e2e\u3068\u691c\u8a3c\u306e\u78ba\u8a8d"
+        },
+        "20e4a6ca879ed1178d43c080417284c46e79e96f2da8362a6efaf455eafac261": {
+            "last_updated": "2025-10-20T20:33:28.573808+09:00",
+            "created_at": "2025-10-20T20:33:20.954677+09:00",
+            "purpose": "Verification of summary for session d3b5272123d68d090cb78c77ada6a9d03d1624c5bbb2060bcd0ab5d88bdf356a"
+        },
+        "a216d44ace8cc3e1767a23ee4392dfd8fbce55ccd2db71f237743c57bed728f9": {
+            "last_updated": "2025-10-20T20:38:50.071258+09:00",
+            "created_at": "2025-10-20T20:38:40.686396+09:00",
+            "purpose": "Verification of summary for session 66e8f1b95243fe5975719bcc498bc7645345d66c2ba89d877d9ab1cb24fc6092"
+        },
+        "1d9a14a265bfb686d9486be820b6983939976f3673f46cefa6082f259c88aac0": {
+            "last_updated": "2025-10-20T20:42:24.999976+09:00",
+            "created_at": "2025-10-20T20:42:17.690934+09:00",
+            "purpose": "Verification of summary for session 66e8f1b95243fe5975719bcc498bc7645345d66c2ba89d877d9ab1cb24fc6092"
+        },
+        "ad7a8a5a52ed6e1b12866c2f87dc4b0d8ae581ca6bc81d0ea0ff53e0a42c28f2": {
+            "last_updated": "2025-10-22T21:24:44.891024+09:00",
+            "created_at": "2025-10-20T20:45:20.363243+09:00",
+            "purpose": "Verification of summary for session 66e8f1b95243fe5975719bcc498bc7645345d66c2ba89d877d9ab1cb24fc6092"
+        },
+        "cdc7b3f7b5cd4b0a7b2a93ab796a579f12e622eeca3e551f1a143ae2be6657cb": {
+            "last_updated": "2025-10-21T08:31:46.072611+09:00",
+            "created_at": "2025-10-21T08:31:46.069612+09:00",
+            "purpose": "Verification of summary for session 66e8f1b95243fe5975719bcc498bc7645345d66c2ba89d877d9ab1cb24fc6092"
+        },
+        "4d382a12cde1de04929146799c3adcb411c29012a745809dbf23b1bc8b158f94": {
+            "last_updated": "2025-10-21T08:37:31.042544+09:00",
+            "created_at": "2025-10-21T08:37:24.049752+09:00",
+            "purpose": "Verification of summary for session ad7a8a5a52ed6e1b12866c2f87dc4b0d8ae581ca6bc81d0ea0ff53e0a42c28f2"
+        },
+        "0f16cce2685d617337a2b2ad01146fe54dfdbf24da4f3b44ef2fdf5b70ae6939": {
+            "last_updated": "2025-10-21T08:37:39.543059+09:00",
+            "created_at": "2025-10-21T08:37:33.375967+09:00",
+            "purpose": "Verification of summary for session ad7a8a5a52ed6e1b12866c2f87dc4b0d8ae581ca6bc81d0ea0ff53e0a42c28f2"
+        },
+        "41620eddc046bf8059113293bc090748290653b3352ee66f1322247f91e51e41": {
+            "last_updated": "2025-10-21T08:37:48.140119+09:00",
+            "created_at": "2025-10-21T08:37:41.873271+09:00",
+            "purpose": "Verification of summary for session ad7a8a5a52ed6e1b12866c2f87dc4b0d8ae581ca6bc81d0ea0ff53e0a42c28f2"
+        },
+        "402ba4b258030821b4e13b8216c7854c83c2659d75326c4d735bd4cb469c104a": {
+            "last_updated": "2025-10-21T08:37:56.997481+09:00",
+            "created_at": "2025-10-21T08:37:50.510946+09:00",
+            "purpose": "Verification of summary for session ad7a8a5a52ed6e1b12866c2f87dc4b0d8ae581ca6bc81d0ea0ff53e0a42c28f2"
+        },
+        "d665370a561835fe72b0a3d3cb5e9f4dfda52c9b9528668d83ec72ec5a2b84a8": {
+            "last_updated": "2025-10-21T08:38:05.005769+09:00",
+            "created_at": "2025-10-21T08:37:58.517587+09:00",
+            "purpose": "Verification of summary for session ad7a8a5a52ed6e1b12866c2f87dc4b0d8ae581ca6bc81d0ea0ff53e0a42c28f2"
+        },
+        "7e44639b7991318f5f86e9ac7a8618752181e8d7ac5ebbe4eff3912d19c9ecf1": {
+            "last_updated": "2025-10-22T19:49:42.190106+09:00",
+            "created_at": "2025-10-21T08:38:15.127669+09:00",
+            "purpose": "Verification of summary for session ad7a8a5a52ed6e1b12866c2f87dc4b0d8ae581ca6bc81d0ea0ff53e0a42c28f2"
+        },
+        "9a587a772f9eee84cf71a70a736f7ca3af23d275cfa84501faef0e9326dc24e3": {
+            "last_updated": "2025-10-21T08:38:23.487256+09:00",
+            "created_at": "2025-10-21T08:38:23.485692+09:00",
+            "purpose": "Verification of summary for session ad7a8a5a52ed6e1b12866c2f87dc4b0d8ae581ca6bc81d0ea0ff53e0a42c28f2"
+        },
+        "355a225fffb3aa0e74931a871f4d3a264ddbd8d4b0ba24d0111cc47277e0f0f6": {
+            "last_updated": "2025-10-22T12:59:45.885106+09:00",
+            "created_at": "2025-10-21T09:11:25.184781+09:00",
+            "purpose": "Fork of: Verification of summary for session 66e8f1b95243fe5975719bcc498bc7645345d66c2ba89d877d9ab1cb24fc6092"
+        },
+        "c9b895a9dcfb115b79d7ab96608522b8261e0550143dc08f5274dd260ae80fd0": {
+            "last_updated": "2025-10-21T09:38:04.763520+09:00",
+            "created_at": "2025-10-21T09:37:56.473344+09:00",
+            "purpose": "Verification of summary for session d3b5272123d68d090cb78c77ada6a9d03d1624c5bbb2060bcd0ab5d88bdf356a"
+        },
+        "77234e80acd7acf832b6d70d8d32ae3491a36cc58611b25e478be49738d62427": {
+            "last_updated": "2025-10-22T19:09:03.209969+09:00",
+            "created_at": "2025-10-22T08:47:07.884589+09:00",
+            "purpose": "\u30cf\u30a4\u30d1\u30fc\u30d1\u30e9\u30e1\u30fc\u30bf\u8abf\u6574\u304c\u53ef\u80fd\u306b\u306a\u3063\u305f\u304b\u8abf\u67fb"
+        },
+        "854da0db1ae37c24a7204ccaf352a764828eadf5ab5842c0f18aba6c76a4ed77": {
+            "last_updated": "2025-10-22T21:28:08.943271+09:00",
+            "created_at": "2025-10-22T21:27:50.031198+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "20427090d982ab51f48da57291cf55cbb245df72d13cab03622bc9756ce2513c": {
+            "last_updated": "2025-10-22T21:34:36.322487+09:00",
+            "created_at": "2025-10-22T21:30:08.956473+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "68ba8a23e8cdc3db15c537dce29abad8717348d3cb35a7c7d4f674718fb3d8ef": {
+            "last_updated": "2025-10-22T21:33:53.795194+09:00",
+            "created_at": "2025-10-22T21:31:46.717637+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "1ee68841fa3902ee7c077233242128e912d1e4cb3e87baa0b60056470ca5b368": {
+            "last_updated": "2025-10-22T21:33:54.412334+09:00",
+            "created_at": "2025-10-22T21:33:25.233764+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "4850ddabd4ac23a42aefafac0dc5871488e1babfd6f3573b6e32d647bc939edc": {
+            "last_updated": "2025-10-22T21:36:43.583560+09:00",
+            "created_at": "2025-10-22T21:36:24.773945+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "6aa4eca50e39a2230adc80353095b4873fdb4b064583508cef9e7f53411749e7": {
+            "last_updated": "2025-10-22T21:46:18.311043+09:00",
+            "created_at": "2025-10-22T21:45:54.983469+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "a944c804ffa0d5dce02fa2c8dc6250c3c0eaf7cec9efc929814e36862fa7064f": {
+            "last_updated": "2025-10-22T21:49:57.039712+09:00",
+            "created_at": "2025-10-22T21:49:37.373991+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "7c55265132b9f775614c3c51293ca2ec0abd3988e19807ce1e85077e8593854c": {
+            "last_updated": "2025-10-22T21:51:49.980102+09:00",
+            "created_at": "2025-10-22T21:51:47.315837+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "9257e64dbb9c1610e8f2aff1b4b989e18070ceae365be3bd8aebb074ae621cda": {
+            "last_updated": "2025-10-23T07:44:51.132486+09:00",
+            "created_at": "2025-10-23T07:44:51.131110+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "08d34f563c75e4f686006a415f3b9a052f899e958b3ac79c881a178f71b46efd": {
+            "last_updated": "2025-10-23T07:45:37.015469+09:00",
+            "created_at": "2025-10-23T07:45:37.014112+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060\u3002"
+        },
+        "71fc78f581d370b88ac5ccf0e09c56cc0c2c35ca53b8de1df0e267b798391e69": {
+            "last_updated": "2025-10-23T07:48:14.093923+09:00",
+            "created_at": "2025-10-23T07:48:14.093576+09:00",
+            "purpose": "\u201c\u30c6\u30b9\u30c8\u3060\u201d"
+        },
+        "49a9c26570f29bc9a02bacf2db1f66142c459fd3c0a732660d63ea6d9e8b7fda": {
+            "last_updated": "2025-10-23T07:49:09.206608+09:00",
+            "created_at": "2025-10-23T07:49:06.742152+09:00",
+            "purpose": "\u201c\u30c6\u30b9\u30c8\u3060\u201d"
+        },
+        "6cbeec510bc968a1aad5395a38f88a9f7e539f511f425fd3a3cf6ccee15c77c8": {
+            "last_updated": "2025-10-23T07:50:43.415999+09:00",
+            "created_at": "2025-10-23T07:50:41.622480+09:00",
+            "purpose": "\u201c\u30c6\u30b9\u30c8\u3060\u201d"
+        },
+        "e129e135985eecf3d1bb213956330159bc1923e7c50c33729927a70d14436f7f": {
+            "last_updated": "2025-10-23T07:52:06.156347+09:00",
+            "created_at": "2025-10-23T07:52:03.750128+09:00",
+            "purpose": "\u201c\u30c6\u30b9\u30c8\u3060\u201d"
+        },
+        "652063e836d123dcd5c79d924e538838e07cc34e9584a6e34629b2e60400b4a9": {
+            "last_updated": "2025-10-23T07:54:18.145030+09:00",
+            "created_at": "2025-10-23T07:54:16.530552+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c6aabbe9b404e791caf7b266a19aa4d078d27f4199253d93ff877c8f97b86d45": {
+            "last_updated": "2025-10-23T07:55:54.651513+09:00",
+            "created_at": "2025-10-23T07:55:52.800170+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "d56c1937ab9d155fa0f905324dcd727b1165cccf1d9d9248be9cc3c82902d6a8": {
+            "last_updated": "2025-10-23T07:56:31.719736+09:00",
+            "created_at": "2025-10-23T07:56:29.417691+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "837c94a48aa5a9f8dd1524e2c29f56c5723381de04d70fefb9c7d6fb70575f1e": {
+            "last_updated": "2025-10-23T07:56:46.168379+09:00",
+            "created_at": "2025-10-23T07:56:43.840080+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "99546726a624257607c238da3141d53039ea3c4deee09cbdd3e24bc615f95228": {
+            "last_updated": "2025-10-23T07:57:19.806056+09:00",
+            "created_at": "2025-10-23T07:57:18.077687+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "a7bb207e51f802a133877dda681e52736481fa8db51e15fca6e4e6b28253f24d": {
+            "last_updated": "2025-10-23T07:58:02.915364+09:00",
+            "created_at": "2025-10-23T07:58:01.245992+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "5cec0cbfc93ee1cf89f2b9a85215efe570ffff1bd5ecb4107b5db8bd2bc82a7a": {
+            "last_updated": "2025-10-23T07:59:27.811749+09:00",
+            "created_at": "2025-10-23T07:58:50.345515+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "4c3eece5ee277a04a2796e83b03376fef71358bffe06aeae092247c568e0bc10": {
+            "last_updated": "2025-10-23T08:01:15.571281+09:00",
+            "created_at": "2025-10-23T08:01:15.570819+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "6c502c448e7dc192c2f057174a3316e7a0f8b592c2aa455e9a58d2c9d6ae9256": {
+            "last_updated": "2025-10-23T08:03:30.464201+09:00",
+            "created_at": "2025-10-23T08:02:37.349691+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e06f1e8c6d25e48a0039c7ad64077908c7e7bc33d83fe9bbe2d457d0691fcd01": {
+            "last_updated": "2025-10-23T08:04:02.245172+09:00",
+            "created_at": "2025-10-23T08:03:48.765209+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "0d8fd843f76263b9c93e456208f38965a847fc1906ee2771536b586a25823ab9": {
+            "last_updated": "2025-10-23T08:05:12.698166+09:00",
+            "created_at": "2025-10-23T08:04:59.690400+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "8a59f297aeb352fcaca35e766c89ff3dea012ddaa8fda6971c2a9d2d5d74cf19": {
+            "last_updated": "2025-10-23T08:12:35.583290+09:00",
+            "created_at": "2025-10-23T08:12:21.695773+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "ed435902aff5c19cee66503c3ad41ed241f9d722597fafe83758b3be4d0e1ef5": {
+            "last_updated": "2025-10-23T08:20:57.900934+09:00",
+            "created_at": "2025-10-23T08:20:57.900399+09:00",
+            "purpose": "\u201c\u30c6\u30b9\u30c8\u3060\u201d"
+        },
+        "bbf34a3a71005e92313bc9bb4e36a6b7b21f26ec8fb8e43d0748c7f0037ddea4": {
+            "last_updated": "2025-10-23T08:23:40.417095+09:00",
+            "created_at": "2025-10-23T08:23:18.591604+09:00",
+            "purpose": "\u201c\u30c6\u30b9\u30c8\u3060\u201d"
+        },
+        "48e54a590435bcd4ef0f14cc21a9a58c5b31418591bd8970254808bc6c4d23d9": {
+            "last_updated": "2025-10-23T08:58:54.531519+09:00",
+            "created_at": "2025-10-23T08:24:03.757876+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "472a2e09fbedea200de17ddc9246d5fadec0a65888e35c0aa23aa3e23b9ef9f9": {
+            "last_updated": "2025-10-23T08:30:39.283227+09:00",
+            "created_at": "2025-10-23T08:24:36.398680+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "ed66d2736172cf4ca041f74fdebaca186be2cd7dea943fd9570c444d5753c5d1": {
+            "last_updated": "2025-10-23T08:42:21.688114+09:00",
+            "created_at": "2025-10-23T08:32:22.983228+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "79d49ffd2ca4f4c41f414f3265045d68332fcdf1656688a889a725d404f42740": {
+            "last_updated": "2025-10-23T08:43:14.480197+09:00",
+            "created_at": "2025-10-23T08:42:51.608052+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "7df49b8d0d0407167d46dfe6afb34a9d21aac5d45a189f04297c39a9bd331a3f": {
+            "last_updated": "2025-10-23T08:48:34.676319+09:00",
+            "created_at": "2025-10-23T08:48:15.414938+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c33c7871a8761741d8f6a5935a9288bfa57a58f03bdf72ad0006f22bc11c6efa": {
+            "last_updated": "2025-10-23T08:51:09.101084+09:00",
+            "created_at": "2025-10-23T08:50:32.438191+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2653ad3e60ea6e0ea4ae88d0eb19985df755133762712d2a99d67532b1f35e7a": {
+            "last_updated": "2025-10-23T08:59:06.958810+09:00",
+            "created_at": "2025-10-23T08:59:06.957684+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "464df8f127bac09b400094184d13d25f16cfa3da5b977fb5a2ee341eba5a5e33": {
+            "last_updated": "2025-10-23T09:00:07.703817+09:00",
+            "created_at": "2025-10-23T09:00:07.702769+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "47e8d8b53eedab5c977d5e087f9fd6af8a267ca5c3195519d1271621b8431fea": {
+            "last_updated": "2025-10-23T09:23:37.973685+09:00",
+            "created_at": "2025-10-23T09:23:20.931250+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "12c54555d4d3ea0a89da0c74351ffe8f22eb23dd404c73791661b98612f19b23": {
+            "last_updated": "2025-10-23T09:25:36.546476+09:00",
+            "created_at": "2025-10-23T09:24:29.763075+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e8eaca76fa018547f3dff77ba83bc959f7cf59fef15e881309e75e79d72dcdd7": {
+            "last_updated": "2025-10-23T11:52:43.253666+09:00",
+            "created_at": "2025-10-23T09:25:47.817136+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "238ec1fb02a6c32e6070f0e000707776bbe81bd7f33ed8d9e47f5ce900d3ddc4": {
+            "last_updated": "2025-10-23T09:33:24.920308+09:00",
+            "created_at": "2025-10-23T09:30:43.542808+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "aa29d10b2d645a67927aa2ea20f300304ef870a8452a743c30cd47049942c1ad": {
+            "last_updated": "2025-10-23T09:33:34.509681+09:00",
+            "created_at": "2025-10-23T09:33:14.713785+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "d1f138e28b8330fd9b922416adb5a8b550ac03062cd39fc6e98e585d95a71544": {
+            "last_updated": "2025-10-23T11:06:42.079514+09:00",
+            "created_at": "2025-10-23T10:57:14.261052+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "a749c811fb8124fd92201517dad5c5eeb515726a2c3931ad8c704d2c301bed0a": {
+            "last_updated": "2025-10-23T11:06:34.131069+09:00",
+            "created_at": "2025-10-23T11:01:02.406855+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "9bb785cde1ea354b771ec96c64d89cef4ff774fa78fcf09a80ed9335d826b15a": {
+            "last_updated": "2025-10-23T11:07:09.592411+09:00",
+            "created_at": "2025-10-23T11:06:50.931057+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "b8bc5156de8b1d06d7b6b4110061516f36ef5e29011f4bf41fb5b505afe7ea2f": {
+            "last_updated": "2025-10-23T11:10:04.348382+09:00",
+            "created_at": "2025-10-23T11:09:44.896690+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "d597bc9cf8ce519abaacffb2a173b9e90616295746d25c459c12aeafbc09d359": {
+            "last_updated": "2025-10-23T11:11:58.008764+09:00",
+            "created_at": "2025-10-23T11:11:32.521358+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "4bbf99ee096765fcc09b006875353f83a1e45b2483e8dc5eb574993bf6f39263": {
+            "last_updated": "2025-10-23T11:12:41.423981+09:00",
+            "created_at": "2025-10-23T11:12:22.891985+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "5bb968362e26826eb8d40f88fffc1c57a4d94a5f4bfc8ea0e2e07a8bb062c46c": {
+            "last_updated": "2025-10-23T11:16:03.729737+09:00",
+            "created_at": "2025-10-23T11:15:46.474304+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2b100379fe1b8661314033359d2e97e3006c2acc93576b8ca3dd07e52535b119": {
+            "last_updated": "2025-10-23T11:17:50.988014+09:00",
+            "created_at": "2025-10-23T11:17:28.504995+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c6cf184550553b5a2386d4f5bd29cdcaef9206071bcad106723cb7d92b362945": {
+            "last_updated": "2025-10-23T11:22:38.312843+09:00",
+            "created_at": "2025-10-23T11:22:19.777572+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e0bc29367b8fda247585abebf5e117ed491bac6d6a351e5bf4590e304cf1726e": {
+            "last_updated": "2025-10-23T11:24:50.654867+09:00",
+            "created_at": "2025-10-23T11:24:30.655996+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "740fcc67fc2b505055fc7d4e7880d6c7ac35afddc989809c0952f83cd5775dfc": {
+            "last_updated": "2025-10-23T11:35:24.447758+09:00",
+            "created_at": "2025-10-23T11:35:05.702101+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "8bfef5019a33a5be4b2d8fc95c8bc78fcb13bf24e8885b2b468af26e0616bbd8": {
+            "last_updated": "2025-10-23T11:36:49.462375+09:00",
+            "created_at": "2025-10-23T11:36:27.174888+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e5afc2232be57f41b58f7af24a42f479a4535206f9a3f83668af1699885631eb": {
+            "last_updated": "2025-10-23T11:38:26.842375+09:00",
+            "created_at": "2025-10-23T11:38:09.045934+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "8717f09b424c54500533747ae839b75a02ccc818dc8af1f38645a77c8b460cc3": {
+            "last_updated": "2025-10-23T11:39:09.738108+09:00",
+            "created_at": "2025-10-23T11:38:42.344231+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed": {
+            "last_updated": "2025-10-25T08:17:02.196352+09:00",
+            "created_at": "2025-10-23T11:39:41.546335+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060\uff11\uff12"
+        },
+        "77d10bb2bb2b653c097a8ed99127e0496fc1cf3add670e464bc0100c4658fa03": {
+            "last_updated": "2025-10-23T11:47:00.710918+09:00",
+            "created_at": "2025-10-23T11:46:35.158908+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "3b3ff59f5ec08b98c0d885031fac12e378a8715f612fcf7fbba840e7027e28b8": {
+            "last_updated": "2025-10-23T11:48:27.261461+09:00",
+            "created_at": "2025-10-23T11:47:40.110915+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "96945bf80f592e784b6b36dadb5d6c1ac1b2be0bf1ad464756fc459ac0e68a01": {
+            "last_updated": "2025-10-23T11:49:27.819001+09:00",
+            "created_at": "2025-10-23T11:49:07.137867+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "5a567c892909e77c743795fe36d2fa843aab793e3e0d4143fbf51f2f64296c2f": {
+            "last_updated": "2025-10-23T11:50:07.739814+09:00",
+            "created_at": "2025-10-23T11:49:47.067600+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "115278e7c3256261d9033484a90336e72410091f470cdd25e3f5de16af185f9a": {
+            "last_updated": "2025-10-23T11:56:46.759406+09:00",
+            "created_at": "2025-10-23T11:56:28.143083+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "28b6284ccb29d60a3e159aa7b3d193c0079dfe2338cf65f47756b3278bdf31f3": {
+            "last_updated": "2025-10-23T12:20:16.946950+09:00",
+            "created_at": "2025-10-23T12:17:13.809708+09:00",
+            "purpose": "Testing the fixed google_web_search tool"
+        },
+        "fc7afc9123f6d222c732bda1aec74857ad2970e6c7a72396448e49c1c0a9b116": {
+            "last_updated": "2025-10-23T16:57:54.685156+09:00",
+            "created_at": "2025-10-23T12:37:30.111264+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "d88509c159be5be898d9e33de1024e7d93a1f94fd42b12dd0771d025e0ef189a": {
+            "last_updated": "2025-10-23T12:39:36.950176+09:00",
+            "created_at": "2025-10-23T12:39:12.329343+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2b37854b704706ba6b234f026c0ce1f9c1873a4e64aa2fb4dce139f976df7571": {
+            "last_updated": "2025-10-23T12:41:42.567259+09:00",
+            "created_at": "2025-10-23T12:40:24.079904+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "362b295661c7e4fa22c221cfbbc77fd83d4bae1388aa548ea9f9ecb6e8fd83af": {
+            "last_updated": "2025-10-23T12:50:45.513593+09:00",
+            "created_at": "2025-10-23T12:50:45.512210+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "97f104e3951a6fadac71c32ed35f4c3c9d49b5722bf90d2bfd712e5da26e9a25": {
+            "last_updated": "2025-10-23T12:51:13.864923+09:00",
+            "created_at": "2025-10-23T12:51:13.863229+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "b855c89bc0d6db6b23625cc7953ffef31f9639a6789154f2e08fe472e7f0b23a": {
+            "last_updated": "2025-10-23T12:55:15.124096+09:00",
+            "created_at": "2025-10-23T12:54:08.717938+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "31875b97f0f32d5fed8fde2a4f9549d66ca24b7bba82e79fbdb83c8436e6b259": {
+            "last_updated": "2025-10-23T12:57:21.574056+09:00",
+            "created_at": "2025-10-23T12:56:29.821644+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "88a10a891bdc20605724a6541ae37e1db9cddf58bfa9af47ddbd3f2339279cfb": {
+            "last_updated": "2025-10-23T13:01:22.044140+09:00",
+            "created_at": "2025-10-23T12:58:24.391358+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "df3bc1513c19060cc0d4bd7bdbd5b7c76c9bdd2145c55c10a2efad44ace38de0": {
+            "last_updated": "2025-10-23T17:37:57.028929+09:00",
+            "created_at": "2025-10-23T13:06:30.800539+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "335a5df509fefb427e904c65ffcc92717fc5d0b06cf26bc40ffe0ecc4d275418": {
+            "last_updated": "2025-10-23T13:43:01.776529+09:00",
+            "created_at": "2025-10-23T13:42:37.480874+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "bb7f823277f1f45d6ae94cf4b06dd1447b2201e3ad7b4110fac126bc27463f55": {
+            "last_updated": "2025-10-23T13:45:54.282251+09:00",
+            "created_at": "2025-10-23T13:45:27.633630+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c82a45f42334c60f470e2d0b5ef443a51cad48746c9e67987e5253e39fc141e1": {
+            "last_updated": "2025-10-23T21:33:49.538580+09:00",
+            "created_at": "2025-10-23T13:50:41.163772+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "00a63d1e4fd000f9f0c797f0807adf9ae95f477618bb2e40837ef00ba4a52d60": {
+            "last_updated": "2025-10-25T12:25:58.072613+09:00",
+            "created_at": "2025-10-23T13:54:50.036510+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "4ec37a74db543a227037b30c571a135dd619031a41ea7b15c39a7e3f694a2aca": {
+            "last_updated": "2025-10-23T13:56:08.343108+09:00",
+            "created_at": "2025-10-23T13:56:08.341574+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c69358c6e25bb7c15a9984023a03ce3d45b51da9557e6989275a2730de3938b6": {
+            "last_updated": "2025-10-23T13:57:46.414601+09:00",
+            "created_at": "2025-10-23T13:57:24.358394+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "4e3bb5313ec4f24b66c5bf1e64acf1fe210bfc9430ed860ecdddcfcbcc162104": {
+            "last_updated": "2025-10-23T14:09:30.484901+09:00",
+            "created_at": "2025-10-23T14:09:04.105452+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "770d9a645edae966d222131412f304818abae2fc0285a02aff9d6acbcd0b6f43": {
+            "last_updated": "2025-10-23T14:32:48.964946+09:00",
+            "created_at": "2025-10-23T14:32:22.227063+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "a08a4a981f38f79c1d4f49b5101fe04929f1bdf9c2aad678666d4c4c1ff1ffc1": {
+            "last_updated": "2025-10-23T14:41:55.660434+09:00",
+            "created_at": "2025-10-23T14:36:53.322243+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "f51841dc01edf001149e1b716de6aa7e93620047338eeb4b9171faf80b7913a8": {
+            "last_updated": "2025-10-23T14:41:54.333147+09:00",
+            "created_at": "2025-10-23T14:39:42.519413+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "7a41839b19afb42731b452e9b30986e7bca97934288da2c204567d8f4905216b": {
+            "last_updated": "2025-10-23T14:41:47.195792+09:00",
+            "created_at": "2025-10-23T14:41:20.539599+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2b76776181cdb3428491eeed81858b4681ad69363d24e2a97f6e4d9f3ce77e7b": {
+            "last_updated": "2025-10-23T14:43:05.078137+09:00",
+            "created_at": "2025-10-23T14:42:00.584725+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "751649a944fd6ac5501fbb6946c515535069d89f284fafd956c44bdc476acd8b": {
+            "last_updated": "2025-10-24T21:09:20.370394+09:00",
+            "created_at": "2025-10-23T14:44:26.258872+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060\uff12"
+        },
+        "7be0907a107245acec1f131d56115126f8e749d2d4ccea3776a07bdd6b61f162": {
+            "last_updated": "2025-10-23T19:23:21.309035+09:00",
+            "created_at": "2025-10-23T15:12:40.601219+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "b5be7ffa07f87c656983f7f495e4b358785ea61a859ae028dcc26f31634d22ab": {
+            "last_updated": "2025-10-23T15:14:45.272881+09:00",
+            "created_at": "2025-10-23T15:13:36.419323+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "33bc342dd20a899299eab08900664444c7d35fd15f280521cec04ee625991d81": {
+            "last_updated": "2025-10-23T21:32:56.425520+09:00",
+            "created_at": "2025-10-23T15:30:37.715094+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "734147736bb85d013271b69d017762ab14abe76bec6ccde344da512c5c0e696b": {
+            "last_updated": "2025-10-23T15:46:20.456172+09:00",
+            "created_at": "2025-10-23T15:31:35.716529+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "9c7c735c618304a17f609d0bc923f67a06d205409f63fc8ba9cfffe2750364e7": {
+            "last_updated": "2025-10-23T15:46:41.761965+09:00",
+            "created_at": "2025-10-23T15:46:41.759667+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "5eeed6147dd9c69bf9d5ec93cab249abf5476ba36fd69e987d21ada5cc8c6b25": {
+            "last_updated": "2025-10-23T15:47:27.307451+09:00",
+            "created_at": "2025-10-23T15:47:27.304996+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2925423283677d6ff746158e67798f2d9dcf536ef03afc5d0e8d8ddaa1e43e27": {
+            "last_updated": "2025-10-23T15:48:11.849395+09:00",
+            "created_at": "2025-10-23T15:48:11.847199+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "5a11e583ba55d1cb0f7676f1ea67b0eddcf7252cda9a23c1814eebb2504dffb2": {
+            "last_updated": "2025-10-23T19:32:47.124567+09:00",
+            "created_at": "2025-10-23T15:49:06.371785+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2a5d34cf62ffd01d4d8874ae446cedf9cfdc51aaef12b767279b73476472d8fc": {
+            "last_updated": "2025-10-23T15:52:57.150485+09:00",
+            "created_at": "2025-10-23T15:52:57.145506+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "7f8696b5b5b4e0f5a5ecadb98b5358cbe98a30dc4ae19fd2be6d968a56891979": {
+            "last_updated": "2025-10-23T16:58:23.273299+09:00",
+            "created_at": "2025-10-23T15:58:35.565548+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "8b4e991942de8bc247897d98a74354b9dce646a49cae7138afbabd3d884c9aac": {
+            "last_updated": "2025-10-24T21:03:27.161599+09:00",
+            "created_at": "2025-10-23T15:59:28.355697+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c53739627c34cfeb0eeffc1e2d92d247937fb0ee510b125336c64688bf19e363": {
+            "last_updated": "2025-10-23T21:45:49.112912+09:00",
+            "created_at": "2025-10-23T16:00:37.926631+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "14843b8877d3fe2a3a15fa53e86a49e23c934559dc13e5a4f8a61951382f9b36": {
+            "last_updated": "2025-10-23T16:53:44.272646+09:00",
+            "created_at": "2025-10-23T16:14:56.359888+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "a4af6332f1cb81291ab81dfc5e6bc2932878148ddb07db0e0f0d7b82587d5a24": {
+            "last_updated": "2025-10-23T16:52:47.432513+09:00",
+            "created_at": "2025-10-23T16:15:37.112209+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c5e3d869ac82ab56062830a7b03e6eecb97ad942bdca8d10f67c93101c5b755c": {
+            "last_updated": "2025-10-23T16:49:38.196904+09:00",
+            "created_at": "2025-10-23T16:17:09.307091+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "3c826c26abb1fb19cd5c02736c77778be8c7f66cab1cbe0144520e39a0acfa2b": {
+            "last_updated": "2025-10-23T16:57:47.314231+09:00",
+            "created_at": "2025-10-23T16:17:11.913559+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "65b396b8ee8f59c56e61a402298d5501d1b12c5a6531f81c5c75c05f62754575": {
+            "last_updated": "2025-10-23T16:46:23.732800+09:00",
+            "created_at": "2025-10-23T16:17:46.327072+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "4b25f23f27c750134ce70757af0b4436f2406825feab55163e84cc3ee7f6a54c": {
+            "last_updated": "2025-10-23T16:46:02.695960+09:00",
+            "created_at": "2025-10-23T16:28:08.533790+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "549733a18814d9a4bdeb0c2cc443dc1562dd74066104ba0c67185f6f3291e4e1": {
+            "last_updated": "2025-10-24T12:54:29.858306+09:00",
+            "created_at": "2025-10-23T17:07:27.113598+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "608f01c69abfb79545628d7bf44240574bba27ee4b81ff7be0bd3da1c1482938": {
+            "last_updated": "2025-10-23T18:22:07.868433+09:00",
+            "created_at": "2025-10-23T17:34:07.127544+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c56c658c9c25aa4652f4da2d770e3424bcaf227652680cf5660e14f90b988f95": {
+            "last_updated": "2025-10-24T09:38:32.904180+09:00",
+            "created_at": "2025-10-24T07:43:41.318835+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "1366d338a02134d3d3af2ab66059927a4c960df22940aa58ed8e5b84953e726a": {
+            "last_updated": "2025-10-24T07:44:09.052086+09:00",
+            "created_at": "2025-10-24T07:44:09.050189+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e2221680fbb767683a283df3513d7d4fc48f57948f1b0b35f825bc2a10678e3f": {
+            "last_updated": "2025-10-24T07:44:37.212885+09:00",
+            "created_at": "2025-10-24T07:44:32.250332+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "7cf25e61349991653cc95f76d7b0f3f4298f753fb16bbd0d84e82f20f51c2c3c": {
+            "last_updated": "2025-10-24T07:44:55.235783+09:00",
+            "created_at": "2025-10-24T07:44:48.967717+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "0215c592f2f3cfb3066409ecc511744484a5d6196c07b65a61984f47d08c696b": {
+            "last_updated": "2025-10-24T07:45:59.019935+09:00",
+            "created_at": "2025-10-24T07:45:53.482537+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "87f62be12921826b4217b5854a09a3fea929606b249ec36d1c1c45a1d8c92de4": {
+            "last_updated": "2025-10-24T13:02:02.907863+09:00",
+            "created_at": "2025-10-24T07:47:32.911516+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "51542d78beb22cf4258b15a824ac206f06241ffad741c52cc7589d7992822ec5": {
+            "last_updated": "2025-10-23T23:20:56.805979+00:00",
+            "created_at": "2025-10-23T23:20:28.920403+00:00",
+            "purpose": "references\u306e\u521d\u671f\u5024\u30c6\u30b9\u30c8"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2": {
+            "last_updated": "2025-10-24T09:43:16.152174+09:00",
+            "created_at": "2025-10-24T09:43:16.130915+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "2f42e87f8a6e44c1b44fcf3abf88ace46df96fab05d53baad212ed0d2247a1c7": {
+            "last_updated": "2025-10-24T20:37:05.487961+09:00",
+            "created_at": "2025-10-24T09:43:39.608176+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/63a6de2e8668271c78e60579bc02edff6e06f28541996f4971e7e0ee8fc032ef": {
+            "last_updated": "2025-10-24T13:01:42.712800+09:00",
+            "created_at": "2025-10-24T13:01:30.860966+09:00",
+            "purpose": "\u5b50\u30bb\u30c3\u30b7\u30e7\u30f3\u3092\u4f5c\u308c\u308b\u304b\u306e\u30c6\u30b9\u30c8"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c": {
+            "last_updated": "2025-10-25T10:16:25.323614+09:00",
+            "created_at": "2025-10-24T13:04:32.642217+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/65a33eaee3a614360f7cb277adedb92a28ecb4d3953738c3de98778662f60a53": {
+            "last_updated": "2025-10-24T13:06:01.076226+09:00",
+            "created_at": "2025-10-24T13:05:40.649095+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/1b838c6ed57e9547f6a3bff4469793d4823a56f35706117543cee049b4bffabd": {
+            "last_updated": "2025-10-24T13:11:57.406893+09:00",
+            "created_at": "2025-10-24T13:11:48.380923+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/0a164537db3e2ed9458683df0d4cd4505e6474ffa5309acdda547f4594fa1ec0": {
+            "last_updated": "2025-10-25T07:48:14.902051+09:00",
+            "created_at": "2025-10-25T07:45:19.114184+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060\u305e"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/0a164537db3e2ed9458683df0d4cd4505e6474ffa5309acdda547f4594fa1ec0/b2e4a8c42b54afac4059455f5f47ad4c35ffcb30aab572c72f8b893e5c6ab151": {
+            "last_updated": "2025-10-25T07:49:05.338439+09:00",
+            "created_at": "2025-10-25T07:49:03.545480+09:00",
+            "purpose": "\u5b50\u30bb\u30c3\u30b7\u30e7\u30f3\u306e\u518d\u30c6\u30b9\u30c8"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/0a164537db3e2ed9458683df0d4cd4505e6474ffa5309acdda547f4594fa1ec0/b2e4a8c42b54afac4059455f5f47ad4c35ffcb30aab572c72f8b893e5c6ab151/6789171bca59c7cea98411b35f4cb3cd806b6d62827f9c3cb84de8a387ee4b37": {
+            "last_updated": "2025-10-25T10:17:56.263182+09:00",
+            "created_at": "2025-10-25T07:53:17.688482+09:00",
+            "purpose": "Fork of: \u5b50\u30bb\u30c3\u30b7\u30e7\u30f3\u306e\u518d\u30c6\u30b9\u30c8"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/371551cbe9ef976c14c1fe579f0dd3a6ee992934213c474c6b4a9ed332b6ea99": {
+            "last_updated": "2025-10-25T08:14:08.679472+09:00",
+            "created_at": "2025-10-25T08:14:08.676715+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/8035e7785b431a2ed35b3dea76c0f45fac840e7c0b504c362cb017ba1143385e": {
+            "last_updated": "2025-10-25T08:15:43.285917+09:00",
+            "created_at": "2025-10-25T08:14:47.560271+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/8035e7785b431a2ed35b3dea76c0f45fac840e7c0b504c362cb017ba1143385e/da5546049b2d2c6fcd00e8bc03194a3ead6dd56a7cb03eab5c6bc0f83b4fc809": {
+            "last_updated": "2025-10-25T08:15:46.419673+09:00",
+            "created_at": "2025-10-25T08:15:46.395886+09:00",
+            "purpose": "Fork of: Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/8035e7785b431a2ed35b3dea76c0f45fac840e7c0b504c362cb017ba1143385e/da5546049b2d2c6fcd00e8bc03194a3ead6dd56a7cb03eab5c6bc0f83b4fc809/82eaac8883b8c0850a51ded9841c2a786b4f15bdd199122382a7c01a6ddd574c": {
+            "last_updated": "2025-10-25T08:15:55.536813+09:00",
+            "created_at": "2025-10-25T08:15:55.513087+09:00",
+            "purpose": "Fork of: Fork of: Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/0059f58e91f974ead4e654ef84f5268aa9e60bd2db203eaba8c97a8c2da016ec": {
+            "last_updated": "2025-10-25T10:00:51.338363+09:00",
+            "created_at": "2025-10-25T08:16:49.479100+09:00",
+            "purpose": "Fork of: Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "f64699cf88fe79fe40e9f3919cce977fe5f29af042f5340fd979864f178e685f": {
+            "last_updated": "2025-10-25T08:17:11.033450+09:00",
+            "created_at": "2025-10-25T08:17:11.012931+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060\uff11\uff12"
+        },
+        "c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/bf890857aaf8afa18f68fd813495f2fc23874567229d523be3064b6190f05d7a": {
+            "last_updated": "2025-10-25T08:17:24.866717+09:00",
+            "created_at": "2025-10-25T08:17:24.846353+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed/71ebd407e9b16cf34c51087cf1187afaf885e9e2de2ec54451c2faa38ff22a2c": {
+            "last_updated": "2025-10-25T10:14:35.456162+09:00",
+            "created_at": "2025-10-25T08:18:28.646706+09:00",
+            "purpose": "\u5b50\u30bb\u30c3\u30b7\u30e7\u30f3\u4f5c\u6210\u30c6\u30b9\u30c8"
+        },
+        "fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed/801491fbbe1986f9e39872371a43ad844afe2d80ba7078ff92adbaf3aff8b119": {
+            "last_updated": "2025-10-25T10:10:04.486266+09:00",
+            "created_at": "2025-10-25T08:18:43.015779+09:00",
+            "purpose": "Fork of: \u5b50\u30bb\u30c3\u30b7\u30e7\u30f3\u4f5c\u6210\u30c6\u30b9\u30c8"
+        },
+        "00a63d1e4fd000f9f0c797f0807adf9ae95f477618bb2e40837ef00ba4a52d60/403a7079c3bba2bcb3838390f33d9e69f63e815ff4423961bb8e89866b23345f": {
+            "last_updated": "2025-10-25T15:36:53.953262+09:00",
+            "created_at": "2025-10-25T01:41:01.771406+00:00",
+            "purpose": "\u65b0\u898f\u30bb\u30c3\u30b7\u30e7\u30f3\u8ffd\u52a0\u30c6\u30b9\u30c81"
+        },
+        "00a63d1e4fd000f9f0c797f0807adf9ae95f477618bb2e40837ef00ba4a52d60/4202940f7b80fb764febc405b167fda18e6a8537136e2ea00a25e4f95083bf90": {
+            "last_updated": "2025-10-25T10:43:11.697680+09:00",
+            "created_at": "2025-10-25T01:43:11.232375+00:00",
+            "purpose": "\u65b0\u898f\u30bb\u30c3\u30b7\u30e7\u30f3\u8ffd\u52a0\u30c6\u30b9\u30c8"
+        },
+        "00a63d1e4fd000f9f0c797f0807adf9ae95f477618bb2e40837ef00ba4a52d60/92612468b4cc83edd8bd0720ecbf515bbd261d8f9818e3bf2c7c0beaae899949": {
+            "last_updated": "2025-10-25T11:58:59.430279+09:00",
+            "created_at": "2025-10-25T01:44:37.149196+00:00",
+            "purpose": "\u65b0\u898f\u30bb\u30c3\u30b7\u30e7\u30f3\u8ffd\u52a0\u30c6\u30b9\u30c8"
+        },
+        "c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/f9e6a404ce07558160d7235e3f235e40505e66ecb1846199280a0faa698dd466": {
+            "last_updated": "2025-10-25T10:44:48.633152+09:00",
+            "created_at": "2025-10-25T10:44:48.630140+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/6aed5b70786de8ca39c93f0a268d37c026b88fcfe3726af9caed2b12b456714f": {
+            "last_updated": "2025-10-25T11:37:06.844232+09:00",
+            "created_at": "2025-10-25T10:45:22.306784+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "f5beece8ac5d7a2843836bde193b74a3329388ddd24b69472bfd451c121460d1": {
+            "last_updated": "2025-10-25T12:00:20.471337+09:00",
+            "created_at": "2025-10-25T12:00:19.277095+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "0e7ddc07e29259d1e1263a00d9cc5d4a028ca802a1b34851d43ecee12da364cb": {
+            "last_updated": "2025-10-25T12:03:49.543434+09:00",
+            "created_at": "2025-10-25T12:01:58.272532+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "a29b3cbe1d3513a4958a87a5bcad66995516f7e8c252e4e13800ebb893e0fae3": {
+            "last_updated": "2025-10-25T14:07:58.446214+09:00",
+            "created_at": "2025-10-25T12:24:22.215647+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "6fee1e85311e93ee87f4051378061574f2a62e6f1720541ee521f04a4e658256": {
+            "last_updated": "2025-10-25T14:08:36.114668+09:00",
+            "created_at": "2025-10-25T14:08:36.112572+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "039b25b323dd9dc041a99ba2020d58558b668e0ca78614ebb24effef227edfac": {
+            "last_updated": "2025-10-25T14:08:41.628616+09:00",
+            "created_at": "2025-10-25T14:08:41.625668+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "177e6c3990e85f33ee7d2517781d391066c8cbbc65b63c83efac7e1d989f16d9": {
+            "last_updated": "2025-10-25T14:09:11.839984+09:00",
+            "created_at": "2025-10-25T14:09:10.022282+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "6572e46e699fc9d1635b3ff931cce2f32f5cfc4aad74b9cc0a8c62888b7f8119": {
+            "last_updated": "2025-10-25T14:10:37.926152+09:00",
+            "created_at": "2025-10-25T14:10:36.037974+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "fed056f40abb51945acc81e428b897422329844fdd7587d54bb984e1aefae820": {
+            "last_updated": "2025-10-25T14:11:15.381660+09:00",
+            "created_at": "2025-10-25T14:11:08.638741+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "faeab96f6ac7883e2ec54a16afc409ca1b3517859f1f13fd1be347bf1f988e38": {
+            "last_updated": "2025-10-25T14:35:48.136627+09:00",
+            "created_at": "2025-10-25T14:15:52.687523+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d": {
+            "last_updated": "2025-10-25T14:32:35.186496+09:00",
+            "created_at": "2025-10-25T14:19:31.665216+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "739defe2ddfbaaeb893d09697b63e033017c865d7e62d69b9eb89600f9adcbda": {
+            "last_updated": "2025-10-25T14:22:02.821909+09:00",
+            "created_at": "2025-10-25T14:22:01.143313+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2b8377c437cce42a906baac78f7f456bffdd2cf75c30b693ad53e19da4d7da4b": {
+            "last_updated": "2025-10-25T14:23:33.195780+09:00",
+            "created_at": "2025-10-25T14:23:27.429486+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "7a44cbb772e2ee1074aaa789ff5e669a0b7f20e02397764c30b0a667f68c0ae1": {
+            "last_updated": "2025-10-25T14:32:03.632571+09:00",
+            "created_at": "2025-10-25T14:26:57.600569+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "6859ed5a9fc410da9006d1490aa261c15256753e7476c8a3c75fe5d54038474c": {
+            "last_updated": "2025-10-25T14:39:16.273088+09:00",
+            "created_at": "2025-10-25T14:39:16.270937+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e8ec3a1108fafa4422b3d44eb3afdbd59e9d236bef612848e0a78b668289295b": {
+            "last_updated": "2025-10-25T14:40:06.509341+09:00",
+            "created_at": "2025-10-25T14:40:06.507163+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c7751362c4988017939407d95ad341ca732b59d656575b3db17404cf4c5d12a8": {
+            "last_updated": "2025-10-25T14:42:36.112415+09:00",
+            "created_at": "2025-10-25T14:42:36.108644+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "8c19db088256dffdd3ac28d80c080e62709a4de0684f1cf67e3326a1c30281a2": {
+            "last_updated": "2025-10-25T14:43:04.366761+09:00",
+            "created_at": "2025-10-25T14:43:04.364175+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "726b8774bed4d54136559cb26b1160156cde111b6f33af9f4b87f23064f36af0": {
+            "last_updated": "2025-10-25T14:43:09.160680+09:00",
+            "created_at": "2025-10-25T14:43:09.158498+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "1260edf4ad2a18dd402511238fb54d70306e7aa419ebb620de624c0ac603d816": {
+            "last_updated": "2025-10-25T14:43:35.155584+09:00",
+            "created_at": "2025-10-25T14:43:35.153329+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "76cca77b3ab0d0ba5db54ac6f31656e45ba6c590b06e4c0ee52478ee1428a812": {
+            "last_updated": "2025-10-25T14:46:11.731977+09:00",
+            "created_at": "2025-10-25T14:46:11.729248+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "489efb962392ceaeae7a24a0f57f5f9358f6933c736914714ccd565421370596": {
+            "last_updated": "2025-10-25T15:05:05.376784+09:00",
+            "created_at": "2025-10-25T14:48:33.675472+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2a480f7d7b91c0d299ffbbf4832e2230f56142eecc700cb0b1f7ada565459eab": {
+            "last_updated": "2025-10-25T14:50:57.371319+09:00",
+            "created_at": "2025-10-25T14:50:51.928499+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e6801fcd91e5131c51e5e7163f3a6f8e995348fbbecc64e54ebeccca63884140": {
+            "last_updated": "2025-10-25T15:04:36.131966+09:00",
+            "created_at": "2025-10-25T14:51:15.935280+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c6e54e5c6f7a7cd060ba55a094f2a996c8335eff3e3f95650b3758db0652dad0": {
+            "last_updated": "2025-10-25T15:28:16.391798+09:00",
+            "created_at": "2025-10-25T15:28:16.389550+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "ad57d43faafb938ffde1909e2341d5d755358af33946b43bae145d07be482d26": {
+            "last_updated": "2025-10-25T15:40:54.376088+09:00",
+            "created_at": "2025-10-25T15:40:42.199257+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "61352d0c4e98c5d5beb0cf35df2e1db1ca091579e681d3159cf3d522494d3fe1": {
+            "last_updated": "2025-10-25T15:43:29.936614+09:00",
+            "created_at": "2025-10-25T15:43:20.537424+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "541f09e02c309db826c59747ea16186d5530ed3f939e4ab8cc5a168747668ce0": {
+            "last_updated": "2025-10-25T15:45:18.490162+09:00",
+            "created_at": "2025-10-25T15:44:24.065598+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "8c7bd4a64ee5db21828aa264dc09dd7767405864c911f391f50da35ec1f5d492": {
+            "last_updated": "2025-10-25T15:51:55.819832+09:00",
+            "created_at": "2025-10-25T15:51:33.948952+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "38358e5b66c8e54fcebb27daf5a521ad26838ac7db93c74a7ba506ad627c4147": {
+            "last_updated": "2025-10-25T16:00:24.865185+09:00",
+            "created_at": "2025-10-25T15:59:13.374162+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "3fcfa66a42242d77fcf288e68a458070bc813fd1d84dd5a6413901f3c55782ad": {
+            "last_updated": "2025-10-25T16:19:39.727280+09:00",
+            "created_at": "2025-10-25T16:19:39.722659+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e6b2a0406e6dd42541cfcc56162e8d8f6e22d5aeba0d0a732c5c35c3ae6478a0": {
+            "last_updated": "2025-10-25T16:27:17.983491+09:00",
+            "created_at": "2025-10-25T16:20:14.263778+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "af6fb2fd51d3680c532ac6962d8b9609cb95cc338000e59b7acd7202ad33b584": {
+            "last_updated": "2025-10-25T16:28:16.869569+09:00",
+            "created_at": "2025-10-25T16:27:57.108166+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "af8751eb9c2f647c51fd3cd4aff5603595695500406a6611c30a2a64009d13bd": {
+            "last_updated": "2025-10-26T12:22:31.538000+09:00",
+            "created_at": "2025-10-25T17:01:08.409139+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e6f8d82e7604704b03035780e01adf3a8b9915e8df413cb4d3e2c7d0e9647ff1": {
+            "last_updated": "2025-10-25T17:03:54.457071+09:00",
+            "created_at": "2025-10-25T17:03:09.961014+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e23533387506d0384a9e173046ff69a593b41b9a4dd8499bf6b96bcd5c257385": {
+            "last_updated": "2025-10-25T18:16:15.484352+09:00",
+            "created_at": "2025-10-25T17:04:15.291928+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "8caab552c34cd59d726079610c1eae8bc73ae3896cbaa67a4313ba07bd137d26": {
+            "last_updated": "2025-10-25T17:46:27.515822+09:00",
+            "created_at": "2025-10-25T17:24:06.774089+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "982b2b32eb86d762796ef138c5ef0eedfd258ebd450710c6a7ca5cb8f8f8f89f": {
+            "last_updated": "2025-10-25T17:47:39.697271+09:00",
+            "created_at": "2025-10-25T17:46:05.797003+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "52ce643cf700631e6e0a7c5a6a7b372824bc2eabb327e5d148420136b548fb1e": {
+            "last_updated": "2025-10-25T18:06:40.168380+09:00",
+            "created_at": "2025-10-25T17:47:56.539197+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2791bc3607954808474d14d6e2ec0e43356189e2b9ca4e19d0617185649ab6b9": {
+            "last_updated": "2025-10-25T18:05:12.242661+09:00",
+            "created_at": "2025-10-25T17:49:51.491899+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "6a4862850b9a3cfbe462a8edb3ef6569548fc71a6aa55709f2402ebc6d116cb7": {
+            "last_updated": "2025-10-25T18:02:42.803039+09:00",
+            "created_at": "2025-10-25T17:51:12.082245+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "2467e1eab02bf90eeaec2f187528a47683f48ea4185b596ee908b92cdf123620": {
+            "last_updated": "2025-10-25T18:20:09.949723+09:00",
+            "created_at": "2025-10-25T18:20:09.947401+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "79ab78ff5012c5b5335f4d4afd29661098869dab917baa1c27da2a00a49b8bb4": {
+            "last_updated": "2025-10-25T18:21:05.662615+09:00",
+            "created_at": "2025-10-25T18:20:54.708052+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "0567a6ef618a76638127788b1d9737e19fa3b84f8706995315692f33137febc3": {
+            "last_updated": "2025-10-25T18:30:23.368051+09:00",
+            "created_at": "2025-10-25T18:30:14.099849+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "1523c31fc70268a7fefce533a47a2fd449a8102b4a09f9de0110368cf1048f11": {
+            "last_updated": "2025-10-25T19:42:10.045421+09:00",
+            "created_at": "2025-10-25T18:33:25.896355+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "404d00f48ade2a7155fe9d91bfcfafa5b43071ad5285bd51e3728b7ead277d9d": {
+            "last_updated": "2025-10-25T18:36:12.017404+09:00",
+            "created_at": "2025-10-25T18:36:12.015130+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "4503c419a850bee5a7e8a2e647cf8fd0341e98757f8f7847d792e9147affcb90": {
+            "last_updated": "2025-10-25T18:37:44.276678+09:00",
+            "created_at": "2025-10-25T18:37:33.935349+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "171ae22c3ec2626202a49064da5814e6474f58ea455af1e082415c2922275ddc": {
+            "last_updated": "2025-10-25T18:40:30.378851+09:00",
+            "created_at": "2025-10-25T18:40:19.026700+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c55c62c6850758ebc43b046d97ffeecf71c92fd6b8e4a748db1ebef577899474": {
+            "last_updated": "2025-10-25T18:41:02.834151+09:00",
+            "created_at": "2025-10-25T18:40:51.561667+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "53eb25bbbba57b7b1538f856619e959a33ba0bf901d57d8d3ee1fa4e01daa952": {
+            "last_updated": "2025-10-25T21:53:10.922386+09:00",
+            "created_at": "2025-10-25T19:42:46.787573+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "040df9874d07d34a47e9a7a301e3fd96c836a3ac9f2ac3ee0eb905ee413abdbc": {
+            "last_updated": "2025-10-25T21:50:45.310590+09:00",
+            "created_at": "2025-10-25T21:17:44.279747+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "15f66b6fb11606b6f813c3b9e9b92409e061b9ab65e0a26c39bd893abab2561a": {
+            "last_updated": "2025-10-25T21:20:02.016836+09:00",
+            "created_at": "2025-10-25T21:19:50.591487+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "6c11a5e2e95c9bc24a34ef9bfbd203656604dbff8838cbf757691a93d1d31156": {
+            "last_updated": "2025-10-25T21:54:51.148214+09:00",
+            "created_at": "2025-10-25T21:23:09.887971+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060\u305e"
+        },
+        "fd891dbaaa151f3e880cea4a41f9c5e5be57ed4d7b30bb2695b5e148548b74ed": {
+            "last_updated": "2025-10-25T21:45:06.206963+09:00",
+            "created_at": "2025-10-25T21:44:32.915905+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "88f72697b245c273479b87186c01675dd56a044ab99cd5ed5c85808fec62a0fa": {
+            "last_updated": "2025-10-26T06:24:58.518484+09:00",
+            "created_at": "2025-10-26T06:24:49.724108+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "79b0d627584f0025a2fa9d17970807f5536569acc47d4b85f6d30af02de297ba": {
+            "last_updated": "2025-10-27T08:00:48.861956+09:00",
+            "created_at": "2025-10-26T07:24:39.175227+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "6488585938487e76b71f638bab0dce2c7473b15f96a898fb789f84fb1cc70e1b": {
+            "last_updated": "2025-10-27T20:57:59.121611+09:00",
+            "created_at": "2025-10-26T07:25:07.643997+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "21e20290d7297c4e7391d865d2d705fd4dabe2c3c9fda7941b0cb0c23077a65c": {
+            "last_updated": "2025-10-26T07:25:15.813355+09:00",
+            "created_at": "2025-10-26T07:25:15.810451+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "c19b8ed204cb041c78a48468fcf2fb096fe0672b7118b247ae5fc3c471b2a9ac": {
+            "last_updated": "2025-10-26T07:26:21.450271+09:00",
+            "created_at": "2025-10-26T07:26:21.447030+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "78e642aa2828d0dec10521e5d4c727cc834342d794c6cd713ba2dff1bbf2a90c": {
+            "last_updated": "2025-10-26T09:39:45.965784+09:00",
+            "created_at": "2025-10-26T07:30:37.879119+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "3f430edca5254271a75aba1b70f7818e69d18f0a93b2e465c45ad3e981dfcbe9": {
+            "last_updated": "2025-10-26T12:25:35.719334+09:00",
+            "created_at": "2025-10-26T09:45:28.734323+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "46611596d90c0ad0b7b3b95dfb98b463010cd219554f06fbcdea933e406295bc": {
+            "last_updated": "2025-10-26T12:21:20.664746+09:00",
+            "created_at": "2025-10-26T09:53:15.195586+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "8498e78292e24adb9fd9d55c9d865edb4249502627d55848f8dfab391796247a": {
+            "last_updated": "2025-10-26T11:28:15.097490+09:00",
+            "created_at": "2025-10-26T11:00:27.194526+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "91701dffbe8481e9a78d5a32a8a94b71d4464708950b94808ac04dbb9e06861a": {
+            "last_updated": "2025-10-26T21:57:19.114213+09:00",
+            "created_at": "2025-10-26T16:05:51.552034+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "39f59a5ef99f4057983b12acf014886d9572e9e06e643dc4de8c58e209da0c99": {
+            "last_updated": "2025-10-27T07:50:46.260426+09:00",
+            "created_at": "2025-10-26T16:21:43.605722+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "22176081d140694b94cbac7683fbc2c99a132db53ee02f6af297cfe9a1f6bf85": {
+            "last_updated": "2025-10-26T17:27:19.260599+09:00",
+            "created_at": "2025-10-26T17:26:19.367815+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "f4475a47b212e80de1329615e1f5581013afcb88fb6262d6df436e5291ae13e8": {
+            "last_updated": "2025-10-26T20:52:59.101308+09:00",
+            "created_at": "2025-10-26T17:44:53.961482+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "9cdfb8a76f23ae757cfdf516828c28e807c1f7f07748db841b60bad0425a7dd4": {
+            "last_updated": "2025-10-27T21:07:11.206935+09:00",
+            "created_at": "2025-10-26T18:13:43.178931+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "aa0381e0330a9336bfb4196ca611513e55efcce8834ff7b76ac50ef970315c72": {
+            "last_updated": "2025-10-26T18:24:37.283031+09:00",
+            "created_at": "2025-10-26T18:24:37.280602+09:00",
+            "purpose": "Fork of: \u30c6\u30b9\u30c8\u3060"
+        },
+        "27363cdf9fcb6aa8add60d5b93a0c7717eb343f591039cb7161dbf4cc761bcfd": {
+            "last_updated": "2025-10-26T20:36:04.545366+09:00",
+            "created_at": "2025-10-26T20:35:58.207548+09:00",
+            "purpose": "Generate dry-run output for README"
+        },
+        "27363cdf9fcb6aa8add60d5b93a0c7717eb343f591039cb7161dbf4cc761bcfd/87993ca602b1aca7b60733be03bd717ce9fd82c35e6ba2495a3b1f444fa243eb": {
+            "last_updated": "2025-10-26T20:46:59.862966+09:00",
+            "created_at": "2025-10-26T20:45:43.152108+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "d3408bb4419b614004263cfc8568995c2662ae5d2cb1d3a090eda20b8fcc154b": {
+            "last_updated": "2025-10-27T08:53:24.943761+09:00",
+            "created_at": "2025-10-27T08:53:10.021555+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "bbeb45826df660975b1d339424600419c62574153b06506bcde88ab6a4f6e3f5": {
+            "last_updated": "2025-10-27T18:31:01.929468+09:00",
+            "created_at": "2025-10-27T08:55:43.913916+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "f2fb3c61933f68704e4814d75910b64789bc9d62c0a5660e38326fe9ffac2934": {
+            "last_updated": "2025-10-27T17:30:17.328347+09:00",
+            "created_at": "2025-10-27T16:58:25.731750+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "9dccec87e0af3a60a7897e64ac81a1500da55e8bb6c73446b16f861cec04e8e8": {
+            "last_updated": "2025-10-27T21:19:49.317177+09:00",
+            "created_at": "2025-10-27T21:19:49.313049+09:00",
+            "purpose": "\u5c0f\u7389\u3072\u304b\u308a\u306b\u3064\u3044\u3066\u306e\u8abf\u67fb"
+        },
+        "6f6f788018adf5803333d7aeb18e5126f5f075f4cba78336844b52102d72e1cf": {
+            "last_updated": "2025-10-27T21:23:04.445945+09:00",
+            "created_at": "2025-10-27T21:23:04.443159+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "04df5f2a2bdcc97e4a8eaed3e3ce8e7d28827835ba2ab3421c6d052047a2e39b": {
+            "last_updated": "2025-10-27T21:26:02.002077+09:00",
+            "created_at": "2025-10-27T21:26:01.998967+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "7f25e478d2d314d5b8bb11c64d886d1670c3994342c0684902534c9d9aa0369e": {
+            "last_updated": "2025-10-27T21:27:37.047895+09:00",
+            "created_at": "2025-10-27T21:27:37.043574+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "9dcb192e91f1fb918d07a21fa4e18191c31e9829c692f2e7834493f4a6845114": {
+            "last_updated": "2025-10-27T21:28:54.510887+09:00",
+            "created_at": "2025-10-27T21:28:54.507080+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "e51a14ccf4490b59fd63f6b7e4a1b0ed20420e7964c0f3544b6c18f7f24db228": {
+            "last_updated": "2025-10-27T21:37:17.200070+09:00",
+            "created_at": "2025-10-27T21:37:17.195753+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "60813cac03829464123e09a733330547089839b754fdef82c1700a14dc85efd4": {
+            "last_updated": "2025-10-27T21:39:15.288029+09:00",
+            "created_at": "2025-10-27T21:39:15.284890+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "aecf3afd2ca3a7891ba11fc2b1e1e504344e286de24fb9c275d9f90fc14818ff": {
+            "last_updated": "2025-10-27T21:39:35.621340+09:00",
+            "created_at": "2025-10-27T21:39:35.618406+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "50606318d6a71f1fd8aa04179c94f26b3dc67634bcdacc20b718d6209ffcc2f7": {
+            "last_updated": "2025-10-27T21:41:17.197065+09:00",
+            "created_at": "2025-10-27T21:41:17.192889+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "26bb086eaea34bb711457922b5644f68835e61b6757bc7455ad0232209443c95": {
+            "last_updated": "2025-10-27T21:45:53.186781+09:00",
+            "created_at": "2025-10-27T21:45:53.183624+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "7331315a14f10754139eaaf60380d2eb0652fde71ab4220d5933e30d099839bd": {
+            "last_updated": "2025-10-27T21:53:29.638353+09:00",
+            "created_at": "2025-10-27T21:53:13.178366+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "abf3d1809e9fc842f8fc186e3673b834f8d65b437e318ba3d897da175f6d01c4": {
+            "last_updated": "2025-10-27T22:02:11.718890+09:00",
+            "created_at": "2025-10-27T22:01:40.009475+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "9abe0d2ef6dfe2153982e0727d11583bff39989f65f59fca2241f42499bb1da5": {
+            "last_updated": "2025-10-28T08:18:34.718061+09:00",
+            "created_at": "2025-10-28T08:18:02.285543+09:00",
+            "purpose": "\u5b50\u30bb\u30c3\u30b7\u30e7\u30f3\u306e\u30c6\u30b9\u30c8"
+        },
+        "2ea8574fddece5e88de4d3b111e0a9f4fd296adce044a73462c0d27d730a9595": {
+            "last_updated": "2025-10-28T08:35:00.889999+09:00",
+            "created_at": "2025-10-28T08:35:00.888298+09:00",
+            "purpose": "\u65b0\u898f\u30bb\u30c3\u30b7\u30e7\u30f3\u4f5c\u6210\u6a5f\u80fd\u306e\u30c6\u30b9\u30c8"
+        },
+        "925528e7d0db34ecaffe791d8cac7c2431e24a69da2d715dcd0da32bcf49df9f": {
+            "last_updated": "2025-10-28T11:02:04.038433+09:00",
+            "created_at": "2025-10-28T11:01:47.705094+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "9417c985d02dc95e5032a7a322f3d00f7d760e0cd2ac2d374a7ff47df0d08c55": {
+            "last_updated": "2025-10-28T11:22:37.826329+09:00",
+            "created_at": "2025-10-28T11:06:20.262193+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "538df3c979735362945036184ae0e001624ee0808c871bc209d5cb4ddb36cc14": {
+            "last_updated": "2025-10-28T12:06:32.040115+09:00",
+            "created_at": "2025-10-28T11:28:30.280720+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "1958322ddeba051a410b9daea331acc044ea6e74200c89a16f35a4efd380a039": {
+            "last_updated": "2025-10-30T21:07:35.033512+09:00",
+            "created_at": "2025-10-28T12:42:42.862433+09:00",
+            "purpose": "\u30c6\u30b9\u30c8\u3060"
+        },
+        "93ce9e88b82244574deac825400dc5be6f0cc033d24a2b90f4ac278412148fd7": {
+            "last_updated": "2025-10-30T13:14:20.741998+09:00",
+            "created_at": "2025-10-29T18:02:10.734183+09:00",
+            "purpose": "\u30c8\u30fc\u30af\u30f3\u6d88\u8cbb\u91cf\u306b\u3064\u3044\u3066\u771f\u9762\u76ee\u306b\u8003\u3048\u305f\u3044\u306d"
+        },
+        "5168a59eaa9475a8444b910eac6c2f8818f99ef946826b53a3bd7e617121cdc4": {
+            "last_updated": "2025-10-30T22:36:13.827316+09:00",
+            "created_at": "2025-10-30T21:46:25.936211+09:00",
+            "purpose": "\u65b0\u30c4\u30fc\u30eb\u30c6\u30b9\u30c8"
+        }
+    },
+    "pools": [
+        {
+            "type": "function_calling",
+            "response": "google_web_search({\"query\": \"react19\"})",
+            "timestamp": "2025-10-23T14:55:45.408002+09:00"
+        },
+        {
+            "type": "tool_response",
+            "name": "google_web_search",
+            "response": {
+                "status": "succeeded",
+                "message": {
+                    "content": "React 19, a significant update to the popular JavaScript library, was officially released on December 5, 2024, with a beta version becoming available on April 25, 2024. This version introduces a host of new features and improvements aimed at enhancing developer experience, optimizing application performance, and simplifying state management and asynchronous operations.\n\nKey features and updates in React 19 include:\n\n*   **Actions** React 19 introduces Actions to streamline state updates using asynchronous functions. This feature automatically handles pending states, errors, and optimistic updates, simplifying common patterns that previously required manual implementation. Actions can be utilized on both the client and server.\n*   **New Hooks** Several new hooks have been added to provide more powerful and flexible tools for managing state and asynchronous operations:\n    *   `useActionState`: Designed to simplify data mutations and state updates within Actions, it manages the pending state and returns the action's final result.\n    *   `useOptimistic`: This hook simplifies the process of handling optimistic UI updates during asynchronous data mutations, allowing for immediate visual feedback to users.\n    *   `useFormStatus`: Enables nested child components to access information about the form they are a part of, similar to how a form acts as a context provider.\n    *   `use`: An experimental API that allows reading the value of resources like Promises or context directly within the render function, primarily intended for simplifying asynchronous data fetching.\n*   **Server Components** React 19 includes all React Server Components features previously available in the Canary channel. This integration aims to improve initial page load times by rendering components on the server, reducing the JavaScript sent to the client, and enhancing code portability.\n*   **Document Metadata Support** Native support for rendering document metadata tags such as `<title>`, `<link>`, and `<meta>` directly within components has been added. These tags are automatically hoisted to the `<head>` section of the document, simplifying SEO and metadata management.\n*   **Resource Preloading** The update brings built-in support for preloading resources like fonts, scripts, and stylesheets. This allows developers to proactively fetch necessary resources in the background, leading to faster page loads and a smoother user experience.\n*   **Ref Improvements** React 19 enhances how refs are handled by allowing them to be passed directly as props to functional components, often eliminating the need for the `forwardRef` higher-order component. Additionally, ref callbacks can now return cleanup functions for better resource management when components unmount.\n*   **Suspense Enhancements** The Suspense API has received improvements to better handle asynchronous data fetching and server-side rendering (SSR), allowing components to \"wait\" for data and display fallback UI.\n*   **React DevTools Enhancements** The React DevTools have been updated with advanced profiling features, including visualizing component render times and analyzing component trees, to make debugging large applications easier.\n*   **React Compiler** A significant advancement announced alongside React 19 is the React Compiler, which is no longer a research project. It aims to convert React code into plain JavaScript, potentially doubling performance and improving application startup times.\n*   **Other Improvements** Additional enhancements include improved error reporting for hydration errors, better support for custom elements and asynchronous scripts, and improved hydration to account for third-party scripts and browser extensions.\n\nDevelopers should be aware that React 19 may introduce some breaking changes and deprecated features, particularly concerning legacy lifecycle methods. It is recommended to review the official release notes for compatibility updates."
+                }
+            },
+            "timestamp": "2025-10-23T14:55:57.619408+09:00"
+        },
+        {
+            "type": "function_calling",
+            "response": "google_web_search({\"query\": \"react19\"})",
+            "timestamp": "2025-10-23T14:56:53.341665+09:00"
+        },
+        {
+            "type": "tool_response",
+            "name": "google_web_search",
+            "response": {
+                "status": "succeeded",
+                "message": {
+                    "content": "React 19, the latest major version of the JavaScript library for building user interfaces, was officially released on December 5, 2024, with its stable version becoming available on npm. A beta version was released earlier on April 25, 2024. This release introduces a host of new features and improvements aimed at enhancing developer experience and application performance.\n\nKey features and updates in React 19 include:\n\n*   **Actions** React 19 introduces Actions, which simplify data mutations and state updates, particularly with forms. They allow the use of asynchronous functions in transitions to automatically handle pending states, errors, and optimistic updates, reducing the need for manual management.\n*   **New Hooks** To complement Actions, React 19 introduces new hooks:\n    *   `useActionState`: Designed to simplify handling data mutations and state updates within Actions, managing pending states and returning the action's result.\n    *   `useOptimistic`: Simplifies optimistic UI updates during asynchronous data mutations, immediately showing the user the expected outcome while the request is in progress.\n    *   `useFormStatus`: Enables nested child components to access information about the form they are part of, similar to a context provider, simplifying form data handling.\n*   **`use` API**: A new experimental API that allows reading the value of resources like Promises or context directly within the render function, leading to cleaner and more concise code for asynchronous data fetching and state management. Unlike `useContext`, `use()` can be utilized within conditionals and loops.\n*   **React Server Components**: React 19 includes all React Server Components features from the Canary channel, allowing components to be rendered ahead of time in an environment separate from the client application or SSR server.\n*   **Ref Enhancements**: Refs can now be passed directly as props to functional components without needing `forwardRef`. Additionally, ref callbacks can now return a cleanup function for better resource management when components unmount.\n*   **Document Metadata Support**: Native support for rendering document metadata tags like `<title>`, `<link>`, and `<meta>` directly within components, which are automatically hoisted to the `<head>` section.\n*   **Asset Loading Improvements**: Enhanced support for asynchronous scripts, allowing them to be rendered anywhere in the component tree. New APIs for preloading resources (e.g., `preload`, `preinit`) optimize initial page loads and client-side updates.\n*   **React Compiler**: React 19 introduces a React Compiler that converts React code into regular JavaScript, potentially doubling performance.\n*   **Improved Hydration Error Reporting**: Easier identification of mistakes with clearer diffs when client and server content do not match.\n*   **Concurrent Rendering by Default**: Concurrent rendering, introduced in React 18 as opt-in, is now enabled automatically for all apps in React 19, allowing React to prioritize updates efficiently.\n*   **Context as a Provider**: A cleaner syntax for context providers, allowing `<Context>` instead of `<Context.Provider>`.\n\nWhile React 19 brings many new features, developers should review the release notes for any breaking changes to ensure compatibility during upgrades."
+                }
+            },
+            "timestamp": "2025-10-23T14:57:04.207009+09:00"
+        },
+        {
+            "type": "function_calling",
+            "response": "google_web_search({\"query\": \"react19\"})",
+            "timestamp": "2025-10-23T15:09:43.352558+09:00"
+        },
+        {
+            "type": "tool_response",
+            "name": "google_web_search",
+            "response": {
+                "status": "succeeded",
+                "message": {
+                    "content": "React 19, a significant update to the popular JavaScript library, was officially released on December 5, 2024. A Release Candidate (RC) was announced in April 2024, with a beta version becoming available on npm on April 25, 2024. This version introduces numerous features and improvements aimed at enhancing developer experience, application performance, and simplifying state management.\n\nKey features and updates in React 19 include:\n*   **Actions** React 19 introduces Actions, a new approach for handling data mutations and state updates, particularly with forms. These functions replace traditional event handlers and integrate with React's concurrent features and transitions, usable on both the client and server.\n*   **New Hooks** Several new hooks have been added to complement Actions and streamline development:\n    *   `useActionState`: Simplifies managing data mutations and state updates within Actions, automatically handling pending states and returning the action's result.\n    *   `useOptimistic`: Designed to manage optimistic UI updates during asynchronous data mutations, providing immediate user feedback.\n    *   `useFormStatus`: Allows nested child components to access information about their parent form.\n    *   `use` API (experimental): This API is designed to read values from resources like Promises or context directly within the render function, simplifying asynchronous data fetching and state management.\n*   **Server Components** React 19 includes all React Server Components features, enabling components to render on the server before bundling. This improves initial page load times and enhances code portability.\n*   **Refs Improvements** Refs can now be passed directly as props to functional components, often eliminating the need for the `forwardRef` higher-order component. Additionally, ref callbacks can return a cleanup function for better resource management when components unmount.\n*   **Document Metadata Support** Native support for rendering document metadata tags such as `<title>`, `<link>`, and `<meta>` directly within components. These tags are automatically hoisted to the `<head>` section of the document.\n*   **Preloading Resources** New APIs have been introduced to improve page load performance by loading and preloading resources like scripts, stylesheets, and fonts.\n*   **Suspense Enhancements** The Suspense API has been enhanced to improve the handling of asynchronous data fetching and server-side rendering (SSR).\n*   **React Compiler** Announced alongside the React 19 RC, the React Compiler converts React code into plain JavaScript, which can significantly improve application startup performance and potentially reduce the need for `useMemo()`, `useCallback()`, and `memo`.\n*   **Other Improvements** React 19 also features improved error reporting for hydration errors, enhanced support for async scripts, and full support for custom elements.\n\nDevelopers should be aware that React 19 introduces some breaking changes and deprecated features, and it is recommended to review the release notes for compatibility updates."
+                }
+            },
+            "timestamp": "2025-10-23T15:09:56.750880+09:00"
+        },
+        {
+            "type": "function_calling",
+            "response": "google_web_search({\"query\": \"react19\"})",
+            "timestamp": "2025-10-23T15:10:34.859862+09:00"
+        },
+        {
+            "type": "tool_response",
+            "name": "google_web_search",
+            "response": {
+                "status": "succeeded",
+                "message": {
+                    "content": "React 19, a significant update to the popular JavaScript library, was officially released on December 5, 2024, following a beta version that became available on April 25, 2024. This version introduces numerous features and improvements aimed at enhancing developer experience, optimizing performance, and simplifying state management and asynchronous operations.\n\nKey new features and enhancements in React 19 include:\n*   **Actions** React 19 introduces Actions, which streamline state updates using asynchronous functions, automatically handling pending states, errors, and optimistic updates. They can be used with HTML `<form>` tags, replacing `onSubmit` handlers and directly receiving `FormData`.\n*   **New Hooks** Several new hooks have been added to complement Actions and simplify various aspects of development:\n    *   `useActionState`: Designed to simplify handling data mutations and state updates within Actions, managing pending states and returning the action's result.\n    *   `useOptimistic`: Simplifies optimistic UI updates during asynchronous data mutations, allowing immediate rendering of expected outcomes while the request is in progress.\n    *   `useFormStatus`: Enables nested child components to access information about the form they are part of.\n    *   `use`: An experimental API that allows reading the value of resources like Promises or context directly within the render function, simplifying asynchronous data fetching and state management.\n*   **Server Components** React 19 includes all React Server Components features from the Canary channel, allowing components to be rendered ahead of time on a server, reducing JavaScript sent to the client and improving initial page load times.\n*   **Improved Ref Handling** Refs can now be passed directly as props to functional components, often eliminating the need for the `forwardRef` higher-order component. Additionally, ref callbacks can return a cleanup function for better resource management when components unmount.\n*   **Document Metadata Support** Native support for rendering document metadata tags like `<title>`, `<link>`, and `<meta>` within components simplifies SEO and control over the document's `<head>` section.\n*   **Suspense Enhancements** The Suspense API has been enhanced to improve handling of asynchronous data fetching and server-side rendering (SSR), allowing components to \"wait\" for data and display fallback UI.\n*   **React Compiler** A significant advancement, the React Compiler, is no longer a research project and aims to make React code run faster by converting it into plain JavaScript, potentially doubling startup performance and reducing the need for `useMemo()`, `useCallback()`, and `memo`.\n*   **Other Improvements** React 19 also brings better error reporting for hydration errors, enhanced support for async scripts, new APIs for preloading resources to optimize initial page loads, and improved compatibility with third-party scripts and browser extensions.\n\nWhile React 19 focuses on continuity, developers should be aware of potential breaking changes, such as the deprecation of certain legacy lifecycle methods, and are advised to review the release notes for compatibility."
+                }
+            },
+            "timestamp": "2025-10-23T15:10:44.517799+09:00"
+        },
+        {
+            "type": "function_calling",
+            "response": "google_web_search({\"query\": \"GPT-5\"})",
+            "timestamp": "2025-10-23T15:13:03.638298+09:00"
+        },
+        {
+            "type": "tool_response",
+            "name": "google_web_search",
+            "response": {
+                "status": "succeeded",
+                "message": {
+                    "content": "GPT-5, OpenAI's latest-generation large language model, was officially released on August 7, 2025. It is the fifth in its series of generative pre-trained transformer (GPT) foundation models and succeeds GPT-4.\n\nKey aspects of GPT-5 include:\n*   **Release and Availability** OpenAI unveiled GPT-5 during a livestream event on August 7, 2025, and began rolling it out across ChatGPT, the API, and the GitHub Models Playground on the same day. It is now the default model in ChatGPT for all free and paid users, replacing GPT-4o. Microsoft Copilot is also powered by GPT-5.\n*   **Architecture and Variants** GPT-5 is not a single model but a system that unifies advanced reasoning, multimodal input, and task execution. It includes a real-time router that automatically selects the best model for a given task, balancing speed and complexity. Variants available through the API include `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, and `gpt-5-chat`.\n*   **Performance and Capabilities** GPT-5 offers significant improvements over its predecessors, particularly in reasoning, multimodality, and agent-style task execution.\n    *   **Integrated Reasoning** It directly integrates deeper reasoning capabilities, allowing it to solve complex, multi-step challenges with greater accuracy.\n    *   **Multimodality** GPT-5 can handle multiple data types simultaneously, processing and generating content from text, code, and images in a single interaction, with enhanced visual reasoning and video frame analysis capabilities.\n    *   **Reduced Hallucinations** The model significantly reduces hallucinations compared to earlier versions.\n    *   **Coding and Writing** GPT-5 shows improved coding and writing skills, with better style and depth of writing, and advanced coding capabilities for developers.\n    *   **Context Window** It features a significantly expanded context window, supporting a combined input and output context length of up to 400K tokens in the API, and up to 128K tokens for ChatGPT Pro users.\n    *   **Safety** GPT-5 implements a \"Safe Completions\" approach, providing helpful responses within safety boundaries rather than outright declining potentially harmful queries.\n*   **Benchmarks** Early benchmarks indicate that GPT-5 is the first model to outperform humans on SimpleBench, scoring 90% against an average human score of 83%. It also shows strong results in math-heavy benchmarks and PhD-level science questions."
+                }
+            },
+            "timestamp": "2025-10-23T15:13:13.286814+09:00"
+        },
+        {
+            "type": "function_calling",
+            "response": "google_web_search({\"query\": \"2024\u5e74\u306e\u5927\u898f\u6a21\u8a00\u8a9e\u30e2\u30c7\u30eb\u306e\u9032\u6b69\"})",
+            "timestamp": "2025-10-23T15:29:51.092197+09:00"
+        },
+        {
+            "type": "tool_response",
+            "name": "google_web_search",
+            "response": {
+                "status": "succeeded",
+                "message": {
+                    "content": "2024\u5e74\u306f\u3001\u5927\u898f\u6a21\u8a00\u8a9e\u30e2\u30c7\u30eb\uff08LLM\uff09\u306e\u5206\u91ce\u306b\u304a\u3044\u3066\u76ee\u899a\u307e\u3057\u3044\u9032\u6b69\u304c\u898b\u3089\u308c\u305f\u5e74\u3068\u306a\u308a\u307e\u3057\u305f\u3002\u7279\u306b\u3001\u30de\u30eb\u30c1\u30e2\u30fc\u30c0\u30eb\u80fd\u529b\u306e\u5411\u4e0a\u3001\u63a8\u8ad6\u3068\u554f\u984c\u89e3\u6c7a\u80fd\u529b\u306e\u5f37\u5316\u3001\u305d\u3057\u3066\u52b9\u7387\u6027\u3068\u5c02\u9580\u6027\u3078\u306e\u6ce8\u529b\u3068\u3044\u3046\u70b9\u304c\u9855\u8457\u306a\u30c8\u30ec\u30f3\u30c9\u3068\u3057\u3066\u6319\u3052\u3089\u308c\u307e\u3059\u3002\n\n**\u4e3b\u8981\u306a\u9032\u6b69\u3068\u30c8\u30ec\u30f3\u30c9:**\n\n*   **\u30de\u30eb\u30c1\u30e2\u30fc\u30c0\u30eb\u80fd\u529b\u306e\u9032\u5316**\n    2024\u5e74\u306b\u306f\u3001\u30c6\u30ad\u30b9\u30c8\u3060\u3051\u3067\u306a\u304f\u3001\u753b\u50cf\u3001\u97f3\u58f0\u3001\u52d5\u753b\u3092\u30b7\u30fc\u30e0\u30ec\u30b9\u306b\u51e6\u7406\u30fb\u751f\u6210\u3067\u304d\u308b\u30de\u30eb\u30c1\u30e2\u30fc\u30c0\u30ebLLM\u304c\u5927\u304d\u304f\u767a\u5c55\u3057\u307e\u3057\u305f\u3002OpenAI\u306eGPT-4o\u306f\u3001\u30c6\u30ad\u30b9\u30c8\u3001\u753b\u50cf\u3001\u97f3\u58f0\u306e\u51e6\u7406\u3092\u7d71\u5408\u3057\u3001\u97f3\u58f0\u8a8d\u8b58\u3001\u591a\u8a00\u8a9e\u7406\u89e3\u3001\u8996\u899a\u7684\u7406\u89e3\u306b\u304a\u3044\u3066\u512a\u308c\u305f\u6027\u80fd\u3092\u767a\u63ee\u3057\u307e\u3057\u305f\u3002Google\u306eGemini 1.5 Pro\u308412\u6708\u306b\u30ea\u30ea\u30fc\u30b9\u3055\u308c\u305fGemini 2.0 Flash\u3082\u3001\u30de\u30eb\u30c1\u30e2\u30fc\u30c0\u30eb\u6a5f\u80fd\u306e\u5f37\u5316\u3092\u793a\u3057\u3066\u3044\u307e\u3059\u3002\u3053\u308c\u3089\u306e\u30e2\u30c7\u30eb\u306f\u3001\u533b\u7642\u3001\u6559\u80b2\u3001\u30a8\u30f3\u30bf\u30fc\u30c6\u30a4\u30e1\u30f3\u30c8\u306a\u3069\u3001\u591a\u69d8\u306a\u5206\u91ce\u3067\u306e\u5fdc\u7528\u304c\u671f\u5f85\u3055\u308c\u3066\u3044\u307e\u3059\u3002\n\n*   **\u63a8\u8ad6\u3068\u554f\u984c\u89e3\u6c7a\u80fd\u529b\u306e\u5f37\u5316**\n    LLM\u306f\u3001\u3088\u308a\u8907\u96d1\u306a\u554f\u984c\u306b\u5bfe\u51e6\u3059\u308b\u305f\u3081\u306e\u63a8\u8ad6\u80fd\u529b\u3092\u5411\u4e0a\u3055\u305b\u307e\u3057\u305f\u3002OpenAI\u304c9\u6708\u306b\u767a\u8868\u3057\u305fo1\u30e2\u30c7\u30eb\u306f\u3001\u56de\u7b54\u3092\u751f\u6210\u3059\u308b\u524d\u306b\u300c\u601d\u8003\u300d\u3092\u30b7\u30df\u30e5\u30ec\u30fc\u30c8\u3059\u308b\u305f\u3081\u306b\u8a08\u7b97\u30ea\u30bd\u30fc\u30b9\u3092\u518d\u914d\u5206\u3059\u308b\u300c\u601d\u8003\u9023\u9396\uff08chain-of-thought\uff09\u300d\u30a2\u30d7\u30ed\u30fc\u30c1\u3092\u63a1\u7528\u3057\u3001\u79d1\u5b66\u7684\u63a8\u8ad6\u3001\u30b3\u30fc\u30c7\u30a3\u30f3\u30b0\u3001\u8907\u96d1\u306a\u554f\u984c\u89e3\u6c7a\u306b\u304a\u3044\u3066\u305d\u306e\u80fd\u529b\u3092\u5927\u5e45\u306b\u5411\u4e0a\u3055\u305b\u307e\u3057\u305f\u3002\n\n*   **\u52b9\u7387\u6027\u3068\u5c02\u9580\u6027\u3078\u306e\u6ce8\u529b**\n    \u5358\u306b\u30e2\u30c7\u30eb\u306e\u898f\u6a21\u3092\u62e1\u5927\u3059\u308b\u3060\u3051\u3067\u306a\u304f\u3001\u8a08\u7b97\u30b3\u30b9\u30c8\u3001\u74b0\u5883\u3078\u306e\u61f8\u5ff5\u3001\u304a\u3088\u3073\u5358\u7d14\u306a\u30b9\u30b1\u30fc\u30ea\u30f3\u30b0\u306b\u3088\u308b\u6027\u80fd\u5411\u4e0a\u306e\u9650\u754c\u304b\u3089\u3001\u30d1\u30e9\u30e1\u30fc\u30bf\u52b9\u7387\u3001\u5c02\u9580\u7684\u306a\u6a5f\u80fd\u3001\u304a\u3088\u3073\u8cac\u4efb\u3042\u308b\u958b\u767a\u306b\u91cd\u70b9\u304c\u7f6e\u304b\u308c\u308b\u3088\u3046\u306b\u306a\u308a\u307e\u3057\u305f\u3002 \u3053\u308c\u306b\u306f\u3001\u3088\u308a\u5c0f\u3055\u304f\u52b9\u7387\u7684\u306a\u30e2\u30c7\u30eb\uff08SLM/\u91cf\u5b50\u5316LLM\uff09\u3084\u3001\u7279\u5b9a\u306e\u30c9\u30e1\u30a4\u30f3\u306b\u7279\u5316\u3057\u305fLLM\u306e\u958b\u767a\u304c\u542b\u307e\u308c\u307e\u3059\u3002\n\n*   **\u4e3b\u8981\u306a\u30e2\u30c7\u30eb\u306e\u767b\u5834\u3068\u9032\u5316**\n    2024\u5e74\u306b\u306f\u3001\u591a\u304f\u306e\u4f01\u696d\u304b\u3089\u9769\u65b0\u7684\u306aLLM\u304c\u767a\u8868\u307e\u305f\u306f\u6539\u826f\u3055\u308c\u307e\u3057\u305f\u3002\n    *   **OpenAI:** GPT-4o\uff085\u6708\uff09\u3001o1\uff089\u6708\uff09\u3001o3\uff0812\u6708\uff09\n    *   **Google:** Gemini 1.5 Pro\u3001Gemini 2.0 Flash\uff0812\u6708\uff09\u3001Gemma 2\n    *   **Meta:** Llama 3\uff084\u6708\uff09\u3001Llama 3.1 405B\n    *   **Anthropic:** Claude 3.5 Sonnet\n    *   **Mistral:** Mistral Large 2\n    *   **Cohere:** Command-R+\u3001Aya Expanse 32B\n    *   **Perplexity:** Sonar 3.1 Large\n    *   **Amazon:** Nova Pro\n    *   **xAI:** Grok Beta\n    *   **Databricks:** DBRX\n    *   **AI21 Labs:** Jamba 1.5 Large\n    *   **DeepSeek:** DeepSeek-V2\n    *   **01.AI:** Yi-Large\n    *   **Qwen:** Qwen2.5 72B\n\n*   **\u30aa\u30fc\u30d7\u30f3\u30bd\u30fc\u30b9\u306e\u9032\u5c55**\n    Meta\u306eLlama 3.1 405B\u306e\u3088\u3046\u306a\u5927\u898f\u6a21\u306a\u30aa\u30fc\u30d7\u30f3\u30bd\u30fc\u30b9\u30e2\u30c7\u30eb\u306e\u767b\u5834\u306f\u3001LLM\u958b\u767a\u306e\u6c11\u4e3b\u5316\u3092\u3055\u3089\u306b\u63a8\u9032\u3057\u307e\u3057\u305f\u3002 Google\u3082\u30aa\u30fc\u30d7\u30f3\u30bd\u30fc\u30b9\u306e\u8efd\u91cf\u30e2\u30c7\u30eb\u3067\u3042\u308bGemma 2\u3092\u767a\u8868\u3057\u3066\u3044\u307e\u3059\u3002\n\n*   **\u5fdc\u7528\u5206\u91ce\u306e\u62e1\u5927\u3068\u7814\u7a76\u306e\u6df1\u5316**\n    LLM\u306f\u3001\u30d8\u30eb\u30b9\u30b1\u30a2\u3001\u6559\u80b2\u3001\u30a8\u30f3\u30bf\u30fc\u30c6\u30a4\u30e1\u30f3\u30c8\u3068\u3044\u3063\u305f\u5206\u91ce\u306b\u52a0\u3048\u3001\u795e\u7d4c\u79d1\u5b66\u306e\u9818\u57df\u3067\u3082\u6d3b\u7528\u304c\u9032\u307f\u3001\u4e00\u90e8\u306e\u4e88\u6e2c\u30bf\u30b9\u30af\u3067\u306f\u4eba\u9593\u306e\u5c02\u9580\u5bb6\u3092\u4e0a\u56de\u308b\u6027\u80fd\u3092\u793a\u3057\u307e\u3057\u305f\u3002 \u307e\u305f\u3001\u8a8d\u77e5\u5fc3\u7406\u5b66\u3092\u7528\u3044\u3066LLM\u306e\u5408\u7406\u6027\u3092\u8a55\u4fa1\u3059\u308b\u7814\u7a76\u3084\u3001LLM\u3068\u4eba\u9593\u306e\u8133\u306e\u53ce\u675f\u3092\u63a2\u308b\u7814\u7a76\u3082\u884c\u308f\u308c\u3066\u3044\u307e\u3059\u3002 \u81ea\u52d5\u904b\u8ee2\u8eca\u3078\u306eLLM\u306e\u7d71\u5408\u3082\u9032\u3081\u3089\u308c\u3066\u3044\u307e\u3059\u3002\n\n*   **\u502b\u7406\u7684\u8003\u616e\u4e8b\u9805**\n    \u30d0\u30a4\u30a2\u30b9\u3001\u4e8b\u5b9f\u306e\u6b63\u78ba\u6027\u3001\u8cac\u4efb\u3042\u308b\u5229\u7528\u3068\u3044\u3063\u305f\u502b\u7406\u7684\u306a\u8ab2\u984c\u3078\u306e\u53d6\u308a\u7d44\u307f\u3082\u5f15\u304d\u7d9a\u304d\u91cd\u8981\u306a\u7126\u70b9\u3068\u306a\u3063\u3066\u3044\u307e\u3059\u3002\n\n2024\u5e74\u306f\u3001LLM\u304c\u305d\u306e\u80fd\u529b\u3092\u5927\u304d\u304f\u62e1\u5f35\u3057\u3001\u591a\u69d8\u306a\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3\u3078\u306e\u7d71\u5408\u304c\u9032\u3093\u3060\u5e74\u3067\u3042\u308a\u3001AI\u306e\u9032\u5316\u306b\u304a\u3051\u308b\u91cd\u8981\u306a\u7bc0\u76ee\u3068\u306a\u308a\u307e\u3057\u305f\u3002"
+                }
+            },
+            "timestamp": "2025-10-23T15:30:06.498615+09:00"
+        }
+    ]
+}

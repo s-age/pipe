@@ -1,0 +1,30 @@
+{
+  "session_id": "e6ba06d90e9bd687541a6b3776aa6ba99ef89036f9a997df81a8445d4af7f0d6",
+  "created_at": "2025-10-29T09:31:35.739305+00:00",
+  "purpose": "Test",
+  "background": "Test",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 0.9
+    },
+    "top_k": {
+      "value": 40.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Test pool merge",
+      "timestamp": "2025-10-29T09:31:35.739921+00:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

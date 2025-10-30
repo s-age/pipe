@@ -1,0 +1,30 @@
+{
+  "session_id": "ad8be35a0cac6c16454bcd80c49447c268ad2c2451c55ccb3f4421d610bb9df9",
+  "created_at": "2025-10-29T03:38:18.787836+00:00",
+  "purpose": "Test Purpose",
+  "background": "Test Background",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.1
+    },
+    "top_p": {
+      "value": 0.2
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Test",
+      "timestamp": "2025-10-29T03:38:18.788322+00:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

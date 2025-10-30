@@ -1,0 +1,52 @@
+{
+  "session_id": "6d7b2033aab0882cf33950a438f424a361795d452447c389deb3c5f5059b2671",
+  "created_at": "2025-10-29T08:37:40.746984+09:00",
+  "purpose": "Fork of: e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search edited",
+      "timestamp": "2025-10-29T08:37:18.503279+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-29T08:37:21.630038+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "Flask is a lightweight and flexible Python web framework designed for building web applications and APIs. It was created by Armin Ronacher of Pocoo in 2010, initially as an April Fool's joke, and its development is now managed by the Pallets project.\n\nFlask is often referred to as a \"microframework\" because it provides only the essential components for web development, such as routing, request handling, and templating, without imposing specific tools or libraries. This minimalist approach gives developers significant control and flexibility over the application's structure and the choice of additional components like Object-Relational Mappers (ORMs) or form validation libraries.\n\nKey features and components of Flask include:\n*   **Core Dependencies** Flask is built upon the Werkzeug WSGI (Web Server Gateway Interface) toolkit, which handles request and response cycles, and the Jinja2 templating engine, used for rendering dynamic HTML content.\n*   **Routing** It offers a simple and intuitive system for defining URL routes that map to Python functions.\n*   **Development Server and Debugger** Flask includes a built-in development server and a fast debugger, which are useful for testing and debugging applications locally.\n*   **Extensibility** While minimal, Flask supports extensions that can add functionalities like database integration, form validation (e.g., Flask-WTF), and authentication.\n*   **Secure Cookies** It supports secure cookies for managing client-side sessions.\n*   **API Support** Flask is a popular choice for building RESTful APIs, allowing easy handling of HTTP methods and JSON data.\n*   **Static Files** It facilitates the handling of static files such as CSS, JavaScript, and images.\n*   **Unit Testing** Flask has integrated support for unit testing.\n\nFlask is widely used for various applications, including small to medium-sized web projects, microservices, backends for single-page applications, and web interfaces for data science projects. Its simplicity, flexibility, and ease of use make it a popular choice for both beginners and experienced developers."
+      },
+      "timestamp": "2025-10-29T08:37:34.332132+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

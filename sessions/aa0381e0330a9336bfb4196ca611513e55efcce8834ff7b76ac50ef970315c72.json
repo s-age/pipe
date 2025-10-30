@@ -1,0 +1,57 @@
+{
+  "session_id": "aa0381e0330a9336bfb4196ca611513e55efcce8834ff7b76ac50ef970315c72",
+  "created_at": "2025-10-26T18:24:37.280602+09:00",
+  "purpose": "Fork of: テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": true,
+      "ttl": null
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使って「小玉ひかり」について教えて",
+      "timestamp": "2025-10-26T11:00:27.197340+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"小玉ひかり\"})",
+      "timestamp": "2025-10-26T11:00:28.490382+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "小玉ひかり（こだま ひかり）は、2000年2月14日生まれの日本のシンガーソングライターであり、声優としても活動しています。千葉県出身です。\n\n14歳で音楽活動を開始し、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。2023年11月には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でミュージックレインよりメジャーデビューを果たしました。続く2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\n彼女はピアノ弾き語りのスタイルを特徴としており、自身のYouTubeチャンネルも積極的に更新しています。また、舞台「REAL AKIBA BOYZ～Over The Future!～」にREN役で出演するなど、声優や舞台での活動も行っています。"
+        }
+      },
+      "timestamp": "2025-10-26T11:00:32.449662+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "小玉ひかり（こだま ひかり）さんは、2000年2月14日生まれの日本のシンガーソングライターであり、声優としても活動しています。千葉県出身です。\n\n14歳で音楽活動を開始し、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。2023年11月には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でメジャーデビューを果たしました。続く2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\n彼女はピアノ弾き語りのスタイルを特徴としており、自身のYouTubeチャンネルも積極的に更新しています。また、舞台『REAL AKIBA BOYZ～Over The Future!～』にREN役で出演するなど、声優や舞台での活動も行っています。",
+      "timestamp": "2025-10-26T11:00:35.710291+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

@@ -1,0 +1,52 @@
+{
+  "session_id": "72cffe6c15335b67bf2760efbaf437c85029d35e6247add82c631cb2cf7e3030",
+  "created_at": "2025-10-28T18:38:03.205757+09:00",
+  "purpose": "Fork of: e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search edited",
+      "timestamp": "2025-10-28T18:37:41.883560+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-28T18:37:45.001191+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "Flask is a lightweight and powerful web framework for Python, often referred to as a \"micro-framework\" because it provides the essentials for web development without imposing unnecessary complexity or a rigid structure. It was created by Armin Ronacher of Pocoo, an international group of Python enthusiasts.\n\n**Key Features of Flask:**\n*   **Micro-framework Design:** Flask offers core tools like routing, templates, and request handling, allowing developers to choose and add other features as needed, providing greater control and flexibility over the application's structure.\n*   **Built on Werkzeug and Jinja2:** Flask is built upon the Werkzeug WSGI toolkit, which handles request and response cycles, and the Jinja2 templating engine, enabling dynamic HTML content.\n*   **Simple and Intuitive Routing:** It uses decorators to map URLs to Python functions, making it easy to define and control the flow of an application.\n*   **No Default ORM:** Unlike some other frameworks, Flask does not come with a built-in Object-Relational Mapper (ORM), giving developers the freedom to choose their preferred ORM (like SQLAlchemy) or use raw SQL.\n*   **RESTful API Support:** Flask is a popular choice for building RESTful APIs due to its simplicity and flexibility, making it suitable for microservices and backends for single-page applications.\n*   **Built-in Development Server:** It includes a lightweight development server for easy local testing and debugging.\n*   **Extensibility:** Its modular design allows for easy extension of functionality through various community-provided extensions and libraries.\n\n**What Flask is Used For:**\nFlask is a versatile framework used for a wide range of applications, including:\n*   Building web applications, from small projects and prototypes to complex, scalable solutions.\n*   Developing RESTful APIs and microservices.\n*   Creating backends for single-page applications.\n*   Developing Minimum Viable Products (MVPs) for startups.\n*   Building online stores, banking applications, dashboards, and IoT projects.\n*   Integrating with machine learning applications to provide a web interface.\n\nMany well-known companies, such as Samsung, Pinterest, Airbnb, Netflix, Reddit, MIT, and Uber, utilize Flask for their web development needs."
+      },
+      "timestamp": "2025-10-28T18:37:55.766456+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

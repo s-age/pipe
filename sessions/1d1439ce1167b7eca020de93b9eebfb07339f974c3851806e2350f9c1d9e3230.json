@@ -1,0 +1,27 @@
+{
+  "sessions_dir": null,
+  "timezone_obj": null,
+  "default_hyperparameters": null,
+  "session_id": "1d1439ce1167b7eca020de93b9eebfb07339f974c3851806e2350f9c1d9e3230",
+  "created_at": "2025-10-28T00:45:49.750734+00:00",
+  "purpose": "Test",
+  "background": "Test",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 0.9
+    },
+    "top_k": {
+      "value": 40.0
+    }
+  },
+  "references": [],
+  "turns": [],
+  "pools": [],
+  "todos": null
+}

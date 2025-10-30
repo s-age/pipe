@@ -1,0 +1,123 @@
+{
+  "session_id": "fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed/71ebd407e9b16cf34c51087cf1187afaf885e9e2de2ec54451c2faa38ff22a2c",
+  "created_at": "2025-10-25T08:18:28.646706+09:00",
+  "purpose": "子セッション作成テスト",
+  "background": "子セッション作成テスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 8167,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5
+    }
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "テストだ",
+      "timestamp": "2025-10-25T08:18:29.146883+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "テストですね。承知いたしました。",
+      "timestamp": "2025-10-25T08:18:30.836578+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "OKとだけ答えて",
+      "timestamp": "2025-10-25T10:10:25.377723+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "OK",
+      "timestamp": "2025-10-25T10:10:26.816729+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "TODOを追加して\n- test1\n- test2",
+      "timestamp": "2025-10-25T10:10:46.597544+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"test1\", \"title\": \"test1\", \"checked\": false}, {\"checked\": false, \"title\": \"test2\", \"description\": \"test2\"}]})",
+      "timestamp": "2025-10-25T10:10:48.528925+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed/71ebd407e9b16cf34c51087cf1187afaf885e9e2de2ec54451c2faa38ff22a2c."
+      },
+      "timestamp": "2025-10-25T10:10:48.554211+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"test1\", \"title\": \"test1\", \"checked\": false}, {\"title\": \"test2\", \"checked\": false, \"description\": \"test2\"}]})",
+      "timestamp": "2025-10-25T10:10:50.318362+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed/71ebd407e9b16cf34c51087cf1187afaf885e9e2de2ec54451c2faa38ff22a2c."
+      },
+      "timestamp": "2025-10-25T10:10:50.325016+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "TODOが正常に追加されました。",
+      "timestamp": "2025-10-25T10:10:51.596086+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "README.mdを読み込んで",
+      "timestamp": "2025-10-25T10:14:31.253298+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-25T10:14:32.685044+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T10:14:32.715045+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`README.md`ファイルを読み込みました。このファイルは、LLMの会話コンテキストを完全に制御するためのツールである`pipe`に関するもので、JSON Schemaを用いたプロンプト構築、CLI駆動のワークフロー、拡張可能なバックエンドなどの機能が説明されています。",
+      "timestamp": "2025-10-25T10:14:35.452990+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": [
+    {
+      "description": "test1",
+      "title": "test1",
+      "checked": false
+    },
+    {
+      "title": "test2",
+      "checked": false,
+      "description": "test2"
+    }
+  ]
+}

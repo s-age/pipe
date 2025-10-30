@@ -1,0 +1,22 @@
+{
+  "session_id": "fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed/801491fbbe1986f9e39872371a43ad844afe2d80ba7078ff92adbaf3aff8b119",
+  "created_at": "2025-10-25T08:18:43.015779+09:00",
+  "purpose": "Fork of: 子セッション作成テスト",
+  "background": "子セッション作成テスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "テストだ",
+      "timestamp": "2025-10-25T08:18:29.146883+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "テストですね。承知いたしました。",
+      "timestamp": "2025-10-25T08:18:30.836578+09:00"
+    }
+  ]
+}

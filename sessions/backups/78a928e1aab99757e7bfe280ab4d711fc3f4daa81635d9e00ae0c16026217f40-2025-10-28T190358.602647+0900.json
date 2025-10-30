@@ -1,0 +1,35 @@
+{
+  "session_id": "9f92638cfd56c36e64e35ce7df86ee009e7c0821c8dfab787749767f01956acc/c14b3fee8824d74d1285fba73612f1b4796103f3203b92207c79ae3ec2ce0819",
+  "created_at": "2025-10-28T19:03:52.948333+09:00",
+  "purpose": "Child session test",
+  "background": "This is a child session test.",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 2015,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "This is the first instruction for the child session.",
+      "timestamp": "2025-10-28T19:03:53.102641+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "これは子セッションの最初の指示です。",
+      "timestamp": "2025-10-28T19:03:57.497956+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

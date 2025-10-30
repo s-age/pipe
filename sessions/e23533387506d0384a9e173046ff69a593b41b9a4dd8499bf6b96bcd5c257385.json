@@ -1,0 +1,228 @@
+{
+  "session_id": "e23533387506d0384a9e173046ff69a593b41b9a4dd8499bf6b96bcd5c257385",
+  "created_at": "2025-10-25T17:04:15.291928+09:00",
+  "purpose": "Fork of: テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 9161,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使って「小玉ひかり」について教えて",
+      "timestamp": "2025-10-25T17:03:09.964877+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"小玉ひかり\"})",
+      "timestamp": "2025-10-25T17:03:11.395684+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "小玉ひかり（こだま ひかり）は、2000年2月14日生まれの日本のシンガーソングライターであり、声優としても活動しています。千葉県出身です。\n\n彼女は14歳で音楽活動を開始し、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。 ピアノ弾き語りを特徴とするシンガーソングライターとして知られています。\n\n2023年11月には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でミュージックレインよりメジャーデビューを果たしました。 続く2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\n小玉ひかりは、自身のYouTubeチャンネルも積極的に更新しており、チャンネル登録者数は2.38万人を超えています。 また、2025年10月には「LAWSON presents 小玉ひかりOne-man Live #こだまつり2025 『Melt』」の開催が予定されています。"
+        }
+      },
+      "timestamp": "2025-10-25T17:03:16.568200+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "可愛い小玉ひかりさんは、2000年2月14日生まれの日本のシンガーソングライターで、声優としても活動されています。千葉県出身です。\n\n14歳で音楽活動を始め、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。ピアノ弾き語りが特徴です。\n\n2023年11月には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でミュージックレインよりメジャーデビューしました。2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\nYouTubeチャンネルも積極的に更新しており、チャンネル登録者数は2.38万人を超えています。2025年10月には「LAWSON presents 小玉ひかりOne-man Live #こだまつり2025 『Melt』」の開催が予定されています。",
+      "timestamp": "2025-10-25T17:03:18.850779+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "TODOを追加して\n- test1\n- test2",
+      "timestamp": "2025-10-25T17:04:41.433031+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"checked\": false, \"title\": \"test1\"}, {\"title\": \"test2\", \"description\": \"\", \"checked\": false}]})",
+      "timestamp": "2025-10-25T17:04:43.509374+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session e23533387506d0384a9e173046ff69a593b41b9a4dd8499bf6b96bcd5c257385."
+      },
+      "timestamp": "2025-10-25T17:04:43.530316+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "TODOが追加されました。",
+      "timestamp": "2025-10-25T17:04:45.044587+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "README.mdを読み込んで",
+      "timestamp": "2025-10-25T17:04:54.586922+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-25T17:04:56.104182+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T17:04:56.121827+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`README.md` ファイルが読み込まれました。\n\nこのファイルは、LLMの対話コンテキストを完全に制御するためのツールである`pipe`について説明しています。主な特徴は以下の通りです。\n\n*   **完全なコンテキスト制御**: 構造化されたJSONスキーマを使用し、履歴を透過的に管理します。\n*   **高い拡張性**: `gemini-cli`をベースにしていますが、他の実行エージェントも利用可能です。\n*   **機能**: セッションベースの履歴、構造化されたJSONプロンプト、CLIワークフロー、Web UI、自動バックアップ、TODOリスト、エージェント駆動の圧縮と検証、ターンベースのフォークなどがあります。\n*   **利用方法**: Pythonスクリプト、Web UI、エージェントからの実行、エージェント駆動のワークフロー、マルチエージェントシミュレーションの5つのルートがあります。\n\n`pipe`は、開発者がLLMの履歴を自由に操作し、真のコンテキストエンジニアリングを実現するためのツールとして設計されています。",
+      "timestamp": "2025-10-25T17:05:01.236234+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使って「新内眞衣」について教えて",
+      "timestamp": "2025-10-25T18:09:35.247285+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-25T18:09:37.200617+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "新内眞衣（しんうち まい, Shinuchi Mai），1992年1月22日出生于日本埼玉县朝霞市，是日本女艺人、时尚模特、电台主持人、艺人及舞台剧演员。她曾是女子偶像团体乃木坂46的二期生前成员。\n\n新内眞衣于2013年5月通过乃木坂46的二期生甄选，并于2014年3月2日晋升为正式成员。在乃木坂46时期，她曾兼任OL（办公室职员）工作，因此也有“OL BBA”的昵称。她曾是乃木坂46中年龄最大的成员.\n\n2022年2月10日，新内眞衣在东京国际论坛A厅举行毕业典礼，正式从乃木坂46毕业。毕业后，她从乃木坂46合同会社移籍至cent. FORCE事务所。\n\n她的主要活动包括：\n*   **电台节目**：曾主持《乃木坂46的All Night Nippon》。\n*   **时尚杂志**：曾是《Oggi.jp》的常驻模特，目前是时尚杂志《andGIRL》的常驻模特。\n*   **写真集**：发行过个人写真集，例如第二本写真集《黎明时分》。\n*   **其他**：她还参与电视剧、电影、电视节目和舞台剧的演出。\n\n新内眞衣的昵称是“Maichun”（まいちゅん）和“Maimai”（まいまい）。她身高165厘米，血型为B型。"
+        }
+      },
+      "timestamp": "2025-10-25T18:09:43.546072+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-25T18:09:37.200617+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "新内眞衣（しんうち まい, Shinuchi Mai），1992年1月22日出生于日本埼玉县朝霞市，是日本女艺人、时尚模特、电台主持人、艺人及舞台剧演员。她曾是女子偶像团体乃木坂46的二期生前成员。\n\n新内眞衣于2013年5月通过乃木坂46的二期生甄选，并于2014年3月2日晋升为正式成员。在乃木坂46时期，她曾兼任OL（办公室职员）工作，因此也有“OL BBA”的昵称。她曾是乃木坂46中年龄最大的成员.\n\n2022年2月10日，新内眞衣在东京国际论坛A厅举行毕业典礼，正式从乃木坂46毕业。毕业后，她从乃木坂46合同会社移籍至cent. FORCE事务所。\n\n她的主要活动包括：\n*   **电台节目**：曾主持《乃木坂46的All Night Nippon》。\n*   **时尚杂志**：曾是《Oggi.jp》的常驻模特，目前是时尚杂志《andGIRL》的常驻模特。\n*   **写真集**：发行过个人写真集，例如第二本写真集《黎明时分》。\n*   **其他**：她还参与电视剧、电影、电视节目和舞台剧的演出。\n\n新内眞衣的昵称是“Maichun”（まいちゅん）和“Maimai”（まいまい）。她身高165厘米，血型为B型。"
+        }
+      },
+      "timestamp": "2025-10-25T18:09:43.546072+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "新内眞衣（しんうち まい）さんは、1992年1月22日生まれ、埼玉県朝霞市出身の日本の女性タレント、ファッションモデル、ラジオパーソナリティ、アーティスト、舞台女優です。元乃木坂46の2期生メンバーでした。\n\n2013年5月に乃木坂46の2期生オーディションに合格し、2014年3月2日に正規メンバーに昇格しました。乃木坂46在籍中はOLとしても活動しており、「OL BBA」という愛称もありました。乃木坂46では最年長メンバーでした。\n\n2022年2月10日に東京国際フォーラムAホールで開催された卒業セレモニーをもって乃木坂46を卒業。卒業後は乃木坂46合同会社からセント・フォース事務所へ移籍しました。\n\n主な活動は以下の通りです。\n*   **ラジオ番組**：『乃木坂46のオールナイトニッポン』のパーソナリティを務めました。\n*   **ファッション雑誌**：『Oggi.jp』の専属モデルを務め、現在はファッション雑誌『andGIRL』のレギュラーモデルです。\n*   **写真集**：個人写真集を発売しており、2nd写真集は『黎明』です。\n*   **その他**：ドラマ、映画、テレビ番組、舞台などにも出演しています。\n\n愛称は「まいちゅん」や「まいまい」です。身長は165cm、血液型はB型です。",
+      "timestamp": "2025-10-25T18:09:49.202784+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "もう一度、pipe_tools.google_web_searchを使って「新内眞衣」について教えて。",
+      "timestamp": "2025-10-25T18:16:15.483630+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-25T18:16:17.430299+09:00"
+    }
+  ],
+  "pools": [
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"checked\": false, \"title\": \"test1\"}, {\"title\": \"test2\", \"description\": \"\", \"checked\": false}]})",
+      "timestamp": "2025-10-25T17:04:43.509374+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session e23533387506d0384a9e173046ff69a593b41b9a4dd8499bf6b96bcd5c257385."
+      },
+      "timestamp": "2025-10-25T17:04:43.530316+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-25T17:04:56.104182+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T17:04:56.121827+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-25T18:09:37.200617+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "新内眞衣（しんうち まい, Shinuchi Mai），1992年1月22日出生于日本埼玉县朝霞市，是日本女艺人、时尚模特、电台主持人、艺人及舞台剧演员。她曾是女子偶像团体乃木坂46的二期生前成员。\n\n新内眞衣于2013年5月通过乃木坂46的二期生甄选，并于2014年3月2日晋升为正式成员。在乃木坂46时期，她曾兼任OL（办公室职员）工作，因此也有“OL BBA”的昵称。她曾是乃木坂46中年龄最大的成员.\n\n2022年2月10日，新内眞衣在东京国际论坛A厅举行毕业典礼，正式从乃木坂46毕业。毕业后，她从乃木坂46合同会社移籍至cent. FORCE事务所。\n\n她的主要活动包括：\n*   **电台节目**：曾主持《乃木坂46的All Night Nippon》。\n*   **时尚杂志**：曾是《Oggi.jp》的常驻模特，目前是时尚杂志《andGIRL》的常驻模特。\n*   **写真集**：发行过个人写真集，例如第二本写真集《黎明时分》。\n*   **其他**：她还参与电视剧、电影、电视节目和舞台剧的演出。\n\n新内眞衣的昵称是“Maichun”（まいちゅん）和“Maimai”（まいまい）。她身高165厘米，血型为B型。"
+        }
+      },
+      "timestamp": "2025-10-25T18:09:43.546072+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-25T18:16:17.430299+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "新内眞衣（しんうち まい）は、1992年1月22日生まれ、埼玉県朝霞市出身の日本のファッションモデル、ラジオパーソナリティ、タレント、舞台女優、そして元OLです。彼女は女性アイドルグループ乃木坂46の元メンバーであり、現在はセント・フォースに所属しています。\n\n乃木坂46在籍中は、「OL兼任アイドル」として活動し、グループ最年長メンバーの一人としても知られていました。 2015年3月にはbayfmのラジオ番組「OL兼任アイドル 新内眞衣のまいちゅんカフェ」でMCを務め、2016年3月からはニッポン放送の「乃木坂46 新内眞衣のオールナイトニッポン0(ZERO)」のパーソナリティを担当しました。 その後、「乃木坂46のオールナイトニッポン」のレギュラーパーソナリティも務め、ラジオの世界で活躍しました。\n\n乃木坂46を2022年2月10日に卒業後、セント・フォースに移籍し、多岐にわたる活動を続けています。ファッションモデルとしては、『andGIRL』のレギュラーモデルを務め、過去には『Oggi.jp』のレギュラーモデルも務めていました。 ラジオでは、2022年4月より「土田晃之 日曜のへそ」のパートナーを務めています。\n\nまた、2023年1月25日にはセカンド写真集『黎明時分』を発売し、オリコン週間書籍ランキングの写真集部門および総合部門で1位を獲得しました。 2024年12月には、2025年版カレンダーの発売記念イベントを開催し、健康に気を付けたいと来年の抱負を語っています。"
+        }
+      },
+      "timestamp": "2025-10-25T18:16:23.939711+09:00"
+    }
+  ],
+  "todos": [
+    {
+      "title": "test1",
+      "description": "",
+      "checked": false
+    },
+    {
+      "title": "test2",
+      "description": "",
+      "checked": false
+    }
+  ]
+}

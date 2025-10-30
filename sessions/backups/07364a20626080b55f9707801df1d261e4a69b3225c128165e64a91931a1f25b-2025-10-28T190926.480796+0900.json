@@ -1,0 +1,52 @@
+{
+  "session_id": "bcf6708ff0ee40709190b9996cd2825c303d4547a09c60ecac176c1925e6f3e7",
+  "created_at": "2025-10-28T19:09:21.401582+09:00",
+  "purpose": "Fork of: e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search edited",
+      "timestamp": "2025-10-28T19:09:02.299679+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-28T19:09:05.630477+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "Flask is a popular, lightweight, and flexible micro web framework for Python, designed to make building web applications quick and easy. It was created by Armin Ronacher and is based on the Werkzeug WSGI toolkit and the Jinja2 templating engine.\n\nKey characteristics and features of Flask include:\n*   **Microframework** Flask is classified as a \"microframework\" because it provides essential tools for web development without imposing strict dependencies or requiring particular libraries. This minimalistic approach gives developers significant flexibility and control over their application's structure and choice of components, such as database abstraction layers or form validation.\n*   **Lightweight and Flexible** It has minimal dependencies, making it easy to learn and use, and highly extensible through a rich ecosystem of extensions.\n*   **Built-in Development Server and Debugger** Flask includes a development server and debugger, which streamline the development and testing process.\n*   **Jinja2 Templating Engine** It uses Jinja2 as its default templating engine, enabling developers to create dynamic HTML pages with Python-like syntax.\n*   **URL Routing** Flask provides an efficient URL routing system that maps URL patterns to Python functions, facilitating a clear and organized code structure.\n*   **WSGI Compliant** Flask is compliant with the Web Server Gateway Interface (WSGI) standard, allowing it to run on any WSGI-compatible web server.\n*   **Secure Cookies and Session Management** It supports secure cookies and session management, which are crucial for maintaining user sessions and handling authentication securely.\n*   **RESTful Request Dispatching** Flask supports RESTful request dispatching, making it suitable for building RESTful APIs.\n\nCommon uses for Flask include:\n*   Developing web applications, from small projects to more complex, scalable applications.\n*   Creating RESTful APIs for communication between different software systems.\n*   Prototyping web-based ideas and concepts quickly due to its lightweight nature.\n*   Building microservices architecture, where applications are broken down into smaller, independent components.\n*   Creating straightforward web interfaces and visualization tools for data science projects."
+      },
+      "timestamp": "2025-10-28T19:09:16.785519+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

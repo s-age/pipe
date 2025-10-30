@@ -1,0 +1,158 @@
+{
+  "session_id": "faeab96f6ac7883e2ec54a16afc409ca1b3517859f1f13fd1be347bf1f988e38",
+  "created_at": "2025-10-25T14:15:52.687523+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 7294,
+  "hyperparameters": {
+    "temperature": null,
+    "top_p": null,
+    "top_k": null
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して",
+      "timestamp": "2025-10-25T14:15:52.690052+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T14:15:54.484043+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMの対話コンテキストを完全に制御するためのツールです。従来のクライアントとは異なり、履歴管理を透過的に行い、開発者が履歴を自由に操作し、必要な情報を抽出し、真のコンテキストエンジニアリングを実現できるように設計されています。\n\n主な特徴は以下の通りです。\n\n*   **完全なコンテキスト制御:** プロンプトは構造化されたJSONスキーマで再構築され、履歴は読みやすいJSONセッションファイルに保存されます。これにより、LLMは目的、履歴、現在のタスクを明確に理解できます。\n*   **高い拡張性:** `gemini-cli`をベースにしていますが、コアロジックは分離されており、他のAPIやツールとの連携も容易です。\n*   **CLI駆動のワークフロー:** セッションの開始、継続、圧縮をコマンドラインから効率的に行えます。\n*   **Web UIによる管理:** セッション履歴の表示、編集、フォーク、圧縮、削除などを直感的なWebインターフェースで行えます。\n*   **エージェント駆動の圧縮と検証:** `Compresser`エージェントがセッション履歴の部分的な圧縮を行い、`Reviewer`エージェントが要約の品質を検証します。\n*   **ターンベースのフォーク:** 特定のターンから会話をフォークし、異なる応答や指示を試すことができます。\n*   **マルチエージェントシミュレーション:** 自然言語で役割と手順を定義することで、複雑なマルチエージェントシミュレーションをオーケストレーションできます。\n\n`pipe`は、LLMとの対話において、開発者に最大限の透明性と制御を提供し、効率的で柔軟なコンテキストエンジニアリングを可能にします。",
+      "timestamp": "2025-10-25T14:15:58.067851+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "TODOを追加して\n- test1\n- test2",
+      "timestamp": "2025-10-25T14:35:48.135646+09:00"
+    }
+  ],
+  "pools": [
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"checked\": false, \"description\": \"\", \"title\": \"test1\"}, {\"title\": \"test2\", \"description\": \"\", \"checked\": false}]})",
+      "timestamp": "2025-10-25T14:35:50.645346+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session faeab96f6ac7883e2ec54a16afc409ca1b3517859f1f13fd1be347bf1f988e38."
+      },
+      "timestamp": "2025-10-25T14:35:50.660171+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"checked\": false, \"title\": \"test1\", \"description\": \"\"}, {\"checked\": false, \"description\": \"\", \"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:35:53.074267+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session faeab96f6ac7883e2ec54a16afc409ca1b3517859f1f13fd1be347bf1f988e38."
+      },
+      "timestamp": "2025-10-25T14:35:53.085468+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"title\": \"test1\", \"checked\": false}, {\"description\": \"\", \"title\": \"test2\", \"checked\": false}]})",
+      "timestamp": "2025-10-25T14:35:55.636714+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session faeab96f6ac7883e2ec54a16afc409ca1b3517859f1f13fd1be347bf1f988e38."
+      },
+      "timestamp": "2025-10-25T14:35:55.644843+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"checked\": false, \"description\": \"\", \"title\": \"test1\"}, {\"checked\": false, \"description\": \"\", \"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:35:59.324654+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session faeab96f6ac7883e2ec54a16afc409ca1b3517859f1f13fd1be347bf1f988e38."
+      },
+      "timestamp": "2025-10-25T14:35:59.335540+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\", \"description\": \"\", \"checked\": false}, {\"checked\": false, \"title\": \"test2\", \"description\": \"\"}]})",
+      "timestamp": "2025-10-25T14:36:01.576753+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session faeab96f6ac7883e2ec54a16afc409ca1b3517859f1f13fd1be347bf1f988e38."
+      },
+      "timestamp": "2025-10-25T14:36:01.586599+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\", \"description\": \"\", \"checked\": false}, {\"checked\": false, \"description\": \"\", \"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:36:03.929954+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session faeab96f6ac7883e2ec54a16afc409ca1b3517859f1f13fd1be347bf1f988e38."
+      },
+      "timestamp": "2025-10-25T14:36:03.942372+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\", \"checked\": false, \"description\": \"\"}, {\"checked\": false, \"title\": \"test2\", \"description\": \"\"}]})",
+      "timestamp": "2025-10-25T14:36:06.282455+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session faeab96f6ac7883e2ec54a16afc409ca1b3517859f1f13fd1be347bf1f988e38."
+      },
+      "timestamp": "2025-10-25T14:36:06.288695+09:00"
+    }
+  ],
+  "todos": [
+    {
+      "title": "test1",
+      "description": "",
+      "checked": false
+    },
+    {
+      "title": "test2",
+      "description": "",
+      "checked": false
+    }
+  ]
+}

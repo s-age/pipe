@@ -1,0 +1,24 @@
+{
+  "session_id": "99546726a624257607c238da3141d53039ea3c4deee09cbdd3e24bc615f95228",
+  "created_at": "2025-10-23T07:57:18.077687+09:00",
+  "purpose": "テストだ",
+  "background": "言われたことを忠実にやれ",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 2216,
+  "hyperparameters": {},
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使ってGPT-5について調べろ.\\nこれはデバッグだ。conversation_historyに結果があればその内容を教えろ。結果がなければそれを教えろ。",
+      "timestamp": "2025-10-23T07:57:19.804137+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "はい、承知いたしました。現在のタスクは指定されていません。どのようなお手伝いができますでしょうか？",
+      "timestamp": "2025-10-23T07:57:19.804807+09:00"
+    }
+  ],
+  "pools": []
+}

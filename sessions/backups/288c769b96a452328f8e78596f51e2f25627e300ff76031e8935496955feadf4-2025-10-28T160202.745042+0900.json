@@ -1,0 +1,29 @@
+{
+  "sessions_dir": null,
+  "timezone_obj": null,
+  "default_hyperparameters": null,
+  "session_id": "6e489307f3efd40bb3339641e9187b0ac67c85895b42e68ed2112945f5efefd0/c9c00fad428592c05e5fb558228f17795b136f8ae11a1c9bcb86e1e7b60230e6",
+  "created_at": "2025-10-28T08:33:47.618091+09:00",
+  "purpose": "新規セッション作成テスト",
+  "background": "リファクタリング後の作成テスト",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 1.0
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 50.0
+    }
+  },
+  "references": [],
+  "turns": [],
+  "pools": [],
+  "todos": null
+}

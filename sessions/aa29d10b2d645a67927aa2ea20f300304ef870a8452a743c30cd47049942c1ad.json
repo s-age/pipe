@@ -1,0 +1,53 @@
+{
+  "session_id": "aa29d10b2d645a67927aa2ea20f300304ef870a8452a743c30cd47049942c1ad",
+  "created_at": "2025-10-23T09:33:14.713785+09:00",
+  "purpose": "テストだ",
+  "background": "言われたことを忠実にやれ",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2,
+      "description": "Be precise and factual. A lower value is preferred for deterministic output."
+    },
+    "top_p": {
+      "value": 0.5,
+      "description": "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
+    },
+    "top_k": {
+      "value": 5,
+      "description": "Limit the generation to the top 5 most likely tokens at each step."
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使ってGPT-5について調べろ。\nこれはデバッグだ。conversation_historyに何が入ってるかを正確に教えろ。",
+      "timestamp": "2025-10-23T09:33:14.714648+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"GPT-5\"})",
+      "timestamp": "2025-10-23T09:33:21.630785+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "OpenAI officially released GPT-5, its latest-generation large language model, on August 7, 2025. It is the fifth in the series of generative pre-trained transformer (GPT) foundation models and succeeds GPT-4.\n\n**Key Features and Capabilities of GPT-5:**\n\n*   **Unified System and Multimodality:** GPT-5 is a multimodal large language model, natively trained on various modalities like text and images simultaneously. It unifies advanced reasoning, multimodal input, and task execution into a single system, eliminating the need to switch between specialized models. It can process and generate content from text, code, and images in a single interaction, and even analyze video frames.\n*   **Integrated and Adaptive Reasoning:** The model directly integrates deeper reasoning capabilities, building on advancements from previous \"o-series\" models. It features a real-time routing system that decides whether to provide an instant answer or engage in a multi-step \"chain-of-thought\" process for complex queries, adapting its reasoning effort based on the task.\n*   **Improved Accuracy and Reduced Hallucinations:** OpenAI states that GPT-5 offers more accurate answers to health questions and significantly lower levels of hallucination compared to its predecessors. Responses are reportedly 45% less likely to contain factual errors than GPT-4o with web search enabled.\n*   **Enhanced Coding and Writing Skills:** GPT-5 demonstrates better coding and writing skills, including smarter code generation, an expanded context window for larger projects, and improved control over writing tone. It can even generate a full web application from a simple prompt.\n*   **Massive Context Windows:** The model dramatically expands its ability to understand and retain context, capable of processing entire documents, multi-hour meetings, and large codebases without losing track of details.\n*   **Advanced Safety:** GPT-5 implements a \"Safe Completions\" approach, aiming to provide helpful responses within safety boundaries rather than outright declining potentially harmful queries. It offers more nuanced and informative responses that also outline any limitations to prompts.\n*   **Agentic Functionality:** GPT-5 includes agentic functionality, allowing it to set up its own desktop and autonomously use its browser to search for sources related to its task.\n\n**Availability and Variants:**\n\nGPT-5 is publicly accessible to users of ChatGPT and Microsoft Copilot, as well as to developers through the OpenAI API. It is available across multiple ChatGPT tiers, including free, Plus, and Pro, with varying levels of intelligence and usage limits.\n\nThe GPT-5 system is not a single model but a family of specialized variants optimized for different use cases. These include:\n*   `gpt-5` (the flagship model)\n*   `gpt-5-main` and `gpt-5-main-mini` (fast, high-throughput models)\n*   `gpt-5-thinking`, `gpt-5-thinking-mini`, and `gpt-5-thinking-nano` (deeper reasoning models, with `gpt-5-thinking-pro` available for ChatGPT Pro subscribers)\n*   `gpt-5-mini` and `gpt-5-nano` (faster, lower-cost options for quick tasks)\n*   `gpt-5-chat`\n\nGPT-5 is now the default model in ChatGPT for all free and paid users, replacing GPT-4o. Microsoft Copilot is also powered by GPT-5, offering enhanced AI experiences without extra cost or manual setup."
+        }
+      },
+      "timestamp": "2025-10-23T09:33:31.393915+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`conversation_history` の内容は以下の通りです。\n\n```json\n{\n  \"description\": \"Historical record of past interactions in this session, in chronological order.\",\n  \"turns\": [\n    {\n      \"type\": \"session_pools_data\"\n    }\n  ]\n}\n```\n",
+      "timestamp": "2025-10-23T09:33:34.505572+09:00"
+    }
+  ],
+  "pools": []
+}

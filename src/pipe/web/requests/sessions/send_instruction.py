@@ -1,12 +1,14 @@
 """
 Pydantic model for validating the request body of the send instruction API endpoint.
 """
+
 from pydantic import BaseModel, field_validator
+
 
 class SendInstructionRequest(BaseModel):
     instruction: str
 
-    @field_validator('instruction')
+    @field_validator("instruction")
     @classmethod
     def check_not_empty(cls, v: str) -> str:
         """Ensures the instruction is not empty."""

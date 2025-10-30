@@ -1,0 +1,24 @@
+{
+  "session_id": "28b6284ccb29d60a3e159aa7b3d193c0079dfe2338cf65f47756b3278bdf31f3",
+  "created_at": "2025-10-23T12:17:13.809708+09:00",
+  "purpose": "Testing the fixed google_web_search tool",
+  "background": "Verify that the google_web_search tool correctly communicates its results, including errors, through the Model Context Protocol.",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {},
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "今日の東京の天気は？",
+      "timestamp": "2025-10-23T12:17:13.811406+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "今日の東京の天気は、曇り時々晴れで、日中は快適な秋らしい陽気となるでしょう。\n現在の気温は16℃、最高気温は17℃、最低気温は11℃です。\n湿度は約56%、降水確率は30%です。\n朝晩は肌寒くなるため、上着などで体感温度を調節することをおすすめします。\n",
+      "timestamp": "2025-10-23T12:17:24.056552+09:00"
+    }
+  ],
+  "pools": []
+}

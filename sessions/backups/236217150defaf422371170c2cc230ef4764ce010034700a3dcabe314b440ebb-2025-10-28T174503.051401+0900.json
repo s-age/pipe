@@ -1,0 +1,52 @@
+{
+  "session_id": "ab6e27ec0a1218761e402bbc2cd6a26e75455c754e77084b326dca1f88169191",
+  "created_at": "2025-10-28T17:34:51.218066+09:00",
+  "purpose": "Fork of: e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search edited",
+      "timestamp": "2025-10-28T17:34:34.330402+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-28T17:34:37.022781+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "Flask is a lightweight and powerful web framework for Python, often referred to as a \"micro-framework\" because it provides the essentials for web development without imposing unnecessary complexity or dependencies. It was created by Armin Ronacher of Pocoo.\n\nKey characteristics and features of Flask include:\n*   **Micro-framework Design** Flask is designed to be simple, easy to use, and flexible, allowing developers to choose the components and libraries they want to use rather than enforcing a full set of tools like more extensive frameworks such as Django.\n*   **Built on Werkzeug and Jinja2** Flask is built upon the Werkzeug WSGI (Web Server Gateway Interface) toolkit, which handles request and response cycles, and the Jinja2 templating engine, which enables dynamic HTML content.\n*   **Simple Routing** It features an intuitive routing system that maps URL patterns to Python functions using decorators.\n*   **Flexibility with Databases** Unlike some other frameworks, Flask does not come with a built-in Object-Relational Mapper (ORM), giving developers the freedom to choose their preferred ORM (like SQLAlchemy) or use raw SQL. It supports various databases, including relational ones like SQLite and PostgreSQL, and NoSQL databases like MongoDB.\n*   **Development Server** Flask includes a built-in development server for easy local testing and debugging.\n*   **Extensibility** Its modular design allows for easy extension of functionality through various community-provided extensions and libraries.\n\nFlask is widely used for various applications, including:\n*   Building web applications, from small projects to larger, complex systems.\n*   Developing RESTful APIs and microservices due to its simplicity and flexibility.\n*   Creating backends for single-page applications.\n*   Serving as a frontend for machine learning models and AI applications.\n*   Educational purposes and rapid prototyping.\n\nCompanies such as Samsung, Pinterest, Airbnb, Netflix, Reddit, MIT, and Uber leverage Flask for their web development needs."
+      },
+      "timestamp": "2025-10-28T17:34:45.826254+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

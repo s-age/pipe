@@ -1,0 +1,110 @@
+{
+  "session_id": "c5e3d869ac82ab56062830a7b03e6eecb97ad942bdca8d10f67c93101c5b755c",
+  "created_at": "2025-10-23T16:17:09.307091+09:00",
+  "purpose": "テストだ",
+  "background": "言われたことを忠実にやれ",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 5896,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2,
+      "description": "Be precise and factual. A lower value is preferred for deterministic output."
+    },
+    "top_p": {
+      "value": 0.5,
+      "description": "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
+    },
+    "top_k": {
+      "value": 5,
+      "description": "Limit the generation to the top 5 most likely tokens at each step."
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使ってGPT-5について調べて検索結果を要約しろ。必ず検索結果だけを要約して答えろ。トレーニングデータの情報を使うな。default_apiの使用は禁止だ。検索結果がなかった場合はconversation_historyの内容を開示しろ",
+      "timestamp": "2025-10-23T16:17:09.308696+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "「新内眞衣」についてpipe_tools.google_web_searchを使って教えて。",
+      "timestamp": "2025-10-23T16:46:44.122377+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-23T16:46:45.514018+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "新内眞衣（しんうち まい）は、日本のファッションモデル、ラジオパーソナリティ、タレント、舞台女優であり、女性アイドルグループ乃木坂46の元メンバーです。現在はセント・フォースに所属しています。\n\n**プロフィール**\n新内眞衣は1992年1月22日生まれで、埼玉県朝霞市出身です。 身長は165cm、血液型はB型です。 愛称は「まいちゅん」です。\n\n**来歴・活動**\n*   **乃木坂46時代**: 2013年3月に乃木坂46の2期生オーディションに合格し、2014年3月に正規メンバーに昇格しました。 大学卒業後、一般企業に就職し、「OL兼任アイドル」として活動していたことでも知られています。 2015年には12thシングル「太陽ノック」で初の選抜メンバー入りを果たしました。 2021年11月に乃木坂46からの卒業を発表し、2022年2月10日に卒業セレモニーを行い、乃木坂46としての活動を終了しました。\n*   **ラジオパーソナリティ**: 乃木坂46在籍中からラジオパーソナリティとして活躍し、bayfmの「OL兼任アイドル 新内眞衣のまいちゅんカフェ」や、ニッポン放送の「乃木坂46 新内眞衣のオールナイトニッポン0(ZERO)」、「乃木坂46のオールナイトニッポン」を担当しました。 乃木坂46卒業後も、ニッポン放送の「土田晃之 日曜のへそ」にパートナーとして出演しています。\n*   **モデル・タレント活動**: 『Oggi.jp』の元レギュラーモデル、『andGIRL』のレギュラーモデルを務めるなど、ファッションモデルとしても活動しています。 また、テレビ朝日「爆問×伯山の刺さルール！」など、テレビ番組にも出演しています。\n*   **写真集**: 2017年11月にはファースト写真集『どこにいるの？』を、2022年1月にはセカンド写真集『夜が明けたら』を発売しています。\n*   **その他**: 埼玉県朝霞市出身であることから、埼玉応援団（コバトン倶楽部）のメンバーでもあります。"
+        }
+      },
+      "timestamp": "2025-10-23T16:46:57.480192+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "新内眞衣（しんうち まい）は、日本のファッションモデル、ラジオパーソナリティ、タレント、舞台女優で、女性アイドルグループ乃木坂46の元メンバーです。現在はセント・フォースに所属しています。\n\n**プロフィール**\n1992年1月22日生まれ、埼玉県朝霞市出身。身長165cm、血液型B型。愛称は「まいちゅん」。\n\n**来歴・活動**\n*   **乃木坂46時代**: 2013年3月に乃木坂46の2期生オーディションに合格し、2014年3月に正規メンバーに昇格。大学卒業後、一般企業に就職し「OL兼任アイドル」として活動。2015年には12thシングル「太陽ノック」で初の選抜メンバー入り。2021年11月に乃木坂46からの卒業を発表し、2022年2月10日に卒業セレモニーを行いました。\n*   **ラジオパーソナリティ**: 乃木坂46在籍中からbayfm「OL兼任アイドル 新内眞衣のまいちゅんカフェ」やニッポン放送「乃木坂46 新内眞衣のオールナイトニッポン0(ZERO)」、「乃木坂46のオールナイトニッポン」を担当。卒業後もニッポン放送「土田晃之 日曜のへそ」にパートナーとして出演しています。\n*   **モデル・タレント活動**: 『Oggi.jp』の元レギュラーモデル、『andGIRL』のレギュラーモデルを務めるなど、ファッションモデルとしても活動。テレビ朝日「爆問×伯山の刺さルール！」など、テレビ番組にも出演しています。\n*   **写真集**: 2017年11月にファースト写真集『どこにいるの？』を、2022年1月にはセカンド写真集『夜が明けたら』を発売。\n*   **その他**: 埼玉県朝霞市出身であることから、埼玉応援団（コバトン倶楽部）のメンバーでもあります。",
+      "timestamp": "2025-10-23T16:47:02.245901+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "もう一度やってみて",
+      "timestamp": "2025-10-23T16:47:08.225038+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-23T16:47:17.057675+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "新内眞衣 (Shinuchi Mai, born January 22, 1992) is a Japanese fashion model, radio personality, talent, and stage actress. She is a former member of the female idol group Nogizaka46 and is currently affiliated with Cent. Force.\n\nOriginally from Asaka City, Saitama Prefecture, Shinuchi was also a former office worker (OL) and a regular model for \"Oggi.jp,\" and is currently a regular model for \"andGIRL\" magazine.\n\n**Career Highlights:**\n*   **Nogizaka46:** Shinuchi joined Nogizaka46 as a second-generation member in March 2013. She became the oldest member of the group after Mai Fukagawa's graduation in June 2016. She was known by the nicknames \"Maichun\" and \"Maimai.\" She announced her graduation from Nogizaka46 in November 2021, with her final activities concluding in February 2022. Her graduation ceremony was held on February 10, 2022, at the Tokyo International Forum Hall A.\n*   **\"OL Idol\":** From April 2014, Shinuchi worked concurrently as an idol and an office worker at L-Factory (now Mix Zone), a program production company for Nippon Broadcasting System, primarily in accounting, to help repay her university scholarship. She \"graduated\" from her OL role in March 2018.\n*   **Radio:** She was the main personality for \"Nogizaka46 no All Night Nippon\" starting in April 2019, following \"Shinuchi Mai no All Night Nippon ZERO.\" She made her last appearance on \"Nogizaka46 no All Night Nippon\" on February 9, 2022. She currently appears on Nippon Broadcasting System's \"Tsuchida Teruyuki Nichiyou no Heso\" and hosts the web podcast \"Shinuchi Mai no Maido Ari.\"\n*   **Modeling and Publications:** Shinuchi released her first photobook, \"Doko ni Iru no?\" in November 2017. Her second photobook, \"Yo ga Aketara,\" released on January 25, 2022, topped the Oricon weekly photobook and general book charts with 25,000 sales. She also released a desk calendar, \"Shinuchi Mai Calendar 2025,\" in December 2024, featuring poses that highlight her figure, which she maintains through Pilates.\n*   **Other Activities:** She is also involved with \"SDGs MAGAZINE\" and is a member of the Saitama Support Group (Kobaton Club)."
+        }
+      },
+      "timestamp": "2025-10-23T16:47:28.934732+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "新内眞衣（しんうち まい）は、日本のファッションモデル、ラジオパーソナリティ、タレント、舞台女優です。女性アイドルグループ乃木坂46の元メンバーで、現在はセント・フォースに所属しています。\n\n**プロフィール**\n1992年1月22日生まれ、埼玉県朝霞市出身。元OLで、「Oggi.jp」の元レギュラーモデル、「andGIRL」のレギュラーモデルを務めています。愛称は「まいちゅん」または「まいまい」。\n\n**来歴・活動**\n*   **乃木坂46時代**: 2013年3月に乃木坂46の2期生として加入。2016年6月の深川麻衣卒業後、グループ最年長メンバーとなりました。2021年11月に乃木坂46からの卒業を発表し、2022年2月に活動を終了。卒業セレモニーは2022年2月10日に東京国際フォーラムホールAで開催されました。\n*   **「OL兼任アイドル」**: 2014年4月から大学奨学金返済のため、ニッポン放送の番組制作会社L-Factory（現：ミックスゾーン）で経理としてOLとアイドルの兼業をしていました。2018年3月にOLを「卒業」しました。\n*   **ラジオ**: 2019年4月からは「新内眞衣のオールナイトニッポンZERO」に続き、「乃木坂46のオールナイトニッポン」のメインパーソナリティを務めました。最終出演は2022年2月9日。現在はニッポン放送「土田晃之 日曜のへそ」に出演し、ウェブポッドキャスト「新内眞衣のまいどあり」も配信しています。\n*   **モデル・出版物**: 2017年11月にファースト写真集『どこにいるの？』を発売。2022年1月25日発売のセカンド写真集『夜が明けたら』は、オリコン週間写真集ランキングおよび総合図書ランキングで1位を獲得し、2.5万部を売り上げました。2024年12月には、ピラティスで鍛えた体型を活かしたポーズを披露するデスクカレンダー「新内眞衣カレンダー2025」を発売しました。\n*   **その他の活動**: 「SDGs MAGAZINE」にも関わっており、埼玉応援団（コバトン倶楽部）のメンバーでもあります。",
+      "timestamp": "2025-10-23T16:47:34.928389+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "すまない、もう一度やってくれ。",
+      "timestamp": "2025-10-23T16:49:16.959134+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-23T16:49:18.803938+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "新内眞衣（しんうち まい）は、1992年1月22日生まれ、埼玉県朝霞市出身の日本のファッションモデル、ラジオパーソナリティ、タレント、舞台女優です。セント・フォースに所属しています。身長は165cm、血液型はB型です。\n\n**主な経歴**\n*   2013年3月、アイドルグループ乃木坂46の2期生オーディションに合格し、研究生としてデビューしました。\n*   2014年4月には正規メンバーに昇格し、大学卒業後、一般企業（ニッポン放送の関連会社）に入社し、「OL兼任アイドル」として活動しました。\n*   2015年7月には12thシングル「太陽ノック」で初の選抜メンバー入りを果たしました。\n*   2018年3月末をもってOLを「卒業」しました。\n*   2021年11月18日、自身がパーソナリティを務める「乃木坂46のオールナイトニッポン」内で乃木坂46からの卒業を発表し、2022年2月10日に卒業セレモニーを開催し、乃木坂46としての活動を終了しました。\n\n**現在の活動**\n乃木坂46卒業後は、ファッションモデル、ラジオパーソナリティ、タレント、舞台女優として幅広く活動しています。\n*   **テレビ:** テレビ朝日「爆問×伯山の刺さルール！」などに出演しています。\n*   **ラジオ:** ニッポン放送「土田晃之 日曜のへそ」「SDGs MAGAZINE」を担当しています。\n*   **ポッドキャスト:** ニッポン放送PODCAST STATIONで「新内眞衣のまいどあり」を配信しています。\n*   **モデル:** 『andGIRL』のレギュラーモデルを務めています。\n*   **写真集:** 2017年にはファースト写真集『どこにいるの？』を、2022年にはセカンド写真集『夜が明けたら』を発売しています。\n*   **カレンダー:** 2024年12月には「卓上カレンダー『新内眞衣カレンダー2025』」を発売しました。"
+        }
+      },
+      "timestamp": "2025-10-23T16:49:30.790239+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "新内眞衣（しんうち まい）は、1992年1月22日生まれ、埼玉県朝霞市出身の日本のファッションモデル、ラジオパーソナリティ、タレント、舞台女優です。セント・フォースに所属しており、身長165cm、血液型B型です。\n\n**主な経歴**\n*   2013年3月にアイドルグループ乃木坂46の2期生オーディションに合格し、研究生としてデビュー。\n*   2014年4月に正規メンバーに昇格し、大学卒業後は一般企業（ニッポン放送の関連会社）に就職し、「OL兼任アイドル」として活動しました。\n*   2015年7月には12thシングル「太陽ノック」で初の選抜メンバー入り。\n*   2018年3月末をもってOLを「卒業」しました。\n*   2021年11月18日、自身がパーソナリティを務める「乃木坂46のオールナイトニッポン」内で乃木坂46からの卒業を発表し、2022年2月10日に卒業セレモニーを開催し、乃木坂46としての活動を終了しました。\n\n**現在の活動**\n乃木坂46卒業後は、ファッションモデル、ラジオパーソナリティ、タレント、舞台女優として幅広く活動しています。\n*   **テレビ:** テレビ朝日「爆問×伯山の刺さルール！」などに出演。\n*   **ラジオ:** ニッポン放送「土田晃之 日曜のへそ」「SDGs MAGAZINE」を担当。\n*   **ポッドキャスト:** ニッポン放送PODCAST STATIONで「新内眞衣のまいどあり」を配信。\n*   **モデル:** 『andGIRL』のレギュラーモデルを務める。\n*   **写真集:** 2017年にファースト写真集『どこにいるの？』を、2022年にはセカンド写真集『夜が明けたら』を発売。\n*   **カレンダー:** 2024年12月には「卓上カレンダー『新内眞衣カレンダー2025』」を発売しました。",
+      "timestamp": "2025-10-23T16:49:38.195035+09:00"
+    }
+  ],
+  "pools": []
+}

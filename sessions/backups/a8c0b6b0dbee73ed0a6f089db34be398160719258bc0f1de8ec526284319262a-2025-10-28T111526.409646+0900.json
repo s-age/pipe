@@ -1,0 +1,32 @@
+{
+  "session_id": "1d32ebf66ed109b5b6f083192a74ca9d00685a9a686b738b3dd5355a8ea6a7ca",
+  "created_at": "2025-10-28T11:08:09.773384+09:00",
+  "purpose": "Fork of: テストだ１１１geagea",
+  "background": "新機能のテストgaggegea",
+  "roles": [
+    "roles/conductor.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 1.6
+    },
+    "top_p": {
+      "value": 0.8
+    },
+    "top_k": {
+      "value": 37.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "「新内眞衣」について教えてちょ",
+      "timestamp": "2025-10-28T11:06:20.266076+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

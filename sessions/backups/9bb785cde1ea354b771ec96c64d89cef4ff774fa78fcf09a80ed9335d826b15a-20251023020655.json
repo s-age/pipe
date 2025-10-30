@@ -1,0 +1,19 @@
+{
+  "session_id": "9bb785cde1ea354b771ec96c64d89cef4ff774fa78fcf09a80ed9335d826b15a",
+  "created_at": "2025-10-23T11:06:50.931057+09:00",
+  "purpose": "テストだ",
+  "background": "言われたことを忠実にやれ",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {},
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使ってGPT-5について調べろ。\nこれはデバッグだ。conversation_historyに結果があればその内容を教えろ。結果がなければそれを教えろ。GPT-5について検索を実行しました。というくだらない応答はいらない。言われたことをやれ。",
+      "timestamp": "2025-10-23T11:06:50.931970+09:00"
+    }
+  ],
+  "pools": []
+}

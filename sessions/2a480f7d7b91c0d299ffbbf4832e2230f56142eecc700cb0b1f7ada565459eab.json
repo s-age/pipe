@@ -1,0 +1,58 @@
+{
+  "session_id": "2a480f7d7b91c0d299ffbbf4832e2230f56142eecc700cb0b1f7ada565459eab",
+  "created_at": "2025-10-25T14:50:51.928499+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 7245,
+  "hyperparameters": {
+    "temperature": null,
+    "top_p": null,
+    "top_k": null
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して",
+      "timestamp": "2025-10-25T14:50:51.931152+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-25T14:50:53.199541+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T14:50:53.206578+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMの対話コンテキストを完全に制御するためのツールです。従来のチャットエージェントとは異なり、履歴の操作、重要な情報の抽出、真のコンテキストエンジニアリングを可能にします。\n\n主な特徴は以下の通りです。\n\n*   **完全なコンテキスト制御:** 構造化されたJSONスキーマを使用してプロンプトを再構築し、履歴を透過的なJSONセッションファイルに保存することで、完全な監査可能性と柔軟なメモリを提供します。\n*   **高い拡張性:** `gemini-cli`をベースにしていますが、コアロジックは分離されており、他のAPIやフレームワークとの統合も容易です。\n*   **CLI駆動のワークフロー:** セッションの開始、継続、圧縮、デバッグ、コスト管理のための強力なコマンドラインインターフェースを提供します。\n*   **Web UIによる管理:** セッション履歴の表示/編集、ターンのフォーク、セッションの継続、圧縮、削除を直感的に行えるWebインターフェースを備えています。\n*   **エージェントによる実行:** 親エージェントからの役割委任や、`Compresser`および`Reviewer`エージェントによる履歴の圧縮と検証など、高度なエージェント駆動型ワークフローをサポートします。\n*   **マルチエージェントシミュレーション:** 自然言語で役割と手順を定義することで、複雑なマルチエージェントシミュレーション（例：リバーシの自己対戦）をオーケストレーションできます。\n\nセットアップにはPython 3.12以降と`gemini-cli`が必要です。`pipe`のツールサーバーを`gemini-cli`に登録することで、高度な機能を利用できます。\n\n`pipe`は、開発者がLLMとの対話コンテキストを完全に掌握し、柔軟に操作できることを目指しています。",
+      "timestamp": "2025-10-25T14:50:57.357657+09:00"
+    }
+  ],
+  "pools": [
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T14:50:53.206578+09:00"
+    }
+  ],
+  "todos": null
+}

@@ -1,0 +1,27 @@
+{
+  "sessions_dir": null,
+  "timezone_obj": null,
+  "default_hyperparameters": null,
+  "session_id": "2ea8574fddece5e88de4d3b111e0a9f4fd296adce044a73462c0d27d730a9595",
+  "created_at": "2025-10-28T08:35:00.888298+09:00",
+  "purpose": "新規セッション作成機能のテスト",
+  "background": "pipeフレームワークの新規セッション作成が正しく動作するか確認する",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [],
+  "turns": [],
+  "pools": [],
+  "todos": null
+}

@@ -1,0 +1,189 @@
+{
+  "session_id": "e6801fcd91e5131c51e5e7163f3a6f8e995348fbbecc64e54ebeccca63884140",
+  "created_at": "2025-10-25T14:51:15.935280+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 7480,
+  "hyperparameters": {
+    "temperature": null,
+    "top_p": null,
+    "top_k": null
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して",
+      "timestamp": "2025-10-25T14:51:15.937311+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-25T14:51:17.751114+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T14:51:17.758278+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMの対話コンテキストを完全に制御するためのツールです。従来のチャットエージェントとは異なり、履歴の操作、重要な情報の抽出、真のコンテキストエンジニアリングを可能にします。\n\n主な特徴は以下の通りです。\n\n*   **完全なコンテキスト制御**: 構造化されたJSONスキーマを使用してプロンプトを再構築し、履歴を透過的なJSONセッションファイルに保存します。これにより、完全な監査可能性と柔軟なメモリ管理が実現されます。\n*   **高い拡張性**: `gemini-cli`をベースにしていますが、コアロジックは分離されており、他のAPIやフレームワークとの統合も容易です。\n*   **CLI駆動のワークフロー**: セッションの開始、続行、圧縮、デバッグ、コスト管理のための強力なコマンドラインインターフェースを提供します。\n*   **Web UIによる管理**: セッション履歴の表示/編集、フォーク、セッションの管理を直感的なWebインターフェースで行えます。\n*   **エージェント駆動のワークフロー**: `Compresser`エージェントと`Reviewer`エージェントが連携し、セッション履歴の部分的な圧縮と検証を自動的に行います。\n*   **マルチエージェントシミュレーション**: Markdownファイルで役割と手順を定義することで、複雑なマルチエージェントシミュレーション（例：Geminiがリバーシを自己対戦する）を自然言語でオーケストレーションできます。\n\nセットアップにはPython 3.xと`gemini-cli`が必要で、APIキーの設定も必要です。`gemini-cli`との統合には、`pipe`のツールサーバーを一度登録する必要があります。",
+      "timestamp": "2025-10-25T14:51:21.492381+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "TODOを追加して\n- test1\n- test2",
+      "timestamp": "2025-10-25T15:01:02.023954+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"checked\": false, \"title\": \"test1\"}, {\"checked\": false, \"title\": \"test2\", \"description\": \"\"}]})",
+      "timestamp": "2025-10-25T15:01:04.431705+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session e6801fcd91e5131c51e5e7163f3a6f8e995348fbbecc64e54ebeccca63884140."
+      },
+      "timestamp": "2025-10-25T15:01:04.449560+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"checked\": false, \"description\": \"\", \"title\": \"test1\"}, {\"checked\": false, \"title\": \"test2\", \"description\": \"\"}]})",
+      "timestamp": "2025-10-25T15:01:06.837520+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session e6801fcd91e5131c51e5e7163f3a6f8e995348fbbecc64e54ebeccca63884140."
+      },
+      "timestamp": "2025-10-25T15:01:06.843221+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "TODOリストに「test1」と「test2」が既に存在します。",
+      "timestamp": "2025-10-25T15:01:08.899389+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools__google_web_searchを使って「新内眞衣」について教えて",
+      "timestamp": "2025-10-25T15:01:48.744239+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools__google_web_searchを使って「新内眞衣」について教えて",
+      "timestamp": "2025-10-25T15:04:36.130432+09:00"
+    }
+  ],
+  "pools": [
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T14:51:17.758278+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session e6801fcd91e5131c51e5e7163f3a6f8e995348fbbecc64e54ebeccca63884140."
+      },
+      "timestamp": "2025-10-25T15:01:04.449560+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session e6801fcd91e5131c51e5e7163f3a6f8e995348fbbecc64e54ebeccca63884140."
+      },
+      "timestamp": "2025-10-25T15:01:06.843221+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "failed",
+        "message": "Failed to execute search agent: /Users/s-age/.pyenv/versions/3.12.11/bin/python: can't open file '/Users/s-age/gitrepos/pipe/src/pipe/core/src/search_agent.py': [Errno 2] No such file or directory"
+      },
+      "timestamp": "2025-10-25T15:01:50.895629+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "failed",
+        "message": "Failed to execute search agent: /Users/s-age/.pyenv/versions/3.12.11/bin/python: can't open file '/Users/s-age/gitrepos/pipe/src/pipe/core/src/search_agent.py': [Errno 2] No such file or directory"
+      },
+      "timestamp": "2025-10-25T15:01:52.740308+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "failed",
+        "message": "Failed to execute search agent: /Users/s-age/.pyenv/versions/3.12.11/bin/python: can't open file '/Users/s-age/gitrepos/pipe/src/pipe/core/src/search_agent.py': [Errno 2] No such file or directory"
+      },
+      "timestamp": "2025-10-25T15:01:54.574418+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "failed",
+        "message": "Failed to execute search agent: /Users/s-age/.pyenv/versions/3.12.11/bin/python: can't open file '/Users/s-age/gitrepos/pipe/src/pipe/core/src/search_agent.py': [Errno 2] No such file or directory"
+      },
+      "timestamp": "2025-10-25T15:01:56.214948+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "failed",
+        "message": "Failed to execute search agent: /Users/s-age/.pyenv/versions/3.12.11/bin/python: can't open file '/Users/s-age/gitrepos/pipe/src/pipe/core/src/search_agent.py': [Errno 2] No such file or directory"
+      },
+      "timestamp": "2025-10-25T15:01:57.952205+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "failed",
+        "message": "Failed to execute search agent: /Users/s-age/.pyenv/versions/3.12.11/bin/python: can't open file '/Users/s-age/gitrepos/pipe/src/pipe/core/src/search_agent.py': [Errno 2] No such file or directory"
+      },
+      "timestamp": "2025-10-25T15:01:59.796745+09:00"
+    }
+  ],
+  "todos": [
+    {
+      "title": "test1",
+      "description": "",
+      "checked": false
+    },
+    {
+      "title": "test2",
+      "description": "",
+      "checked": false
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "session_id": "7d6722b95fac3f0f265650c8c43ae3266087e849a96e829a09615042b3d5ef49",
+  "created_at": "2025-10-25T18:29:47.568996+09:00",
+  "last_updated": "2025-10-25T18:29:47.569046+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [],
+  "turns": [],
+  "pools": [],
+  "todos": null
+}

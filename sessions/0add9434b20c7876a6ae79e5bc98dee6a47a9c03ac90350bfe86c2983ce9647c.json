@@ -1,0 +1,24 @@
+{
+  "session_id": "0add9434b20c7876a6ae79e5bc98dee6a47a9c03ac90350bfe86c2983ce9647c",
+  "created_at": "2025-10-19T16:05:42.054133+09:00",
+  "purpose": "圧縮と検証の確認",
+  "background": "検証エージェントが正しく動くかの確認",
+  "roles": [
+    "roles/compresser.md"
+  ],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "{\"session_id\": \"86659e871f54748997f1b2cf97aaffa45b03347d2196b396c9ef59978f3b155a\", \"start\": 1, \"end\": 50, \"policy\":\n\"エラーを網羅的に説明して、最終的にどうなったかを要約\", \"length\": 500}",
+      "timestamp": "2025-10-19T16:06:17.704570+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "要約が生成されました。元のターンをこの要約に置き換えることに同意しますか？ (はい/いいえ)\n",
+      "timestamp": "2025-10-19T16:06:17.705506+09:00"
+    }
+  ]
+}

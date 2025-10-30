@@ -1,0 +1,42 @@
+{
+  "session_id": "6c11a5e2e95c9bc24a34ef9bfbd203656604dbff8838cbf757691a93d1d31156/1c399f51c11c9ed3faa882ca57e92f53dd5834ba60a198e48ebaf4e28d54e5e0",
+  "created_at": "2025-10-25T21:56:52.283602+09:00",
+  "purpose": "testだ",
+  "background": "testだ",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 7296,
+  "hyperparameters": {
+    "temperature": {
+      "value": 1.2
+    },
+    "top_p": {
+      "value": 0.7
+    },
+    "top_k": {
+      "value": 38.0
+    }
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "testだ",
+      "timestamp": "2025-10-25T21:56:52.986500+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "「testだ」というタスクを受け取りました。これはシステムが正しく動作しているかどうかのテストだと理解しました。\n\n何か特定の作業を希望されますか、それともこのまま応答を続けますか？",
+      "timestamp": "2025-10-25T21:56:56.301217+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

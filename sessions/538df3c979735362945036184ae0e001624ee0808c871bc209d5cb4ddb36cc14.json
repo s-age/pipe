@@ -1,0 +1,119 @@
+{
+  "session_id": "538df3c979735362945036184ae0e001624ee0808c871bc209d5cb4ddb36cc14",
+  "created_at": "2025-10-28T11:28:30.280720+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 16397,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "「新内眞衣」について教えて",
+      "timestamp": "2025-10-28T11:28:30.283988+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-28T11:28:32.975288+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "This tool response has expired to save tokens."
+      },
+      "timestamp": "2025-10-28T11:28:41.352041+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "新内眞衣（しんうち まい）さんは、1992年1月22日生まれ、埼玉県朝霞市出身の日本のファッションモデル、ラジオパーソナリティ、タレント、舞台女優、そして元OLです。現在はセント・フォースに所属しています。\n\n女性アイドルグループ乃木坂46の元メンバーで、在籍中には『Oggi.jp』のレギュラーモデルを務め、現在は『andGIRL』のレギュラーモデルとして活動しています。\n\n乃木坂46時代には、2015年5月11日に12thシングル「太陽ノック」で初の選抜メンバーに選ばれました。2016年3月22日にはニッポン放送の『オールナイトニッポン0(ZERO)』の水曜パーソナリティを務めることが発表され、同年3月31日より『乃木坂46 新内眞衣のオールナイトニッポン0(ZERO)』の放送が開始されました。また、同年11月14日には埼玉応援団（コバトン倶楽部）のメンバーに就任しています。\n\n2022年2月に乃木坂46を卒業後も、ソロでテレビ番組やラジオ番組、舞台、イベントなど多岐にわたる分野で活躍しています。特にレギュラー番組への出演や様々な人との出会いを今後の活動で重視したいと語っています。2022年11月には、出身地である朝霞市での初の地元凱旋ロケを経験し、その魅力を披露しました。\n\nその他、ポッドキャスト番組『新内眞衣のまいどあり』も配信しており、radikoやオールナイトニッポンJAM、ニッポン放送PODCAST STATIONなどで聴取可能です。また、彼女のファースト写真集『どこにいるの？』も出版されています。",
+      "timestamp": "2025-10-28T11:28:48.763797+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "OKとだけ答えて",
+      "timestamp": "2025-10-28T11:52:05.693072+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "OK",
+      "timestamp": "2025-10-28T11:52:08.032957+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "もう一度、OKとだけ答えて",
+      "timestamp": "2025-10-28T11:52:27.619897+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "OK",
+      "timestamp": "2025-10-28T11:52:31.004622+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "もう一度、OKとだけ答えて",
+      "timestamp": "2025-10-28T11:52:39.479146+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "OK",
+      "timestamp": "2025-10-28T11:52:42.081648+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して",
+      "timestamp": "2025-10-28T12:06:03.781634+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-28T12:06:06.325372+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added or updated in session references."
+      },
+      "timestamp": "2025-10-28T12:06:06.345470+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMの対話コンテキストを完全に制御するためのツールです。従来のクライアントとは異なり、履歴管理が透過的で、開発者が自由に履歴を操作し、必要な情報を抽出し、真のコンテキストエンジニアリングを実現できるように設計されています。\n\n主な特徴は以下の通りです。\n\n*   **完全なコンテキスト制御**: 構造化されたJSONスキーマでプロンプトを再構築し、履歴は読み取り可能なJSONセッションファイルに保存されます。これにより、LLMに永続的で柔軟なメモリを提供し、監査可能性を確保します。\n*   **高い拡張性**: `gemini-cli`をベースにしていますが、コアロジックは分離されており、他のAPIやフレームワークとの連携も可能です。\n*   **CLI駆動のワークフロー**: セッションの開始、続行、圧縮などをコマンドラインで操作できます。\n*   **Web UIによる管理**: セッション履歴の閲覧、編集、フォーク、圧縮、削除などを視覚的に管理できるWebインターフェースを提供します。\n*   **エージェント駆動の高度な機能**: `Compresser`エージェントによる部分的な履歴圧縮や、`Reviewer`エージェントによる要約の検証機能があります。\n*   **マルチエージェントシミュレーション**: Markdownファイルで役割と手順を定義することで、複雑なマルチエージェントシミュレーション（例：リバーシの自己対戦）を自然言語でオーケストレーションできます。\n*   **ドライランモード**: APIに送信する前の最終的なJSONプロンプトを確認できます。\n*   **安全な操作**: 編集や圧縮操作の前に自動的にバックアップが作成されます。\n*   **言語サポート**: エージェントの応答言語を指定できます。\n*   **YOLOモード**: すべてのアクションを自動的に承認します。\n*   **セッション内Todo**: セッションのメタデータ内で簡単なTodoリストを管理できます。\n\nこのプロジェクトは、CC0 1.0 Universal Public Domain Dedicationライセンスの下でリリースされており、自由にカスタマイズして利用できます。",
+      "timestamp": "2025-10-28T12:06:11.299851+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "OKとだけ答えて",
+      "timestamp": "2025-10-28T12:06:29.211549+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "OK",
+      "timestamp": "2025-10-28T12:06:32.028819+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

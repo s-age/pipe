@@ -1,0 +1,57 @@
+{
+  "session_id": "116f9d0385747d2ec86e58f33023b27573c368a455edd96190cfbb339fa3a6e2",
+  "created_at": "2025-10-28T16:55:17.394372+09:00",
+  "purpose": "Fork of: e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search",
+      "timestamp": "2025-10-28T16:54:56.040824+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-28T16:54:59.122222+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "The term \"Flask\" can refer to two distinct concepts: a popular Python web framework and a type of container for liquids.\n\n**Flask (Python Web Framework)**\nFlask is a lightweight and powerful web framework for Python, often categorized as a \"micro-framework\" due to its minimalist design and fewer built-in features compared to more extensive frameworks like Django. It provides the essentials for web development, giving developers significant control and flexibility over their application's structure.\n\nKey characteristics of the Flask framework include:\n*   **Micro-framework:** It is designed to be simple to use with minimal dependencies, allowing developers to add only the components they need.\n*   **Built on Werkzeug and Jinja2:** Flask utilizes the Werkzeug WSGI (Web Server Gateway Interface) toolkit for handling request and response cycles, and the Jinja2 templating engine for creating dynamic HTML pages.\n*   **Flexibility:** Flask offers suggestions but does not enforce specific dependencies or project layouts, enabling developers to choose their preferred tools and libraries.\n*   **Community Extensions:** A wide array of community-provided extensions makes it easy to add new functionalities to Flask applications.\n*   **Applications:** It is used for building web applications, creating web APIs, and developing machine learning applications.\n\n**Flask (Container)**\nA flask is also a type of small container designed to hold liquids. These containers typically have a squarish body and a narrow neck for drinking or pouring.\n\nDifferent types of flasks include:\n*   **Hip Flask:** A small, often flattened, container used for carrying and discreetly sipping alcoholic beverages.\n*   **Laboratory Flask:** Glass vessels with wide bases and narrow necks, such as Erlenmeyer flasks or round-bottom flasks, used by chemists and in scientific work.\n*   **Vacuum Flask (Thermos):** A special container with double walls separated by a vacuum, designed to keep drinks hot or cold for extended periods.\n*   **Canteen:** A flask specifically for carrying water, often used by soldiers or travelers."
+      },
+      "timestamp": "2025-10-28T16:55:09.492746+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "Flaskという言葉には、主に2つの異なる意味があります。\n\n**Flask（Python Webフレームワーク）**\nFlaskは、Pythonで書かれた軽量で強力なWebフレームワークです。ミニマリストな設計が特徴で、Djangoのような大規模なフレームワークと比較して、組み込み機能が少ない「マイクロフレームワーク」に分類されます。これにより、開発者はアプリケーションの構造を柔軟に制御できます。\n\n主な特徴は以下の通りです。\n*   **マイクロフレームワーク:** 依存関係が最小限で、必要なコンポーネントのみを追加できるシンプルな設計です。\n*   **WerkzeugとJinja2を基盤とする:** リクエストとレスポンスの処理にはWerkzeug WSGIツールキットを、動的なHTMLページの作成にはJinja2テンプレートエンジンを利用しています。\n*   **柔軟性:** 特定の依存関係やプロジェクトのレイアウトを強制せず、開発者が好みのツールやライブラリを選択できます。\n*   **コミュニティ拡張:** コミュニティが提供する豊富な拡張機能により、Flaskアプリケーションに新しい機能を追加するのが容易です。\n*   **用途:** Webアプリケーションの構築、Web APIの作成、機械学習アプリケーションの開発などに使用されます。\n\n**Flask（容器）**\nFlaskは、液体を入れるために設計された小さな容器も指します。これらの容器は通常、角張った本体と、飲んだり注いだりするための細い首を持っています。\n\n異なる種類のフラスコには以下のようなものがあります。\n*   **ヒップフラスコ:** アルコール飲料を持ち運び、さりげなく飲むための、小さく平らな容器です。\n*   **実験用フラスコ:** エルレンマイヤーフラスコや丸底フラスコのように、底が広く首が細いガラス製の容器で、化学者や科学研究で使用されます。\n*   **魔法瓶（Thermos）:** 真空によって隔てられた二重壁を持つ特殊な容器で、飲み物を長時間温かくまたは冷たく保つように設計されています。\n*   **水筒:** 水を持ち運ぶためのフラスコで、兵士や旅行者によく使われます。",
+      "timestamp": "2025-10-28T16:55:16.891002+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

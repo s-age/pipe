@@ -1,0 +1,61 @@
+{
+  "session_id": "27363cdf9fcb6aa8add60d5b93a0c7717eb343f591039cb7161dbf4cc761bcfd/87993ca602b1aca7b60733be03bd717ce9fd82c35e6ba2495a3b1f444fa243eb",
+  "created_at": "2025-10-26T20:45:43.152108+09:00",
+  "purpose": "テストだ",
+  "background": "構造変更のWebUIのテストだ",
+  "roles": [
+    "roles/compresser.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": true,
+      "ttl": 0
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "これはテストセッションだ。",
+      "timestamp": "2025-10-26T20:45:43.920731+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "これはテストセッションです。次のコマンドをお待ちしています。\n",
+      "timestamp": "2025-10-26T20:45:50.768357+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約してみてくれ",
+      "timestamp": "2025-10-26T20:46:11.147328+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMのコンテキスト管理を開発者に完全に制御させるためのツールです。従来のチャットクライアントとは異なり、履歴の操作、重要な情報の抽出、真のコンテキストエンジニアリングを可能にします。\n\n主な特徴は以下の通りです。\n- **完全なコンテキスト制御**: 構造化されたJSONスキーマを使用してプロンプトを再構築し、履歴を透過的なJSONセッションファイルに保存することで、LLMに永続的で柔軟なメモリを提供します。\n- **高い拡張性**: `gemini-cli`をベースにしていますが、コアロジックは分離されており、他のAPIやフレームワークにも容易に切り替え可能です。\n- **CLI駆動ワークフロー**: セッションの開始、続行、圧縮をコマンドラインから行えます。\n- **Web UIによる管理**: セッション履歴の閲覧、編集、フォーク、圧縮、削除を視覚的に管理できます。\n- **エージェント駆動ワークフロー**: `Compresser`エージェントと`Reviewer`エージェントが連携し、履歴の圧縮と検証を自動で行います。\n- **マルチエージェントシミュレーション**: Markdownファイルで役割と手順を定義することで、複雑なマルチエージェントシミュレーション（例：リバーシの自己対戦）を自然言語でオーケストレーションできます。\n\nセットアップにはPython 3.12以上と`gemini-cli`が必要です。`pipe`のツールサーバーを`gemini-cli`に登録することで、高度な機能が利用可能になります。\n",
+      "timestamp": "2025-10-26T20:46:17.675707+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "TODOを作成してくれ。\n- test1\n- test2",
+      "timestamp": "2025-10-26T20:46:59.862072+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": [
+    "test1",
+    "test2"
+  ]
+}

@@ -1,12 +1,14 @@
 """
 Pydantic model for validating the request body of the fork session API endpoint.
 """
+
 from pydantic import BaseModel, field_validator
+
 
 class ForkSessionRequest(BaseModel):
     session_id: str
 
-    @field_validator('session_id')
+    @field_validator("session_id")
     @classmethod
     def check_not_empty(cls, v: str) -> str:
         """Ensures the session_id is not empty."""

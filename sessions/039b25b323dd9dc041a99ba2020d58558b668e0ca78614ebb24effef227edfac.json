@@ -1,0 +1,24 @@
+{
+  "session_id": "039b25b323dd9dc041a99ba2020d58558b668e0ca78614ebb24effef227edfac",
+  "created_at": "2025-10-25T14:08:41.625668+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": null,
+    "top_p": null,
+    "top_k": null
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して",
+      "timestamp": "2025-10-25T14:08:41.628062+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

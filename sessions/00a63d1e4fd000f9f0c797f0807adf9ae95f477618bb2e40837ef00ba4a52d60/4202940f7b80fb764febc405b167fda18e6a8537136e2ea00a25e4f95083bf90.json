@@ -1,0 +1,36 @@
+{
+  "session_id": "00a63d1e4fd000f9f0c797f0807adf9ae95f477618bb2e40837ef00ba4a52d60/4202940f7b80fb764febc405b167fda18e6a8537136e2ea00a25e4f95083bf90",
+  "created_at": "2025-10-25T01:43:11.232375+00:00",
+  "purpose": "新規セッション追加テスト",
+  "background": "構造を大きく変えたので新規セッションの追加テストを行う",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "これはテストだ。",
+      "timestamp": "2025-10-25T10:43:11.696985+09:00"
+    }
+  ],
+  "pools": []
+}

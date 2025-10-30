@@ -1,0 +1,13 @@
+{
+  "session_id": "71fc78f581d370b88ac5ccf0e09c56cc0c2c35ca53b8de1df0e267b798391e69",
+  "created_at": "2025-10-23T07:48:14.093576+09:00",
+  "purpose": "“テストだ”",
+  "background": "“言われたことを忠実にやれ”",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {},
+  "references": [],
+  "turns": [],
+  "pools": []
+}

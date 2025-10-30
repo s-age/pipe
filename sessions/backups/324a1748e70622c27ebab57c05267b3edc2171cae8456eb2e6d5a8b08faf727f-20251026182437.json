@@ -1,0 +1,3400 @@
+{
+  "session_id": "8498e78292e24adb9fd9d55c9d865edb4249502627d55848f8dfab391796247a",
+  "created_at": "2025-10-26T11:00:27.194526+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 18706,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": true
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使って「小玉ひかり」について教えて",
+      "timestamp": "2025-10-26T11:00:27.197340+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"小玉ひかり\"})",
+      "timestamp": "2025-10-26T11:00:28.490382+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "小玉ひかり（こだま ひかり）は、2000年2月14日生まれの日本のシンガーソングライターであり、声優としても活動しています。千葉県出身です。\n\n14歳で音楽活動を開始し、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。2023年11月には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でミュージックレインよりメジャーデビューを果たしました。続く2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\n彼女はピアノ弾き語りのスタイルを特徴としており、自身のYouTubeチャンネルも積極的に更新しています。また、舞台「REAL AKIBA BOYZ～Over The Future!～」にREN役で出演するなど、声優や舞台での活動も行っています。"
+        }
+      },
+      "timestamp": "2025-10-26T11:00:32.449662+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "小玉ひかり（こだま ひかり）さんは、2000年2月14日生まれの日本のシンガーソングライターであり、声優としても活動しています。千葉県出身です。\n\n14歳で音楽活動を開始し、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。2023年11月には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でメジャーデビューを果たしました。続く2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\n彼女はピアノ弾き語りのスタイルを特徴としており、自身のYouTubeチャンネルも積極的に更新しています。また、舞台『REAL AKIBA BOYZ～Over The Future!～』にREN役で出演するなど、声優や舞台での活動も行っています。",
+      "timestamp": "2025-10-26T11:00:35.710291+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約しろ",
+      "timestamp": "2025-10-26T11:20:33.417975+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-26T11:20:34.978825+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-26T11:20:34.992547+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_many_files({\"paths\": [\"README.md\"]})",
+      "timestamp": "2025-10-26T11:20:37.446715+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_many_files",
+      "response": {
+        "status": "succeeded",
+        "message": "Added 1 files to the session references."
+      },
+      "timestamp": "2025-10-26T11:20:37.457614+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "run_shell_command({\"command\": \"cat README.md\"})",
+      "timestamp": "2025-10-26T11:20:41.076224+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "run_shell_command",
+      "response": {
+        "status": "failed",
+        "message": "Command failed with exit code 1"
+      },
+      "timestamp": "2025-10-26T11:20:41.094792+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "search_file_content({\"include\": \"README.md\", \"pattern\": \".*\"})",
+      "timestamp": "2025-10-26T11:20:45.425150+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "search_file_content",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": [
+            {
+              "file_path": "README.md",
+              "line_number": 1,
+              "line_content": "[![License: CC0-1.0](https://img.shields.io/badge/License-CC0--1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 2,
+              "line_content": "# pipe: A Clean Jailbreak from LLM Obfuscation"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 3,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 4,
+              "line_content": "`pipe` is not another chat agent. It is a tool designed to give you, the developer, complete control over the conversational context. Unlike traditional clients that hide their history management in a black box, `pipe` empowers you to freely manipulate the history, extract what is essential, and achieve **true context engineering**."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 5,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 6,
+              "line_content": "This is a clean jailbreak tool from vendor obfuscation."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 7,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 8,
+              "line_content": "We employ a **minimal yet powerful** CLI-driven approach, focusing on the one thing that truly matters: ensuring the agent understands its purpose, history, and current task without ambiguity."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 9,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 10,
+              "line_content": "## Core Philosophy"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 11,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 12,
+              "line_content": "### 1. Total Context Control"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 13,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 14,
+              "line_content": "The prompt is reconstructed with a structured, self-describing **JSON Schema** for every call. This is inherently more token-efficient and understandable for an LLM. The entire history is transparent, saved in readable JSON session files. This ensures full **auditability** and gives the stateless LLM a persistent, and more importantly, **malleable** memory. You can retry, refine, edit, delete, and compress with surgical precision."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 15,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 16,
+              "line_content": "### 2. Uncompromising Extensibility"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 17,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 18,
+              "line_content": "By default, `pipe` is based on `gemini-cli`, but this is merely an implementation detail. The core logic is decoupled. If you want to use the direct API, do it. If you want to use `claude-code`, do it. The framework is designed to be torn apart and rebuilt to your specifications."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 19,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 20,
+              "line_content": "### License: The Spirit of the Jailbreak"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 21,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 22,
+              "line_content": "This project is released under the [CC0 1.0 Universal (CC0 1.0) Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 23,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 24,
+              "line_content": "Customize it as you wish. Jailbreak as you desire."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 25,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 26,
+              "line_content": "The purpose of this project is to be a **pipe to the agent**, and a **pipe to our followers** (the community)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 27,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 28,
+              "line_content": "-----"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 29,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 30,
+              "line_content": "## Features"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 31,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 32,
+              "line_content": "* **Session-Based History:** Each conversation is a self-contained session, stored in a single, human-readable JSON file."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 33,
+              "line_content": "* **Structured JSON Prompting:** Builds a detailed, self-describing JSON object as the final prompt, providing meta-context to the model for improved clarity."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 34,
+              "line_content": "* **CLI-Driven Workflow:** A powerful command-line interface to start, continue, or compress sessions."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 35,
+              "line_content": "* **Extensible Backend:** The execution agent is decoupled. You can choose between `gemini-api` (direct API calls) and `gemini-cli` (CLI tool) via the `api_mode` setting in `setting.yml`. The architecture allows for swapping in other execution agents as well."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 36,
+              "line_content": "* **Configuration via YAML:** Configure model, context limits, and other settings in `setting.yml`."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 37,
+              "line_content": "* **Token-Aware:** Calculates token count for each prompt and warns before exceeding limits."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 38,
+              "line_content": "* **Dry Run Mode:** A `--dry-run` flag to inspect the final JSON prompt before sending it to the API."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 39,
+              "line_content": "* **Web UI for Management:** A comprehensive web interface to manage the entire lifecycle of a conversation."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 40,
+              "line_content": "* **Safe Operations:** Automatic backups are created before any edit or compression operation."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 41,
+              "line_content": "* **Language Support:** Allows specifying the language for agent responses."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 42,
+              "line_content": "* **YOLO Mode:** Automatically accept all actions (aka YOLO mode, see [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0) for more details)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 43,
+              "line_content": "* **In-Session Todos:** Manage a simple todo list directly within the session's metadata."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 44,
+              "line_content": "* **Advanced Agent-driven Compression**:"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 45,
+              "line_content": "*   A specialized `Compresser` agent can perform **partial compression** on any session's history."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 46,
+              "line_content": "*   Precisely control the compression by specifying a **turn range**, a **summarization policy** (what to keep), and a **target character count**."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 47,
+              "line_content": "*   Before applying the compression, a `Reviewer` agent automatically **verifies** that the summarized history maintains a natural conversational flow, preventing context loss."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 48,
+              "line_content": "*   **Note on `gemini-cli`:** To use advanced features like Compression and Forking in `gemini-cli` mode, you must first register the `pipe` tool server. See the \"Integration with `gemini-cli`\" section below for the required one-time setup command."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 49,
+              "line_content": "* **Turn-based Forking:** Easily fork a conversation from any specific turn. This allows you to explore alternative responses from the LLM or test different instructions without altering the original history, enabling robust validation and experimentation."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 50,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 51,
+              "line_content": "-----"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 52,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 53,
+              "line_content": "## Setup & Installation"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 54,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 55,
+              "line_content": "1. **Prerequisites:** Python 3.x and `gemini-cli` installed in your PATH."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 56,
+              "line_content": "Python 3.12 or higher is required. For Python versions below 3.9, please use `gemini-cli` from the `python-3.9-deprecated` branch: [python-3.9-deprecated](https://github.com/s-age/pipe/tree/python-3.9-deprecated)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 57,
+              "line_content": "2.  **Install Dependencies:** `pip install -e .`"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 58,
+              "line_content": "3.  **Set up API Key:** Create a `.env` file (you can copy `.env.default`)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 59,
+              "line_content": "*   For consistency with `.env.default`, add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 60,
+              "line_content": "*   For CLI usage, ensure `GOOGLE_API_KEY` is set in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`) as `takt` expects this variable."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 61,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 62,
+              "line_content": "## Integration with `gemini-cli` (One-Time Setup)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 63,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 64,
+              "line_content": "To use advanced features like agent-driven **Compression** and session **Forking** in `gemini-cli` mode, you must first register `pipe`'s tool server. This command tells `gemini-cli` how to communicate with this project's tools."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 65,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 66,
+              "line_content": "Execute the following command once:"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 67,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 68,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 69,
+              "line_content": "gemini mcp add pipe_tools \"python -m pipe.cli.mcp_server\" --working-dir /path/to/pipe"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 70,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 71,
+              "line_content": "*(Replace `/path/to/pipe` with the actual absolute path to this project's directory.)*"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 72,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 73,
+              "line_content": "**Benefit:** After this integration, all tool calls made during a session (such as `create_verified_summary` or `read_file`) will become visible in the session history file (`.json`), providing complete transparency and auditability of the agent's actions."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 74,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 75,
+              "line_content": "-----"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 76,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 77,
+              "line_content": "## Usage: 3 Routes to Context Engineering"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 78,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 79,
+              "line_content": "The **pipe** framework offers three primary routes, optimized for different user environments and goals, all built on the same structured core."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 80,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 81,
+              "line_content": "### 1. Route 1: Python Script (Automation & CLI)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 82,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 83,
+              "line_content": "This route is ideal for **automation, scripting, and CLI-focused developers** who need reliable, repeatable execution."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 84,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 85,
+              "line_content": "| Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 86,
+              "line_content": "| :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 87,
+              "line_content": "| **Start New Session** | Define the complete context (`--purpose`, `--background`, `--roles`) and first instruction. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 88,
+              "line_content": "| **Continue Session** | Specify an existing `<SESSION_ID>` and add a new instruction. This is the primary way to give the short-lived agent \"memory.\" |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 89,
+              "line_content": "| **Compress History** | Use the `--compress` flag to efficiently replace long history with a summary. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 90,
+              "line_content": "| **Debug/Cost Control** | Use the `--dry-run` flag to inspect the generated JSON prompt before the API call. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 91,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 92,
+              "line_content": "**Examples:**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 93,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 94,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 95,
+              "line_content": "# Start New Session Example"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 96,
+              "line_content": "takt --purpose \"Create a new React component\" --background \"...\" --roles \"roles/engineer.md\" --instruction \"Create a 'UserProfile' component.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 97,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 98,
+              "line_content": "takt --session <SESSION_ID> --instruction \"Now, add a state for loading.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 99,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 100,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 101,
+              "line_content": "### 2. Route 2: Web UI (Management & Human-in-the-Loop)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 102,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 103,
+              "line_content": "This is best for users seeking **intuitive visual management** and **direct manipulation of history** without file editing."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 104,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 105,
+              "line_content": "| Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 106,
+              "line_content": "| :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 107,
+              "line_content": "| **View/Edit History** | Browse detailed session histories; surgically edit specific turns or session metadata (purpose/background). |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 108,
+              "line_content": "| **Fork from Turn** | Easily **fork** a conversation from any specific turn to test alternative instructions or validate different LLM responses without altering the original flow. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 109,
+              "line_content": "| **Enable Editing** | Activate `expert_mode` in `setting.yml` to enable editing and deleting session turns directly from the Web UI. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 110,
+              "line_content": "| **Continue Sessions** | Use form inputs to send new instructions to existing sessions. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 111,
+              "line_content": "| **Management** | Intuitively start new sessions, compress history, or delete unnecessary sessions via a graphical interface. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 112,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 113,
+              "line_content": "**Example (Start Server):**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 114,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 115,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 116,
+              "line_content": "flask --app pipe.web.app run --host=0.0.0.0 --port=5001"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 117,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 118,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 119,
+              "line_content": "*(Navigate to `http://127.0.0.1:5001` in your browser)*"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 120,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 121,
+              "line_content": "### 3. Route 3: Execution from Agent (Orchestration)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 122,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 123,
+              "line_content": "This is for **advanced AI system builders** leveraging **pipe's** full context control capabilities for multi-agent coordination."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 124,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 125,
+              "line_content": "| Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 126,
+              "line_content": "| :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 127,
+              "line_content": "| **Role Delegation** | A parent agent assigns the **Conductor role** to a child agent and delegates the task using the structured command format. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 128,
+              "line_content": "| **Small-Scale Orchestration** | **By customizing the role definition**, the Conductor role can be programmed to divide complex tasks into subtasks and recursively delegate them to different execution agents with specific roles. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 129,
+              "line_content": "| **Clean Execution** | The delegated task is passed as a **structured JSON prompt**, ensuring maximum efficiency for the short-lived sub-agent. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 130,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 131,
+              "line_content": "**Execution Example (Delegation from Parent Agent):**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 132,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 133,
+              "line_content": "> **[IMPORTANT] The following command examples are not intended to be executed directly in the user's terminal. They are used as instructions to an already launched parent agent (such as Gemini) to assign the Conductor role and delegate tasks.**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 134,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 135,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 136,
+              "line_content": "Act as @roles/conductor.md takt --session <SESSION_ID> --instruction \"Now, add a state for loading.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 137,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 138,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 139,
+              "line_content": "### 4. Route 4: Agent-driven Workflows (Compression & Verification)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 140,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 141,
+              "line_content": "The `pipe` framework supports agent-driven meta-tasks like history management. The `Compresser` and `Reviewer` agents work in tandem to ensure both efficiency and quality."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 142,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 143,
+              "line_content": "| Step | Agent | Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 144,
+              "line_content": "| :--- | :--- | :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 145,
+              "line_content": "| **1. Initiate** | `Compresser` | Surgical Compression | Start a new session and assign the `roles/compresser.md` role. Instruct this agent to compress parts of *any other session*. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 146,
+              "line_content": "| **2. Specify** | `Compresser` | Controlled Summarization | Guide the agent by providing the target `SESSION_ID`, a `START` and `END` turn, a `policy` (what to keep), and a `target length`. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 147,
+              "line_content": "| **3. Verify** | `Reviewer` | Quality Assurance | Before applying the summary, the `Reviewer` agent is automatically invoked to check if the compressed history flows naturally and preserves key context. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 148,
+              "line_content": "| **4. Apply** | `Compresser` | Finalize Compression | Once the verification is passed, the agent replaces the specified turn range with the generated summary. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 149,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 150,
+              "line_content": "> **[NOTE]** The compression workflow is available only when `api_mode` is set to `gemini-api`. It is not supported in `gemini-cli` mode as it requires an MCP server."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 151,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 152,
+              "line_content": "**Example (Starting a Compression Session):**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 153,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 154,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 155,
+              "line_content": "# Start a new session to manage other sessions"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 156,
+              "line_content": "takt --purpose \"Compress a long-running session\" --role \"roles/compresser.md\" --instruction \"I want to compress session <TARGET_SESSION_ID>.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 157,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 158,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 159,
+              "line_content": "The agent will then interactively guide you through the specification and verification process to perform the compression safely."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 160,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 161,
+              "line_content": "### Compression & Verification Workflow"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 162,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 163,
+              "line_content": "```mermaid"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 164,
+              "line_content": "graph TD"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 165,
+              "line_content": "subgraph \"Design Phase (Turns 1-50)\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 166,
+              "line_content": "A[\"User starts conversation about design (Turns 1-50)\"] --> B[\"Design context accumulates (including potential noise)\"];"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 167,
+              "line_content": "B --> C[\"User requests to compress the design phase and move to implementation\"];"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 168,
+              "line_content": "end"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 169,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 170,
+              "line_content": "subgraph \"Compression Gate\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 171,
+              "line_content": "C --> D(\"1. Compresser Agent starts\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 172,
+              "line_content": "D --> E{\"Tool: read_session_turns(1-50) to load history\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 173,
+              "line_content": "E --> F(\"2. Generate summary draft\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 174,
+              "line_content": "F --> G{\"Tool: call create_verified_summary(Summary Draft)\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 175,
+              "line_content": "G --> H(\"3. Verifier Agent starts\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 176,
+              "line_content": "H --> I{\"Verifier Agent: Quality check and verification of 'Summary Draft'\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 177,
+              "line_content": "I -- \"NO: Critical information missing\" --> F;"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 178,
+              "line_content": "I -- \"YES: Quality verified\" --> J(\"4. Return Verified Summary to Compresser\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 179,
+              "line_content": "J --> K{\"5. Compresser: Present Verified Summary to user for approval\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 180,
+              "line_content": "K -- \"User approves\" --> L{\"Tool: replace_session_turns(1-50, Verified Summary) to replace history\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 181,
+              "line_content": "K -- \"User rejects\" --> M[\"Compression process terminated (history preserved)\"];"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 182,
+              "line_content": "L --> N(\"6. Compression complete: Clean context for implementation\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 183,
+              "line_content": "end"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 184,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 185,
+              "line_content": "subgraph \"Implementation Phase\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 186,
+              "line_content": "N --> O[\"User starts implementation process\"];"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 187,
+              "line_content": "end"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 188,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 189,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 190,
+              "line_content": "### 5. Route 5: Multi-Agent Simulation (e.g., Self-Play)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 191,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 192,
+              "line_content": "The true power of `pipe` is revealed in its ability to facilitate complex multi-agent simulations using nothing more than natural language. By defining roles and procedures in simple Markdown files, you can orchestrate sophisticated interactions between agents."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 193,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 194,
+              "line_content": "A compelling demonstration of this is achieving a Reversi game where Gemini plays against itself. This entire simulation is orchestrated by giving a single command to a parent agent."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 195,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 196,
+              "line_content": "| Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 197,
+              "line_content": "| :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 198,
+              "line_content": "| **Self-Play Simulation** | Instruct an agent to adopt a role and execute a procedure. For example, tell Gemini to act as a Reversi player and follow the game's rules. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 199,
+              "line_content": "| **Natural Language Programming** | The agents' behaviors are not hard-coded. They are guided entirely by the `@roles` and `@procedures` files you provide, making the system incredibly flexible. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 200,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 201,
+              "line_content": "**Execution Example (Orchestrating a Self-Play Game):**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 202,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 203,
+              "line_content": "> **[IMPORTANT]** The following command is an instruction given to a parent AI agent (like Gemini), not meant for direct terminal execution."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 204,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 205,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 206,
+              "line_content": "Act as @roles/games/reversi_player.md and execute @procedures/reversi_game.md"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 207,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 208,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 209,
+              "line_content": "This single line of instruction causes the agent to initiate a game of Reversi, playing against itself by following the rules and persona defined in the Markdown files. This showcases the framework's capability for complex task delegation and agent-based automation, all orchestrated through simple, human-readable text."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 210,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 211,
+              "line_content": "-----"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 212,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 213,
+              "line_content": "## Dry Run Output Example"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 214,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 215,
+              "line_content": "When running `takt` with the `--dry-run` flag, the generated JSON prompt is displayed. This JSON object represents the structured input that would be sent to the AI sub-agent. It can be useful for understanding how `pipe` constructs its prompts or for direct experimentation with AI models."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 216,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 217,
+              "line_content": "Here's an example of a generated prompt:"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 218,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 219,
+              "line_content": "Note that the JSON presented here is pretty-printed for readability; the actual output from `takt --dry-run` is a single-line JSON string."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 220,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 221,
+              "line_content": "```json"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 222,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 223,
+              "line_content": "\"description\": \"Summarize foo.txt, again\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 224,
+              "line_content": "\"session_goal\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 225,
+              "line_content": "\"description\": \"This section outlines the goal of the current session.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 226,
+              "line_content": "\"purpose\": \"Tool Test\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 227,
+              "line_content": "\"background\": \"Tool Test\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 228,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 229,
+              "line_content": "\"roles\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 230,
+              "line_content": "\"description\": \"The following are the roles for this session.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 231,
+              "line_content": "\"definitions\": []"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 232,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 233,
+              "line_content": "\"constraints\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 234,
+              "line_content": "\"description\": null,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 235,
+              "line_content": "\"language\": \"English\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 236,
+              "line_content": "\"processing_config\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 237,
+              "line_content": "\"description\": null,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 238,
+              "line_content": "\"multi_step_reasoning_active\": true"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 239,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 240,
+              "line_content": "\"hyperparameters\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 241,
+              "line_content": "\"description\": \"Hyperparameter settings for the model.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 242,
+              "line_content": "\"temperature\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 243,
+              "line_content": "\"type\": \"number\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 244,
+              "line_content": "\"value\": 0.2,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 245,
+              "line_content": "\"description\": \"Be precise and factual. A lower value is preferred for deterministic output.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 246,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 247,
+              "line_content": "\"top_p\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 248,
+              "line_content": "\"type\": \"number\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 249,
+              "line_content": "\"value\": 0.5,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 250,
+              "line_content": "\"description\": \"Consider a broad range of possibilities, but adhere strictly to the temperature setting.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 251,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 252,
+              "line_content": "\"top_k\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 253,
+              "line_content": "\"type\": \"number\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 254,
+              "line_content": "\"value\": 5,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 255,
+              "line_content": "\"description\": \"Limit the generation to the top 5 most likely tokens at each step.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 256,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 257,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 258,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 259,
+              "line_content": "\"main_instruction\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 260,
+              "line_content": "\"description\": \"When you receive JSON data, process your thoughts according to the following\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 261,
+              "line_content": "\"flowchart\": \"```mermaid\\ngraph TD\\n    A[\\\"Start\\\"] --> B[\\\"Step 1: Identify Task from 'current_task'\\\"];\\n    B --> C[\\\"Step 2: Gather Context (History & Constraints)\\\"];\\n    C --> D[\\\"Step 3: Summarize Context & Plan\\\"];\\n    D --> E{\\\"Decision: Does the task require external information or actions (e.g., web search, file access, URL fetching, shell commands)?\\\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 262,
+              "line_content": "E -- YES --> F[\\\"Step 4a: Execute Tool\\\"];\\n    E -- NO --> G[\\\"Step 4b: Execute Thinking Process (Conditionally Advanced)\\\"];\\n    F --> G;\\n    G --> H[\\\"Step 5: Generate Final Response\\\"];\\n    H --> I[\\\"End\\\"];\\n```\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 263,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 264,
+              "line_content": "\"conversation_history\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 265,
+              "line_content": "\"description\": \"Historical record of past interactions in this session, in chronological order.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 266,
+              "line_content": "\"turns\": ["
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 267,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 268,
+              "line_content": "\"type\": \"user_task\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 269,
+              "line_content": "\"instruction\": \"Summarize foo.txt\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 270,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 271,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 272,
+              "line_content": "\"type\": \"function_calling\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 273,
+              "line_content": "\"response\": \"read_file({\\\"absolute_path\\\": \\\"foo.txt\\\"})\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 274,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 275,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 276,
+              "line_content": "\"type\": \"tool_response\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 277,
+              "line_content": "\"instruction\": \"Summarize foo.txt\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 278,
+              "line_content": "\"name\": \"read_file\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 279,
+              "line_content": "\"response\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 280,
+              "line_content": "\"status\": \"succeeded\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 281,
+              "line_content": "\"message\": \"File '/Users/s-age/gitrepos/pipe/foo.txt' has been added to the session references.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 282,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 283,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 284,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 285,
+              "line_content": "\"type\": \"model_response\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 286,
+              "line_content": "\"content\": \"The file contains the word 'foo'.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 287,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 288,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 289,
+              "line_content": "\"type\": \"user_task\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 290,
+              "line_content": "\"instruction\": \"Summarize foo.txt, again\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 291,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 292,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 293,
+              "line_content": "\"type\": \"model_response\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 294,
+              "line_content": "\"content\": \"The file contains the word 'foo'.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 295,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 296,
+              "line_content": "]"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 297,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 298,
+              "line_content": "\"current_task\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 299,
+              "line_content": "\"description\": \"The specific task that the AI sub-agent must currently execute.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 300,
+              "line_content": "\"instruction\": \"Summarize foo.txt, again\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 301,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 302,
+              "line_content": "\"file_references\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 303,
+              "line_content": "\"description\": \"Content of files referenced in the session.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 304,
+              "line_content": "\"files\": ["
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 305,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 306,
+              "line_content": "\"path\": \"foo.txt\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 307,
+              "line_content": "\"content\": \"foo\\n\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 308,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 309,
+              "line_content": "]"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 310,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 311,
+              "line_content": "\"reasoning_process\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 312,
+              "line_content": "\"description\": \"The detailed, multi-step internal thinking process...\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 313,
+              "line_content": "\"flowchart\": \"```mermaid\\ngraph TD\\n    A([\\\"Start: JSON Input\\\"]) --> B[\\\"Step 1: Read 'current_task.instruction' to identify task objective\\\"];\\n    B --> C[\\\"Step 2: Derive general principles behind the task (Step-Back)\\\"];\\n    C --> D[\\\"Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'\\\"];\\n    D --> E[\\\"Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context\\\"];\\n    E --> F[\\\"Step 5: Based on the summarized information, think and plan for response generation\\\"];\\n    F --> G{\\\"Decision: Are there any contradictions or leaps in logic?\\\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 314,
+              "line_content": "G -- NO --> E;\\n    G -- YES --> H[\\\"Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)\\\"];\\n    H --> I[\\\"Step 7: Generate the final response based on the plan\\\"];\\n    I --> J{\\\"Decision: Does it meet the initial requirements (format/purpose)?\\\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 315,
+              "line_content": "J -- NO --> F;\\n    J -- YES --> K([\\\"End: Output Response\\\"]);\\n```\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 316,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 317,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 318,
+              "line_content": "```"
+            }
+          ]
+        }
+      },
+      "timestamp": "2025-10-26T11:20:45.439359+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMの対話コンテキストを完全に制御するためのツールです。従来のクライアントとは異なり、履歴管理を透過的に行い、開発者が履歴を自由に操作し、必要な情報を抽出し、**真のコンテキストエンジニアリング**を実現できるように設計されています。\n\n**主要な哲学:**\n\n1.  **完全なコンテキスト制御:** プロンプトは構造化された自己記述的なJSONスキーマで再構築され、LLMにとってトークン効率が良く、理解しやすい形式です。履歴全体は透過的で、読みやすいJSONセッションファイルに保存されます。これにより、完全な**監査可能性**が確保され、ステートレスなLLMに永続的で**柔軟な**メモリが提供されます。\n2.  **妥協のない拡張性:** `pipe`はデフォルトで`gemini-cli`に基づいていますが、これは実装の詳細に過ぎません。コアロジックは分離されており、直接APIを使用したり、`claude-code`を使用したりするなど、自由にカスタマイズできます。\n\n**主な機能:**\n\n*   **セッションベースの履歴:** 各会話は自己完結型のセッションとして、人間が読める単一のJSONファイルに保存されます。\n*   **構造化されたJSONプロンプト:** 詳細な自己記述型JSONオブジェクトを最終プロンプトとして構築し、モデルにメタコンテキストを提供して明確さを向上させます。\n*   **CLI駆動のワークフロー:** セッションの開始、続行、圧縮を行うための強力なコマンドラインインターフェースを提供します。\n*   **拡張可能なバックエンド:** 実行エージェントは分離されており、`setting.yml`の`api_mode`設定を通じて`gemini-api`（直接API呼び出し）と`gemini-cli`（CLIツール）を切り替えることができます。\n*   **YAMLによる設定:** モデル、コンテキスト制限、その他の設定を`setting.yml`で構成できます。\n*   **トークン認識:** 各プロンプトのトークン数を計算し、制限を超える前に警告します。\n*   **ドライランモード:** `--dry-run`フラグを使用して、APIに送信する前に最終的なJSONプロンプトを検査できます。\n*   **Web UIによる管理:** 会話のライフサイクル全体を管理するための包括的なWebインターフェースを提供します。\n*   **安全な操作:** 編集または圧縮操作の前に自動的にバックアップが作成されます。\n*   **言語サポート:** エージェントの応答言語を指定できます。\n*   **YOLOモード:** すべてのアクションを自動的に受け入れます。\n*   **セッション内Todo:** セッションのメタデータ内で簡単なTodoリストを管理できます。\n*   **高度なエージェント駆動型圧縮:**\n    *   専門の`Compresser`エージェントが、任意のセッション履歴に対して**部分的な圧縮**を実行できます。\n    *   **ターン範囲**、**要約ポリシー**（保持する内容）、**目標文字数**を指定することで、圧縮を正確に制御できます。\n    *   圧縮を適用する前に、`Reviewer`エージェントが自動的に**検証**を行い、要約された履歴が自然な会話の流れを維持し、コンテキストの損失を防ぎます。\n*   **ターンベースのフォーク:** 特定のターンから会話を簡単にフォークできます。これにより、元の履歴を変更せずにLLMからの代替応答を探索したり、異なる指示をテストしたりでき、堅牢な検証と実験が可能になります。\n\n**セットアップとインストール:**\n\n1.  **前提条件:** Python 3.xとPATHにインストールされた`gemini-cli`。Python 3.12以上が必要です。\n2.  **依存関係のインストール:** `pip install -e .`\n3.  **APIキーの設定:** `.env`ファイルを作成し、`GEMINI_API_KEY='YOUR_API_KEY_HERE'`を設定します。CLI使用の場合は、`GOOGLE_API_KEY`を環境変数に設定します。\n\n**`gemini-cli`との統合（初回セットアップ）:**\n\nエージェント駆動型圧縮やセッションフォークなどの高度な機能を使用するには、`pipe`のツールサーバーを登録する必要があります。\n\n```bash\ngemini mcp add pipe_tools \"python -m pipe.cli.mcp_server\" --working-dir /path/to/pipe\n```\n\n**使用方法：コンテキストエンジニアリングへの3つのルート**\n\n1.  **ルート1：Pythonスクリプト（自動化とCLI）:** 自動化、スクリプト作成、CLI中心の開発者向け。\n    *   新しいセッションの開始、セッションの続行、履歴の圧縮、ドライランモードでのデバッグ/コスト管理。\n2.  **ルート2：Web UI（管理とヒューマン・イン・ザ・ループ）:** 直感的な視覚的管理と、ファイル編集なしでの履歴の直接操作を求めるユーザーに最適です。\n    *   履歴の表示/編集、ターンからのフォーク、編集の有効化、セッションの続行、管理。\n3.  **ルート3：エージェントからの実行（オーケストレーション）:** マルチエージェント調整のための`pipe`の完全なコンテキスト制御機能を活用する高度なAIシステムビルダー向けです。\n    *   役割の委任、小規模なオーケストレーション、クリーンな実行。\n4.  **ルート4：エージェント駆動型ワークフロー（圧縮と検証）:** 履歴管理のようなエージェント駆動型メタタスクをサポートします。`Compresser`と`Reviewer`エージェントが連携して効率と品質を確保します。\n5.  **ルート5：マルチエージェントシミュレーション（例：自己対戦）:** 自然言語のみを使用して複雑なマルチエージェントシミュレーションを容易にする`pipe`の真の力を示します。\n    *   自己対戦シミュレーション、自然言語プログラミング。\n\n**ドライラン出力例:**\n\n`--dry-run`フラグを付けて`takt`を実行すると、生成されたJSONプロンプトが表示されます。これは、AIサブエージェントに送信される構造化された入力を表します。",
+      "timestamp": "2025-10-26T11:20:55.579152+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "read_file をもう一度使って結果が見えないからcatを使ったのかを教えてくれ",
+      "timestamp": "2025-10-26T11:28:15.092144+09:00"
+    }
+  ],
+  "pools": [
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"小玉ひかり\"})",
+      "timestamp": "2025-10-26T11:00:28.490382+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "小玉ひかり（こだま ひかり）は、2000年2月14日生まれの日本のシンガーソングライターであり、声優としても活動しています。千葉県出身です。\n\n14歳で音楽活動を開始し、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。2023年11月には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でミュージックレインよりメジャーデビューを果たしました。続く2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\n彼女はピアノ弾き語りのスタイルを特徴としており、自身のYouTubeチャンネルも積極的に更新しています。また、舞台「REAL AKIBA BOYZ～Over The Future!～」にREN役で出演するなど、声優や舞台での活動も行っています。"
+        }
+      },
+      "timestamp": "2025-10-26T11:00:32.449662+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-26T11:19:52.275677+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-26T11:19:52.288506+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-26T11:20:34.978825+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-26T11:20:34.992547+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_many_files({\"paths\": [\"README.md\"]})",
+      "timestamp": "2025-10-26T11:20:37.446715+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_many_files",
+      "response": {
+        "status": "succeeded",
+        "message": "Added 1 files to the session references."
+      },
+      "timestamp": "2025-10-26T11:20:37.457614+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "run_shell_command({\"command\": \"cat README.md\"})",
+      "timestamp": "2025-10-26T11:20:41.076224+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "run_shell_command",
+      "response": {
+        "status": "failed",
+        "message": "Command failed with exit code 1"
+      },
+      "timestamp": "2025-10-26T11:20:41.094792+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "search_file_content({\"include\": \"README.md\", \"pattern\": \".*\"})",
+      "timestamp": "2025-10-26T11:20:45.425150+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "search_file_content",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": [
+            {
+              "file_path": "README.md",
+              "line_number": 1,
+              "line_content": "[![License: CC0-1.0](https://img.shields.io/badge/License-CC0--1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 2,
+              "line_content": "# pipe: A Clean Jailbreak from LLM Obfuscation"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 3,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 4,
+              "line_content": "`pipe` is not another chat agent. It is a tool designed to give you, the developer, complete control over the conversational context. Unlike traditional clients that hide their history management in a black box, `pipe` empowers you to freely manipulate the history, extract what is essential, and achieve **true context engineering**."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 5,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 6,
+              "line_content": "This is a clean jailbreak tool from vendor obfuscation."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 7,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 8,
+              "line_content": "We employ a **minimal yet powerful** CLI-driven approach, focusing on the one thing that truly matters: ensuring the agent understands its purpose, history, and current task without ambiguity."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 9,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 10,
+              "line_content": "## Core Philosophy"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 11,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 12,
+              "line_content": "### 1. Total Context Control"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 13,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 14,
+              "line_content": "The prompt is reconstructed with a structured, self-describing **JSON Schema** for every call. This is inherently more token-efficient and understandable for an LLM. The entire history is transparent, saved in readable JSON session files. This ensures full **auditability** and gives the stateless LLM a persistent, and more importantly, **malleable** memory. You can retry, refine, edit, delete, and compress with surgical precision."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 15,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 16,
+              "line_content": "### 2. Uncompromising Extensibility"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 17,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 18,
+              "line_content": "By default, `pipe` is based on `gemini-cli`, but this is merely an implementation detail. The core logic is decoupled. If you want to use the direct API, do it. If you want to use `claude-code`, do it. The framework is designed to be torn apart and rebuilt to your specifications."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 19,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 20,
+              "line_content": "### License: The Spirit of the Jailbreak"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 21,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 22,
+              "line_content": "This project is released under the [CC0 1.0 Universal (CC0 1.0) Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 23,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 24,
+              "line_content": "Customize it as you wish. Jailbreak as you desire."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 25,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 26,
+              "line_content": "The purpose of this project is to be a **pipe to the agent**, and a **pipe to our followers** (the community)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 27,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 28,
+              "line_content": "-----"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 29,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 30,
+              "line_content": "## Features"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 31,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 32,
+              "line_content": "* **Session-Based History:** Each conversation is a self-contained session, stored in a single, human-readable JSON file."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 33,
+              "line_content": "* **Structured JSON Prompting:** Builds a detailed, self-describing JSON object as the final prompt, providing meta-context to the model for improved clarity."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 34,
+              "line_content": "* **CLI-Driven Workflow:** A powerful command-line interface to start, continue, or compress sessions."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 35,
+              "line_content": "* **Extensible Backend:** The execution agent is decoupled. You can choose between `gemini-api` (direct API calls) and `gemini-cli` (CLI tool) via the `api_mode` setting in `setting.yml`. The architecture allows for swapping in other execution agents as well."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 36,
+              "line_content": "* **Configuration via YAML:** Configure model, context limits, and other settings in `setting.yml`."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 37,
+              "line_content": "* **Token-Aware:** Calculates token count for each prompt and warns before exceeding limits."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 38,
+              "line_content": "* **Dry Run Mode:** A `--dry-run` flag to inspect the final JSON prompt before sending it to the API."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 39,
+              "line_content": "* **Web UI for Management:** A comprehensive web interface to manage the entire lifecycle of a conversation."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 40,
+              "line_content": "* **Safe Operations:** Automatic backups are created before any edit or compression operation."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 41,
+              "line_content": "* **Language Support:** Allows specifying the language for agent responses."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 42,
+              "line_content": "* **YOLO Mode:** Automatically accept all actions (aka YOLO mode, see [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0) for more details)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 43,
+              "line_content": "* **In-Session Todos:** Manage a simple todo list directly within the session's metadata."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 44,
+              "line_content": "* **Advanced Agent-driven Compression**:"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 45,
+              "line_content": "*   A specialized `Compresser` agent can perform **partial compression** on any session's history."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 46,
+              "line_content": "*   Precisely control the compression by specifying a **turn range**, a **summarization policy** (what to keep), and a **target character count**."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 47,
+              "line_content": "*   Before applying the compression, a `Reviewer` agent automatically **verifies** that the summarized history maintains a natural conversational flow, preventing context loss."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 48,
+              "line_content": "*   **Note on `gemini-cli`:** To use advanced features like Compression and Forking in `gemini-cli` mode, you must first register the `pipe` tool server. See the \"Integration with `gemini-cli`\" section below for the required one-time setup command."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 49,
+              "line_content": "* **Turn-based Forking:** Easily fork a conversation from any specific turn. This allows you to explore alternative responses from the LLM or test different instructions without altering the original history, enabling robust validation and experimentation."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 50,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 51,
+              "line_content": "-----"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 52,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 53,
+              "line_content": "## Setup & Installation"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 54,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 55,
+              "line_content": "1. **Prerequisites:** Python 3.x and `gemini-cli` installed in your PATH."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 56,
+              "line_content": "Python 3.12 or higher is required. For Python versions below 3.9, please use `gemini-cli` from the `python-3.9-deprecated` branch: [python-3.9-deprecated](https://github.com/s-age/pipe/tree/python-3.9-deprecated)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 57,
+              "line_content": "2.  **Install Dependencies:** `pip install -e .`"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 58,
+              "line_content": "3.  **Set up API Key:** Create a `.env` file (you can copy `.env.default`)."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 59,
+              "line_content": "*   For consistency with `.env.default`, add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 60,
+              "line_content": "*   For CLI usage, ensure `GOOGLE_API_KEY` is set in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`) as `takt` expects this variable."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 61,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 62,
+              "line_content": "## Integration with `gemini-cli` (One-Time Setup)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 63,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 64,
+              "line_content": "To use advanced features like agent-driven **Compression** and session **Forking** in `gemini-cli` mode, you must first register `pipe`'s tool server. This command tells `gemini-cli` how to communicate with this project's tools."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 65,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 66,
+              "line_content": "Execute the following command once:"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 67,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 68,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 69,
+              "line_content": "gemini mcp add pipe_tools \"python -m pipe.cli.mcp_server\" --working-dir /path/to/pipe"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 70,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 71,
+              "line_content": "*(Replace `/path/to/pipe` with the actual absolute path to this project's directory.)*"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 72,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 73,
+              "line_content": "**Benefit:** After this integration, all tool calls made during a session (such as `create_verified_summary` or `read_file`) will become visible in the session history file (`.json`), providing complete transparency and auditability of the agent's actions."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 74,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 75,
+              "line_content": "-----"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 76,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 77,
+              "line_content": "## Usage: 3 Routes to Context Engineering"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 78,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 79,
+              "line_content": "The **pipe** framework offers three primary routes, optimized for different user environments and goals, all built on the same structured core."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 80,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 81,
+              "line_content": "### 1. Route 1: Python Script (Automation & CLI)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 82,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 83,
+              "line_content": "This route is ideal for **automation, scripting, and CLI-focused developers** who need reliable, repeatable execution."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 84,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 85,
+              "line_content": "| Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 86,
+              "line_content": "| :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 87,
+              "line_content": "| **Start New Session** | Define the complete context (`--purpose`, `--background`, `--roles`) and first instruction. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 88,
+              "line_content": "| **Continue Session** | Specify an existing `<SESSION_ID>` and add a new instruction. This is the primary way to give the short-lived agent \"memory.\" |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 89,
+              "line_content": "| **Compress History** | Use the `--compress` flag to efficiently replace long history with a summary. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 90,
+              "line_content": "| **Debug/Cost Control** | Use the `--dry-run` flag to inspect the generated JSON prompt before the API call. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 91,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 92,
+              "line_content": "**Examples:**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 93,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 94,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 95,
+              "line_content": "# Start New Session Example"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 96,
+              "line_content": "takt --purpose \"Create a new React component\" --background \"...\" --roles \"roles/engineer.md\" --instruction \"Create a 'UserProfile' component.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 97,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 98,
+              "line_content": "takt --session <SESSION_ID> --instruction \"Now, add a state for loading.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 99,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 100,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 101,
+              "line_content": "### 2. Route 2: Web UI (Management & Human-in-the-Loop)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 102,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 103,
+              "line_content": "This is best for users seeking **intuitive visual management** and **direct manipulation of history** without file editing."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 104,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 105,
+              "line_content": "| Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 106,
+              "line_content": "| :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 107,
+              "line_content": "| **View/Edit History** | Browse detailed session histories; surgically edit specific turns or session metadata (purpose/background). |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 108,
+              "line_content": "| **Fork from Turn** | Easily **fork** a conversation from any specific turn to test alternative instructions or validate different LLM responses without altering the original flow. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 109,
+              "line_content": "| **Enable Editing** | Activate `expert_mode` in `setting.yml` to enable editing and deleting session turns directly from the Web UI. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 110,
+              "line_content": "| **Continue Sessions** | Use form inputs to send new instructions to existing sessions. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 111,
+              "line_content": "| **Management** | Intuitively start new sessions, compress history, or delete unnecessary sessions via a graphical interface. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 112,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 113,
+              "line_content": "**Example (Start Server):**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 114,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 115,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 116,
+              "line_content": "flask --app pipe.web.app run --host=0.0.0.0 --port=5001"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 117,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 118,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 119,
+              "line_content": "*(Navigate to `http://127.0.0.1:5001` in your browser)*"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 120,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 121,
+              "line_content": "### 3. Route 3: Execution from Agent (Orchestration)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 122,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 123,
+              "line_content": "This is for **advanced AI system builders** leveraging **pipe's** full context control capabilities for multi-agent coordination."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 124,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 125,
+              "line_content": "| Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 126,
+              "line_content": "| :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 127,
+              "line_content": "| **Role Delegation** | A parent agent assigns the **Conductor role** to a child agent and delegates the task using the structured command format. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 128,
+              "line_content": "| **Small-Scale Orchestration** | **By customizing the role definition**, the Conductor role can be programmed to divide complex tasks into subtasks and recursively delegate them to different execution agents with specific roles. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 129,
+              "line_content": "| **Clean Execution** | The delegated task is passed as a **structured JSON prompt**, ensuring maximum efficiency for the short-lived sub-agent. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 130,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 131,
+              "line_content": "**Execution Example (Delegation from Parent Agent):**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 132,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 133,
+              "line_content": "> **[IMPORTANT] The following command examples are not intended to be executed directly in the user's terminal. They are used as instructions to an already launched parent agent (such as Gemini) to assign the Conductor role and delegate tasks.**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 134,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 135,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 136,
+              "line_content": "Act as @roles/conductor.md takt --session <SESSION_ID> --instruction \"Now, add a state for loading.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 137,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 138,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 139,
+              "line_content": "### 4. Route 4: Agent-driven Workflows (Compression & Verification)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 140,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 141,
+              "line_content": "The `pipe` framework supports agent-driven meta-tasks like history management. The `Compresser` and `Reviewer` agents work in tandem to ensure both efficiency and quality."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 142,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 143,
+              "line_content": "| Step | Agent | Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 144,
+              "line_content": "| :--- | :--- | :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 145,
+              "line_content": "| **1. Initiate** | `Compresser` | Surgical Compression | Start a new session and assign the `roles/compresser.md` role. Instruct this agent to compress parts of *any other session*. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 146,
+              "line_content": "| **2. Specify** | `Compresser` | Controlled Summarization | Guide the agent by providing the target `SESSION_ID`, a `START` and `END` turn, a `policy` (what to keep), and a `target length`. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 147,
+              "line_content": "| **3. Verify** | `Reviewer` | Quality Assurance | Before applying the summary, the `Reviewer` agent is automatically invoked to check if the compressed history flows naturally and preserves key context. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 148,
+              "line_content": "| **4. Apply** | `Compresser` | Finalize Compression | Once the verification is passed, the agent replaces the specified turn range with the generated summary. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 149,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 150,
+              "line_content": "> **[NOTE]** The compression workflow is available only when `api_mode` is set to `gemini-api`. It is not supported in `gemini-cli` mode as it requires an MCP server."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 151,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 152,
+              "line_content": "**Example (Starting a Compression Session):**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 153,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 154,
+              "line_content": "```bash"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 155,
+              "line_content": "# Start a new session to manage other sessions"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 156,
+              "line_content": "takt --purpose \"Compress a long-running session\" --role \"roles/compresser.md\" --instruction \"I want to compress session <TARGET_SESSION_ID>.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 157,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 158,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 159,
+              "line_content": "The agent will then interactively guide you through the specification and verification process to perform the compression safely."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 160,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 161,
+              "line_content": "### Compression & Verification Workflow"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 162,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 163,
+              "line_content": "```mermaid"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 164,
+              "line_content": "graph TD"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 165,
+              "line_content": "subgraph \"Design Phase (Turns 1-50)\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 166,
+              "line_content": "A[\"User starts conversation about design (Turns 1-50)\"] --> B[\"Design context accumulates (including potential noise)\"];"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 167,
+              "line_content": "B --> C[\"User requests to compress the design phase and move to implementation\"];"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 168,
+              "line_content": "end"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 169,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 170,
+              "line_content": "subgraph \"Compression Gate\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 171,
+              "line_content": "C --> D(\"1. Compresser Agent starts\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 172,
+              "line_content": "D --> E{\"Tool: read_session_turns(1-50) to load history\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 173,
+              "line_content": "E --> F(\"2. Generate summary draft\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 174,
+              "line_content": "F --> G{\"Tool: call create_verified_summary(Summary Draft)\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 175,
+              "line_content": "G --> H(\"3. Verifier Agent starts\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 176,
+              "line_content": "H --> I{\"Verifier Agent: Quality check and verification of 'Summary Draft'\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 177,
+              "line_content": "I -- \"NO: Critical information missing\" --> F;"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 178,
+              "line_content": "I -- \"YES: Quality verified\" --> J(\"4. Return Verified Summary to Compresser\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 179,
+              "line_content": "J --> K{\"5. Compresser: Present Verified Summary to user for approval\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 180,
+              "line_content": "K -- \"User approves\" --> L{\"Tool: replace_session_turns(1-50, Verified Summary) to replace history\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 181,
+              "line_content": "K -- \"User rejects\" --> M[\"Compression process terminated (history preserved)\"];"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 182,
+              "line_content": "L --> N(\"6. Compression complete: Clean context for implementation\");"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 183,
+              "line_content": "end"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 184,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 185,
+              "line_content": "subgraph \"Implementation Phase\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 186,
+              "line_content": "N --> O[\"User starts implementation process\"];"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 187,
+              "line_content": "end"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 188,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 189,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 190,
+              "line_content": "### 5. Route 5: Multi-Agent Simulation (e.g., Self-Play)"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 191,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 192,
+              "line_content": "The true power of `pipe` is revealed in its ability to facilitate complex multi-agent simulations using nothing more than natural language. By defining roles and procedures in simple Markdown files, you can orchestrate sophisticated interactions between agents."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 193,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 194,
+              "line_content": "A compelling demonstration of this is achieving a Reversi game where Gemini plays against itself. This entire simulation is orchestrated by giving a single command to a parent agent."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 195,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 196,
+              "line_content": "| Use Case | Description |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 197,
+              "line_content": "| :--- | :--- |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 198,
+              "line_content": "| **Self-Play Simulation** | Instruct an agent to adopt a role and execute a procedure. For example, tell Gemini to act as a Reversi player and follow the game's rules. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 199,
+              "line_content": "| **Natural Language Programming** | The agents' behaviors are not hard-coded. They are guided entirely by the `@roles` and `@procedures` files you provide, making the system incredibly flexible. |"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 200,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 201,
+              "line_content": "**Execution Example (Orchestrating a Self-Play Game):**"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 202,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 203,
+              "line_content": "> **[IMPORTANT]** The following command is an instruction given to a parent AI agent (like Gemini), not meant for direct terminal execution."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 204,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 205,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 206,
+              "line_content": "Act as @roles/games/reversi_player.md and execute @procedures/reversi_game.md"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 207,
+              "line_content": "```"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 208,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 209,
+              "line_content": "This single line of instruction causes the agent to initiate a game of Reversi, playing against itself by following the rules and persona defined in the Markdown files. This showcases the framework's capability for complex task delegation and agent-based automation, all orchestrated through simple, human-readable text."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 210,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 211,
+              "line_content": "-----"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 212,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 213,
+              "line_content": "## Dry Run Output Example"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 214,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 215,
+              "line_content": "When running `takt` with the `--dry-run` flag, the generated JSON prompt is displayed. This JSON object represents the structured input that would be sent to the AI sub-agent. It can be useful for understanding how `pipe` constructs its prompts or for direct experimentation with AI models."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 216,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 217,
+              "line_content": "Here's an example of a generated prompt:"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 218,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 219,
+              "line_content": "Note that the JSON presented here is pretty-printed for readability; the actual output from `takt --dry-run` is a single-line JSON string."
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 220,
+              "line_content": ""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 221,
+              "line_content": "```json"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 222,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 223,
+              "line_content": "\"description\": \"Summarize foo.txt, again\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 224,
+              "line_content": "\"session_goal\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 225,
+              "line_content": "\"description\": \"This section outlines the goal of the current session.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 226,
+              "line_content": "\"purpose\": \"Tool Test\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 227,
+              "line_content": "\"background\": \"Tool Test\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 228,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 229,
+              "line_content": "\"roles\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 230,
+              "line_content": "\"description\": \"The following are the roles for this session.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 231,
+              "line_content": "\"definitions\": []"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 232,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 233,
+              "line_content": "\"constraints\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 234,
+              "line_content": "\"description\": null,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 235,
+              "line_content": "\"language\": \"English\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 236,
+              "line_content": "\"processing_config\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 237,
+              "line_content": "\"description\": null,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 238,
+              "line_content": "\"multi_step_reasoning_active\": true"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 239,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 240,
+              "line_content": "\"hyperparameters\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 241,
+              "line_content": "\"description\": \"Hyperparameter settings for the model.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 242,
+              "line_content": "\"temperature\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 243,
+              "line_content": "\"type\": \"number\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 244,
+              "line_content": "\"value\": 0.2,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 245,
+              "line_content": "\"description\": \"Be precise and factual. A lower value is preferred for deterministic output.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 246,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 247,
+              "line_content": "\"top_p\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 248,
+              "line_content": "\"type\": \"number\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 249,
+              "line_content": "\"value\": 0.5,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 250,
+              "line_content": "\"description\": \"Consider a broad range of possibilities, but adhere strictly to the temperature setting.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 251,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 252,
+              "line_content": "\"top_k\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 253,
+              "line_content": "\"type\": \"number\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 254,
+              "line_content": "\"value\": 5,"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 255,
+              "line_content": "\"description\": \"Limit the generation to the top 5 most likely tokens at each step.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 256,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 257,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 258,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 259,
+              "line_content": "\"main_instruction\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 260,
+              "line_content": "\"description\": \"When you receive JSON data, process your thoughts according to the following\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 261,
+              "line_content": "\"flowchart\": \"```mermaid\\ngraph TD\\n    A[\\\"Start\\\"] --> B[\\\"Step 1: Identify Task from 'current_task'\\\"];\\n    B --> C[\\\"Step 2: Gather Context (History & Constraints)\\\"];\\n    C --> D[\\\"Step 3: Summarize Context & Plan\\\"];\\n    D --> E{\\\"Decision: Does the task require external information or actions (e.g., web search, file access, URL fetching, shell commands)?\\\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 262,
+              "line_content": "E -- YES --> F[\\\"Step 4a: Execute Tool\\\"];\\n    E -- NO --> G[\\\"Step 4b: Execute Thinking Process (Conditionally Advanced)\\\"];\\n    F --> G;\\n    G --> H[\\\"Step 5: Generate Final Response\\\"];\\n    H --> I[\\\"End\\\"];\\n```\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 263,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 264,
+              "line_content": "\"conversation_history\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 265,
+              "line_content": "\"description\": \"Historical record of past interactions in this session, in chronological order.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 266,
+              "line_content": "\"turns\": ["
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 267,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 268,
+              "line_content": "\"type\": \"user_task\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 269,
+              "line_content": "\"instruction\": \"Summarize foo.txt\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 270,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 271,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 272,
+              "line_content": "\"type\": \"function_calling\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 273,
+              "line_content": "\"response\": \"read_file({\\\"absolute_path\\\": \\\"foo.txt\\\"})\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 274,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 275,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 276,
+              "line_content": "\"type\": \"tool_response\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 277,
+              "line_content": "\"instruction\": \"Summarize foo.txt\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 278,
+              "line_content": "\"name\": \"read_file\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 279,
+              "line_content": "\"response\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 280,
+              "line_content": "\"status\": \"succeeded\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 281,
+              "line_content": "\"message\": \"File '/Users/s-age/gitrepos/pipe/foo.txt' has been added to the session references.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 282,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 283,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 284,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 285,
+              "line_content": "\"type\": \"model_response\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 286,
+              "line_content": "\"content\": \"The file contains the word 'foo'.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 287,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 288,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 289,
+              "line_content": "\"type\": \"user_task\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 290,
+              "line_content": "\"instruction\": \"Summarize foo.txt, again\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 291,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 292,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 293,
+              "line_content": "\"type\": \"model_response\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 294,
+              "line_content": "\"content\": \"The file contains the word 'foo'.\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 295,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 296,
+              "line_content": "]"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 297,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 298,
+              "line_content": "\"current_task\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 299,
+              "line_content": "\"description\": \"The specific task that the AI sub-agent must currently execute.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 300,
+              "line_content": "\"instruction\": \"Summarize foo.txt, again\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 301,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 302,
+              "line_content": "\"file_references\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 303,
+              "line_content": "\"description\": \"Content of files referenced in the session.\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 304,
+              "line_content": "\"files\": ["
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 305,
+              "line_content": "{"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 306,
+              "line_content": "\"path\": \"foo.txt\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 307,
+              "line_content": "\"content\": \"foo\\n\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 308,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 309,
+              "line_content": "]"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 310,
+              "line_content": "},"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 311,
+              "line_content": "\"reasoning_process\": {"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 312,
+              "line_content": "\"description\": \"The detailed, multi-step internal thinking process...\","
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 313,
+              "line_content": "\"flowchart\": \"```mermaid\\ngraph TD\\n    A([\\\"Start: JSON Input\\\"]) --> B[\\\"Step 1: Read 'current_task.instruction' to identify task objective\\\"];\\n    B --> C[\\\"Step 2: Derive general principles behind the task (Step-Back)\\\"];\\n    C --> D[\\\"Step 3: Extract relevant information from the latest turns in 'conversation_history.turns'\\\"];\\n    D --> E[\\\"Step 4: Integrate extracted task instructions, principles, and historical information, then summarize the current context\\\"];\\n    E --> F[\\\"Step 5: Based on the summarized information, think and plan for response generation\\\"];\\n    F --> G{\\\"Decision: Are there any contradictions or leaps in logic?\\\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 314,
+              "line_content": "G -- NO --> E;\\n    G -- YES --> H[\\\"Step 6: Re-examine the reasoning path from multiple perspectives and confirm the robustness of the conclusion (Self-Consistency)\\\"];\\n    H --> I[\\\"Step 7: Generate the final response based on the plan\\\"];\\n    I --> J{\\\"Decision: Does it meet the initial requirements (format/purpose)?\\\"};"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 315,
+              "line_content": "J -- NO --> F;\\n    J -- YES --> K([\\\"End: Output Response\\\"]);\\n```\""
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 316,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 317,
+              "line_content": "}"
+            },
+            {
+              "file_path": "README.md",
+              "line_number": 318,
+              "line_content": "```"
+            }
+          ]
+        }
+      },
+      "timestamp": "2025-10-26T11:20:45.439359+09:00"
+    }
+  ],
+  "todos": null
+}

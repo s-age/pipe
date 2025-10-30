@@ -1,0 +1,30 @@
+{
+  "session_id": "4c3eece5ee277a04a2796e83b03376fef71358bffe06aeae092247c568e0bc10",
+  "created_at": "2025-10-23T08:01:15.570819+09:00",
+  "purpose": "テストだ",
+  "background": "言われたことを忠実にやれ",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {},
+  "references": [],
+  "turns": [],
+  "pools": [
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"GPT-5\"})",
+      "timestamp": "2025-10-23T08:01:17.778099+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "GPT-5, OpenAI's latest-generation large language model, was officially released on August 7, 2025. It is the fifth in its series of generative pre-trained transformer (GPT) foundation models and succeeds GPT-4 and its variants, including GPT-4o.\n\n**Key Features and Capabilities:**\n\n*   **Unified System and Reasoning:** GPT-5 is a unified system that integrates advanced reasoning capabilities, previously found in OpenAI's o-series models, directly into its architecture. It features a real-time router that automatically selects the most suitable model (fast, high-throughput for routine queries or a deeper \"thinking\" model for complex tasks) based on the conversation's complexity and user intent.\n*   **Multimodality:** GPT-5 is natively multimodal, meaning it was trained from scratch on multiple modalities like text and images simultaneously. It can analyze text, images, and audio, and has enhanced visual reasoning and video frame analysis capabilities.\n*   **Improved Performance:** OpenAI states that GPT-5 offers faster response times, better coding and writing skills, more accurate answers, and significantly lower levels of hallucination compared to its predecessors. Early benchmarks show GPT-5 outperforming humans on SimpleBench, scoring 90% against an average human score of 83%.\n*   **Context Handling:** The model dramatically expands its ability to understand and retain context, capable of processing entire documents, multi-hour meetings, and large codebases.\n*   **Agentic Functionality:** GPT-5 includes agentic functionality, allowing it to set up its own desktop and autonomously use its browser to search for sources related to its task.\n*   **Enhanced Safety:** GPT-5 implements a \"Safe Completions\" approach, aiming to provide helpful responses within safety boundaries rather than outright declining potentially harmful queries. It is designed to give more critical and \"less effusively agreeable\" answers.\n\n**Availability:**\n\nGPT-5 is publicly accessible to users of ChatGPT and Microsoft Copilot, as well as to developers through the OpenAI API. It is rolling out to all ChatGPT users, including those on the Free tier, with Plus and Pro subscribers receiving increased usage limits and access to more advanced \"thinking\" variants. In Microsoft Copilot, GPT-5 is available without extra cost or manual setup, offering smarter and more personalized AI experiences.\n\n**Variants:**\n\nGPT-5 is not a single model but a system of models, including:\n*   **gpt-5-main** and **gpt-5-main-mini:** Fast, high-throughput models.\n*   **gpt-5-thinking** and **gpt-5-thinking-mini:** Deeper reasoning models.\n*   **gpt-5-thinking-nano:** An even smaller and faster version of the thinking model, accessible via the API.\n*   **gpt-5, gpt-5-mini, gpt-5-nano, and gpt-5-chat:** A family of specialized variants optimized for different use cases.\n\nDevelopers can access various GPT-5 models through the OpenAI API, with adjustable reasoning effort and verbosity."
+        }
+      },
+      "timestamp": "2025-10-23T08:01:26.898699+09:00"
+    }
+  ]
+}

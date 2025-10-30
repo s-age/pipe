@@ -1,0 +1,36 @@
+{
+  "session_id": "00a63d1e4fd000f9f0c797f0807adf9ae95f477618bb2e40837ef00ba4a52d60/403a7079c3bba2bcb3838390f33d9e69f63e815ff4423961bb8e89866b23345f",
+  "created_at": "2025-10-25T01:41:01.771406+00:00",
+  "purpose": "新規セッション追加テスト",
+  "background": "構造を大きく変えたので新規セッションの追加テストを行う",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約してみて",
+      "timestamp": "2025-10-25T11:59:44.240333+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-25T11:59:45.908471+09:00"
+    }
+  ],
+  "pools": []
+}

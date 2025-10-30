@@ -1,0 +1,52 @@
+{
+  "session_id": "1e78fcfd1df04050f7ff3e8795b99328ece817d2095fc7a8692ef62989830ceb",
+  "created_at": "2025-10-29T07:45:05.721015+09:00",
+  "purpose": "Fork of: e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search edited",
+      "timestamp": "2025-10-29T07:44:51.644937+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-29T07:44:54.532681+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "Flask is a lightweight and flexible Python web application framework. It is classified as a \"microframework\" because it provides the essentials for web development without enforcing particular tools, libraries, or a specific project layout, giving developers more control and flexibility over the application structure.\n\nKey aspects of Flask include:\n*   **Lightweight and Minimalistic** Flask is designed to make getting started quick and easy, with the ability to scale up to complex applications. It provides only the core components needed to build web applications, allowing developers to choose their preferred tools and libraries for features like database abstraction or form validation.\n*   **Core Dependencies** Flask relies on the Werkzeug WSGI toolkit for managing request and response cycles, the Jinja2 templating engine for dynamic HTML, and the Click CLI toolkit.\n*   **Flexibility and Extensibility** While minimalistic, Flask supports extensions that can add various application features, such as object-relational mappers, form validation, and authentication. This modular design allows for customization and tailoring to specific project needs.\n*   **Use Cases** Flask is a popular choice for building dynamic websites, RESTful APIs, and microservices, suitable for projects ranging from small applications to complex enterprise-level systems.\n*   **History** Created by Armin Ronacher of Pocoo in 2010, Flask's development later transitioned to the Pallets project.\n*   **Popularity** Flask has gained significant popularity among Python developers due to its simplicity, flexibility, and strong community support. It has been recognized as a highly popular web framework in Python developer surveys."
+      },
+      "timestamp": "2025-10-29T07:45:01.149258+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

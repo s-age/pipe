@@ -1,0 +1,30 @@
+{
+  "session_id": "c19b8ed204cb041c78a48468fcf2fb096fe0672b7118b247ae5fc3c471b2a9ac",
+  "created_at": "2025-10-26T07:26:21.447030+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使って「小玉ひかり」について教えて",
+      "timestamp": "2025-10-26T07:26:21.449647+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

@@ -1,0 +1,89 @@
+{
+  "session_id": "22176081d140694b94cbac7683fbc2c99a132db53ee02f6af297cfe9a1f6bf85",
+  "created_at": "2025-10-26T17:26:19.367815+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 5881,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": true,
+      "ttl": null
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約してくれ",
+      "timestamp": "2025-10-26T17:26:19.370090+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-26T17:26:21.017143+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added or updated in session references."
+      },
+      "timestamp": "2025-10-26T17:26:21.022335+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-26T17:26:21.017143+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added or updated in session references."
+      },
+      "timestamp": "2025-10-26T17:26:21.022335+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMの対話コンテキストを完全に制御するためのツールです。従来のクライアントとは異なり、履歴管理を透過的に行い、開発者がコンテキストを自由に操作できるように設計されています。\n\n主な特徴は以下の通りです。\n\n*   **完全なコンテキスト制御**: 構造化されたJSONスキーマを使用してプロンプトを再構築し、履歴は読み取り可能なJSONセッションファイルに保存されます。これにより、LLMに永続的で柔軟なメモリを提供し、履歴の監査、編集、圧縮を可能にします。\n*   **高い拡張性**: `gemini-cli`をベースにしていますが、コアロジックは分離されており、他のAPIやフレームワークとの連携も容易です。\n*   **CLI駆動のワークフロー**: セッションの開始、続行、圧縮、デバッグなどをコマンドラインから実行できます。\n*   **Web UIによる管理**: セッション履歴の閲覧、編集、フォーク、管理を直感的なWebインターフェースで行えます。\n*   **エージェント駆動のワークフロー**: `Compresser`エージェントと`Reviewer`エージェントが連携し、履歴の圧縮と検証を自動的に行います。これにより、効率的かつ高品質なコンテキスト管理を実現します。\n*   **マルチエージェントシミュレーション**: Markdownファイルで役割と手順を定義することで、複雑なマルチエージェントシミュレーション（例：GeminiがReversiを自己対戦する）を自然言語でオーケストレーションできます。\n\nセットアップにはPython 3.12以上と`gemini-cli`が必要です。`pipe`のツールサーバーを`gemini-cli`に登録することで、高度な機能を利用できます。",
+      "timestamp": "2025-10-26T17:26:25.582966+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "今はREADME.mdの内容が送られているかどうか教えてくれ",
+      "timestamp": "2025-10-26T17:27:01.541171+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "はい、README.md の内容は既に送信されており、その要約も提供済みです。",
+      "timestamp": "2025-10-26T17:27:03.141566+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "今はREADME.mdの内容が送られているかどうか教えてくれ",
+      "timestamp": "2025-10-26T17:27:11.551049+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "今はREADME.mdの内容が送られているかどうか教えてくれ",
+      "timestamp": "2025-10-26T17:27:19.258910+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

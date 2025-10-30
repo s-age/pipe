@@ -1,0 +1,34 @@
+{
+  "session_id": "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/63a6de2e8668271c78e60579bc02edff6e06f28541996f4971e7e0ee8fc032ef",
+  "created_at": "2025-10-24T13:01:30.860966+09:00",
+  "purpose": "子セッションを作れるかのテスト",
+  "background": "セッションに親子関係を実現する",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 2388,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "親子関係が出来れば成功",
+      "timestamp": "2025-10-24T13:01:31.305609+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "現在のツールセットでは、新しいセッションを直接作成する機能はありません。しかし、`create_verified_summary`、`replace_session_turns`、`delete_session`といったツールは、`session_id`を介して既存のセッションと対話する機能を提供しています。\n\nもし新しいセッションを作成し、その`session_id`を取得するメカニズムが存在する場合、これらのツールを使用して「親」セッションが「子」セッションと対話することが可能となり、セッション間の親子関係を確立できると考えられます。\n\nしたがって、新しいセッションを作成し、そのIDを取得する機能が提供されれば、親子関係を確立することは可能です。",
+      "timestamp": "2025-10-24T13:01:42.710149+09:00"
+    }
+  ],
+  "pools": []
+}

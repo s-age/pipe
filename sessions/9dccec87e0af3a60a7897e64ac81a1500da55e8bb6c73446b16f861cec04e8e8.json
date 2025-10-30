@@ -1,0 +1,30 @@
+{
+  "session_id": "9dccec87e0af3a60a7897e64ac81a1500da55e8bb6c73446b16f861cec04e8e8",
+  "created_at": "2025-10-27T21:19:49.313049+09:00",
+  "purpose": "小玉ひかりについての調査",
+  "background": "Webで検索して回答",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "小玉ひかりについて教えて",
+      "timestamp": "2025-10-27T21:19:49.316569+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

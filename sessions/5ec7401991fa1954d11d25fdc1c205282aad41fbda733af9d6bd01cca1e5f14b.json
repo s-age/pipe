@@ -1,0 +1,24 @@
+{
+  "session_id": "5ec7401991fa1954d11d25fdc1c205282aad41fbda733af9d6bd01cca1e5f14b",
+  "created_at": "2025-10-28T03:14:42.415625+00:00",
+  "purpose": "Test",
+  "background": "Test",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 0.9
+    },
+    "top_k": {
+      "value": 40.0
+    }
+  },
+  "references": [],
+  "turns": [],
+  "pools": [],
+  "todos": null
+}

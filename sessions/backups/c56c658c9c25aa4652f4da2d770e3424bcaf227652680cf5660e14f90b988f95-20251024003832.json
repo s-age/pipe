@@ -1,0 +1,19 @@
+{
+  "session_id": "c56c658c9c25aa4652f4da2d770e3424bcaf227652680cf5660e14f90b988f95",
+  "created_at": "2025-10-24T07:43:41.318835+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {},
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して、ツールの使用は禁止",
+      "timestamp": "2025-10-24T07:43:41.321350+09:00"
+    }
+  ],
+  "pools": []
+}

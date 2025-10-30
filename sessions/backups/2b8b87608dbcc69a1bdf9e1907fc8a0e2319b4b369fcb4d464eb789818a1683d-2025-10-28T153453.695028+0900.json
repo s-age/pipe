@@ -1,0 +1,57 @@
+{
+  "session_id": "99a433b5ed539f7ad656f239202e8c7e46d16862902e40583c8f77b2f3ecbc23",
+  "created_at": "2025-10-28T15:34:37.705878+09:00",
+  "purpose": "e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 9272,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search",
+      "timestamp": "2025-10-28T15:34:37.864019+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-28T15:34:40.999185+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "Flask is a lightweight and powerful web framework for Python, often referred to as a \"micro-framework\" due to its minimalist design and core essentials for web development without extensive built-in features. This approach provides developers with greater control and flexibility over the application's structure.\n\nKey aspects of Flask include:\n*   **Micro-framework Philosophy** Flask provides the fundamental tools for web development, allowing developers to integrate only the components they need, unlike more comprehensive frameworks such as Django.\n*   **Core Components** Flask is built upon two powerful libraries:\n    *   **Werkzeug:** A comprehensive WSGI (Web Server Gateway Interface) toolkit that manages the application's request and response cycles.\n    *   **Jinja2:** A templating engine that enables the creation of dynamic HTML web pages using variables and loops.\n*   **Routing System** Flask features a simple and intuitive routing system where URLs are mapped to Python functions using decorators, facilitating an organized code structure.\n*   **Flexibility in Data Management** Unlike some other frameworks, Flask does not include a built-in Object-Relational Mapping (ORM) tool. This allows developers to choose their preferred ORM, such as SQLAlchemy, or use raw SQL.\n*   **RESTful API Support** Flask is a popular choice for building RESTful APIs due to its simplicity and flexibility, making it suitable for creating microservices and backends for single-page applications.\n*   **Development Server** It comes with a built-in development server for easy local testing and running of applications.\n\nFlask was developed by Armin Ronacher and was released in April 2010. It is widely used for various applications, including dynamic web pages, RESTful API development, microservices architecture, and educational prototyping."
+      },
+      "timestamp": "2025-10-28T15:34:50.207452+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "FlaskはPythonの軽量で強力なWebフレームワークで、そのミニマリストな設計から「マイクロフレームワーク」と呼ばれています。\n\n主な特徴は以下の通りです。\n\n*   **マイクロフレームワークの哲学**: Web開発に必要な基本的なツールを提供し、開発者がアプリケーションの構造を柔軟に制御できます。\n*   **コアコンポーネント**:\n    *   **Werkzeug**: WSGI（Web Server Gateway Interface）ツールキットで、リクエストとレスポンスのサイクルを管理します。\n    *   **Jinja2**: 変数やループを使用して動的なHTMLウェブページを作成できるテンプレートエンジンです。\n*   **ルーティングシステム**: デコレータを使用してURLをPython関数にマッピングする、シンプルで直感的なルーティングシステムを備えています。\n*   **データ管理の柔軟性**: ORM（Object-Relational Mapping）ツールが組み込まれていないため、開発者はSQLAlchemyなどの好みのORMを選択したり、生のSQLを使用したりできます。\n*   **RESTful APIのサポート**: シンプルさと柔軟性から、RESTful APIの構築に人気があり、マイクロサービスやシングルページアプリケーションのバックエンドに適しています。\n*   **開発サーバー**: ローカルでのテストやアプリケーションの実行を容易にするための開発サーバーが付属しています。\n\nFlaskはArmin Ronacherによって開発され、2010年4月にリリースされました。動的なWebページ、RESTful API開発、マイクロサービスアーキテクチャ、教育的なプロトタイピングなど、様々なアプリケーションで広く利用されています。",
+      "timestamp": "2025-10-28T15:34:53.177422+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

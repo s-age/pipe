@@ -1,0 +1,35 @@
+{
+  "session_id": "6e489307f3efd40bb3339641e9187b0ac67c85895b42e68ed2112945f5efefd0/6e1aa71e121c84b9e12016a01325baa88bb73826392402ecb66682a1a7dcee16",
+  "created_at": "2025-10-28T08:19:09.488118+09:00",
+  "purpose": "子セッションのテスト",
+  "background": "リファクタリング確認",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 2190,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "リファクタ後の機能確認だ",
+      "timestamp": "2025-10-28T08:19:09.760716+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "リファクタリング後の機能確認ですね。\nどの機能をどのように確認すればよいか、詳細を教えていただけますでしょうか？",
+      "timestamp": "2025-10-28T08:19:12.921852+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

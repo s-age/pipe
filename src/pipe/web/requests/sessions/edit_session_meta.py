@@ -1,19 +1,20 @@
 """
 Pydantic model for validating the request body of the edit session meta API endpoint.
 """
-from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, model_validator
+from typing import Any
+
 from pipe.core.models.hyperparameters import Hyperparameters
+from pydantic import BaseModel, model_validator
 
 
 class EditSessionMetaRequest(BaseModel):
-    purpose: Optional[str] = None
-    background: Optional[str] = None
-    roles: Optional[List[str]] = None
-    multi_step_reasoning_enabled: Optional[bool] = None
-    token_count: Optional[int] = None
-    hyperparameters: Optional[Hyperparameters] = None
+    purpose: str | None = None
+    background: str | None = None
+    roles: list[str] | None = None
+    multi_step_reasoning_enabled: bool | None = None
+    token_count: int | None = None
+    hyperparameters: Hyperparameters | None = None
 
     @model_validator(mode="before")
     @classmethod

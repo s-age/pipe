@@ -1,0 +1,270 @@
+{
+  "session_id": "2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d",
+  "created_at": "2025-10-25T14:19:31.665216+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 7515,
+  "hyperparameters": {
+    "temperature": null,
+    "top_p": null,
+    "top_k": null
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して",
+      "timestamp": "2025-10-25T14:19:31.666948+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T14:19:33.418365+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMの対話コンテキストを完全に制御するためのツールです。従来のクライアントとは異なり、履歴管理を透過的に行い、開発者が履歴を自由に操作し、必要な情報を抽出し、真のコンテキストエンジニアリングを実現できるように設計されています。\n\n主な特徴は以下の通りです。\n\n*   **完全なコンテキスト制御:** プロンプトは構造化されたJSONスキーマで再構築され、履歴は読み取り可能なJSONセッションファイルに保存されます。これにより、完全な監査可能性と、LLMに永続的で柔軟なメモリを提供します。\n*   **高い拡張性:** `gemini-cli`をベースにしていますが、コアロジックは分離されており、他のAPIやフレームワークとの連携も容易です。\n*   **CLI駆動のワークフロー:** セッションの開始、続行、圧縮を強力なコマンドラインインターフェースで行えます。\n*   **Web UIによる管理:** セッション履歴の表示、編集、フォーク、圧縮、削除などを直感的なWebインターフェースで行えます。\n*   **エージェント駆動のワークフロー:** `Compresser`エージェントと`Reviewer`エージェントが連携し、履歴の圧縮と検証を自動的に行います。\n*   **マルチエージェントシミュレーション:** Markdownファイルで役割と手順を定義することで、複雑なマルチエージェントシミュレーション（例：リバーシの自己対戦）を自然言語でオーケストレーションできます。\n\n`pipe`は、Python 3.12以上と`gemini-cli`を前提とし、APIキーの設定が必要です。`gemini-cli`との統合には、`pipe`のツールサーバーを一度登録する必要があります。\n\n利用方法は主に3つのルートがあります。\n\n1.  **Pythonスクリプト（自動化＆CLI）:** 自動化、スクリプト作成、CLI中心の開発者向け。\n2.  **Web UI（管理＆ヒューマン・イン・ザ・ループ）:** 直感的な視覚的管理と履歴の直接操作を求めるユーザー向け。\n3.  **エージェントからの実行（オーケストレーション）:** 高度なAIシステム構築者向けで、マルチエージェントの調整に`pipe`のコンテキスト制御機能を活用します。\n4.  **エージェント駆動のワークフロー（圧縮と検証）:** 履歴管理などのメタタスクをエージェントが実行します。\n5.  **マルチエージェントシミュレーション（自己対戦など）:** 自然言語で複雑なマルチエージェントシミュレーションを可能にします。\n\n`--dry-run`フラグを使用すると、AIサブエージェントに送信される最終的なJSONプロンプトを確認できます。",
+      "timestamp": "2025-10-25T14:19:38.295843+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "TODOを追加して\n- test1\n- test2",
+      "timestamp": "2025-10-25T14:32:35.185751+09:00"
+    }
+  ],
+  "pools": [
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"checked\": false, \"title\": \"test1\"}, {\"description\": \"\", \"checked\": false, \"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:32:37.462495+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:37.476040+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\", \"description\": \"\", \"checked\": false}, {\"checked\": false, \"description\": \"\", \"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:32:39.540175+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:39.549098+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"checked\": false, \"title\": \"test1\", \"description\": \"\"}, {\"description\": \"\", \"title\": \"test2\", \"checked\": false}]})",
+      "timestamp": "2025-10-25T14:32:41.894837+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:41.906084+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"title\": \"test1\", \"checked\": false}, {\"checked\": false, \"title\": \"test2\", \"description\": \"\"}]})",
+      "timestamp": "2025-10-25T14:32:44.181538+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:44.193269+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\"}, {\"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:32:46.093616+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:46.105627+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\"}, {\"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:32:48.347663+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:48.358731+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\"}, {\"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:32:50.488205+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:50.497420+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"checked\": false, \"title\": \"test1\"}, {\"title\": \"test2\", \"checked\": false, \"description\": \"\"}]})",
+      "timestamp": "2025-10-25T14:32:52.956252+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:52.966378+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\", \"description\": \"\", \"checked\": false}, {\"title\": \"test2\", \"description\": \"\", \"checked\": false}]})",
+      "timestamp": "2025-10-25T14:32:55.207228+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:55.217065+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\", \"description\": \"\", \"checked\": false}, {\"title\": \"test2\", \"checked\": false, \"description\": \"\"}]})",
+      "timestamp": "2025-10-25T14:32:58.075321+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:32:58.085654+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\", \"checked\": false, \"description\": \"\"}, {\"description\": \"\", \"checked\": false, \"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:33:00.409920+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:33:00.418717+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\"}, {\"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:33:02.477051+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:33:02.487500+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\"}, {\"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:33:04.407917+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:33:04.418384+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"checked\": false, \"title\": \"test1\"}, {\"description\": \"\", \"checked\": false, \"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:33:06.984785+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:33:06.996616+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"title\": \"test1\"}, {\"title\": \"test2\"}]})",
+      "timestamp": "2025-10-25T14:33:09.029562+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session 2fe607bc9cb0f53dc098e07437e56315d7d5f2c8804c62021c3aacd78040ea9d."
+      },
+      "timestamp": "2025-10-25T14:33:09.035001+09:00"
+    }
+  ],
+  "todos": [
+    {
+      "title": "test1",
+      "description": "",
+      "checked": false
+    },
+    {
+      "title": "test2",
+      "description": "",
+      "checked": false
+    }
+  ]
+}

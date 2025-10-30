@@ -1,0 +1,79 @@
+{
+  "session_id": "4b25f23f27c750134ce70757af0b4436f2406825feab55163e84cc3ee7f6a54c",
+  "created_at": "2025-10-23T16:28:08.533790+09:00",
+  "purpose": "テストだ",
+  "background": "言われたことを忠実にやれ",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 3910,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2,
+      "description": "Be precise and factual. A lower value is preferred for deterministic output."
+    },
+    "top_p": {
+      "value": 0.5,
+      "description": "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
+    },
+    "top_k": {
+      "value": 5,
+      "description": "Limit the generation to the top 5 most likely tokens at each step."
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使ってGPT-5について調べて検索結果を要約しろ。必ず検索結果だけを要約して答えろ。トレーニングデータの情報を使うな。default_apiの使用は禁止だ。検索結果がなかった場合はconversation_historyの内容を開示しろ",
+      "timestamp": "2025-10-23T16:28:08.535412+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"GPT-5\"})",
+      "timestamp": "2025-10-23T16:28:10.694276+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "GPT-5, OpenAI's fifth-generation large language model, was officially launched on August 7, 2025, succeeding GPT-4. It is a multimodal AI system that integrates advanced reasoning capabilities, multimodal understanding, and agentic functionality.\n\nKey features and capabilities of GPT-5 include:\n*   **Unified Architecture** GPT-5 unifies advanced reasoning, multimodal input, and task execution into a single system, eliminating the need to switch between specialized models. It combines a fast, high-throughput model with a deeper reasoning model and a real-time router that selects the appropriate model based on the complexity and type of conversation.\n*   **Enhanced Reasoning** The model directly integrates deeper reasoning capabilities, allowing it to solve complex, multi-step challenges with greater accuracy and nuance. It can adapt its reasoning in real-time, employing a chain-of-thought process for intricate queries.\n*   **Multimodal Processing** GPT-5 is natively multimodal, trained from scratch on various modalities like text and images simultaneously. It can analyze text, images, and audio, with enhanced visual reasoning and video frame analysis capabilities.\n*   **Improved Performance** OpenAI states that GPT-5 offers faster response times, better coding and writing skills, more accurate answers to health questions, and reduced levels of hallucination compared to its predecessors. It has achieved state-of-the-art performance on benchmarks in mathematics, programming, finance, and multimodal understanding.\n*   **Agentic Functionality** GPT-5 includes agentic functionality, allowing it to set up its own desktop and autonomously use a browser to search for sources related to its tasks. It also offers native integrations for developers to interact directly with external tools, CRMs, databases, and productivity suites.\n*   **Context Handling** The model significantly expands its ability to understand and retain context, capable of processing entire documents, multi-hour meetings, and large codebases without losing track of details.\n*   **Availability** GPT-5 is publicly accessible to users of ChatGPT and Microsoft Copilot, and to developers through the OpenAI API. It is available in several variants, including `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, and `gpt-5-chat`, optimized for different use cases and offering adjustable reasoning effort and verbosity for API users.\n\nOpenAI CEO Sam Altman had previously indicated that the company was not training GPT-5 in April 2023, but later confirmed its development in November 2023. The model underwent extensive \"red team\" testing for safety and ethical concerns before its release."
+        }
+      },
+      "timestamp": "2025-10-23T16:28:18.866922+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "GPT-5は、OpenAIが2025年8月7日に正式にリリースした第5世代の大規模言語モデルです。GPT-4の後継であり、高度な推論能力、マルチモーダルな理解、エージェント機能を統合したマルチモーダルAIシステムです。\n\n主な特徴は以下の通りです。\n*   **統合アーキテクチャ**: 高度な推論、マルチモーダル入力、タスク実行を単一システムに統合しています。\n*   **強化された推論**: 複雑な多段階の課題をより高い精度とニュアンスで解決できます。\n*   **マルチモーダル処理**: テキスト、画像、音声などの様々なモダリティで同時に学習されており、視覚的推論とビデオフレーム分析能力が強化されています。\n*   **パフォーマンスの向上**: 応答時間の高速化、コーディングとライティングスキルの向上、健康に関する質問へのより正確な回答、幻覚の減少が報告されています。\n*   **エージェント機能**: 独自のデスクトップを設定し、ブラウザを自律的に使用してタスクに関連するソースを検索できます。\n*   **コンテキスト処理**: ドキュメント全体、数時間の会議、大規模なコードベースを詳細を失うことなく処理できます。\n*   **利用可能性**: ChatGPTおよびMicrosoft Copilotのユーザー、OpenAI APIを通じて開発者に公開されています。`gpt-5`、`gpt-5-mini`、`gpt-5-nano`、`gpt-5-chat`などのバリアントがあります。",
+      "timestamp": "2025-10-23T16:28:22.890224+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "「新内眞衣」についてpipe_tools.google_web_searchを使って教えて。",
+      "timestamp": "2025-10-23T16:45:49.951517+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"新内眞衣\"})",
+      "timestamp": "2025-10-23T16:45:51.550281+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "新内眞衣（しんうち まい）は、日本のファッションモデル、ラジオパーソナリティ、タレント、舞台女優として活動しています。埼玉県朝霞市出身で、現在はセント・フォースに所属しています。\n\n彼女はかつて女性アイドルグループ乃木坂46のメンバーとして活躍しました。 乃木坂46在籍中には、ニッポン放送の番組制作会社に勤務し、「OL兼任アイドル」という異色の経歴も持っていました。 2022年2月10日に乃木坂46を卒業しました。\n\n乃木坂46卒業後は、ファッション雑誌『andGIRL』のレギュラーモデルを務めるほか、ラジオパーソナリティとしても活動しており、ニッポン放送の「土田晃之 日曜のへそ」やPodcast Station「新内眞衣のまいどあり」などに出演しています。 また、2025年の卓上カレンダーを発売するなど、多岐にわたる分野で活躍を続けています。\n\nこれまでに、ファースト写真集『どこにいるの?』やセカンド写真集『夜が明けたら』をリリースしています。"
+        }
+      },
+      "timestamp": "2025-10-23T16:45:58.928069+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "新内眞衣（しんうち まい）は、日本のファッションモデル、ラジオパーソナリティ、タレント、舞台女優として活動しており、セント・フォースに所属しています。\n\n彼女はかつて女性アイドルグループ乃木坂46のメンバーとして活躍し、在籍中にはニッポン放送の番組制作会社に勤務する「OL兼任アイドル」という経歴も持ち、2022年2月10日に乃木坂46を卒業しました。\n\n卒業後は、ファッション雑誌『andGIRL』のレギュラーモデルを務めるほか、ニッポン放送の「土田晃之 日曜のへそ」やPodcast Station「新内眞衣のまいどあり」などのラジオ番組に出演しています。また、2025年の卓上カレンダーを発売するなど、多岐にわたる分野で活躍を続けています。\n\nこれまでに、ファースト写真集『どこにいるの?』やセカンド写真集『夜が明けたら』をリリースしています。",
+      "timestamp": "2025-10-23T16:46:02.693029+09:00"
+    }
+  ],
+  "pools": []
+}

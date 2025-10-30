@@ -1,0 +1,43 @@
+{
+  "session_id": "fed056f40abb51945acc81e428b897422329844fdd7587d54bb984e1aefae820",
+  "created_at": "2025-10-25T14:11:08.638741+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 7332,
+  "hyperparameters": {
+    "temperature": null,
+    "top_p": null,
+    "top_k": null
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して",
+      "timestamp": "2025-10-25T14:11:08.640308+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T14:11:10.734292+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMのコンテキストを完全に制御するためのツールです。従来のチャットクライアントとは異なり、履歴の操作、重要な情報の抽出、真のコンテキストエンジニアリングを可能にします。\n\n主な特徴は以下の通りです。\n\n*   **完全なコンテキスト制御**: プロンプトは構造化されたJSONスキーマで再構築され、履歴は読み取り可能なJSONセッションファイルに保存されます。これにより、完全な監査可能性と、LLMの永続的で柔軟なメモリが保証されます。\n*   **高い拡張性**: `pipe`は`gemini-cli`をベースにしていますが、コアロジックは分離されており、他のAPIやフレームワークとの連携も容易です。\n*   **CLI駆動のワークフロー**: セッションの開始、続行、圧縮をコマンドラインで行えます。\n*   **Web UI**: セッション履歴の表示、編集、フォーク、管理を直感的なWebインターフェースで行えます。\n*   **エージェント駆動のワークフロー**: `Compresser`エージェントと`Reviewer`エージェントが連携し、セッション履歴の圧縮と検証を自動的に行います。\n*   **マルチエージェントシミュレーション**: 自然言語で定義された役割と手順に基づいて、複雑なマルチエージェントシミュレーション（例：リバーシの自己対戦）をオーケストレーションできます。\n\nセットアップにはPython 3.12以上と`gemini-cli`が必要です。`pipe`のツールサーバーを`gemini-cli`に登録することで、高度な機能を利用できます。\n\n`pipe`は、Pythonスクリプト、Web UI、エージェントからの実行、エージェント駆動のワークフロー、マルチエージェントシミュレーションの5つの主要な利用方法を提供し、様々な環境と目的に合わせてコンテキストエンジニアリングを可能にします。",
+      "timestamp": "2025-10-25T14:11:15.376613+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

@@ -1,0 +1,22 @@
+{
+  "session_id": "00b8b6d052a3be45d204efc38c1125c6ed1e004cebba2294e7277aaa948b2cc2/c81b635c36f7ba27705ff9d29f0b4bf63cf5856c1e9c182d82ecf6dd6a5ef04c/0a164537db3e2ed9458683df0d4cd4505e6474ffa5309acdda547f4594fa1ec0/b2e4a8c42b54afac4059455f5f47ad4c35ffcb30aab572c72f8b893e5c6ab151/6789171bca59c7cea98411b35f4cb3cd806b6d62827f9c3cb84de8a387ee4b37",
+  "created_at": "2025-10-25T07:53:17.688482+09:00",
+  "purpose": "Fork of: 子セッションの再テスト",
+  "background": "子セッションを作れるかの再テストセッション",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "OKとだけ答えて",
+      "timestamp": "2025-10-25T07:49:04.042118+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "OK",
+      "timestamp": "2025-10-25T07:49:05.336449+09:00"
+    }
+  ]
+}

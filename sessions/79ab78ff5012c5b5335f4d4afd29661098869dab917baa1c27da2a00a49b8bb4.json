@@ -1,0 +1,84 @@
+{
+  "session_id": "79ab78ff5012c5b5335f4d4afd29661098869dab917baa1c27da2a00a49b8bb4",
+  "created_at": "2025-10-25T18:20:54.708052+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 2847,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "pipe_tools.google_web_searchを使って「小玉ひかり」について教えて",
+      "timestamp": "2025-10-25T18:20:54.736703+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"小玉ひかり\"})",
+      "timestamp": "2025-10-25T18:20:56.432769+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "小玉ひかり（こだま ひかり）は、2000年生まれの日本のシンガーソングライターであり、声優としても活動しています。千葉県出身です。\n\n14歳で音楽活動を開始し、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。2023年11月29日には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でミュージックレインよりメジャーデビューを果たしました。続く2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\n彼女はピアノ弾き語りを特徴としており、自身のYouTubeチャンネルも積極的に更新しており、チャンネル登録者数は2.38万人を超えています。また、テレビ番組「TEPPEN」にピアノ演奏者として出演したこともあります。\n\nライブ活動も行っており、2025年には「見放題 × MOSAiC presents シモキタソングタウン2025」や「Kabukicho Street Live Fes.」、「HUG ROCK FESTIVAL 2025 サマー」、そしてワンマンライブ「LAWSON presents 小玉ひかりOne-man Live #こだまつり2025 『Melt』」への出演が決定しています。"
+        }
+      },
+      "timestamp": "2025-10-25T18:21:02.779865+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"小玉ひかり\"})",
+      "timestamp": "2025-10-25T18:20:56.432769+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "小玉ひかり（こだま ひかり）は、2000年生まれの日本のシンガーソングライターであり、声優としても活動しています。千葉県出身です。\n\n14歳で音楽活動を開始し、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。2023年11月29日には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でミュージックレインよりメジャーデビューを果たしました。続く2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\n彼女はピアノ弾き語りを特徴としており、自身のYouTubeチャンネルも積極的に更新しており、チャンネル登録者数は2.38万人を超えています。また、テレビ番組「TEPPEN」にピアノ演奏者として出演したこともあります。\n\nライブ活動も行っており、2025年には「見放題 × MOSAiC presents シモキタソングタウン2025」や「Kabukicho Street Live Fes.」、「HUG ROCK FESTIVAL 2025 サマー」、そしてワンマンライブ「LAWSON presents 小玉ひかりOne-man Live #こだまつり2025 『Melt』」への出演が決定しています。"
+        }
+      },
+      "timestamp": "2025-10-25T18:21:02.779865+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "小玉ひかりさんは、2000年生まれの日本のシンガーソングライターで、声優としても活動されています。千葉県出身です。\n\n14歳で音楽活動を始め、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。2023年11月29日には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でミュージックレインよりメジャーデビューしました。2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\nピアノ弾き語りが特徴で、自身のYouTubeチャンネルも積極的に更新しており、チャンネル登録者数は2.38万人を超えています。テレビ番組「TEPPEN」にピアノ演奏者として出演したこともあります。\n\n2025年には「見放題 × MOSAiC presents シモキタソングタウン2025」や「Kabukicho Street Live Fes.」、「HUG ROCK FESTIVAL 2025 サマー」、そしてワンマンライブ「LAWSON presents 小玉ひかりOne-man Live #こだまつり2025 『Melt』」への出演が決定しています。",
+      "timestamp": "2025-10-25T18:21:05.653338+09:00"
+    }
+  ],
+  "pools": [
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"小玉ひかり\"})",
+      "timestamp": "2025-10-25T18:20:56.432769+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": {
+          "content": "小玉ひかり（こだま ひかり）は、2000年生まれの日本のシンガーソングライターであり、声優としても活動しています。千葉県出身です。\n\n14歳で音楽活動を開始し、YouTubeに歌ってみた動画や弾き語り動画を投稿していました。2023年11月29日には、TVアニメ『カノジョも彼女』Season 2のオープニングテーマ「ドラマチックに恋したい」でミュージックレインよりメジャーデビューを果たしました。続く2ndシングル「チャージ！」は、TVアニメ『女神のカフェテラス』第2期のオープニングテーマに起用されています。\n\n彼女はピアノ弾き語りを特徴としており、自身のYouTubeチャンネルも積極的に更新しており、チャンネル登録者数は2.38万人を超えています。また、テレビ番組「TEPPEN」にピアノ演奏者として出演したこともあります。\n\nライブ活動も行っており、2025年には「見放題 × MOSAiC presents シモキタソングタウン2025」や「Kabukicho Street Live Fes.」、「HUG ROCK FESTIVAL 2025 サマー」、そしてワンマンライブ「LAWSON presents 小玉ひかりOne-man Live #こだまつり2025 『Melt』」への出演が決定しています。"
+        }
+      },
+      "timestamp": "2025-10-25T18:21:02.779865+09:00"
+    }
+  ],
+  "todos": null
+}

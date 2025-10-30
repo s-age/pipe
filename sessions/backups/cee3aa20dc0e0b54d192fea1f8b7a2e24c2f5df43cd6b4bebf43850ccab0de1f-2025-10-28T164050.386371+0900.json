@@ -1,0 +1,57 @@
+{
+  "session_id": "26adf6281eb30aac9878f372f25665636f1022e3f7007f1495c8db9f002f31b0",
+  "created_at": "2025-10-28T16:40:29.886299+09:00",
+  "purpose": "e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 9334,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search",
+      "timestamp": "2025-10-28T16:40:30.078740+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-28T16:40:33.146316+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "Flask is a popular, lightweight, and flexible web application microframework written in Python. It is designed to make getting started with web development quick and easy, while also being powerful enough to build complex applications.\n\nKey characteristics and features of Flask include:\n*   **Microframework** Flask is classified as a \"microframework\" because it provides only the essentials for web development, such as routing, request handling, and templating, without enforcing specific tools or libraries. This minimalistic design gives developers more control and flexibility over their application's structure.\n*   **Dependencies** It is built on top of the Werkzeug WSGI toolkit and the Jinja2 templating engine. Werkzeug handles the application's request and response cycles, while Jinja2 allows for dynamic HTML templates.\n*   **Extensibility** Unlike larger frameworks like Django, Flask does not include built-in features such as a database abstraction layer or form validation. Instead, it supports a wide range of community-provided extensions that can add such functionalities as if they were part of Flask itself.\n*   **Use Cases** Flask is widely used for building web applications, APIs (Application Programming Interfaces), and microservices. Its simplicity and flexibility make it a suitable choice for small to medium-sized projects, as well as for creating web interfaces and visualization tools in data science.\n*   **Popularity** Flask has gained significant popularity among Python developers. As of October 2020, it was the second-most starred Python web development framework on GitHub, just behind Django, and was voted the most popular web framework in the Python Developers Survey for several years between 2018 and 2022.\n*   **History** Flask was created by Armin Ronacher of Pocoo in 2010, initially as an April Fool's joke that evolved into a serious application. Development is now maintained by the Pallets project.\n\nWhile primarily known as a Python web framework, \"flask\" can also refer to a type of container, such as a hip flask, a laboratory flask, or a vacuum flask."
+      },
+      "timestamp": "2025-10-28T16:40:44.971772+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "FlaskはPython製の軽量で柔軟なWebアプリケーションマイクロフレームワークです。Web開発を素早く簡単に始められるように設計されており、複雑なアプリケーションの構築にも十分対応できます。\n\n主な特徴は以下の通りです。\n\n*   **マイクロフレームワーク**: ルーティング、リクエスト処理、テンプレート化といったWeb開発の基本的な機能のみを提供し、特定のツールやライブラリを強制しません。これにより、開発者はアプリケーションの構造をより細かく制御できます。\n*   **依存関係**: Werkzeug WSGIツールキットとJinja2テンプレートエンジンを基盤としています。\n*   **拡張性**: データベース抽象化レイヤーやフォーム検証などの機能は組み込まれていませんが、コミュニティが提供する豊富な拡張機能でこれらを追加できます。\n*   **用途**: Webアプリケーション、API、マイクロサービスの構築に広く利用されています。シンプルさと柔軟性から、小規模から中規模のプロジェクト、データサイエンスにおけるWebインターフェースや可視化ツールの作成に適しています。\n*   **人気**: Python開発者の間で非常に人気があり、GitHubのPython Web開発フレームワークではDjangoに次ぐ人気を誇り、Python開発者調査では2018年から2022年にかけて最も人気のあるWebフレームワークに選ばれました。\n*   **歴史**: 2010年にArmin Ronacherによってエイプリルフールのジョークとして作成されましたが、後に本格的なアプリケーションに発展しました。現在はPalletsプロジェクトによってメンテナンスされています。",
+      "timestamp": "2025-10-28T16:40:49.842129+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

@@ -1,0 +1,30 @@
+{
+  "session_id": "b0ad116432db7d9b79b4560eeb42da9eccd80452945a5320593ce28c0592ce9b",
+  "created_at": "2025-10-28T11:59:23.579870+00:00",
+  "purpose": "Test",
+  "background": "Test",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 0.9
+    },
+    "top_k": {
+      "value": 40.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Say hello",
+      "timestamp": "2025-10-28T11:59:23.580445+00:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

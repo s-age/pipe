@@ -5,7 +5,7 @@ virtualenv/
 env/
 venv/
 ENV/
-sessions/
+
 setting.yml
 .gemini/
 .coverage

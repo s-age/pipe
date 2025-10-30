@@ -1,0 +1,29 @@
+{
+  "session_id": "0215c592f2f3cfb3066409ecc511744484a5d6196c07b65a61984f47d08c696b",
+  "created_at": "2025-10-24T07:45:53.482537+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 7975,
+  "hyperparameters": {},
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して、ツールの使用は禁止",
+      "timestamp": "2025-10-24T07:45:53.484615+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe` is a tool designed to provide developers with complete control over conversational context, acting as a \"clean jailbreak from LLM obfuscation.\" It emphasizes total context control through a structured, self-describing JSON Schema for prompts, transparent history management in readable JSON session files, and full auditability. The tool is highly extensible, allowing users to swap out backend implementations.\n\nKey features include:\n*   **Session-Based History:** Conversations are stored in self-contained, human-readable JSON files.\n*   **Structured JSON Prompting:** Detailed JSON objects are built as prompts, providing meta-context to the model.\n*   **CLI-Driven Workflow:** A command-line interface for starting, continuing, and compressing sessions.\n*   **Extensible Backend:** Decoupled execution agent, allowing choice between `gemini-api` and `gemini-cli`.\n*   **Configuration via YAML:** Settings are managed in `setting.yml`.\n*   **Token-Aware:** Calculates token counts and warns about limits.\n*   **Dry Run Mode:** Inspects the final JSON prompt before sending.\n*   **Web UI for Management:** A web interface for viewing, editing, forking, and managing sessions.\n*   **Safe Operations:** Automatic backups before edits or compressions.\n*   **Language Support:** Specifies language for agent responses.\n*   **YOLO Mode:** Automatically accepts all actions.\n*   **In-Session Todos:** Manages a simple todo list within session metadata.\n*   **Advanced Agent-driven Compression:** A `Compresser` agent can perform partial compression on session history, with a `Reviewer` agent verifying summary quality.\n*   **Turn-based Forking:** Allows exploring alternative responses from any specific turn.\n\nThe project is released under the CC0 1.0 Universal Public Domain Dedication, encouraging customization and \"jailbreaking.\"\n\n`pipe` offers three primary usage routes:\n1.  **Python Script (Automation & CLI):** Ideal for scripting and CLI-focused developers for starting, continuing, and compressing sessions.\n2.  **Web UI (Management & Human-in-the-Loop):** Best for intuitive visual management, direct history manipulation, and forking conversations.\n3.  **Execution from Agent (Orchestration):** For advanced AI system builders to leverage context control for multi-agent coordination and role delegation.\n4.  **Agent-driven Workflows (Compression & Verification):** Utilizes `Compresser` and `Reviewer` agents for efficient and quality-assured history management.\n5.  **Multi-Agent Simulation (e.g., Self-Play):** Facilitates complex multi-agent simulations using natural language and Markdown-defined roles and procedures.\n\nSetup involves Python 3.x, `gemini-cli`, installing dependencies, and setting up an API key. Integration with `gemini-cli` for advanced features requires a one-time tool server registration. A dry run output example demonstrates the structured JSON prompt sent to the AI sub-agent.",
+      "timestamp": "2025-10-24T07:45:59.018491+09:00"
+    }
+  ],
+  "pools": []
+}

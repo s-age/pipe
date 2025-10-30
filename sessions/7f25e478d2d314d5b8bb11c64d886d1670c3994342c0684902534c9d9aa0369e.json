@@ -1,0 +1,30 @@
+{
+  "session_id": "7f25e478d2d314d5b8bb11c64d886d1670c3994342c0684902534c9d9aa0369e",
+  "created_at": "2025-10-27T21:27:37.043574+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2
+    },
+    "top_p": {
+      "value": 0.5
+    },
+    "top_k": {
+      "value": 5.0
+    }
+  },
+  "references": [],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "「新内眞衣」について教えて",
+      "timestamp": "2025-10-27T21:27:37.047264+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

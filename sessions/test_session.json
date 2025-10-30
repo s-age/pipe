@@ -1,0 +1,20 @@
+{
+  "session_id": "test_session",
+  "created_at": "2025-10-26T13:00:00Z",
+  "purpose": "Test the save method",
+  "background": null,
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 0,
+  "hyperparameters": null,
+  "references": [
+    {
+      "path": "app.py",
+      "disabled": false,
+      "ttl": null
+    }
+  ],
+  "turns": [],
+  "pools": [],
+  "todos": null
+}

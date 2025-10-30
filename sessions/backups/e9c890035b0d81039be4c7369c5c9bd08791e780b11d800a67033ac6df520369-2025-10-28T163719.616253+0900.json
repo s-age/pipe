@@ -1,0 +1,57 @@
+{
+  "session_id": "d80b6f1fe08887370d95f813bb4090a5837c139343f406f0a9c3b1995b88981d",
+  "created_at": "2025-10-28T16:18:15.081765+09:00",
+  "purpose": "e2e test",
+  "background": "This is a regression test by e2e.",
+  "roles": [
+    "roles/engineer.md"
+  ],
+  "multi_step_reasoning_enabled": true,
+  "token_count": 9265,
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.5
+    },
+    "top_p": {
+      "value": 1.0
+    },
+    "top_k": {
+      "value": 10.0
+    }
+  },
+  "references": [
+    {
+      "path": "README.md",
+      "disabled": false,
+      "ttl": 2
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "Tell me about Flask using pipe_tools.google_web_search",
+      "timestamp": "2025-10-28T16:18:15.292165+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "google_web_search({\"query\": \"Flask\"})",
+      "timestamp": "2025-10-28T16:18:18.023479+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "google_web_search",
+      "response": {
+        "status": "succeeded",
+        "message": "Flask is a lightweight and popular micro web framework for Python, designed to make getting started with web development quick and easy, while also being scalable for complex applications. It is classified as a \"microframework\" because it provides core essentials for web development without imposing specific tools or libraries, offering developers flexibility and control over their application's components.\n\nKey features of Flask include:\n*   **Minimalistic Design** Flask provides essential tools like routing, request handling, and templating, allowing developers to choose additional components as needed.\n*   **Built-in Development Server and Debugger** It comes with a development server that simplifies testing and running applications locally.\n*   **Jinja2 Templating Engine** Flask utilizes Jinja2 for creating dynamic HTML pages.\n*   **WSGI Compliant** It adheres to the Web Server Gateway Interface (WSGI) standard, which defines how web servers and web applications communicate.\n*   **RESTful Request Dispatching** Flask is well-suited for building RESTful APIs.\n*   **Support for Unit Testing** It includes integrated support for unit testing, making it easier to test applications.\n*   **Extensibility** Flask supports a modular approach with \"blueprints\" and has a rich ecosystem of extensions for functionalities like database integration, authentication, and more.\n\nCommon uses for Flask include building various types of web applications (such as blogs, e-commerce sites, and social media platforms), developing RESTful APIs, creating microservices, and rapid prototyping. Companies like Samsung, Pinterest, Airbnb, Netflix, and Reddit reportedly leverage Flask for their web development needs.\n\nIt's worth noting that \"flask\" can also refer to a physical container, such as a laboratory flask used for mixing, heating, and storing substances, or a vacuum flask (thermos) designed to maintain the temperature of its contents."
+      },
+      "timestamp": "2025-10-28T16:18:28.265564+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "Flaskは、Python製の軽量かつ人気のあるマイクロウェブフレームワークです。ウェブ開発を素早く簡単に始められるように設計されており、複雑なアプリケーションにも拡張可能です。\n\n主な特徴は以下の通りです。\n*   **ミニマリストな設計**: ルーティング、リクエスト処理、テンプレート化などの必須機能を提供し、必要に応じて追加コンポーネントを選択できます。\n*   **開発サーバーとデバッガーを内蔵**: アプリケーションのテストとローカル実行を簡素化します。\n*   **Jinja2テンプレートエンジン**: 動的なHTMLページを作成するために利用されます。\n*   **WSGI準拠**: ウェブサーバーとウェブアプリケーション間の通信方法を定義するWSGI標準に準拠しています。\n*   **RESTfulリクエストディスパッチ**: RESTful APIの構築に適しています。\n*   **単体テストのサポート**: アプリケーションのテストを容易にするための統合サポートが含まれています。\n*   **拡張性**: 「ブループリント」によるモジュール化されたアプローチをサポートし、データベース統合や認証などの機能のための豊富な拡張エコシステムがあります。\n\nFlaskは、ブログ、Eコマースサイト、ソーシャルメディアプラットフォームなどの様々なウェブアプリケーションの構築、RESTful APIの開発、マイクロサービスの作成、迅速なプロトタイピングなどに一般的に使用されています。Samsung、Pinterest、Airbnb、Netflix、Redditなどの企業がFlaskを活用していると報告されています。",
+      "timestamp": "2025-10-28T16:18:34.166953+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

@@ -1,0 +1,43 @@
+{
+  "session_id": "2b8377c437cce42a906baac78f7f456bffdd2cf75c30b693ad53e19da4d7da4b",
+  "created_at": "2025-10-25T14:23:27.429486+09:00",
+  "purpose": "テストだ",
+  "background": "新機能のテスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 7254,
+  "hyperparameters": {
+    "temperature": null,
+    "top_p": null,
+    "top_k": null
+  },
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "README.mdを要約して",
+      "timestamp": "2025-10-25T14:23:27.431096+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T14:23:28.961531+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "`pipe`は、LLMの対話コンテキストを完全に制御するためのツールです。従来のクライアントとは異なり、履歴管理を透明化し、開発者が自由に履歴を操作し、必要な情報を抽出することで、真のコンテキストエンジニアリングを実現します。\n\n主な特徴は以下の通りです。\n\n*   **完全なコンテキスト制御:** 構造化されたJSONスキーマでプロンプトを再構築し、履歴をJSONセッションファイルに保存することで、完全な監査可能性と柔軟なメモリを提供します。\n*   **高い拡張性:** `gemini-cli`をベースにしていますが、コアロジックは分離されており、他のAPIやフレームワークとの連携も容易です。\n*   **CLI駆動のワークフロー:** セッションの開始、継続、圧縮などをコマンドラインから効率的に行えます。\n*   **Web UIによる管理:** セッション履歴の閲覧、編集、フォーク、圧縮、削除などを直感的なWebインターフェースで行えます。\n*   **エージェント駆動のワークフロー:** `Compresser`エージェントと`Reviewer`エージェントが連携し、履歴の圧縮と検証を自動的に行います。\n*   **マルチエージェントシミュレーション:** Markdownファイルで役割と手順を定義することで、複雑なマルチエージェントシミュレーション（例：リバーシの自己対戦）を自然言語でオーケストレーションできます。\n\nこのプロジェクトはCC0 1.0 Universalライセンスの下で公開されており、自由にカスタマイズして利用できます。",
+      "timestamp": "2025-10-25T14:23:33.190364+09:00"
+    }
+  ],
+  "pools": [],
+  "todos": null
+}

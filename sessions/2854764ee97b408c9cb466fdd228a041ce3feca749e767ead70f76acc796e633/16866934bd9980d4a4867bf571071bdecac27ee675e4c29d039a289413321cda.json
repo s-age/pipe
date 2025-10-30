@@ -1,0 +1,35 @@
+{
+    "session_id": "2854764ee97b408c9cb466fdd228a041ce3feca749e767ead70f76acc796e633/16866934bd9980d4a4867bf571071bdecac27ee675e4c29d039a289413321cda",
+    "created_at": "2025-10-30T13:11:10.473405+09:00",
+    "purpose": "Child session test",
+    "background": "This is a child session test.",
+    "roles": [],
+    "multi_step_reasoning_enabled": false,
+    "token_count": 2015,
+    "hyperparameters": {
+        "temperature": {
+            "value": 0.2
+        },
+        "top_p": {
+            "value": 0.5
+        },
+        "top_k": {
+            "value": 5.0
+        }
+    },
+    "references": [],
+    "turns": [
+        {
+            "type": "user_task",
+            "instruction": "This is the first instruction for the child session.",
+            "timestamp": "2025-10-30T13:11:10.625036+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "\u3053\u308c\u306f\u5b50\u30bb\u30c3\u30b7\u30e7\u30f3\u306e\u6700\u521d\u306e\u6307\u793a\u3067\u3059\u3002",
+            "timestamp": "2025-10-30T13:11:14.457289+09:00"
+        }
+    ],
+    "pools": [],
+    "todos": null
+}

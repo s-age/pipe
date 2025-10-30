@@ -1,7 +1,7 @@
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 from pipe.core.models.settings import Settings
 from pipe.core.models.todo import TodoItem
@@ -80,20 +80,27 @@ class TestDeleteTodosTool(unittest.TestCase):
 
     def test_delete_todos_failure(self):
         """
-        Tests that the tool returns an error if the session_service raises an exception.
+        Tests that the tool returns an error if the session_service raises an
+        exception.
         """
-        mock_session_service = MagicMock()
+        mock_session_service = MagicMock(spec=SessionService)
+        mock_session = MagicMock()
+        mock_session_service.get_session.return_value = mock_session
         error_message = "Test exception"
-        mock_session_service.delete_todos.side_effect = Exception(error_message)
 
-        result = delete_todos(
-            session_service=mock_session_service, session_id=self.session_id
-        )
+        with patch(
+            "pipe.core.domains.todos.delete_todos_in_session",
+            side_effect=Exception(error_message),
+        ) as mock_delete_todos_in_session:
+            result = delete_todos(
+                session_service=mock_session_service, session_id=self.session_id
+            )
 
-        self.assertIn("error", result)
-        self.assertEqual(
-            result["error"], f"Failed to delete todos from session: {error_message}"
-        )
+            mock_delete_todos_in_session.assert_called_once_with(mock_session)
+            self.assertIn("error", result)
+            self.assertEqual(
+                result["error"], f"Failed to delete todos from session: {error_message}"
+            )
 
 
 if __name__ == "__main__":

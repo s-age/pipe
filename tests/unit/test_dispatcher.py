@@ -89,6 +89,11 @@ class TestDispatcher(unittest.TestCase):
 
         self.session_service.settings.api_mode = "gemini-api"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
+        # Create a mock session with a mock references collection
+        mock_session = MagicMock()
+        from pipe.core.collections.references import ReferenceCollection
+        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
+        self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
         _dispatch_run(args, self.session_service)
         mock_gemini_api_run.assert_called_once()
@@ -100,6 +105,11 @@ class TestDispatcher(unittest.TestCase):
 
         self.session_service.settings.api_mode = "gemini-cli"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
+        # Create a mock session with a mock references collection
+        mock_session = MagicMock()
+        from pipe.core.collections.references import ReferenceCollection
+        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
+        self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
         _dispatch_run(args, self.session_service)
         mock_gemini_cli_run.assert_called_once()
@@ -110,6 +120,11 @@ class TestDispatcher(unittest.TestCase):
 
         self.session_service.settings.api_mode = "unknown-api"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
+        # Create a mock session with a mock references collection
+        mock_session = MagicMock()
+        from pipe.core.collections.references import ReferenceCollection
+        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
+        self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
         with self.assertRaises(ValueError):
             _dispatch_run(args, self.session_service)

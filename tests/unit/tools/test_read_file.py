@@ -92,22 +92,32 @@ class TestReadFileTool(unittest.TestCase):
         updating a reference.
         """
         mock_session_service = MagicMock(spec=SessionService)
+        mock_session = MagicMock()
+        mock_session.references.default_ttl = 3
+        mock_session_service.get_session.return_value = mock_session
 
-        # Make os.path.getsize return a non-zero value
         with patch("os.path.getsize", return_value=10):
-            read_file(
-                absolute_path=self.test_file_path,
-                session_service=mock_session_service,
-                session_id="mock_session_id",
-            )
+            with patch(
+                "pipe.core.domains.references.add_reference"
+            ) as mock_add_reference:
+                with patch(
+                    "pipe.core.domains.references.update_reference_ttl"
+                ) as mock_update_reference_ttl:
+                    read_file(
+                        absolute_path=self.test_file_path,
+                        session_service=mock_session_service,
+                        session_id="mock_session_id",
+                    )
 
-        # Verify that the correct methods were called in order
-        mock_session_service.add_reference_to_session.assert_called_once_with(
-            "mock_session_id", self.test_file_path
-        )
-        mock_session_service.update_reference_ttl_in_session.assert_called_once_with(
-            "mock_session_id", self.test_file_path, 3
-        )
+                    mock_add_reference.assert_called_once_with(
+                        mock_session.references, self.test_file_path, 3
+                    )
+                    mock_update_reference_ttl.assert_called_once_with(
+                        mock_session.references, self.test_file_path, 3
+                    )
+                    mock_session_service._save_session.assert_called_once_with(
+                        mock_session
+                    )
 
 
 if __name__ == "__main__":

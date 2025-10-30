@@ -104,9 +104,15 @@ class SessionService:
             print(f"New session created: {session.session_id}", file=sys.stderr)
 
         if args.references:
+            from pipe.core.domains.references import add_reference
+
             for ref_path in args.references:
                 if ref_path.strip():
-                    session.references.add(ref_path.strip())
+                    add_reference(
+                        session.references,
+                        ref_path.strip(),
+                        session.references.default_ttl
+                    )
 
         self.repository.save(session)
 
@@ -174,10 +180,14 @@ class SessionService:
 
         abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
         if not os.path.isfile(abs_path):
-            print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
+            print(
+                f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr
+            )
             return
 
-        session.references.add(file_path)
+        from pipe.core.domains.references import add_reference
+
+        add_reference(session.references, file_path, session.references.default_ttl)
         self._save_session(session)
 
     def update_reference_ttl_in_session(
@@ -187,7 +197,9 @@ class SessionService:
         if not session:
             return
 
-        session.references.update_ttl(file_path, new_ttl)
+        from pipe.core.domains.references import update_reference_ttl
+
+        update_reference_ttl(session.references, file_path, new_ttl)
         self._save_session(session)
 
     def decrement_all_references_ttl_in_session(self, session_id: str):
@@ -195,23 +207,43 @@ class SessionService:
         if not session:
             return
 
-        session.references.decrement_all_ttl()
+        from pipe.core.domains.references import decrement_all_references_ttl
+
+        decrement_all_references_ttl(session.references)
+        self._save_session(session)
+
+    def add_multiple_references(self, session_id: str, file_paths: list[str]):
+        session = self._fetch_session(session_id)
+        if not session:
+            return
+
+        from pipe.core.domains.references import add_reference
+
+        for file_path in file_paths:
+            abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
+            if not os.path.isfile(abs_path):
+                print(
+                f"Warning: Path is not a file, skipping: {abs_path}",
+                file=sys.stderr
+            )
+                continue
+            add_reference(session.references, file_path, session.references.default_ttl)
         self._save_session(session)
 
     def update_todos(self, session_id: str, todos: list):
         session = self._fetch_session(session_id)
         if session:
-            from pipe.core.collections.todos import TodoCollection
+            from pipe.core.domains.todos import update_todos_in_session
 
-            TodoCollection.update_in_session(session, todos)
+            update_todos_in_session(session, todos)
             self._save_session(session)
 
     def delete_todos(self, session_id: str):
         session = self._fetch_session(session_id)
         if session:
-            from pipe.core.collections.todos import TodoCollection
+            from pipe.core.domains.todos import delete_todos_in_session
 
-            TodoCollection.delete_in_session(session)
+            delete_todos_in_session(session)
             self._save_session(session)
 
     def add_to_pool(self, session_id: str, pool_data: Turn):
@@ -366,7 +398,9 @@ class SessionService:
         """
         session = self._fetch_session(session_id)
         if session:
-            if session.turns.expire_old_tool_responses(
-                self.settings.tool_response_expiration
+            from pipe.core.domains.turns import expire_old_tool_responses
+
+            if expire_old_tool_responses(
+                session.turns, self.settings.tool_response_expiration
             ):
                 self._save_session(session)

@@ -1,9 +1,10 @@
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 from pipe.core.models.settings import Settings
+from pipe.core.models.todo import TodoItem
 from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_service import SessionService
 from pipe.core.tools.edit_todos import edit_todos
@@ -37,32 +38,43 @@ class TestEditTodosTool(unittest.TestCase):
         session = self.session_service.create_new_session("Test", "Test", [])
         self.session_id = session.session_id
 
+        # Add some initial todos to the session
+        initial_todos = [
+            TodoItem(title="Task 1", checked=False),
+            TodoItem(title="Task 2", checked=True),
+        ]
+        self.session_service.update_todos(
+            self.session_id, [t.model_dump() for t in initial_todos]
+        )
+
     def tearDown(self):
         shutil.rmtree(self.project_root)
 
     def test_edit_todos_updates_session_todos(self):
         """
-        Tests that the edit_todos tool correctly updates the todos in the session.
+        Tests that the edit_todos tool correctly updates the session's todos.
         """
         new_todos = [
-            {"title": "New Task 1", "description": "Desc 1", "checked": False},
-            {"title": "New Task 2", "description": "Desc 2", "checked": True},
+            TodoItem(title="Task 1", checked=True),
+            TodoItem(title="Task 3", checked=False),
         ]
-
         result = edit_todos(
-            todos=new_todos,
+            todos=[t.model_dump() for t in new_todos],
             session_service=self.session_service,
             session_id=self.session_id,
         )
 
         self.assertIn("message", result)
         self.assertNotIn("error", result)
+        self.assertIn("successfully updated", result["message"])
 
         # Verify that the todos were actually updated
         session = self.session_service.get_session(self.session_id)
         self.assertEqual(len(session.todos), 2)
-        self.assertEqual(session.todos[0].title, "New Task 1")
-        self.assertTrue(session.todos[1].checked)
+        self.assertEqual(session.todos[0].title, "Task 1")
+        self.assertTrue(session.todos[0].checked)
+        self.assertEqual(session.todos[1].title, "Task 3")
+        self.assertFalse(session.todos[1].checked)
 
     def test_edit_todos_no_session_service(self):
         """
@@ -74,20 +86,29 @@ class TestEditTodosTool(unittest.TestCase):
 
     def test_edit_todos_failure(self):
         """
-        Tests that the tool returns an error if the session_service raises an exception.
+        Tests that the tool returns an error if the session_service raises an
+        exception.
         """
-        mock_session_service = MagicMock()
+        mock_session_service = MagicMock(spec=SessionService)
+        mock_session = MagicMock()
+        mock_session_service.get_session.return_value = mock_session
         error_message = "Test exception"
-        mock_session_service.update_todos.side_effect = Exception(error_message)
 
-        result = edit_todos(
-            todos=[], session_service=mock_session_service, session_id=self.session_id
-        )
+        with patch(
+            "pipe.core.domains.todos.update_todos_in_session",
+            side_effect=Exception(error_message),
+        ) as mock_update_todos_in_session:
+            result = edit_todos(
+                todos=[],
+                session_service=mock_session_service,
+                session_id=self.session_id,
+            )
 
-        self.assertIn("error", result)
-        self.assertEqual(
-            result["error"], f"Failed to update todos in session: {error_message}"
-        )
+            mock_update_todos_in_session.assert_called_once_with(mock_session, [])
+            self.assertIn("error", result)
+            self.assertEqual(
+                result["error"], f"Failed to update todos in session: {error_message}"
+            )
 
 
 if __name__ == "__main__":

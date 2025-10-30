@@ -18,8 +18,10 @@ def py_get_code_snippet(file_path: str, symbol_name: str) -> dict[str, Any]:
     end_lineno = -1
 
     for node in ast.walk(tree):
-        if isinstance(node, ast.ClassDef | ast.FunctionDef) and \
-           node.name == symbol_name:
+        if (
+            isinstance(node, ast.ClassDef | ast.FunctionDef)
+            and node.name == symbol_name
+        ):
             end_lineno = (
                 node.end_lineno
                 if hasattr(node, "end_lineno") and node.end_lineno is not None

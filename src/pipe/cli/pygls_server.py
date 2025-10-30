@@ -94,9 +94,7 @@ async def hover(ls: LanguageServer, params: types.HoverParams) -> Hover | None:
         for name, hint in type_hints_result["type_hints"].items():
             content += f"#   {name}: {hint}\n"
         content += "```"
-        return Hover(
-            contents=MarkupContent(kind=MarkupKind.Markdown, value=content)
-        )
+        return Hover(contents=MarkupContent(kind=MarkupKind.Markdown, value=content))
 
     analysis_result = py_analyze_code(file_path)
     if "error" not in analysis_result:

@@ -12,13 +12,15 @@ Each subdirectory is a specialized organ, performing a distinct function with fa
 
 -   **`agents/`**: Wrappers of chaos. These modules are the sole point of contact with external AI services (like the Gemini API or the `gemini-cli` tool). They exist to translate our deterministic, structured world into the language of the outside, and to translate the outside's probabilistic responses back into our control.
 
--   **`collections/`**: The logicians. A model object like a `Reference` or a `Turn` is just data. A `Collection` is where that data becomes intelligent. These classes encapsulate the *business logic* for lists of models—implementing TTL decay, sorting heuristics, and other rules that define how the context behaves over time.
+-   **`collections/`**: The data structures. These classes provide specialized list-like structures for managing groups of model objects (e.g., `ReferenceCollection`, `TurnCollection`). They focus on efficient storage and retrieval, while the business logic for manipulating their contents resides in the `domains/` layer.
 
 -   **`delegates/`**: The orchestrators. When the `dispatcher` points, a `delegate` acts. Each delegate is a high-level workflow, orchestrating the complex dance between `services` and `agents` to fulfill a command, whether it's running a prompt, forking a session, or displaying help.
 
+-   **`domains/`**: The logicians. This layer encapsulates the *business logic* for manipulating core data entities. Functions here implement rules like TTL decay for references, filtering for turns, and validation for todos, ensuring that context behavior is consistent and auditable.
+
 -   **`models/`**: The atomic structure. Defined with Pydantic, these are the immutable data blueprints of our universe. From the `Session` itself to a single `Turn`, every piece of state is rigorously structured and validated here.
 
--   **`services/`**: The central nervous system. Services like `SessionService` and `PromptService` are the powerful, cross-cutting monoliths that manage the application's core state and capabilities. `SessionService` is the master of persistence; `PromptService` is the grand architect of the final, structured prompt.
+-   **`services/`**: The central nervous system. Services like `SessionService` and `PromptService` are responsible for coordinating interactions between various components, managing application-wide state, and orchestrating complex operations. `SessionService` handles session persistence and lifecycle; `PromptService` is the grand architect of the final, structured prompt.
 
 -   **`tools/`**: The hands of the AI. These are the executable capabilities we grant to the model. Each file is a self-contained function that the AI can invoke, from reading a file (`read_file`) to searching the web. They are the model's only way to interact with the world beyond its immediate context.
 

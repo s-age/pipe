@@ -19,9 +19,15 @@ By default, `pipe` is based on `gemini-cli`, but this is merely an implementatio
 
 ### License: The Spirit of the Jailbreak
 
-This project is released under the [CC0 1.0 Universal (CC0 1.0) Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/).
+This project's *original code* is released under the [CC0 1.0 Universal (CC0 1.0) Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/).
 
 Customize it as you wish. Jailbreak as you desire.
+
+**Important Note on Dependencies:**
+This project utilizes various third-party libraries, each governed by its own license. While the original code of `pipe` is dedicated to the public domain under CC0, the licenses of these dependencies (e.g., MIT, Apache 2.0, BSD) still apply to their respective components.
+
+*   **Commercial Use**: Please review the licenses of all included third-party libraries to ensure compliance with your intended use, especially for commercial applications.
+*   **Attribution**: Some third-party licenses may require attribution. It is your responsibility to comply with all applicable license terms.
 
 The purpose of this project is to be a **pipe to the agent**, and a **pipe to our followers** (the community).
 

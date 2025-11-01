@@ -19,7 +19,7 @@ def _parse_code_for_patterns(file_paths: list[str]) -> dict:
         "functions": [],
         "imports": [],
     }
-    extracted_patterns["type_hints"] = {} # type: ignore
+    extracted_patterns["type_hints"] = {}  # type: ignore
 
     for file_path in file_paths:
         try:

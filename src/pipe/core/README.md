@@ -58,6 +58,14 @@ The `takt` command is the primary entrypoint for manipulating the state machine.
     -   *Dependencies*: Optional.
     -   *Example*: `takt --references src/main.py,tests/test_main.py --instruction "Review the code and identify potential bugs."`
 
+-   `--artifacts <FILE_PATH_1>,<FILE_PATH_2>,...`: Specifies comma-separated file paths that represent the expected output files for the session.
+    -   *Dependencies*: Optional.
+    -   *Example*: `takt --artifacts output.py,results.json --instruction "Generate the output files."`
+
+-   `--procedure <FILE_PATH>`: Specifies a single file path to a procedure document that will be referenced throughout the session.
+    -   *Dependencies*: Optional.
+    -   *Example*: `takt --procedure docs/development_guide.md --instruction "Implement the feature according to the guide."`
+
 -   `--multi-step-reasoning`: Instructs the AI to use a more complex, chain-of-thought reasoning process.
     -   *Dependencies*: Optional. Use to enhance the AI's reasoning capabilities.
     -   *Example*: `takt --multi-step-reasoning --instruction "Analyze the root cause of the performance degradation."`

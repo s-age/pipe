@@ -5,8 +5,8 @@ Dispatches commands to the appropriate delegates based on arguments.
 import argparse
 import sys
 
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
-from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 
 
@@ -18,7 +18,10 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     session_id = session_service.current_session_id
 
     api_mode = session_service.settings.api_mode
-    prompt_service = PromptService(session_service.project_root)
+    service_factory = ServiceFactory(
+        session_service.project_root, session_service.settings
+    )
+    prompt_service = service_factory.create_prompt_service()
 
     if args.dry_run:
         from .delegates import dry_run_delegate

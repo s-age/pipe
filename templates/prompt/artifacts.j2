@@ -1,0 +1,6 @@
+{% macro render_artifacts_macro(artifacts) %}
+{
+  "description": "List of files that are expected to be created or modified as part of the task. You MUST NOT modify any files not listed in this array.",
+  "files": {{ artifacts | tojson }}
+}
+{% endmacro %}

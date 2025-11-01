@@ -60,6 +60,8 @@ class Session(BaseModel):
     token_count: int = 0
     hyperparameters: Hyperparameters | None = None
     references: ReferenceCollection = Field(default_factory=ReferenceCollection)
+    artifacts: list[str] = []
+    procedure: str | None = None
     turns: TurnCollection = Field(default_factory=TurnCollection)
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: list[TodoItem] | None = None
@@ -162,6 +164,8 @@ class Session(BaseModel):
             multi_step_reasoning_enabled=self.multi_step_reasoning_enabled,
             hyperparameters=self.hyperparameters,
             references=self.references,
+            artifacts=self.artifacts,
+            procedure=self.procedure,
             turns=forked_turns,
         )
 
@@ -177,6 +181,10 @@ class Session(BaseModel):
             self.multi_step_reasoning_enabled = new_meta_data[
                 "multi_step_reasoning_enabled"
             ]
+        if "artifacts" in new_meta_data:
+            self.artifacts = new_meta_data["artifacts"]
+        if "procedure" in new_meta_data:
+            self.procedure = new_meta_data["procedure"]
         if "token_count" in new_meta_data:
             self.token_count = new_meta_data["token_count"]
         if "hyperparameters" in new_meta_data:
@@ -196,6 +204,8 @@ class Session(BaseModel):
             if self.hyperparameters
             else None,
             "references": [r.model_dump() for r in self.references],
+            "artifacts": self.artifacts,
+            "procedure": self.procedure,
             "turns": [t.model_dump() for t in self.turns],
             "pools": [p.model_dump() for p in self.pools],
             "todos": [t.model_dump() for t in self.todos] if self.todos else [],

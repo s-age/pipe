@@ -91,6 +91,8 @@ class SessionService:
                 background=args.background,
                 roles=args.roles or [],
                 multi_step_reasoning_enabled=args.multi_step_reasoning,
+                artifacts=args.artifacts or [],
+                procedure=args.procedure,
                 parent_id=args.parent,
             )
 
@@ -143,6 +145,8 @@ class SessionService:
         token_count: int = 0,
         hyperparameters: dict | None = None,
         parent_id: str | None = None,
+        artifacts: list[str] | None = None,
+        procedure: str | None = None,
     ) -> Session:
         session = self._create_session_object(
             purpose=purpose,
@@ -152,6 +156,8 @@ class SessionService:
             token_count=token_count,
             hyperparameters=hyperparameters,
             parent_id=parent_id,
+            artifacts=artifacts,
+            procedure=procedure,
         )
 
         self.repository.save(session)
@@ -339,6 +345,8 @@ class SessionService:
         token_count: int = 0,
         hyperparameters: dict | None = None,
         parent_id: str | None = None,
+        artifacts: list[str] | None = None,
+        procedure: str | None = None,
     ) -> Session:
         if parent_id:
             parent_session = self.repository.find(parent_id)
@@ -354,6 +362,8 @@ class SessionService:
                 "background": background,
                 "roles": roles,
                 "multi_step_reasoning_enabled": multi_step_reasoning_enabled,
+                "artifacts": artifacts,
+                "procedure": procedure,
                 "timestamp": timestamp,
             },
             sort_keys=True,
@@ -380,6 +390,8 @@ class SessionService:
             hyperparameters=hyperparameters
             if hyperparameters is not None
             else default_hyperparameters,
+            artifacts=artifacts or [],
+            procedure=procedure,
         )
 
         return session

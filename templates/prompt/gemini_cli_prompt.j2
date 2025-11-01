@@ -8,6 +8,8 @@
 {% from "file_references.j2" import render_file_references_macro %}
 {% from "advanced_reasoning_flow.j2" import render_advanced_reasoning_flow_macro %}
 {% from "todos.j2" import render_todos_macro %}
+{% from "artifacts.j2" import render_artifacts_macro %}
+{% from "procedure.j2" import render_procedure_macro %}
 {
   "description": {{ render_description_macro(session.description) }},
   "main_instruction": {{ render_main_instruction_macro() }},
@@ -22,8 +24,14 @@
   "session_goal": {{ render_session_goal_macro(session.session_goal) }},
   "roles": {{ render_roles_macro(session.roles) }},
   "constraints": {{ render_constraints_macro(session.constraints) }},
-  "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }}{% if session.file_references %},{% endif %}
+  "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }}{% if session.file_references or session.artifacts or session.procedure %},{% endif %}
   {% if session.file_references %}
-  "file_references": {{ render_file_references_macro(session.file_references) }}
+  "file_references": {{ render_file_references_macro(session.file_references) }}{% if session.artifacts or session.procedure %},{% endif %}
+  {% endif %}
+  {% if session.artifacts and session.artifacts | length > 0 %}
+  "artifacts": {{ render_artifacts_macro(session.artifacts) }}{% if session.procedure %},{% endif %}
+  {% endif %}
+  {% if session.procedure %}
+  "procedure": {{ render_procedure_macro(session.procedure, session.procedure_content) }}
   {% endif %}
 }

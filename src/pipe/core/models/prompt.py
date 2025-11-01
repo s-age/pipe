@@ -1,3 +1,5 @@
+import os
+import sys
 import zoneinfo
 from typing import TYPE_CHECKING, Any
 
@@ -32,6 +34,9 @@ class Prompt(BaseModel):
     constraints: PromptConstraints
     conversation_history: PromptConversationHistory
     file_references: list[PromptFileReference] | None = None
+    artifacts: list[str] | None = None
+    procedure: str | None = None
+    procedure_content: str | None = None
 
     @classmethod
     def from_session(
@@ -42,6 +47,7 @@ class Prompt(BaseModel):
         from pipe.core.domains.todos import get_todos_for_prompt
         from pipe.core.models.prompts.constraints import PromptHyperparameters
         from pipe.core.utils.datetime import get_current_timestamp
+        from pipe.core.utils.file import read_text_file
 
         # 1. Build Hyperparameters
         merged_params = settings.parameters.model_dump()
@@ -83,6 +89,21 @@ class Prompt(BaseModel):
         current_task_turn_data = session.turns[-1].model_dump()
         current_task = PromptCurrentTask(**current_task_turn_data)
 
+        procedure_content = None
+        if session.procedure:
+            try:
+                procedure_content = read_text_file(
+                    os.path.join(project_root, session.procedure)
+                )
+            except FileNotFoundError:
+                print(
+                    f"Warning: Procedure file not found: {session.procedure}",
+                    file=sys.stderr,
+                )
+                procedure_content = (
+                    f"Error: Procedure file not found at {session.procedure}"
+                )
+
         # 4. Assemble the final Prompt object
         prompt_data = {
             "current_datetime": get_current_timestamp(
@@ -111,6 +132,9 @@ class Prompt(BaseModel):
             "current_task": current_task,
             "todos": prompt_todos if prompt_todos else None,
             "file_references": prompt_references if prompt_references else None,
+            "artifacts": session.artifacts if session.artifacts else None,
+            "procedure": session.procedure if session.procedure else None,
+            "procedure_content": procedure_content if procedure_content else None,
             "reasoning_process": {
                 "description": "Think step-by-step to achieve the goal."
             }

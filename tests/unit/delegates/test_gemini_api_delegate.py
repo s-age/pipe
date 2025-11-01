@@ -5,12 +5,11 @@ import unittest
 from unittest.mock import MagicMock, Mock, patch
 
 from pipe.core.delegates import gemini_api_delegate
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import UserTaskTurn
 from pipe.core.repositories.session_repository import SessionRepository
-from pipe.core.services.prompt_service import PromptService
-from pipe.core.services.session_service import SessionService
 
 # We avoid importing specific response types to make the test more robust
 # against library changes. MagicMock will create the structure we need.
@@ -43,12 +42,9 @@ class TestGeminiApiDelegate(unittest.TestCase):
         self.mock_repository = Mock(spec=SessionRepository)
 
         # Instantiate services with the real project root
-        self.session_service = SessionService(
-            project_root=self.project_root,
-            settings=self.settings,
-            repository=self.mock_repository,
-        )
-        self.prompt_service = PromptService(project_root=self.project_root)
+        self.service_factory = ServiceFactory(self.project_root, self.settings)
+        self.session_service = self.service_factory.create_session_service()
+        self.prompt_service = self.service_factory.create_prompt_service()
 
         # Override session paths to use the temporary directory
         self.session_service.sessions_dir = self.temp_sessions_dir

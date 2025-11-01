@@ -6,10 +6,10 @@ import unittest
 from unittest.mock import MagicMock, Mock, patch
 
 from pipe.core.agents.gemini_cli import call_gemini_cli
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
 from pipe.core.repositories.session_repository import SessionRepository
-from pipe.core.services.session_service import SessionService
 
 
 class TestGeminiCliIntegration(unittest.TestCase):
@@ -43,12 +43,9 @@ class TestGeminiCliIntegration(unittest.TestCase):
         self.settings = Settings(**settings_data)
         self.mock_repository = Mock(spec=SessionRepository)
 
-        # Instantiate the real service, then override the sessions path
-        self.session_service = SessionService(
-            project_root=self.project_root,
-            settings=self.settings,
-            repository=self.mock_repository,
-        )
+        # Instantiate services with the real project root
+        self.service_factory = ServiceFactory(self.project_root, self.settings)
+        self.session_service = self.service_factory.create_session_service()
         self.session_service.sessions_dir = self.temp_sessions_dir
         self.session_service.index_path = os.path.join(
             self.temp_sessions_dir, "index.json"

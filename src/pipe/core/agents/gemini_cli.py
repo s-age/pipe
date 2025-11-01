@@ -9,49 +9,54 @@
 # For more information on the underlying tool, see the official repository:
 # https://github.com/google-gemini/gemini-cli
 
-import os
+import json
 import subprocess
-import sys
 
-from jinja2 import Environment, FileSystemLoader
-from pipe.core.services.prompt_service import PromptService
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.services.session_service import SessionService
 
 
 def call_gemini_cli(session_service: SessionService) -> str:
     settings = session_service.settings
     project_root = session_service.project_root
-    session_id = session_service.current_session_id
 
     model_name = settings.model
     if not model_name:
         raise ValueError("'model' not found in settings")
 
-    prompt_service = PromptService(project_root)
+    service_factory = ServiceFactory(project_root, settings)
+    prompt_service = service_factory.create_prompt_service()
     prompt_model = prompt_service.build_prompt(session_service)
 
-    template_env = Environment(
-        loader=FileSystemLoader(os.path.join(project_root, "templates", "prompt")),
-        trim_blocks=True,
-        lstrip_blocks=True,
+    # Render the prompt using the appropriate template
+    template_name = (
+        "gemini_api_prompt.j2"
+        if settings.api_mode == "gemini-api"
+        else "gemini_cli_prompt.j2"
     )
-    template = template_env.get_template("gemini_cli_prompt.j2")
+    template = prompt_service.jinja_env.get_template(template_name)
+    rendered_prompt = template.render(session=prompt_model)
 
-    context = prompt_model.model_dump()
-    final_prompt = template.render(session=context)
+    # Ensure the rendered prompt is valid JSON and pretty-print it
+    pretty_printed_prompt = json.dumps(json.loads(rendered_prompt), indent=2)
 
-    # Sanitize the prompt string to remove any surrogate characters before
-    # passing to subprocess
-    final_prompt = final_prompt.encode("utf-8", "replace").decode("utf-8")
+    command = [
+        "gemini",
+        "-y",
+        "-m",
+        model_name,
+        "-p",
+        pretty_printed_prompt,
+    ]
 
-    command = ["gemini", "-m", model_name, "-p", final_prompt]
-    if settings.yolo:
-        command.insert(1, "-y")
+    # Add references if any
+    if prompt_model.file_references:
+        for ref in prompt_model.file_references:
+            command.extend(["-r", ref.path])
 
-    env = os.environ.copy()
-    env["PYTHONUNBUFFERED"] = "1"  # Force unbuffered output for streaming
-    if session_id:
-        env["PIPE_SESSION_ID"] = session_id
+    # Add multi-step reasoning if enabled
+    if prompt_model.reasoning_process:
+        command.append("--multi-step-reasoning")
 
     try:
         process = subprocess.Popen(
@@ -60,32 +65,28 @@ def call_gemini_cli(session_service: SessionService) -> str:
             stderr=subprocess.PIPE,
             text=True,
             encoding="utf-8",
-            env=env,
             bufsize=1,
         )
 
-        model_response_text = []
+        full_response = ""
         if process.stdout:
             for line in iter(process.stdout.readline, ""):
-                print(line, end="", flush=True)
-                model_response_text.append(line)
-            process.stdout.close()
+                full_response += line
 
         stderr_output = ""
         if process.stderr:
             stderr_output = process.stderr.read()
-            process.stderr.close()
 
         return_code = process.wait()
 
         if return_code != 0:
-            raise RuntimeError(f"Error during gemini-cli execution: {stderr_output}")
+            raise RuntimeError(
+                f"Error during gemini-cli execution: {stderr_output}"
+            )
 
-        if stderr_output:
-            print(f"\nWarning from gemini-cli: {stderr_output}", file=sys.stderr)
-
-        return "".join(model_response_text)
+        return full_response
     except FileNotFoundError:
-        raise RuntimeError(
-            "Error: 'gemini' command not found. Make sure it's in your PATH."
-        )
+        raise RuntimeError("Error: 'gemini' command not found. "
+                           "Please ensure it is installed and in your PATH.")
+    except Exception as e:
+        raise RuntimeError(f"An unexpected error occurred: {e}")

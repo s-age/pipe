@@ -6,6 +6,7 @@ from unittest.mock import Mock
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session
@@ -13,8 +14,6 @@ from pipe.core.models.settings import Settings
 from pipe.core.models.todo import TodoItem
 from pipe.core.models.turn import ModelResponseTurn
 from pipe.core.repositories.session_repository import SessionRepository
-from pipe.core.services.prompt_service import PromptService
-from pipe.core.services.session_service import SessionService
 
 
 class TestPromptService(unittest.TestCase):
@@ -42,12 +41,9 @@ class TestPromptService(unittest.TestCase):
         }
         self.settings = Settings(**settings_data)
         self.mock_repository = Mock(spec=SessionRepository)
-        self.session_service = SessionService(
-            project_root=self.project_root,
-            settings=self.settings,
-            repository=self.mock_repository,
-        )
-        self.prompt_service = PromptService(project_root=self.project_root)
+        self.service_factory = ServiceFactory(self.project_root, self.settings)
+        self.session_service = self.service_factory.create_session_service()
+        self.prompt_service = self.service_factory.create_prompt_service()
 
         # Setup mock repository to return a session with valid hyperparameters
         self.mock_session = Mock(spec=Session)

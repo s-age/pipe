@@ -281,6 +281,8 @@ document.addEventListener('DOMContentLoaded', function() {
             background: viewContainer.querySelector('[data-field="background"]').value,
             roles: viewContainer.querySelector('[data-field="roles"]').value.split(',').map(s => s.trim()).filter(Boolean),
             multi_step_reasoning_enabled: viewContainer.querySelector('[data-field="multi_step_reasoning_enabled"]').checked,
+            artifacts: viewContainer.querySelector('[data-field="artifacts"]').value.split(',').map(s => s.trim()).filter(Boolean),
+            procedure: viewContainer.querySelector('[data-field="procedure"]').value.trim(),
             hyperparameters: {
                 temperature: { value: parseFloat(viewContainer.querySelector('[data-field="temperature"]').value) },
                 top_p: { value: parseFloat(viewContainer.querySelector('[data-field="top_p"]').value) },
@@ -571,9 +573,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 noReferencesMessage.style.display = 'block';
             }
         }
+
+        // Update Procedure Content
+        const procedureContentTextarea = document.querySelector('[data-field="procedure_content"]');
+        if (procedureContentTextarea) {
+            procedureContentTextarea.value = sessionData.procedure_content || '';
+        }
     }
 
-     function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
+    function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
         const fetchSessionData = fetch(`/api/session/${sessionId}`).then(handleResponse);
         const fetchSessionList = fetch('/api/sessions').then(handleResponse);
 

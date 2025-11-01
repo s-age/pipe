@@ -59,6 +59,12 @@
             <label for="references">References (comma-separated paths):</label>
             <input type="text" id="references" name="references">
 
+            <label for="artifacts">Artifacts (comma-separated paths):</label>
+            <input type="text" id="artifacts" name="artifacts">
+
+            <label for="procedure">Procedure (path to file):</label>
+            <input type="text" id="procedure" name="procedure">
+
             <label for="instruction">First Instruction:</label>
             <textarea id="instruction" name="instruction" required></textarea>
 
@@ -129,6 +135,8 @@
                 const roles = document.getElementById('roles').value;
                 const parent = document.getElementById('parent').value;
                 const references = document.getElementById('references').value;
+                const artifacts = document.getElementById('artifacts').value;
+                const procedure = document.getElementById('procedure').value;
                 const instruction = document.getElementById('instruction').value;
                 const multi_step_reasoning_enabled = document.getElementById('multi-step-reasoning').checked;
 
@@ -147,7 +155,7 @@
                 fetch('/api/session/new', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ purpose, background, roles, parent, references, instruction, multi_step_reasoning_enabled, hyperparameters })
+                    body: JSON.stringify({ purpose, background, roles, parent, references, artifacts, procedure, instruction, multi_step_reasoning_enabled, hyperparameters })
                 })
                 .then(response => {
                     if (!response.ok) {

@@ -119,6 +119,9 @@ def create_new_session_api():
         request_data = NewSessionRequest(**request.get_json())
 
         roles = [r.strip() for r in request_data.roles.split(",") if r.strip()]
+        artifacts = [
+            a.strip() for a in request_data.artifacts.split(",") if a.strip()
+        ]
 
         session = session_service.create_new_session(
             purpose=request_data.purpose,
@@ -127,6 +130,8 @@ def create_new_session_api():
             multi_step_reasoning_enabled=request_data.multi_step_reasoning_enabled,
             hyperparameters=request_data.hyperparameters,
             parent_id=request_data.parent,
+            artifacts=artifacts,
+            procedure=request_data.procedure,
         )
         session_id = session.session_id
 
@@ -143,6 +148,10 @@ def create_new_session_api():
         ]
         if request_data.references:
             command.extend(["--references", request_data.references])
+        if request_data.artifacts:
+            command.extend(["--artifacts", request_data.artifacts])
+        if request_data.procedure:
+            command.extend(["--procedure", request_data.procedure])
         if request_data.multi_step_reasoning_enabled:
             command.append("--multi-step-reasoning")
 

@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -36,7 +37,7 @@ class TestGoogleWebSearchTool(unittest.TestCase):
         src_path = os.path.join(project_root, "src")
         agent_path = os.path.join(src_path, "pipe", "core", "agents", "search_agent.py")
         expected_command = (
-            f'PYTHONPATH={src_path} pyenv exec python {agent_path} "{query}"'
+            f'PYTHONPATH={src_path} {sys.executable} {agent_path} "{query}"'
         )
 
         mock_subprocess_run.assert_called_once_with(

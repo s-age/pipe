@@ -49,15 +49,6 @@ def call_gemini_cli(session_service: SessionService) -> str:
         pretty_printed_prompt,
     ]
 
-    # Add references if any
-    if prompt_model.file_references:
-        for ref in prompt_model.file_references:
-            command.extend(["-r", ref.path])
-
-    # Add multi-step reasoning if enabled
-    if prompt_model.reasoning_process:
-        command.append("--multi-step-reasoning")
-
     try:
         process = subprocess.Popen(
             command,

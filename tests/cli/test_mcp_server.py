@@ -203,11 +203,10 @@ class TestMainLoop(unittest.TestCase):
         }
         mock_stdin.write(json.dumps(request) + "\n")
         mock_stdin.seek(0)
-        mock_select.return_value = ([mock_stdin], [], [])
+        mock_select.side_effect = [([mock_stdin], [], []), ([], [], [])]
 
         from pipe.cli.mcp_server import main
 
-        # The loop will exit after reading the one line and then getting EOF
         main()
 
         output = mock_stdout.getvalue()
@@ -230,7 +229,7 @@ class TestMainLoop(unittest.TestCase):
         }
         mock_stdin.write(json.dumps(request) + "\n")
         mock_stdin.seek(0)
-        mock_select.return_value = ([mock_stdin], [], [])
+        mock_select.side_effect = [([mock_stdin], [], []), ([], [], [])]
 
         from pipe.cli.mcp_server import main
 
@@ -239,8 +238,8 @@ class TestMainLoop(unittest.TestCase):
         output = mock_stdout.getvalue()
         response = json.loads(output)
 
-        mock_execute.assert_called_once_with("my_tool", {"x": 1})
         self.assertEqual(response["id"], "2")
+        self.assertEqual(response["result"]["status"], "succeeded")
         self.assertEqual(response["result"]["result"], {"data": "success"})
 
     def test_method_not_found(

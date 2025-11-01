@@ -18,7 +18,7 @@ def google_web_search(query: str) -> dict[str, Any]:
         )
         src_path = os.path.join(project_root, "src")
         agent_path = os.path.join(src_path, "pipe", "core", "agents", "search_agent.py")
-        command = f'PYTHONPATH={src_path} pyenv exec python {agent_path} "{query}"'
+        command = f'PYTHONPATH={src_path} {sys.executable} {agent_path} "{query}"'
 
         process = subprocess.run(
             command, shell=True, capture_output=True, text=True, check=True

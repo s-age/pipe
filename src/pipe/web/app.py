@@ -155,6 +155,7 @@ def create_new_session_api():
         if request_data.multi_step_reasoning_enabled:
             command.append("--multi-step-reasoning")
 
+        print(f"DEBUG: Running command: {command}", file=sys.stderr)
         subprocess.run(
             command, capture_output=True, text=True, check=True, encoding="utf-8"
         )
@@ -165,6 +166,7 @@ def create_new_session_api():
         # Pydantic validation failed
         return jsonify({"success": False, "message": str(e)}), 422
     except subprocess.CalledProcessError as e:
+        print(f"DEBUG: Stderr from takt command: {e.stderr}", file=sys.stderr)
         return jsonify(
             {
                 "success": False,

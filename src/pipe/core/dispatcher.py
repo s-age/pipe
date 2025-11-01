@@ -53,6 +53,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         session_service.merge_pool_into_turns(session_id)
 
         model_response_text = gemini_cli_delegate.run(args, session_service)
+        print(model_response_text)
         final_turn = ModelResponseTurn(
             type="model_response",
             content=model_response_text,

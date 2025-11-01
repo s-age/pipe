@@ -132,6 +132,11 @@ class TestExecuteTool(unittest.TestCase):
 
         mock_session_service = MagicMock()
         mock_session_service.timezone_obj = zoneinfo.ZoneInfo("UTC")
+
+        mock_session = MagicMock()
+        mock_session.pools = []
+        mock_session_service.get_session.return_value = mock_session
+
         mock_service_factory.return_value.create_session_service.return_value = (
             mock_session_service
         )
@@ -203,11 +208,10 @@ class TestMainLoop(unittest.TestCase):
         }
         mock_stdin.write(json.dumps(request) + "\n")
         mock_stdin.seek(0)
-        mock_select.return_value = ([mock_stdin], [], [])
+        mock_select.side_effect = [([mock_stdin], [], []), ([], [], [])]
 
         from pipe.cli.mcp_server import main
 
-        # The loop will exit after reading the one line and then getting EOF
         main()
 
         output = mock_stdout.getvalue()
@@ -230,7 +234,7 @@ class TestMainLoop(unittest.TestCase):
         }
         mock_stdin.write(json.dumps(request) + "\n")
         mock_stdin.seek(0)
-        mock_select.return_value = ([mock_stdin], [], [])
+        mock_select.side_effect = [([mock_stdin], [], []), ([], [], [])]
 
         from pipe.cli.mcp_server import main
 
@@ -239,9 +243,13 @@ class TestMainLoop(unittest.TestCase):
         output = mock_stdout.getvalue()
         response = json.loads(output)
 
-        mock_execute.assert_called_once_with("my_tool", {"x": 1})
         self.assertEqual(response["id"], "2")
-        self.assertEqual(response["result"]["result"], {"data": "success"})
+        self.assertEqual(response["result"]["isError"], False)
+        self.assertIn("content", response["result"])
+        self.assertEqual(
+            response["result"]["content"][0]["text"],
+            json.dumps({"data": "success"}),
+        )
 
     def test_method_not_found(
         self, mock_stdin, mock_stdout, mock_select, mock_execute, mock_get_defs

@@ -12,6 +12,8 @@ class EditSessionMetaRequest(BaseModel):
     purpose: str | None = None
     background: str | None = None
     roles: list[str] | None = None
+    artifacts: list[str] | None = None
+    procedure: str | None = None
     multi_step_reasoning_enabled: bool | None = None
     token_count: int | None = None
     hyperparameters: Hyperparameters | None = None
@@ -25,14 +27,16 @@ class EditSessionMetaRequest(BaseModel):
                 "purpose",
                 "background",
                 "roles",
+                "artifacts",
+                "procedure",
                 "multi_step_reasoning_enabled",
                 "token_count",
                 "hyperparameters",
             ]
         ):
             raise ValueError(
-                "At least one of ['purpose', 'background', 'roles', "
-                "'multi_step_reasoning_enabled', 'token_count', 'hyperparameters'] "
-                "must be present."
+                "At least one of ['purpose', 'background', 'roles', 'artifacts', "
+                "'procedure', 'multi_step_reasoning_enabled', 'token_count', "
+                "'hyperparameters'] must be present."
             )
         return data

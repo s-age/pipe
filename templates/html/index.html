@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body
     data-timezone="{{ settings.timezone }}"
@@ -115,6 +116,41 @@
                     <input type="text" data-field="roles" value="{{ session_data.roles | join(', ') }}" style="width: 100%; box-sizing: border-box;">
                 </div>
                 <div class="meta-item">
+                    <strong>Procedure:</strong>
+                    <input type="text" data-field="procedure" value="{{ session_data.procedure if session_data.procedure else '' }}" style="width: 100%; box-sizing: border-box;">
+                    <textarea data-field="procedure_content" style="width: 100%; box-sizing: border-box; min-height: 150px; margin-top: 10px;" readonly>{{ session_data.procedure_content if session_data.procedure_content else '' }}</textarea>
+                </div>
+                <div class="meta-item">
+                    <strong>Artifacts:</strong>
+                    <input type="text" data-field="artifacts" value="{% if session_data.artifacts %}{{ session_data.artifacts | join(', ') }}{% endif %}" style="width: 100%; box-sizing: border-box;">
+                </div>
+
+                <div class="meta-item">
+                    <strong>References:</strong>
+                    <ul id="references-list" style="list-style: none; padding-left: 0; display: {% if not session_data.references or session_data.references|length == 0 %}none{% else %}block{% endif %};">
+                        {% for reference in session_data.references %}
+                            <li style="margin-bottom: 10px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <label style="cursor: pointer; display: flex; align-items: center; flex-grow: 1;">
+                                        <input type="checkbox" class="reference-checkbox" data-index="{{ loop.index0 }}" {% if not reference.disabled %}checked{% endif %} style="margin-right: 8px;">
+                                        <button class="action-btn reference-persist-toggle" data-index="{{ loop.index0 }}" data-persist="{{ 'true' if reference.persist else 'false' }}" style="background: none; border: none; padding: 0; cursor: pointer; margin-right: 5px;">
+                                            <span class="material-icons" style="font-size: 16px; vertical-align: middle; color: {% if reference.persist %}#007bff{% else %}#ccc{% endif %};">lock</span>
+                                        </button>
+                                        <span data-testid="reference-path" style="word-break: break-all; {% if reference.disabled %}text-decoration: line-through; color: #888;{% endif %}">{{ reference.path }}</span>
+                                    </label>
+                                    <div class="ttl-controls" style="display: flex; align-items: center; margin-left: 10px;">
+                                        <button class="ttl-btn" data-index="{{ loop.index0 }}" data-action="decrement">-</button>
+                                        <span class="ttl-value" style="padding: 0 8px; font-weight: bold;">{{ reference.ttl if reference.ttl is not none else 3 }}</span>
+                                        <button class="ttl-btn" data-index="{{ loop.index0 }}" data-action="increment">+</button>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <p id="no-references-message" style="display: {% if not session_data.references or session_data.references|length == 0 %}block{% else %}none{% endif %};">No references for this session.</p>
+                </div>
+
+                <div class="meta-item">
                     <label>
                         <input type="checkbox" data-field="multi_step_reasoning_enabled" {% if session_data.multi_step_reasoning_enabled %}checked{% endif %}>
                         <strong>Multi-step Reasoning</strong>
@@ -164,47 +200,6 @@
                     <p id="no-todos-message" style="display: {% if not session_data.todos or session_data.todos|length == 0 %}block{% else %}none{% endif %};">No todos for this session.</p>
                 </div>
 
-                                <div class="meta-item">
-
-                                    <strong>References:</strong>
-
-                                    <ul id="references-list" style="list-style: none; padding-left: 0; display: {% if not session_data.references or session_data.references|length == 0 %}none{% else %}block{% endif %};">
-
-                                        {% for reference in session_data.references %}
-
-                                            <li style="margin-bottom: 10px;">
-
-                                                <div style="display: flex; align-items: center; justify-content: space-between;">
-
-                                                    <label style="cursor: pointer; display: flex; align-items: center; flex-grow: 1;">
-
-                                                        <input type="checkbox" class="reference-checkbox" data-index="{{ loop.index0 }}" {% if not reference.disabled %}checked{% endif %} style="margin-right: 8px;">
-
-                                                        <span data-testid="reference-path" style="word-break: break-all; {% if reference.disabled %}text-decoration: line-through; color: #888;{% endif %}">{{ reference.path }}</span>
-
-                                                    </label>
-
-                                                    <div class="ttl-controls" style="display: flex; align-items: center; margin-left: 10px;">
-
-                                                        <button class="ttl-btn" data-index="{{ loop.index0 }}" data-action="decrement">-</button>
-
-                                                        <span class="ttl-value" style="padding: 0 8px; font-weight: bold;">{{ reference.ttl if reference.ttl is not none else 3 }}</span>
-
-                                                        <button class="ttl-btn" data-index="{{ loop.index0 }}" data-action="increment">+</button>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </li>
-
-                                        {% endfor %}
-
-                                    </ul>
-
-                                    <p id="no-references-message" style="display: {% if not session_data.references or session_data.references|length == 0 %}block{% else %}none{% endif %};">No references for this session.</p>
-
-                                </div>
             </div>
             <button class="action-btn save-btn" id="save-meta-btn" data-session-id="{{ current_session_id }}">Save Meta</button>
         </section>

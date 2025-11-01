@@ -16,7 +16,7 @@ from pipe.core.utils.file import (
     FileLock,
     delete_file,
 )
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
 
 class Session(BaseModel):
@@ -27,6 +27,21 @@ class Session(BaseModel):
     persisting itself to a file.
     It does not manage the collection of all sessions or the index file.
     """
+
+    @model_validator(mode="before")
+    @classmethod
+    def _preprocess_todos(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "todos" in data and data["todos"] is not None:
+            processed_todos = []
+            for item in data["todos"]:
+                if isinstance(item, str):
+                    processed_todos.append(TodoItem(title=item))
+                elif isinstance(item, dict):
+                    processed_todos.append(TodoItem(**item))
+                else:
+                    processed_todos.append(item)
+            data["todos"] = processed_todos
+        return data
 
     if TYPE_CHECKING:
         from pipe.core.models.args import TaktArgs
@@ -60,6 +75,8 @@ class Session(BaseModel):
     token_count: int = 0
     hyperparameters: Hyperparameters | None = None
     references: ReferenceCollection = Field(default_factory=ReferenceCollection)
+    artifacts: list[str] = []
+    procedure: str | None = None
     turns: TurnCollection = Field(default_factory=TurnCollection)
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: list[TodoItem] | None = None
@@ -162,6 +179,8 @@ class Session(BaseModel):
             multi_step_reasoning_enabled=self.multi_step_reasoning_enabled,
             hyperparameters=self.hyperparameters,
             references=self.references,
+            artifacts=self.artifacts,
+            procedure=self.procedure,
             turns=forked_turns,
         )
 
@@ -177,6 +196,10 @@ class Session(BaseModel):
             self.multi_step_reasoning_enabled = new_meta_data[
                 "multi_step_reasoning_enabled"
             ]
+        if "artifacts" in new_meta_data:
+            self.artifacts = new_meta_data["artifacts"]
+        if "procedure" in new_meta_data:
+            self.procedure = new_meta_data["procedure"]
         if "token_count" in new_meta_data:
             self.token_count = new_meta_data["token_count"]
         if "hyperparameters" in new_meta_data:
@@ -196,6 +219,8 @@ class Session(BaseModel):
             if self.hyperparameters
             else None,
             "references": [r.model_dump() for r in self.references],
+            "artifacts": self.artifacts,
+            "procedure": self.procedure,
             "turns": [t.model_dump() for t in self.turns],
             "pools": [p.model_dump() for p in self.pools],
             "todos": [t.model_dump() for t in self.todos] if self.todos else [],

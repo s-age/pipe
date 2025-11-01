@@ -1,29 +1,39 @@
 {% from "description.j2" import render_description_macro %}
-{% from "session_goal.j2" import render_session_goal_macro %}
-{% from "roles.j2" import render_roles_macro %}
-{% from "constraints.j2" import render_constraints_macro %}
 {% from "main_instruction.j2" import render_main_instruction_macro %}
+{% from "constraints.j2" import render_constraints_macro %}
+{% from "session_goal.j2" import render_session_goal_macro %}
+{% from "procedure.j2" import render_procedure_macro %}
+{% from "roles.j2" import render_roles_macro %}
 {% from "conversation_history.j2" import render_conversation_history_macro %}
-{% from "current_task.j2" import render_current_task_macro %}
 {% from "file_references.j2" import render_file_references_macro %}
+{% from "artifacts.j2" import render_artifacts_macro %}
 {% from "advanced_reasoning_flow.j2" import render_advanced_reasoning_flow_macro %}
 {% from "todos.j2" import render_todos_macro %}
+{% from "current_task.j2" import render_current_task_macro %}
 {
   "description": {{ render_description_macro(session.description) }},
   "main_instruction": {{ render_main_instruction_macro() }},
-  {% if session.multi_step_reasoning_enabled %}
-  "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.multi_step_reasoning_enabled) }},
+  "constraints": {{ render_constraints_macro(session.constraints) }},
+  "session_goal": {{ render_session_goal_macro(session.session_goal) }},
+  {% if session.procedure %}
+  "procedure": {{ render_procedure_macro(session.procedure, session.procedure_content) }},
   {% endif %}
-  "current_task": {{ render_current_task_macro(session.current_task) }},
+  {% if session.roles and session.roles.definitions | length > 0 %}
+  "roles": {{ render_roles_macro(session.roles) }},
+  {% endif %}
+  "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }},
+  {% if session.file_references %}
+  "file_references": {{ render_file_references_macro(session.file_references) }},
+  {% endif %}
+  {% if session.artifacts and session.artifacts | length > 0 %}
+  "files_to_be_modified": {{ render_artifacts_macro(session.artifacts) }},
+  {% endif %}
+  {% if session.constraints.processing_config.multi_step_reasoning_active %}
+  "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.constraints.processing_config.multi_step_reasoning_active) }},
+  {% endif %}
   {% if session.todos %}
   "todos": {{ render_todos_macro(session.todos) }},
   {% endif %}
-  "current_datetime": "{{ session.current_datetime }}",
-  "session_goal": {{ render_session_goal_macro(session.session_goal) }},
-  "roles": {{ render_roles_macro(session.roles) }},
-  "constraints": {{ render_constraints_macro(session.constraints) }},
-  "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }}{% if session.file_references %},{% endif %}
-  {% if session.file_references %}
-  "file_references": {{ render_file_references_macro(session.file_references) }}
-  {% endif %}
+  "current_task": {{ render_current_task_macro(session.current_task) }},
+  "current_datetime": "{{ session.current_datetime }}"
 }

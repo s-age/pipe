@@ -281,6 +281,8 @@ document.addEventListener('DOMContentLoaded', function() {
             background: viewContainer.querySelector('[data-field="background"]').value,
             roles: viewContainer.querySelector('[data-field="roles"]').value.split(',').map(s => s.trim()).filter(Boolean),
             multi_step_reasoning_enabled: viewContainer.querySelector('[data-field="multi_step_reasoning_enabled"]').checked,
+            artifacts: viewContainer.querySelector('[data-field="artifacts"]').value.split(',').map(s => s.trim()).filter(Boolean),
+            procedure: viewContainer.querySelector('[data-field="procedure"]').value.trim(),
             hyperparameters: {
                 temperature: { value: parseFloat(viewContainer.querySelector('[data-field="temperature"]').value) },
                 top_p: { value: parseFloat(viewContainer.querySelector('[data-field="top_p"]').value) },
@@ -555,6 +557,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <label style="cursor: pointer; display: flex; align-items: center; flex-grow: 1;">
                                 <input type="checkbox" class="reference-checkbox" data-index="${index}" ${!ref.disabled ? 'checked' : ''} style="margin-right: 8px;">
+                                <button class="action-btn reference-persist-toggle" data-index="${index}" data-persist="${ref.persist ? 'true' : 'false'}" style="background: none; border: none; padding: 0; cursor: pointer; margin-right: 5px;">
+                                    <span class="material-icons" style="font-size: 16px; vertical-align: middle; color: ${ref.persist ? '#007bff' : '#ccc'};">lock</span>
+                                </button>
                                 <span data-testid="reference-path" style="word-break: break-all; text-decoration: ${textDecoration}; color: ${color};">${ref.path}</span>
                             </label>
                             <div class="ttl-controls" style="display: flex; align-items: center; margin-left: 10px;">
@@ -571,9 +576,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 noReferencesMessage.style.display = 'block';
             }
         }
+
+        // Update Procedure Content
+        const procedureContentTextarea = document.querySelector('[data-field="procedure_content"]');
+        if (procedureContentTextarea) {
+            procedureContentTextarea.value = sessionData.procedure_content || '';
+        }
     }
 
-     function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
+    function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
         const fetchSessionData = fetch(`/api/session/${sessionId}`).then(handleResponse);
         const fetchSessionList = fetch('/api/sessions').then(handleResponse);
 
@@ -808,7 +819,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    document.getElementById('meta-column')?.addEventListener('click', function(event) {
+    document.getElementById('references-list')?.addEventListener('click', function(event) {
+        if (event.target.closest('.reference-persist-toggle')) {
+            const button = event.target.closest('.reference-persist-toggle');
+            const index = parseInt(button.dataset.index, 10);
+            const sessionId = document.getElementById('current-session-id').value;
+            let references = sessionData.references || [];
+
+            if (references[index]) {
+                const currentPersist = button.dataset.persist === 'true';
+                const newPersist = !currentPersist;
+                references[index].persist = newPersist;
+
+                // Update UI immediately
+                button.dataset.persist = newPersist ? 'true' : 'false';
+                const iconSpan = button.querySelector('.material-icons');
+                if (iconSpan) {
+                    iconSpan.style.color = newPersist ? '#007bff' : '#ccc';
+                }
+
+                updateReferencePersist(sessionId, index, newPersist);
+            }
+        }
         if (event.target.classList.contains('ttl-btn')) {
             const button = event.target;
             const index = parseInt(button.dataset.index, 10);
@@ -828,6 +860,35 @@ document.addEventListener('DOMContentLoaded', function() {
             updateReferenceTtl(sessionId, index, newTtl, ttlSpan);
         }
     });
+
+    function updateReferencePersist(sessionId, index, newPersist) {
+        fetch(`/api/session/${sessionId}/references/persist/${index}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ persist: newPersist })
+        })
+        .then(handleResponse)
+        .then(data => {
+            if (!data.success) {
+                throw new Error(data.message);
+            }
+            console.log(`Reference persist state updated successfully for index ${index}.`);
+            // No reload needed as UI is updated immediately
+        })
+        .catch(error => {
+            handleError(error);
+            // Revert UI on error
+            const button = document.querySelector(`.reference-persist-toggle[data-index="${index}"]`);
+            if (button) {
+                const revertedPersist = !newPersist;
+                button.dataset.persist = revertedPersist ? 'true' : 'false';
+                const iconSpan = button.querySelector('.material-icons');
+                if (iconSpan) {
+                    iconSpan.style.color = revertedPersist ? '#007bff' : '#ccc';
+                }
+            }
+        });
+    }
 
     function updateReferenceTtl(sessionId, index, newTtl, ttlSpanElement) {
         fetch(`/api/session/${sessionId}/references/ttl/${index}`, {

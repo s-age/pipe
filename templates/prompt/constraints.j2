@@ -7,14 +7,20 @@
   }{% if data.hyperparameters %},
   "hyperparameters": {
     "description": {{ data.hyperparameters.description | tojson }},
-    {% for key, value in data.hyperparameters.items() %}
-    {% if key != 'description' %}
-    {{ key | tojson }}: {
-      "type": {{ value.type | tojson }},
-      "value": {{ value.value | tojson }},
-      "description": {{ value.description | tojson }}
-    }{% if not loop.last %},{% endif %}
-    {% endif %}
-    {% endfor %}
+    "temperature": {
+      "type": {{ data.hyperparameters.temperature.type | tojson }},
+      "value": {{ data.hyperparameters.temperature.value | tojson }},
+      "description": {{ data.hyperparameters.temperature.description | tojson }}
+    },
+    "top_p": {
+      "type": {{ data.hyperparameters.top_p.type | tojson }},
+      "value": {{ data.hyperparameters.top_p.value | tojson }},
+      "description": {{ data.hyperparameters.top_p.description | tojson }}
+    },
+    "top_k": {
+      "type": {{ data.hyperparameters.top_k.type | tojson }},
+      "value": {{ data.hyperparameters.top_k.value | tojson }},
+      "description": {{ data.hyperparameters.top_k.description | tojson }}
+    }
   }{% endif %}
 }{% endmacro %}

@@ -10,7 +10,9 @@ import zoneinfo
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.sessions import SessionCollection
+from pipe.core.domains.references import add_reference
 from pipe.core.models.args import TaktArgs
+from pipe.core.models.artifact import Artifact
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
@@ -91,6 +93,8 @@ class SessionService:
                 background=args.background,
                 roles=args.roles or [],
                 multi_step_reasoning_enabled=args.multi_step_reasoning,
+                artifacts=args.artifacts or [],
+                procedure=args.procedure,
                 parent_id=args.parent,
             )
 
@@ -106,12 +110,16 @@ class SessionService:
         if args.references:
             from pipe.core.domains.references import add_reference
 
+            persistent_references = set(args.references_persist)
+
             for ref_path in args.references:
                 if ref_path.strip():
+                    is_persistent = ref_path.strip() in persistent_references
                     add_reference(
                         session.references,
                         ref_path.strip(),
                         session.references.default_ttl,
+                        persist=is_persistent,
                     )
 
         self.repository.save(session)
@@ -143,6 +151,8 @@ class SessionService:
         token_count: int = 0,
         hyperparameters: dict | None = None,
         parent_id: str | None = None,
+        artifacts: list[str] | None = None,
+        procedure: str | None = None,
     ) -> Session:
         session = self._create_session_object(
             purpose=purpose,
@@ -152,6 +162,8 @@ class SessionService:
             token_count=token_count,
             hyperparameters=hyperparameters,
             parent_id=parent_id,
+            artifacts=artifacts,
+            procedure=procedure,
         )
 
         self.repository.save(session)
@@ -183,8 +195,6 @@ class SessionService:
             print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
             return
 
-        from pipe.core.domains.references import add_reference
-
         add_reference(session.references, file_path, session.references.default_ttl)
         self._save_session(session)
 
@@ -198,6 +208,18 @@ class SessionService:
         from pipe.core.domains.references import update_reference_ttl
 
         update_reference_ttl(session.references, file_path, new_ttl)
+        self._save_session(session)
+
+    def update_reference_persist_in_session(
+        self, session_id: str, file_path: str, new_persist_state: bool
+    ):
+        session = self._fetch_session(session_id)
+        if not session:
+            return
+
+        from pipe.core.domains.references import update_reference_persist
+
+        update_reference_persist(session.references, file_path, new_persist_state)
         self._save_session(session)
 
     def decrement_all_references_ttl_in_session(self, session_id: str):
@@ -214,8 +236,6 @@ class SessionService:
         session = self._fetch_session(session_id)
         if not session:
             return
-
-        from pipe.core.domains.references import add_reference
 
         for file_path in file_paths:
             abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
@@ -339,6 +359,8 @@ class SessionService:
         token_count: int = 0,
         hyperparameters: dict | None = None,
         parent_id: str | None = None,
+        artifacts: list[Artifact] | None = None,  # Changed type to list[Artifact]
+        procedure: str | None = None,
     ) -> Session:
         if parent_id:
             parent_session = self.repository.find(parent_id)
@@ -354,6 +376,8 @@ class SessionService:
                 "background": background,
                 "roles": roles,
                 "multi_step_reasoning_enabled": multi_step_reasoning_enabled,
+                "artifacts": artifacts,
+                "procedure": procedure,
                 "timestamp": timestamp,
             },
             sort_keys=True,
@@ -380,6 +404,8 @@ class SessionService:
             hyperparameters=hyperparameters
             if hyperparameters is not None
             else default_hyperparameters,
+            artifacts=artifacts or [],
+            procedure=procedure,
         )
 
         return session

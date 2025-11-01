@@ -1,0 +1,7 @@
+{% macro render_procedure_macro(procedure_path, procedure_content) %}
+{
+  "description": "A workflow document that outlines the steps and processes to be followed throughout the session.",
+  "file_path": {{ procedure_path | tojson }},
+  "content": {{ procedure_content | tojson }}
+}
+{% endmacro %}

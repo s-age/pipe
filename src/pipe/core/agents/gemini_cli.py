@@ -10,6 +10,7 @@
 # https://github.com/google-gemini/gemini-cli
 
 import json
+import os
 import subprocess
 
 from pipe.core.factories.service_factory import ServiceFactory
@@ -49,6 +50,15 @@ def call_gemini_cli(session_service: SessionService) -> str:
         pretty_printed_prompt,
     ]
 
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"  # Force unbuffered output for streaming
+    # CRITICAL: This environment variable ensures that the Gemini CLI
+    # operates within the context of the current session.
+    # Do NOT remove or modify this line without careful consideration,
+    # as it is essential for tools to access session-specific data.
+    if session_service.current_session_id:
+        env["PIPE_SESSION_ID"] = session_service.current_session_id
+
     try:
         process = subprocess.Popen(
             command,
@@ -56,6 +66,7 @@ def call_gemini_cli(session_service: SessionService) -> str:
             stderr=subprocess.PIPE,
             text=True,
             encoding="utf-8",
+            env=env,
             bufsize=1,
         )
 

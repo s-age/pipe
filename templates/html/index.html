@@ -122,7 +122,7 @@
                 </div>
                 <div class="meta-item">
                     <strong>Artifacts:</strong>
-                    <input type="text" data-field="artifacts" value="{{ session_data.artifacts | join(', ') }}" style="width: 100%; box-sizing: border-box;">
+                    <input type="text" data-field="artifacts" value="{% if session_data.artifacts %}{{ session_data.artifacts | join(', ') }}{% endif %}" style="width: 100%; box-sizing: border-box;">
                 </div>
 
                 <div class="meta-item">
@@ -200,23 +200,6 @@
                     <p id="no-todos-message" style="display: {% if not session_data.todos or session_data.todos|length == 0 %}block{% else %}none{% endif %};">No todos for this session.</p>
                 </div>
 
-                <div class="meta-item">
-                    <strong>Todos:</strong>
-                    <button class="action-btn" id="delete-todos-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px; background-color: #dc3545;">Delete All</button>
-                    <ul id="todos-list" style="list-style: none; padding-left: 0; display: {% if not session_data.todos or session_data.todos|length == 0 %}none{% else %}block{% endif %};">
-                        {% if session_data.todos %}
-                        {% for todo in session_data.todos %}
-                            <li style="margin-bottom: 10px;">
-                                <label style="cursor: pointer;">
-                                    <input type="checkbox" class="todo-checkbox" data-index="{{ loop.index0 }}" {% if todo.checked %}checked{% endif %} style="margin-right: 8px;">
-                                    <strong style="display: inline;">{{ todo.title }}</strong>
-                                </label>
-                            </li>
-                        {% endfor %}
-                        {% endif %}
-                    </ul>
-                    <p id="no-todos-message" style="display: {% if not session_data.todos or session_data.todos|length == 0 %}block{% else %}none{% endif %};">No todos for this session.</p>
-                </div>
             </div>
             <button class="action-btn save-btn" id="save-meta-btn" data-session-id="{{ current_session_id }}">Save Meta</button>
         </section>

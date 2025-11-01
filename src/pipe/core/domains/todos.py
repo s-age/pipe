@@ -7,9 +7,20 @@ if TYPE_CHECKING:
     from pipe.core.models.session import Session
 
 
-def update_todos_in_session(session: "Session", todos_data: list[dict | TodoItem]):
+def update_todos_in_session(
+    session: "Session", todos_data: list[dict | TodoItem | str]
+):
     """Updates the todos list in a session object. Does not save."""
-    session.todos = [TodoItem(**t) if isinstance(t, dict) else t for t in todos_data]
+    converted_todos = []
+    for t in todos_data:
+        if isinstance(t, dict):
+            converted_todos.append(TodoItem(**t))
+        elif isinstance(t, str):
+            converted_todos.append(TodoItem(title=t))
+        else:
+            converted_todos.append(t)
+
+    session.todos = converted_todos
 
 
 def delete_todos_in_session(session: "Session"):

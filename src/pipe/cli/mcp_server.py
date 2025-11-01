@@ -27,6 +27,8 @@ import traceback
 import warnings
 from typing import Union, get_args, get_type_hints
 
+from pydantic import BaseModel  # Added for BaseModel schema generation
+
 # Add src directory to Python path BEFORE local imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 
@@ -129,7 +131,14 @@ def get_tool_definitions():
                         get_args(param_type)[0] if get_args(param_type) else str
                     )
                     item_origin_type = getattr(list_item_type, "__origin__", None)
-                    if item_origin_type in (dict, dict):
+                    if inspect.isclass(list_item_type) and issubclass(
+                        list_item_type, BaseModel
+                    ):
+                        properties[name] = {
+                            "type": "array",
+                            "items": list_item_type.model_json_schema(),
+                        }
+                    elif item_origin_type in (dict, dict):
                         properties[name] = {
                             "type": "array",
                             "items": {"type": "object"},
@@ -142,6 +151,8 @@ def get_tool_definitions():
                         }
                 elif origin_type in (dict, dict):
                     properties[name] = {"type": "object", "properties": {}}
+                elif inspect.isclass(param_type) and issubclass(param_type, BaseModel):
+                    properties[name] = param_type.model_json_schema()
                 else:
                     mapped_type = type_mapping.get(param_type, "string")
                     properties[name] = {"type": mapped_type}

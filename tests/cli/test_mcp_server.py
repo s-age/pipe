@@ -132,6 +132,11 @@ class TestExecuteTool(unittest.TestCase):
 
         mock_session_service = MagicMock()
         mock_session_service.timezone_obj = zoneinfo.ZoneInfo("UTC")
+
+        mock_session = MagicMock()
+        mock_session.pools = []
+        mock_session_service.get_session.return_value = mock_session
+
         mock_service_factory.return_value.create_session_service.return_value = (
             mock_session_service
         )
@@ -239,8 +244,12 @@ class TestMainLoop(unittest.TestCase):
         response = json.loads(output)
 
         self.assertEqual(response["id"], "2")
-        self.assertEqual(response["result"]["status"], "succeeded")
-        self.assertEqual(response["result"]["result"], {"data": "success"})
+        self.assertEqual(response["result"]["isError"], False)
+        self.assertIn("content", response["result"])
+        self.assertEqual(
+            response["result"]["content"][0]["text"],
+            json.dumps({"data": "success"}),
+        )
 
     def test_method_not_found(
         self, mock_stdin, mock_stdout, mock_select, mock_execute, mock_get_defs

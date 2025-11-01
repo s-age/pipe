@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 
+from pipe.core.models.artifact import Artifact
+
 
 @dataclass
 class TaktArgs:
@@ -14,7 +16,7 @@ class TaktArgs:
     instruction: str | None = None
     references: list[str] = field(default_factory=list)
     references_persist: list[str] = field(default_factory=list)
-    artifacts: list[str] = field(default_factory=list)
+    artifacts: list[Artifact] = field(default_factory=list)
     procedure: str | None = None
     multi_step_reasoning: bool = False
     fork: str | None = None

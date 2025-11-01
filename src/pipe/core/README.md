@@ -30,29 +30,53 @@ Each subdirectory is a specialized organ, performing a distinct function with fa
 
 The `takt` command is the primary entrypoint for manipulating the state machine. Every command is a precise instruction to alter the session's state vector.
 
--   `--session <SESSION_ID>`: Target a specific session by its ID. If omitted, a new session is created.
+-   `--session <SESSION_ID>`: Targets an existing session by its ID. If omitted, a new session is created.
+    -   *Dependencies*: Used with `--instruction` to continue an existing session. Not used for new session creation.
     -   *Example*: `takt --session 22176081d1... --instruction "Continue the analysis."`
 
--   `--instruction "<INSTRUCTION>"`: The primary task for the AI to execute in the current turn.
-    -   *Example*: `takt --instruction "Refactor the User class to be immutable."`
-
--   `--purpose "<PURPOSE>"` and `--background "<BACKGROUND>"`: Provides the high-level `session_goal` for a *new* session. Required for session creation.
+-   `--purpose "<PURPOSE>"`: Defines the overall purpose for a new session.
+    -   *Dependencies*: Required along with `--background` when creating a new session (i.e., when `--session` is not specified).
     -   *Example*: `takt --purpose "Develop a CLI tool" --background "The tool is for parsing log files." --instruction "Start by designing the data models."`
 
--   `--references <PATH_1> <PATH_2>`: Attach file paths to the context. The AI can then read these files using tools. Paths are relative to the project root.
-    -   *Example*: `takt --references src/main.py tests/test_main.py --instruction "Review the code and identify potential bugs."`
+-   `--background "<BACKGROUND>"`: Provides the background context for a new session.
+    -   *Dependencies*: Required along with `--purpose` when creating a new session (i.e., when `--session` is not specified).
+    -   *Example*: `takt --purpose "Develop a CLI tool" --background "The tool is for parsing log files." --instruction "Start by designing the data models."`
 
--   `--roles <ROLE_1> <ROLE_2>`: Define the personas for the session by providing paths to role definition files.
-    -   *Example*: `takt --roles roles/engineer.md roles/reviewer.md --instruction "Debate the pros and cons of this architecture."`
+-   `--roles <ROLE_PATH_1>,<ROLE_PATH_2>,...`: Specifies comma-separated paths to role definition files to define the personas for the session.
+    -   *Dependencies*: Optional.
+    -   *Example*: `takt --roles roles/engineer.md,roles/reviewer.md --instruction "Debate the pros and cons of this architecture."`
+
+-   `--parent <SESSION_ID>`: Specifies the ID of the parent session for a new session, establishing a hierarchical session structure.
+    -   *Dependencies*: Only valid when creating a new session (i.e., when `--session` is not specified).
+    -   *Example*: `takt --parent 22176081d1... --purpose "Execute sub-task" --background "Part of a larger task." --instruction "Refactor a specific module."`
+
+-   `--instruction "<INSTRUCTION>"`: The primary task for the AI to execute in the current turn.
+    -   *Dependencies*: Required when continuing an existing session (`--session`) or creating a new session.
+    -   *Example*: `takt --instruction "Refactor the User class to be immutable."`
+
+-   `--references <FILE_PATH_1>,<FILE_PATH_2>,...`: Attaches comma-separated file paths to the context. The AI can then read these files using tools. Paths are relative to the project root.
+    -   *Dependencies*: Optional.
+    -   *Example*: `takt --references src/main.py,tests/test_main.py --instruction "Review the code and identify potential bugs."`
 
 -   `--multi-step-reasoning`: Instructs the AI to use a more complex, chain-of-thought reasoning process.
+    -   *Dependencies*: Optional. Use to enhance the AI's reasoning capabilities.
     -   *Example*: `takt --multi-step-reasoning --instruction "Analyze the root cause of the performance degradation."`
 
--   `--dry-run`: A read-only mode. Constructs and prints the final JSON prompt that *would* be sent, but does not execute it or modify session state. Essential for debugging the context architecture.
-    -   *Example*: `takt --dry-run --instruction "Show me the prompt for this."`
-
--   `--fork <SESSION_ID> --at-turn <TURN_INDEX>`: Forks an existing session at a specific turn index, creating a new history branch. `--at-turn` is mandatory when forking.
+-   `--fork <SESSION_ID>`: Forks an existing session at a specific turn index, creating a new history branch.
+    -   *Dependencies*: Must be used simultaneously with `--at-turn`.
     -   *Example*: `takt --fork 22176081d1... --at-turn 5`
+
+-   `--at-turn <TURN_INDEX>`: Specifies the 1-based turn number to fork from.
+    -   *Dependencies*: Required when used simultaneously with `--fork`.
+    -   *Example*: `takt --fork 22176081d1... --at-turn 5`
+
+-   `--api-mode <MODE_NAME>`: Specifies the API mode to use (e.g., `gemini-api`, `gemini-cli`).
+    -   *Dependencies*: Optional. The default is configured in `setting.yml`.
+    -   *Example*: `takt --api-mode gemini-api --instruction "Implement a new feature."`
+
+-   `--dry-run`: A read-only mode. Constructs and prints the final JSON prompt that *would* be sent, but does not execute it or modify session state. Essential for debugging the context architecture.
+    -   *Dependencies*: Can be used independently of other execution options.
+    -   *Example*: `takt --dry-run --instruction "Show me the prompt for this."`
 
 ## Developer Guide: Integrating a New Agent
 

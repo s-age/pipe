@@ -1,0 +1,22 @@
+import os
+{% for dep in dependencies %}
+{{ dep }}
+{% endfor %}
+
+
+class {{ name }}Agent:
+    """
+    {{ description }}
+    """
+    def __init__(self, settings: Settings):
+        self.settings = settings
+        # TODO: Initialize API client or other dependencies here
+
+    {% for method in methods %}
+    def {{ method.name }}({{ method.args }}) -> {{ method.returns }}:
+        """
+        {{ method.docstring }}
+        """
+        # TODO: Implement {{ method.name }} logic here
+        pass
+    {% endfor %}

@@ -10,7 +10,9 @@ import zoneinfo
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.sessions import SessionCollection
+from pipe.core.domains.references import add_reference
 from pipe.core.models.args import TaktArgs
+from pipe.core.models.artifact import Artifact
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
@@ -193,8 +195,6 @@ class SessionService:
             print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
             return
 
-        from pipe.core.domains.references import add_reference
-
         add_reference(session.references, file_path, session.references.default_ttl)
         self._save_session(session)
 
@@ -236,8 +236,6 @@ class SessionService:
         session = self._fetch_session(session_id)
         if not session:
             return
-
-        from pipe.core.domains.references import add_reference
 
         for file_path in file_paths:
             abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
@@ -361,7 +359,7 @@ class SessionService:
         token_count: int = 0,
         hyperparameters: dict | None = None,
         parent_id: str | None = None,
-        artifacts: list[str] | None = None,
+        artifacts: list[Artifact] | None = None,  # Changed type to list[Artifact]
         procedure: str | None = None,
     ) -> Session:
         if parent_id:

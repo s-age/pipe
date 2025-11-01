@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
+from ..models.artifact import Artifact  # Import Artifact model
 from .prompts.constraints import PromptConstraints
 from .prompts.conversation_history import PromptConversationHistory
 from .prompts.current_task import PromptCurrentTask
@@ -34,13 +35,17 @@ class Prompt(BaseModel):
     constraints: PromptConstraints
     conversation_history: PromptConversationHistory
     file_references: list[PromptFileReference] | None = None
-    artifacts: list[str] | None = None
+    artifacts: list[Artifact] | None = None  # Changed type to list[Artifact]
     procedure: str | None = None
     procedure_content: str | None = None
 
     @classmethod
     def from_session(
-        cls, session: "Session", settings: "Settings", project_root: str
+        cls,
+        session: "Session",
+        settings: "Settings",
+        project_root: str,
+        artifacts: list[Artifact] | None = None,
     ) -> "Prompt":
         """Builds and returns a Prompt object from a session's data."""
         from pipe.core.domains.references import get_references_for_prompt
@@ -132,7 +137,7 @@ class Prompt(BaseModel):
             "current_task": current_task,
             "todos": prompt_todos if prompt_todos else None,
             "file_references": prompt_references if prompt_references else None,
-            "artifacts": session.artifacts if session.artifacts else None,
+            "artifacts": artifacts if artifacts else None,
             "procedure": session.procedure if session.procedure else None,
             "procedure_content": procedure_content if procedure_content else None,
             "reasoning_process": {

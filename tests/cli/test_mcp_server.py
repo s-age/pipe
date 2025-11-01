@@ -132,6 +132,11 @@ class TestExecuteTool(unittest.TestCase):
 
         mock_session_service = MagicMock()
         mock_session_service.timezone_obj = zoneinfo.ZoneInfo("UTC")
+
+        mock_session = MagicMock()
+        mock_session.pools = []
+        mock_session_service.get_session.return_value = mock_session
+
         mock_service_factory.return_value.create_session_service.return_value = (
             mock_session_service
         )
@@ -184,6 +189,7 @@ class TestExecuteTool(unittest.TestCase):
             execute_tool("../../bad", {})
 
 
+@patch("pipe.cli.mcp_server.read_yaml_file")
 @patch("pipe.cli.mcp_server.get_tool_definitions")
 @patch("pipe.cli.mcp_server.execute_tool")
 @patch("pipe.cli.mcp_server.select.select")
@@ -191,7 +197,13 @@ class TestExecuteTool(unittest.TestCase):
 @patch("sys.stdin", new_callable=StringIO)
 class TestMainLoop(unittest.TestCase):
     def test_initialize_request(
-        self, mock_stdin, mock_stdout, mock_select, mock_execute, mock_get_defs
+        self,
+        mock_stdin,
+        mock_stdout,
+        mock_select,
+        mock_execute,
+        mock_get_defs,
+        mock_read_yaml,
     ):
         """Tests handling of a standard 'initialize' request."""
         mock_get_defs.return_value = [{"name": "test_tool"}]
@@ -217,10 +229,25 @@ class TestMainLoop(unittest.TestCase):
         self.assertEqual(len(response["result"]["tools"]), 1)
 
     def test_tools_call_request(
-        self, mock_stdin, mock_stdout, mock_select, mock_execute, mock_get_defs
+        self,
+        mock_stdin,
+        mock_stdout,
+        mock_select,
+        mock_execute,
+        mock_get_defs,
+        mock_read_yaml,
     ):
         """Tests handling of a 'tools/call' request."""
         mock_execute.return_value = {"data": "success"}
+        mock_read_yaml.return_value = {
+            "timezone": "UTC",
+            "api_mode": "gemini-cli",
+            "parameters": {
+                "temperature": {"value": 0.1, "description": "t"},
+                "top_p": {"value": 0.2, "description": "p"},
+                "top_k": {"value": 10, "description": "k"},
+            },
+        }
         request = {
             "jsonrpc": "2.0",
             "id": "2",
@@ -239,11 +266,21 @@ class TestMainLoop(unittest.TestCase):
         response = json.loads(output)
 
         self.assertEqual(response["id"], "2")
-        self.assertEqual(response["result"]["status"], "succeeded")
-        self.assertEqual(response["result"]["result"], {"data": "success"})
+        self.assertEqual(response["result"]["isError"], False)
+        self.assertIn("content", response["result"])
+        self.assertEqual(
+            response["result"]["content"][0]["text"],
+            json.dumps({"data": "success"}),
+        )
 
     def test_method_not_found(
-        self, mock_stdin, mock_stdout, mock_select, mock_execute, mock_get_defs
+        self,
+        mock_stdin,
+        mock_stdout,
+        mock_select,
+        mock_execute,
+        mock_get_defs,
+        mock_read_yaml,
     ):
         """Tests the response for an unknown method."""
         request = {"jsonrpc": "2.0", "id": "3", "method": "foo/bar"}

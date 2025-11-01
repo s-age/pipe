@@ -380,6 +380,7 @@ class TestAppViews(unittest.TestCase):
         mock_session.purpose = "My Test Session"
         mock_session.hyperparameters = None
         mock_session.references = []
+        mock_session.artifacts = []  # Added to fix AttributeError
         mock_session.multi_step_reasoning_enabled = False
         mock_session.token_count = 123
 

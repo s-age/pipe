@@ -42,6 +42,12 @@ class NewSessionRequest(BaseModel):
         validate_comma_separated_files(v)
         return v
 
+    @field_validator("artifacts")
+    @classmethod
+    def validate_artifacts_exist(cls, v: str) -> str:
+        validate_comma_separated_files(v)
+        return v
+
     @field_validator("procedure")
     @classmethod
     def validate_procedure_exists(cls, v: str) -> str:

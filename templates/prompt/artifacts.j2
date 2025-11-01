@@ -1,6 +1,13 @@
 {% macro render_artifacts_macro(artifacts) %}
 {
-  "description": "List of files that are expected to be created or modified as part of the task. You MUST NOT modify any files not listed in this array.",
-  "files": {{ artifacts | tojson }}
+  "description": "List of files that are expected to be created or modified as part of the task. If 'contents' is null, it indicates a new file to be created. You MUST NOT modify any files not listed in this array.",
+  "files": [
+    {% for artifact in artifacts %}
+    {
+      "path": "{{ artifact.path }}",
+      "contents": {{ artifact.contents | tojson if artifact.contents is not none else 'null' }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
 }
 {% endmacro %}

@@ -156,7 +156,6 @@ def create_new_session_api():
         if request_data.multi_step_reasoning_enabled:
             command.append("--multi-step-reasoning")
 
-        print(f"DEBUG: Running command: {command}", file=sys.stderr)
         subprocess.run(
             command, capture_output=True, text=True, check=True, encoding="utf-8"
         )
@@ -221,6 +220,8 @@ def view_session(session_id):
 
     # Use the model's own method to get a serializable dictionary
     session_data_for_template = session_data.to_dict()
+    # Ensure artifacts are passed as a list of strings for the template
+    session_data_for_template["artifacts"] = session_data.artifacts
     turns_list = session_data_for_template["turns"]
 
     current_session_purpose = session_data.purpose

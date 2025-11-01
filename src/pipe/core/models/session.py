@@ -16,7 +16,7 @@ from pipe.core.utils.file import (
     FileLock,
     delete_file,
 )
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
 
 class Session(BaseModel):
@@ -27,6 +27,21 @@ class Session(BaseModel):
     persisting itself to a file.
     It does not manage the collection of all sessions or the index file.
     """
+
+    @model_validator(mode="before")
+    @classmethod
+    def _preprocess_todos(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "todos" in data and data["todos"] is not None:
+            processed_todos = []
+            for item in data["todos"]:
+                if isinstance(item, str):
+                    processed_todos.append(TodoItem(title=item))
+                elif isinstance(item, dict):
+                    processed_todos.append(TodoItem(**item))
+                else:
+                    processed_todos.append(item)
+            data["todos"] = processed_todos
+        return data
 
     if TYPE_CHECKING:
         from pipe.core.models.args import TaktArgs

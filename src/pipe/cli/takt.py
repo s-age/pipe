@@ -89,11 +89,14 @@ def _parse_arguments():
         "--references", type=str, help="Comma-separated paths to reference files."
     )
     parser.add_argument(
-        "--artifacts", type=str, help="Comma-separated paths to artifact files."
+        "--references-persist",
+        type=str,
+        help="Comma-separated paths to persistent reference files.",
     )
     parser.add_argument(
-        "--procedure", type=str, help="Path to the procedure file."
+        "--artifacts", type=str, help="Comma-separated paths to artifact files."
     )
+    parser.add_argument("--procedure", type=str, help="Path to the procedure file.")
     parser.add_argument(
         "--multi-step-reasoning",
         action="store_true",

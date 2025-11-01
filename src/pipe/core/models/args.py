@@ -13,6 +13,7 @@ class TaktArgs:
     parent: str | None = None
     instruction: str | None = None
     references: list[str] = field(default_factory=list)
+    references_persist: list[str] = field(default_factory=list)
     artifacts: list[str] = field(default_factory=list)
     procedure: str | None = None
     multi_step_reasoning: bool = False
@@ -43,6 +44,11 @@ class TaktArgs:
             instruction=parsed_args.instruction,
             references=[r.strip() for r in parsed_args.references.split(",")]
             if parsed_args.references
+            else [],
+            references_persist=[
+                r.strip() for r in parsed_args.references_persist.split(",")
+            ]
+            if parsed_args.references_persist
             else [],
             artifacts=[r.strip() for r in parsed_args.artifacts.split(",")]
             if parsed_args.artifacts

@@ -5,3 +5,4 @@ class Reference(BaseModel):
     path: str
     disabled: bool = False
     ttl: int | None = None
+    persist: bool = False

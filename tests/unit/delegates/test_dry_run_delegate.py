@@ -59,7 +59,9 @@ class TestDryRunDelegate(unittest.TestCase):
 
         # 3. Assertions
         mock_prompt_service.build_prompt.assert_called_once_with(mock_session_service)
-        mock_prompt_service.jinja_env.get_template.assert_called_once_with("gemini_api_prompt.j2")
+        mock_prompt_service.jinja_env.get_template.assert_called_once_with(
+            "gemini_api_prompt.j2"
+        )
         mock_template.render.assert_called_once_with(session=mock_prompt_model)
         self.assertEqual(json.loads(mock_stdout.getvalue().strip()), {"key": "value"})
 

@@ -108,12 +108,16 @@ class SessionService:
         if args.references:
             from pipe.core.domains.references import add_reference
 
+            persistent_references = set(args.references_persist)
+
             for ref_path in args.references:
                 if ref_path.strip():
+                    is_persistent = ref_path.strip() in persistent_references
                     add_reference(
                         session.references,
                         ref_path.strip(),
                         session.references.default_ttl,
+                        persist=is_persistent,
                     )
 
         self.repository.save(session)
@@ -204,6 +208,18 @@ class SessionService:
         from pipe.core.domains.references import update_reference_ttl
 
         update_reference_ttl(session.references, file_path, new_ttl)
+        self._save_session(session)
+
+    def update_reference_persist_in_session(
+        self, session_id: str, file_path: str, new_persist_state: bool
+    ):
+        session = self._fetch_session(session_id)
+        if not session:
+            return
+
+        from pipe.core.domains.references import update_reference_persist
+
+        update_reference_persist(session.references, file_path, new_persist_state)
         self._save_session(session)
 
     def decrement_all_references_ttl_in_session(self, session_id: str):

@@ -58,6 +58,10 @@ The `takt` command is the primary entrypoint for manipulating the state machine.
     -   *Dependencies*: Optional.
     -   *Example*: `takt --references src/main.py,tests/test_main.py --instruction "Review the code and identify potential bugs."`
 
+-   `--references-persist <FILE_PATH_1>,<FILE_PATH_2>,...`: When used with `--references`, specifies comma-separated file paths from the `--references` list that should be marked as persistent across sessions.
+    -   *Dependencies*: Optional. Only applicable when `--references` is also used.
+    -   *Example*: `takt --references src/main.py,tests/test_main.py --references-persist src/main.py --instruction "Review the code and identify potential bugs."`
+
 -   `--artifacts <FILE_PATH_1>,<FILE_PATH_2>,...`: Specifies comma-separated file paths that represent the expected output files for the session.
     -   *Dependencies*: Optional.
     -   *Example*: `takt --artifacts output.py,results.json --instruction "Generate the output files."`

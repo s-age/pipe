@@ -19,6 +19,7 @@ class TestArgsModel(unittest.TestCase):
             parent="parent-session",
             instruction="Do something",
             references="file1.txt, file2.txt",
+            references_persist="file1.txt",
             artifacts="artifact1.txt, artifact2.json",
             procedure="procedure.md",
             multi_step_reasoning=True,
@@ -37,6 +38,7 @@ class TestArgsModel(unittest.TestCase):
         self.assertEqual(takt_args.parent, "parent-session")
         self.assertEqual(takt_args.instruction, "Do something")
         self.assertEqual(takt_args.references, ["file1.txt", "file2.txt"])
+        self.assertEqual(takt_args.references_persist, ["file1.txt"])
         self.assertEqual(takt_args.artifacts, ["artifact1.txt", "artifact2.json"])
         self.assertEqual(takt_args.procedure, "procedure.md")
         self.assertTrue(takt_args.multi_step_reasoning)
@@ -56,6 +58,7 @@ class TestArgsModel(unittest.TestCase):
             parent=None,
             instruction="Minimal instruction",
             references=None,
+            references_persist=None,
             artifacts=None,
             procedure=None,
             multi_step_reasoning=False,
@@ -71,6 +74,7 @@ class TestArgsModel(unittest.TestCase):
         self.assertIsNone(takt_args.purpose)
         self.assertEqual(takt_args.roles, [])
         self.assertEqual(takt_args.references, [])
+        self.assertEqual(takt_args.references_persist, [])
         self.assertEqual(takt_args.artifacts, [])
         self.assertIsNone(takt_args.procedure)
         self.assertEqual(takt_args.instruction, "Minimal instruction")

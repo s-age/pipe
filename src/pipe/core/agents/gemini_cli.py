@@ -71,13 +71,13 @@ def call_gemini_cli(session_service: SessionService) -> str:
         return_code = process.wait()
 
         if return_code != 0:
-            raise RuntimeError(
-                f"Error during gemini-cli execution: {stderr_output}"
-            )
+            raise RuntimeError(f"Error during gemini-cli execution: {stderr_output}")
 
         return full_response
     except FileNotFoundError:
-        raise RuntimeError("Error: 'gemini' command not found. "
-                           "Please ensure it is installed and in your PATH.")
+        raise RuntimeError(
+            "Error: 'gemini' command not found. "
+            "Please ensure it is installed and in your PATH."
+        )
     except Exception as e:
         raise RuntimeError(f"An unexpected error occurred: {e}")

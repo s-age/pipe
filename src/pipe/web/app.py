@@ -7,6 +7,9 @@ from flask import Flask, abort, jsonify, render_template, request
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
+from pipe.web.requests.sessions.edit_reference_persist import (
+    EditReferencePersistRequest,
+)
 from pipe.web.requests.sessions.edit_reference_ttl import EditReferenceTtlRequest
 from pipe.web.requests.sessions.edit_references import EditReferencesRequest
 from pipe.web.requests.sessions.edit_session_meta import EditSessionMetaRequest
@@ -119,9 +122,7 @@ def create_new_session_api():
         request_data = NewSessionRequest(**request.get_json())
 
         roles = [r.strip() for r in request_data.roles.split(",") if r.strip()]
-        artifacts = [
-            a.strip() for a in request_data.artifacts.split(",") if a.strip()
-        ]
+        artifacts = [a.strip() for a in request_data.artifacts.split(",") if a.strip()]
 
         session = session_service.create_new_session(
             purpose=request_data.purpose,
@@ -365,6 +366,41 @@ def edit_references_api(session_id):
         return jsonify({"success": False, "message": str(e)}), 422
     except FileNotFoundError:
         return jsonify({"success": False, "message": "Session not found."}), 404
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route(
+    "/api/session/<path:session_id>/references/persist/<int:reference_index>",
+    methods=["POST"],
+)
+def edit_reference_persist_api(session_id, reference_index):
+    try:
+        request_data = EditReferencePersistRequest(**request.get_json())
+        new_persist_state = request_data.persist
+
+        session = session_service.get_session(session_id)
+        if not session:
+            return jsonify({"success": False, "message": "Session not found."}), 404
+
+        if not (0 <= reference_index < len(session.references)):
+            return jsonify(
+                {"success": False, "message": "Reference index out of range."}
+            ), 400
+
+        file_path = session.references[reference_index].path
+        session_service.update_reference_persist_in_session(
+            session_id, file_path, new_persist_state
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Persist state for reference {reference_index} updated.",
+            }
+        ), 200
+    except ValidationError as e:
+        return jsonify({"success": False, "message": str(e)}), 422
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 

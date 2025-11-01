@@ -10,11 +10,14 @@ if TYPE_CHECKING:
 
 
 def add_reference(
-    references_collection: "ReferenceCollection", path: str, default_ttl: int
+    references_collection: "ReferenceCollection",
+    path: str,
+    default_ttl: int,
+    persist: bool = False,
 ):
     if not any(ref.path == path for ref in references_collection.data):
         references_collection.data.append(
-            Reference(path=path, disabled=False, ttl=default_ttl)
+            Reference(path=path, disabled=False, ttl=default_ttl, persist=persist)
         )
         sort_references_by_ttl(references_collection)
 
@@ -30,9 +33,19 @@ def update_reference_ttl(
     sort_references_by_ttl(references_collection)
 
 
+def update_reference_persist(
+    references_collection: "ReferenceCollection", path: str, new_persist_state: bool
+):
+    for ref in references_collection.data:
+        if ref.path == path:
+            ref.persist = new_persist_state
+            break
+    sort_references_by_ttl(references_collection)
+
+
 def decrement_all_references_ttl(references_collection: "ReferenceCollection"):
     for ref in references_collection:
-        if not ref.disabled:
+        if not ref.disabled and not ref.persist:
             current_ttl = (
                 ref.ttl if ref.ttl is not None else references_collection.default_ttl
             )

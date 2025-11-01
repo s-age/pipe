@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body
     data-timezone="{{ settings.timezone }}"
@@ -132,6 +133,9 @@
                                 <div style="display: flex; align-items: center; justify-content: space-between;">
                                     <label style="cursor: pointer; display: flex; align-items: center; flex-grow: 1;">
                                         <input type="checkbox" class="reference-checkbox" data-index="{{ loop.index0 }}" {% if not reference.disabled %}checked{% endif %} style="margin-right: 8px;">
+                                        <button class="action-btn reference-persist-toggle" data-index="{{ loop.index0 }}" data-persist="{{ 'true' if reference.persist else 'false' }}" style="background: none; border: none; padding: 0; cursor: pointer; margin-right: 5px;">
+                                            <span class="material-icons" style="font-size: 16px; vertical-align: middle; color: {% if reference.persist %}#007bff{% else %}#ccc{% endif %};">lock</span>
+                                        </button>
                                         <span data-testid="reference-path" style="word-break: break-all; {% if reference.disabled %}text-decoration: line-through; color: #888;{% endif %}">{{ reference.path }}</span>
                                     </label>
                                     <div class="ttl-controls" style="display: flex; align-items: center; margin-left: 10px;">

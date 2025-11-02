@@ -1,55 +1,51 @@
 import { style } from '@vanilla-extract/css';
+import { colors } from '../../../styles/colors.css.ts';
 
 export const turnsColumn = style({
-  flex: '1',
   overflowY: 'auto',
-  borderRight: '1px solid #393e46',
+  flex: '1',
   display: 'flex',
   flexDirection: 'column',
-  background: '#373b3e',
+  background: colors.mediumBackground,
+  borderRight: `1px solid ${colors.mediumBackground}`,
+  minWidth: 0,
 });
 
 export const turnsHeader = style({
-  position: 'sticky',
-  top: '0',
-  padding: '0 8px',
-  borderBottom: '1px solid #3c858a',
-  zIndex: '5',
+  padding: '16px',
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
+  borderBottom: `1px solid ${colors.mediumBackground}`,
 });
 
 export const turnsListSection = style({
   flex: '1',
-  margin: '16px',
   overflowY: 'auto',
-  paddingTop: '10px',
+  padding: '16px',
 });
 
 export const newInstructionControl = style({
+  padding: '16px',
+  borderTop: `1px solid ${colors.mediumBackground}`,
   display: 'flex',
-  padding: '12px',
-  borderTop: '1px solid #393e46',
+  gap: '10px',
+  alignItems: 'flex-end',
 });
 
 export const instructionTextarea = style({
   flex: '1',
   minHeight: '60px',
-  margin: '0 12px 0 0',
-  padding: '10px',
-  background: '#8c97a4',
-  borderRadius: '4px',
-  border: '1px solid #373b3e',
   resize: 'vertical',
-
-  ":focus": {
-    border: '1px solid #137a7f',
-  }
+  padding: '8px',
+  borderRadius: '4px',
+  border: `1px solid ${colors.darkBlue}`,
+  backgroundColor: colors.grayText,
+  color: colors.lightText,
 });
 
 export const welcomeMessage = style({
+  padding: '20px',
   textAlign: 'center',
-  marginTop: '50px',
-  color: '#6c757d',
+  color: colors.grayText,
 });

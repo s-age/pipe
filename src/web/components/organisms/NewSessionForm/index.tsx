@@ -1,4 +1,4 @@
-import React from 'react';
+import { JSX } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -35,7 +35,7 @@ interface NewSessionFormProps {
   defaultSettings: any; // TODO: 型を定義する
 }
 
-const NewSessionForm: React.FC<NewSessionFormProps> = ({ onSubmit, sessions, defaultSettings }) => {
+const NewSessionForm: ({ onSubmit, sessions, defaultSettings }: NewSessionFormProps) => JSX.Element = ({ onSubmit, sessions, defaultSettings }) => {
   const { handleSubmit, control, formState: { errors, isSubmitting }, watch } = useForm<NewSessionFormInputs>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -85,10 +85,10 @@ const NewSessionForm: React.FC<NewSessionFormProps> = ({ onSubmit, sessions, def
           </div>
         </fieldset>
 
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" kind="primary" size="default" disabled={isSubmitting}>
           {isSubmitting ? 'Creating...' : 'Create Session'}
         </Button>
-        <Button type="button" variant="cancel" onClick={() => window.location.href = '/'}>
+        <Button type="button" kind="secondary" size="default" onClick={() => window.location.href = '/'}>
           Cancel
         </Button>
         {Object.keys(errors).length > 0 && <p className={errorMessageStyle}>Please correct the errors in the form.</p>}

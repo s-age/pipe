@@ -2,6 +2,7 @@ import { useController, UseControllerProps, FieldValues } from 'react-hook-form'
 import Label from '@/components/atoms/Label';
 import TextArea from '@/components/atoms/TextArea';
 import { errorMessageStyle } from './style.css';
+import { JSX } from 'react';
 
 interface TextareaFieldProps<TFieldValues extends FieldValues = FieldValues> extends UseControllerProps<TFieldValues> {
   label: string;
@@ -11,7 +12,7 @@ interface TextareaFieldProps<TFieldValues extends FieldValues = FieldValues> ext
   required?: boolean;
 }
 
-const TextareaField = <TFieldValues extends FieldValues = FieldValues>({ label, id, placeholder, readOnly, required, ...props }: TextareaFieldProps<TFieldValues>) => {
+const TextareaField = <TFieldValues extends FieldValues = FieldValues>({ label, id, placeholder, readOnly, required, ...props }: TextareaFieldProps<TFieldValues>): JSX.Element => {
   const { field, fieldState: { error } } = useController(props);
 
   return (

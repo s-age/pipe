@@ -1,16 +1,50 @@
-import { style, globalStyle } from '@vanilla-extract/css';
+import { style } from '@vanilla-extract/css';
+import { colors } from '../../../styles/colors.css.ts';
 
 export const sessionListColumn = style({
   flex: '0 0 250px',
-  borderRight: '1px solid #393e46',
   overflowY: 'auto',
-  backgroundColor: '#222831',
+  borderRight: `1px solid ${colors.mediumBackground}`,
+  backgroundColor: colors.darkBackground,
+  display: 'flex',
+  flexDirection: 'column',
 });
 
 export const sessionListContainer = style({
   listStyle: 'none',
   padding: '16px',
-  paddingBottom: '70px', // Adjust based on the height of the sticky button container
+  margin: '0',
+  flexGrow: '1',
+});
+
+export const sessionListItem = style({
+  marginBottom: '8px',
+});
+
+export const sessionLink = style({
+  display: 'block',
+  padding: '8px',
+  borderRadius: '4px',
+  textDecoration: 'none',
+  color: colors.lightText,
+  ':hover': {
+    backgroundColor: colors.mediumBackground,
+  },
+});
+
+export const sessionLinkActive = style({
+  backgroundColor: colors.accent,
+  color: colors.darkBackground,
+  fontWeight: 'bold',
+  ':hover': {
+    backgroundColor: colors.accentHover,
+  },
+});
+
+export const sessionIdStyle = style({
+  fontSize: '0.8em',
+  color: colors.lightText,
+  marginLeft: '8px',
 });
 
 export const stickyNewChatButtonContainer = style({
@@ -18,40 +52,6 @@ export const stickyNewChatButtonContainer = style({
   bottom: 0,
   zIndex: 1,
   padding: '12px',
-  borderTop: '1px solid #393e46',
+  borderTop: `1px solid ${colors.mediumBackground}`,
   background: 'inherit'
-});
-
-export const sessionListItem = style({
-  marginBottom: '4px',
-});
-
-export const sessionLink = style({
-  display: 'block',
-  padding: '8px 12px',
-  borderRadius: '4px',
-  textDecoration: 'none',
-  color: '#eeeeee',
-  ':hover': {
-    backgroundColor: '#393e46',
-  },
-});
-
-export const sessionLinkActive = style({
-  backgroundColor: '#00adb5',
-  color: '#222831',
-});
-
-export const sessionIdStyle = style({
-  fontSize: '0.8em',
-  color: '#eeeeee',
-  marginLeft: '8px',
-});
-
-export const newChatButton = style({
-  width: '100%',
-});
-
-globalStyle(`${sessionLinkActive} ${sessionIdStyle}`, {
-  color: 'rgba(34,40,49,0.8)',
 });

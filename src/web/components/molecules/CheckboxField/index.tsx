@@ -2,13 +2,14 @@ import { useController, UseControllerProps, FieldValues } from 'react-hook-form'
 import Checkbox from '@/components/atoms/Checkbox';
 import Label from '@/components/atoms/Label';
 import { checkboxContainer, labelStyle } from './style.css';
+import { JSX } from 'react';
 
 interface CheckboxFieldProps<TFieldValues extends FieldValues = FieldValues> extends UseControllerProps<TFieldValues> {
   label: string;
   id: string;
 }
 
-const CheckboxField = <TFieldValues extends FieldValues = FieldValues>({ label, id, ...props }: CheckboxFieldProps<TFieldValues>) => {
+const CheckboxField = <TFieldValues extends FieldValues = FieldValues>({ label, id, ...props }: CheckboxFieldProps<TFieldValues>): JSX.Element => {
   const { field } = useController(props);
 
   return (

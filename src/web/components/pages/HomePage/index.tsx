@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, JSX } from 'react';
 import { fetchSessions, fetchSessionData, updateSessionMeta, deleteTurn, forkSession, sendInstruction, updateTodo, deleteTodos, updateReferencePersist, updateReferenceTtl, updateReferenceDisabled } from '@/lib/api_client/client';
 import SessionList from '@/components/organisms/SessionList';
 import TurnsList from '@/components/organisms/TurnsList';
 import SessionMeta from '@/components/organisms/SessionMeta';
 import { appContainer } from './style.css';
 
-const HomePage: React.FC = () => {
+const HomePage: () => JSX.Element = () => {
   const [sessions, setSessions] = useState<any[]>([]); // TODO: 型を定義する
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessionData, setSessionData] = useState<any>(null); // TODO: 型を定義する

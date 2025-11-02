@@ -2,6 +2,7 @@ import { useController, UseControllerProps, FieldValues } from 'react-hook-form'
 import InputText from '@/components/atoms/InputText';
 import Label from '@/components/atoms/Label';
 import { errorMessageStyle, inputFieldStyle } from './style.css';
+import { JSX } from 'react';
 
 interface InputFieldProps<TFieldValues extends FieldValues = FieldValues> extends UseControllerProps<TFieldValues> {
   label: string;
@@ -14,7 +15,7 @@ interface InputFieldProps<TFieldValues extends FieldValues = FieldValues> extend
   step?: string;
 }
 
-const InputField = <TFieldValues extends FieldValues = FieldValues>({ label, id, type = 'text', placeholder, required, min, max, step, ...props }: InputFieldProps<TFieldValues>) => {
+const InputField = <TFieldValues extends FieldValues = FieldValues>({ label, id, type = 'text', placeholder, required, min, max, step, ...props }: InputFieldProps<TFieldValues>): JSX.Element => {
   const { field, fieldState: { error } } = useController(props);
 
   return (

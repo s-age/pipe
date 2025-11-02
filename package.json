@@ -13,24 +13,27 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.4.0",
+    "@vanilla-extract/recipes": "^0.5.7",
+    "clsx": "^2.1.1",
     "marked": "^12.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.51.3",
-    "zod": "^3.23.4",
-    "@hookform/resolvers": "^3.4.0",
-    "react-router-dom": "^6.23.0"
+    "react-router-dom": "^6.23.0",
+    "ts-morph": "^27.0.2",
+    "zod": "^3.23.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "typescript": "^5.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/react-router-dom": "^5.3.3",
     "@vanilla-extract/css": "^1.14.1",
     "@vanilla-extract/vite-plugin": "^4.0.0",
-    "vite": "^5.2.11",
     "@vitejs/plugin-react": "^4.2.1",
-    "@types/react-router-dom": "^5.3.3"
+    "typescript": "^5.9.3",
+    "vite": "^5.2.11"
   },
   "browserslist": {
     "production": [

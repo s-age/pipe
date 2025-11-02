@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, JSX } from 'react';
 
 import Turn from '@/components/molecules/Turn';
 import Button from '@/components/atoms/Button';
@@ -16,7 +16,7 @@ interface TurnsListProps {
   onSendInstruction: (sessionId: string, instruction: string) => void;
 }
 
-const TurnsList: React.FC<TurnsListProps> = ({ sessionData, currentSessionId, expertMode, onDeleteTurn, onForkSession, onSendInstruction }) => {
+const TurnsList: ({ sessionData, currentSessionId, expertMode, onDeleteTurn, onForkSession, onSendInstruction }: TurnsListProps) => JSX.Element = ({ sessionData, currentSessionId, expertMode, onDeleteTurn, onForkSession, onSendInstruction }) => {
   const turnsListRef = useRef<HTMLDivElement>(null);
   const [instructionText, setInstructionText] = useState<string>('');
   const [isSending, setIsSending] = useState<boolean>(false);
@@ -65,7 +65,7 @@ const TurnsList: React.FC<TurnsListProps> = ({ sessionData, currentSessionId, ex
         <Heading level={2} className={h2Style}>
           {sessionData.purpose} {contextLimit > 0 && tokenCount !== null && `(${contextLeft}% context left)`}
         </Heading>
-        <Button variant="cancel" onClick={() => { /* onDeleteSession は HomePage で処理 */ }}>
+        <Button kind="secondary" size="default" onClick={() => { /* onDeleteSession は HomePage で処理 */ }}>
           Delete Session
         </Button>
       </div>
@@ -99,7 +99,7 @@ const TurnsList: React.FC<TurnsListProps> = ({ sessionData, currentSessionId, ex
           }}
           disabled={isSending}
         />
-        <Button onClick={handleSend} disabled={isSending}>
+        <Button kind="primary" size="default" onClick={handleSend} disabled={isSending}>
           {isSending ? 'Sending...' : 'Send Instruction'}
         </Button>
       </section>

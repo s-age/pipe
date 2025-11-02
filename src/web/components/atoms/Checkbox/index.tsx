@@ -1,9 +1,9 @@
-import React, { InputHTMLAttributes } from 'react';
+import { InputHTMLAttributes, JSX } from 'react';
 import { checkboxStyle } from './style.css';
 
 interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {}
 
-const Checkbox: React.FC<CheckboxProps> = (props) => {
+const Checkbox: (props: CheckboxProps) => JSX.Element = (props) => {
   return <input type="checkbox" className={checkboxStyle} {...props} />;
 };
 

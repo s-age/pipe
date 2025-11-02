@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, JSX } from 'react';
 import NewSessionForm from '@/components/organisms/NewSessionForm';
 import { createSession, fetchSessions, fetchSettings } from '@/lib/api_client/client';
 import { pageContainer, errorMessageStyle } from './style.css';
@@ -8,7 +8,7 @@ interface SessionOption {
   label: string;
 }
 
-const NewSessionPage: React.FC = () => {
+const NewSessionPage: () => JSX.Element = () => {
   const [sessions, setSessions] = useState<SessionOption[]>([]);
   const [settings, setSettings] = useState<any>(null); // TODO: 型を定義する
   const [error, setError] = useState<string | null>(null);

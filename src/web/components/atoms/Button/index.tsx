@@ -1,13 +1,16 @@
-import React, { ButtonHTMLAttributes } from 'react';
-import { baseButtonStyle, cancelButton } from './style.css';
+import { ButtonHTMLAttributes, JSX } from 'react';
+import { button } from './style.css';
+import clsx from 'clsx';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'cancel';
+  kind?: 'primary' | 'secondary' | 'ghost';
+  size?: 'small' | 'default' | 'large' | 'xsmall';
+  text?: 'bold' | 'uppercase';
+  hasBorder?: boolean;
 }
 
-const Button: React.FC<ButtonProps> = ({ variant = 'primary', className, ...props }) => {
-  const buttonClassName = `${baseButtonStyle} ${variant === 'cancel' ? cancelButton : ''} ${className || ''}`.trim();
-  return <button className={buttonClassName} {...props} />;
+const Button: (props: ButtonProps) => JSX.Element = ({ kind = 'primary', size = 'default', text, hasBorder = true, className, ...props }) => {
+  return <button className={clsx(button({ kind, size, text, hasBorder }), className)} {...props} />;
 };
 
 export default Button;

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { JSX } from 'react';
 import Button from '@/components/atoms/Button';
-import { sessionListColumn, sessionListContainer, sessionListItem, sessionLink, sessionLinkActive, sessionIdStyle, newChatButton, stickyNewChatButtonContainer } from './style.css';
+import { sessionListColumn, sessionListContainer, sessionListItem, sessionLink, sessionLinkActive, sessionIdStyle, stickyNewChatButtonContainer } from './style.css';
 import Heading from '@/components/atoms/Heading';
 import { h2Style } from '@/components/atoms/Heading/style.css';
 
@@ -10,7 +10,7 @@ interface SessionListProps {
   onSessionSelect: (sessionId: string) => void;
 }
 
-const SessionList: React.FC<SessionListProps> = ({ sessions, currentSessionId, onSessionSelect }) => {
+const SessionList = ({ sessions, currentSessionId, onSessionSelect }: SessionListProps): JSX.Element => {
   // セッションツリーを構築するヘルパー関数
   const buildSessionTree = (sessionsData: [string, { purpose: string }][]) => {
     const tree: any = {};
@@ -46,7 +46,7 @@ const SessionList: React.FC<SessionListProps> = ({ sessions, currentSessionId, o
                 onSessionSelect(node.id);
               }}
             >
-              {node.meta.purpose} <span className={sessionIdStyle}>{node.id}</span>
+              {node.meta.purpose} <p className={sessionIdStyle}>{node.id.substring(0, 8)}</p>
             </a>
             {Object.keys(node.children).length > 0 && (
               <ul style={{ paddingLeft: '20px' }}>{createNode(node.children, level + 1)}</ul>
@@ -76,7 +76,8 @@ const SessionList: React.FC<SessionListProps> = ({ sessions, currentSessionId, o
       </ul>
       <div className={stickyNewChatButtonContainer}>
         <Button
-          className={newChatButton}
+          kind="primary"
+          size="default"
           onClick={() => (window.location.href = '/new_session')}
         >
           + New Chat

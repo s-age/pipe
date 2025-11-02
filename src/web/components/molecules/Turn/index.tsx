@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import  { useState, JSX } from 'react';
 
 import { marked } from 'marked';
 import Button from '@/components/atoms/Button';
-import { turnHeader, turnHeaderInfo, turnIndexStyle, turnTimestamp, turnHeaderControls, turnContent, rawMarkdown, renderedMarkdown, toolResponseContent, statusSuccess, statusError, editablePre, editTextArea, editButtonContainer, turnWrapper, userTaskAligned, otherTurnAligned, turnContentBase } from './style.css';
+import Tooltip from '@/components/atoms/Tooltip';
+import { turnHeader, turnHeaderInfo, turnIndexStyle, turnTimestamp, turnHeaderControls, turnContent, rawMarkdown, renderedMarkdown, toolResponseContent, statusSuccess, statusError, editablePre, editTextArea, editButtonContainer, turnWrapper, userTaskAligned, otherTurnAligned, turnContentBase, materialIcons, forkButtonIcon, deleteButtonIcon, copyButtonIcon, editButtonIcon } from './style.css';
 
 interface TurnProps {
   turn: any; // TODO: 型を定義する
@@ -13,7 +14,7 @@ interface TurnProps {
   onForkSession: (sessionId: string, forkIndex: number) => void;
 }
 
-const Turn: React.FC<TurnProps> = ({ turn, index, sessionId, expertMode, onDeleteTurn, onForkSession }) => {
+const Turn: ({ turn, index, sessionId, expertMode, onDeleteTurn, onForkSession }: TurnProps) => JSX.Element = ({ turn, index, sessionId, expertMode, onDeleteTurn, onForkSession }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(turn.content || turn.instruction || '');
 
@@ -54,8 +55,8 @@ const Turn: React.FC<TurnProps> = ({ turn, index, sessionId, expertMode, onDelet
             onChange={(e) => setEditedContent(e.target.value)}
           />
           <div className={editButtonContainer}>
-            <Button onClick={handleSaveEdit}>Save</Button>
-            <Button variant="cancel" onClick={() => setIsEditing(false)}>Cancel</Button>
+            <Button kind="primary" size="default" onClick={handleSaveEdit}>Save</Button>
+            <Button kind="secondary" size="default" onClick={() => setIsEditing(false)}>Cancel</Button>
           </div>
         </div>
       );
@@ -116,13 +117,21 @@ const Turn: React.FC<TurnProps> = ({ turn, index, sessionId, expertMode, onDelet
         </span>
         <div className={turnHeaderControls}>
           {turn.type === 'model_response' && (
-            <Button onClick={() => onForkSession(sessionId, index)}>Fork</Button>
+            <Tooltip content="Fork Session">
+              <Button kind="ghost" size="xsmall" onClick={() => onForkSession(sessionId, index)}><span className={`${materialIcons} ${forkButtonIcon}`}>call_split</span></Button>
+            </Tooltip>
           )}
-          <Button onClick={handleCopy}>Copy</Button>
+          <Tooltip content="Copy Turn">
+            <Button kind="ghost" size="xsmall" onClick={handleCopy}><span className={`${materialIcons} ${copyButtonIcon}`}>content_copy</span></Button>
+          </Tooltip>
           {expertMode && (turn.type === 'user_task' || turn.type === 'model_response') && (
-            <Button onClick={() => setIsEditing(true)}>Edit</Button>
+            <Tooltip content="Edit Turn">
+              <Button kind="ghost" size="xsmall" onClick={() => setIsEditing(true)}><span className={`${materialIcons} ${editButtonIcon}`}>edit</span></Button>
+            </Tooltip>
           )}
-          <Button variant="cancel" onClick={() => onDeleteTurn(sessionId, index)}>Delete</Button>
+          <Tooltip content="Delete Turn">
+            <Button kind="ghost" size="xsmall" onClick={() => onDeleteTurn(sessionId, index)}><span className={`${materialIcons} ${deleteButtonIcon}`}>delete</span></Button>
+          </Tooltip>
         </div>
       </div>
       {renderTurnContent()}

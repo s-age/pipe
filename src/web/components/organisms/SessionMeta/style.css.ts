@@ -1,9 +1,10 @@
 import { style, globalStyle } from '@vanilla-extract/css';
+import { colors } from '../../../styles/colors.css.ts';
 
 export const metaColumn = style({
   flex: '0 0 300px',
   overflowY: 'auto',
-  background: '#222831',
+  background: colors.darkBackground,
 });
 
 export const sessionMetaSection = style({
@@ -26,42 +27,42 @@ export const stickySaveMetaButtonContainer = style({
   bottom: 0,
   zIndex: 1,
   padding: '12px',
-  borderTop: '1px solid #393e46',
+  borderTop: `1px solid ${colors.mediumBackground}`,
   background: 'inherit'
 });
 
 export const metaItem = style({
-  marginBottom: '15px',
+  marginBottom: '16px',
 });
 
 export const metaItemLabel = style({
   fontWeight: 'bold',
-  marginBottom: '5px',
+  marginBottom: '4px',
   display: 'block',
-  color: '#fffeec'
+  color: colors.offWhite
 });
 
 export const inputFullWidth = style({
   width: '100%',
   boxSizing: 'border-box',
-  background: '#8c97a4',
+  background: colors.grayText,
   borderRadius: '4px',
   padding: '8px',
 
   ":focus": {
-    border: '1px solid #137a7f',
+    border: `1px solid ${colors.darkBlue}`,
   }
 });
 
 export const textareaFullWidth = style({
   width: '100%',
   boxSizing: 'border-box',
-  background: '#8c97a4',
+  background: colors.grayText,
   minHeight: '100px',
   marginTop: '10px',
 
   ":focus": {
-    border: '1px solid #137a7f',
+    border: `1px solid ${colors.darkBlue}`,
   }
 });
 
@@ -69,11 +70,11 @@ export const checkboxLabel = style({
   display: 'flex',
   alignItems: 'center',
   cursor: 'pointer',
-  color: '#fffeec',
+  color: colors.offWhite,
 });
 
 globalStyle(`${checkboxLabel} input[type="checkbox"]`, {
-  marginRight: '5px',
+  marginRight: '4px',
 });
 
 export const hyperparametersControl = style({
@@ -87,7 +88,7 @@ export const sliderValue = style({
   display: 'inline-block',
   width: '30px',
   textAlign: 'right',
-  color: '#fffeec',
+  color: colors.offWhite,
 });
 
 export const todosList = style({
@@ -118,7 +119,7 @@ export const todoTitle = style({
 });
 
 export const noItemsMessage = style({
-  color: '#6c757d',
+  color: colors.grayText,
   fontStyle: 'italic',
 });
 
@@ -152,19 +153,21 @@ export const referencePath = style({
   wordBreak: 'break-all',
 });
 
-export const referencePersistToggle = style({
-  background: 'none',
-  border: 'none',
-  padding: '0',
-  cursor: 'pointer',
-  marginRight: '5px',
-  display: 'flex',
-  alignItems: 'center',
-});
-
 export const materialIcons = style({
+  fontFamily: 'Material Icons',
   fontSize: '16px',
   verticalAlign: 'middle',
+});
+
+export const lockIconStyle = style({
+  selectors: {
+    '&[data-locked="true"]': {
+      color: colors.accent,
+    },
+    '&[data-locked="false"]': {
+      color: colors.lightText,
+    },
+  },
 });
 
 export const ttlControls = style({
@@ -173,20 +176,10 @@ export const ttlControls = style({
   marginLeft: '10px',
 });
 
-export const ttlButton = style({
-  background: '#e9ecef',
-  border: '1px solid #ced4da',
-  borderRadius: '4px',
-  padding: '2px 8px',
-  cursor: 'pointer',
-  ':hover': {
-    backgroundColor: '#dee2e6',
-  },
-});
-
 export const ttlValue = style({
   padding: '0 8px',
   fontWeight: 'bold',
+  color: colors.offWhite,
 });
 
 export const referenceCheckboxMargin = style({
@@ -195,8 +188,8 @@ export const referenceCheckboxMargin = style({
 
 export const deleteTodosButton = style({
   float: 'right',
-  marginBottom: '5px',
-  backgroundColor: '#dc3545',
+  marginBottom: '4px',
+  backgroundColor: colors.error,
 });
 
 export const saveMetaButton = style({

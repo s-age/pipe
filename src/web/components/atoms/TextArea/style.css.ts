@@ -1,11 +1,12 @@
 import { style } from '@vanilla-extract/css';
+import { colors } from '../../../styles/colors.css';
 
 export const textareaStyle = style({
   width: 'calc(100% - 22px)',
   padding: '10px',
   marginBottom: '15px',
-  border: '1px solid #ced4da',
-  background: '#8c97a4',
+  border: `1px solid ${colors.lightText}`,
+  background: colors.grayText,
   borderRadius: '4px',
   fontSize: '1em',
   boxSizing: 'border-box',

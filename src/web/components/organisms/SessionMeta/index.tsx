@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, JSX } from 'react';
 import InputText from '@/components/atoms/InputText';
 import TextArea from '@/components/atoms/TextArea';
 import Label from '@/components/atoms/Label';
 import Checkbox from '@/components/atoms/Checkbox';
 import Button from '@/components/atoms/Button';
-import { metaColumn, sessionMetaSection, sessionMetaView, metaItem, metaItemLabel, inputFullWidth, textareaFullWidth, checkboxLabel, hyperparametersControl, sliderValue, todosList, todoItem, todoCheckboxLabel, todoTitle, noItemsMessage, referencesList, referenceItem, referenceControls, referenceLabel, referencePath, referencePersistToggle, materialIcons, ttlControls, ttlButton, ttlValue, referenceCheckboxMargin, deleteTodosButton, saveMetaButton, stickySaveMetaButtonContainer } from './style.css';
+import { metaColumn, sessionMetaSection, sessionMetaView, metaItem, metaItemLabel, inputFullWidth, textareaFullWidth, checkboxLabel, hyperparametersControl, sliderValue, todosList, todoItem, todoCheckboxLabel, todoTitle, noItemsMessage, referencesList, referenceItem, referenceControls, referenceLabel, referencePath, materialIcons, ttlControls, ttlValue, referenceCheckboxMargin, stickySaveMetaButtonContainer, lockIconStyle } from './style.css';
+import clsx from 'clsx';
+import { colors } from '../../../styles/colors.css';
 
 interface SessionMetaProps {
   sessionData: any; // TODO: 型を定義する
@@ -17,7 +19,7 @@ interface SessionMetaProps {
   onUpdateReferenceDisabled: (sessionId: string, index: number, disabled: boolean) => void;
 }
 
-const SessionMeta: React.FC<SessionMetaProps> = ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, onDeleteAllTodos, onUpdateReferencePersist, onUpdateReferenceTtl, onUpdateReferenceDisabled }) => {
+const SessionMeta: ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, onDeleteAllTodos, onUpdateReferencePersist, onUpdateReferenceTtl, onUpdateReferenceDisabled }: SessionMetaProps) => JSX.Element = ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, onDeleteAllTodos, onUpdateReferencePersist, onUpdateReferenceTtl, onUpdateReferenceDisabled }) => {
   const [purpose, setPurpose] = useState(sessionData?.purpose || '');
   const [background, setBackground] = useState(sessionData?.background || '');
   const [roles, setRoles] = useState(sessionData?.roles?.join(', ') || '');
@@ -146,27 +148,30 @@ const SessionMeta: React.FC<SessionMetaProps> = ({ sessionData, currentSessionId
                           className={referenceCheckboxMargin}
                         />
                         <Button
-                          className={referencePersistToggle}
+                          kind="ghost"
+                          size="xsmall"
+                          style={{minWidth: '32px'}}
                           onClick={() => handleReferencePersistToggle(index)}
                         >
                           <span
-                            className={`${materialIcons} ${reference.persist ? '' : ''}`}
+                            className={clsx(materialIcons, lockIconStyle)}
+                            data-locked={reference.persist}
                           >
-                            lock
+                            {reference.persist ? 'lock' : 'lock_open'}
                           </span>
                         </Button>
                         <span
                           data-testid="reference-path"
                           className={referencePath}
-                          style={{ textDecoration: reference.disabled ? 'line-through' : 'none', color: reference.disabled ? '#888' : 'inherit' }}
+                          style={{ textDecoration: reference.disabled ? 'line-through' : 'none', color: reference.disabled ? colors.grayText : 'inherit' }}
                         >
                           {reference.path}
                         </span>
                       </Label>
                       <div className={ttlControls}>
-                        <Button className={ttlButton} onClick={() => handleReferenceTtlChange(index, 'decrement')}>-</Button>
+                        <Button kind="primary" size="xsmall" onClick={() => handleReferenceTtlChange(index, 'decrement')}>-</Button>
                         <span className={ttlValue}>{reference.ttl !== null ? reference.ttl : 3}</span>
-                        <Button className={ttlButton} onClick={() => handleReferenceTtlChange(index, 'increment')}>+</Button>
+                        <Button kind="primary" size="xsmall" onClick={() => handleReferenceTtlChange(index, 'increment')}>+</Button>
                       </div>
                     </div>
                   </li>
@@ -214,7 +219,8 @@ const SessionMeta: React.FC<SessionMetaProps> = ({ sessionData, currentSessionId
           <div className={metaItem}>
             <Label className={metaItemLabel}>Todos:</Label>
             <Button
-              className={deleteTodosButton}
+              kind="secondary"
+              size="default"
               onClick={() => currentSessionId && onDeleteAllTodos(currentSessionId)}
             >
               Delete All
@@ -242,7 +248,7 @@ const SessionMeta: React.FC<SessionMetaProps> = ({ sessionData, currentSessionId
       </section>
 
       <div className={stickySaveMetaButtonContainer}>
-        <Button className={saveMetaButton} onClick={handleSaveMeta}>
+        <Button kind="primary" size="default" onClick={handleSaveMeta}>
           Save Meta
         </Button>
       </div>

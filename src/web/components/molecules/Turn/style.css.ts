@@ -1,4 +1,5 @@
 import { style, globalStyle } from '@vanilla-extract/css';
+import { colors } from '../../../styles/colors.css';
 
 // 各ターンを囲むFlexboxコンテナとして機能
 export const turnWrapper = style({
@@ -19,8 +20,8 @@ export const otherTurnAligned = style({
 
 // 各ターンのコンテンツ部分の共通スタイル
 export const turnContentBase = style({
-  backgroundColor: '#8c97a4',
-  border: '1px solid #222831',
+  backgroundColor: colors.grayText,
+  border: `1px solid ${colors.darkBackground}`,
   borderRadius: '8px',
   padding: '8px',
   boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
@@ -56,7 +57,7 @@ export const turnHeaderControls = style({
 export const turnContent = style({
   wordWrap: 'break-word',
   whiteSpace: 'pre-wrap',
-  color: '#fffeec',
+  color: colors.offWhite,
   padding: '0 12px',
 });
 
@@ -79,23 +80,23 @@ globalStyle(`${renderedMarkdown}.markdown-body`, {
 export const toolResponseContent = style({
   padding: '12px',
   borderRadius: '4px',
-  color: '#fffeec',
+  color: colors.offWhite,
 });
 
 export const statusSuccess = style({
-  color: '#00adb5',
+  color: colors.accent,
   fontWeight: 'bold',
 });
 
 export const statusError = style({
-  color: '#e12885',
+  color: colors.error,
   fontWeight: 'bold',
 });
 
 export const editablePre = style({
   padding: '0 12px',
   borderRadius: '4px',
-  color: '#fffeec',
+  color: colors.offWhite,
   boxSizing: 'border-box',
 });
 
@@ -105,14 +106,46 @@ export const editTextArea = style({
   boxSizing: 'border-box',
   padding: '12px',
   borderRadius: '4px',
-  border: '1px solid #00adb5',
+  border: `1px solid ${colors.accent}`,
   whiteSpace: 'pre-wrap',
   wordWrap: 'break-word',
-  backgroundColor: '#222831',
-  color: '#fffeec',
+  backgroundColor: colors.darkBackground,
+  color: colors.offWhite,
 });
 
 export const editButtonContainer = style({
   textAlign: 'right',
   marginTop: '12px',
+});
+
+export const materialIcons = style({
+  fontFamily: 'Material Icons',
+  fontSize: '16px',
+  verticalAlign: 'middle',
+});
+
+export const forkButtonIcon = style({
+  background: colors.purpleAccent,
+  borderRadius: '4px',
+  padding: '4px',
+});
+
+export const deleteButtonIcon = style({
+  background: colors.error,
+  borderRadius: '4px',
+  padding: '4px',
+});
+
+export const copyButtonIcon = style({
+  background: colors.lightBlue,
+  borderRadius: '4px',
+  padding: '4px',
+  color: colors.darkBackground,
+});
+
+export const editButtonIcon = style({
+  background: colors.mediumBlue,
+  borderRadius: '4px',
+  padding: '4px',
+  color: colors.mediumBackground,
 });

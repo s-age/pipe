@@ -4,6 +4,7 @@ import sys
 import zoneinfo
 
 from flask import Flask, abort, jsonify, render_template, request
+from flask_cors import CORS
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
@@ -72,6 +73,7 @@ template_dir = os.path.join(project_root, "templates")
 assets_dir = os.path.join(project_root, "assets")
 
 app = Flask(__name__, template_folder=template_dir, static_folder=assets_dir)
+CORS(app)
 
 config_path = os.path.join(project_root, "setting.yml")
 settings_dict = load_settings(config_path)
@@ -568,6 +570,14 @@ def get_session_turns_api(session_id):
         new_turns = all_turns[since_index:]
 
         return jsonify({"success": True, "turns": new_turns}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route("/api/settings", methods=["GET"])
+def get_settings_api():
+    try:
+        return jsonify({"success": True, "settings": settings.model_dump()}), 200
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 

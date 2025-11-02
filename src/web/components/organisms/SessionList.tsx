@@ -1,0 +1,85 @@
+import React from 'react';
+import Button from '@/components/atoms/Button';
+import { sessionListColumn, sessionListContainer, sessionListItem, sessionLink, sessionLinkActive, sessionIdStyle, newChatButton } from './SessionList.css';
+
+interface SessionListProps {
+  sessions: [string, { purpose: string; [key: string]: any }][];
+  currentSessionId: string | null;
+  onSessionSelect: (sessionId: string) => void;
+}
+
+const SessionList: React.FC<SessionListProps> = ({ sessions, currentSessionId, onSessionSelect }) => {
+  // セッションツリーを構築するヘルパー関数
+  const buildSessionTree = (sessionsData: [string, { purpose: string }][]) => {
+    const tree: any = {};
+    sessionsData.forEach(([id, meta]) => {
+      const parts = id.split('/');
+      let currentLevel = tree;
+      parts.forEach((part, index) => {
+        if (!currentLevel[part]) {
+          currentLevel[part] = { meta: null, children: {} };
+        }
+        if (index === parts.length - 1) {
+          currentLevel[part].meta = meta;
+          currentLevel[part].id = id;
+        }
+        currentLevel = currentLevel[part].children;
+      });
+    });
+    return tree;
+  };
+
+  const createNode = (branch: any, level: number) => {
+    const items: React.ReactNode[] = [];
+    for (const key in branch) {
+      const node = branch[key];
+      if (node.meta) {
+        items.push(
+          <li key={node.id} className={sessionListItem}>
+            <a
+              href={`/session/${node.id}`}
+              className={`${sessionLink} ${node.id === currentSessionId ? sessionLinkActive : ''}`.trim()}
+              onClick={(e) => {
+                e.preventDefault();
+                onSessionSelect(node.id);
+              }}
+            >
+              {node.meta.purpose} <span className={sessionIdStyle}>{node.id}</span>
+            </a>
+            {Object.keys(node.children).length > 0 && (
+              <ul style={{ paddingLeft: '20px' }}>{createNode(node.children, level + 1)}</ul>
+            )}
+          </li>
+        );
+      } else if (Object.keys(node.children).length > 0) {
+        // メタデータがないが子がある場合（中間ディレクトリ）
+        items.push(
+          <li key={key} className={sessionListItem}>
+            <span style={{ fontWeight: 'bold' }}>{key}</span>
+            <ul style={{ paddingLeft: '20px' }}>{createNode(node.children, level + 1)}</ul>
+          </li>
+        );
+      }
+    }
+    return items;
+  };
+
+  const sessionTree = buildSessionTree(sessions);
+
+  return (
+    <div className={sessionListColumn}>
+      <h2>Sessions</h2>
+      <Button
+        className={newChatButton}
+        onClick={() => (window.location.href = '/new_session')}
+      >
+        + New Chat
+      </Button>
+      <ul className={sessionListContainer}>
+        {createNode(sessionTree, 0)}
+      </ul>
+    </div>
+  );
+};
+
+export default SessionList;

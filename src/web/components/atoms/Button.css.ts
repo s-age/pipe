@@ -1,23 +1,24 @@
 import { style } from '@vanilla-extract/css';
 
 export const baseButtonStyle = style({
-  backgroundColor: '#007bff',
-  color: 'white',
+  backgroundColor: '#00adb5',
+  color: '#222831',
   border: 'none',
-  padding: '10px 20px',
+  padding: '12px 20px',
   fontSize: '1em',
   borderRadius: '4px',
   cursor: 'pointer',
   transition: 'background-color 0.2s',
   ':hover': {
-    backgroundColor: '#0056b3',
+    backgroundColor: '#008c92',
   },
 });
 
 export const cancelButton = style({
-  backgroundColor: '#6c757d',
-  marginLeft: '10px',
+  backgroundColor: '#393e46',
+  color: '#eeeeee',
+  marginLeft: '12px',
   ':hover': {
-    backgroundColor: '#5a6268',
+    backgroundColor: '#00adb5',
   },
 });

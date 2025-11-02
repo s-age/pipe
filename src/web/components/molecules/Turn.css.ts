@@ -1,11 +1,11 @@
 import { style, globalStyle } from '@vanilla-extract/css';
 
 export const turnStyle = style({
-  backgroundColor: '#fff',
-  border: '1px solid #e0e0e0',
+  backgroundColor: '#393e46',
+  border: '1px solid #222831',
   borderRadius: '8px',
-  marginBottom: '15px',
-  padding: '15px',
+  marginBottom: '16px',
+  padding: '16px',
   boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
 });
 
@@ -13,9 +13,9 @@ export const turnHeader = style({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  marginBottom: '10px',
-  paddingBottom: '10px',
-  borderBottom: '1px solid #eee',
+  marginBottom: '8px',
+  paddingBottom: '8px',
+  borderBottom: '1px solid #222831',
 });
 
 export const turnHeaderInfo = style({
@@ -24,25 +24,26 @@ export const turnHeaderInfo = style({
 });
 
 export const turnIndexStyle = style({
-  color: '#007bff',
-  marginRight: '10px',
+  color: '#00adb5',
+  marginRight: '8px',
   fontWeight: 'bold',
 });
 
 export const turnTimestamp = style({
   fontWeight: 'normal',
-  color: '#999',
-  marginLeft: '10px',
+  color: '#eeeeee',
+  marginLeft: '8px',
 });
 
 export const turnHeaderControls = style({
   display: 'flex',
-  gap: '5px',
+  gap: '4px',
 });
 
 export const turnContent = style({
   wordWrap: 'break-word',
   whiteSpace: 'pre-wrap',
+  color: '#eeeeee',
 });
 
 export const rawMarkdown = style({
@@ -60,41 +61,45 @@ globalStyle(`${renderedMarkdown}.markdown-body`, {
 });
 
 export const toolResponseContent = style({
-  backgroundColor: '#e9ecef',
-  padding: '10px',
+  backgroundColor: '#222831',
+  padding: '12px',
   borderRadius: '4px',
-  border: '1px solid #dee2e6',
+  border: '1px solid #00adb5',
+  color: '#eeeeee',
 });
 
 export const statusSuccess = style({
-  color: '#28a745',
+  color: '#00adb5',
   fontWeight: 'bold',
 });
 
 export const statusError = style({
-  color: '#dc3545',
+  color: '#ff69b4',
   fontWeight: 'bold',
 });
 
 export const editablePre = style({
-  backgroundColor: '#f4f4f4',
-  padding: '10px',
+  backgroundColor: '#222831',
+  padding: '12px',
   borderRadius: '4px',
-  border: '1px solid #ddd',
+  border: '1px solid #00adb5',
+  color: '#eeeeee',
 });
 
 export const editTextArea = style({
   width: '100%',
   minHeight: '120px',
   boxSizing: 'border-box',
-  padding: '10px',
-  borderRadius: '5px',
-  border: '1px solid #ced4da',
+  padding: '12px',
+  borderRadius: '4px',
+  border: '1px solid #00adb5',
   whiteSpace: 'pre-wrap',
   wordWrap: 'break-word',
+  backgroundColor: '#222831',
+  color: '#eeeeee',
 });
 
 export const editButtonContainer = style({
   textAlign: 'right',
-  marginTop: '10px',
+  marginTop: '12px',
 });

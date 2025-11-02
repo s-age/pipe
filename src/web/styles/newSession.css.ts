@@ -3,22 +3,22 @@ import { style } from '@vanilla-extract/css';
 export const bodyStyle = style({
   fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
   margin: '20px',
-  backgroundColor: '#fffeec',
-  color: '#373b3e',
+  backgroundColor: '#222831',
+  color: '#eeeeee',
 });
 
 export const containerStyle = style({
   maxWidth: '800px',
   margin: 'auto',
-  backgroundColor: '#fffeec',
+  backgroundColor: '#393e46',
   padding: '28px',
   borderRadius: '8px',
   boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
 });
 
 export const h1Style = style({
-  color: '#137a7f',
-  borderBottom: '1px solid #bec8d1',
+  color: '#00adb5',
+  borderBottom: '1px solid #393e46',
   paddingBottom: '12px',
   marginBottom: '20px',
 });
@@ -27,17 +27,19 @@ export const labelStyle = style({
   display: 'block',
   marginBottom: '4px',
   fontWeight: 'bold',
-  color: '#bec8d1',
+  color: '#00adb5',
 });
 
 export const inputFieldStyle = style({
   width: 'calc(100% - 24px)',
   padding: '12px',
   marginBottom: '16px',
-  border: '1px solid #bec8d1',
+  border: '1px solid #00adb5',
   borderRadius: '4px',
   fontSize: '1em',
   boxSizing: 'border-box',
+  backgroundColor: '#222831',
+  color: '#eeeeee',
 });
 
 export const textareaFieldStyle = style({
@@ -46,8 +48,8 @@ export const textareaFieldStyle = style({
 });
 
 export const actionButton = style({
-  backgroundColor: '#137a7f',
-  color: 'white',
+  backgroundColor: '#00adb5',
+  color: '#222831',
   border: 'none',
   padding: '12px 20px',
   fontSize: '1em',
@@ -55,25 +57,26 @@ export const actionButton = style({
   cursor: 'pointer',
   transition: 'background-color 0.2s',
   ':hover': {
-    backgroundColor: '#86cecb',
+    backgroundColor: '#008c92',
   },
 });
 
 export const cancelButton = style({
-  backgroundColor: '#bec8d1',
+  backgroundColor: '#393e46',
+  color: '#eeeeee',
   marginLeft: '12px',
   ':hover': {
-    backgroundColor: '#86cecb',
+    backgroundColor: '#00adb5',
   },
 });
 
 export const errorMessage = style({
-  color: '#e12885',
+  color: '#ff69b4',
   marginTop: '12px',
 });
 
 export const fieldsetStyle = style({
-  border: '1px solid #bec8d1',
+  border: '1px solid #393e46',
   padding: '16px',
   borderRadius: '4px',
   marginBottom: '16px',
@@ -81,6 +84,7 @@ export const fieldsetStyle = style({
 
 export const legendStyle = style({
   padding: '0 4px',
+  color: '#00adb5',
 });
 
 export const gridContainer = style({

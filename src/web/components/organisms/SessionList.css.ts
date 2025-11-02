@@ -3,9 +3,9 @@ import { style, globalStyle } from '@vanilla-extract/css';
 export const sessionListColumn = style({
   flex: '0 0 250px',
   padding: '20px',
-  borderRight: '1px solid #eee',
+  borderRight: '1px solid #393e46',
   overflowY: 'auto',
-  backgroundColor: '#f8f9fa',
+  backgroundColor: '#222831',
 });
 
 export const sessionListContainer = style({
@@ -14,36 +14,36 @@ export const sessionListContainer = style({
 });
 
 export const sessionListItem = style({
-  marginBottom: '5px',
+  marginBottom: '4px',
 });
 
 export const sessionLink = style({
   display: 'block',
-  padding: '8px 10px',
+  padding: '8px 12px',
   borderRadius: '4px',
   textDecoration: 'none',
-  color: '#343a40',
+  color: '#eeeeee',
   ':hover': {
-    backgroundColor: '#e9ecef',
+    backgroundColor: '#393e46',
   },
 });
 
 export const sessionLinkActive = style({
-  backgroundColor: '#007bff',
-  color: 'white',
+  backgroundColor: '#00adb5',
+  color: '#222831',
 });
 
 export const sessionIdStyle = style({
   fontSize: '0.8em',
-  color: '#6c757d',
-  marginLeft: '10px',
+  color: '#eeeeee',
+  marginLeft: '8px',
 });
 
 export const newChatButton = style({
   width: '100%',
-  marginBottom: '15px',
+  marginBottom: '16px',
 });
 
 globalStyle(`${sessionLinkActive} ${sessionIdStyle}`, {
-  color: 'rgba(255,255,255,0.8)',
+  color: 'rgba(34,40,49,0.8)',
 });

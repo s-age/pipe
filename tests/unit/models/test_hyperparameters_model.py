@@ -24,9 +24,7 @@ class TestHyperparametersModel(unittest.TestCase):
         Tests that a Hyperparameters instance can be created with only some values,
         and others remain None.
         """
-        hyperparameters_data = {
-            "temperature": 0.7
-        }
+        hyperparameters_data = {"temperature": 0.7}
         hyperparams = Hyperparameters(**hyperparameters_data)
 
         self.assertEqual(hyperparams.temperature, 0.7)

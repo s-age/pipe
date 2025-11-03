@@ -28,6 +28,7 @@ def validate_space_separated_files(paths: str):
         if path.strip():
             validate_file_exists(path)
 
+
 def validate_list_of_files_exist(paths: list[str]):
     """Validates that all files in a list of paths exist."""
     if not paths:

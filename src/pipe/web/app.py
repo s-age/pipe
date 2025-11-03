@@ -268,34 +268,29 @@ def session_api(session_id):
     if request.method == "DELETE":
         try:
             session_service.delete_session(session_id)
-            return jsonify(
-                {"message": f"Session {session_id} deleted."}
-            ), 200
+            return jsonify({"message": f"Session {session_id} deleted."}), 200
         except Exception as e:
             return jsonify({"message": str(e)}), 500
 
 
 @app.route("/api/session/<path:session_id>/turn/<int:turn_index>", methods=["DELETE"])
 def delete_turn_api(session_id, turn_index):
-            try:
-                session_service.delete_turn(session_id, turn_index)
-                return jsonify(
-                    {
-                        "message": (
-                            f"Turn {turn_index} from session {session_id} deleted."
-                        ),
-                    }
-                ), 200
-            except FileNotFoundError:
-                return jsonify({"message": "Session not found."}), 404
-            except IndexError:
-                return jsonify({"message": "Turn index out of range."}), 400
-            except Exception as e:
-                return jsonify({"message": str(e)}), 500
+    try:
+        session_service.delete_turn(session_id, turn_index)
+        return jsonify(
+            {
+                "message": (f"Turn {turn_index} from session {session_id} deleted."),
+            }
+        ), 200
+    except FileNotFoundError:
+        return jsonify({"message": "Session not found."}), 404
+    except IndexError:
+        return jsonify({"message": "Turn index out of range."}), 400
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
-@app.route(
-    "/api/session/<path:session_id>/turns/<int:turn_index>", methods=["PATCH"]
-)
+
+@app.route("/api/session/<path:session_id>/turns/<int:turn_index>", methods=["PATCH"])
 def edit_turn_api(session_id, turn_index):
     try:
         new_data = request.get_json()
@@ -325,9 +320,7 @@ def edit_session_meta_api(session_id):
         session_service.edit_session_meta(
             session_id, request_data.model_dump(exclude_unset=True)
         )
-        return jsonify(
-            {"message": f"Session {session_id} metadata updated."}
-        ), 200
+        return jsonify({"message": f"Session {session_id} metadata updated."}), 200
     except ValidationError as e:
         return jsonify({"message": str(e)}), 422
     except FileNotFoundError:
@@ -341,9 +334,7 @@ def edit_todos_api(session_id):
     try:
         request_data = EditTodosRequest(**request.get_json())
         session_service.update_todos(session_id, request_data.todos)
-        return jsonify(
-            {"message": f"Session {session_id} todos updated."}
-        ), 200
+        return jsonify({"message": f"Session {session_id} todos updated."}), 200
     except ValidationError as e:
         return jsonify({"message": str(e)}), 422
     except FileNotFoundError:
@@ -357,9 +348,7 @@ def edit_references_api(session_id):
     try:
         request_data = EditReferencesRequest(**request.get_json())
         session_service.update_references(session_id, request_data.references)
-        return jsonify(
-            {"message": f"Session {session_id} references updated."}
-        ), 200
+        return jsonify({"message": f"Session {session_id} references updated."}), 200
     except ValidationError as e:
         return jsonify({"message": str(e)}), 422
     except FileNotFoundError:
@@ -382,9 +371,7 @@ def edit_reference_persist_api(session_id, reference_index):
             return jsonify({"message": "Session not found."}), 404
 
         if not (0 <= reference_index < len(session.references)):
-            return jsonify(
-                {"message": "Reference index out of range."}
-            ), 400
+            return jsonify({"message": "Reference index out of range."}), 400
 
         file_path = session.references[reference_index].path
         session_service.update_reference_persist_in_session(
@@ -416,9 +403,7 @@ def edit_reference_ttl_api(session_id, reference_index):
             return jsonify({"message": "Session not found."}), 404
 
         if not (0 <= reference_index < len(session.references)):
-            return jsonify(
-                {"message": "Reference index out of range."}
-            ), 400
+            return jsonify({"message": "Reference index out of range."}), 400
 
         file_path = session.references[reference_index].path
         session_service.update_reference_ttl_in_session(session_id, file_path, new_ttl)
@@ -436,15 +421,14 @@ def edit_reference_ttl_api(session_id, reference_index):
 
 @app.route("/api/session/<path:session_id>/todos", methods=["DELETE"])
 def delete_todos_api(session_id):
-            try:
-                session_service.delete_todos(session_id)
-                return jsonify(
-                    {"message": f"Todos deleted from session {session_id}."}
-                ), 200
-            except FileNotFoundError:
-                return jsonify({"message": "Session not found."}), 404
-            except Exception as e:
-                return jsonify({"message": str(e)}), 500
+    try:
+        session_service.delete_todos(session_id)
+        return jsonify({"message": f"Todos deleted from session {session_id}."}), 200
+    except FileNotFoundError:
+        return jsonify({"message": "Session not found."}), 404
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
 
 @app.route("/api/session/fork/<int:fork_index>", methods=["POST"])
 def fork_session_api(fork_index):
@@ -456,17 +440,13 @@ def fork_session_api(fork_index):
         if new_session_id:
             return jsonify({"new_session_id": new_session_id}), 200
         else:
-            return jsonify(
-                {"message": "Failed to fork session."}
-            ), 500
+            return jsonify({"message": "Failed to fork session."}), 500
     except ValidationError as e:
         return jsonify({"message": str(e)}), 422
     except FileNotFoundError:
         return jsonify({"message": "Session not found."}), 404
     except IndexError:
-        return jsonify(
-            {"message": "Fork turn index out of range."}
-        ), 400
+        return jsonify({"message": "Fork turn index out of range."}), 400
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 

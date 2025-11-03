@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import React, { JSX, useState, useEffect } from 'react' // useState, useEffectを追加
+import React, { JSX } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Checkbox from '@/components/atoms/Checkbox'
@@ -39,6 +39,8 @@ import {
   stickySaveMetaButtonContainer,
   lockIconStyle,
 } from './style.css'
+import { useSessionBasicMeta } from './useSessionBasicMeta'
+import { useSessionHyperparameters } from './useSessionHyperparameters'
 import { colors } from '../../../styles/colors.css'
 
 type SessionMetaProps = {
@@ -66,40 +68,35 @@ export const SessionMeta = ({
   onUpdateReferenceTtl,
   onUpdateReferenceDisabled,
 }: SessionMetaProps): JSX.Element => {
-  // ローカルステートの定義
-  const [purpose, setPurpose] = useState(sessionData?.purpose || '')
-  const [background, setBackground] = useState(sessionData?.background || '')
-  const [roles, setRoles] = useState(sessionData?.roles?.join(', ') || '')
-  const [procedure, setProcedure] = useState(sessionData?.procedure || '')
-  const [artifacts, setArtifacts] = useState(sessionData?.artifacts?.join(', ') || '')
-  const [temperature, setTemperature] = useState(
-    sessionData?.hyperparameters?.temperature || 0.7,
-  )
-  const [topP, setTopP] = useState(sessionData?.hyperparameters?.top_p || 0.9)
-  const [topK, setTopK] = useState(sessionData?.hyperparameters?.top_k || 5)
+  const {
+    purpose,
+    setPurpose,
+    handlePurposeBlur,
+    background,
+    setBackground,
+    handleBackgroundBlur,
+    roles,
+    setRoles,
+    handleRolesBlur,
+    procedure,
+    setProcedure,
+    handleProcedureBlur,
+    artifacts,
+    setArtifacts,
+    handleArtifactsBlur,
+  } = useSessionBasicMeta({ sessionData, currentSessionId, onMetaSave })
 
-  // sessionDataが変更されたときにローカルステートを同期
-
-  useEffect(() => {
-    if (sessionData) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPurpose(sessionData.purpose || '')
-
-      setBackground(sessionData.background || '')
-
-      setRoles(sessionData.roles?.join(', ') || '')
-
-      setProcedure(sessionData.procedure || '')
-
-      setArtifacts(sessionData.artifacts?.join(', ') || '')
-
-      setTemperature(sessionData.hyperparameters?.temperature || 0.7)
-
-      setTopP(sessionData.hyperparameters?.top_p || 0.9)
-
-      setTopK(sessionData.hyperparameters?.top_k || 5)
-    }
-  }, [sessionData])
+  const {
+    temperature,
+    setTemperature,
+    handleTemperatureMouseUp,
+    topP,
+    setTopP,
+    handleTopPMouseUp,
+    topK,
+    setTopK,
+    handleTopKMouseUp,
+  } = useSessionHyperparameters({ sessionData, currentSessionId, onMetaSave })
 
   const handleSaveMeta = (): void => {
     if (!currentSessionId || !sessionData) return
@@ -123,73 +120,6 @@ export const SessionMeta = ({
       },
     }
     onMetaSave(currentSessionId, meta)
-  }
-
-  // 各フィールドのonBlurハンドラ
-  const handlePurposeBlur = (): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, { purpose: purpose })
-  }
-
-  const handleBackgroundBlur = (): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, { background: background })
-  }
-
-  const handleRolesBlur = (): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, {
-      roles: roles
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    })
-  }
-
-  const handleProcedureBlur = (): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, { procedure: procedure })
-  }
-
-  const handleArtifactsBlur = (): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, {
-      artifacts: artifacts
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    })
-  }
-
-  // スライダーのonMouseUpハンドラ
-  const handleTemperatureMouseUp = (): void => {
-    if (!currentSessionId || !sessionData) return
-    onMetaSave(currentSessionId, {
-      hyperparameters: {
-        ...sessionData.hyperparameters,
-        temperature: temperature,
-      },
-    })
-  }
-
-  const handleTopPMouseUp = (): void => {
-    if (!currentSessionId || !sessionData) return
-    onMetaSave(currentSessionId, {
-      hyperparameters: {
-        ...sessionData.hyperparameters,
-        top_p: topP,
-      },
-    })
-  }
-
-  const handleTopKMouseUp = (): void => {
-    if (!currentSessionId || !sessionData) return
-    onMetaSave(currentSessionId, {
-      hyperparameters: {
-        ...sessionData.hyperparameters,
-        top_k: topK,
-      },
-    })
   }
 
   const handleTodoCheckboxChange = (index: number): void => {

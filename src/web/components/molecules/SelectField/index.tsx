@@ -1,21 +1,21 @@
-import { JSX } from "react";
-import { useController, UseControllerProps, FieldValues } from "react-hook-form";
+import { JSX } from 'react'
+import { useController, UseControllerProps, FieldValues } from 'react-hook-form'
 
-import Label from "@/components/atoms/Label";
-import Select from "@/components/atoms/Select";
+import Label from '@/components/atoms/Label'
+import Select from '@/components/atoms/Select'
 
-import { errorMessageStyle } from "./style.css";
+import { errorMessageStyle } from './style.css'
 
 type SelectOption = {
-  value: string;
-  label: string;
-};
+  value: string
+  label: string
+}
 
 type SelectFieldProps<TFieldValues extends FieldValues = FieldValues> = {
-  label: string;
-  id: string;
-  options: SelectOption[];
-} & UseControllerProps<TFieldValues>;
+  label: string
+  id: string
+  options: SelectOption[]
+} & UseControllerProps<TFieldValues>
 
 const SelectField = <TFieldValues extends FieldValues = FieldValues>({
   label,
@@ -26,7 +26,7 @@ const SelectField = <TFieldValues extends FieldValues = FieldValues>({
   const {
     field,
     fieldState: { error },
-  } = useController(props);
+  } = useController(props)
 
   return (
     <div>
@@ -40,7 +40,7 @@ const SelectField = <TFieldValues extends FieldValues = FieldValues>({
       </Select>
       {error && <p className={errorMessageStyle}>{error.message}</p>}
     </div>
-  );
-};
+  )
+}
 
-export default SelectField;
+export default SelectField

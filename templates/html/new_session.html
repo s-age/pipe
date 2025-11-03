@@ -1,185 +1,324 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create New Session</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #343a40; }
-        .container { max-width: 800px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #007bff; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #495057; }
-        input[type="text"], textarea {
-            width: calc(100% - 22px);
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 20px;
+        background-color: #f8f9fa;
+        color: #343a40;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #007bff;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #495057;
+      }
+      input[type='text'],
+      textarea {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1em;
+        box-sizing: border-box;
+      }
+      textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      .action-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1em;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .action-btn:hover {
+        background-color: #0056b3;
+      }
+      .cancel-btn {
+        background-color: #6c757d;
+        margin-left: 10px;
+      }
+      .cancel-btn:hover {
+        background-color: #5a6268;
+      }
+      .error-message {
+        color: #dc3545;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body
+    data-settings="{{ settings | tojson | safe }}"
+    data-sessions="{{ sessions | tojson | safe }}"
+  >
+    <div class="container">
+      <h1>Create New Chat Session</h1>
+      <form id="new-session-form">
+        <label for="purpose">Purpose:</label>
+        <input type="text" id="purpose" name="purpose" required />
+
+        <label for="background">Background:</label>
+        <textarea id="background" name="background" required></textarea>
+
+        <label for="roles"
+          >Roles (comma-separated paths, e.g., roles/engineer.md):</label
+        >
+        <input type="text" id="roles" name="roles" />
+
+        <label for="parent">Parent Session (optional):</label>
+        <select
+          id="parent"
+          name="parent"
+          style="
+            width: 100%;
             padding: 10px;
             margin-bottom: 15px;
             border: 1px solid #ced4da;
             border-radius: 4px;
             font-size: 1em;
-            box-sizing: border-box;
-        }
-        textarea { min-height: 100px; resize: vertical; }
-        .action-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1em;
+          "
+        >
+          <option value="">None</option>
+          {% for id, meta in sessions %}
+          <option value="{{ id }}">{{ meta.purpose }}</option>
+          {% endfor %}
+        </select>
+
+        <label for="references">References (comma-separated paths):</label>
+        <input type="text" id="references" name="references" />
+
+        <label for="artifacts">Artifacts (comma-separated paths):</label>
+        <input type="text" id="artifacts" name="artifacts" />
+
+        <label for="procedure">Procedure (path to file):</label>
+        <input type="text" id="procedure" name="procedure" />
+
+        <label for="instruction">First Instruction:</label>
+        <textarea id="instruction" name="instruction" required></textarea>
+
+        <div style="margin-bottom: 15px">
+          <input
+            type="checkbox"
+            id="multi-step-reasoning"
+            name="multi_step_reasoning_enabled"
+          />
+          <label for="multi-step-reasoning">Enable Multi-step Reasoning</label>
+        </div>
+
+        <fieldset
+          style="
+            border: 1px solid #dee2e6;
+            padding: 15px;
             border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .action-btn:hover { background-color: #0056b3; }
-        .cancel-btn { background-color: #6c757d; margin-left: 10px; }
-        .cancel-btn:hover { background-color: #5a6268; }
-        .error-message { color: #dc3545; margin-top: 10px; }
-    </style>
-</head>
-<body data-settings='{{ settings | tojson | safe }}' data-sessions='{{ sessions | tojson | safe }}'>
-    <div class="container">
-        <h1>Create New Chat Session</h1>
-        <form id="new-session-form">
-            <label for="purpose">Purpose:</label>
-            <input type="text" id="purpose" name="purpose" required>
-
-            <label for="background">Background:</label>
-            <textarea id="background" name="background" required></textarea>
-
-            <label for="roles">Roles (comma-separated paths, e.g., roles/engineer.md):</label>
-            <input type="text" id="roles" name="roles">
-
-            <label for="parent">Parent Session (optional):</label>
-            <select id="parent" name="parent" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ced4da; border-radius: 4px; font-size: 1em;">
-                <option value="">None</option>
-                {% for id, meta in sessions %}
-                <option value="{{ id }}">{{ meta.purpose }}</option>
-                {% endfor %}
-            </select>
-
-            <label for="references">References (comma-separated paths):</label>
-            <input type="text" id="references" name="references">
-
-            <label for="artifacts">Artifacts (comma-separated paths):</label>
-            <input type="text" id="artifacts" name="artifacts">
-
-            <label for="procedure">Procedure (path to file):</label>
-            <input type="text" id="procedure" name="procedure">
-
-            <label for="instruction">First Instruction:</label>
-            <textarea id="instruction" name="instruction" required></textarea>
-
-            <div style="margin-bottom: 15px;">
-                <input type="checkbox" id="multi-step-reasoning" name="multi_step_reasoning_enabled">
-                <label for="multi-step-reasoning">Enable Multi-step Reasoning</label>
+            margin-bottom: 15px;
+          "
+        >
+          <legend style="padding: 0 5px">Hyperparameters</legend>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 15px;
+            "
+          >
+            {% if settings and settings.parameters %}
+            <div>
+              <label for="temperature"
+                >Temperature:
+                <span id="temperature-value"
+                  >{{ settings.parameters.temperature.value }}</span
+                ></label
+              >
+              <input
+                type="range"
+                id="temperature"
+                name="temperature"
+                min="0"
+                max="2"
+                step="0.1"
+                value="{{ settings.parameters.temperature.value }}"
+              />
             </div>
+            <div>
+              <label for="top_p"
+                >Top P:
+                <span id="top_p-value"
+                  >{{ settings.parameters.top_p.value }}</span
+                ></label
+              >
+              <input
+                type="range"
+                id="top_p"
+                name="top_p"
+                min="0"
+                max="1"
+                step="0.1"
+                value="{{ settings.parameters.top_p.value }}"
+              />
+            </div>
+            <div>
+              <label for="top_k"
+                >Top K:
+                <span id="top_k-value"
+                  >{{ settings.parameters.top_k.value }}</span
+                ></label
+              >
+              <input
+                type="range"
+                id="top_k"
+                name="top_k"
+                min="1"
+                max="50"
+                step="1"
+                value="{{ settings.parameters.top_k.value }}"
+              />
+            </div>
+            {% endif %}
+          </div>
+        </fieldset>
 
-            <fieldset style="border: 1px solid #dee2e6; padding: 15px; border-radius: 4px; margin-bottom: 15px;">
-                <legend style="padding: 0 5px;">Hyperparameters</legend>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                    {% if settings and settings.parameters %}
-                    <div>
-                        <label for="temperature">Temperature: <span id="temperature-value">{{ settings.parameters.temperature.value }}</span></label>
-                        <input type="range" id="temperature" name="temperature" min="0" max="2" step="0.1"
-                               value="{{ settings.parameters.temperature.value }}">
-                    </div>
-                    <div>
-                        <label for="top_p">Top P: <span id="top_p-value">{{ settings.parameters.top_p.value }}</span></label>
-                        <input type="range" id="top_p" name="top_p" min="0" max="1" step="0.1"
-                               value="{{ settings.parameters.top_p.value }}">
-                    </div>
-                    <div>
-                        <label for="top_k">Top K: <span id="top_k-value">{{ settings.parameters.top_k.value }}</span></label>
-                        <input type="range" id="top_k" name="top_k" min="1" max="50" step="1"
-                               value="{{ settings.parameters.top_k.value }}">
-                    </div>
-                    {% endif %}
-                </div>
-            </fieldset>
-
-            <button type="submit" class="action-btn" id="create-session-btn">Create Session</button>
-            <button type="button" class="action-btn cancel-btn" onclick="window.location.href='/'">Cancel</button>
-        </form>
-        <div id="error-message" class="error-message"></div>
+        <button type="submit" class="action-btn" id="create-session-btn">
+          Create Session
+        </button>
+        <button
+          type="button"
+          class="action-btn cancel-btn"
+          onclick="window.location.href='/'"
+        >
+          Cancel
+        </button>
+      </form>
+      <div id="error-message" class="error-message"></div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize sliders
-            const settings = JSON.parse(document.body.dataset.settings || '{}');
-            const sliders = [
-                { slider: 'temperature', value: 'temperature-value' },
-                { slider: 'top_p', value: 'top_p-value' },
-                { slider: 'top_k', value: 'top_k-value' }
-            ];
-            sliders.forEach(({ slider, value }) => {
-                const sliderEl = document.getElementById(slider);
-                const valueEl = document.getElementById(value);
-                if (sliderEl && valueEl && settings.parameters && settings.parameters[slider]) {
-                    sliderEl.value = settings.parameters[slider].value;
-                    valueEl.textContent = settings.parameters[slider].value;
-                    sliderEl.addEventListener('input', () => valueEl.textContent = sliderEl.value);
+      document.addEventListener('DOMContentLoaded', function () {
+        // Initialize sliders
+        const settings = JSON.parse(document.body.dataset.settings || '{}')
+        const sliders = [
+          { slider: 'temperature', value: 'temperature-value' },
+          { slider: 'top_p', value: 'top_p-value' },
+          { slider: 'top_k', value: 'top_k-value' },
+        ]
+        sliders.forEach(({ slider, value }) => {
+          const sliderEl = document.getElementById(slider)
+          const valueEl = document.getElementById(value)
+          if (
+            sliderEl &&
+            valueEl &&
+            settings.parameters &&
+            settings.parameters[slider]
+          ) {
+            sliderEl.value = settings.parameters[slider].value
+            valueEl.textContent = settings.parameters[slider].value
+            sliderEl.addEventListener(
+              'input',
+              () => (valueEl.textContent = sliderEl.value),
+            )
+          }
+        })
+
+        // Handle form submission
+        document
+          .getElementById('new-session-form')
+          .addEventListener('submit', function (event) {
+            event.preventDefault()
+
+            const createButton = document.getElementById('create-session-btn')
+            createButton.disabled = true
+            const originalButtonText = createButton.textContent
+            createButton.textContent = 'Creating...'
+
+            const purpose = document.getElementById('purpose').value
+            const background = document.getElementById('background').value
+            const roles = document.getElementById('roles').value
+            const parent = document.getElementById('parent').value
+            const references = document.getElementById('references').value
+            const artifacts = document.getElementById('artifacts').value
+            const procedure = document.getElementById('procedure').value
+            const instruction = document.getElementById('instruction').value
+            const multi_step_reasoning_enabled =
+              document.getElementById('multi-step-reasoning').checked
+
+            const temperature = document.getElementById('temperature').value
+            const top_p = document.getElementById('top_p').value
+            const top_k = document.getElementById('top_k').value
+
+            const hyperparameters = {}
+            if (temperature)
+              hyperparameters.temperature = { value: parseFloat(temperature) }
+            if (top_p) hyperparameters.top_p = { value: parseFloat(top_p) }
+            if (top_k) hyperparameters.top_k = { value: parseInt(top_k, 10) }
+
+            const errorMessageDiv = document.getElementById('error-message')
+            errorMessageDiv.textContent = ''
+
+            fetch('/api/session/new', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                purpose,
+                background,
+                roles,
+                parent,
+                references,
+                artifacts,
+                procedure,
+                instruction,
+                multi_step_reasoning_enabled,
+                hyperparameters,
+              }),
+            })
+              .then((response) => {
+                if (!response.ok) {
+                  return response.json().then((err) => {
+                    throw new Error(err.message || 'Server error')
+                  })
                 }
-            });
-
-            // Handle form submission
-            document.getElementById('new-session-form').addEventListener('submit', function(event) {
-                event.preventDefault();
-
-                const createButton = document.getElementById('create-session-btn');
-                createButton.disabled = true;
-                const originalButtonText = createButton.textContent;
-                createButton.textContent = 'Creating...';
-
-                const purpose = document.getElementById('purpose').value;
-                const background = document.getElementById('background').value;
-                const roles = document.getElementById('roles').value;
-                const parent = document.getElementById('parent').value;
-                const references = document.getElementById('references').value;
-                const artifacts = document.getElementById('artifacts').value;
-                const procedure = document.getElementById('procedure').value;
-                const instruction = document.getElementById('instruction').value;
-                const multi_step_reasoning_enabled = document.getElementById('multi-step-reasoning').checked;
-
-                const temperature = document.getElementById('temperature').value;
-                const top_p = document.getElementById('top_p').value;
-                const top_k = document.getElementById('top_k').value;
-
-                const hyperparameters = {};
-                if (temperature) hyperparameters.temperature = { value: parseFloat(temperature) };
-                if (top_p) hyperparameters.top_p = { value: parseFloat(top_p) };
-                if (top_k) hyperparameters.top_k = { value: parseInt(top_k, 10) };
-
-                const errorMessageDiv = document.getElementById('error-message');
-                errorMessageDiv.textContent = '';
-
-                fetch('/api/session/new', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ purpose, background, roles, parent, references, artifacts, procedure, instruction, multi_step_reasoning_enabled, hyperparameters })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => { throw new Error(err.message || 'Server error'); });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = `/session/${data.session_id}`;
-                    } else {
-                        errorMessageDiv.textContent = data.message || 'Failed to create session.';
-                    }
-                })
-                .catch(error => {
-                    errorMessageDiv.textContent = 'An error occurred: ' + error.message;
-                    console.error('Error:', error);
-                })
-                .finally(() => {
-                    createButton.disabled = false;
-                    createButton.textContent = originalButtonText;
-                });
-            });
-        });
+                return response.json()
+              })
+              .then((data) => {
+                if (data.success) {
+                  window.location.href = `/session/${data.session_id}`
+                } else {
+                  errorMessageDiv.textContent =
+                    data.message || 'Failed to create session.'
+                }
+              })
+              .catch((error) => {
+                errorMessageDiv.textContent = 'An error occurred: ' + error.message
+                console.error('Error:', error)
+              })
+              .finally(() => {
+                createButton.disabled = false
+                createButton.textContent = originalButtonText
+              })
+          })
+      })
     </script>
-</body>
+  </body>
 </html>

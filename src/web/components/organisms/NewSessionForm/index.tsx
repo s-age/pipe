@@ -1,14 +1,14 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { JSX } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import * as z from "zod";
+import { zodResolver } from '@hookform/resolvers/zod'
+import { JSX } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
+import * as z from 'zod'
 
-import Button from "@/components/atoms/Button";
-import Heading from "@/components/atoms/Heading";
-import CheckboxField from "@/components/molecules/CheckboxField";
-import InputField from "@/components/molecules/InputField";
-import SelectField from "@/components/molecules/SelectField";
-import TextareaField from "@/components/molecules/TextareaField";
+import Button from '@/components/atoms/Button'
+import Heading from '@/components/atoms/Heading'
+import CheckboxField from '@/components/molecules/CheckboxField'
+import InputField from '@/components/molecules/InputField'
+import SelectField from '@/components/molecules/SelectField'
+import TextareaField from '@/components/molecules/TextareaField'
 
 import {
   formContainer,
@@ -16,17 +16,17 @@ import {
   legendStyle,
   hyperparametersGrid,
   errorMessageStyle,
-} from "./style.css";
+} from './style.css'
 
 const formSchema = z.object({
-  purpose: z.string().min(1, "Purpose is required"),
-  background: z.string().min(1, "Background is required"),
+  purpose: z.string().min(1, 'Purpose is required'),
+  background: z.string().min(1, 'Background is required'),
   roles: z.string().optional(),
   parent: z.string().optional(),
   references: z.string().optional(),
   artifacts: z.string().optional(),
   procedure: z.string().optional(),
-  instruction: z.string().min(1, "First Instruction is required"),
+  instruction: z.string().min(1, 'First Instruction is required'),
   multi_step_reasoning_enabled: z.boolean().default(false),
   hyperparameters: z
     .object({
@@ -35,23 +35,23 @@ const formSchema = z.object({
       top_k: z.number().min(1).max(50).default(5),
     })
     .optional(),
-});
+})
 
-type NewSessionFormInputs = z.infer<typeof formSchema>;
+type NewSessionFormInputs = z.infer<typeof formSchema>
 
 type DefaultSettings = {
   parameters?: {
-    temperature?: { value: number };
-    top_p?: { value: number };
-    top_k?: { value: number };
-  };
-};
+    temperature?: { value: number }
+    top_p?: { value: number }
+    top_k?: { value: number }
+  }
+}
 
 type NewSessionFormProps = {
-  onSubmit: (data: NewSessionFormInputs) => void;
-  sessions: { value: string; label: string }[];
-  defaultSettings: DefaultSettings;
-};
+  onSubmit: (data: NewSessionFormInputs) => void
+  sessions: { value: string; label: string }[]
+  defaultSettings: DefaultSettings
+}
 
 const NewSessionForm: ({
   onSubmit,
@@ -65,14 +65,14 @@ const NewSessionForm: ({
   } = useForm<NewSessionFormInputs>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      purpose: "",
-      background: "",
-      roles: "",
-      parent: "",
-      references: "",
-      artifacts: "",
-      procedure: "",
-      instruction: "",
+      purpose: '',
+      background: '',
+      roles: '',
+      parent: '',
+      references: '',
+      artifacts: '',
+      procedure: '',
+      instruction: '',
       multi_step_reasoning_enabled: false,
       hyperparameters: {
         temperature: defaultSettings.parameters?.temperature?.value || 0.7,
@@ -80,13 +80,13 @@ const NewSessionForm: ({
         top_k: defaultSettings.parameters?.top_k?.value || 5,
       },
     },
-  });
+  })
 
-  const temperatureValue = useWatch({ control, name: "hyperparameters.temperature" });
-  const topPValue = useWatch({ control, name: "hyperparameters.top_p" });
-  const topKValue = useWatch({ control, name: "hyperparameters.top_k" });
+  const temperatureValue = useWatch({ control, name: 'hyperparameters.temperature' })
+  const topPValue = useWatch({ control, name: 'hyperparameters.top_p' })
+  const topKValue = useWatch({ control, name: 'hyperparameters.top_k' })
 
-  const parentSessionOptions = [{ value: "", label: "None" }, ...sessions];
+  const parentSessionOptions = [{ value: '', label: 'None' }, ...sessions]
 
   return (
     <div className={formContainer}>
@@ -188,13 +188,13 @@ const NewSessionForm: ({
         </fieldset>
 
         <Button type="submit" kind="primary" size="default" disabled={isSubmitting}>
-          {isSubmitting ? "Creating..." : "Create Session"}
+          {isSubmitting ? 'Creating...' : 'Create Session'}
         </Button>
         <Button
           type="button"
           kind="secondary"
           size="default"
-          onClick={() => (window.location.href = "/")}
+          onClick={() => (window.location.href = '/')}
         >
           Cancel
         </Button>
@@ -203,7 +203,7 @@ const NewSessionForm: ({
         )}
       </form>
     </div>
-  );
-};
+  )
+}
 
-export default NewSessionForm;
+export default NewSessionForm

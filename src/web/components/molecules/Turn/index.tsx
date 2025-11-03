@@ -1,8 +1,8 @@
-import { marked } from "marked";
-import { useState, JSX } from "react";
+import { marked } from 'marked'
+import { useState, JSX } from 'react'
 
-import Button from "@/components/atoms/Button";
-import Tooltip from "@/components/atoms/Tooltip";
+import Button from '@/components/atoms/Button'
+import Tooltip from '@/components/atoms/Tooltip'
 
 import {
   turnHeader,
@@ -28,33 +28,33 @@ import {
   deleteButtonIcon,
   copyButtonIcon,
   editButtonIcon,
-} from "./style.css";
+} from './style.css'
 
 type TurnData = {
-  type: string;
-  content?: string;
-  instruction?: string;
+  type: string
+  content?: string
+  instruction?: string
   response?: {
-    status: string;
+    status: string
     output?:
       | string
       | number
       | boolean
       | object
       | null
-      | (string | number | boolean | object | null)[];
-  };
-  timestamp?: string;
-};
+      | (string | number | boolean | object | null)[]
+  }
+  timestamp?: string
+}
 
 type TurnProps = {
-  turn: TurnData;
-  index: number;
-  sessionId: string;
-  expertMode: boolean;
-  onDeleteTurn: (sessionId: string, turnIndex: number) => void;
-  onForkSession: (sessionId: string, forkIndex: number) => void;
-};
+  turn: TurnData
+  index: number
+  sessionId: string
+  expertMode: boolean
+  onDeleteTurn: (sessionId: string, turnIndex: number) => void
+  onForkSession: (sessionId: string, forkIndex: number) => void
+}
 
 const Turn: ({
   turn,
@@ -71,47 +71,47 @@ const Turn: ({
   onDeleteTurn,
   onForkSession,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(
-    turn.content || turn.instruction || "",
-  );
+    turn.content || turn.instruction || '',
+  )
 
   const getHeaderContent = (type: string) => {
     switch (type) {
-      case "user_task":
-        return "You";
-      case "model_response":
-        return "Model";
-      case "function_calling":
-        return "Function Calling";
-      case "tool_response":
-        return "Tool Response";
-      case "compressed_history":
-        return "Compressed";
+      case 'user_task':
+        return 'You'
+      case 'model_response':
+        return 'Model'
+      case 'function_calling':
+        return 'Function Calling'
+      case 'tool_response':
+        return 'Tool Response'
+      case 'compressed_history':
+        return 'Compressed'
       default:
-        return "Unknown";
+        return 'Unknown'
     }
-  };
+  }
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(editedContent);
-      alert("Copied!");
+      await navigator.clipboard.writeText(editedContent)
+      alert('Copied!')
     } catch (err) {
-      console.error("Failed to copy: ", err);
-      alert("Failed to copy");
+      console.error('Failed to copy: ', err)
+      alert('Failed to copy')
     }
-  };
+  }
 
   const handleSaveEdit = () => {
     // TODO: API呼び出しを実装する
-    console.log(`Saving turn ${index} with new content: ${editedContent}`);
-    setIsEditing(false);
-  };
+    console.log(`Saving turn ${index} with new content: ${editedContent}`)
+    setIsEditing(false)
+  }
 
   const renderTurnContent = () => {
-    let markdownContent = "";
-    let statusClass = "";
+    let markdownContent = ''
+    let statusClass = ''
 
     if (isEditing) {
       return (
@@ -130,19 +130,19 @@ const Turn: ({
             </Button>
           </div>
         </div>
-      );
+      )
     }
 
     switch (turn.type) {
-      case "user_task":
-        return <pre className={editablePre}>{turn.instruction}</pre>;
-      case "model_response":
-      case "compressed_history":
-        markdownContent = turn.content || "";
+      case 'user_task':
+        return <pre className={editablePre}>{turn.instruction}</pre>
+      case 'model_response':
+      case 'compressed_history':
+        markdownContent = turn.content || ''
 
         return (
           <div className={turnContent}>
-            {turn.type === "compressed_history" && (
+            {turn.type === 'compressed_history' && (
               <p>
                 <strong>
                   <em>-- History Compressed --</em>
@@ -155,11 +155,11 @@ const Turn: ({
               dangerouslySetInnerHTML={{ __html: marked.parse(markdownContent.trim()) }}
             />
           </div>
-        );
-      case "function_calling":
-        return <pre className={turnContent}>{turn.response}</pre>;
-      case "tool_response":
-        statusClass = turn.response.status === "success" ? statusSuccess : statusError;
+        )
+      case 'function_calling':
+        return <pre className={turnContent}>{turn.response}</pre>
+      case 'tool_response':
+        statusClass = turn.response.status === 'success' ? statusSuccess : statusError
 
         return (
           <div className={toolResponseContent}>
@@ -169,28 +169,28 @@ const Turn: ({
               <pre>{JSON.stringify(turn.response.output, null, 2)}</pre>
             )}
           </div>
-        );
+        )
       default:
-        return <pre className={turnContent}>{JSON.stringify(turn, null, 2)}</pre>;
+        return <pre className={turnContent}>{JSON.stringify(turn, null, 2)}</pre>
     }
-  };
+  }
 
   const formatTimestamp = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
 
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  };
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  }
 
-  const timestamp = turn.timestamp ? formatTimestamp(new Date(turn.timestamp)) : "";
+  const timestamp = turn.timestamp ? formatTimestamp(new Date(turn.timestamp)) : ''
 
   return (
     <div
-      className={`${turnWrapper} ${turn.type === "user_task" ? userTaskAligned : otherTurnAligned}`}
+      className={`${turnWrapper} ${turn.type === 'user_task' ? userTaskAligned : otherTurnAligned}`}
     >
       <div className={turnContentBase} id={`turn-${index}`}>
         <div className={turnHeader}>
@@ -200,7 +200,7 @@ const Turn: ({
             <span className={turnTimestamp}>{timestamp}</span>
           </span>
           <div className={turnHeaderControls}>
-            {turn.type === "model_response" && (
+            {turn.type === 'model_response' && (
               <Tooltip content="Fork Session">
                 <Button
                   kind="ghost"
@@ -221,7 +221,7 @@ const Turn: ({
               </Button>
             </Tooltip>
             {expertMode &&
-              (turn.type === "user_task" || turn.type === "model_response") && (
+              (turn.type === 'user_task' || turn.type === 'model_response') && (
                 <Tooltip content="Edit Turn">
                   <Button kind="ghost" size="xsmall" onClick={() => setIsEditing(true)}>
                     <span className={`${materialIcons} ${editButtonIcon}`}>edit</span>
@@ -242,7 +242,7 @@ const Turn: ({
         {renderTurnContent()}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Turn;
+export default Turn

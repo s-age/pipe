@@ -1,11 +1,11 @@
-import clsx from "clsx";
-import React, { JSX } from "react";
+import clsx from 'clsx'
+import React, { JSX } from 'react'
 
-import Button from "@/components/atoms/Button";
-import Checkbox from "@/components/atoms/Checkbox";
-import InputText from "@/components/atoms/InputText";
-import Label from "@/components/atoms/Label";
-import TextArea from "@/components/atoms/TextArea";
+import Button from '@/components/atoms/Button'
+import Checkbox from '@/components/atoms/Checkbox'
+import InputText from '@/components/atoms/InputText'
+import Label from '@/components/atoms/Label'
+import TextArea from '@/components/atoms/TextArea'
 
 import {
   metaColumn,
@@ -34,57 +34,53 @@ import {
   referenceCheckboxMargin,
   stickySaveMetaButtonContainer,
   lockIconStyle,
-} from "./style.css";
-import { colors } from "../../../styles/colors.css";
+} from './style.css'
+import { colors } from '../../../styles/colors.css'
 
 type TodoItem = {
-  title: string;
-  checked: boolean;
-};
+  title: string
+  checked: boolean
+}
 
 type ReferenceItem = {
-  path: string;
-  persist: boolean;
-  ttl: number | null;
-  disabled: boolean;
-};
+  path: string
+  persist: boolean
+  ttl: number | null
+  disabled: boolean
+}
 
 type SessionData = {
-  purpose: string;
-  background: string;
-  roles: string[];
-  procedure: string;
-  artifacts: string[];
-  multi_step_reasoning_enabled: boolean;
+  purpose: string
+  background: string
+  roles: string[]
+  procedure: string
+  artifacts: string[]
+  multi_step_reasoning_enabled: boolean
   hyperparameters: {
-    temperature: { value: number };
-    top_p: { value: number };
-    top_k: { value: number };
-  };
-  todos: TodoItem[];
-  references: ReferenceItem[];
-};
+    temperature: { value: number }
+    top_p: { value: number }
+    top_k: { value: number }
+  }
+  todos: TodoItem[]
+  references: ReferenceItem[]
+}
 
 type SessionMetaProps = {
-  sessionData: SessionData | null;
-  currentSessionId: string | null;
-  onMetaSave: (sessionId: string, meta: SessionData) => void;
-  onUpdateTodo: (sessionId: string, todos: TodoItem[]) => void;
-  onDeleteAllTodos: (sessionId: string) => void;
-  onUpdateReferencePersist: (
-    sessionId: string,
-    index: number,
-    persist: boolean,
-  ) => void;
-  onUpdateReferenceTtl: (sessionId: string, index: number, ttl: number) => void;
+  sessionData: SessionData | null
+  currentSessionId: string | null
+  onMetaSave: (sessionId: string, meta: SessionData) => void
+  onUpdateTodo: (sessionId: string, todos: TodoItem[]) => void
+  onDeleteAllTodos: (sessionId: string) => void
+  onUpdateReferencePersist: (sessionId: string, index: number, persist: boolean) => void
+  onUpdateReferenceTtl: (sessionId: string, index: number, ttl: number) => void
   onUpdateReferenceDisabled: (
     sessionId: string,
     index: number,
     disabled: boolean,
-  ) => void;
-};
+  ) => void
+}
 
-export default function SessionMeta({
+export const SessionMeta = ({
   sessionData,
   currentSessionId,
   onMetaSave,
@@ -93,9 +89,9 @@ export default function SessionMeta({
   onUpdateReferencePersist,
   onUpdateReferenceTtl,
   onUpdateReferenceDisabled,
-}: SessionMetaProps): JSX.Element {
+}: SessionMetaProps): JSX.Element => {
   const handleSaveMeta = () => {
-    if (!currentSessionId || !sessionData) return;
+    if (!currentSessionId || !sessionData) return
     const meta = {
       purpose: sessionData.purpose,
       background: sessionData.background,
@@ -110,50 +106,49 @@ export default function SessionMeta({
       },
       todos: sessionData.todos,
       references: sessionData.references,
-    };
-    onMetaSave(currentSessionId, meta);
-  };
+    }
+    onMetaSave(currentSessionId, meta)
+  }
 
   const handleTodoCheckboxChange = (index: number) => {
-    if (!currentSessionId || !sessionData) return;
-    const newTodos = [...sessionData.todos];
-    newTodos[index].checked = !newTodos[index].checked;
-    onUpdateTodo(currentSessionId, newTodos);
-  };
+    if (!currentSessionId || !sessionData) return
+    const newTodos = [...sessionData.todos]
+    newTodos[index].checked = !newTodos[index].checked
+    onUpdateTodo(currentSessionId, newTodos)
+  }
 
   const handleReferenceCheckboxChange = (index: number) => {
-    if (!currentSessionId || !sessionData) return;
-    const newReferences = [...sessionData.references];
-    newReferences[index].disabled = !newReferences[index].disabled;
-    onUpdateReferenceDisabled(currentSessionId, index, newReferences[index].disabled);
-  };
+    if (!currentSessionId || !sessionData) return
+    const newReferences = [...sessionData.references]
+    newReferences[index].disabled = !newReferences[index].disabled
+    onUpdateReferenceDisabled(currentSessionId, index, newReferences[index].disabled)
+  }
 
   const handleReferencePersistToggle = (index: number) => {
-    if (!currentSessionId || !sessionData) return;
-    const newReferences = [...sessionData.references];
-    newReferences[index].persist = !newReferences[index].persist;
-    onUpdateReferencePersist(currentSessionId, index, newReferences[index].persist);
-  };
+    if (!currentSessionId || !sessionData) return
+    const newReferences = [...sessionData.references]
+    newReferences[index].persist = !newReferences[index].persist
+    onUpdateReferencePersist(currentSessionId, index, newReferences[index].persist)
+  }
 
   const handleReferenceTtlChange = (
     index: number,
-    action: "increment" | "decrement",
+    action: 'increment' | 'decrement',
   ) => {
-    if (!currentSessionId || !sessionData) return;
-    const newReferences = [...sessionData.references];
-    const currentTtl = newReferences[index].ttl !== null ? newReferences[index].ttl : 3;
-    const newTtl =
-      action === "increment" ? currentTtl + 1 : Math.max(0, currentTtl - 1);
-    newReferences[index].ttl = newTtl;
-    onUpdateReferenceTtl(currentSessionId, index, newTtl);
-  };
+    if (!currentSessionId || !sessionData) return
+    const newReferences = [...sessionData.references]
+    const currentTtl = newReferences[index].ttl !== null ? newReferences[index].ttl : 3
+    const newTtl = action === 'increment' ? currentTtl + 1 : Math.max(0, currentTtl - 1)
+    newReferences[index].ttl = newTtl
+    onUpdateReferenceTtl(currentSessionId, index, newTtl)
+  }
 
   if (!currentSessionId || !sessionData) {
     return (
       <div className={metaColumn}>
         <p className={noItemsMessage}>Select a session to view its meta information.</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -199,12 +194,12 @@ export default function SessionMeta({
             </Label>
             <InputText
               id="roles"
-              value={sessionData.roles?.join(", ") || ""}
+              value={sessionData.roles?.join(', ') || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 onMetaSave(currentSessionId, {
                   ...sessionData,
                   roles: e.target.value
-                    .split(",")
+                    .split(',')
                     .map((s) => s.trim())
                     .filter(Boolean),
                 })
@@ -234,12 +229,12 @@ export default function SessionMeta({
             </Label>
             <InputText
               id="artifacts"
-              value={sessionData.artifacts?.join(", ") || ""}
+              value={sessionData.artifacts?.join(', ') || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 onMetaSave(currentSessionId, {
                   ...sessionData,
                   artifacts: e.target.value
-                    .split(",")
+                    .split(',')
                     .map((s) => s.trim())
                     .filter(Boolean),
                 })
@@ -265,14 +260,14 @@ export default function SessionMeta({
                           <Button
                             kind="ghost"
                             size="xsmall"
-                            style={{ minWidth: "32px" }}
+                            style={{ minWidth: '32px' }}
                             onClick={() => handleReferencePersistToggle(index)}
                           >
                             <span
                               className={clsx(materialIcons, lockIconStyle)}
                               data-locked={reference.persist}
                             >
-                              {reference.persist ? "lock" : "lock_open"}
+                              {reference.persist ? 'lock' : 'lock_open'}
                             </span>
                           </Button>
                           <span
@@ -280,9 +275,9 @@ export default function SessionMeta({
                             className={referencePath}
                             style={{
                               textDecoration: reference.disabled
-                                ? "line-through"
-                                : "none",
-                              color: reference.disabled ? colors.grayText : "inherit",
+                                ? 'line-through'
+                                : 'none',
+                              color: reference.disabled ? colors.grayText : 'inherit',
                             }}
                           >
                             {reference.path}
@@ -292,7 +287,7 @@ export default function SessionMeta({
                           <Button
                             kind="primary"
                             size="xsmall"
-                            onClick={() => handleReferenceTtlChange(index, "decrement")}
+                            onClick={() => handleReferenceTtlChange(index, 'decrement')}
                           >
                             -
                           </Button>
@@ -302,7 +297,7 @@ export default function SessionMeta({
                           <Button
                             kind="primary"
                             size="xsmall"
-                            onClick={() => handleReferenceTtlChange(index, "increment")}
+                            onClick={() => handleReferenceTtlChange(index, 'increment')}
                           >
                             +
                           </Button>
@@ -444,5 +439,5 @@ export default function SessionMeta({
         </Button>
       </div>
     </div>
-  );
+  )
 }

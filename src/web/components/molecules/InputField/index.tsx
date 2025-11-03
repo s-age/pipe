@@ -1,26 +1,26 @@
-import { JSX } from "react";
-import { useController, UseControllerProps, FieldValues } from "react-hook-form";
+import { JSX } from 'react'
+import { useController, UseControllerProps, FieldValues } from 'react-hook-form'
 
-import InputText from "@/components/atoms/InputText";
-import Label from "@/components/atoms/Label";
+import InputText from '@/components/atoms/InputText'
+import Label from '@/components/atoms/Label'
 
-import { errorMessageStyle, inputFieldStyle } from "./style.css";
+import { errorMessageStyle, inputFieldStyle } from './style.css'
 
 type InputFieldProps<TFieldValues extends FieldValues = FieldValues> = {
-  label: string;
-  id: string;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-  min?: string;
-  max?: string;
-  step?: string;
-} & UseControllerProps<TFieldValues>;
+  label: string
+  id: string
+  type?: string
+  placeholder?: string
+  required?: boolean
+  min?: string
+  max?: string
+  step?: string
+} & UseControllerProps<TFieldValues>
 
 const InputField = <TFieldValues extends FieldValues = FieldValues>({
   label,
   id,
-  type = "text",
+  type = 'text',
   placeholder,
   required,
   min,
@@ -31,7 +31,7 @@ const InputField = <TFieldValues extends FieldValues = FieldValues>({
   const {
     field,
     fieldState: { error },
-  } = useController(props);
+  } = useController(props)
 
   return (
     <div>
@@ -49,7 +49,7 @@ const InputField = <TFieldValues extends FieldValues = FieldValues>({
       />
       {error && <p className={errorMessageStyle}>{error.message}</p>}
     </div>
-  );
-};
+  )
+}
 
-export default InputField;
+export default InputField

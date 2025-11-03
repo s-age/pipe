@@ -1,8 +1,8 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
-import HomePage from "./components/pages/HomePage/index";
-import NewSessionPage from "./components/pages/NewSessionPage/index";
+import HomePage from './components/pages/HomePage/index'
+import NewSessionPage from './components/pages/NewSessionPage/index'
 
 const App: React.FC = () => (
   <Router>
@@ -12,6 +12,6 @@ const App: React.FC = () => (
       <Route path="/new_session" element={<NewSessionPage />} />
     </Routes>
   </Router>
-);
+)
 
-export default App;
+export default App

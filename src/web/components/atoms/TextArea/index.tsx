@@ -1,11 +1,11 @@
-import { TextareaHTMLAttributes, JSX } from "react";
+import { TextareaHTMLAttributes, JSX } from 'react'
 
-import { textareaStyle } from "./style.css";
+import { textareaStyle } from './style.css'
 
-type TextAreaProps = {} & TextareaHTMLAttributes<HTMLTextAreaElement>;
+type TextAreaProps = {} & TextareaHTMLAttributes<HTMLTextAreaElement>
 
 const TextArea: (props: TextAreaProps) => JSX.Element = (props) => (
   <textarea className={textareaStyle} {...props} />
-);
+)
 
-export default TextArea;
+export default TextArea

@@ -24,12 +24,14 @@ graph TD
 
 1.  **Create and Verify Summary**: When the user provides a target `session_id`, `start_turn`, `end_turn`, `policy`, and `target_length`, call the `create_verified_summary` tool with these parameters. **CRITICAL: If the user's instruction contains a `session_id`, you MUST pass it as the `session_id` argument to the tool.** This single tool handles both summary generation and AI-powered verification.
 2.  **Analyze Verification Result**: The tool will return a `status` of "approved" or "rejected", along with a `verifier_session_id`.
-    *   If the status is "rejected", report the reasoning to the user and ask them to provide a new policy or different parameters. Then, call the `delete_session` tool to clean up the failed verifier session using its ID. After that, restart the workflow.
-    *   If the status is "approved", proceed to the next step.
+    - If the status is "rejected", report the reasoning to the user and ask them to provide a new policy or different parameters. Then, call the `delete_session` tool to clean up the failed verifier session using its ID. After that, restart the workflow.
+    - If the status is "approved", proceed to the next step.
 3.  **Final User Confirmation**: Present the AI-verified summary and the `verifier_session_id` to the human user. Ask for their final approval to replace the original turns.
 4.  **Execute Replacement**: Only after receiving explicit "yes" from the user, call the `replace_session_turns` tool to finalize the compression.
 5.  **Clean Up**: After the replacement is successful, call the `delete_session` tool with the `verifier_session_id` to remove the temporary verification session.
+
 ---
+
 ## Addendum: High-Priority Execution Instructions
 
 The above workflow description is a general guide. When executing a compression task, you MUST follow the specific, higher-priority instructions below.

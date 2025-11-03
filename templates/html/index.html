@@ -1,212 +1,479 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-color-mode="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Conductor Sessions</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown.min.css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-<body
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+  </head>
+  <body
     data-timezone="{{ settings.timezone }}"
     data-session-turns-count="{% if current_session_id %}{{ session_data.turns | length }}{% else %}0{% endif %}"
     data-expert-mode="{{ expert_mode | tojson }}"
     data-current-session-id="{{ current_session_id }}"
-    data-session-data='{{ session_data | tojson | safe }}'
-    data-sessions='{{ sessions | tojson | safe }}'
->
+    data-session-data="{{ session_data | tojson | safe }}"
+    data-sessions="{{ sessions | tojson | safe }}"
+  >
     <!-- Column 1: Session List -->
     <div id="sessions-column" class="column">
-        <h2>Sessions</h2>
-        <button class="action-btn save-btn" style="width: 100%; margin-bottom: 15px;" id="new-chat-button">+ New Chat</button>
-        <ul id="session-list-container">
-            <!-- Session tree will be built by JavaScript -->
-        </ul>
+      <h2>Sessions</h2>
+      <button
+        class="action-btn save-btn"
+        style="width: 100%; margin-bottom: 15px"
+        id="new-chat-button"
+      >
+        + New Chat
+      </button>
+      <ul id="session-list-container">
+        <!-- Session tree will be built by JavaScript -->
+      </ul>
     </div>
     <!-- Column 2: Turns List -->
     <div id="turns-column" class="column">
-        {% if current_session_id %}
-        <div id="turns-column-header" style="position: sticky; top: 0; background-color: #f0f2f5; padding: 10px 20px; border-bottom: 1px solid #dee2e6; z-index: 5;">
-            <h2>{{ session_data.purpose }} {% if context_limit > 0 and token_count is not none %}({{ ((context_limit - token_count) / context_limit * 100) | round(0, 'floor') }}% context left){% endif %}</h2>
-            <button class="action-btn delete-session-btn" data-session-id="{{ current_session_id }}">Delete Session</button>
-        </div>
-        {% endif %}
-        {% if current_session_id %}
-        <section id="turns-list-section">
-
+      {% if current_session_id %}
+      <div
+        id="turns-column-header"
+        style="
+          position: sticky;
+          top: 0;
+          background-color: #f0f2f5;
+          padding: 10px 20px;
+          border-bottom: 1px solid #dee2e6;
+          z-index: 5;
+        "
+      >
+        <h2>
+          {{ session_data.purpose }} {% if context_limit > 0 and token_count is not none
+          %}({{ ((context_limit - token_count) / context_limit * 100) | round(0,
+          'floor') }}% context left){% endif %}
+        </h2>
+        <button
+          class="action-btn delete-session-btn"
+          data-session-id="{{ current_session_id }}"
+        >
+          Delete Session
+        </button>
+      </div>
+      {% endif %} {% if current_session_id %}
+      <section id="turns-list-section">
         {% for turn in turns %}
         <div class="turn {{ turn.type }}" id="turn-{{ loop.index0 }}">
-            <div class="turn-header">
-                <span>
-                    <strong style="color: #007bff; margin-right: 10px;">{{ loop.index }}:</strong>
-                    {% if turn.type == 'user_task' %}You
-                    {% elif turn.type == 'model_response' %}Model
-                    {% elif turn.type == 'function_calling' %}Function Calling
-                    {% elif turn.type == 'tool_response' %}Tool Response
-                    {% elif turn.type == 'compressed_history' %}Compressed
-                    {% else %}Unknown{% endif %}
-                    <span style="font-weight: normal; color: #999; margin-left: 10px;">{{ turn.timestamp.replace('T', ' ').split('.')[0] if turn.timestamp else '' }}</span>
-                </span>
+          <div class="turn-header">
+            <span>
+              <strong style="color: #007bff; margin-right: 10px"
+                >{{ loop.index }}:</strong
+              >
+              {% if turn.type == 'user_task' %}You {% elif turn.type == 'model_response'
+              %}Model {% elif turn.type == 'function_calling' %}Function Calling {% elif
+              turn.type == 'tool_response' %}Tool Response {% elif turn.type ==
+              'compressed_history' %}Compressed {% else %}Unknown{% endif %}
+              <span style="font-weight: normal; color: #999; margin-left: 10px"
+                >{{ turn.timestamp.replace('T', ' ').split('.')[0] if turn.timestamp
+                else '' }}</span
+              >
+            </span>
 
-                <div class="turn-header-controls">
-                    {% if turn.type == 'model_response' %}
-                    <button class="action-btn fork-btn" data-session-id="{{ current_session_id }}" data-fork-index="{{ loop.index0 }}">Fork</button>
-                    {% endif %}
-                    <button class="action-btn copy-turn-btn" data-turn-index="{{ loop.index0 }}">Copy</button>
-                    {% if expert_mode and (turn.type == 'user_task' or turn.type == 'model_response') %}
-                    <button class="action-btn edit-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}" data-turn-type="{{ turn.type }}">Edit</button>
-                    {% endif %}
-                    <button class="action-btn delete-btn" data-session-id="{{ current_session_id }}" data-turn-index="{{ loop.index0 }}">Delete</button>
-                </div>
+            <div class="turn-header-controls">
+              {% if turn.type == 'model_response' %}
+              <button
+                class="action-btn fork-btn"
+                data-session-id="{{ current_session_id }}"
+                data-fork-index="{{ loop.index0 }}"
+              >
+                Fork
+              </button>
+              {% endif %}
+              <button
+                class="action-btn copy-turn-btn"
+                data-turn-index="{{ loop.index0 }}"
+              >
+                Copy
+              </button>
+              {% if expert_mode and (turn.type == 'user_task' or turn.type ==
+              'model_response') %}
+              <button
+                class="action-btn edit-btn"
+                data-session-id="{{ current_session_id }}"
+                data-turn-index="{{ loop.index0 }}"
+                data-turn-type="{{ turn.type }}"
+              >
+                Edit
+              </button>
+              {% endif %}
+              <button
+                class="action-btn delete-btn"
+                data-session-id="{{ current_session_id }}"
+                data-turn-index="{{ loop.index0 }}"
+              >
+                Delete
+              </button>
             </div>
+          </div>
 
-            <div class="turn-content">
-                {% if turn.type == 'user_task' %}
-                    <pre class="editable" data-field="instruction">{{ turn.instruction }}</pre>
-                {% elif turn.type == 'model_response' or turn.type == 'compressed_history' %}
-                    {% if turn.type == 'compressed_history' %}<p><strong><em>-- History Compressed --</em></strong></p>{% endif %}
-                    <div class="raw-markdown" style="display: none;">{{ turn.content }}</div>
-                    <div class="rendered-markdown markdown-body editable" data-field="content"></div>
-                {% elif turn.type == 'function_calling' %}
-                    <pre>{{ turn.response }}</pre>
-                {% elif turn.type == 'tool_response' %}
-                    <div class="tool-response-content">
-                        <strong>Status: </strong>
-                        <span class="status-{{ turn.response.status }}">{{ turn.response.status }}</span>
-                    </div>
-                {% endif %}
+          <div class="turn-content">
+            {% if turn.type == 'user_task' %}
+            <pre class="editable" data-field="instruction">{{ turn.instruction }}</pre>
+            {% elif turn.type == 'model_response' or turn.type == 'compressed_history'
+            %} {% if turn.type == 'compressed_history' %}
+            <p>
+              <strong><em>-- History Compressed --</em></strong>
+            </p>
+            {% endif %}
+            <div class="raw-markdown" style="display: none">{{ turn.content }}</div>
+            <div
+              class="rendered-markdown markdown-body editable"
+              data-field="content"
+            ></div>
+            {% elif turn.type == 'function_calling' %}
+            <pre>{{ turn.response }}</pre>
+            {% elif turn.type == 'tool_response' %}
+            <div class="tool-response-content">
+              <strong>Status: </strong>
+              <span class="status-{{ turn.response.status }}"
+                >{{ turn.response.status }}</span
+              >
             </div>
+            {% endif %}
+          </div>
         </div>
         {% endfor %}
-
-        </section>
-        {% else %}
-        <div class="welcome-message">
-            <h1>Welcome</h1>
-            <p>Select a session from the sidebar to view its details.</p>
-        </div>
-        {% endif %}
-        
-        {% if current_session_id %}
-        <section class="new-instruction-control">
-            <textarea id="new-instruction-text" placeholder="Enter your instruction here..."></textarea>
-            <button class="action-btn send-instruction-btn" data-session-id="{{ current_session_id }}">Send Instruction</button>
-        </section>
-        {% endif %}
+      </section>
+      {% else %}
+      <div class="welcome-message">
+        <h1>Welcome</h1>
+        <p>Select a session from the sidebar to view its details.</p>
+      </div>
+      {% endif %} {% if current_session_id %}
+      <section class="new-instruction-control">
+        <textarea
+          id="new-instruction-text"
+          placeholder="Enter your instruction here..."
+        ></textarea>
+        <button
+          class="action-btn send-instruction-btn"
+          data-session-id="{{ current_session_id }}"
+        >
+          Send Instruction
+        </button>
+      </section>
+      {% endif %}
     </div>
 
     <!-- Column 3: Meta & Actions -->
     <div id="meta-column" class="column">
-        {% if current_session_id %}
-        <input type="hidden" id="current-session-id" value="{{ current_session_id }}">
-        <section style="flex: 5 0 0; display: flex; flex-direction: column; box-sizing: border-box; min-height: 0;">
-            <div class="session-meta" id="session-meta-view" style="flex: 1; overflow-y: auto;">
-                <div class="meta-item">
-                    <strong>Purpose:</strong>
-                    <input type="text" data-field="purpose" value="{{ session_data.purpose }}" style="width: 100%; box-sizing: border-box;">
-                </div>
-                <div class="meta-item">
-                    <strong>Background:</strong>
-                    <textarea data-field="background" style="width: 100%; box-sizing: border-box; min-height: 100px;">{{ session_data.background }}</textarea>
-                </div>
-                <div class="meta-item">
-                    <strong>Roles:</strong>
-                    <input type="text" data-field="roles" value="{{ session_data.roles | join(', ') }}" style="width: 100%; box-sizing: border-box;">
-                </div>
-                <div class="meta-item">
-                    <strong>Procedure:</strong>
-                    <input type="text" data-field="procedure" value="{{ session_data.procedure if session_data.procedure else '' }}" style="width: 100%; box-sizing: border-box;">
-                    <textarea data-field="procedure_content" style="width: 100%; box-sizing: border-box; min-height: 150px; margin-top: 10px;" readonly>{{ session_data.procedure_content if session_data.procedure_content else '' }}</textarea>
-                </div>
-                <div class="meta-item">
-                    <strong>Artifacts:</strong>
-                    <input type="text" data-field="artifacts" value="{% if session_data.artifacts %}{{ session_data.artifacts | join(', ') }}{% endif %}" style="width: 100%; box-sizing: border-box;">
-                </div>
+      {% if current_session_id %}
+      <input type="hidden" id="current-session-id" value="{{ current_session_id }}" />
+      <section
+        style="
+          flex: 5 0 0;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+          min-height: 0;
+        "
+      >
+        <div
+          class="session-meta"
+          id="session-meta-view"
+          style="flex: 1; overflow-y: auto"
+        >
+          <div class="meta-item">
+            <strong>Purpose:</strong>
+            <input
+              type="text"
+              data-field="purpose"
+              value="{{ session_data.purpose }}"
+              style="width: 100%; box-sizing: border-box"
+            />
+          </div>
+          <div class="meta-item">
+            <strong>Background:</strong>
+            <textarea
+              data-field="background"
+              style="width: 100%; box-sizing: border-box; min-height: 100px"
+            >
+{{ session_data.background }}</textarea
+            >
+          </div>
+          <div class="meta-item">
+            <strong>Roles:</strong>
+            <input
+              type="text"
+              data-field="roles"
+              value="{{ session_data.roles | join(', ') }}"
+              style="width: 100%; box-sizing: border-box"
+            />
+          </div>
+          <div class="meta-item">
+            <strong>Procedure:</strong>
+            <input
+              type="text"
+              data-field="procedure"
+              value="{{ session_data.procedure if session_data.procedure else '' }}"
+              style="width: 100%; box-sizing: border-box"
+            />
+            <textarea
+              data-field="procedure_content"
+              style="
+                width: 100%;
+                box-sizing: border-box;
+                min-height: 150px;
+                margin-top: 10px;
+              "
+              readonly
+            >
+{{ session_data.procedure_content if session_data.procedure_content else '' }}</textarea
+            >
+          </div>
+          <div class="meta-item">
+            <strong>Artifacts:</strong>
+            <input
+              type="text"
+              data-field="artifacts"
+              value="{% if session_data.artifacts %}{{ session_data.artifacts | join(', ') }}{% endif %}"
+              style="width: 100%; box-sizing: border-box"
+            />
+          </div>
 
-                <div class="meta-item">
-                    <strong>References:</strong>
-                    <ul id="references-list" style="list-style: none; padding-left: 0; display: {% if not session_data.references or session_data.references|length == 0 %}none{% else %}block{% endif %};">
-                        {% for reference in session_data.references %}
-                            <li style="margin-bottom: 10px;">
-                                <div style="display: flex; align-items: center; justify-content: space-between;">
-                                    <label style="cursor: pointer; display: flex; align-items: center; flex-grow: 1;">
-                                        <input type="checkbox" class="reference-checkbox" data-index="{{ loop.index0 }}" {% if not reference.disabled %}checked{% endif %} style="margin-right: 8px;">
-                                        <button class="action-btn reference-persist-toggle" data-index="{{ loop.index0 }}" data-persist="{{ 'true' if reference.persist else 'false' }}" style="background: none; border: none; padding: 0; cursor: pointer; margin-right: 5px;">
-                                            <span class="material-icons" style="font-size: 16px; vertical-align: middle; color: {% if reference.persist %}#007bff{% else %}#ccc{% endif %};">lock</span>
-                                        </button>
-                                        <span data-testid="reference-path" style="word-break: break-all; {% if reference.disabled %}text-decoration: line-through; color: #888;{% endif %}">{{ reference.path }}</span>
-                                    </label>
-                                    <div class="ttl-controls" style="display: flex; align-items: center; margin-left: 10px;">
-                                        <button class="ttl-btn" data-index="{{ loop.index0 }}" data-action="decrement">-</button>
-                                        <span class="ttl-value" style="padding: 0 8px; font-weight: bold;">{{ reference.ttl if reference.ttl is not none else 3 }}</span>
-                                        <button class="ttl-btn" data-index="{{ loop.index0 }}" data-action="increment">+</button>
-                                    </div>
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                    <p id="no-references-message" style="display: {% if not session_data.references or session_data.references|length == 0 %}block{% else %}none{% endif %};">No references for this session.</p>
+          <div class="meta-item">
+            <strong>References:</strong>
+            <ul
+              id="references-list"
+              style="list-style: none; padding-left: 0; display: {% if not session_data.references or session_data.references|length == 0 %}none{% else %}block{% endif %};"
+            >
+              {% for reference in session_data.references %}
+              <li style="margin-bottom: 10px">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                  "
+                >
+                  <label
+                    style="
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                      flex-grow: 1;
+                    "
+                  >
+                    <input
+                      type="checkbox"
+                      class="reference-checkbox"
+                      data-index="{{ loop.index0 }}"
+                      {%
+                      if
+                      not
+                      reference.disabled
+                      %}checked{%
+                      endif
+                      %}
+                      style="margin-right: 8px"
+                    />
+                    <button
+                      class="action-btn reference-persist-toggle"
+                      data-index="{{ loop.index0 }}"
+                      data-persist="{{ 'true' if reference.persist else 'false' }}"
+                      style="
+                        background: none;
+                        border: none;
+                        padding: 0;
+                        cursor: pointer;
+                        margin-right: 5px;
+                      "
+                    >
+                      <span
+                        class="material-icons"
+                        style="font-size: 16px; vertical-align: middle; color: {% if reference.persist %}#007bff{% else %}#ccc{% endif %};"
+                        >lock</span
+                      >
+                    </button>
+                    <span
+                      data-testid="reference-path"
+                      style="word-break: break-all; {% if reference.disabled %}text-decoration: line-through; color: #888;{% endif %}"
+                      >{{ reference.path }}</span
+                    >
+                  </label>
+                  <div
+                    class="ttl-controls"
+                    style="display: flex; align-items: center; margin-left: 10px"
+                  >
+                    <button
+                      class="ttl-btn"
+                      data-index="{{ loop.index0 }}"
+                      data-action="decrement"
+                    >
+                      -
+                    </button>
+                    <span class="ttl-value" style="padding: 0 8px; font-weight: bold"
+                      >{{ reference.ttl if reference.ttl is not none else 3 }}</span
+                    >
+                    <button
+                      class="ttl-btn"
+                      data-index="{{ loop.index0 }}"
+                      data-action="increment"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
+              </li>
+              {% endfor %}
+            </ul>
+            <p
+              id="no-references-message"
+              style="display: {% if not session_data.references or session_data.references|length == 0 %}block{% else %}none{% endif %};"
+            >
+              No references for this session.
+            </p>
+          </div>
 
-                <div class="meta-item">
-                    <label>
-                        <input type="checkbox" data-field="multi_step_reasoning_enabled" {% if session_data.multi_step_reasoning_enabled %}checked{% endif %}>
-                        <strong>Multi-step Reasoning</strong>
-                    </label>
-                </div>
-                <div class="meta-item">
-                    <strong>Hyperparameters:</strong>
-                    {% if session_data.hyperparameters %}
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label>Temperature:</label>
-                        <div>
-                            <input type="range" data-field="temperature" min="0" max="2" step="0.1" value="{{ session_data.hyperparameters.temperature.value if session_data.hyperparameters.temperature else 0 }}">
-                            <span id="edit-temperature-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.temperature.value if session_data.hyperparameters.temperature else 0 }}</span>
-                        </div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label>Top P:</label>
-                        <div>
-                            <input type="range" data-field="top_p" min="0" max="1" step="0.1" value="{{ session_data.hyperparameters.top_p.value if session_data.hyperparameters.top_p else 0 }}">
-                            <span id="edit-top_p-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.top_p.value if session_data.hyperparameters.top_p else 0 }}</span>
-                        </div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label>Top K:</label>
-                        <div>
-                            <input type="range" data-field="top_k" min="1" max="50" step="1" value="{{ session_data.hyperparameters.top_k.value if session_data.hyperparameters.top_k else 0 }}">
-                            <span id="edit-top_k-value" style="display: inline-block; width: 30px; text-align: right;">{{ session_data.hyperparameters.top_k.value if session_data.hyperparameters.top_k else 0 }}</span>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="meta-item">
-                    <strong>Todos:</strong>
-                    <button class="action-btn" id="delete-todos-btn" data-session-id="{{ current_session_id }}" style="float: right; margin-bottom: 5px; background-color: #dc3545;">Delete All</button>
-                    <ul id="todos-list" style="list-style: none; padding-left: 0; display: {% if not session_data.todos or session_data.todos|length == 0 %}none{% else %}block{% endif %};">
-                        {% if session_data.todos %}
-                        {% for todo in session_data.todos %}
-                            <li style="margin-bottom: 10px;">
-                                <label style="cursor: pointer;">
-                                    <input type="checkbox" class="todo-checkbox" data-index="{{ loop.index0 }}" {% if todo.checked %}checked{% endif %} style="margin-right: 8px;">
-                                    <strong style="display: inline;">{{ todo.title }}</strong>
-                                </label>
-                            </li>
-                        {% endfor %}
-                        {% endif %}
-                    </ul>
-                    <p id="no-todos-message" style="display: {% if not session_data.todos or session_data.todos|length == 0 %}block{% else %}none{% endif %};">No todos for this session.</p>
-                </div>
-
+          <div class="meta-item">
+            <label>
+              <input
+                type="checkbox"
+                data-field="multi_step_reasoning_enabled"
+                {%
+                if
+                session_data.multi_step_reasoning_enabled
+                %}checked{%
+                endif
+                %}
+              />
+              <strong>Multi-step Reasoning</strong>
+            </label>
+          </div>
+          <div class="meta-item">
+            <strong>Hyperparameters:</strong>
+            {% if session_data.hyperparameters %}
+            <div
+              style="display: flex; justify-content: space-between; align-items: center"
+            >
+              <label>Temperature:</label>
+              <div>
+                <input
+                  type="range"
+                  data-field="temperature"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value="{{ session_data.hyperparameters.temperature.value if session_data.hyperparameters.temperature else 0 }}"
+                />
+                <span
+                  id="edit-temperature-value"
+                  style="display: inline-block; width: 30px; text-align: right"
+                  >{{ session_data.hyperparameters.temperature.value if
+                  session_data.hyperparameters.temperature else 0 }}</span
+                >
+              </div>
             </div>
-            <button class="action-btn save-btn" id="save-meta-btn" data-session-id="{{ current_session_id }}">Save Meta</button>
-        </section>
-        {% endif %}
+            <div
+              style="display: flex; justify-content: space-between; align-items: center"
+            >
+              <label>Top P:</label>
+              <div>
+                <input
+                  type="range"
+                  data-field="top_p"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value="{{ session_data.hyperparameters.top_p.value if session_data.hyperparameters.top_p else 0 }}"
+                />
+                <span
+                  id="edit-top_p-value"
+                  style="display: inline-block; width: 30px; text-align: right"
+                  >{{ session_data.hyperparameters.top_p.value if
+                  session_data.hyperparameters.top_p else 0 }}</span
+                >
+              </div>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; align-items: center"
+            >
+              <label>Top K:</label>
+              <div>
+                <input
+                  type="range"
+                  data-field="top_k"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value="{{ session_data.hyperparameters.top_k.value if session_data.hyperparameters.top_k else 0 }}"
+                />
+                <span
+                  id="edit-top_k-value"
+                  style="display: inline-block; width: 30px; text-align: right"
+                  >{{ session_data.hyperparameters.top_k.value if
+                  session_data.hyperparameters.top_k else 0 }}</span
+                >
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          <div class="meta-item">
+            <strong>Todos:</strong>
+            <button
+              class="action-btn"
+              id="delete-todos-btn"
+              data-session-id="{{ current_session_id }}"
+              style="float: right; margin-bottom: 5px; background-color: #dc3545"
+            >
+              Delete All
+            </button>
+            <ul
+              id="todos-list"
+              style="list-style: none; padding-left: 0; display: {% if not session_data.todos or session_data.todos|length == 0 %}none{% else %}block{% endif %};"
+            >
+              {% if session_data.todos %} {% for todo in session_data.todos %}
+              <li style="margin-bottom: 10px">
+                <label style="cursor: pointer">
+                  <input
+                    type="checkbox"
+                    class="todo-checkbox"
+                    data-index="{{ loop.index0 }}"
+                    {%
+                    if
+                    todo.checked
+                    %}checked{%
+                    endif
+                    %}
+                    style="margin-right: 8px"
+                  />
+                  <strong style="display: inline">{{ todo.title }}</strong>
+                </label>
+              </li>
+              {% endfor %} {% endif %}
+            </ul>
+            <p
+              id="no-todos-message"
+              style="display: {% if not session_data.todos or session_data.todos|length == 0 %}block{% else %}none{% endif %};"
+            >
+              No todos for this session.
+            </p>
+          </div>
+        </div>
+        <button
+          class="action-btn save-btn"
+          id="save-meta-btn"
+          data-session-id="{{ current_session_id }}"
+        >
+          Save Meta
+        </button>
+      </section>
+      {% endif %}
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-</body>
+  </body>
 </html>
-    

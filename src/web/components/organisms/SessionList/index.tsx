@@ -1,8 +1,8 @@
-import React, { JSX } from "react";
+import React, { JSX } from 'react'
 
-import Button from "@/components/atoms/Button";
-import Heading from "@/components/atoms/Heading";
-import { h2Style } from "@/components/atoms/Heading/style.css";
+import Button from '@/components/atoms/Button'
+import Heading from '@/components/atoms/Heading'
+import { h2Style } from '@/components/atoms/Heading/style.css'
 
 import {
   sessionListColumn,
@@ -12,24 +12,24 @@ import {
   sessionLinkActive,
   sessionIdStyle,
   stickyNewChatButtonContainer,
-} from "./style.css";
+} from './style.css'
 
 type SessionMeta = {
-  purpose: string;
-  [key: string]: string | number | boolean | object | null | undefined;
-};
+  purpose: string
+  [key: string]: string | number | boolean | object | null | undefined
+}
 
 type SessionTreeNode = {
-  meta: SessionMeta | null;
-  id?: string;
-  children: Record<string, SessionTreeNode>;
-};
+  meta: SessionMeta | null
+  id?: string
+  children: Record<string, SessionTreeNode>
+}
 
 type SessionListProps = {
-  sessions: [string, SessionMeta][];
-  currentSessionId: string | null;
-  onSessionSelect: (sessionId: string) => void;
-};
+  sessions: [string, SessionMeta][]
+  currentSessionId: string | null
+  onSessionSelect: (sessionId: string) => void
+}
 
 const SessionList = ({
   sessions,
@@ -40,70 +40,70 @@ const SessionList = ({
   const buildSessionTree = (
     sessionsData: [string, SessionMeta][],
   ): Record<string, SessionTreeNode> => {
-    const tree: Record<string, SessionTreeNode> = {};
+    const tree: Record<string, SessionTreeNode> = {}
     sessionsData.forEach(([id, meta]) => {
-      const parts = id.split("/");
-      let currentLevel: Record<string, SessionTreeNode> = tree;
+      const parts = id.split('/')
+      let currentLevel: Record<string, SessionTreeNode> = tree
       parts.forEach((part, index) => {
         if (!currentLevel[part]) {
-          currentLevel[part] = { meta: null, children: {} };
+          currentLevel[part] = { meta: null, children: {} }
         }
         if (index === parts.length - 1) {
-          currentLevel[part].meta = meta;
-          currentLevel[part].id = id;
+          currentLevel[part].meta = meta
+          currentLevel[part].id = id
         }
-        currentLevel = currentLevel[part].children;
-      });
-    });
+        currentLevel = currentLevel[part].children
+      })
+    })
 
-    return tree;
-  };
+    return tree
+  }
 
   const createNode = (
     branch: Record<string, SessionTreeNode>,
     level: number,
   ): React.ReactNode[] => {
-    const items: React.ReactNode[] = [];
+    const items: React.ReactNode[] = []
     for (const key in branch) {
-      const node = branch[key];
+      const node = branch[key]
       if (node.meta) {
         items.push(
           <li key={node.id} className={sessionListItem}>
             <a
               href={`/session/${node.id}`}
-              className={`${sessionLink} ${node.id === currentSessionId ? sessionLinkActive : ""}`.trim()}
+              className={`${sessionLink} ${node.id === currentSessionId ? sessionLinkActive : ''}`.trim()}
               onClick={(e) => {
-                e.preventDefault();
-                onSessionSelect(node.id);
+                e.preventDefault()
+                onSessionSelect(node.id)
               }}
             >
-              {node.meta.purpose}{" "}
+              {node.meta.purpose}{' '}
               <p className={sessionIdStyle}>{node.id.substring(0, 8)}</p>
             </a>
             {Object.keys(node.children).length > 0 && (
-              <ul style={{ paddingLeft: "20px" }}>
+              <ul style={{ paddingLeft: '20px' }}>
                 {createNode(node.children, level + 1)}
               </ul>
             )}
           </li>,
-        );
+        )
       } else if (Object.keys(node.children).length > 0) {
         // メタデータがないが子がある場合（中間ディレクトリ）
         items.push(
           <li key={key} className={sessionListItem}>
-            <span style={{ fontWeight: "bold" }}>{key}</span>
-            <ul style={{ paddingLeft: "20px" }}>
+            <span style={{ fontWeight: 'bold' }}>{key}</span>
+            <ul style={{ paddingLeft: '20px' }}>
               {createNode(node.children, level + 1)}
             </ul>
           </li>,
-        );
+        )
       }
     }
 
-    return items;
-  };
+    return items
+  }
 
-  const sessionTree = buildSessionTree(sessions);
+  const sessionTree = buildSessionTree(sessions)
 
   return (
     <div className={sessionListColumn}>
@@ -115,13 +115,13 @@ const SessionList = ({
         <Button
           kind="primary"
           size="default"
-          onClick={() => (window.location.href = "/new_session")}
+          onClick={() => (window.location.href = '/new_session')}
         >
           + New Chat
         </Button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SessionList;
+export default SessionList

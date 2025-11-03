@@ -1,17 +1,17 @@
-import React, { useState, JSX } from "react";
+import React, { useState, JSX } from 'react'
 
-import { tooltipContainer, tooltipText } from "./style.css";
+import { tooltipContainer, tooltipText } from './style.css'
 
 type TooltipProps = {
-  content: string;
-  children: React.ReactNode;
-};
+  content: string
+  children: React.ReactNode
+}
 
 const Tooltip: ({ content, children }: TooltipProps) => JSX.Element = ({
   content,
   children,
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(false)
 
   return (
     <div
@@ -22,7 +22,7 @@ const Tooltip: ({ content, children }: TooltipProps) => JSX.Element = ({
       {children}
       {isVisible && <div className={tooltipText}>{content}</div>}
     </div>
-  );
-};
+  )
+}
 
-export default Tooltip;
+export default Tooltip

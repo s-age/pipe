@@ -1,18 +1,18 @@
-import { JSX } from "react";
-import { useController, UseControllerProps, FieldValues } from "react-hook-form";
+import { JSX } from 'react'
+import { useController, UseControllerProps, FieldValues } from 'react-hook-form'
 
-import Label from "@/components/atoms/Label";
-import TextArea from "@/components/atoms/TextArea";
+import Label from '@/components/atoms/Label'
+import TextArea from '@/components/atoms/TextArea'
 
-import { errorMessageStyle } from "./style.css";
+import { errorMessageStyle } from './style.css'
 
 type TextareaFieldProps<TFieldValues extends FieldValues = FieldValues> = {
-  label: string;
-  id: string;
-  placeholder?: string;
-  readOnly?: boolean;
-  required?: boolean;
-} & UseControllerProps<TFieldValues>;
+  label: string
+  id: string
+  placeholder?: string
+  readOnly?: boolean
+  required?: boolean
+} & UseControllerProps<TFieldValues>
 
 const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
   label,
@@ -25,7 +25,7 @@ const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
   const {
     field,
     fieldState: { error },
-  } = useController(props);
+  } = useController(props)
 
   return (
     <div>
@@ -39,7 +39,7 @@ const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
       />
       {error && <p className={errorMessageStyle}>{error.message}</p>}
     </div>
-  );
-};
+  )
+}
 
-export default TextareaField;
+export default TextareaField

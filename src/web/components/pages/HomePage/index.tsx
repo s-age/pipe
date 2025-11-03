@@ -19,10 +19,44 @@ import {
 
 import { appContainer } from "./style.css";
 
+type TodoItem = {
+  title: string;
+  checked: boolean;
+};
+
+type ReferenceItem = {
+  path: string;
+  persist: boolean;
+  ttl: number | null;
+  disabled: boolean;
+};
+
+type SessionMetaType = {
+  purpose: string;
+  [key: string]: string | number | boolean | object | null | undefined;
+};
+
+type SessionData = {
+  purpose: string;
+  background: string;
+  roles: string[];
+  procedure: string;
+  artifacts: string[];
+  multi_step_reasoning_enabled: boolean;
+  hyperparameters: {
+    temperature: { value: number };
+    top_p: { value: number };
+    top_k: { value: number };
+  };
+  todos: TodoItem[];
+  references: ReferenceItem[];
+  turns: TurnData[];
+};
+
 const HomePage: () => JSX.Element = () => {
-  const [sessions, setSessions] = useState<any[]>([]); // TODO: 型を定義する
+  const [sessions, setSessions] = useState<[string, SessionMetaType][]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [sessionData, setSessionData] = useState<any>(null); // TODO: 型を定義する
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const expertMode = true; // 仮の値
@@ -38,7 +72,7 @@ const HomePage: () => JSX.Element = () => {
         if (id && id !== "session" && id !== "") {
           setCurrentSessionId(id);
         }
-      } catch (err: any) {
+      } catch (err: Error) {
         setError(err.message || "Failed to load sessions.");
       } finally {
         setLoading(false);
@@ -54,7 +88,7 @@ const HomePage: () => JSX.Element = () => {
         try {
           const data = await fetchSessionData(currentSessionId);
           setSessionData(data.session);
-        } catch (err: any) {
+        } catch (err: Error) {
           setError(err.message || "Failed to load session data.");
         } finally {
           setLoading(false);
@@ -71,7 +105,7 @@ const HomePage: () => JSX.Element = () => {
     window.history.pushState({}, "", `/session/${sessionId}`);
   };
 
-  const handleMetaSave = async (id: string, meta: any) => {
+  const handleMetaSave = async (id: string, meta: SessionData) => {
     try {
       await updateSessionMeta(id, meta);
       alert("Session meta saved successfully!");
@@ -82,7 +116,7 @@ const HomePage: () => JSX.Element = () => {
       }
       const fetchedSessions = await fetchSessions();
       setSessions(fetchedSessions);
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || "Failed to save session meta.");
     }
   };
@@ -95,7 +129,7 @@ const HomePage: () => JSX.Element = () => {
       // セッションデータを再読み込み
       const data = await fetchSessionData(sessionId);
       setSessionData(data.session);
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || "Failed to delete turn.");
     }
   };
@@ -114,7 +148,7 @@ const HomePage: () => JSX.Element = () => {
       } else {
         throw new Error(result.message || "Failed to fork session.");
       }
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || "Failed to fork session.");
     }
   };
@@ -127,17 +161,16 @@ const HomePage: () => JSX.Element = () => {
       // 完了後にセッションデータを再読み込み
       const data = await fetchSessionData(sessionId);
       setSessionData(data.session);
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || "Failed to send instruction.");
     }
   };
 
-  const handleUpdateTodo = async (sessionId: string, todos: any[]) => {
-    // TODO: 型を定義する
+  const handleUpdateTodo = async (sessionId: string, todos: TodoItem[]) => {
     try {
       await updateTodo(sessionId, todos);
       // UIは即時更新されるため、ここでは再フェッチしない
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || "Failed to update todos.");
     }
   };
@@ -149,7 +182,7 @@ const HomePage: () => JSX.Element = () => {
       // セッションデータを再読み込み
       const data = await fetchSessionData(sessionId);
       setSessionData(data.session);
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || "Failed to delete all todos.");
     }
   };
@@ -162,7 +195,7 @@ const HomePage: () => JSX.Element = () => {
     try {
       await updateReferencePersist(sessionId, index, persist);
       // UIは即時更新されるため、ここでは再フェッチしない
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || "Failed to update reference persist state.");
     }
   };
@@ -177,7 +210,7 @@ const HomePage: () => JSX.Element = () => {
       // セッションデータを再読み込みしてUIを更新
       const data = await fetchSessionData(sessionId);
       setSessionData(data.session);
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || "Failed to update reference TTL.");
     }
   };
@@ -190,7 +223,7 @@ const HomePage: () => JSX.Element = () => {
     try {
       await updateReferenceDisabled(sessionId, index, disabled);
       // UIは即時更新されるため、ここでは再フェッチしない
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || "Failed to update reference disabled state.");
     }
   };
@@ -223,6 +256,7 @@ const HomePage: () => JSX.Element = () => {
         onSendInstruction={handleSendInstruction}
       />
       <SessionMeta
+        key={currentSessionId} // currentSessionIdをキーとして追加
         sessionData={sessionData}
         currentSessionId={currentSessionId}
         onMetaSave={handleMetaSave}

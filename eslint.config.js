@@ -59,14 +59,15 @@ export default [
             "prettier/prettier": "error", 
             
             // ✅ React/Hooks
-            "react/react-in-jsx-scope": "off",
-            ...pluginReact.configs.recommended.rules,
+            ...pluginReact.configs.recommended.rules, // recommended rulesを先に適用
             ...pluginReactHooks.configs.recommended.rules,
+            "react/react-in-jsx-scope": "off", // その後で上書き
+            "react/prop-types": "off", // prop-typesも無効化
 
 
             // ✅ TypeScript
             "no-unused-vars": "off", // Disable standard ESLint rules
-            "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+            "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
             "@typescript-eslint/consistent-type-definitions": ["error", "type"],
 
             // ✅ Imports / Unused
@@ -106,4 +107,18 @@ export default [
 
     // 3. Apply Prettier last to disable all conflicting rules
     ...compat.extends("prettier"),
+
+    // Node.js specific configuration for ts_analyzer.js
+    {
+        files: ["src/pipe/cli/ts_analyzer.js"],
+        languageOptions: {
+            globals: {
+                ...globals.node,
+            },
+        },
+        rules: {
+            "@typescript-eslint/no-require-imports": "off",
+            "no-undef": "off", // Disable no-undef as globals.node should handle it
+        },
+    },
 ];

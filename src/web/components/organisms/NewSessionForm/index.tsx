@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { JSX } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 import Button from "@/components/atoms/Button";
@@ -39,10 +39,18 @@ const formSchema = z.object({
 
 type NewSessionFormInputs = z.infer<typeof formSchema>;
 
+type DefaultSettings = {
+  parameters?: {
+    temperature?: { value: number };
+    top_p?: { value: number };
+    top_k?: { value: number };
+  };
+};
+
 type NewSessionFormProps = {
   onSubmit: (data: NewSessionFormInputs) => void;
   sessions: { value: string; label: string }[];
-  defaultSettings: any; // TODO: 型を定義する
+  defaultSettings: DefaultSettings;
 };
 
 const NewSessionForm: ({
@@ -54,7 +62,6 @@ const NewSessionForm: ({
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-    watch,
   } = useForm<NewSessionFormInputs>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -75,9 +82,9 @@ const NewSessionForm: ({
     },
   });
 
-  const temperatureValue = watch("hyperparameters.temperature");
-  const topPValue = watch("hyperparameters.top_p");
-  const topKValue = watch("hyperparameters.top_k");
+  const temperatureValue = useWatch({ control, name: "hyperparameters.temperature" });
+  const topPValue = useWatch({ control, name: "hyperparameters.top_p" });
+  const topKValue = useWatch({ control, name: "hyperparameters.top_k" });
 
   const parentSessionOptions = [{ value: "", label: "None" }, ...sessions];
 

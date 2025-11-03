@@ -15,8 +15,22 @@ import {
   welcomeMessage,
 } from "./style.css";
 
+type TurnData = {
+  type: string;
+  content?: string;
+  instruction?: string;
+  response?: { status: string; output?: unknown };
+  timestamp?: string;
+};
+
+type SessionData = {
+  purpose: string;
+  turns: TurnData[];
+  // 他のsessionDataプロパティもここに追加
+};
+
 type TurnsListProps = {
-  sessionData: any; // TODO: 型を定義する
+  sessionData: SessionData | null;
   currentSessionId: string | null;
   expertMode: boolean;
   onDeleteTurn: (sessionId: string, turnIndex: number) => void;
@@ -100,7 +114,7 @@ const TurnsList: ({
       </div>
 
       <section className={turnsListSection} ref={turnsListRef}>
-        {sessionData.turns.map((turn: any, index: number) => (
+        {sessionData.turns.map((turn: TurnData, index: number) => (
           <Turn
             key={index}
             turn={turn}

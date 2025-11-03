@@ -43,7 +43,6 @@ test.describe.serial("Session Creation and Management", () => {
       timeout: 60000,
     });
     await expect(page.locator("#turns-column h2")).toContainText("Fork of: e2e test");
-    const forkedSessionUrl = page.url();
 
     // Go back to the original session to delete it
     await page.goto(originalSessionUrl);

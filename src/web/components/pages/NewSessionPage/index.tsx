@@ -10,9 +10,39 @@ type SessionOption = {
   label: string;
 };
 
+type DefaultSettings = {
+  parameters?: {
+    temperature?: { value: number };
+    top_p?: { value: number };
+    top_k?: { value: number };
+  };
+};
+
+type SessionMetaType = {
+  purpose: string;
+  [key: string]: string | number | boolean | object | null | undefined;
+};
+
+type NewSessionFormInputs = {
+  purpose: string;
+  background: string;
+  roles?: string;
+  parent?: string;
+  references?: string;
+  artifacts?: string;
+  procedure?: string;
+  instruction: string;
+  multi_step_reasoning_enabled: boolean;
+  hyperparameters?: {
+    temperature: number;
+    top_p: number;
+    top_k: number;
+  };
+};
+
 const NewSessionPage: () => JSX.Element = () => {
   const [sessions, setSessions] = useState<SessionOption[]>([]);
-  const [settings, setSettings] = useState<any>(null); // TODO: 型を定義する
+  const [settings, setSettings] = useState<DefaultSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -24,11 +54,14 @@ const NewSessionPage: () => JSX.Element = () => {
           fetchSettings(),
         ]);
         setSessions(
-          sessionsData.map((s: any) => ({ value: s[0], label: s[1].purpose })),
+          sessionsData.map((s: [string, SessionMetaType]) => ({
+            value: s[0],
+            label: s[1].purpose,
+          })),
         );
         setSettings(settingsData);
-      } catch (err: any) {
-        setError(err.message || "Failed to load initial data.");
+      } catch (err: unknown) {
+        setError((err as Error).message || "Failed to load initial data.");
       } finally {
         setLoading(false);
       }
@@ -36,8 +69,7 @@ const NewSessionPage: () => JSX.Element = () => {
     loadData();
   }, []);
 
-  const handleSubmit = async (data: any) => {
-    // TODO: 型を定義する
+  const handleSubmit = async (data: NewSessionFormInputs) => {
     setError(null);
     try {
       const result = await createSession(data);
@@ -46,8 +78,8 @@ const NewSessionPage: () => JSX.Element = () => {
       } else {
         setError(result.message || "Failed to create session.");
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred during session creation.");
+    } catch (err: unknown) {
+      setError((err as Error).message || "An error occurred during session creation.");
     }
   };
 

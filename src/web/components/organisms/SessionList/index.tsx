@@ -14,8 +14,19 @@ import {
   stickyNewChatButtonContainer,
 } from "./style.css";
 
+type SessionMeta = {
+  purpose: string;
+  [key: string]: string | number | boolean | object | null | undefined;
+};
+
+type SessionTreeNode = {
+  meta: SessionMeta | null;
+  id?: string;
+  children: Record<string, SessionTreeNode>;
+};
+
 type SessionListProps = {
-  sessions: [string, { purpose: string; [key: string]: any }][];
+  sessions: [string, SessionMeta][];
   currentSessionId: string | null;
   onSessionSelect: (sessionId: string) => void;
 };
@@ -26,11 +37,13 @@ const SessionList = ({
   onSessionSelect,
 }: SessionListProps): JSX.Element => {
   // セッションツリーを構築するヘルパー関数
-  const buildSessionTree = (sessionsData: [string, { purpose: string }][]) => {
-    const tree: any = {};
+  const buildSessionTree = (
+    sessionsData: [string, SessionMeta][],
+  ): Record<string, SessionTreeNode> => {
+    const tree: Record<string, SessionTreeNode> = {};
     sessionsData.forEach(([id, meta]) => {
       const parts = id.split("/");
-      let currentLevel = tree;
+      let currentLevel: Record<string, SessionTreeNode> = tree;
       parts.forEach((part, index) => {
         if (!currentLevel[part]) {
           currentLevel[part] = { meta: null, children: {} };
@@ -46,7 +59,10 @@ const SessionList = ({
     return tree;
   };
 
-  const createNode = (branch: any, level: number) => {
+  const createNode = (
+    branch: Record<string, SessionTreeNode>,
+    level: number,
+  ): React.ReactNode[] => {
     const items: React.ReactNode[] = [];
     for (const key in branch) {
       const node = branch[key];

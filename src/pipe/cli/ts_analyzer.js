@@ -1,13 +1,16 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
-const { Project, SyntaxKind } = require("ts-morph");
+import { Project, SyntaxKind } from "ts-morph";
 
-// const project = new Project(); // グローバル宣言を削除
-const projectRoot = path.join(__dirname, "..", "..", ".."); // Adjust based on actual project structure
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = path.join(__dirname, "..", "..", "..");
 
 function getTypeDefinitions(filePath, symbolName, project) {
-  // projectを引数に追加
   const sourceFile = project.addSourceFileAtPath(filePath);
   const definitions = {};
 
@@ -137,7 +140,6 @@ function getTypeDefinitions(filePath, symbolName, project) {
 function getReferences(filePath, symbolName, project) {
   const references = [];
 
-  // プロジェクト内のすべてのソースファイルからシンボルを検索
   const symbol = project
     .getSourceFiles()
     .flatMap((sf) => sf.getDescendantsOfKind(SyntaxKind.Identifier))
@@ -212,7 +214,7 @@ function getCodeSnippet(filePath, symbolName, project) {
 function getFileContentSnippet(filePath) {
   try {
     return fs.readFileSync(filePath, "utf8");
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -224,7 +226,6 @@ function getSnippetAndTypeDefinitions(filePath, symbolName, project) {
   return { snippet, typeDefinitions };
 }
 
-// 類似度計算関数 (Pythonのdifflib.SequenceMatcher.ratio()に似たもの)
 function calculateSimilarity(str1, str2) {
   const m = str1.length;
   const n = str2.length;
@@ -275,57 +276,55 @@ function findSimilarCode(
       const stat = fs.statSync(fullPath);
       if (stat.isDirectory()) {
         if (file !== "node_modules") {
-          // node_modulesをスキップ
           walkSync(fullPath);
         }
       } else if (
         (file.endsWith(".ts") || file.endsWith(".tsx")) &&
         !file.endsWith(".css.ts")
       ) {
-        // .css.tsファイルはスキップ
-        process.stderr.write(`DEBUG: Found TS/TSX file: ${fullPath}\n`); // デバッグログ
+        process.stderr.write(`DEBUG: Found TS/TSX file: ${fullPath}\n`);
         tsFiles.push(fullPath);
       } else {
         process.stderr.write(
           `DEBUG: Skipping non-TS/TSX or .css.ts file: ${fullPath}\n`,
-        ); // デバッグログ
+        );
       }
     }
   }
   walkSync(searchDirectory);
-  process.stderr.write(`DEBUG: Total TS/TSX files found: ${tsFiles.length}\n`); // デバッグログ
+  process.stderr.write(`DEBUG: Total TS/TSX files found: ${tsFiles.length}\n`);
 
   const similarCodes = [];
 
   for (const filePath of tsFiles) {
     if (path.resolve(filePath) === path.resolve(baseFilePath)) {
-      process.stderr.write(`DEBUG: Skipping base file: ${filePath}\n`); // デバッグログ
+      process.stderr.write(`DEBUG: Skipping base file: ${filePath}\n`);
       continue;
     }
 
     let targetSymbol = path.parse(filePath).name;
     if (targetSymbol === "index") {
-      targetSymbol = path.basename(path.dirname(filePath)); // 親ディレクトリ名をシンボル名とする
+      targetSymbol = path.basename(path.dirname(filePath));
       process.stderr.write(
         `DEBUG: Inferred symbol for index.tsx: ${targetSymbol} from ${filePath}\n`,
-      ); // デバッグログ
+      );
     } else {
       process.stderr.write(
         `DEBUG: Using file name as symbol: ${targetSymbol} for ${filePath}\n`,
-      ); // デバッグログ
+      );
     }
 
-    const otherSnippet = getCodeSnippet(filePath, targetSymbol);
+    const otherSnippet = getCodeSnippet(filePath, targetSymbol, project);
     if (otherSnippet) {
       const similarity = calculateSimilarity(baseSnippet, otherSnippet);
       process.stderr.write(
         `DEBUG: Comparing ${symbolName} (base) with ${targetSymbol} (${filePath}). Similarity: ${similarity}\n`,
-      ); // デバッグログ
+      );
       if (similarity > 0.5) {
         // 類似度の閾値
         process.stderr.write(
           `DEBUG: Found similar code (similarity > 0.5): ${targetSymbol} in ${filePath}\n`,
-        ); // デバッグログ
+        );
         similarCodes.push({
           file_path: filePath,
           symbol_name: targetSymbol,
@@ -335,12 +334,12 @@ function findSimilarCode(
       } else {
         process.stderr.write(
           `DEBUG: Similarity below threshold (0.5): ${targetSymbol} in ${filePath}\n`,
-        ); // デバッグログ
+        );
       }
     } else {
       process.stderr.write(
         `DEBUG: No snippet found for symbol '${targetSymbol}' in ${filePath}\n`,
-      ); // デバッグログ
+      );
     }
   }
 
@@ -355,14 +354,14 @@ function findSimilarCode(
 async function main() {
   const project = new Project({
     tsConfigFilePath: path.join(projectRoot, "src", "web", "tsconfig.json"),
-  }); // main関数内でProjectオブジェクトを初期化
+  });
 
   const args = process.argv.slice(2);
   const filePath = args[0];
   const symbolName = args[1];
   const action = args[2];
-  const searchDirectory = args[3]; // find_similar_code用
-  const maxResults = args[4] ? parseInt(args[4], 10) : 3; // find_similar_code用
+  const searchDirectory = args[3];
+  const maxResults = args[4] ? parseInt(args[4], 10) : 3;
 
   if (!filePath || !symbolName || !action) {
     console.log(
@@ -388,12 +387,12 @@ async function main() {
   // });
 
   if (!project.getSourceFile(filePath)) {
-    project.addSourceFileAtPath(filePath); // ファイルが追加されていない場合に追加
+    project.addSourceFileAtPath(filePath);
   }
 
   process.stderr.write(
     `DEBUG: Number of source files in project: ${project.getSourceFiles().length}\n`,
-  ); // デバッグログ
+  );
 
   let result = null;
   try {
@@ -438,9 +437,9 @@ async function main() {
       default:
         process.exit(1);
     }
-  } catch (e) {
-    process.stderr.write(`ERROR: ${e.message || String(e)}\n`); // エラーログをstderrに出力
-    console.log(JSON.stringify({ error: e.message || String(e) }, null, 2)); // JSON形式でエラーを返す
+  } catch (_error) {
+    process.stderr.write(`ERROR: ${_error.message || String(_error)}\n`);
+    console.log(JSON.stringify({ error: _error.message || String(_error) }, null, 2));
     process.exit(1);
   }
 

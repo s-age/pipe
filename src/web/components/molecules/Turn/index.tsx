@@ -30,8 +30,25 @@ import {
   editButtonIcon,
 } from "./style.css";
 
+type TurnData = {
+  type: string;
+  content?: string;
+  instruction?: string;
+  response?: {
+    status: string;
+    output?:
+      | string
+      | number
+      | boolean
+      | object
+      | null
+      | (string | number | boolean | object | null)[];
+  };
+  timestamp?: string;
+};
+
 type TurnProps = {
-  turn: any; // TODO: 型を定義する
+  turn: TurnData;
   index: number;
   sessionId: string;
   expertMode: boolean;
@@ -93,6 +110,9 @@ const Turn: ({
   };
 
   const renderTurnContent = () => {
+    let markdownContent = "";
+    let statusClass = "";
+
     if (isEditing) {
       return (
         <div className={turnContent}>
@@ -118,7 +138,7 @@ const Turn: ({
         return <pre className={editablePre}>{turn.instruction}</pre>;
       case "model_response":
       case "compressed_history":
-        const markdownContent = turn.content || "";
+        markdownContent = turn.content || "";
 
         return (
           <div className={turnContent}>
@@ -139,8 +159,7 @@ const Turn: ({
       case "function_calling":
         return <pre className={turnContent}>{turn.response}</pre>;
       case "tool_response":
-        const statusClass =
-          turn.response.status === "success" ? statusSuccess : statusError;
+        statusClass = turn.response.status === "success" ? statusSuccess : statusError;
 
         return (
           <div className={toolResponseContent}>

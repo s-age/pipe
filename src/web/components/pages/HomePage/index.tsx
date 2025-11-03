@@ -1,57 +1,25 @@
-import { useState, useEffect, JSX } from 'react'
+import { useState, useEffect, JSX, useCallback, useMemo } from 'react'
 
 import SessionList from '@/components/organisms/SessionList'
-import SessionMeta from '@/components/organisms/SessionMeta'
+import { SessionMeta } from '@/components/organisms/SessionMeta'
 import TurnsList from '@/components/organisms/TurnsList'
+import { useStreamingFetch } from '@/hooks/useStreamingFetch'
+import { API_BASE_URL } from '@/lib/api/client'
+import { deleteTodos } from '@/lib/api/session/deleteTodos'
+import { deleteTurn } from '@/lib/api/session/deleteTurn'
+import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
+import { editReferences } from '@/lib/api/session/editReferences'
+import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
 import {
-  fetchSessions,
-  fetchSessionData,
-  updateSessionMeta,
-  deleteTurn,
-  forkSession,
-  sendInstruction,
-  updateTodo,
-  deleteTodos,
-  updateReferencePersist,
-  updateReferenceTtl,
-  updateReferenceDisabled,
-} from '@/lib/api/client'
+  editSessionMeta,
+  EditSessionMetaRequest,
+} from '@/lib/api/session/editSessionMeta'
+import { editTodos, Todo } from '@/lib/api/session/editTodos'
+import { forkSession } from '@/lib/api/session/forkSession'
+import { getSession, SessionData } from '@/lib/api/session/getSession'
+import { getSessions, SessionMetaType } from '@/lib/api/sessions/getSessions'
 
 import { appContainer } from './style.css'
-
-type TodoItem = {
-  title: string
-  checked: boolean
-}
-
-type ReferenceItem = {
-  path: string
-  persist: boolean
-  ttl: number | null
-  disabled: boolean
-}
-
-type SessionMetaType = {
-  purpose: string
-  [key: string]: string | number | boolean | object | null | undefined
-}
-
-type SessionData = {
-  purpose: string
-  background: string
-  roles: string[]
-  procedure: string
-  artifacts: string[]
-  multi_step_reasoning_enabled: boolean
-  hyperparameters: {
-    temperature: { value: number }
-    top_p: { value: number }
-    top_k: { value: number }
-  }
-  todos: TodoItem[]
-  references: ReferenceItem[]
-  turns: TurnData[]
-}
 
 const HomePage: () => JSX.Element = () => {
   const [sessions, setSessions] = useState<[string, SessionMetaType][]>([])
@@ -59,12 +27,80 @@ const HomePage: () => JSX.Element = () => {
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [streamingTrigger, setStreamingTrigger] = useState<{
+    instruction: string
+    sessionId: string
+  } | null>(null)
+  // isStreamingRequestInitiated の削除
+
   const expertMode = true // 仮の値
+
+  const memoizedStreamingOptions = useMemo(() => {
+    if (!streamingTrigger) return undefined
+
+    return {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ instruction: streamingTrigger.instruction }),
+    }
+  }, [streamingTrigger])
+
+  const {
+    streamedText,
+    isLoading: isStreaming,
+    error: streamingError,
+    setStreamedText,
+  } = useStreamingFetch(
+    streamingTrigger
+      ? `${API_BASE_URL}/session/${streamingTrigger.sessionId}/instruction`
+      : null,
+    memoizedStreamingOptions,
+  )
+
+  useEffect(() => {
+    if (streamingError) {
+      setError(streamingError)
+      setStreamingTrigger(null)
+    }
+  }, [streamingError])
+
+  useEffect(() => {
+    // 💡 修正されたストリーミング完了判定ロジック
+    // streamingTriggerがセットされており、isStreamingが完了し、かつ streamedTextにデータがあるか、
+    // または streamingErrorがある場合（ただしstreamingErrorは上のuseEffectで処理される）に実行。
+    // isStreamingがfalseになるのを待つことで、リクエストが少なくとも開始したことを保証する。
+    if (streamingTrigger && !isStreaming) {
+      // 💡 streamingTriggerが設定された直後 (isStreaming=false) の誤発動を防ぐため、
+      // 既にデータがあるか、完了していることを前提として処理を続行する。
+
+      const loadSessionDataAfterStreaming = async () => {
+        if (currentSessionId) {
+          try {
+            const data = await getSession(currentSessionId)
+            setSessionData(data.session)
+          } catch (err: unknown) {
+            setError(
+              (err as Error).message || 'Failed to load session data after streaming.',
+            )
+          }
+        }
+      }
+
+      // 💡 データ受信後、ストリームが完了したことを確認してからクリアする
+      if (streamedText.length > 0 || streamingError) {
+        loadSessionDataAfterStreaming()
+        setStreamingTrigger(null)
+        setStreamedText('')
+      }
+    }
+  }, [isStreaming, streamingTrigger, currentSessionId, streamedText, streamingError]) // streamedTextも依存配列に追加
 
   useEffect(() => {
     const loadSessions = async () => {
       try {
-        const fetchedSessions = await fetchSessions()
+        const fetchedSessions = await getSessions()
         setSessions(fetchedSessions)
         // URLからセッションIDを取得し、現在のセッションを設定
         const pathParts = window.location.pathname.split('/')
@@ -72,8 +108,8 @@ const HomePage: () => JSX.Element = () => {
         if (id && id !== 'session' && id !== '') {
           setCurrentSessionId(id)
         }
-      } catch (err: Error) {
-        setError(err.message || 'Failed to load sessions.')
+      } catch (err: unknown) {
+        setError((err as Error).message || 'Failed to load sessions.')
       } finally {
         setLoading(false)
       }
@@ -86,16 +122,15 @@ const HomePage: () => JSX.Element = () => {
       if (currentSessionId) {
         setLoading(true)
         try {
-          const data = await fetchSessionData(currentSessionId)
+          const data = await getSession(currentSessionId)
           setSessionData(data.session)
-        } catch (err: Error) {
-          setError(err.message || 'Failed to load session data.')
-        } finally {
-          setLoading(false)
+        } catch (err: unknown) {
+          setError((err as Error).message || 'Failed to load session data.')
         }
       } else {
         setSessionData(null)
       }
+      setLoading(false) // ロード完了後、必ずfalseに設定
     }
     loadSessionData()
   }, [currentSessionId])
@@ -105,85 +140,84 @@ const HomePage: () => JSX.Element = () => {
     window.history.pushState({}, '', `/session/${sessionId}`)
   }
 
-  const handleMetaSave = async (id: string, meta: SessionData) => {
+  const handleMetaSave = async (id: string, meta: EditSessionMetaRequest) => {
     try {
-      await updateSessionMeta(id, meta)
-      alert('Session meta saved successfully!')
+      await editSessionMeta(id, meta)
       // 必要に応じてセッションデータを再読み込み
       if (currentSessionId === id) {
-        const data = await fetchSessionData(id)
+        const data = await getSession(id)
         setSessionData(data.session)
       }
-      const fetchedSessions = await fetchSessions()
+      const fetchedSessions = await getSessions()
       setSessions(fetchedSessions)
-    } catch (err: Error) {
-      setError(err.message || 'Failed to save session meta.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to save session meta.')
     }
   }
 
   const handleDeleteTurn = async (sessionId: string, turnIndex: number) => {
-    if (!confirm('Are you sure you want to delete this turn?')) return
+    // confirmをカスタムモーダルに置き換えるべき
+    if (!window.confirm('Are you sure you want to delete this turn?')) return
     try {
       await deleteTurn(sessionId, turnIndex)
-      alert('Turn deleted successfully!')
       // セッションデータを再読み込み
-      const data = await fetchSessionData(sessionId)
+      const data = await getSession(sessionId)
       setSessionData(data.session)
-    } catch (err: Error) {
-      setError(err.message || 'Failed to delete turn.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to delete turn.')
     }
   }
 
   const handleForkSession = async (sessionId: string, forkIndex: number) => {
+    // confirmをカスタムモーダルに置き換えるべき
     if (
-      !confirm(
+      !window.confirm(
         `Are you sure you want to fork this session at turn index ${forkIndex + 1}?`,
       )
     )
       return
     try {
-      const result = await forkSession(sessionId, forkIndex)
-      if (result.success && result.new_session_id) {
+      const result = await forkSession(forkIndex, { session_id: sessionId })
+      if (result.new_session_id) {
         window.location.href = `/session/${result.new_session_id}`
       } else {
-        throw new Error(result.message || 'Failed to fork session.')
+        throw new Error('Failed to fork session.')
       }
-    } catch (err: Error) {
-      setError(err.message || 'Failed to fork session.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to fork session.')
     }
   }
 
-  const handleSendInstruction = async (sessionId: string, instruction: string) => {
-    try {
-      // リアルタイム更新のために、まずUIにユーザーのターンとモデルの応答のプレースホルダーを追加
-      // これは複雑なので、一旦API呼び出しのみに留める
-      await sendInstruction(sessionId, instruction)
-      // 完了後にセッションデータを再読み込み
-      const data = await fetchSessionData(sessionId)
-      setSessionData(data.session)
-    } catch (err: Error) {
-      setError(err.message || 'Failed to send instruction.')
-    }
-  }
+  const handleSendInstruction = useCallback(
+    async (instruction: string) => {
+      if (!currentSessionId) return
+      console.log('Instruction to send:', instruction)
+      setStreamingTrigger({ instruction, sessionId: currentSessionId })
+      // isStreamingRequestInitiated の呼び出しを削除
+    },
+    [currentSessionId],
+  )
 
-  const handleUpdateTodo = async (sessionId: string, todos: TodoItem[]) => {
+  const handleUpdateTodo = async (sessionId: string, todos: Todo[]) => {
     try {
-      await updateTodo(sessionId, todos)
+      await editTodos(sessionId, todos)
       // UIは即時更新されるため、ここでは再フェッチしない
-    } catch (err: Error) {
-      setError(err.message || 'Failed to update todos.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to update todos.')
     }
   }
 
   const handleDeleteAllTodos = async (sessionId: string) => {
-    if (!confirm('Are you sure you want to delete all todos for this session?')) return
+    // confirmをカスタムモーダルに置き換えるべき
+    if (!window.confirm('Are you sure you want to delete all todos for this session?'))
+      return
     try {
       await deleteTodos(sessionId)
       // セッションデータを再読み込み
-      const data = await fetchSessionData(sessionId)
+      const data = await getSession(sessionId)
       setSessionData(data.session)
-    } catch (err: Error) {
-      setError(err.message || 'Failed to delete all todos.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to delete all todos.')
     }
   }
 
@@ -193,10 +227,10 @@ const HomePage: () => JSX.Element = () => {
     persist: boolean,
   ) => {
     try {
-      await updateReferencePersist(sessionId, index, persist)
+      await editReferencePersist(sessionId, index, persist)
       // UIは即時更新されるため、ここでは再フェッチしない
-    } catch (err: Error) {
-      setError(err.message || 'Failed to update reference persist state.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to update reference persist state.')
     }
   }
 
@@ -206,12 +240,12 @@ const HomePage: () => JSX.Element = () => {
     ttl: number,
   ) => {
     try {
-      await updateReferenceTtl(sessionId, index, ttl)
+      await editReferenceTtl(sessionId, index, ttl)
       // セッションデータを再読み込みしてUIを更新
-      const data = await fetchSessionData(sessionId)
+      const data = await getSession(sessionId)
       setSessionData(data.session)
-    } catch (err: Error) {
-      setError(err.message || 'Failed to update reference TTL.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to update reference TTL.')
     }
   }
 
@@ -220,11 +254,14 @@ const HomePage: () => JSX.Element = () => {
     index: number,
     disabled: boolean,
   ) => {
+    if (!sessionData) return
     try {
-      await updateReferenceDisabled(sessionId, index, disabled)
+      const newReferences = [...sessionData.references]
+      newReferences[index] = { ...newReferences[index], disabled }
+      await editReferences(sessionId, newReferences)
       // UIは即時更新されるため、ここでは再フェッチしない
-    } catch (err: Error) {
-      setError(err.message || 'Failed to update reference disabled state.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to update reference disabled state.')
     }
   }
 
@@ -254,6 +291,8 @@ const HomePage: () => JSX.Element = () => {
         onDeleteTurn={handleDeleteTurn}
         onForkSession={handleForkSession}
         onSendInstruction={handleSendInstruction}
+        streamedText={streamedText}
+        isStreaming={isStreaming}
       />
       <SessionMeta
         key={currentSessionId} // currentSessionIdをキーとして追加

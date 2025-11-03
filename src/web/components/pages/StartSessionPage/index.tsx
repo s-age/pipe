@@ -1,7 +1,9 @@
 import { useState, useEffect, JSX } from 'react'
 
 import StartSessionForm from '@/components/organisms/StartSessionForm'
-import { createSession, fetchSessions, fetchSettings } from '@/lib/api/client'
+import { startSession, StartSessionRequest } from '@/lib/api/session/startSession'
+import { getSessions, SessionMetaType } from '@/lib/api/sessions/getSessions'
+import { getSettings, Settings } from '@/lib/api/settings/getSettings'
 
 import { pageContainer, errorMessageStyle } from './style.css'
 
@@ -10,39 +12,9 @@ type SessionOption = {
   label: string
 }
 
-type DefaultSettings = {
-  parameters?: {
-    temperature?: { value: number }
-    top_p?: { value: number }
-    top_k?: { value: number }
-  }
-}
-
-type SessionMetaType = {
-  purpose: string
-  [key: string]: string | number | boolean | object | null | undefined
-}
-
-type NewSessionFormInputs = {
-  purpose: string
-  background: string
-  roles?: string
-  parent?: string
-  references?: string
-  artifacts?: string
-  procedure?: string
-  instruction: string
-  multi_step_reasoning_enabled: boolean
-  hyperparameters?: {
-    temperature: number
-    top_p: number
-    top_k: number
-  }
-}
-
 const StartSessionPage: () => JSX.Element = () => {
   const [sessions, setSessions] = useState<SessionOption[]>([])
-  const [settings, setSettings] = useState<DefaultSettings | null>(null)
+  const [settings, setSettings] = useState<Settings | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
 
@@ -50,8 +22,8 @@ const StartSessionPage: () => JSX.Element = () => {
     const loadData = async () => {
       try {
         const [sessionsData, settingsData] = await Promise.all([
-          fetchSessions(),
-          fetchSettings(),
+          getSessions(),
+          getSettings(),
         ])
         setSessions(
           sessionsData.map((s: [string, SessionMetaType]) => ({
@@ -69,14 +41,14 @@ const StartSessionPage: () => JSX.Element = () => {
     loadData()
   }, [])
 
-  const handleSubmit = async (data: NewSessionFormInputs) => {
+  const handleSubmit = async (data: StartSessionRequest) => {
     setError(null)
     try {
-      const result = await createSession(data)
-      if (result.success) {
+      const result = await startSession(data)
+      if (result.session_id) {
         window.location.href = `/session/${result.session_id}`
       } else {
-        setError(result.message || 'Failed to create session.')
+        setError('Failed to create session: No session ID returned.')
       }
     } catch (err: unknown) {
       setError((err as Error).message || 'An error occurred during session creation.')

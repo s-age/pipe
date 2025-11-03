@@ -3,6 +3,7 @@ import React, { JSX } from 'react'
 import Button from '@/components/atoms/Button'
 import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
+import { SessionMetaType } from '@/lib/api/sessions/getSessions'
 
 import {
   sessionListColumn,
@@ -14,19 +15,14 @@ import {
   stickyNewChatButtonContainer,
 } from './style.css'
 
-type SessionMeta = {
-  purpose: string
-  [key: string]: string | number | boolean | object | null | undefined
-}
-
 type SessionTreeNode = {
-  meta: SessionMeta | null
+  meta: SessionMetaType | null
   id?: string
   children: Record<string, SessionTreeNode>
 }
 
 type SessionListProps = {
-  sessions: [string, SessionMeta][]
+  sessions: [string, SessionMetaType][]
   currentSessionId: string | null
   onSessionSelect: (sessionId: string) => void
 }
@@ -38,7 +34,7 @@ const SessionList = ({
 }: SessionListProps): JSX.Element => {
   // セッションツリーを構築するヘルパー関数
   const buildSessionTree = (
-    sessionsData: [string, SessionMeta][],
+    sessionsData: [string, SessionMetaType][],
   ): Record<string, SessionTreeNode> => {
     const tree: Record<string, SessionTreeNode> = {}
     sessionsData.forEach(([id, meta]) => {
@@ -66,7 +62,7 @@ const SessionList = ({
     const items: React.ReactNode[] = []
     for (const key in branch) {
       const node = branch[key]
-      if (node.meta) {
+      if (node.meta && node.id) {
         items.push(
           <li key={node.id} className={sessionListItem}>
             <a
@@ -74,7 +70,7 @@ const SessionList = ({
               className={`${sessionLink} ${node.id === currentSessionId ? sessionLinkActive : ''}`.trim()}
               onClick={(e) => {
                 e.preventDefault()
-                onSessionSelect(node.id)
+                onSessionSelect(node.id!)
               }}
             >
               {node.meta.purpose}{' '}

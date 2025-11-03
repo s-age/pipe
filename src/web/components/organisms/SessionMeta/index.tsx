@@ -6,6 +6,10 @@ import Checkbox from '@/components/atoms/Checkbox'
 import InputText from '@/components/atoms/InputText'
 import Label from '@/components/atoms/Label'
 import TextArea from '@/components/atoms/TextArea'
+import { Todo } from '@/lib/api/session/editTodos'
+import { Reference } from '@/lib/api/session/startSession'
+import { SessionData } from '@/lib/api/session/getSession'
+import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 
 import {
   metaColumn,
@@ -37,39 +41,11 @@ import {
 } from './style.css'
 import { colors } from '../../../styles/colors.css'
 
-type TodoItem = {
-  title: string
-  checked: boolean
-}
-
-type ReferenceItem = {
-  path: string
-  persist: boolean
-  ttl: number | null
-  disabled: boolean
-}
-
-type SessionData = {
-  purpose: string
-  background: string
-  roles: string[]
-  procedure: string
-  artifacts: string[]
-  multi_step_reasoning_enabled: boolean
-  hyperparameters: {
-    temperature: { value: number }
-    top_p: { value: number }
-    top_k: { value: number }
-  }
-  todos: TodoItem[]
-  references: ReferenceItem[]
-}
-
 type SessionMetaProps = {
   sessionData: SessionData | null
   currentSessionId: string | null
-  onMetaSave: (sessionId: string, meta: SessionData) => void
-  onUpdateTodo: (sessionId: string, todos: TodoItem[]) => void
+  onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
+  onUpdateTodo: (sessionId: string, todos: Todo[]) => void
   onDeleteAllTodos: (sessionId: string) => void
   onUpdateReferencePersist: (sessionId: string, index: number, persist: boolean) => void
   onUpdateReferenceTtl: (sessionId: string, index: number, ttl: number) => void
@@ -80,7 +56,7 @@ type SessionMetaProps = {
   ) => void
 }
 
-export const SessionMeta = ({
+export function SessionMeta({
   sessionData,
   currentSessionId,
   onMetaSave,
@@ -89,10 +65,10 @@ export const SessionMeta = ({
   onUpdateReferencePersist,
   onUpdateReferenceTtl,
   onUpdateReferenceDisabled,
-}: SessionMetaProps): JSX.Element => {
+}: SessionMetaProps): JSX.Element {
   const handleSaveMeta = () => {
     if (!currentSessionId || !sessionData) return
-    const meta = {
+    const meta: EditSessionMetaRequest = {
       purpose: sessionData.purpose,
       background: sessionData.background,
       roles: sessionData.roles,
@@ -100,12 +76,10 @@ export const SessionMeta = ({
       artifacts: sessionData.artifacts,
       multi_step_reasoning_enabled: sessionData.multi_step_reasoning_enabled,
       hyperparameters: {
-        temperature: { value: sessionData.hyperparameters.temperature.value },
-        top_p: { value: sessionData.hyperparameters.top_p.value },
-        top_k: { value: sessionData.hyperparameters.top_k.value },
+        temperature: sessionData.hyperparameters?.temperature,
+        top_p: sessionData.hyperparameters?.top_p,
+        top_k: sessionData.hyperparameters?.top_k,
       },
-      todos: sessionData.todos,
-      references: sessionData.references,
     }
     onMetaSave(currentSessionId, meta)
   }
@@ -138,7 +112,7 @@ export const SessionMeta = ({
     if (!currentSessionId || !sessionData) return
     const newReferences = [...sessionData.references]
     const currentTtl = newReferences[index].ttl !== null ? newReferences[index].ttl : 3
-    const newTtl = action === 'increment' ? currentTtl + 1 : Math.max(0, currentTtl - 1)
+    const newTtl = action === 'increment' ? (currentTtl || 0) + 1 : Math.max(0, (currentTtl || 0) - 1)
     newReferences[index].ttl = newTtl
     onUpdateReferenceTtl(currentSessionId, index, newTtl)
   }
@@ -165,7 +139,6 @@ export const SessionMeta = ({
               value={sessionData.purpose}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 onMetaSave(currentSessionId, {
-                  ...sessionData,
                   purpose: e.target.value,
                 })
               }
@@ -181,7 +154,6 @@ export const SessionMeta = ({
               value={sessionData.background}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 onMetaSave(currentSessionId, {
-                  ...sessionData,
                   background: e.target.value,
                 })
               }
@@ -197,7 +169,6 @@ export const SessionMeta = ({
               value={sessionData.roles?.join(', ') || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 onMetaSave(currentSessionId, {
-                  ...sessionData,
                   roles: e.target.value
                     .split(',')
                     .map((s) => s.trim())
@@ -216,7 +187,6 @@ export const SessionMeta = ({
               value={sessionData.procedure}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 onMetaSave(currentSessionId, {
-                  ...sessionData,
                   procedure: e.target.value,
                 })
               }
@@ -232,7 +202,6 @@ export const SessionMeta = ({
               value={sessionData.artifacts?.join(', ') || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 onMetaSave(currentSessionId, {
-                  ...sessionData,
                   artifacts: e.target.value
                     .split(',')
                     .map((s) => s.trim())
@@ -248,7 +217,7 @@ export const SessionMeta = ({
             {sessionData.references.length > 0 ? (
               <ul className={referencesList}>
                 {sessionData.references.map(
-                  (reference: ReferenceItem, index: number) => (
+                  (reference: Reference, index: number) => (
                     <li key={index} className={referenceItem}>
                       <div className={referenceControls}>
                         <Label className={referenceLabel}>
@@ -319,7 +288,6 @@ export const SessionMeta = ({
                 checked={sessionData.multi_step_reasoning_enabled}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   onMetaSave(currentSessionId, {
-                    ...sessionData,
                     multi_step_reasoning_enabled: e.target.checked,
                   })
                 }
@@ -333,20 +301,19 @@ export const SessionMeta = ({
               <Label>Temperature:</Label>
               <div>
                 <span className={sliderValue}>
-                  {sessionData.hyperparameters?.temperature?.value || 0.7}
+                  {sessionData.hyperparameters?.temperature || 0.7}
                 </span>
                 <InputText
                   type="range"
                   min="0"
                   max="2"
                   step="0.1"
-                  value={sessionData.hyperparameters?.temperature?.value || 0.7}
+                  value={sessionData.hyperparameters?.temperature || 0.7}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     onMetaSave(currentSessionId, {
-                      ...sessionData,
                       hyperparameters: {
                         ...sessionData.hyperparameters,
-                        temperature: { value: parseFloat(e.target.value) },
+                        temperature: parseFloat(e.target.value),
                       },
                     })
                   }
@@ -357,20 +324,19 @@ export const SessionMeta = ({
               <Label>Top P:</Label>
               <div>
                 <span className={sliderValue}>
-                  {sessionData.hyperparameters?.top_p?.value || 0.9}
+                  {sessionData.hyperparameters?.top_p || 0.9}
                 </span>
                 <InputText
                   type="range"
                   min="0"
                   max="1"
                   step="0.1"
-                  value={sessionData.hyperparameters?.top_p?.value || 0.9}
+                  value={sessionData.hyperparameters?.top_p || 0.9}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     onMetaSave(currentSessionId, {
-                      ...sessionData,
                       hyperparameters: {
                         ...sessionData.hyperparameters,
-                        top_p: { value: parseFloat(e.target.value) },
+                        top_p: parseFloat(e.target.value),
                       },
                     })
                   }
@@ -381,20 +347,19 @@ export const SessionMeta = ({
               <Label>Top K:</Label>
               <div>
                 <span className={sliderValue}>
-                  {sessionData.hyperparameters?.top_k?.value || 5}
+                  {sessionData.hyperparameters?.top_k || 5}
                 </span>
                 <InputText
                   type="range"
                   min="1"
                   max="50"
                   step="1"
-                  value={sessionData.hyperparameters?.top_k?.value || 5}
+                  value={sessionData.hyperparameters?.top_k || 5}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     onMetaSave(currentSessionId, {
-                      ...sessionData,
                       hyperparameters: {
                         ...sessionData.hyperparameters,
-                        top_k: { value: parseInt(e.target.value, 10) },
+                        top_k: parseInt(e.target.value, 10),
                       },
                     })
                   }
@@ -413,7 +378,7 @@ export const SessionMeta = ({
             </Button>
             {sessionData.todos.length > 0 ? (
               <ul className={todosList}>
-                {sessionData.todos.map((todo: TodoItem, index: number) => (
+                {sessionData.todos.map((todo: Todo, index: number) => (
                   <li key={index} className={todoItem}>
                     <Label className={todoCheckboxLabel}>
                       <Checkbox

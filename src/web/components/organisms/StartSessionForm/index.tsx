@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { JSX } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm, useWatch, SubmitHandler } from 'react-hook-form'
 import * as z from 'zod'
 
 import Button from '@/components/atoms/Button'
@@ -9,6 +9,8 @@ import CheckboxField from '@/components/molecules/CheckboxField'
 import InputField from '@/components/molecules/InputField'
 import SelectField from '@/components/molecules/SelectField'
 import TextareaField from '@/components/molecules/TextareaField'
+import { StartSessionRequest } from '@/lib/api/session/startSession'
+import { Settings } from '@/lib/api/settings/getSettings'
 
 import {
   formContainer,
@@ -21,43 +23,78 @@ import {
 const formSchema = z.object({
   purpose: z.string().min(1, 'Purpose is required'),
   background: z.string().min(1, 'Background is required'),
-  roles: z.string().optional(),
-  parent: z.string().optional(),
-  references: z.string().optional(),
-  artifacts: z.string().optional(),
-  procedure: z.string().optional(),
+  roles: z
+    .string()
+    .transform((val) =>
+      val
+        ? val
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : null,
+    )
+    .nullable()
+    .default(null),
+  parent: z
+    .string()
+    .transform((val) => (val === '' ? null : val))
+    .nullable()
+    .default(null),
+  references: z
+    .string()
+    .transform((val) =>
+      val
+        ? val
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .map((path) => ({ path }))
+        : null,
+    )
+    .nullable()
+    .default(null),
+  artifacts: z
+    .string()
+    .transform((val) =>
+      val
+        ? val
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : null,
+    )
+    .nullable()
+    .default(null),
+  procedure: z
+    .string()
+    .transform((val) => (val === '' ? null : val))
+    .nullable()
+    .default(null),
   instruction: z.string().min(1, 'First Instruction is required'),
   multi_step_reasoning_enabled: z.boolean().default(false),
   hyperparameters: z
     .object({
-      temperature: z.number().min(0).max(2).default(0.7),
-      top_p: z.number().min(0).max(1).default(0.9),
-      top_k: z.number().min(1).max(50).default(5),
+      temperature: z.number().min(0).max(2).nullable().default(0.7),
+      top_p: z.number().min(0).max(1).nullable().default(0.9),
+      top_k: z.number().min(1).max(50).nullable().default(5),
     })
-    .optional(),
+    .nullable()
+    .default(null),
 })
 
 type StartSessionFormInputs = z.infer<typeof formSchema>
 
-type DefaultSettings = {
-  parameters?: {
-    temperature?: { value: number }
-    top_p?: { value: number }
-    top_k?: { value: number }
-  }
-}
-
 type StartSessionFormProps = {
-  onSubmit: (data: NewSessionFormInputs) => void
+  onSubmit: SubmitHandler<StartSessionFormInputs>
   sessions: { value: string; label: string }[]
-  defaultSettings: DefaultSettings
+  defaultSettings: Settings | null
 }
 
-const StartSessionForm: ({
+const StartSessionForm: (props: StartSessionFormProps) => JSX.Element = ({
   onSubmit,
   sessions,
   defaultSettings,
-}: NewSessionFormProps) => JSX.Element = ({ onSubmit, sessions, defaultSettings }) => {
+}) => {
   const {
     handleSubmit,
     control,
@@ -67,18 +104,21 @@ const StartSessionForm: ({
     defaultValues: {
       purpose: '',
       background: '',
-      roles: '',
-      parent: '',
-      references: '',
-      artifacts: '',
-      procedure: '',
+      roles: null,
+      parent: null,
+      references: null,
+      artifacts: null,
+      procedure: null,
       instruction: '',
       multi_step_reasoning_enabled: false,
-      hyperparameters: {
-        temperature: defaultSettings.parameters?.temperature?.value || 0.7,
-        top_p: defaultSettings.parameters?.top_p?.value || 0.9,
-        top_k: defaultSettings.parameters?.top_k?.value || 5,
-      },
+      hyperparameters:
+        defaultSettings?.parameters?.temperature !== undefined
+          ? {
+              temperature: defaultSettings?.parameters?.temperature || 0.7,
+              top_p: defaultSettings?.parameters?.top_p || 0.9,
+              top_k: defaultSettings?.parameters?.top_k || 5,
+            }
+          : null,
     },
   })
 
@@ -91,7 +131,7 @@ const StartSessionForm: ({
   return (
     <div className={formContainer}>
       <Heading level={1}>Create New Session</Heading>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit((data) => onSubmit(data as StartSessionRequest))}>
         <InputField
           control={control}
           name="purpose"

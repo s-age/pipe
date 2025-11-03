@@ -3,6 +3,7 @@ import { useState, JSX } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Tooltip from '@/components/atoms/Tooltip'
+import { TurnData } from '@/lib/api/session/getSession'
 
 import {
   turnHeader,
@@ -30,23 +31,6 @@ import {
   editButtonIcon,
 } from './style.css'
 
-type TurnData = {
-  type: string
-  content?: string
-  instruction?: string
-  response?: {
-    status: string
-    output?:
-      | string
-      | number
-      | boolean
-      | object
-      | null
-      | (string | number | boolean | object | null)[]
-  }
-  timestamp?: string
-}
-
 type TurnProps = {
   turn: TurnData
   index: number
@@ -54,6 +38,7 @@ type TurnProps = {
   expertMode: boolean
   onDeleteTurn: (sessionId: string, turnIndex: number) => void
   onForkSession: (sessionId: string, forkIndex: number) => void
+  isStreaming?: boolean // 新しく追加
 }
 
 const Turn: ({
@@ -63,6 +48,7 @@ const Turn: ({
   expertMode,
   onDeleteTurn,
   onForkSession,
+  isStreaming,
 }: TurnProps) => JSX.Element = ({
   turn,
   index,
@@ -70,6 +56,7 @@ const Turn: ({
   expertMode,
   onDeleteTurn,
   onForkSession,
+  isStreaming = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(
@@ -150,15 +137,18 @@ const Turn: ({
               </p>
             )}
             <div className={rawMarkdown}>{markdownContent}</div>
-            <div
-              className={`${renderedMarkdown} markdown-body`}
-              dangerouslySetInnerHTML={{ __html: marked.parse(markdownContent.trim()) }}
-            />
+            {!isStreaming && (
+              <div
+                className={`${renderedMarkdown} markdown-body`}
+                dangerouslySetInnerHTML={{ __html: marked.parse(markdownContent.trim()) }}
+              />
+            )}
           </div>
         )
       case 'function_calling':
-        return <pre className={turnContent}>{turn.response}</pre>
+        return <pre className={turnContent}>{JSON.stringify(turn.response, null, 2)}</pre>
       case 'tool_response':
+        if (!turn.response) return null
         statusClass = turn.response.status === 'success' ? statusSuccess : statusError
 
         return (

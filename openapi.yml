@@ -3,9 +3,10 @@ info:
   title: Pipe CLI Web API
   version: 1.0.0
 paths:
-  /api/session/start:
+  # 1. セッション開始
+  /api/sessions/start: # リソースコレクションに対するアクションとして修正
     post:
-      summary: Create a new session
+      summary: Start a new session
       requestBody:
         required: true
         content:
@@ -26,6 +27,8 @@ paths:
           description: Validation error
         '500':
           description: Internal server error
+
+  # 2. 全セッション取得 (RESTful: 複数形)
   /api/sessions:
     get:
       summary: Get all sessions
@@ -43,7 +46,9 @@ paths:
                       type: object # TODO: Define Session schema
         '500':
           description: Internal server error
-  /api/session/{session_id}:
+
+  # 3. 単一セッションの操作 (RESTful: 複数形 + ID)
+  /api/sessions/{session_id}:
     get:
       summary: Get a specific session
       parameters:
@@ -88,7 +93,9 @@ paths:
                     type: string
         '500':
           description: Internal server error
-  /api/session/{session_id}/turn/{turn_index}:
+
+  # 4. 特定ターンの削除 (RESTful: 複数形 + インデックス)
+  /api/sessions/{session_id}/turns/{turn_index}:
     delete:
       summary: Delete a specific turn from a session
       parameters:
@@ -120,8 +127,8 @@ paths:
           description: Session not found
         '500':
           description: Internal server error
-  /api/session/{session_id}/turns/{turn_index}:
-    patch:
+
+    patch: # ターン全体の編集
       summary: Edit a specific turn in a session
       parameters:
         - in: path
@@ -160,7 +167,9 @@ paths:
           description: Session not found
         '500':
           description: Internal server error
-  /api/session/{session_id}/meta:
+
+  # 5. メタデータの編集
+  /api/sessions/{session_id}/meta:
     patch:
       summary: Edit session metadata
       parameters:
@@ -192,9 +201,11 @@ paths:
           description: Session not found
         '500':
           description: Internal server error
-  /api/session/{session_id}/todos:
+
+  # 6. ToDoリストの編集と一括削除
+  /api/sessions/{session_id}/todos:
     patch:
-      summary: Edit session todos
+      summary: Edit session todos (replace/update list)
       parameters:
         - in: path
           name: session_id
@@ -224,9 +235,35 @@ paths:
           description: Session not found
         '500':
           description: Internal server error
-  /api/session/{session_id}/references:
+
+    delete:
+      summary: Delete all todos from a session
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      responses:
+        '200':
+          description: Todos deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  # 7. 参照リストの編集
+  /api/sessions/{session_id}/references:
     patch:
-      summary: Edit session references
+      summary: Edit session references (replace/update list)
       parameters:
         - in: path
           name: session_id
@@ -256,8 +293,11 @@ paths:
           description: Session not found
         '500':
           description: Internal server error
-      /api/session/{session_id}/references/{reference_index}/persist:
-      patch:      summary: Edit reference persist state
+
+  # 8. 個別参照のpersist状態編集 (YAML構造を修正し、パスを複数形に変更)
+  /api/sessions/{session_id}/references/{reference_index}/persist:
+    patch:
+      summary: Edit reference persist state
       parameters:
         - in: path
           name: session_id
@@ -295,8 +335,11 @@ paths:
           description: Reference index out of range
         '500':
           description: Internal server error
-      /api/session/{session_id}/references/{reference_index}/ttl:
-      patch:      summary: Edit reference TTL
+
+  # 9. 個別参照のTTL編集 (YAML構造を修正し、パスを複数形に変更)
+  /api/sessions/{session_id}/references/{reference_index}/ttl:
+    patch:
+      summary: Edit reference TTL
       parameters:
         - in: path
           name: session_id
@@ -334,45 +377,24 @@ paths:
           description: Reference index out of range
         '500':
           description: Internal server error
-  /api/session/{session_id}/todos:
-    delete:
-      summary: Delete all todos from a session
+
+  # 10. セッションのフォーク (パスを複数形に変更)
+  /api/sessions/{session_id}/fork:
+    post:
+      summary: Fork a session from a specific turn
       parameters:
         - in: path
           name: session_id
           schema:
             type: string
           required: true
-          description: The ID of the session
-      responses:
-        '200':
-          description: Todos deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
-  /api/session/fork/{fork_index}:
-    post:
-      summary: Fork a session
-      parameters:
-        - in: path
-          name: fork_index
-          schema:
-            type: integer
-          required: true
-          description: The turn index to fork from
+          description: The ID of the session to fork
       requestBody:
         required: true
         content:
           application/json:
             schema:
+              # ForkSessionRequestをターンインデックスをボディに持つように修正
               $ref: '#/components/schemas/ForkSessionRequest'
       responses:
         '200':
@@ -392,7 +414,9 @@ paths:
           description: Fork turn index out of range
         '500':
           description: Internal server error
-  /api/session/{session_id}/instruction:
+
+  # 11. インストラクション送信 (パスを複数形に変更)
+  /api/sessions/{session_id}/instruction:
     post:
       summary: Send an instruction to a session
       parameters:
@@ -423,7 +447,9 @@ paths:
           description: Session not found
         '500':
           description: Internal server error
-  /api/session/{session_id}/turns:
+
+  # 12. ターン取得 (パスを複数形に変更)
+  /api/sessions/{session_id}/turns:
     get:
       summary: Get session turns
       parameters:
@@ -455,6 +481,8 @@ paths:
           description: Session not found
         '500':
           description: Internal server error
+
+  # 13. 設定の取得
   /api/settings:
     get:
       summary: Get application settings
@@ -470,6 +498,7 @@ paths:
                     type: object # TODO: Define Settings schema
         '500':
           description: Internal server error
+
 components:
   schemas:
     StartSessionRequest:
@@ -580,10 +609,12 @@ components:
     ForkSessionRequest:
       type: object
       properties:
-        session_id:
-          type: string
+        # パスから{fork_index}を削除したため、ボディで渡す形に変更
+        fork_index:
+          type: integer
+          description: The turn index to fork from
       required:
-        - session_id
+        - fork_index
     SendInstructionRequest:
       type: object
       properties:
@@ -603,7 +634,6 @@ components:
         top_k:
           type: number
           nullable: true
-
     Reference:
       type: object
       properties:
@@ -627,7 +657,7 @@ components:
           type: string
         description:
           type: string
-          default: ""
+          default: ''
         checked:
           type: boolean
           default: false

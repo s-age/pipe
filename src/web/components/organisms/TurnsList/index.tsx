@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, JSX } from 'react'
+import { ChangeEvent, KeyboardEvent } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
 import TextArea from '@/components/atoms/TextArea'
 import Turn from '@/components/molecules/Turn'
+import { TurnData, SessionData } from '@/lib/api/session/getSession'
 
 import {
   turnsColumn,
@@ -15,27 +17,15 @@ import {
   welcomeMessage,
 } from './style.css'
 
-type TurnData = {
-  type: string
-  content?: string
-  instruction?: string
-  response?: { status: string; output?: unknown }
-  timestamp?: string
-}
-
-type SessionData = {
-  purpose: string
-  turns: TurnData[]
-  // 他のsessionDataプロパティもここに追加
-}
-
 type TurnsListProps = {
   sessionData: SessionData | null
   currentSessionId: string | null
   expertMode: boolean
   onDeleteTurn: (sessionId: string, turnIndex: number) => void
   onForkSession: (sessionId: string, forkIndex: number) => void
-  onSendInstruction: (sessionId: string, instruction: string) => void
+  onSendInstruction: (instruction: string) => void
+  streamedText: string
+  isStreaming: boolean
 }
 
 const TurnsList: ({
@@ -45,6 +35,8 @@ const TurnsList: ({
   onDeleteTurn,
   onForkSession,
   onSendInstruction,
+  streamedText,
+  isStreaming,
 }: TurnsListProps) => JSX.Element = ({
   sessionData,
   currentSessionId,
@@ -52,10 +44,11 @@ const TurnsList: ({
   onDeleteTurn,
   onForkSession,
   onSendInstruction,
+  streamedText,
+  isStreaming,
 }) => {
   const turnsListRef = useRef<HTMLDivElement>(null)
   const [instructionText, setInstructionText] = useState<string>('')
-  const [isSending, setIsSending] = useState<boolean>(false)
 
   const scrollToBottom = () => {
     if (turnsListRef.current) {
@@ -65,18 +58,15 @@ const TurnsList: ({
 
   useEffect(() => {
     scrollToBottom()
-  }, [sessionData]) // sessionDataが更新されたらスクロール
+  }, [sessionData, streamedText]) // sessionDataまたはstreamedTextが更新されたらスクロール
 
   const handleSend = async () => {
     if (!instructionText.trim() || !currentSessionId) return
-    setIsSending(true)
     try {
-      await onSendInstruction(currentSessionId, instructionText)
+      await onSendInstruction(instructionText)
       setInstructionText('')
     } catch (error) {
       console.error('Failed to send instruction:', error)
-    } finally {
-      setIsSending(false)
     }
   }
 
@@ -125,6 +115,22 @@ const TurnsList: ({
             onForkSession={onForkSession}
           />
         ))}
+        {isStreaming && streamedText && (
+          <Turn
+            key="streaming-response"
+            turn={{
+              type: 'model_response',
+              content: streamedText,
+              timestamp: new Date().toISOString(),
+            }}
+            index={sessionData.turns.length} // 仮のインデックス
+            sessionId={currentSessionId}
+            expertMode={expertMode}
+            onDeleteTurn={() => {}} // ストリーミング中は削除不可
+            onForkSession={() => {}} // ストリーミング中はフォーク不可
+            isStreaming={isStreaming}
+          />
+        )}
       </section>
 
       <section className={newInstructionControl}>
@@ -133,17 +139,24 @@ const TurnsList: ({
           className={instructionTextarea}
           placeholder="Enter your instruction here..."
           value={instructionText}
-          onChange={(e) => setInstructionText(e.target.value)}
-          onKeyPress={(e) => {
+          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
+            setInstructionText(e.target.value)
+          }}
+          onKeyPress={(e: KeyboardEvent<HTMLTextAreaElement>) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
               handleSend()
             }
           }}
-          disabled={isSending}
+          disabled={isStreaming} // ストリーミング中は無効化
         />
-        <Button kind="primary" size="default" onClick={handleSend} disabled={isSending}>
-          {isSending ? 'Sending...' : 'Send Instruction'}
+        <Button
+          kind="primary"
+          size="default"
+          onClick={handleSend}
+          disabled={isStreaming}
+        >
+          {isStreaming ? 'Sending...' : 'Send Instruction'}
         </Button>
       </section>
     </div>

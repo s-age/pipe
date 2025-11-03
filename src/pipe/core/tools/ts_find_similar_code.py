@@ -69,12 +69,10 @@ def ts_find_similar_code(
 
         try:
             output = json.loads(process.stdout)
-            if output.get("success"):
-                return output["data"]
+            if "error" in output:
+                return {"error": output["error"]}
             else:
-                return {
-                    "error": output.get("error", "Unknown error from ts_analyzer.js")
-                }
+                return output
         except json.JSONDecodeError:
             return {
                 "error": (

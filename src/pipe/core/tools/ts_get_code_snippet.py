@@ -27,23 +27,21 @@ def ts_get_code_snippet(file_path: str, symbol_name: str) -> dict[str, Any]:
         )
         script_path = os.path.abspath(script_path)
 
-        command = ["node", script_path, file_path, symbol_name, "get_code_snippet"]
-        process = subprocess.run(command, capture_output=True, text=True, check=True)
+        # Calculate project_root internally
+        project_root = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "..")
+        )
 
-        output = json.loads(process.stdout)
-        if output.get("success"):
-            return {"snippet": output["data"]}
+        command = ["node", script_path, file_path, symbol_name, "get_code_snippet"]
+        process = subprocess.run(command, capture_output=True, text=True, check=True, cwd=project_root)
+
+        snippet = process.stdout.strip()
+        if snippet:
+            return {"snippet": snippet}
         else:
-            return {"error": output.get("error", "Unknown error from ts_analyzer.js")}
+            return {"error": "No code snippet found."}
 
     except subprocess.CalledProcessError as e:
         return {"error": f"ts_analyzer.js failed: {e.stderr.strip()}"}
-    except json.JSONDecodeError:
-        return {
-            "error": (
-                f"Failed to parse JSON output from ts_analyzer.js: "
-                f"{process.stdout.strip()}"
-            )
-        }
     except Exception as e:
         return {"error": f"An unexpected error occurred: {e}"}

@@ -27,14 +27,19 @@ def ts_get_type_definitions(file_path: str, symbol_name: str) -> dict[str, Any]:
         )
         script_path = os.path.abspath(script_path)
 
+        # Calculate project_root internally
+        project_root = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "..")
+        )
+
         command = ["node", script_path, file_path, symbol_name, "get_type_definitions"]
-        process = subprocess.run(command, capture_output=True, text=True, check=True)
+        process = subprocess.run(command, capture_output=True, text=True, check=True, cwd=project_root)
 
         output = json.loads(process.stdout)
-        if output.get("success"):
-            return {"type_definitions": output["data"]}
+        if "error" in output:
+            return {"error": output["error"]}
         else:
-            return {"error": output.get("error", "Unknown error from ts_analyzer.js")}
+            return {"type_definitions": output}
 
     except subprocess.CalledProcessError as e:
         return {"error": f"ts_analyzer.js failed: {e.stderr.strip()}"}

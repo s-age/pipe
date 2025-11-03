@@ -241,39 +241,49 @@ function findSimilarCode(baseFilePath, symbolName, searchDirectory, maxResults =
                     walkSync(fullPath);
                 }
             } else if ((file.endsWith(".ts") || file.endsWith(".tsx")) && !file.endsWith(".css.ts")) { // .css.tsファイルはスキップ
+                process.stderr.write(`DEBUG: Found TS/TSX file: ${fullPath}\n`); // デバッグログ
                 tsFiles.push(fullPath);
+            } else {
+                process.stderr.write(`DEBUG: Skipping non-TS/TSX or .css.ts file: ${fullPath}\n`); // デバッグログ
             }
         }
     }
     walkSync(searchDirectory);
+    process.stderr.write(`DEBUG: Total TS/TSX files found: ${tsFiles.length}\n`); // デバッグログ
 
     const similarCodes = [];
 
     for (const filePath of tsFiles) {
         if (path.resolve(filePath) === path.resolve(baseFilePath)) {
+            process.stderr.write(`DEBUG: Skipping base file: ${filePath}\n`); // デバッグログ
             continue;
         }
 
         let targetSymbol = path.parse(filePath).name;
         if (targetSymbol === 'index') {
             targetSymbol = path.basename(path.dirname(filePath)); // 親ディレクトリ名をシンボル名とする
-        }
-
-        if (targetSymbol[0].toUpperCase() !== targetSymbol[0]) { // PascalCaseでない場合はスキップ
-            continue;
+            process.stderr.write(`DEBUG: Inferred symbol for index.tsx: ${targetSymbol} from ${filePath}\n`); // デバッグログ
+        } else {
+            process.stderr.write(`DEBUG: Using file name as symbol: ${targetSymbol} for ${filePath}\n`); // デバッグログ
         }
         
         const otherSnippet = getCodeSnippet(filePath, targetSymbol);
         if (otherSnippet) {
             const similarity = calculateSimilarity(baseSnippet, otherSnippet);
+            process.stderr.write(`DEBUG: Comparing ${symbolName} (base) with ${targetSymbol} (${filePath}). Similarity: ${similarity}\n`); // デバッグログ
             if (similarity > 0.5) { // 類似度の閾値
+                process.stderr.write(`DEBUG: Found similar code (similarity > 0.5): ${targetSymbol} in ${filePath}\n`); // デバッグログ
                 similarCodes.push({
                     file_path: filePath,
                     symbol_name: targetSymbol,
                     similarity: similarity,
                     snippet: otherSnippet
                 });
+            } else {
+                process.stderr.write(`DEBUG: Similarity below threshold (0.5): ${targetSymbol} in ${filePath}\n`); // デバッグログ
             }
+        } else {
+            process.stderr.write(`DEBUG: No snippet found for symbol '${targetSymbol}' in ${filePath}\n`); // デバッグログ
         }
     }
 
@@ -295,14 +305,16 @@ async function main() {
     const maxResults = args[4] ? parseInt(args[4], 10) : 3; // find_similar_code用
 
     if (!filePath || !symbolName || !action) {
+        console.log(JSON.stringify({ error: "Missing required arguments: filePath, symbolName, or action." }, null, 2));
         process.exit(1);
     }
 
     if (!path.isAbsolute(filePath)) {
+        console.log(JSON.stringify({ error: `File path must be absolute: ${filePath}` }, null, 2));
         process.exit(1);
     }
 
-    project.addSourceFilesFromTsConfig(path.join(projectRoot, 'src', 'web', 'tsconfig.json'));
+    // project.addSourceFilesFromTsConfig(path.join(projectRoot, 'src', 'web', 'tsconfig.json'));
 
     if (!project.getSourceFile(filePath)) {
         project.addSourceFileAtPath(filePath); // ファイルが追加されていない場合に追加
@@ -336,10 +348,16 @@ async function main() {
                 process.exit(1);
         }
     } catch (e) {
+        process.stderr.write(`ERROR: ${e.message || String(e)}\n`); // エラーログをstderrに出力
+        console.log(JSON.stringify({ error: e.message || String(e) }, null, 2)); // JSON形式でエラーを返す
         process.exit(1);
+    }
+
+    if (typeof result === 'string') {
+        console.log(result);
+    } else {
+        console.log(JSON.stringify(result, null, 2));
     }
 }
 
 main();
-
-

@@ -1,0 +1,4 @@
+fix: Resolve JSX closing tag errors in Turn.tsx
+
+- Corrected the JSX structure in `Turn.tsx` to ensure all `div` elements are properly closed.
+- Ensured the `turnWrapper` and `turnContentBase` divs have their corresponding closing tags.

@@ -387,10 +387,20 @@ class SessionService:
         session_id = f"{parent_id}/{session_hash}" if parent_id else session_hash
 
         # TODO: Default hyperparameters should be handled more cleanly
+        print(
+            f"DEBUG: type of self.settings.parameters.temperature: "
+            f"{type(self.settings.parameters.temperature)}",
+            file=sys.stderr,
+        )
+        print(
+            f"DEBUG: self.settings.parameters.temperature: "
+            f"{self.settings.parameters.temperature}",
+            file=sys.stderr,
+        )
         default_hyperparameters = Hyperparameters(
-            temperature=self.settings.parameters.temperature.model_dump(),
-            top_p=self.settings.parameters.top_p.model_dump(),
-            top_k=self.settings.parameters.top_k.model_dump(),
+            temperature=self.settings.parameters.temperature.value,
+            top_p=self.settings.parameters.top_p.value,
+            top_k=self.settings.parameters.top_k.value,
         )
 
         session = Session(

@@ -5,9 +5,8 @@ Pydantic model for validating the request body of the new session API endpoint.
 import os
 from typing import Any
 
-from pipe.web.validators.rules.file_exists import (
-    validate_comma_separated_files,
-)
+from pipe.core.models.reference import Reference
+from pipe.web.validators.rules.file_exists import validate_list_of_files_exist
 from pydantic import BaseModel, field_validator
 
 
@@ -15,10 +14,10 @@ class NewSessionRequest(BaseModel):
     purpose: str
     background: str
     instruction: str
-    roles: str | None = ""
+    roles: list[str] | None = None
     parent: str | None = None
-    references: str | None = ""
-    artifacts: str | None = ""
+    references: list[Reference] | None = None
+    artifacts: list[str] | None = None
     procedure: str | None = None
     multi_step_reasoning_enabled: bool = False
     hyperparameters: dict[str, Any] | None = None
@@ -30,22 +29,16 @@ class NewSessionRequest(BaseModel):
             raise ValueError(f"{field.field_name} must not be empty.")
         return v
 
-    @field_validator("roles")
+    @field_validator("roles", "artifacts")
     @classmethod
-    def validate_roles_exist(cls, v: str) -> str:
-        validate_comma_separated_files(v)
+    def validate_list_of_strings_exist(cls, v: list[str]) -> list[str]:
+        validate_list_of_files_exist(v)
         return v
 
     @field_validator("references")
     @classmethod
-    def validate_references_exist(cls, v: str) -> str:
-        validate_comma_separated_files(v)
-        return v
-
-    @field_validator("artifacts")
-    @classmethod
-    def validate_artifacts_exist(cls, v: str) -> str:
-        validate_comma_separated_files(v)
+    def validate_list_of_references_exist(cls, v: list[Reference]) -> list[Reference]:
+        validate_list_of_files_exist([ref.path for ref in v])
         return v
 
     @field_validator("procedure")

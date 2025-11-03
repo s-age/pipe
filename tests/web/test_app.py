@@ -2,6 +2,7 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
+from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.reference import Reference
 from pipe.core.models.session import Session
 
@@ -13,7 +14,8 @@ class TestAppApi(unittest.TestCase):
     def setUp(self):
         # Configure the app for testing
         app.config["TESTING"] = True
-        self.client = app.test_client()
+        with app.app_context():
+            self.client = app.test_client()
 
         # We patch the session_service used by the app to isolate the web layer
         # and avoid actual file system operations.
@@ -38,10 +40,10 @@ class TestAppApi(unittest.TestCase):
         mock_session.references = [Reference(path=file_path, disabled=False, ttl=3)]
         self.mock_session_service.get_session.return_value = mock_session
 
-        response = self.client.post(
-            f"/api/session/{session_id}/references/ttl/{reference_index}",
-            data=json.dumps({"ttl": new_ttl}),
-            content_type="application/json",
+        response = self.client.open(
+            f"/api/session/{session_id}/references/{reference_index}/ttl",
+            method="PATCH",
+            json={"ttl": new_ttl},
         )
 
         self.assertEqual(response.status_code, 200)
@@ -54,10 +56,10 @@ class TestAppApi(unittest.TestCase):
         """Tests the API response when the session ID does not exist."""
         self.mock_session_service.get_session.return_value = None
 
-        response = self.client.post(
-            "/api/session/nonexistent/references/ttl/0",
-            data=json.dumps({"ttl": 5}),
-            content_type="application/json",
+        response = self.client.open(
+            "/api/session/nonexistent/references/0/ttl",
+            method="PATCH",
+            json={"ttl": 5},
         )
 
         self.assertEqual(response.status_code, 404)
@@ -69,10 +71,10 @@ class TestAppApi(unittest.TestCase):
         mock_session.references = [Reference(path="test.py")]
         self.mock_session_service.get_session.return_value = mock_session
 
-        response = self.client.post(
-            f"/api/session/{session_id}/references/ttl/99",  # Index 99 is out of range
-            data=json.dumps({"ttl": 5}),
-            content_type="application/json",
+        response = self.client.open(
+            f"/api/session/{session_id}/references/99/ttl",  # Index 99 is out of range
+            method="PATCH",
+            json={"ttl": 5},
         )
 
         self.assertEqual(response.status_code, 400)
@@ -93,10 +95,10 @@ class TestAppApi(unittest.TestCase):
 
         for payload in invalid_payloads:
             with self.subTest(payload=payload):
-                response = self.client.post(
-                    f"/api/session/{session_id}/references/ttl/0",
-                    data=json.dumps(payload),
-                    content_type="application/json",
+                response = self.client.open(
+                    f"/api/session/{session_id}/references/0/ttl",
+                    method="PATCH",
+                    json=payload,
                 )
                 self.assertEqual(response.status_code, 422)
 
@@ -109,7 +111,7 @@ class TestAppApi(unittest.TestCase):
         response = self.client.get("/api/sessions")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertTrue(data["success"])
+        self.assertIn("sessions", data)
         self.assertEqual(data["sessions"], mock_sessions)
 
     def test_get_session_api_success(self):
@@ -122,7 +124,7 @@ class TestAppApi(unittest.TestCase):
         response = self.client.get(f"/api/session/{session_id}")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertTrue(data["success"])
+        self.assertIn("session", data)
         self.assertEqual(data["session"]["purpose"], "Details")
 
     def test_get_session_api_not_found(self):
@@ -150,10 +152,11 @@ class TestAppApi(unittest.TestCase):
             "purpose": "Test",
             "background": "BG",
             "instruction": "Do thing",
-            "roles": "",
+            "roles": [],
             "parent": None,
-            "references": "",
+            "references": [],
             "multi_step_reasoning_enabled": False,
+            "hyperparameters": Hyperparameters().model_dump(),
         }
         response = self.client.post(
             "/api/session/new",
@@ -163,7 +166,6 @@ class TestAppApi(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertTrue(data["success"])
         self.assertEqual(data["session_id"], "new_session_123")
         mock_subprocess_run.assert_called_once()
 
@@ -182,8 +184,8 @@ class TestAppApi(unittest.TestCase):
         turn_index = 0
         payload = {"instruction": "new instruction"}
 
-        response = self.client.post(
-            f"/api/session/{session_id}/turn/{turn_index}/edit",
+        response = self.client.patch(
+            f"/api/session/{session_id}/turns/{turn_index}",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -198,8 +200,8 @@ class TestAppApi(unittest.TestCase):
         session_id = "sid"
         payload = {"purpose": "New Purpose"}
 
-        response = self.client.post(
-            f"/api/session/{session_id}/meta/edit",
+        response = self.client.patch(
+            f"/api/session/{session_id}/meta",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -230,8 +232,8 @@ class TestAppApi(unittest.TestCase):
     def test_edit_todos_api_success(self):
         """Tests successfully editing todos."""
         payload = {"todos": [{"title": "Test Todo", "checked": False}]}
-        response = self.client.post(
-            "/api/session/sid/todos/edit",
+        response = self.client.patch(
+            "/api/session/sid/todos",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -252,8 +254,8 @@ class TestAppApi(unittest.TestCase):
     def test_edit_references_api_success(self):
         """Tests successfully editing references."""
         payload = {"references": [{"path": "/test.py", "disabled": False, "ttl": -1}]}
-        response = self.client.post(
-            "/api/session/sid/references/edit",
+        response = self.client.patch(
+            "/api/session/sid/references",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -296,7 +298,7 @@ class TestAppApi(unittest.TestCase):
         response = self.client.get("/api/session/sid/turns?since=0")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertTrue(data["success"])
+        self.assertIn("turns", data)
         self.assertEqual(len(data["turns"]), 1)
         self.assertEqual(data["turns"][0]["instruction"], "test")
 

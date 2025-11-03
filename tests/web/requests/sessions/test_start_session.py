@@ -93,13 +93,6 @@ class TestStartSessionRequest(unittest.TestCase):
         with self.assertRaises(ValidationError):
             StartSessionRequest(**data)
 
-    def test_non_existent_artifact_file(self):
-        """Tests that validation fails for a non-existent artifact file."""
-        data = self.base_data.copy()
-        data["artifacts"] = ["non_existent_artifact.txt"]
-        with self.assertRaises(ValidationError):
-            StartSessionRequest(**data)
-
     def test_mixed_existence_references(self):
         """Tests that validation fails if at least one reference file is missing."""
         data = self.base_data.copy()
@@ -116,14 +109,6 @@ class TestStartSessionRequest(unittest.TestCase):
         data["roles"] = [self.role_file, "non_existent_role.md"]
         with self.assertRaises(ValidationError):
             StartSessionRequest(**data)
-
-    def test_mixed_existence_artifacts(self):
-        """Tests that validation fails if at least one artifact file is missing."""
-        data = self.base_data.copy()
-        data["artifacts"] = [self.artifact_file, "non_existent_artifact.txt"]
-        with self.assertRaises(ValidationError):
-            StartSessionRequest(**data)
-
 
 if __name__ == "__main__":
     unittest.main()

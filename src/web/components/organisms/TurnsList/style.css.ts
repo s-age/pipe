@@ -42,7 +42,7 @@ export const instructionTextarea = style({
   borderRadius: '4px',
   border: `1px solid ${colors.darkBlue}`,
   backgroundColor: colors.grayText,
-  color: colors.lightText,
+  color: colors.darkBackground,
 })
 
 export const welcomeMessage = style({

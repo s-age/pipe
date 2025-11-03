@@ -7,6 +7,7 @@ import { h2Style } from '@/components/atoms/Heading/style.css'
 import TextArea from '@/components/atoms/TextArea'
 import Turn from '@/components/molecules/Turn'
 import { TurnData, SessionData } from '@/lib/api/session/getSession'
+import { colors } from '@/styles/colors.css'
 
 import {
   turnsColumn,
@@ -24,6 +25,7 @@ type TurnsListProps = {
   onDeleteTurn: (sessionId: string, turnIndex: number) => void
   onForkSession: (sessionId: string, forkIndex: number) => void
   onSendInstruction: (instruction: string) => void
+  onDeleteSession: (sessionId: string) => void // 追加
   streamedText: string
   isStreaming: boolean
 }
@@ -44,6 +46,7 @@ const TurnsList: ({
   onDeleteTurn,
   onForkSession,
   onSendInstruction,
+  onDeleteSession, // 追加
   streamedText,
   isStreaming,
 }) => {
@@ -95,9 +98,8 @@ const TurnsList: ({
         <Button
           kind="secondary"
           size="default"
-          onClick={() => {
-            /* onDeleteSession は HomePage で処理 */
-          }}
+          onClick={() => currentSessionId && onDeleteSession(currentSessionId)}
+          style={{ backgroundColor: colors.error, color: colors.lightText }}
         >
           Delete Session
         </Button>

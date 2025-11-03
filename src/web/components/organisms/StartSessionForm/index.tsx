@@ -74,9 +74,9 @@ const formSchema = z.object({
   multi_step_reasoning_enabled: z.boolean().default(false),
   hyperparameters: z
     .object({
-      temperature: z.number().min(0).max(2).nullable().default(0.7),
-      top_p: z.number().min(0).max(1).nullable().default(0.9),
-      top_k: z.number().min(1).max(50).nullable().default(5),
+      temperature: z.coerce.number().min(0).max(2).nullable().default(0.7),
+      top_p: z.coerce.number().min(0).max(1).nullable().default(0.9),
+      top_k: z.coerce.number().min(1).max(50).nullable().default(5),
     })
     .nullable()
     .default(null),
@@ -111,14 +111,11 @@ const StartSessionForm: (props: StartSessionFormProps) => JSX.Element = ({
       procedure: null,
       instruction: '',
       multi_step_reasoning_enabled: false,
-      hyperparameters:
-        defaultSettings?.parameters?.temperature !== undefined
-          ? {
-              temperature: defaultSettings?.parameters?.temperature || 0.7,
-              top_p: defaultSettings?.parameters?.top_p || 0.9,
-              top_k: defaultSettings?.parameters?.top_k || 5,
-            }
-          : null,
+      hyperparameters: {
+        temperature: defaultSettings?.parameters?.temperature?.value ?? 0.7,
+        top_p: defaultSettings?.parameters?.top_p?.value ?? 0.9,
+        top_k: defaultSettings?.parameters?.top_k?.value ?? 5,
+      },
     },
   })
 

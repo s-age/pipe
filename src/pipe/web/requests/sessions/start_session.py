@@ -29,7 +29,7 @@ class StartSessionRequest(BaseModel):
             raise ValueError(f"{field.field_name} must not be empty.")
         return v
 
-    @field_validator("roles", "artifacts")
+    @field_validator("roles")
     @classmethod
     def validate_list_of_strings_exist(cls, v: list[str]) -> list[str]:
         validate_list_of_files_exist(v)

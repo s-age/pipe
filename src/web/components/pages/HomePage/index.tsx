@@ -5,11 +5,12 @@ import { SessionMeta } from '@/components/organisms/SessionMeta'
 import TurnsList from '@/components/organisms/TurnsList'
 import { useStreamingFetch } from '@/hooks/useStreamingFetch'
 import { API_BASE_URL } from '@/lib/api/client'
+import { deleteSession } from '@/lib/api/session/deleteSession'
 import { deleteTodos } from '@/lib/api/session/deleteTodos'
 import { deleteTurn } from '@/lib/api/session/deleteTurn'
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
-import { editReferences } from '@/lib/api/session/editReferences'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
+import { editReferences } from '@/lib/api/session/editReferences'
 import {
   editSessionMeta,
   EditSessionMetaRequest,
@@ -228,7 +229,9 @@ const HomePage: () => JSX.Element = () => {
   ) => {
     try {
       await editReferencePersist(sessionId, index, persist)
-      // UIは即時更新されるため、ここでは再フェッチしない
+      // セッションデータを再読み込みしてUIを更新
+      const data = await getSession(sessionId)
+      setSessionData(data.session)
     } catch (err: unknown) {
       setError((err as Error).message || 'Failed to update reference persist state.')
     }
@@ -259,9 +262,25 @@ const HomePage: () => JSX.Element = () => {
       const newReferences = [...sessionData.references]
       newReferences[index] = { ...newReferences[index], disabled }
       await editReferences(sessionId, newReferences)
-      // UIは即時更新されるため、ここでは再フェッチしない
+      // セッションデータを再読み込みしてUIを更新
+      const data = await getSession(sessionId)
+      setSessionData(data.session)
     } catch (err: unknown) {
       setError((err as Error).message || 'Failed to update reference disabled state.')
+    }
+  }
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!window.confirm('Are you sure you want to delete this session?')) return
+    try {
+      await deleteSession(sessionId)
+      const fetchedSessions = await getSessions()
+      setSessions(fetchedSessions)
+      setCurrentSessionId(null)
+      setSessionData(null)
+      window.history.pushState({}, '', '/') // URLをルートに戻す
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to delete session.')
     }
   }
 
@@ -291,6 +310,7 @@ const HomePage: () => JSX.Element = () => {
         onDeleteTurn={handleDeleteTurn}
         onForkSession={handleForkSession}
         onSendInstruction={handleSendInstruction}
+        onDeleteSession={handleDeleteSession}
         streamedText={streamedText}
         isStreaming={isStreaming}
       />

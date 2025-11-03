@@ -111,7 +111,7 @@ const SessionList = ({
         <Button
           kind="primary"
           size="default"
-          onClick={() => (window.location.href = '/new_session')}
+          onClick={() => (window.location.href = '/start_session')}
         >
           + New Chat
         </Button>

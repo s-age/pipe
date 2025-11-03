@@ -20,9 +20,9 @@ class TestStartSessionValidator(unittest.TestCase):
         Tests that a None purpose raises a ValueError.
         """
         with self.assertRaises(ValueError) as cm:
-                        start_session_validator.validate(
-                            purpose=None, background="Valid background"
-                        )
+            start_session_validator.validate(
+                purpose=None, background="Valid background"
+            )
         self.assertEqual(str(cm.exception), "Purpose is required for a new session.")
 
     def test_empty_purpose_raises_error(self):

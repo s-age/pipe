@@ -1,24 +1,46 @@
-import { useEffect, useRef, useState, JSX } from 'react';
+import { useEffect, useRef, useState, JSX } from "react";
 
-import Turn from '@/components/molecules/Turn';
-import Button from '@/components/atoms/Button';
-import Heading from '@/components/atoms/Heading';
-import { turnsColumn, turnsHeader, turnsListSection, newInstructionControl, instructionTextarea, welcomeMessage } from './style.css';
-import { h2Style } from '@/components/atoms/Heading/style.css';
-import TextArea from '@/components/atoms/TextArea';
+import Button from "@/components/atoms/Button";
+import Heading from "@/components/atoms/Heading";
+import { h2Style } from "@/components/atoms/Heading/style.css";
+import TextArea from "@/components/atoms/TextArea";
+import Turn from "@/components/molecules/Turn";
 
-interface TurnsListProps {
+import {
+  turnsColumn,
+  turnsHeader,
+  turnsListSection,
+  newInstructionControl,
+  instructionTextarea,
+  welcomeMessage,
+} from "./style.css";
+
+type TurnsListProps = {
   sessionData: any; // TODO: 型を定義する
   currentSessionId: string | null;
   expertMode: boolean;
   onDeleteTurn: (sessionId: string, turnIndex: number) => void;
   onForkSession: (sessionId: string, forkIndex: number) => void;
   onSendInstruction: (sessionId: string, instruction: string) => void;
-}
+};
 
-const TurnsList: ({ sessionData, currentSessionId, expertMode, onDeleteTurn, onForkSession, onSendInstruction }: TurnsListProps) => JSX.Element = ({ sessionData, currentSessionId, expertMode, onDeleteTurn, onForkSession, onSendInstruction }) => {
+const TurnsList: ({
+  sessionData,
+  currentSessionId,
+  expertMode,
+  onDeleteTurn,
+  onForkSession,
+  onSendInstruction,
+}: TurnsListProps) => JSX.Element = ({
+  sessionData,
+  currentSessionId,
+  expertMode,
+  onDeleteTurn,
+  onForkSession,
+  onSendInstruction,
+}) => {
   const turnsListRef = useRef<HTMLDivElement>(null);
-  const [instructionText, setInstructionText] = useState<string>('');
+  const [instructionText, setInstructionText] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
 
   const scrollToBottom = () => {
@@ -36,9 +58,9 @@ const TurnsList: ({ sessionData, currentSessionId, expertMode, onDeleteTurn, onF
     setIsSending(true);
     try {
       await onSendInstruction(currentSessionId, instructionText);
-      setInstructionText('');
+      setInstructionText("");
     } catch (error) {
-      console.error('Failed to send instruction:', error);
+      console.error("Failed to send instruction:", error);
     } finally {
       setIsSending(false);
     }
@@ -57,15 +79,22 @@ const TurnsList: ({ sessionData, currentSessionId, expertMode, onDeleteTurn, onF
 
   const contextLimit = 4000; // 仮の値
   const tokenCount = 1000; // 仮の値
-  const contextLeft = ((contextLimit - tokenCount) / contextLimit * 100).toFixed(0);
+  const contextLeft = (((contextLimit - tokenCount) / contextLimit) * 100).toFixed(0);
 
   return (
     <div className={turnsColumn}>
       <div className={turnsHeader}>
         <Heading level={2} className={h2Style}>
-          {sessionData.purpose} {contextLimit > 0 && tokenCount !== null && `(${contextLeft}% context left)`}
+          {sessionData.purpose}{" "}
+          {contextLimit > 0 && tokenCount !== null && `(${contextLeft}% context left)`}
         </Heading>
-        <Button kind="secondary" size="default" onClick={() => { /* onDeleteSession は HomePage で処理 */ }}>
+        <Button
+          kind="secondary"
+          size="default"
+          onClick={() => {
+            /* onDeleteSession は HomePage で処理 */
+          }}
+        >
           Delete Session
         </Button>
       </div>
@@ -92,7 +121,7 @@ const TurnsList: ({ sessionData, currentSessionId, expertMode, onDeleteTurn, onF
           value={instructionText}
           onChange={(e) => setInstructionText(e.target.value)}
           onKeyPress={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               handleSend();
             }
@@ -100,7 +129,7 @@ const TurnsList: ({ sessionData, currentSessionId, expertMode, onDeleteTurn, onF
           disabled={isSending}
         />
         <Button kind="primary" size="default" onClick={handleSend} disabled={isSending}>
-          {isSending ? 'Sending...' : 'Send Instruction'}
+          {isSending ? "Sending..." : "Send Instruction"}
         </Button>
       </section>
     </div>

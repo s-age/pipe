@@ -1,374 +1,454 @@
-const { Project, SyntaxKind } = require('ts-morph');
-const path = require('path');
-const fs = require('fs');
+const fs = require("fs");
+const path = require("path");
+
+const { Project, SyntaxKind } = require("ts-morph");
 
 // const project = new Project(); // グローバル宣言を削除
-const projectRoot = path.join(__dirname, '..', '..', '..'); // Adjust based on actual project structure
+const projectRoot = path.join(__dirname, "..", "..", ".."); // Adjust based on actual project structure
 
-function getTypeDefinitions(filePath, symbolName, project) { // projectを引数に追加
-    const sourceFile = project.addSourceFileAtPath(filePath);
-    const definitions = {};
+function getTypeDefinitions(filePath, symbolName, project) {
+  // projectを引数に追加
+  const sourceFile = project.addSourceFileAtPath(filePath);
+  const definitions = {};
 
-    // Find class declarations
-    const classDeclaration = sourceFile.getClass(symbolName);
-    if (classDeclaration) {
-        definitions.type = 'class';
-        definitions.properties = classDeclaration.getProperties().map(p => ({
-            name: p.getName(),
-            type: p.getType().getText(),
-            isStatic: p.isStatic(),
-            isReadonly: p.isReadonly(),
-        }));
-        definitions.methods = classDeclaration.getMethods().map(m => ({
-            name: m.getName(),
-            parameters: m.getParameters().map(p => ({
-                name: p.getName(),
-                type: p.getType().getText(),
-            })),
-            returnType: m.getReturnType().getText(),
-            isStatic: m.isStatic(),
-        }));
-        return definitions;
-    }
+  // Find class declarations
+  const classDeclaration = sourceFile.getClass(symbolName);
+  if (classDeclaration) {
+    definitions.type = "class";
+    definitions.properties = classDeclaration.getProperties().map((p) => ({
+      name: p.getName(),
+      type: p.getType().getText(),
+      isStatic: p.isStatic(),
+      isReadonly: p.isReadonly(),
+    }));
+    definitions.methods = classDeclaration.getMethods().map((m) => ({
+      name: m.getName(),
+      parameters: m.getParameters().map((p) => ({
+        name: p.getName(),
+        type: p.getType().getText(),
+      })),
+      returnType: m.getReturnType().getText(),
+      isStatic: m.isStatic(),
+    }));
 
-    // Find function declarations
-    const functionDeclaration = sourceFile.getFunction(symbolName);
-    if (functionDeclaration) {
-        definitions.type = 'function';
-        definitions.parameters = functionDeclaration.getParameters().map(p => ({
-            name: p.getName(),
-            type: p.getType().getText(),
-        }));
-        definitions.returnType = functionDeclaration.getReturnType().getText();
-        return definitions;
-    }
+    return definitions;
+  }
 
-    // Find variable declarations (const, let, var)
-    const variableDeclaration = sourceFile.getVariableDeclaration(symbolName);
-    if (variableDeclaration) {
-        const initializer = variableDeclaration.getInitializer();
+  // Find function declarations
+  const functionDeclaration = sourceFile.getFunction(symbolName);
+  if (functionDeclaration) {
+    definitions.type = "function";
+    definitions.parameters = functionDeclaration.getParameters().map((p) => ({
+      name: p.getName(),
+      type: p.getType().getText(),
+    }));
+    definitions.returnType = functionDeclaration.getReturnType().getText();
 
-        // Check if it's an arrow function component
-        if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
-            const arrowFunction = initializer;
-            const parameters = arrowFunction.getParameters();
-            const returnType = arrowFunction.getReturnType().getText();
+    return definitions;
+  }
 
-            if (parameters.length > 0) {
-                const firstParam = parameters[0];
-                const firstParamType = firstParam.getTypeNode();
+  // Find variable declarations (const, let, var)
+  const variableDeclaration = sourceFile.getVariableDeclaration(symbolName);
+  if (variableDeclaration) {
+    const initializer = variableDeclaration.getInitializer();
 
-                if (firstParamType && firstParamType.getKind() === SyntaxKind.TypeReference) {
-                    const propsTypeName = firstParamType.getText();
-                    const propsInterface = sourceFile.getInterface(propsTypeName);
-                    const propsTypeAlias = sourceFile.getTypeAlias(propsTypeName);
+    // Check if it's an arrow function component
+    if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
+      const arrowFunction = initializer;
+      const parameters = arrowFunction.getParameters();
+      const returnType = arrowFunction.getReturnType().getText();
 
-                    if (propsInterface) {
-                        definitions.type = 'React.ArrowFunctionComponent';
-                        definitions.propsType = propsTypeName;
-                        definitions.returnType = returnType;
-                        definitions.props = propsInterface.getProperties().map(p => ({
-                            name: p.getName(),
-                            type: p.getType().getText(),
-                            isOptional: p.hasQuestionToken(),
-                        }));
-                        return definitions;
-                    } else if (propsTypeAlias) {
-                        definitions.type = 'React.ArrowFunctionComponent';
-                        definitions.propsType = propsTypeName;
-                        definitions.returnType = returnType;
-                        const aliasedType = propsTypeAlias.getType();
-                        definitions.props = aliasedType.getProperties().map(p => ({
-                            name: p.getName(),
-                            type: p.getTypeAtLocation(propsTypeAlias).getText(),
-                            isOptional: p.compilerObject.flags & 16777216,
-                        }));
-                        return definitions;
-                    }
-                }
-            }
-            // If no specific Props type is found but it's an arrow function
-            definitions.type = 'React.ArrowFunctionComponent';
-            definitions.parameters = parameters.map(p => ({
-                name: p.getName(),
-                type: p.getType().getText(),
-            }));
+      if (parameters.length > 0) {
+        const firstParam = parameters[0];
+        const firstParamType = firstParam.getTypeNode();
+
+        if (firstParamType && firstParamType.getKind() === SyntaxKind.TypeReference) {
+          const propsTypeName = firstParamType.getText();
+          const propsInterface = sourceFile.getInterface(propsTypeName);
+          const propsTypeAlias = sourceFile.getTypeAlias(propsTypeName);
+
+          if (propsInterface) {
+            definitions.type = "React.ArrowFunctionComponent";
+            definitions.propsType = propsTypeName;
             definitions.returnType = returnType;
+            definitions.props = propsInterface.getProperties().map((p) => ({
+              name: p.getName(),
+              type: p.getType().getText(),
+              isOptional: p.hasQuestionToken(),
+            }));
+
             return definitions;
+          } else if (propsTypeAlias) {
+            definitions.type = "React.ArrowFunctionComponent";
+            definitions.propsType = propsTypeName;
+            definitions.returnType = returnType;
+            const aliasedType = propsTypeAlias.getType();
+            definitions.props = aliasedType.getProperties().map((p) => ({
+              name: p.getName(),
+              type: p.getTypeAtLocation(propsTypeAlias).getText(),
+              isOptional: p.compilerObject.flags & 16777216,
+            }));
+
+            return definitions;
+          }
         }
+      }
+      // If no specific Props type is found but it's an arrow function
+      definitions.type = "React.ArrowFunctionComponent";
+      definitions.parameters = parameters.map((p) => ({
+        name: p.getName(),
+        type: p.getType().getText(),
+      }));
+      definitions.returnType = returnType;
 
-        definitions.type = 'variable';
-        definitions.variableType = variableDeclaration.getType().getText();
-        return definitions;
+      return definitions;
     }
 
-    // Find interfaces
-    const interfaceDeclaration = sourceFile.getInterface(symbolName);
-    if (interfaceDeclaration) {
-        definitions.type = 'interface';
-        definitions.properties = interfaceDeclaration.getProperties().map(p => ({
-            name: p.getName(),
-            type: p.getType().getText(),
-        }));
-        return definitions;
-    }
+    definitions.type = "variable";
+    definitions.variableType = variableDeclaration.getType().getText();
 
-    // Find type aliases
-    const typeAliasDeclaration = sourceFile.getTypeAlias(symbolName);
-    if (typeAliasDeclaration) {
-        definitions.type = 'typeAlias';
-        definitions.definition = typeAliasDeclaration.getTypeNode().getText();
-        return definitions;
-    }
+    return definitions;
+  }
 
-    return null;
+  // Find interfaces
+  const interfaceDeclaration = sourceFile.getInterface(symbolName);
+  if (interfaceDeclaration) {
+    definitions.type = "interface";
+    definitions.properties = interfaceDeclaration.getProperties().map((p) => ({
+      name: p.getName(),
+      type: p.getType().getText(),
+    }));
+
+    return definitions;
+  }
+
+  // Find type aliases
+  const typeAliasDeclaration = sourceFile.getTypeAlias(symbolName);
+  if (typeAliasDeclaration) {
+    definitions.type = "typeAlias";
+    definitions.definition = typeAliasDeclaration.getTypeNode().getText();
+
+    return definitions;
+  }
+
+  return null;
 }
 
 function getReferences(filePath, symbolName, project) {
-    const references = [];
+  const references = [];
 
-    // プロジェクト内のすべてのソースファイルからシンボルを検索
-    const symbol = project.getSourceFiles()
-        .flatMap(sf => sf.getDescendantsOfKind(SyntaxKind.Identifier))
-        .find(id => id.getText() === symbolName);
+  // プロジェクト内のすべてのソースファイルからシンボルを検索
+  const symbol = project
+    .getSourceFiles()
+    .flatMap((sf) => sf.getDescendantsOfKind(SyntaxKind.Identifier))
+    .find((id) => id.getText() === symbolName);
 
-    if (symbol) {
-        const symbolReferences = symbol.findReferencesAsNodes();
-        symbolReferences.forEach(ref => {
-            references.push({
-                filePath: ref.getSourceFile().getFilePath(),
-                lineNumber: ref.getStartLineNumber(),
-                lineContent: ref.getSourceFile().getFullText().split('\n')[ref.getStartLineNumber() - 1].trim(),
-            });
-        });
-    }
-    return references;
+  if (symbol) {
+    const symbolReferences = symbol.findReferencesAsNodes();
+    symbolReferences.forEach((ref) => {
+      references.push({
+        filePath: ref.getSourceFile().getFilePath(),
+        lineNumber: ref.getStartLineNumber(),
+        lineContent: ref
+          .getSourceFile()
+          .getFullText()
+          .split("\n")
+          [ref.getStartLineNumber() - 1].trim(),
+      });
+    });
+  }
+
+  return references;
 }
 
 function getCodeSnippet(filePath, symbolName, project) {
-    const sourceFile = project.addSourceFileAtPath(filePath);
+  const sourceFile = project.addSourceFileAtPath(filePath);
 
-    // Try to find a class, function, variable, interface, or type alias
-    const declaration = sourceFile.getClass(symbolName) ||
-                        sourceFile.getFunction(symbolName) ||
-                        sourceFile.getInterface(symbolName) ||
-                        sourceFile.getTypeAlias(symbolName);
+  // Try to find a class, function, variable, interface, or type alias
+  const declaration =
+    sourceFile.getClass(symbolName) ||
+    sourceFile.getFunction(symbolName) ||
+    sourceFile.getInterface(symbolName) ||
+    sourceFile.getTypeAlias(symbolName);
 
-    if (declaration) {
-        return declaration.getText();
+  if (declaration) {
+    return declaration.getText();
+  }
+
+  // Try to find a variable declaration, including default exports
+  const variableDeclarations = sourceFile.getVariableDeclarations();
+  for (const varDecl of variableDeclarations) {
+    if (varDecl.getName() === symbolName) {
+      const initializer = varDecl.getInitializer();
+      if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
+        // For arrow function components, return the entire variable statement
+        return varDecl.getParent().getText();
+      }
+
+      return varDecl.getText();
     }
+  }
 
-    // Try to find a variable declaration, including default exports
-    const variableDeclarations = sourceFile.getVariableDeclarations();
-    for (const varDecl of variableDeclarations) {
-        if (varDecl.getName() === symbolName) {
-            const initializer = varDecl.getInitializer();
-            if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
-                // For arrow function components, return the entire variable statement
-                return varDecl.getParent().getText();
-            }
-            return varDecl.getText();
+  // If not found by name, check for default export if the symbol name matches the file name
+  const fileNameWithoutExtension = path.parse(filePath).name;
+  if (symbolName === fileNameWithoutExtension) {
+    const defaultExportSymbol = sourceFile.getDefaultExportSymbol();
+    if (defaultExportSymbol) {
+      const declarations = defaultExportSymbol.getDeclarations();
+      for (const decl of declarations) {
+        if (
+          decl.getKind() === SyntaxKind.VariableDeclaration ||
+          decl.getKind() === SyntaxKind.VariableStatement
+        ) {
+          return decl.getText();
         }
+      }
     }
+  }
 
-    // If not found by name, check for default export if the symbol name matches the file name
-    const fileNameWithoutExtension = path.parse(filePath).name;
-    if (symbolName === fileNameWithoutExtension) {
-        const defaultExportSymbol = sourceFile.getDefaultExportSymbol();
-        if (defaultExportSymbol) {
-            const declarations = defaultExportSymbol.getDeclarations();
-            for (const decl of declarations) {
-                if (decl.getKind() === SyntaxKind.VariableDeclaration || decl.getKind() === SyntaxKind.VariableStatement) {
-                    return decl.getText();
-                }
-            }
-        }
-    }
-
-    return null;
+  return null;
 }
 
 function getFileContentSnippet(filePath) {
-    try {
-        return fs.readFileSync(filePath, 'utf8');
-    } catch (error) {
-        return null;
-    }
+  try {
+    return fs.readFileSync(filePath, "utf8");
+  } catch (error) {
+    return null;
+  }
 }
 
 function getSnippetAndTypeDefinitions(filePath, symbolName, project) {
-    const snippet = getCodeSnippet(filePath, symbolName, project);
-    const typeDefinitions = getTypeDefinitions(filePath, symbolName, project);
-    return { snippet, typeDefinitions };
+  const snippet = getCodeSnippet(filePath, symbolName, project);
+  const typeDefinitions = getTypeDefinitions(filePath, symbolName, project);
+
+  return { snippet, typeDefinitions };
 }
 
 // 類似度計算関数 (Pythonのdifflib.SequenceMatcher.ratio()に似たもの)
 function calculateSimilarity(str1, str2) {
-    const m = str1.length;
-    const n = str2.length;
-    const dp = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0));
+  const m = str1.length;
+  const n = str2.length;
+  const dp = Array(m + 1)
+    .fill(0)
+    .map(() => Array(n + 1).fill(0));
 
-    for (let i = 1; i <= m; i++) {
-        for (let j = 1; j <= n; j++) {
-            if (str1[i - 1] === str2[j - 1]) {
-                dp[i][j] = dp[i - 1][j - 1] + 1;
-            } else {
-                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-            }
-        }
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
     }
-    const lcs = dp[m][n];
-    return (2 * lcs) / (m + n);
+  }
+  const lcs = dp[m][n];
+
+  return (2 * lcs) / (m + n);
 }
 
-function findSimilarCode(baseFilePath, symbolName, searchDirectory, maxResults = 3, project) {
-    const baseInfo = getSnippetAndTypeDefinitions(baseFilePath, symbolName, project);
-    if (!baseInfo.snippet) {
-        console.error(`DEBUG: No base snippet found for symbol '${symbolName}' in ${baseFilePath}`);
-        return { error: `No code snippet found for symbol '${symbolName}' in ${baseFilePath}` };
-    }
-
-    const baseSnippet = baseInfo.snippet;
-    const baseTypeDefinitions = baseInfo.typeDefinitions;
-
-    const tsFiles = [];
-    function walkSync(currentDir) {
-        const files = fs.readdirSync(currentDir);
-        for (const file of files) {
-            const fullPath = path.join(currentDir, file);
-            const stat = fs.statSync(fullPath);
-            if (stat.isDirectory()) {
-                if (file !== 'node_modules') { // node_modulesをスキップ
-                    walkSync(fullPath);
-                }
-            } else if ((file.endsWith(".ts") || file.endsWith(".tsx")) && !file.endsWith(".css.ts")) { // .css.tsファイルはスキップ
-                process.stderr.write(`DEBUG: Found TS/TSX file: ${fullPath}\n`); // デバッグログ
-                tsFiles.push(fullPath);
-            } else {
-                process.stderr.write(`DEBUG: Skipping non-TS/TSX or .css.ts file: ${fullPath}\n`); // デバッグログ
-            }
-        }
-    }
-    walkSync(searchDirectory);
-    process.stderr.write(`DEBUG: Total TS/TSX files found: ${tsFiles.length}\n`); // デバッグログ
-
-    const similarCodes = [];
-
-    for (const filePath of tsFiles) {
-        if (path.resolve(filePath) === path.resolve(baseFilePath)) {
-            process.stderr.write(`DEBUG: Skipping base file: ${filePath}\n`); // デバッグログ
-            continue;
-        }
-
-        let targetSymbol = path.parse(filePath).name;
-        if (targetSymbol === 'index') {
-            targetSymbol = path.basename(path.dirname(filePath)); // 親ディレクトリ名をシンボル名とする
-            process.stderr.write(`DEBUG: Inferred symbol for index.tsx: ${targetSymbol} from ${filePath}\n`); // デバッグログ
-        } else {
-            process.stderr.write(`DEBUG: Using file name as symbol: ${targetSymbol} for ${filePath}\n`); // デバッグログ
-        }
-        
-        const otherSnippet = getCodeSnippet(filePath, targetSymbol);
-        if (otherSnippet) {
-            const similarity = calculateSimilarity(baseSnippet, otherSnippet);
-            process.stderr.write(`DEBUG: Comparing ${symbolName} (base) with ${targetSymbol} (${filePath}). Similarity: ${similarity}\n`); // デバッグログ
-            if (similarity > 0.5) { // 類似度の閾値
-                process.stderr.write(`DEBUG: Found similar code (similarity > 0.5): ${targetSymbol} in ${filePath}\n`); // デバッグログ
-                similarCodes.push({
-                    file_path: filePath,
-                    symbol_name: targetSymbol,
-                    similarity: similarity,
-                    snippet: otherSnippet
-                });
-            } else {
-                process.stderr.write(`DEBUG: Similarity below threshold (0.5): ${targetSymbol} in ${filePath}\n`); // デバッグログ
-            }
-        } else {
-            process.stderr.write(`DEBUG: No snippet found for symbol '${targetSymbol}' in ${filePath}\n`); // デバッグログ
-        }
-    }
-
-    similarCodes.sort((a, b) => b.similarity - a.similarity);
+function findSimilarCode(
+  baseFilePath,
+  symbolName,
+  searchDirectory,
+  maxResults = 3,
+  project,
+) {
+  const baseInfo = getSnippetAndTypeDefinitions(baseFilePath, symbolName, project);
+  if (!baseInfo.snippet) {
+    console.error(
+      `DEBUG: No base snippet found for symbol '${symbolName}' in ${baseFilePath}`,
+    );
 
     return {
-        base_symbol_type_definitions: baseTypeDefinitions,
-        similar_codes: similarCodes.slice(0, maxResults)
+      error: `No code snippet found for symbol '${symbolName}' in ${baseFilePath}`,
     };
+  }
+
+  const baseSnippet = baseInfo.snippet;
+  const baseTypeDefinitions = baseInfo.typeDefinitions;
+
+  const tsFiles = [];
+  function walkSync(currentDir) {
+    const files = fs.readdirSync(currentDir);
+    for (const file of files) {
+      const fullPath = path.join(currentDir, file);
+      const stat = fs.statSync(fullPath);
+      if (stat.isDirectory()) {
+        if (file !== "node_modules") {
+          // node_modulesをスキップ
+          walkSync(fullPath);
+        }
+      } else if (
+        (file.endsWith(".ts") || file.endsWith(".tsx")) &&
+        !file.endsWith(".css.ts")
+      ) {
+        // .css.tsファイルはスキップ
+        process.stderr.write(`DEBUG: Found TS/TSX file: ${fullPath}\n`); // デバッグログ
+        tsFiles.push(fullPath);
+      } else {
+        process.stderr.write(
+          `DEBUG: Skipping non-TS/TSX or .css.ts file: ${fullPath}\n`,
+        ); // デバッグログ
+      }
+    }
+  }
+  walkSync(searchDirectory);
+  process.stderr.write(`DEBUG: Total TS/TSX files found: ${tsFiles.length}\n`); // デバッグログ
+
+  const similarCodes = [];
+
+  for (const filePath of tsFiles) {
+    if (path.resolve(filePath) === path.resolve(baseFilePath)) {
+      process.stderr.write(`DEBUG: Skipping base file: ${filePath}\n`); // デバッグログ
+      continue;
+    }
+
+    let targetSymbol = path.parse(filePath).name;
+    if (targetSymbol === "index") {
+      targetSymbol = path.basename(path.dirname(filePath)); // 親ディレクトリ名をシンボル名とする
+      process.stderr.write(
+        `DEBUG: Inferred symbol for index.tsx: ${targetSymbol} from ${filePath}\n`,
+      ); // デバッグログ
+    } else {
+      process.stderr.write(
+        `DEBUG: Using file name as symbol: ${targetSymbol} for ${filePath}\n`,
+      ); // デバッグログ
+    }
+
+    const otherSnippet = getCodeSnippet(filePath, targetSymbol);
+    if (otherSnippet) {
+      const similarity = calculateSimilarity(baseSnippet, otherSnippet);
+      process.stderr.write(
+        `DEBUG: Comparing ${symbolName} (base) with ${targetSymbol} (${filePath}). Similarity: ${similarity}\n`,
+      ); // デバッグログ
+      if (similarity > 0.5) {
+        // 類似度の閾値
+        process.stderr.write(
+          `DEBUG: Found similar code (similarity > 0.5): ${targetSymbol} in ${filePath}\n`,
+        ); // デバッグログ
+        similarCodes.push({
+          file_path: filePath,
+          symbol_name: targetSymbol,
+          similarity: similarity,
+          snippet: otherSnippet,
+        });
+      } else {
+        process.stderr.write(
+          `DEBUG: Similarity below threshold (0.5): ${targetSymbol} in ${filePath}\n`,
+        ); // デバッグログ
+      }
+    } else {
+      process.stderr.write(
+        `DEBUG: No snippet found for symbol '${targetSymbol}' in ${filePath}\n`,
+      ); // デバッグログ
+    }
+  }
+
+  similarCodes.sort((a, b) => b.similarity - a.similarity);
+
+  return {
+    base_symbol_type_definitions: baseTypeDefinitions,
+    similar_codes: similarCodes.slice(0, maxResults),
+  };
 }
 
-
 async function main() {
-    const project = new Project({
-        tsConfigFilePath: path.join(projectRoot, 'src', 'web', 'tsconfig.json'),
-    }); // main関数内でProjectオブジェクトを初期化
+  const project = new Project({
+    tsConfigFilePath: path.join(projectRoot, "src", "web", "tsconfig.json"),
+  }); // main関数内でProjectオブジェクトを初期化
 
-    const args = process.argv.slice(2);
-    const filePath = args[0];
-    const symbolName = args[1];
-    const action = args[2];
-    const searchDirectory = args[3]; // find_similar_code用
-    const maxResults = args[4] ? parseInt(args[4], 10) : 3; // find_similar_code用
+  const args = process.argv.slice(2);
+  const filePath = args[0];
+  const symbolName = args[1];
+  const action = args[2];
+  const searchDirectory = args[3]; // find_similar_code用
+  const maxResults = args[4] ? parseInt(args[4], 10) : 3; // find_similar_code用
 
-    if (!filePath || !symbolName || !action) {
-        console.log(JSON.stringify({ error: "Missing required arguments: filePath, symbolName, or action." }, null, 2));
-        process.exit(1);
-    }
+  if (!filePath || !symbolName || !action) {
+    console.log(
+      JSON.stringify(
+        { error: "Missing required arguments: filePath, symbolName, or action." },
+        null,
+        2,
+      ),
+    );
+    process.exit(1);
+  }
 
-    if (!path.isAbsolute(filePath)) {
-        console.log(JSON.stringify({ error: `File path must be absolute: ${filePath}` }, null, 2));
-        process.exit(1);
-    }
+  if (!path.isAbsolute(filePath)) {
+    console.log(
+      JSON.stringify({ error: `File path must be absolute: ${filePath}` }, null, 2),
+    );
+    process.exit(1);
+  }
 
-    // project.addSourceFilesFromTsConfig(path.join(projectRoot, 'src', 'web', 'tsconfig.json'), {
-    //     tsConfigFilePath: path.join(projectRoot, 'src', 'web', 'tsconfig.json'),
-    //     basePath: path.join(projectRoot, 'src', 'web')
-    // });
+  // project.addSourceFilesFromTsConfig(path.join(projectRoot, 'src', 'web', 'tsconfig.json'), {
+  //     tsConfigFilePath: path.join(projectRoot, 'src', 'web', 'tsconfig.json'),
+  //     basePath: path.join(projectRoot, 'src', 'web')
+  // });
 
-    if (!project.getSourceFile(filePath)) {
-        project.addSourceFileAtPath(filePath); // ファイルが追加されていない場合に追加
-    }
+  if (!project.getSourceFile(filePath)) {
+    project.addSourceFileAtPath(filePath); // ファイルが追加されていない場合に追加
+  }
 
-    process.stderr.write(`DEBUG: Number of source files in project: ${project.getSourceFiles().length}\n`); // デバッグログ
+  process.stderr.write(
+    `DEBUG: Number of source files in project: ${project.getSourceFiles().length}\n`,
+  ); // デバッグログ
 
-    let result = null;
-    try {
-        switch (action) {
-            case 'get_type_definitions':
-                result = getTypeDefinitions(filePath, symbolName, project);
-                break;
-            case 'get_references':
-                result = getReferences(filePath, symbolName, project);
-                break;
-            case 'get_code_snippet':
-                result = getCodeSnippet(filePath, symbolName, project);
-                break;
-            case 'get_file_content_snippet':
-                result = getFileContentSnippet(filePath);
-                break;
-            case 'get_snippet_and_type_definitions':
-                result = getSnippetAndTypeDefinitions(filePath, symbolName, project);
-                break;
-            case 'find_similar_code':
-                if (!searchDirectory) {
-                    console.log(JSON.stringify({ error: "Missing required argument: searchDirectory for find_similar_code." }, null, 2));
-                    process.exit(1);
-                }
-                result = findSimilarCode(filePath, symbolName, searchDirectory, maxResults, project);
-                break;
-            default:
-                process.exit(1);
+  let result = null;
+  try {
+    switch (action) {
+      case "get_type_definitions":
+        result = getTypeDefinitions(filePath, symbolName, project);
+        break;
+      case "get_references":
+        result = getReferences(filePath, symbolName, project);
+        break;
+      case "get_code_snippet":
+        result = getCodeSnippet(filePath, symbolName, project);
+        break;
+      case "get_file_content_snippet":
+        result = getFileContentSnippet(filePath);
+        break;
+      case "get_snippet_and_type_definitions":
+        result = getSnippetAndTypeDefinitions(filePath, symbolName, project);
+        break;
+      case "find_similar_code":
+        if (!searchDirectory) {
+          console.log(
+            JSON.stringify(
+              {
+                error:
+                  "Missing required argument: searchDirectory for find_similar_code.",
+              },
+              null,
+              2,
+            ),
+          );
+          process.exit(1);
         }
-    } catch (e) {
-        process.stderr.write(`ERROR: ${e.message || String(e)}\n`); // エラーログをstderrに出力
-        console.log(JSON.stringify({ error: e.message || String(e) }, null, 2)); // JSON形式でエラーを返す
+        result = findSimilarCode(
+          filePath,
+          symbolName,
+          searchDirectory,
+          maxResults,
+          project,
+        );
+        break;
+      default:
         process.exit(1);
     }
+  } catch (e) {
+    process.stderr.write(`ERROR: ${e.message || String(e)}\n`); // エラーログをstderrに出力
+    console.log(JSON.stringify({ error: e.message || String(e) }, null, 2)); // JSON形式でエラーを返す
+    process.exit(1);
+  }
 
-    if (typeof result === 'string') {
-        console.log(result);
-    } else {
-        console.log(JSON.stringify(result, null, 2));
-    }
+  if (typeof result === "string") {
+    console.log(result);
+  } else {
+    console.log(JSON.stringify(result, null, 2));
+  }
 }
 
 main();

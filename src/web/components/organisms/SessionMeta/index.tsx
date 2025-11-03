@@ -1,32 +1,91 @@
-import React, { useState, useEffect, JSX } from 'react';
-import InputText from '@/components/atoms/InputText';
-import TextArea from '@/components/atoms/TextArea';
-import Label from '@/components/atoms/Label';
-import Checkbox from '@/components/atoms/Checkbox';
-import Button from '@/components/atoms/Button';
-import { metaColumn, sessionMetaSection, sessionMetaView, metaItem, metaItemLabel, inputFullWidth, textareaFullWidth, checkboxLabel, hyperparametersControl, sliderValue, todosList, todoItem, todoCheckboxLabel, todoTitle, noItemsMessage, referencesList, referenceItem, referenceControls, referenceLabel, referencePath, materialIcons, ttlControls, ttlValue, referenceCheckboxMargin, stickySaveMetaButtonContainer, lockIconStyle } from './style.css';
-import clsx from 'clsx';
-import { colors } from '../../../styles/colors.css';
+import clsx from "clsx";
+import React, { useState, useEffect, JSX } from "react";
 
-interface SessionMetaProps {
+import Button from "@/components/atoms/Button";
+import Checkbox from "@/components/atoms/Checkbox";
+import InputText from "@/components/atoms/InputText";
+import Label from "@/components/atoms/Label";
+import TextArea from "@/components/atoms/TextArea";
+
+import {
+  metaColumn,
+  sessionMetaSection,
+  sessionMetaView,
+  metaItem,
+  metaItemLabel,
+  inputFullWidth,
+  textareaFullWidth,
+  checkboxLabel,
+  hyperparametersControl,
+  sliderValue,
+  todosList,
+  todoItem,
+  todoCheckboxLabel,
+  todoTitle,
+  noItemsMessage,
+  referencesList,
+  referenceItem,
+  referenceControls,
+  referenceLabel,
+  referencePath,
+  materialIcons,
+  ttlControls,
+  ttlValue,
+  referenceCheckboxMargin,
+  stickySaveMetaButtonContainer,
+  lockIconStyle,
+} from "./style.css";
+import { colors } from "../../../styles/colors.css";
+
+type SessionMetaProps = {
   sessionData: any; // TODO: 型を定義する
   currentSessionId: string | null;
   onMetaSave: (sessionId: string, meta: any) => void;
   onUpdateTodo: (sessionId: string, todos: any[]) => void;
   onDeleteAllTodos: (sessionId: string) => void;
-  onUpdateReferencePersist: (sessionId: string, index: number, persist: boolean) => void;
+  onUpdateReferencePersist: (
+    sessionId: string,
+    index: number,
+    persist: boolean,
+  ) => void;
   onUpdateReferenceTtl: (sessionId: string, index: number, ttl: number) => void;
-  onUpdateReferenceDisabled: (sessionId: string, index: number, disabled: boolean) => void;
-}
+  onUpdateReferenceDisabled: (
+    sessionId: string,
+    index: number,
+    disabled: boolean,
+  ) => void;
+};
 
-const SessionMeta: ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, onDeleteAllTodos, onUpdateReferencePersist, onUpdateReferenceTtl, onUpdateReferenceDisabled }: SessionMetaProps) => JSX.Element = ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, onDeleteAllTodos, onUpdateReferencePersist, onUpdateReferenceTtl, onUpdateReferenceDisabled }) => {
-  const [purpose, setPurpose] = useState(sessionData?.purpose || '');
-  const [background, setBackground] = useState(sessionData?.background || '');
-  const [roles, setRoles] = useState(sessionData?.roles?.join(', ') || '');
-  const [procedure, setProcedure] = useState(sessionData?.procedure || '');
-  const [artifacts, setArtifacts] = useState(sessionData?.artifacts?.join(', ') || '');
-  const [multiStepReasoningEnabled, setMultiStepReasoningEnabled] = useState(sessionData?.multi_step_reasoning_enabled || false);
-  const [temperature, setTemperature] = useState(sessionData?.hyperparameters?.temperature?.value || 0.7);
+const SessionMeta: ({
+  sessionData,
+  currentSessionId,
+  onMetaSave,
+  onUpdateTodo,
+  onDeleteAllTodos,
+  onUpdateReferencePersist,
+  onUpdateReferenceTtl,
+  onUpdateReferenceDisabled,
+}: SessionMetaProps) => JSX.Element = ({
+  sessionData,
+  currentSessionId,
+  onMetaSave,
+  onUpdateTodo,
+  onDeleteAllTodos,
+  onUpdateReferencePersist,
+  onUpdateReferenceTtl,
+  onUpdateReferenceDisabled,
+}) => {
+  const [purpose, setPurpose] = useState(sessionData?.purpose || "");
+  const [background, setBackground] = useState(sessionData?.background || "");
+  const [roles, setRoles] = useState(sessionData?.roles?.join(", ") || "");
+  const [procedure, setProcedure] = useState(sessionData?.procedure || "");
+  const [artifacts, setArtifacts] = useState(sessionData?.artifacts?.join(", ") || "");
+  const [multiStepReasoningEnabled, setMultiStepReasoningEnabled] = useState(
+    sessionData?.multi_step_reasoning_enabled || false,
+  );
+  const [temperature, setTemperature] = useState(
+    sessionData?.hyperparameters?.temperature?.value || 0.7,
+  );
   const [topP, setTopP] = useState(sessionData?.hyperparameters?.top_p?.value || 0.9);
   const [topK, setTopK] = useState(sessionData?.hyperparameters?.top_k?.value || 5);
   const [todos, setTodos] = useState(sessionData?.todos || []);
@@ -34,11 +93,11 @@ const SessionMeta: ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, o
 
   useEffect(() => {
     if (sessionData) {
-      setPurpose(sessionData.purpose || '');
-      setBackground(sessionData.background || '');
-      setRoles(sessionData.roles?.join(', ') || '');
-      setProcedure(sessionData.procedure || '');
-      setArtifacts(sessionData.artifacts?.join(', ') || '');
+      setPurpose(sessionData.purpose || "");
+      setBackground(sessionData.background || "");
+      setRoles(sessionData.roles?.join(", ") || "");
+      setProcedure(sessionData.procedure || "");
+      setArtifacts(sessionData.artifacts?.join(", ") || "");
       setMultiStepReasoningEnabled(sessionData.multi_step_reasoning_enabled || false);
       setTemperature(sessionData.hyperparameters?.temperature?.value || 0.7);
       setTopP(sessionData.hyperparameters?.top_p?.value || 0.9);
@@ -53,9 +112,15 @@ const SessionMeta: ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, o
     const meta = {
       purpose,
       background,
-      roles: roles.split(',').map((s: string) => s.trim()).filter(Boolean),
+      roles: roles
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter(Boolean),
       procedure,
-      artifacts: artifacts.split(',').map((s: string) => s.trim()).filter(Boolean),
+      artifacts: artifacts
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter(Boolean),
       multi_step_reasoning_enabled: multiStepReasoningEnabled,
       hyperparameters: {
         temperature: { value: parseFloat(temperature.toString()) },
@@ -90,11 +155,15 @@ const SessionMeta: ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, o
     onUpdateReferencePersist(currentSessionId, index, newReferences[index].persist);
   };
 
-  const handleReferenceTtlChange = (index: number, action: 'increment' | 'decrement') => {
+  const handleReferenceTtlChange = (
+    index: number,
+    action: "increment" | "decrement",
+  ) => {
     if (!currentSessionId) return;
     const newReferences = [...references];
-    let currentTtl = newReferences[index].ttl !== null ? newReferences[index].ttl : 3;
-    let newTtl = action === 'increment' ? currentTtl + 1 : Math.max(0, currentTtl - 1);
+    const currentTtl = newReferences[index].ttl !== null ? newReferences[index].ttl : 3;
+    const newTtl =
+      action === "increment" ? currentTtl + 1 : Math.max(0, currentTtl - 1);
     newReferences[index].ttl = newTtl;
     setReferences(newReferences);
     onUpdateReferenceTtl(currentSessionId, index, newTtl);
@@ -114,24 +183,69 @@ const SessionMeta: ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, o
       <section className={sessionMetaSection}>
         <div className={sessionMetaView}>
           <div className={metaItem}>
-            <Label htmlFor="purpose" className={metaItemLabel}>Purpose:</Label>
-            <InputText id="purpose" value={purpose} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPurpose(e.target.value)} className={inputFullWidth} />
+            <Label htmlFor="purpose" className={metaItemLabel}>
+              Purpose:
+            </Label>
+            <InputText
+              id="purpose"
+              value={purpose}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setPurpose(e.target.value)
+              }
+              className={inputFullWidth}
+            />
           </div>
           <div className={metaItem}>
-            <Label htmlFor="background" className={metaItemLabel}>Background:</Label>
-            <TextArea id="background" value={background} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBackground(e.target.value)} className={textareaFullWidth} />
+            <Label htmlFor="background" className={metaItemLabel}>
+              Background:
+            </Label>
+            <TextArea
+              id="background"
+              value={background}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setBackground(e.target.value)
+              }
+              className={textareaFullWidth}
+            />
           </div>
           <div className={metaItem}>
-            <Label htmlFor="roles" className={metaItemLabel}>Roles:</Label>
-            <InputText id="roles" value={roles} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRoles(e.target.value)} className={inputFullWidth} />
+            <Label htmlFor="roles" className={metaItemLabel}>
+              Roles:
+            </Label>
+            <InputText
+              id="roles"
+              value={roles}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setRoles(e.target.value)
+              }
+              className={inputFullWidth}
+            />
           </div>
           <div className={metaItem}>
-            <Label htmlFor="procedure" className={metaItemLabel}>Procedure:</Label>
-            <InputText id="procedure" value={procedure} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProcedure(e.target.value)} className={inputFullWidth} />
+            <Label htmlFor="procedure" className={metaItemLabel}>
+              Procedure:
+            </Label>
+            <InputText
+              id="procedure"
+              value={procedure}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setProcedure(e.target.value)
+              }
+              className={inputFullWidth}
+            />
           </div>
           <div className={metaItem}>
-            <Label htmlFor="artifacts" className={metaItemLabel}>Artifacts:</Label>
-            <InputText id="artifacts" value={artifacts} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setArtifacts(e.target.value)} className={inputFullWidth} />
+            <Label htmlFor="artifacts" className={metaItemLabel}>
+              Artifacts:
+            </Label>
+            <InputText
+              id="artifacts"
+              value={artifacts}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setArtifacts(e.target.value)
+              }
+              className={inputFullWidth}
+            />
           </div>
 
           <div className={metaItem}>
@@ -150,28 +264,47 @@ const SessionMeta: ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, o
                         <Button
                           kind="ghost"
                           size="xsmall"
-                          style={{minWidth: '32px'}}
+                          style={{ minWidth: "32px" }}
                           onClick={() => handleReferencePersistToggle(index)}
                         >
                           <span
                             className={clsx(materialIcons, lockIconStyle)}
                             data-locked={reference.persist}
                           >
-                            {reference.persist ? 'lock' : 'lock_open'}
+                            {reference.persist ? "lock" : "lock_open"}
                           </span>
                         </Button>
                         <span
                           data-testid="reference-path"
                           className={referencePath}
-                          style={{ textDecoration: reference.disabled ? 'line-through' : 'none', color: reference.disabled ? colors.grayText : 'inherit' }}
+                          style={{
+                            textDecoration: reference.disabled
+                              ? "line-through"
+                              : "none",
+                            color: reference.disabled ? colors.grayText : "inherit",
+                          }}
                         >
                           {reference.path}
                         </span>
                       </Label>
                       <div className={ttlControls}>
-                        <Button kind="primary" size="xsmall" onClick={() => handleReferenceTtlChange(index, 'decrement')}>-</Button>
-                        <span className={ttlValue}>{reference.ttl !== null ? reference.ttl : 3}</span>
-                        <Button kind="primary" size="xsmall" onClick={() => handleReferenceTtlChange(index, 'increment')}>+</Button>
+                        <Button
+                          kind="primary"
+                          size="xsmall"
+                          onClick={() => handleReferenceTtlChange(index, "decrement")}
+                        >
+                          -
+                        </Button>
+                        <span className={ttlValue}>
+                          {reference.ttl !== null ? reference.ttl : 3}
+                        </span>
+                        <Button
+                          kind="primary"
+                          size="xsmall"
+                          onClick={() => handleReferenceTtlChange(index, "increment")}
+                        >
+                          +
+                        </Button>
                       </div>
                     </div>
                   </li>
@@ -187,7 +320,9 @@ const SessionMeta: ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, o
               <Checkbox
                 name="multi_step_reasoning"
                 checked={multiStepReasoningEnabled}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMultiStepReasoningEnabled(e.target.checked)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setMultiStepReasoningEnabled(e.target.checked)
+                }
               />
               <strong>Multi-step Reasoning</strong>
             </Label>
@@ -198,21 +333,48 @@ const SessionMeta: ({ sessionData, currentSessionId, onMetaSave, onUpdateTodo, o
               <Label>Temperature:</Label>
               <div>
                 <span className={sliderValue}>{temperature}</span>
-                <InputText type="range" min="0" max="2" step="0.1" value={temperature} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTemperature(parseFloat(e.target.value))} />
+                <InputText
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setTemperature(parseFloat(e.target.value))
+                  }
+                />
               </div>
             </div>
             <div className={hyperparametersControl}>
               <Label>Top P:</Label>
               <div>
                 <span className={sliderValue}>{topP}</span>
-                <InputText type="range" min="0" max="1" step="0.1" value={topP} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTopP(parseFloat(e.target.value))} />
+                <InputText
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={topP}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setTopP(parseFloat(e.target.value))
+                  }
+                />
               </div>
             </div>
             <div className={hyperparametersControl}>
               <Label>Top K:</Label>
               <div>
                 <span className={sliderValue}>{topK}</span>
-                <InputText type="range" min="1" max="50" step="1" value={topK} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTopK(parseInt(e.target.value, 10))} />
+                <InputText
+                  type="range"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value={topK}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setTopK(parseInt(e.target.value, 10))
+                  }
+                />
               </div>
             </div>
           </div>

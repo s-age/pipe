@@ -1,16 +1,27 @@
-import { ButtonHTMLAttributes, JSX } from 'react';
-import { button } from './style.css';
-import clsx from 'clsx';
+import clsx from "clsx";
+import { ButtonHTMLAttributes, JSX } from "react";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  kind?: 'primary' | 'secondary' | 'ghost';
-  size?: 'small' | 'default' | 'large' | 'xsmall';
-  text?: 'bold' | 'uppercase';
+import { button } from "./style.css";
+
+type ButtonProps = {
+  kind?: "primary" | "secondary" | "ghost";
+  size?: "small" | "default" | "large" | "xsmall";
+  text?: "bold" | "uppercase";
   hasBorder?: boolean;
-}
+} & ButtonHTMLAttributes<HTMLButtonElement>;
 
-const Button: (props: ButtonProps) => JSX.Element = ({ kind = 'primary', size = 'default', text, hasBorder = true, className, ...props }) => {
-  return <button className={clsx(button({ kind, size, text, hasBorder }), className)} {...props} />;
-};
+const Button: (props: ButtonProps) => JSX.Element = ({
+  kind = "primary",
+  size = "default",
+  text,
+  hasBorder = true,
+  className,
+  ...props
+}) => (
+  <button
+    className={clsx(button({ kind, size, text, hasBorder }), className)}
+    {...props}
+  />
+);
 
 export default Button;

@@ -1,10 +1,11 @@
-import { SelectHTMLAttributes, JSX } from 'react';
-import { selectStyle } from './style.css';
+import { SelectHTMLAttributes, JSX } from "react";
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {}
+import { selectStyle } from "./style.css";
 
-const Select: (props: SelectProps) => JSX.Element = (props) => {
-  return <select className={selectStyle} {...props} />;
-};
+type SelectProps = {} & SelectHTMLAttributes<HTMLSelectElement>;
+
+const Select: (props: SelectProps) => JSX.Element = (props) => (
+  <select className={selectStyle} {...props} />
+);
 
 export default Select;

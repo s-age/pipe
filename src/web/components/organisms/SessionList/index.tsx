@@ -1,21 +1,35 @@
-import React, { JSX } from 'react';
-import Button from '@/components/atoms/Button';
-import { sessionListColumn, sessionListContainer, sessionListItem, sessionLink, sessionLinkActive, sessionIdStyle, stickyNewChatButtonContainer } from './style.css';
-import Heading from '@/components/atoms/Heading';
-import { h2Style } from '@/components/atoms/Heading/style.css';
+import React, { JSX } from "react";
 
-interface SessionListProps {
+import Button from "@/components/atoms/Button";
+import Heading from "@/components/atoms/Heading";
+import { h2Style } from "@/components/atoms/Heading/style.css";
+
+import {
+  sessionListColumn,
+  sessionListContainer,
+  sessionListItem,
+  sessionLink,
+  sessionLinkActive,
+  sessionIdStyle,
+  stickyNewChatButtonContainer,
+} from "./style.css";
+
+type SessionListProps = {
   sessions: [string, { purpose: string; [key: string]: any }][];
   currentSessionId: string | null;
   onSessionSelect: (sessionId: string) => void;
-}
+};
 
-const SessionList = ({ sessions, currentSessionId, onSessionSelect }: SessionListProps): JSX.Element => {
+const SessionList = ({
+  sessions,
+  currentSessionId,
+  onSessionSelect,
+}: SessionListProps): JSX.Element => {
   // セッションツリーを構築するヘルパー関数
   const buildSessionTree = (sessionsData: [string, { purpose: string }][]) => {
     const tree: any = {};
     sessionsData.forEach(([id, meta]) => {
-      const parts = id.split('/');
+      const parts = id.split("/");
       let currentLevel = tree;
       parts.forEach((part, index) => {
         if (!currentLevel[part]) {
@@ -28,6 +42,7 @@ const SessionList = ({ sessions, currentSessionId, onSessionSelect }: SessionLis
         currentLevel = currentLevel[part].children;
       });
     });
+
     return tree;
   };
 
@@ -40,29 +55,35 @@ const SessionList = ({ sessions, currentSessionId, onSessionSelect }: SessionLis
           <li key={node.id} className={sessionListItem}>
             <a
               href={`/session/${node.id}`}
-              className={`${sessionLink} ${node.id === currentSessionId ? sessionLinkActive : ''}`.trim()}
+              className={`${sessionLink} ${node.id === currentSessionId ? sessionLinkActive : ""}`.trim()}
               onClick={(e) => {
                 e.preventDefault();
                 onSessionSelect(node.id);
               }}
             >
-              {node.meta.purpose} <p className={sessionIdStyle}>{node.id.substring(0, 8)}</p>
+              {node.meta.purpose}{" "}
+              <p className={sessionIdStyle}>{node.id.substring(0, 8)}</p>
             </a>
             {Object.keys(node.children).length > 0 && (
-              <ul style={{ paddingLeft: '20px' }}>{createNode(node.children, level + 1)}</ul>
+              <ul style={{ paddingLeft: "20px" }}>
+                {createNode(node.children, level + 1)}
+              </ul>
             )}
-          </li>
+          </li>,
         );
       } else if (Object.keys(node.children).length > 0) {
         // メタデータがないが子がある場合（中間ディレクトリ）
         items.push(
           <li key={key} className={sessionListItem}>
-            <span style={{ fontWeight: 'bold' }}>{key}</span>
-            <ul style={{ paddingLeft: '20px' }}>{createNode(node.children, level + 1)}</ul>
-          </li>
+            <span style={{ fontWeight: "bold" }}>{key}</span>
+            <ul style={{ paddingLeft: "20px" }}>
+              {createNode(node.children, level + 1)}
+            </ul>
+          </li>,
         );
       }
     }
+
     return items;
   };
 
@@ -70,15 +91,15 @@ const SessionList = ({ sessions, currentSessionId, onSessionSelect }: SessionLis
 
   return (
     <div className={sessionListColumn}>
-      <Heading level={2} className={h2Style}>Sessions</Heading>
-      <ul className={sessionListContainer}>
-        {createNode(sessionTree, 0)}
-      </ul>
+      <Heading level={2} className={h2Style}>
+        Sessions
+      </Heading>
+      <ul className={sessionListContainer}>{createNode(sessionTree, 0)}</ul>
       <div className={stickyNewChatButtonContainer}>
         <Button
           kind="primary"
           size="default"
-          onClick={() => (window.location.href = '/new_session')}
+          onClick={() => (window.location.href = "/new_session")}
         >
           + New Chat
         </Button>

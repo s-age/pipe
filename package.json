@@ -2,6 +2,7 @@
   "name": "pipe",
   "version": "1.0.0",
   "description": "[![License: CC0-1.0](https://img.shields.io/badge/License-CC0--1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/) # pipe: A Clean Jailbreak from LLM Obfuscation",
+  "type": "module",
   "main": "index.js",
   "directories": {
     "test": "tests"
@@ -10,7 +11,9 @@
     "start": "vite",
     "build": "tsc -p src/web && vite build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "lint": "eslint \"{src,tests}/**/*.{js,jsx,ts,tsx}\" --fix",
+    "format": "prettier \"{src,tests}/**/*.{js,jsx,ts,tsx,json,css,md}\" --write"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.4.0",
@@ -29,10 +32,21 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/react-router-dom": "^5.3.3",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
     "@vanilla-extract/css": "^1.14.1",
     "@vanilla-extract/vite-plugin": "^4.0.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "prettier": "^3.6.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2",
     "vite": "^5.2.11"
   },
   "browserslist": {

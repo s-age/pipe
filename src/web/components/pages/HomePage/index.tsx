@@ -1,9 +1,23 @@
-import { useState, useEffect, JSX } from 'react';
-import { fetchSessions, fetchSessionData, updateSessionMeta, deleteTurn, forkSession, sendInstruction, updateTodo, deleteTodos, updateReferencePersist, updateReferenceTtl, updateReferenceDisabled } from '@/lib/api_client/client';
-import SessionList from '@/components/organisms/SessionList';
-import TurnsList from '@/components/organisms/TurnsList';
-import SessionMeta from '@/components/organisms/SessionMeta';
-import { appContainer } from './style.css';
+import { useState, useEffect, JSX } from "react";
+
+import SessionList from "@/components/organisms/SessionList";
+import SessionMeta from "@/components/organisms/SessionMeta";
+import TurnsList from "@/components/organisms/TurnsList";
+import {
+  fetchSessions,
+  fetchSessionData,
+  updateSessionMeta,
+  deleteTurn,
+  forkSession,
+  sendInstruction,
+  updateTodo,
+  deleteTodos,
+  updateReferencePersist,
+  updateReferenceTtl,
+  updateReferenceDisabled,
+} from "@/lib/api_client/client";
+
+import { appContainer } from "./style.css";
 
 const HomePage: () => JSX.Element = () => {
   const [sessions, setSessions] = useState<any[]>([]); // TODO: 型を定義する
@@ -19,13 +33,13 @@ const HomePage: () => JSX.Element = () => {
         const fetchedSessions = await fetchSessions();
         setSessions(fetchedSessions);
         // URLからセッションIDを取得し、現在のセッションを設定
-        const pathParts = window.location.pathname.split('/');
+        const pathParts = window.location.pathname.split("/");
         const id = pathParts[pathParts.length - 1];
-        if (id && id !== 'session' && id !== '') {
+        if (id && id !== "session" && id !== "") {
           setCurrentSessionId(id);
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to load sessions.');
+        setError(err.message || "Failed to load sessions.");
       } finally {
         setLoading(false);
       }
@@ -41,7 +55,7 @@ const HomePage: () => JSX.Element = () => {
           const data = await fetchSessionData(currentSessionId);
           setSessionData(data.session);
         } catch (err: any) {
-          setError(err.message || 'Failed to load session data.');
+          setError(err.message || "Failed to load session data.");
         } finally {
           setLoading(false);
         }
@@ -54,13 +68,13 @@ const HomePage: () => JSX.Element = () => {
 
   const handleSessionSelect = (sessionId: string) => {
     setCurrentSessionId(sessionId);
-    window.history.pushState({}, '', `/session/${sessionId}`);
+    window.history.pushState({}, "", `/session/${sessionId}`);
   };
 
   const handleMetaSave = async (id: string, meta: any) => {
     try {
       await updateSessionMeta(id, meta);
-      alert('Session meta saved successfully!');
+      alert("Session meta saved successfully!");
       // 必要に応じてセッションデータを再読み込み
       if (currentSessionId === id) {
         const data = await fetchSessionData(id);
@@ -69,34 +83,39 @@ const HomePage: () => JSX.Element = () => {
       const fetchedSessions = await fetchSessions();
       setSessions(fetchedSessions);
     } catch (err: any) {
-      setError(err.message || 'Failed to save session meta.');
+      setError(err.message || "Failed to save session meta.");
     }
   };
 
   const handleDeleteTurn = async (sessionId: string, turnIndex: number) => {
-    if (!confirm('Are you sure you want to delete this turn?')) return;
+    if (!confirm("Are you sure you want to delete this turn?")) return;
     try {
       await deleteTurn(sessionId, turnIndex);
-      alert('Turn deleted successfully!');
+      alert("Turn deleted successfully!");
       // セッションデータを再読み込み
       const data = await fetchSessionData(sessionId);
       setSessionData(data.session);
     } catch (err: any) {
-      setError(err.message || 'Failed to delete turn.');
+      setError(err.message || "Failed to delete turn.");
     }
   };
 
   const handleForkSession = async (sessionId: string, forkIndex: number) => {
-    if (!confirm(`Are you sure you want to fork this session at turn index ${forkIndex + 1}?`)) return;
+    if (
+      !confirm(
+        `Are you sure you want to fork this session at turn index ${forkIndex + 1}?`,
+      )
+    )
+      return;
     try {
       const result = await forkSession(sessionId, forkIndex);
       if (result.success && result.new_session_id) {
         window.location.href = `/session/${result.new_session_id}`;
       } else {
-        throw new Error(result.message || 'Failed to fork session.');
+        throw new Error(result.message || "Failed to fork session.");
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to fork session.');
+      setError(err.message || "Failed to fork session.");
     }
   };
 
@@ -109,57 +128,70 @@ const HomePage: () => JSX.Element = () => {
       const data = await fetchSessionData(sessionId);
       setSessionData(data.session);
     } catch (err: any) {
-      setError(err.message || 'Failed to send instruction.');
+      setError(err.message || "Failed to send instruction.");
     }
   };
 
-  const handleUpdateTodo = async (sessionId: string, todos: any[]) => { // TODO: 型を定義する
+  const handleUpdateTodo = async (sessionId: string, todos: any[]) => {
+    // TODO: 型を定義する
     try {
       await updateTodo(sessionId, todos);
       // UIは即時更新されるため、ここでは再フェッチしない
     } catch (err: any) {
-      setError(err.message || 'Failed to update todos.');
+      setError(err.message || "Failed to update todos.");
     }
   };
 
   const handleDeleteAllTodos = async (sessionId: string) => {
-    if (!confirm('Are you sure you want to delete all todos for this session?')) return;
+    if (!confirm("Are you sure you want to delete all todos for this session?")) return;
     try {
       await deleteTodos(sessionId);
       // セッションデータを再読み込み
       const data = await fetchSessionData(sessionId);
       setSessionData(data.session);
     } catch (err: any) {
-      setError(err.message || 'Failed to delete all todos.');
+      setError(err.message || "Failed to delete all todos.");
     }
   };
 
-  const handleUpdateReferencePersist = async (sessionId: string, index: number, persist: boolean) => {
+  const handleUpdateReferencePersist = async (
+    sessionId: string,
+    index: number,
+    persist: boolean,
+  ) => {
     try {
       await updateReferencePersist(sessionId, index, persist);
       // UIは即時更新されるため、ここでは再フェッチしない
     } catch (err: any) {
-      setError(err.message || 'Failed to update reference persist state.');
+      setError(err.message || "Failed to update reference persist state.");
     }
   };
 
-  const handleUpdateReferenceTtl = async (sessionId: string, index: number, ttl: number) => {
+  const handleUpdateReferenceTtl = async (
+    sessionId: string,
+    index: number,
+    ttl: number,
+  ) => {
     try {
       await updateReferenceTtl(sessionId, index, ttl);
       // セッションデータを再読み込みしてUIを更新
       const data = await fetchSessionData(sessionId);
       setSessionData(data.session);
     } catch (err: any) {
-      setError(err.message || 'Failed to update reference TTL.');
+      setError(err.message || "Failed to update reference TTL.");
     }
   };
 
-  const handleUpdateReferenceDisabled = async (sessionId: string, index: number, disabled: boolean) => {
+  const handleUpdateReferenceDisabled = async (
+    sessionId: string,
+    index: number,
+    disabled: boolean,
+  ) => {
     try {
       await updateReferenceDisabled(sessionId, index, disabled);
       // UIは即時更新されるため、ここでは再フェッチしない
     } catch (err: any) {
-      setError(err.message || 'Failed to update reference disabled state.');
+      setError(err.message || "Failed to update reference disabled state.");
     }
   };
 
@@ -168,7 +200,11 @@ const HomePage: () => JSX.Element = () => {
   }
 
   if (error) {
-    return <div className={appContainer} style={{ color: 'red' }}>Error: {error}</div>;
+    return (
+      <div className={appContainer} style={{ color: "red" }}>
+        Error: {error}
+      </div>
+    );
   }
 
   return (

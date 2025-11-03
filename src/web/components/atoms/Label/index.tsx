@@ -1,10 +1,11 @@
-import { LabelHTMLAttributes, JSX } from 'react';
-import { labelStyle } from './style.css';
+import { LabelHTMLAttributes, JSX } from "react";
 
-interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {}
+import { labelStyle } from "./style.css";
 
-const Label: (props: LabelProps) => JSX.Element = (props) => {
-  return <label className={labelStyle} {...props} />;
-};
+type LabelProps = {} & LabelHTMLAttributes<HTMLLabelElement>;
+
+const Label: (props: LabelProps) => JSX.Element = (props) => (
+  <label className={labelStyle} {...props} />
+);
 
 export default Label;

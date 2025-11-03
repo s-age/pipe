@@ -1,22 +1,32 @@
-import { useController, UseControllerProps, FieldValues } from 'react-hook-form';
-import Select from '@/components/atoms/Select';
-import Label from '@/components/atoms/Label';
-import { errorMessageStyle } from './style.css';
-import { JSX } from 'react';
+import { JSX } from "react";
+import { useController, UseControllerProps, FieldValues } from "react-hook-form";
 
-interface SelectOption {
+import Label from "@/components/atoms/Label";
+import Select from "@/components/atoms/Select";
+
+import { errorMessageStyle } from "./style.css";
+
+type SelectOption = {
   value: string;
   label: string;
-}
+};
 
-interface SelectFieldProps<TFieldValues extends FieldValues = FieldValues> extends UseControllerProps<TFieldValues> {
+type SelectFieldProps<TFieldValues extends FieldValues = FieldValues> = {
   label: string;
   id: string;
   options: SelectOption[];
-}
+} & UseControllerProps<TFieldValues>;
 
-const SelectField = <TFieldValues extends FieldValues = FieldValues>({ label, id, options, ...props }: SelectFieldProps<TFieldValues>): JSX.Element => {
-  const { field, fieldState: { error } } = useController(props);
+const SelectField = <TFieldValues extends FieldValues = FieldValues>({
+  label,
+  id,
+  options,
+  ...props
+}: SelectFieldProps<TFieldValues>): JSX.Element => {
+  const {
+    field,
+    fieldState: { error },
+  } = useController(props);
 
   return (
     <div>

@@ -1,41 +1,88 @@
-import  { useState, JSX } from 'react';
+import { marked } from "marked";
+import { useState, JSX } from "react";
 
-import { marked } from 'marked';
-import Button from '@/components/atoms/Button';
-import Tooltip from '@/components/atoms/Tooltip';
-import { turnHeader, turnHeaderInfo, turnIndexStyle, turnTimestamp, turnHeaderControls, turnContent, rawMarkdown, renderedMarkdown, toolResponseContent, statusSuccess, statusError, editablePre, editTextArea, editButtonContainer, turnWrapper, userTaskAligned, otherTurnAligned, turnContentBase, materialIcons, forkButtonIcon, deleteButtonIcon, copyButtonIcon, editButtonIcon } from './style.css';
+import Button from "@/components/atoms/Button";
+import Tooltip from "@/components/atoms/Tooltip";
 
-interface TurnProps {
+import {
+  turnHeader,
+  turnHeaderInfo,
+  turnIndexStyle,
+  turnTimestamp,
+  turnHeaderControls,
+  turnContent,
+  rawMarkdown,
+  renderedMarkdown,
+  toolResponseContent,
+  statusSuccess,
+  statusError,
+  editablePre,
+  editTextArea,
+  editButtonContainer,
+  turnWrapper,
+  userTaskAligned,
+  otherTurnAligned,
+  turnContentBase,
+  materialIcons,
+  forkButtonIcon,
+  deleteButtonIcon,
+  copyButtonIcon,
+  editButtonIcon,
+} from "./style.css";
+
+type TurnProps = {
   turn: any; // TODO: 型を定義する
   index: number;
   sessionId: string;
   expertMode: boolean;
   onDeleteTurn: (sessionId: string, turnIndex: number) => void;
   onForkSession: (sessionId: string, forkIndex: number) => void;
-}
+};
 
-const Turn: ({ turn, index, sessionId, expertMode, onDeleteTurn, onForkSession }: TurnProps) => JSX.Element = ({ turn, index, sessionId, expertMode, onDeleteTurn, onForkSession }) => {
+const Turn: ({
+  turn,
+  index,
+  sessionId,
+  expertMode,
+  onDeleteTurn,
+  onForkSession,
+}: TurnProps) => JSX.Element = ({
+  turn,
+  index,
+  sessionId,
+  expertMode,
+  onDeleteTurn,
+  onForkSession,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedContent, setEditedContent] = useState(turn.content || turn.instruction || '');
+  const [editedContent, setEditedContent] = useState(
+    turn.content || turn.instruction || "",
+  );
 
   const getHeaderContent = (type: string) => {
     switch (type) {
-      case 'user_task': return 'You';
-      case 'model_response': return 'Model';
-      case 'function_calling': return 'Function Calling';
-      case 'tool_response': return 'Tool Response';
-      case 'compressed_history': return 'Compressed';
-      default: return 'Unknown';
+      case "user_task":
+        return "You";
+      case "model_response":
+        return "Model";
+      case "function_calling":
+        return "Function Calling";
+      case "tool_response":
+        return "Tool Response";
+      case "compressed_history":
+        return "Compressed";
+      default:
+        return "Unknown";
     }
   };
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(editedContent);
-      alert('Copied!');
+      alert("Copied!");
     } catch (err) {
-      console.error('Failed to copy: ', err);
-      alert('Failed to copy');
+      console.error("Failed to copy: ", err);
+      alert("Failed to copy");
     }
   };
 
@@ -55,22 +102,33 @@ const Turn: ({ turn, index, sessionId, expertMode, onDeleteTurn, onForkSession }
             onChange={(e) => setEditedContent(e.target.value)}
           />
           <div className={editButtonContainer}>
-            <Button kind="primary" size="default" onClick={handleSaveEdit}>Save</Button>
-            <Button kind="secondary" size="default" onClick={() => setIsEditing(false)}>Cancel</Button>
+            <Button kind="primary" size="default" onClick={handleSaveEdit}>
+              Save
+            </Button>
+            <Button kind="secondary" size="default" onClick={() => setIsEditing(false)}>
+              Cancel
+            </Button>
           </div>
         </div>
       );
     }
 
     switch (turn.type) {
-      case 'user_task':
+      case "user_task":
         return <pre className={editablePre}>{turn.instruction}</pre>;
-      case 'model_response':
-      case 'compressed_history':
-        const markdownContent = turn.content || '';
+      case "model_response":
+      case "compressed_history":
+        const markdownContent = turn.content || "";
+
         return (
           <div className={turnContent}>
-            {turn.type === 'compressed_history' && <p><strong><em>-- History Compressed --</em></strong></p>}
+            {turn.type === "compressed_history" && (
+              <p>
+                <strong>
+                  <em>-- History Compressed --</em>
+                </strong>
+              </p>
+            )}
             <div className={rawMarkdown}>{markdownContent}</div>
             <div
               className={`${renderedMarkdown} markdown-body`}
@@ -78,15 +136,19 @@ const Turn: ({ turn, index, sessionId, expertMode, onDeleteTurn, onForkSession }
             />
           </div>
         );
-      case 'function_calling':
+      case "function_calling":
         return <pre className={turnContent}>{turn.response}</pre>;
-      case 'tool_response':
-        const statusClass = turn.response.status === 'success' ? statusSuccess : statusError;
+      case "tool_response":
+        const statusClass =
+          turn.response.status === "success" ? statusSuccess : statusError;
+
         return (
           <div className={toolResponseContent}>
             <strong>Status: </strong>
             <span className={statusClass}>{turn.response.status}</span>
-            {turn.response.output && <pre>{JSON.stringify(turn.response.output, null, 2)}</pre>}
+            {turn.response.output && (
+              <pre>{JSON.stringify(turn.response.output, null, 2)}</pre>
+            )}
           </div>
         );
       default:
@@ -96,46 +158,70 @@ const Turn: ({ turn, index, sessionId, expertMode, onDeleteTurn, onForkSession }
 
   const formatTimestamp = (date: Date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
-  const timestamp = turn.timestamp ? formatTimestamp(new Date(turn.timestamp)) : '';
+  const timestamp = turn.timestamp ? formatTimestamp(new Date(turn.timestamp)) : "";
 
   return (
-    <div className={`${turnWrapper} ${turn.type === 'user_task' ? userTaskAligned : otherTurnAligned}`}>
+    <div
+      className={`${turnWrapper} ${turn.type === "user_task" ? userTaskAligned : otherTurnAligned}`}
+    >
       <div className={turnContentBase} id={`turn-${index}`}>
         <div className={turnHeader}>
-        <span className={turnHeaderInfo}>
-          <span className={turnIndexStyle}>{index + 1}:</span>
-          {getHeaderContent(turn.type)}
-          <span className={turnTimestamp}>{timestamp}</span>
-        </span>
-        <div className={turnHeaderControls}>
-          {turn.type === 'model_response' && (
-            <Tooltip content="Fork Session">
-              <Button kind="ghost" size="xsmall" onClick={() => onForkSession(sessionId, index)}><span className={`${materialIcons} ${forkButtonIcon}`}>call_split</span></Button>
+          <span className={turnHeaderInfo}>
+            <span className={turnIndexStyle}>{index + 1}:</span>
+            {getHeaderContent(turn.type)}
+            <span className={turnTimestamp}>{timestamp}</span>
+          </span>
+          <div className={turnHeaderControls}>
+            {turn.type === "model_response" && (
+              <Tooltip content="Fork Session">
+                <Button
+                  kind="ghost"
+                  size="xsmall"
+                  onClick={() => onForkSession(sessionId, index)}
+                >
+                  <span className={`${materialIcons} ${forkButtonIcon}`}>
+                    call_split
+                  </span>
+                </Button>
+              </Tooltip>
+            )}
+            <Tooltip content="Copy Turn">
+              <Button kind="ghost" size="xsmall" onClick={handleCopy}>
+                <span className={`${materialIcons} ${copyButtonIcon}`}>
+                  content_copy
+                </span>
+              </Button>
             </Tooltip>
-          )}
-          <Tooltip content="Copy Turn">
-            <Button kind="ghost" size="xsmall" onClick={handleCopy}><span className={`${materialIcons} ${copyButtonIcon}`}>content_copy</span></Button>
-          </Tooltip>
-          {expertMode && (turn.type === 'user_task' || turn.type === 'model_response') && (
-            <Tooltip content="Edit Turn">
-              <Button kind="ghost" size="xsmall" onClick={() => setIsEditing(true)}><span className={`${materialIcons} ${editButtonIcon}`}>edit</span></Button>
+            {expertMode &&
+              (turn.type === "user_task" || turn.type === "model_response") && (
+                <Tooltip content="Edit Turn">
+                  <Button kind="ghost" size="xsmall" onClick={() => setIsEditing(true)}>
+                    <span className={`${materialIcons} ${editButtonIcon}`}>edit</span>
+                  </Button>
+                </Tooltip>
+              )}
+            <Tooltip content="Delete Turn">
+              <Button
+                kind="ghost"
+                size="xsmall"
+                onClick={() => onDeleteTurn(sessionId, index)}
+              >
+                <span className={`${materialIcons} ${deleteButtonIcon}`}>delete</span>
+              </Button>
             </Tooltip>
-          )}
-          <Tooltip content="Delete Turn">
-            <Button kind="ghost" size="xsmall" onClick={() => onDeleteTurn(sessionId, index)}><span className={`${materialIcons} ${deleteButtonIcon}`}>delete</span></Button>
-          </Tooltip>
+          </div>
         </div>
+        {renderTurnContent()}
       </div>
-      {renderTurnContent()}
-        </div>
     </div>
   );
 };

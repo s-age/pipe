@@ -10,7 +10,7 @@ from pipe.web.validators.rules.file_exists import validate_list_of_files_exist
 from pydantic import BaseModel, field_validator
 
 
-class NewSessionRequest(BaseModel):
+class StartSessionRequest(BaseModel):
     purpose: str
     background: str
     instruction: str

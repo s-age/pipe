@@ -5,10 +5,10 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from src.pipe.web.requests.sessions.new_session import NewSessionRequest
+from src.pipe.web.requests.sessions.start_session import StartSessionRequest
 
 
-class TestNewSessionRequest(unittest.TestCase):
+class TestStartSessionRequest(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
         self.role_file = os.path.join(self.test_dir, "test_role.md")
@@ -53,8 +53,9 @@ class TestNewSessionRequest(unittest.TestCase):
                 "artifacts": [self.artifact_file],
             }
         )
+
         try:
-            NewSessionRequest(**data)
+            StartSessionRequest(**data)
         except ValidationError as e:
             self.fail(f"Validation failed unexpectedly: {e}")
 
@@ -65,7 +66,7 @@ class TestNewSessionRequest(unittest.TestCase):
                 data = self.base_data.copy()
                 data.pop(field)
                 with self.assertRaises(ValidationError):
-                    NewSessionRequest(**data)
+                    StartSessionRequest(**data)
 
     def test_empty_required_fields(self):
         """Tests that validation fails when required fields are empty."""
@@ -74,14 +75,14 @@ class TestNewSessionRequest(unittest.TestCase):
                 data = self.base_data.copy()
                 data[field] = ""
                 with self.assertRaises(ValidationError):
-                    NewSessionRequest(**data)
+                    StartSessionRequest(**data)
 
     def test_non_existent_role_file(self):
         """Tests that validation fails for a non-existent role file."""
         data = self.base_data.copy()
         data["roles"] = ["non_existent_role.md"]
         with self.assertRaises(ValidationError):
-            NewSessionRequest(**data)
+            StartSessionRequest(**data)
 
     def test_non_existent_reference_file(self):
         """Tests that validation fails for a non-existent reference file."""
@@ -90,14 +91,14 @@ class TestNewSessionRequest(unittest.TestCase):
             {"path": "non_existent_ref.txt", "disabled": False, "persist": False}
         ]
         with self.assertRaises(ValidationError):
-            NewSessionRequest(**data)
+            StartSessionRequest(**data)
 
     def test_non_existent_artifact_file(self):
         """Tests that validation fails for a non-existent artifact file."""
         data = self.base_data.copy()
         data["artifacts"] = ["non_existent_artifact.txt"]
         with self.assertRaises(ValidationError):
-            NewSessionRequest(**data)
+            StartSessionRequest(**data)
 
     def test_mixed_existence_references(self):
         """Tests that validation fails if at least one reference file is missing."""
@@ -107,21 +108,21 @@ class TestNewSessionRequest(unittest.TestCase):
             {"path": "non_existent_ref.txt", "disabled": False, "persist": False},
         ]
         with self.assertRaises(ValidationError):
-            NewSessionRequest(**data)
+            StartSessionRequest(**data)
 
     def test_mixed_existence_roles(self):
         """Tests that validation fails if at least one role file is missing."""
         data = self.base_data.copy()
         data["roles"] = [self.role_file, "non_existent_role.md"]
         with self.assertRaises(ValidationError):
-            NewSessionRequest(**data)
+            StartSessionRequest(**data)
 
     def test_mixed_existence_artifacts(self):
         """Tests that validation fails if at least one artifact file is missing."""
         data = self.base_data.copy()
         data["artifacts"] = [self.artifact_file, "non_existent_artifact.txt"]
         with self.assertRaises(ValidationError):
-            NewSessionRequest(**data)
+            StartSessionRequest(**data)
 
 
 if __name__ == "__main__":

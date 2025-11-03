@@ -1,7 +1,7 @@
 import { useState, useEffect, JSX } from 'react'
 
-import NewSessionForm from '@/components/organisms/NewSessionForm'
-import { createSession, fetchSessions, fetchSettings } from '@/lib/api_client/client'
+import StartSessionForm from '@/components/organisms/StartSessionForm'
+import { createSession, fetchSessions, fetchSettings } from '@/lib/api/client'
 
 import { pageContainer, errorMessageStyle } from './style.css'
 
@@ -40,7 +40,7 @@ type NewSessionFormInputs = {
   }
 }
 
-const NewSessionPage: () => JSX.Element = () => {
+const StartSessionPage: () => JSX.Element = () => {
   const [sessions, setSessions] = useState<SessionOption[]>([])
   const [settings, setSettings] = useState<DefaultSettings | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -97,7 +97,7 @@ const NewSessionPage: () => JSX.Element = () => {
 
   return (
     <div className={pageContainer}>
-      <NewSessionForm
+      <StartSessionForm
         onSubmit={handleSubmit}
         sessions={sessions}
         defaultSettings={settings}
@@ -107,4 +107,4 @@ const NewSessionPage: () => JSX.Element = () => {
   )
 }
 
-export default NewSessionPage
+export default StartSessionPage

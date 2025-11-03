@@ -16,8 +16,8 @@ from pipe.web.requests.sessions.edit_references import EditReferencesRequest
 from pipe.web.requests.sessions.edit_session_meta import EditSessionMetaRequest
 from pipe.web.requests.sessions.edit_todos import EditTodosRequest
 from pipe.web.requests.sessions.fork_session import ForkSessionRequest
-from pipe.web.requests.sessions.new_session import NewSessionRequest
 from pipe.web.requests.sessions.send_instruction import SendInstructionRequest
+from pipe.web.requests.sessions.start_session import StartSessionRequest
 from pydantic import ValidationError
 
 
@@ -106,22 +106,22 @@ def index():
     )
 
 
-@app.route("/new_session")
-def new_session_form():
+@app.route("/start_session")
+def start_session_form():
     sessions_collection = session_service.list_sessions()
     sorted_sessions = sessions_collection.get_sorted_by_last_updated()
     return render_template(
-        "html/new_session.html",
+        "html/start_session.html",
         settings=settings.model_dump(),
         sessions=sorted_sessions,
     )
 
 
-@app.route("/api/session/new", methods=["POST"])
+@app.route("/api/session/start", methods=["POST"])
 def create_new_session_api():
     try:
         # Validate request body using the Pydantic model
-        request_data = NewSessionRequest(**request.get_json())
+        request_data = StartSessionRequest(**request.get_json())
 
         session = session_service.create_new_session(
             purpose=request_data.purpose,

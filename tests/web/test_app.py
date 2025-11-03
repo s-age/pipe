@@ -159,7 +159,7 @@ class TestAppApi(unittest.TestCase):
             "hyperparameters": Hyperparameters().model_dump(),
         }
         response = self.client.post(
-            "/api/session/new",
+            "/api/session/start",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -172,7 +172,7 @@ class TestAppApi(unittest.TestCase):
     def test_create_new_session_api_validation_error(self):
         """Tests the validation error for the new session API."""
         response = self.client.post(
-            "/api/session/new",
+            "/api/session/start",
             data=json.dumps({}),  # Empty payload
             content_type="application/json",
         )
@@ -370,7 +370,7 @@ class TestAppViews(unittest.TestCase):
         (
             self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
         ) = []
-        response = self.client.get("/new_session")
+        response = self.client.get("/start_session")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Create New Session", response.data)
 

@@ -37,7 +37,7 @@ const formSchema = z.object({
     .optional(),
 })
 
-type NewSessionFormInputs = z.infer<typeof formSchema>
+type StartSessionFormInputs = z.infer<typeof formSchema>
 
 type DefaultSettings = {
   parameters?: {
@@ -47,13 +47,13 @@ type DefaultSettings = {
   }
 }
 
-type NewSessionFormProps = {
+type StartSessionFormProps = {
   onSubmit: (data: NewSessionFormInputs) => void
   sessions: { value: string; label: string }[]
   defaultSettings: DefaultSettings
 }
 
-const NewSessionForm: ({
+const StartSessionForm: ({
   onSubmit,
   sessions,
   defaultSettings,
@@ -62,7 +62,7 @@ const NewSessionForm: ({
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<NewSessionFormInputs>({
+  } = useForm<StartSessionFormInputs>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       purpose: '',
@@ -90,7 +90,7 @@ const NewSessionForm: ({
 
   return (
     <div className={formContainer}>
-      <Heading level={1}>Create New Chat Session</Heading>
+      <Heading level={1}>Create New Session</Heading>
       <form onSubmit={handleSubmit(onSubmit)}>
         <InputField
           control={control}
@@ -206,4 +206,4 @@ const NewSessionForm: ({
   )
 }
 
-export default NewSessionForm
+export default StartSessionForm

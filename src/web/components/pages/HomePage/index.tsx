@@ -15,7 +15,7 @@ import {
   updateReferencePersist,
   updateReferenceTtl,
   updateReferenceDisabled,
-} from '@/lib/api_client/client'
+} from '@/lib/api/client'
 
 import { appContainer } from './style.css'
 

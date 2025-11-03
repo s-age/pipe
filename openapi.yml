@@ -3,7 +3,7 @@ info:
   title: Pipe CLI Web API
   version: 1.0.0
 paths:
-  /api/session/new:
+  /api/session/start:
     post:
       summary: Create a new session
       requestBody:
@@ -11,7 +11,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewSessionRequest'
+              $ref: '#/components/schemas/StartSessionRequest'
       responses:
         '200':
           description: Session created successfully
@@ -472,7 +472,7 @@ paths:
           description: Internal server error
 components:
   schemas:
-    NewSessionRequest:
+    StartSessionRequest:
       type: object
       properties:
         purpose:

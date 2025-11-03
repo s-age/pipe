@@ -9,7 +9,7 @@ from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
-from pipe.core.validators.sessions import new_session as new_session_validator
+from pipe.core.validators.sessions import start_session as start_session_validator
 
 # Ignore specific warnings from the genai library
 warnings.filterwarnings(
@@ -147,7 +147,7 @@ def main():
     try:
         # Validate arguments for a new session at the endpoint
         if not args.session and args.instruction:
-            new_session_validator.validate(args.purpose, args.background)
+            start_session_validator.validate(args.purpose, args.background)
 
         dispatch(args, session_service, parser)
     except (ValueError, FileNotFoundError, IndexError) as e:

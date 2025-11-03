@@ -2,10 +2,10 @@ const { Project, SyntaxKind } = require('ts-morph');
 const path = require('path');
 const fs = require('fs');
 
-const project = new Project();
+// const project = new Project(); // グローバル宣言を削除
 const projectRoot = path.join(__dirname, '..', '..', '..'); // Adjust based on actual project structure
 
-function getTypeDefinitions(filePath, symbolName) {
+function getTypeDefinitions(filePath, symbolName, project) { // projectを引数に追加
     const sourceFile = project.addSourceFileAtPath(filePath);
     const definitions = {};
 
@@ -124,11 +124,12 @@ function getTypeDefinitions(filePath, symbolName) {
     return null;
 }
 
-function getReferences(filePath, symbolName) {
-    const sourceFile = project.addSourceFileAtPath(filePath);
+function getReferences(filePath, symbolName, project) {
     const references = [];
 
-    const symbol = sourceFile.getDescendantsOfKind(SyntaxKind.Identifier)
+    // プロジェクト内のすべてのソースファイルからシンボルを検索
+    const symbol = project.getSourceFiles()
+        .flatMap(sf => sf.getDescendantsOfKind(SyntaxKind.Identifier))
         .find(id => id.getText() === symbolName);
 
     if (symbol) {
@@ -144,7 +145,7 @@ function getReferences(filePath, symbolName) {
     return references;
 }
 
-function getCodeSnippet(filePath, symbolName) {
+function getCodeSnippet(filePath, symbolName, project) {
     const sourceFile = project.addSourceFileAtPath(filePath);
 
     // Try to find a class, function, variable, interface, or type alias
@@ -195,9 +196,9 @@ function getFileContentSnippet(filePath) {
     }
 }
 
-function getSnippetAndTypeDefinitions(filePath, symbolName) {
-    const snippet = getCodeSnippet(filePath, symbolName);
-    const typeDefinitions = getTypeDefinitions(filePath, symbolName);
+function getSnippetAndTypeDefinitions(filePath, symbolName, project) {
+    const snippet = getCodeSnippet(filePath, symbolName, project);
+    const typeDefinitions = getTypeDefinitions(filePath, symbolName, project);
     return { snippet, typeDefinitions };
 }
 
@@ -220,8 +221,8 @@ function calculateSimilarity(str1, str2) {
     return (2 * lcs) / (m + n);
 }
 
-function findSimilarCode(baseFilePath, symbolName, searchDirectory, maxResults = 3) {
-    const baseInfo = getSnippetAndTypeDefinitions(baseFilePath, symbolName);
+function findSimilarCode(baseFilePath, symbolName, searchDirectory, maxResults = 3, project) {
+    const baseInfo = getSnippetAndTypeDefinitions(baseFilePath, symbolName, project);
     if (!baseInfo.snippet) {
         console.error(`DEBUG: No base snippet found for symbol '${symbolName}' in ${baseFilePath}`);
         return { error: `No code snippet found for symbol '${symbolName}' in ${baseFilePath}` };
@@ -297,6 +298,10 @@ function findSimilarCode(baseFilePath, symbolName, searchDirectory, maxResults =
 
 
 async function main() {
+    const project = new Project({
+        tsConfigFilePath: path.join(projectRoot, 'src', 'web', 'tsconfig.json'),
+    }); // main関数内でProjectオブジェクトを初期化
+
     const args = process.argv.slice(2);
     const filePath = args[0];
     const symbolName = args[1];
@@ -314,35 +319,41 @@ async function main() {
         process.exit(1);
     }
 
-    // project.addSourceFilesFromTsConfig(path.join(projectRoot, 'src', 'web', 'tsconfig.json'));
+    // project.addSourceFilesFromTsConfig(path.join(projectRoot, 'src', 'web', 'tsconfig.json'), {
+    //     tsConfigFilePath: path.join(projectRoot, 'src', 'web', 'tsconfig.json'),
+    //     basePath: path.join(projectRoot, 'src', 'web')
+    // });
 
     if (!project.getSourceFile(filePath)) {
         project.addSourceFileAtPath(filePath); // ファイルが追加されていない場合に追加
     }
 
+    process.stderr.write(`DEBUG: Number of source files in project: ${project.getSourceFiles().length}\n`); // デバッグログ
+
     let result = null;
     try {
         switch (action) {
             case 'get_type_definitions':
-                result = getTypeDefinitions(filePath, symbolName);
+                result = getTypeDefinitions(filePath, symbolName, project);
                 break;
             case 'get_references':
-                result = getReferences(filePath, symbolName);
+                result = getReferences(filePath, symbolName, project);
                 break;
             case 'get_code_snippet':
-                result = getCodeSnippet(filePath, symbolName);
+                result = getCodeSnippet(filePath, symbolName, project);
                 break;
             case 'get_file_content_snippet':
                 result = getFileContentSnippet(filePath);
                 break;
             case 'get_snippet_and_type_definitions':
-                result = getSnippetAndTypeDefinitions(filePath, symbolName);
+                result = getSnippetAndTypeDefinitions(filePath, symbolName, project);
                 break;
             case 'find_similar_code':
                 if (!searchDirectory) {
+                    console.log(JSON.stringify({ error: "Missing required argument: searchDirectory for find_similar_code." }, null, 2));
                     process.exit(1);
                 }
-                result = findSimilarCode(filePath, symbolName, searchDirectory, maxResults);
+                result = findSimilarCode(filePath, symbolName, searchDirectory, maxResults, project);
                 break;
             default:
                 process.exit(1);

@@ -37,6 +37,10 @@ def ts_get_references(file_path: str, symbol_name: str) -> dict[str, Any]:
             command, capture_output=True, text=True, check=True, cwd=project_root
         )
 
+        if process.stderr.strip():
+            # stderrはデバッグ情報なので、エラーとして返さずにログに出力
+            print(f"DEBUG (ts_analyzer.js stderr): {process.stderr.strip()}")
+
         output = json.loads(process.stdout)
         if "error" in output:
             return {"error": output["error"]}

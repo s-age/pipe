@@ -30,16 +30,7 @@ type TurnsListProps = {
   isStreaming: boolean
 }
 
-const TurnsList: ({
-  sessionData,
-  currentSessionId,
-  expertMode,
-  onDeleteTurn,
-  onForkSession,
-  onSendInstruction,
-  streamedText,
-  isStreaming,
-}: TurnsListProps) => JSX.Element = ({
+const TurnsList = ({
   sessionData,
   currentSessionId,
   expertMode,
@@ -49,11 +40,11 @@ const TurnsList: ({
   onDeleteSession, // 追加
   streamedText,
   isStreaming,
-}) => {
+}: TurnsListProps): JSX.Element => {
   const turnsListRef = useRef<HTMLDivElement>(null)
   const [instructionText, setInstructionText] = useState<string>('')
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (): void => {
     if (turnsListRef.current) {
       turnsListRef.current.scrollTop = turnsListRef.current.scrollHeight
     }
@@ -63,7 +54,7 @@ const TurnsList: ({
     scrollToBottom()
   }, [sessionData, streamedText]) // sessionDataまたはstreamedTextが更新されたらスクロール
 
-  const handleSend = async () => {
+  const handleSend = async (): Promise<void> => {
     if (!instructionText.trim() || !currentSessionId) return
     try {
       await onSendInstruction(instructionText)

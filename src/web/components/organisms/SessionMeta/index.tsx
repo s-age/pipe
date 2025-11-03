@@ -72,32 +72,49 @@ export const SessionMeta = ({
   const [roles, setRoles] = useState(sessionData?.roles?.join(', ') || '')
   const [procedure, setProcedure] = useState(sessionData?.procedure || '')
   const [artifacts, setArtifacts] = useState(sessionData?.artifacts?.join(', ') || '')
-  const [temperature, setTemperature] = useState(sessionData?.hyperparameters?.temperature || 0.7)
+  const [temperature, setTemperature] = useState(
+    sessionData?.hyperparameters?.temperature || 0.7,
+  )
   const [topP, setTopP] = useState(sessionData?.hyperparameters?.top_p || 0.9)
   const [topK, setTopK] = useState(sessionData?.hyperparameters?.top_k || 5)
 
   // sessionDataが変更されたときにローカルステートを同期
+
   useEffect(() => {
     if (sessionData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPurpose(sessionData.purpose || '')
+
       setBackground(sessionData.background || '')
+
       setRoles(sessionData.roles?.join(', ') || '')
+
       setProcedure(sessionData.procedure || '')
+
       setArtifacts(sessionData.artifacts?.join(', ') || '')
+
       setTemperature(sessionData.hyperparameters?.temperature || 0.7)
+
       setTopP(sessionData.hyperparameters?.top_p || 0.9)
+
       setTopK(sessionData.hyperparameters?.top_k || 5)
     }
   }, [sessionData])
 
-  const handleSaveMeta = () => {
+  const handleSaveMeta = (): void => {
     if (!currentSessionId || !sessionData) return
     const meta: EditSessionMetaRequest = {
       purpose: purpose,
       background: background,
-      roles: roles.split(',').map((s) => s.trim()).filter(Boolean),
+      roles: roles
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
       procedure: procedure,
-      artifacts: artifacts.split(',').map((s) => s.trim()).filter(Boolean),
+      artifacts: artifacts
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
       multi_step_reasoning_enabled: sessionData.multi_step_reasoning_enabled, // これはチェックボックスなので即時反映
       hyperparameters: {
         temperature: temperature,
@@ -109,33 +126,43 @@ export const SessionMeta = ({
   }
 
   // 各フィールドのonBlurハンドラ
-  const handlePurposeBlur = () => {
+  const handlePurposeBlur = (): void => {
     if (!currentSessionId) return
     onMetaSave(currentSessionId, { purpose: purpose })
   }
 
-  const handleBackgroundBlur = () => {
+  const handleBackgroundBlur = (): void => {
     if (!currentSessionId) return
     onMetaSave(currentSessionId, { background: background })
   }
 
-  const handleRolesBlur = () => {
+  const handleRolesBlur = (): void => {
     if (!currentSessionId) return
-    onMetaSave(currentSessionId, { roles: roles.split(',').map((s) => s.trim()).filter(Boolean) })
+    onMetaSave(currentSessionId, {
+      roles: roles
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    })
   }
 
-  const handleProcedureBlur = () => {
+  const handleProcedureBlur = (): void => {
     if (!currentSessionId) return
     onMetaSave(currentSessionId, { procedure: procedure })
   }
 
-  const handleArtifactsBlur = () => {
+  const handleArtifactsBlur = (): void => {
     if (!currentSessionId) return
-    onMetaSave(currentSessionId, { artifacts: artifacts.split(',').map((s) => s.trim()).filter(Boolean) })
+    onMetaSave(currentSessionId, {
+      artifacts: artifacts
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    })
   }
 
   // スライダーのonMouseUpハンドラ
-  const handleTemperatureMouseUp = () => {
+  const handleTemperatureMouseUp = (): void => {
     if (!currentSessionId || !sessionData) return
     onMetaSave(currentSessionId, {
       hyperparameters: {
@@ -145,7 +172,7 @@ export const SessionMeta = ({
     })
   }
 
-  const handleTopPMouseUp = () => {
+  const handleTopPMouseUp = (): void => {
     if (!currentSessionId || !sessionData) return
     onMetaSave(currentSessionId, {
       hyperparameters: {
@@ -155,7 +182,7 @@ export const SessionMeta = ({
     })
   }
 
-  const handleTopKMouseUp = () => {
+  const handleTopKMouseUp = (): void => {
     if (!currentSessionId || !sessionData) return
     onMetaSave(currentSessionId, {
       hyperparameters: {
@@ -165,21 +192,21 @@ export const SessionMeta = ({
     })
   }
 
-  const handleTodoCheckboxChange = (index: number) => {
+  const handleTodoCheckboxChange = (index: number): void => {
     if (!currentSessionId || !sessionData) return
     const newTodos = [...sessionData.todos]
     newTodos[index].checked = !newTodos[index].checked
     onUpdateTodo(currentSessionId, newTodos)
   }
 
-  const handleReferenceCheckboxChange = (index: number) => {
+  const handleReferenceCheckboxChange = (index: number): void => {
     if (!currentSessionId || !sessionData) return
     const newReferences = [...sessionData.references]
     newReferences[index].disabled = !newReferences[index].disabled
     onUpdateReferenceDisabled(currentSessionId, index, newReferences[index].disabled)
   }
 
-  const handleReferencePersistToggle = (index: number) => {
+  const handleReferencePersistToggle = (index: number): void => {
     if (!currentSessionId || !sessionData) return
     const newReferences = [...sessionData.references]
     newReferences[index].persist = !newReferences[index].persist
@@ -189,7 +216,7 @@ export const SessionMeta = ({
   const handleReferenceTtlChange = (
     index: number,
     action: 'increment' | 'decrement',
-  ) => {
+  ): void => {
     if (!currentSessionId || !sessionData) return
     const newReferences = [...sessionData.references]
     const currentTtl = newReferences[index].ttl !== null ? newReferences[index].ttl : 3
@@ -221,7 +248,9 @@ export const SessionMeta = ({
             <InputText
               id="purpose"
               value={purpose}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPurpose(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setPurpose(e.target.value)
+              }
               onBlur={handlePurposeBlur}
               className={inputFullWidth}
             />
@@ -233,7 +262,9 @@ export const SessionMeta = ({
             <TextArea
               id="background"
               value={background}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBackground(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setBackground(e.target.value)
+              }
               onBlur={handleBackgroundBlur}
               className={textareaFullWidth}
             />
@@ -245,7 +276,9 @@ export const SessionMeta = ({
             <InputText
               id="roles"
               value={roles}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRoles(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setRoles(e.target.value)
+              }
               onBlur={handleRolesBlur}
               className={inputFullWidth}
             />
@@ -257,7 +290,9 @@ export const SessionMeta = ({
             <InputText
               id="procedure"
               value={procedure}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProcedure(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setProcedure(e.target.value)
+              }
               onBlur={handleProcedureBlur}
               className={inputFullWidth}
             />
@@ -269,7 +304,9 @@ export const SessionMeta = ({
             <InputText
               id="artifacts"
               value={artifacts}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setArtifacts(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setArtifacts(e.target.value)
+              }
               onBlur={handleArtifactsBlur}
               className={inputFullWidth}
             />
@@ -361,9 +398,7 @@ export const SessionMeta = ({
             <div className={hyperparametersControl}>
               <Label>Temperature:</Label>
               <div>
-                <span className={sliderValue}>
-                  {temperature}
-                </span>
+                <span className={sliderValue}>{temperature}</span>
                 <InputText
                   type="range"
                   min="0"
@@ -380,9 +415,7 @@ export const SessionMeta = ({
             <div className={hyperparametersControl}>
               <Label>Top P:</Label>
               <div>
-                <span className={sliderValue}>
-                  {topP}
-                </span>
+                <span className={sliderValue}>{topP}</span>
                 <InputText
                   type="range"
                   min="0"
@@ -399,9 +432,7 @@ export const SessionMeta = ({
             <div className={hyperparametersControl}>
               <Label>Top K:</Label>
               <div>
-                <span className={sliderValue}>
-                  {topK}
-                </span>
+                <span className={sliderValue}>{topK}</span>
                 <InputText
                   type="range"
                   min="1"

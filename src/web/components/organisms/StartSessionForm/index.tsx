@@ -112,9 +112,9 @@ const StartSessionForm: (props: StartSessionFormProps) => JSX.Element = ({
       instruction: '',
       multi_step_reasoning_enabled: false,
       hyperparameters: {
-        temperature: defaultSettings?.parameters?.temperature?.value ?? 0.7,
-        top_p: defaultSettings?.parameters?.top_p?.value ?? 0.9,
-        top_k: defaultSettings?.parameters?.top_k?.value ?? 5,
+        temperature: defaultSettings?.parameters?.temperature ?? 0.7,
+        top_p: defaultSettings?.parameters?.top_p ?? 0.9,
+        top_k: defaultSettings?.parameters?.top_k ?? 5,
       },
     },
   })

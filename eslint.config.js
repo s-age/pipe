@@ -28,7 +28,7 @@ export default [
 
   // 2. Custom Configuration (React, Import, Unused Imports, etc.)
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
+    files: ['**/*.{ts,tsx}'],
 
     // 🚨 tseslint.configs.recommended has already configured the parser, so it's often unnecessary here
     // languageOptions: {
@@ -68,6 +68,7 @@ export default [
       'no-unused-vars': 'off', // Disable standard ESLint rules
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+      '@typescript-eslint/explicit-function-return-type': 'error',
 
       // ✅ Imports / Unused
       'import/order': [

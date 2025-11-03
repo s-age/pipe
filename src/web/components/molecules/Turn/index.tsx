@@ -41,15 +41,7 @@ type TurnProps = {
   isStreaming?: boolean // 新しく追加
 }
 
-const Turn: ({
-  turn,
-  index,
-  sessionId,
-  expertMode,
-  onDeleteTurn,
-  onForkSession,
-  isStreaming,
-}: TurnProps) => JSX.Element = ({
+const Turn = ({
   turn,
   index,
   sessionId,
@@ -57,13 +49,13 @@ const Turn: ({
   onDeleteTurn,
   onForkSession,
   isStreaming = false,
-}) => {
+}: TurnProps): JSX.Element => {
   const [isEditing, setIsEditing] = useState(false)
-  const [editedContent, setEditedContent] = useState(
-    turn.content || turn.instruction || '',
+  const [editedContent, setEditedContent] = useState<string>(
+    (turn.content || turn.instruction || ''),
   )
 
-  const getHeaderContent = (type: string) => {
+  const getHeaderContent = (type: string): string => {
     switch (type) {
       case 'user_task':
         return 'You'
@@ -80,7 +72,7 @@ const Turn: ({
     }
   }
 
-  const handleCopy = async () => {
+  const handleCopy = async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(editedContent)
       alert('Copied!')
@@ -90,13 +82,13 @@ const Turn: ({
     }
   }
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = (): void => {
     // TODO: API呼び出しを実装する
     console.log(`Saving turn ${index} with new content: ${editedContent}`)
     setIsEditing(false)
   }
 
-  const renderTurnContent = () => {
+  const renderTurnContent = (): JSX.Element | null => {
     let markdownContent = ''
     let statusClass = ''
 
@@ -122,7 +114,7 @@ const Turn: ({
 
     switch (turn.type) {
       case 'user_task':
-        return <pre className={editablePre}>{turn.instruction}</pre>
+        return <pre className={editablePre}>{turn.instruction || ''}</pre>
       case 'model_response':
       case 'compressed_history':
         markdownContent = turn.content || ''
@@ -140,13 +132,17 @@ const Turn: ({
             {!isStreaming && (
               <div
                 className={`${renderedMarkdown} markdown-body`}
-                dangerouslySetInnerHTML={{ __html: marked.parse(markdownContent.trim()) }}
+                dangerouslySetInnerHTML={{
+                  __html: marked.parse(markdownContent.trim()),
+                }}
               />
             )}
           </div>
         )
       case 'function_calling':
-        return <pre className={turnContent}>{JSON.stringify(turn.response, null, 2)}</pre>
+        return (
+          <pre className={turnContent}>{JSON.stringify(turn.response, null, 2)}</pre>
+        )
       case 'tool_response':
         if (!turn.response) return null
         statusClass = turn.response.status === 'success' ? statusSuccess : statusError
@@ -155,7 +151,7 @@ const Turn: ({
           <div className={toolResponseContent}>
             <strong>Status: </strong>
             <span className={statusClass}>{turn.response.status}</span>
-            {turn.response.output && (
+            {turn.response.output !== undefined && turn.response.output !== null && (
               <pre>{JSON.stringify(turn.response.output, null, 2)}</pre>
             )}
           </div>
@@ -165,7 +161,7 @@ const Turn: ({
     }
   }
 
-  const formatTimestamp = (date: Date) => {
+  const formatTimestamp = (date: Date): string => {
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
@@ -186,7 +182,7 @@ const Turn: ({
         <div className={turnHeader}>
           <span className={turnHeaderInfo}>
             <span className={turnIndexStyle}>{index + 1}:</span>
-            {getHeaderContent(turn.type)}
+            {getHeaderContent(turn.type || 'unknown')}
             <span className={turnTimestamp}>{timestamp}</span>
           </span>
           <div className={turnHeaderControls}>

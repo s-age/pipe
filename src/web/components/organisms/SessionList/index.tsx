@@ -3,7 +3,7 @@ import React, { JSX } from 'react'
 import Button from '@/components/atoms/Button'
 import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
-import { SessionMetaType } from '@/lib/api/sessions/getSessions'
+import { SessionOverview } from '@/lib/api/sessions/getSessions'
 
 import {
   sessionListColumn,
@@ -16,13 +16,13 @@ import {
 } from './style.css'
 
 type SessionTreeNode = {
-  meta: SessionMetaType | null
+  meta: SessionOverview | null
   id?: string
   children: Record<string, SessionTreeNode>
 }
 
 type SessionListProps = {
-  sessions: [string, SessionMetaType][]
+  sessions: SessionOverview[]
   currentSessionId: string | null
   onSessionSelect: (sessionId: string) => void
 }
@@ -34,10 +34,12 @@ const SessionList = ({
 }: SessionListProps): JSX.Element => {
   // セッションツリーを構築するヘルパー関数
   const buildSessionTree = (
-    sessionsData: [string, SessionMetaType][],
+    sessionsData: SessionOverview[],
   ): Record<string, SessionTreeNode> => {
     const tree: Record<string, SessionTreeNode> = {}
-    sessionsData.forEach(([id, meta]) => {
+    sessionsData.forEach((session) => {
+      const id = session.session_id
+      const meta = session
       const parts = id.split('/')
       let currentLevel: Record<string, SessionTreeNode> = tree
       parts.forEach((part, index) => {

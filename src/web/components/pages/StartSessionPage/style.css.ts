@@ -9,9 +9,3 @@ export const pageContainer = style({
   color: colors.darkBackground,
   padding: '16px',
 })
-
-export const errorMessageStyle = style({
-  color: colors.error,
-  marginTop: '10px',
-  textAlign: 'center',
-})

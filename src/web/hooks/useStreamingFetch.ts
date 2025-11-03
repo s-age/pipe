@@ -3,29 +3,34 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 type StreamingFetchOptions = {
   method?: string
   headers?: HeadersInit
-  body?: BodyInit
+  body?: BodyInit | null
 }
 
 export const useStreamingFetch = (
   url: string | null,
   options: StreamingFetchOptions = {},
-) => {
+): {
+  streamedText: string
+  isLoading: boolean
+  error: string | null
+  setStreamedText: React.Dispatch<React.SetStateAction<string>>
+} => {
   const [streamedText, setStreamedText] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const controllerRef = useRef<AbortController | null>(null)
 
   // optionsが安定していることを保証するために useMemo を使用
-  const stableOptions = useMemo(() => options, [options])
+  const stableOptions = useMemo((): StreamingFetchOptions => options, [options])
 
-  useEffect(() => {
+  useEffect((): (() => void) => {
     if (!url) {
       setStreamedText('')
       if (controllerRef.current) {
         controllerRef.current.abort()
       }
 
-      return
+      return (): void => {}
     }
 
     // 新しいリクエストが開始される前に古いコントローラをクリーンアップ
@@ -35,7 +40,7 @@ export const useStreamingFetch = (
     controllerRef.current = new AbortController()
     const signal = controllerRef.current.signal
 
-    const fetchData = async () => {
+    const fetchData = async (): Promise<void> => {
       setIsLoading(true)
       setError(null)
       setStreamedText('')
@@ -75,7 +80,7 @@ export const useStreamingFetch = (
 
     fetchData()
 
-    return () => {
+    return (): void => {
       if (controllerRef.current) {
         controllerRef.current.abort()
       }
@@ -84,7 +89,12 @@ export const useStreamingFetch = (
 
   // 戻り値全体をuseMemoで安定化させる
   return useMemo(
-    () => ({
+    (): {
+      streamedText: string
+      isLoading: boolean
+      error: string | null
+      setStreamedText: React.Dispatch<React.SetStateAction<string>>
+    } => ({
       streamedText,
       isLoading,
       error,

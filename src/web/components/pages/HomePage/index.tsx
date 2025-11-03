@@ -9,8 +9,8 @@ import { deleteSession } from '@/lib/api/session/deleteSession'
 import { deleteTodos } from '@/lib/api/session/deleteTodos'
 import { deleteTurn } from '@/lib/api/session/deleteTurn'
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
-import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
 import { editReferences } from '@/lib/api/session/editReferences'
+import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
 import {
   editSessionMeta,
   EditSessionMetaRequest,
@@ -18,12 +18,12 @@ import {
 import { editTodos, Todo } from '@/lib/api/session/editTodos'
 import { forkSession } from '@/lib/api/session/forkSession'
 import { getSession, SessionData } from '@/lib/api/session/getSession'
-import { getSessions, SessionMetaType } from '@/lib/api/sessions/getSessions'
+import { getSessions, SessionOverview } from '@/lib/api/sessions/getSessions'
 
 import { appContainer } from './style.css'
 
-const HomePage: () => JSX.Element = () => {
-  const [sessions, setSessions] = useState<[string, SessionMetaType][]>([])
+const HomePage = (): JSX.Element => {
+  const [sessions, setSessions] = useState<SessionOverview[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
@@ -36,7 +36,7 @@ const HomePage: () => JSX.Element = () => {
 
   const expertMode = true // 仮の値
 
-  const memoizedStreamingOptions = useMemo(() => {
+  const memoizedStreamingOptions = useMemo((): RequestInit | undefined => {
     if (!streamingTrigger) return undefined
 
     return {
@@ -60,14 +60,14 @@ const HomePage: () => JSX.Element = () => {
     memoizedStreamingOptions,
   )
 
-  useEffect(() => {
+  useEffect((): void => {
     if (streamingError) {
       setError(streamingError)
       setStreamingTrigger(null)
     }
   }, [streamingError])
 
-  useEffect(() => {
+  useEffect((): void => {
     // 💡 修正されたストリーミング完了判定ロジック
     // streamingTriggerがセットされており、isStreamingが完了し、かつ streamedTextにデータがあるか、
     // または streamingErrorがある場合（ただしstreamingErrorは上のuseEffectで処理される）に実行。
@@ -76,7 +76,7 @@ const HomePage: () => JSX.Element = () => {
       // 💡 streamingTriggerが設定された直後 (isStreaming=false) の誤発動を防ぐため、
       // 既にデータがあるか、完了していることを前提として処理を続行する。
 
-      const loadSessionDataAfterStreaming = async () => {
+      const loadSessionDataAfterStreaming = async (): Promise<void> => {
         if (currentSessionId) {
           try {
             const data = await getSession(currentSessionId)
@@ -96,13 +96,20 @@ const HomePage: () => JSX.Element = () => {
         setStreamedText('')
       }
     }
-  }, [isStreaming, streamingTrigger, currentSessionId, streamedText, streamingError]) // streamedTextも依存配列に追加
+  }, [
+    isStreaming,
+    streamingTrigger,
+    currentSessionId,
+    streamedText,
+    streamingError,
+    setStreamedText,
+  ]) // streamedTextも依存配列に追加
 
-  useEffect(() => {
-    const loadSessions = async () => {
+  useEffect((): void => {
+    const loadSessions = async (): Promise<void> => {
       try {
         const fetchedSessions = await getSessions()
-        setSessions(fetchedSessions)
+        setSessions(fetchedSessions.sessions)
         // URLからセッションIDを取得し、現在のセッションを設定
         const pathParts = window.location.pathname.split('/')
         const id = pathParts[pathParts.length - 1]
@@ -118,8 +125,8 @@ const HomePage: () => JSX.Element = () => {
     loadSessions()
   }, [])
 
-  useEffect(() => {
-    const loadSessionData = async () => {
+  useEffect((): void => {
+    const loadSessionData = async (): Promise<void> => {
       if (currentSessionId) {
         setLoading(true)
         try {
@@ -136,12 +143,15 @@ const HomePage: () => JSX.Element = () => {
     loadSessionData()
   }, [currentSessionId])
 
-  const handleSessionSelect = (sessionId: string) => {
+  const handleSessionSelect = (sessionId: string): void => {
     setCurrentSessionId(sessionId)
     window.history.pushState({}, '', `/session/${sessionId}`)
   }
 
-  const handleMetaSave = async (id: string, meta: EditSessionMetaRequest) => {
+  const handleMetaSave = async (
+    id: string,
+    meta: EditSessionMetaRequest,
+  ): Promise<void> => {
     try {
       await editSessionMeta(id, meta)
       // 必要に応じてセッションデータを再読み込み
@@ -150,13 +160,16 @@ const HomePage: () => JSX.Element = () => {
         setSessionData(data.session)
       }
       const fetchedSessions = await getSessions()
-      setSessions(fetchedSessions)
+      setSessions(fetchedSessions.sessions)
     } catch (err: unknown) {
       setError((err as Error).message || 'Failed to save session meta.')
     }
   }
 
-  const handleDeleteTurn = async (sessionId: string, turnIndex: number) => {
+  const handleDeleteTurn = async (
+    sessionId: string,
+    turnIndex: number,
+  ): Promise<void> => {
     // confirmをカスタムモーダルに置き換えるべき
     if (!window.confirm('Are you sure you want to delete this turn?')) return
     try {
@@ -169,7 +182,10 @@ const HomePage: () => JSX.Element = () => {
     }
   }
 
-  const handleForkSession = async (sessionId: string, forkIndex: number) => {
+  const handleForkSession = async (
+    sessionId: string,
+    forkIndex: number,
+  ): Promise<void> => {
     // confirmをカスタムモーダルに置き換えるべき
     if (
       !window.confirm(
@@ -178,7 +194,7 @@ const HomePage: () => JSX.Element = () => {
     )
       return
     try {
-      const result = await forkSession(forkIndex, { session_id: sessionId })
+      const result = await forkSession(sessionId, forkIndex)
       if (result.new_session_id) {
         window.location.href = `/session/${result.new_session_id}`
       } else {
@@ -190,16 +206,16 @@ const HomePage: () => JSX.Element = () => {
   }
 
   const handleSendInstruction = useCallback(
-    async (instruction: string) => {
+    async (instruction: string): Promise<void> => {
       if (!currentSessionId) return
       console.log('Instruction to send:', instruction)
       setStreamingTrigger({ instruction, sessionId: currentSessionId })
       // isStreamingRequestInitiated の呼び出しを削除
     },
-    [currentSessionId],
+    [currentSessionId, setStreamingTrigger],
   )
 
-  const handleUpdateTodo = async (sessionId: string, todos: Todo[]) => {
+  const handleUpdateTodo = async (sessionId: string, todos: Todo[]): Promise<void> => {
     try {
       await editTodos(sessionId, todos)
       // UIは即時更新されるため、ここでは再フェッチしない
@@ -208,7 +224,7 @@ const HomePage: () => JSX.Element = () => {
     }
   }
 
-  const handleDeleteAllTodos = async (sessionId: string) => {
+  const handleDeleteAllTodos = async (sessionId: string): Promise<void> => {
     // confirmをカスタムモーダルに置き換えるべき
     if (!window.confirm('Are you sure you want to delete all todos for this session?'))
       return
@@ -226,7 +242,7 @@ const HomePage: () => JSX.Element = () => {
     sessionId: string,
     index: number,
     persist: boolean,
-  ) => {
+  ): Promise<void> => {
     try {
       await editReferencePersist(sessionId, index, persist)
       // セッションデータを再読み込みしてUIを更新
@@ -241,7 +257,7 @@ const HomePage: () => JSX.Element = () => {
     sessionId: string,
     index: number,
     ttl: number,
-  ) => {
+  ): Promise<void> => {
     try {
       await editReferenceTtl(sessionId, index, ttl)
       // セッションデータを再読み込みしてUIを更新
@@ -256,7 +272,7 @@ const HomePage: () => JSX.Element = () => {
     sessionId: string,
     index: number,
     disabled: boolean,
-  ) => {
+  ): Promise<void> => {
     if (!sessionData) return
     try {
       const newReferences = [...sessionData.references]
@@ -270,12 +286,12 @@ const HomePage: () => JSX.Element = () => {
     }
   }
 
-  const handleDeleteSession = async (sessionId: string) => {
+  const handleDeleteSession = async (sessionId: string): Promise<void> => {
     if (!window.confirm('Are you sure you want to delete this session?')) return
     try {
       await deleteSession(sessionId)
       const fetchedSessions = await getSessions()
-      setSessions(fetchedSessions)
+      setSessions(fetchedSessions.sessions)
       setCurrentSessionId(null)
       setSessionData(null)
       window.history.pushState({}, '', '/') // URLをルートに戻す

@@ -8,14 +8,14 @@ type SessionOption = {
   label: string
 }
 
-type UseSessionDataResult = {
+type UseSessionDetailResult = {
   sessions: SessionOption[]
   settings: Settings | null
   loading: boolean
   error: string | null
 }
 
-export const useSessionData = (): UseSessionDataResult => {
+export const useSessionDetail = (): UseSessionDetailResult => {
   const [sessions, setSessions] = useState<SessionOption[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [error, setError] = useState<string | null>(null)

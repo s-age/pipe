@@ -7,7 +7,7 @@ import { editReferences } from '@/lib/api/session/editReferences'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
 import { editTodos, Todo } from '@/lib/api/session/editTodos'
 import { forkSession } from '@/lib/api/session/forkSession'
-import { SessionData, getSession } from '@/lib/api/session/getSession'
+import { SessionDetail, getSession } from '@/lib/api/session/getSession'
 
 type UseSessionActions = {
   handleDeleteTurn: (sessionId: string, turnIndex: number) => Promise<void>
@@ -30,13 +30,13 @@ type UseSessionActions = {
     disabled: boolean,
   ) => Promise<void>
   setError: (error: string | null) => void
-  setSessionData: (data: SessionData | null) => void
-  sessionData: SessionData | null
+  setSessionDetail: (data: SessionDetail | null) => void
+  sessionDetail: SessionDetail | null
 }
 
 export const useSessionActions = (
-  sessionData: SessionData | null,
-  setSessionData: (data: SessionData | null) => void,
+  sessionDetail: SessionDetail | null,
+  setSessionDetail: (data: SessionDetail | null) => void,
 ): UseSessionActions => {
   const setError = useState<string | null>(null)[1]
 
@@ -46,12 +46,12 @@ export const useSessionActions = (
       try {
         await deleteTurn(sessionId, turnIndex)
         const data = await getSession(sessionId)
-        setSessionData(data.session)
+        setSessionDetail(data.session)
       } catch (err: unknown) {
         setError((err as Error).message || 'Failed to delete turn.')
       }
     },
-    [setSessionData, setError],
+    [setSessionDetail, setError],
   )
 
   const handleForkSession = useCallback(
@@ -96,12 +96,12 @@ export const useSessionActions = (
       try {
         await deleteTodos(sessionId)
         const data = await getSession(sessionId)
-        setSessionData(data.session)
+        setSessionDetail(data.session)
       } catch (err: unknown) {
         setError((err as Error).message || 'Failed to delete all todos.')
       }
     },
-    [setSessionData, setError],
+    [setSessionDetail, setError],
   )
 
   const handleUpdateReferencePersist = useCallback(
@@ -109,12 +109,12 @@ export const useSessionActions = (
       try {
         await editReferencePersist(sessionId, index, persist)
         const data = await getSession(sessionId)
-        setSessionData(data.session)
+        setSessionDetail(data.session)
       } catch (err: unknown) {
         setError((err as Error).message || 'Failed to update reference persist state.')
       }
     },
-    [setSessionData, setError],
+    [setSessionDetail, setError],
   )
 
   const handleUpdateReferenceTtl = useCallback(
@@ -122,28 +122,28 @@ export const useSessionActions = (
       try {
         await editReferenceTtl(sessionId, index, ttl)
         const data = await getSession(sessionId)
-        setSessionData(data.session)
+        setSessionDetail(data.session)
       } catch (err: unknown) {
         setError((err as Error).message || 'Failed to update reference TTL.')
       }
     },
-    [setSessionData, setError],
+    [setSessionDetail, setError],
   )
 
   const handleUpdateReferenceDisabled = useCallback(
     async (sessionId: string, index: number, disabled: boolean): Promise<void> => {
-      if (!sessionData) return
+      if (!sessionDetail) return
       try {
-        const newReferences = [...sessionData.references]
+        const newReferences = [...sessionDetail.references]
         newReferences[index] = { ...newReferences[index], disabled }
         await editReferences(sessionId, newReferences)
         const data = await getSession(sessionId)
-        setSessionData(data.session)
+        setSessionDetail(data.session)
       } catch (err: unknown) {
         setError((err as Error).message || 'Failed to update reference disabled state.')
       }
     },
-    [sessionData, setSessionData, setError],
+    [sessionDetail, setSessionDetail, setError],
   )
 
   return {
@@ -155,7 +155,7 @@ export const useSessionActions = (
     handleUpdateReferenceTtl,
     handleUpdateReferenceDisabled,
     setError,
-    setSessionData,
-    sessionData,
+    setSessionDetail,
+    sessionDetail,
   }
 }

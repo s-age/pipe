@@ -1,16 +1,16 @@
 import { useState, useCallback } from 'react'
 
 import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
-import { SessionData } from '@/lib/api/session/getSession'
+import { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseSessionBasicMetaProps = {
-  sessionData: SessionData | null
+  sessionDetail: SessionDetail | null
   currentSessionId: string | null
   onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
 }
 
 export const useSessionBasicMeta = ({
-  sessionData,
+  sessionDetail,
   currentSessionId,
   onMetaSave,
 }: UseSessionBasicMetaProps): {
@@ -30,11 +30,11 @@ export const useSessionBasicMeta = ({
   setArtifacts: React.Dispatch<React.SetStateAction<string>>
   handleArtifactsBlur: () => void
 } => {
-  const [purpose, setPurpose] = useState(sessionData?.purpose || '')
-  const [background, setBackground] = useState(sessionData?.background || '')
-  const [roles, setRoles] = useState(sessionData?.roles?.join(', ') || '')
-  const [procedure, setProcedure] = useState(sessionData?.procedure || '')
-  const [artifacts, setArtifacts] = useState(sessionData?.artifacts?.join(', ') || '')
+  const [purpose, setPurpose] = useState(sessionDetail?.purpose || '')
+  const [background, setBackground] = useState(sessionDetail?.background || '')
+  const [roles, setRoles] = useState(sessionDetail?.roles?.join(', ') || '')
+  const [procedure, setProcedure] = useState(sessionDetail?.procedure || '')
+  const [artifacts, setArtifacts] = useState(sessionDetail?.artifacts?.join(', ') || '')
 
   const handlePurposeBlur = useCallback((): void => {
     if (!currentSessionId) return

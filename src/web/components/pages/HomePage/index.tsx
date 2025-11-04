@@ -14,25 +14,25 @@ const HomePage = (): JSX.Element => {
   const {
     sessions,
     currentSessionId,
-    sessionData,
+    sessionDetail,
     error,
     handleSessionSelect,
     handleMetaSave,
     handleDeleteSession,
-    setSessionData,
+    setSessionDetail,
   } = useSessionManagement()
 
-  const loadSessionDataAfterStreaming = useCallback(async (): Promise<void> => {
+  const loadSessionDetailAfterStreaming = useCallback(async (): Promise<void> => {
     if (currentSessionId) {
       try {
         const data = await getSession(currentSessionId)
-        setSessionData(data.session)
+        setSessionDetail(data.session)
       } catch (err: unknown) {
         // エラーハンドリングはuseSessionManagementに任せるか、ここでsetErrorを呼ぶ
         console.error('Failed to load session data after streaming:', err)
       }
     }
-  }, [currentSessionId, setSessionData])
+  }, [currentSessionId, setSessionDetail])
 
   const {
     streamedText,
@@ -40,7 +40,7 @@ const HomePage = (): JSX.Element => {
     streamingError,
     handleSendInstruction,
     setStreamingTrigger,
-  } = useStreamingInstruction(currentSessionId, loadSessionDataAfterStreaming)
+  } = useStreamingInstruction(currentSessionId, loadSessionDetailAfterStreaming)
 
   const {
     handleDeleteTurn,
@@ -50,7 +50,7 @@ const HomePage = (): JSX.Element => {
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
     handleUpdateReferenceDisabled,
-  } = useSessionActions(sessionData, setSessionData)
+  } = useSessionActions(sessionDetail, setSessionDetail)
 
   // ストリーミングエラーをHomePageのerror状態に反映
   if (streamingError) {
@@ -76,7 +76,7 @@ const HomePage = (): JSX.Element => {
         handleSessionSelect={handleSessionSelect}
       />
       <TurnsList
-        sessionData={sessionData}
+        sessionDetail={sessionDetail}
         currentSessionId={currentSessionId}
         expertMode={expertMode}
         onDeleteTurn={handleDeleteTurn}
@@ -88,7 +88,7 @@ const HomePage = (): JSX.Element => {
       />
       <SessionMeta
         key={currentSessionId}
-        sessionData={sessionData}
+        sessionDetail={sessionDetail}
         currentSessionId={currentSessionId}
         onMetaSave={handleMetaSave}
         onUpdateTodo={handleUpdateTodo}

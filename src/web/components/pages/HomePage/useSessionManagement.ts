@@ -5,25 +5,25 @@ import {
   editSessionMeta,
   EditSessionMetaRequest,
 } from '@/lib/api/session/editSessionMeta'
-import { getSession, SessionData } from '@/lib/api/session/getSession'
+import { getSession, SessionDetail } from '@/lib/api/session/getSession'
 import { getSessions, SessionOverview } from '@/lib/api/sessions/getSessions'
 
 type UseSessionManagement = {
   sessions: SessionOverview[]
   currentSessionId: string | null
-  sessionData: SessionData | null
+  sessionDetail: SessionDetail | null
   error: string | null
   setCurrentSessionId: (id: string | null) => void
   handleSessionSelect: (sessionId: string) => void
   handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
   handleDeleteSession: (sessionId: string) => Promise<void>
-  setSessionData: (data: SessionData | null) => void
+  setSessionDetail: (data: SessionDetail | null) => void
 }
 
 export const useSessionManagement = (): UseSessionManagement => {
   const [sessions, setSessions] = useState<SessionOverview[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
-  const [sessionData, setSessionData] = useState<SessionData | null>(null)
+  const [sessionDetail, setSessionDetail] = useState<SessionDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // セッション一覧のロード
@@ -51,19 +51,19 @@ export const useSessionManagement = (): UseSessionManagement => {
 
   // 現在のセッションデータのロード
   useEffect(() => {
-    const loadSessionData = async (): Promise<void> => {
+    const loadSessionDetail = async (): Promise<void> => {
       if (currentSessionId) {
         try {
           const data = await getSession(currentSessionId)
-          setSessionData(data.session)
+          setSessionDetail(data.session)
         } catch (err: unknown) {
           setError((err as Error).message || 'Failed to load session data.')
         }
       } else {
-        setSessionData(null)
+        setSessionDetail(null)
       }
     }
-    loadSessionData()
+    loadSessionDetail()
   }, [currentSessionId])
 
   const handleSessionSelect = useCallback(
@@ -80,7 +80,7 @@ export const useSessionManagement = (): UseSessionManagement => {
         await editSessionMeta(id, meta)
         if (currentSessionId === id) {
           const data = await getSession(id)
-          setSessionData(data.session)
+          setSessionDetail(data.session)
         }
         const fetchedSessions = await getSessions()
         setSessions(fetchedSessions.sessions.map(([, session]) => session))
@@ -88,7 +88,7 @@ export const useSessionManagement = (): UseSessionManagement => {
         setError((err as Error).message || 'Failed to save session meta.')
       }
     },
-    [currentSessionId, setSessionData],
+    [currentSessionId, setSessionDetail],
   )
 
   const handleDeleteSession = useCallback(
@@ -99,24 +99,24 @@ export const useSessionManagement = (): UseSessionManagement => {
         const fetchedSessions = await getSessions()
         setSessions(fetchedSessions.sessions.map(([, session]) => session))
         setCurrentSessionId(null)
-        setSessionData(null)
+        setSessionDetail(null)
         window.history.pushState({}, '', '/')
       } catch (err: unknown) {
         setError((err as Error).message || 'Failed to delete session.')
       }
     },
-    [setSessions, setCurrentSessionId, setSessionData],
+    [setSessions, setCurrentSessionId, setSessionDetail],
   )
 
   return {
     sessions,
     currentSessionId,
-    sessionData,
+    sessionDetail,
     error,
     setCurrentSessionId,
     handleSessionSelect,
     handleMetaSave,
     handleDeleteSession,
-    setSessionData,
+    setSessionDetail,
   }
 }

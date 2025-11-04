@@ -2,7 +2,7 @@ const timezone = document.body.dataset.timezone || 'UTC'
 const sessionTurnsCount = parseInt(document.body.dataset.sessionTurnsCount || '0')
 const expertMode = document.body.dataset.expertMode === 'true'
 const currentSessionId = document.body.dataset.currentSessionId
-let sessionData = JSON.parse(document.body.dataset.sessionData || '{}')
+let sessionDetail = JSON.parse(document.body.dataset.sessionDetail || '{}')
 
 function isScrolledToBottom() {
   const turnsList = document.getElementById('turns-list-section')
@@ -595,16 +595,16 @@ document.addEventListener('DOMContentLoaded', function () {
     return turnElement
   }
 
-  function updateRightColumn(sessionData) {
+  function updateRightColumn(sessionDetail) {
     // Update TODOs
     const todosList = document.getElementById('todos-list')
     const noTodosMessage = document.getElementById('no-todos-message')
     if (todosList && noTodosMessage) {
       todosList.innerHTML = '' // Clear existing list
-      if (sessionData.todos && sessionData.todos.length > 0) {
+      if (sessionDetail.todos && sessionDetail.todos.length > 0) {
         todosList.style.display = 'block'
         noTodosMessage.style.display = 'none'
-        sessionData.todos.forEach((todo, index) => {
+        sessionDetail.todos.forEach((todo, index) => {
           const li = document.createElement('li')
           li.style.marginBottom = '10px'
           li.innerHTML = `
@@ -626,10 +626,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const noReferencesMessage = document.getElementById('no-references-message')
     if (referencesList && noReferencesMessage) {
       referencesList.innerHTML = '' // Clear existing list
-      if (sessionData.references && sessionData.references.length > 0) {
+      if (sessionDetail.references && sessionDetail.references.length > 0) {
         referencesList.style.display = 'block'
         noReferencesMessage.style.display = 'none'
-        sessionData.references.forEach((ref, index) => {
+        sessionDetail.references.forEach((ref, index) => {
           const li = document.createElement('li')
           li.style.marginBottom = '10px'
           const textDecoration = ref.disabled ? 'line-through' : 'none'
@@ -665,15 +665,15 @@ document.addEventListener('DOMContentLoaded', function () {
       '[data-field="procedure_content"]',
     )
     if (procedureContentTextarea) {
-      procedureContentTextarea.value = sessionData.procedure_content || ''
+      procedureContentTextarea.value = sessionDetail.procedure_content || ''
     }
   }
 
   function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
-    const fetchSessionData = fetch(`/api/session/${sessionId}`).then(handleResponse)
+    const fetchSessionDetail = fetch(`/api/session/${sessionId}`).then(handleResponse)
     const fetchSessionList = fetch('/api/sessions').then(handleResponse)
 
-    Promise.all([fetchSessionData, fetchSessionList])
+    Promise.all([fetchSessionDetail, fetchSessionList])
       .then(([sessionResult, sessionsResult]) => {
         // Update session list (left column)
         if (sessionsResult.success && sessionsResult.sessions) {
@@ -683,13 +683,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Update turns (main column)
         if (sessionResult.success && sessionResult.session) {
-          sessionData = sessionResult.session // Update global sessionData
-          document.body.dataset.sessionData = JSON.stringify(sessionData) // Sync dataset
+          sessionDetail = sessionResult.session // Update global sessionDetail
+          document.body.dataset.sessionDetail = JSON.stringify(sessionDetail) // Sync dataset
 
           // Always update right column if session data is fetched
-          updateRightColumn(sessionData)
+          updateRightColumn(sessionDetail)
 
-          const newTurns = sessionData.turns.slice(startIndex)
+          const newTurns = sessionDetail.turns.slice(startIndex)
 
           if (newTurns.length > 0) {
             placeholders.forEach((p) => p.remove())
@@ -839,7 +839,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const checkbox = event.target
       const index = parseInt(checkbox.dataset.index, 10)
       const sessionId = document.getElementById('current-session-id').value
-      let todos = sessionData.todos || []
+      let todos = sessionDetail.todos || []
       if (todos[index]) {
         todos[index].checked = checkbox.checked
       }
@@ -875,7 +875,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ?.addEventListener('change', function (event) {
       if (event.target.classList.contains('reference-checkbox')) {
         const sessionId = document.getElementById('current-session-id').value
-        let references = sessionData.references || []
+        let references = sessionDetail.references || []
         const checkbox = event.target
         const index = parseInt(checkbox.dataset.index, 10)
         if (references[index]) {
@@ -925,7 +925,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const button = event.target.closest('.reference-persist-toggle')
         const index = parseInt(button.dataset.index, 10)
         const sessionId = document.getElementById('current-session-id').value
-        let references = sessionData.references || []
+        let references = sessionDetail.references || []
 
         if (references[index]) {
           const currentPersist = button.dataset.persist === 'true'

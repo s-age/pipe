@@ -8,7 +8,7 @@ import Label from '@/components/atoms/Label'
 import TextArea from '@/components/atoms/TextArea'
 import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import { Todo } from '@/lib/api/session/editTodos'
-import { SessionData } from '@/lib/api/session/getSession'
+import { SessionDetail } from '@/lib/api/session/getSession'
 import { Reference } from '@/lib/api/session/startSession'
 
 import {
@@ -44,7 +44,7 @@ import { useSessionHyperparameters } from './useSessionHyperparameters'
 import { colors } from '../../../styles/colors.css'
 
 type SessionMetaProps = {
-  sessionData: SessionData | null
+  sessionDetail: SessionDetail | null
   currentSessionId: string | null
   onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
   onUpdateTodo: (sessionId: string, todos: Todo[]) => void
@@ -59,7 +59,7 @@ type SessionMetaProps = {
 }
 
 export const SessionMeta = ({
-  sessionData,
+  sessionDetail,
   currentSessionId,
   onMetaSave,
   onUpdateTodo,
@@ -84,7 +84,7 @@ export const SessionMeta = ({
     artifacts,
     setArtifacts,
     handleArtifactsBlur,
-  } = useSessionBasicMeta({ sessionData, currentSessionId, onMetaSave })
+  } = useSessionBasicMeta({ sessionDetail, currentSessionId, onMetaSave })
 
   const {
     temperature,
@@ -96,10 +96,10 @@ export const SessionMeta = ({
     topK,
     setTopK,
     handleTopKMouseUp,
-  } = useSessionHyperparameters({ sessionData, currentSessionId, onMetaSave })
+  } = useSessionHyperparameters({ sessionDetail, currentSessionId, onMetaSave })
 
   const handleSaveMeta = (): void => {
-    if (!currentSessionId || !sessionData) return
+    if (!currentSessionId || !sessionDetail) return
     const meta: EditSessionMetaRequest = {
       purpose: purpose,
       background: background,
@@ -112,7 +112,7 @@ export const SessionMeta = ({
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean),
-      multi_step_reasoning_enabled: sessionData.multi_step_reasoning_enabled, // これはチェックボックスなので即時反映
+      multi_step_reasoning_enabled: sessionDetail.multi_step_reasoning_enabled, // これはチェックボックスなので即時反映
       hyperparameters: {
         temperature: temperature,
         top_p: topP,
@@ -123,22 +123,22 @@ export const SessionMeta = ({
   }
 
   const handleTodoCheckboxChange = (index: number): void => {
-    if (!currentSessionId || !sessionData) return
-    const newTodos = [...sessionData.todos]
+    if (!currentSessionId || !sessionDetail) return
+    const newTodos = [...sessionDetail.todos]
     newTodos[index].checked = !newTodos[index].checked
     onUpdateTodo(currentSessionId, newTodos)
   }
 
   const handleReferenceCheckboxChange = (index: number): void => {
-    if (!currentSessionId || !sessionData) return
-    const newReferences = [...sessionData.references]
+    if (!currentSessionId || !sessionDetail) return
+    const newReferences = [...sessionDetail.references]
     newReferences[index].disabled = !newReferences[index].disabled
     onUpdateReferenceDisabled(currentSessionId, index, newReferences[index].disabled)
   }
 
   const handleReferencePersistToggle = (index: number): void => {
-    if (!currentSessionId || !sessionData) return
-    const newReferences = [...sessionData.references]
+    if (!currentSessionId || !sessionDetail) return
+    const newReferences = [...sessionDetail.references]
     newReferences[index].persist = !newReferences[index].persist
     onUpdateReferencePersist(currentSessionId, index, newReferences[index].persist)
   }
@@ -147,8 +147,8 @@ export const SessionMeta = ({
     index: number,
     action: 'increment' | 'decrement',
   ): void => {
-    if (!currentSessionId || !sessionData) return
-    const newReferences = [...sessionData.references]
+    if (!currentSessionId || !sessionDetail) return
+    const newReferences = [...sessionDetail.references]
     const currentTtl = newReferences[index].ttl !== null ? newReferences[index].ttl : 3
     const newTtl =
       action === 'increment'
@@ -158,7 +158,7 @@ export const SessionMeta = ({
     onUpdateReferenceTtl(currentSessionId, index, newTtl)
   }
 
-  if (!currentSessionId || !sessionData) {
+  if (!currentSessionId || !sessionDetail) {
     return (
       <div className={metaColumn}>
         <p className={noItemsMessage}>Select a session to view its meta information.</p>
@@ -244,9 +244,9 @@ export const SessionMeta = ({
 
           <div className={metaItem}>
             <Label className={metaItemLabel}>References:</Label>
-            {sessionData.references.length > 0 ? (
+            {sessionDetail.references.length > 0 ? (
               <ul className={referencesList}>
-                {sessionData.references.map((reference: Reference, index: number) => (
+                {sessionDetail.references.map((reference: Reference, index: number) => (
                   <li key={index} className={referenceItem}>
                     <div className={referenceControls}>
                       <Label className={referenceLabel}>
@@ -313,7 +313,7 @@ export const SessionMeta = ({
             <Label className={checkboxLabel}>
               <Checkbox
                 name="multi_step_reasoning"
-                checked={sessionData.multi_step_reasoning_enabled}
+                checked={sessionDetail.multi_step_reasoning_enabled}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   onMetaSave(currentSessionId, {
                     multi_step_reasoning_enabled: e.target.checked,
@@ -386,9 +386,9 @@ export const SessionMeta = ({
             >
               Delete All
             </Button>
-            {sessionData.todos.length > 0 ? (
+            {sessionDetail.todos.length > 0 ? (
               <ul className={todosList}>
-                {sessionData.todos.map((todo: Todo, index: number) => (
+                {sessionDetail.todos.map((todo: Todo, index: number) => (
                   <li key={index} className={todoItem}>
                     <Label className={todoCheckboxLabel}>
                       <Checkbox

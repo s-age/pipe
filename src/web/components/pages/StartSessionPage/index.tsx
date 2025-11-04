@@ -4,15 +4,15 @@ import ErrorMessage from '@/components/atoms/ErrorMessage'
 import LoadingSpinner from '@/components/atoms/LoadingSpinner'
 import StartSessionForm from '@/components/organisms/StartSessionForm'
 import { useSessionCreation } from '@/hooks/useSessionCreation'
-import { useSessionData } from '@/hooks/useSessionData'
+import { useSessionDetail } from '@/hooks/useSessionDetail'
 
 import { pageContainer } from './style.css'
 
 const StartSessionPage: () => JSX.Element = () => {
-  const { sessions, settings, loading, error: sessionDataError } = useSessionData()
+  const { sessions, settings, loading, error: sessionDetailError } = useSessionDetail()
   const { handleSubmit, error: sessionCreationError } = useSessionCreation()
 
-  const error = sessionDataError || sessionCreationError
+  const error = sessionDetailError || sessionCreationError
 
   if (loading) {
     return <LoadingSpinner />

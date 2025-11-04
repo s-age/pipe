@@ -6,7 +6,7 @@ import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
 import TextArea from '@/components/atoms/TextArea'
 import Turn from '@/components/molecules/Turn'
-import { TurnData, SessionData } from '@/lib/api/session/getSession'
+import { TurnData, SessionDetail } from '@/lib/api/session/getSession'
 import { colors } from '@/styles/colors.css'
 
 import {
@@ -19,7 +19,7 @@ import {
 } from './style.css'
 
 type TurnsListProps = {
-  sessionData: SessionData | null
+  sessionDetail: SessionDetail | null
   currentSessionId: string | null
   expertMode: boolean
   onDeleteTurn: (sessionId: string, turnIndex: number) => void
@@ -31,7 +31,7 @@ type TurnsListProps = {
 }
 
 const TurnsList = ({
-  sessionData,
+  sessionDetail,
   currentSessionId,
   expertMode,
   onDeleteTurn,
@@ -52,7 +52,7 @@ const TurnsList = ({
 
   useEffect(() => {
     scrollToBottom()
-  }, [sessionData, streamedText]) // sessionDataまたはstreamedTextが更新されたらスクロール
+  }, [sessionDetail, streamedText]) // sessionDetailまたはstreamedTextが更新されたらスクロール
 
   const handleSend = async (): Promise<void> => {
     if (!instructionText.trim() || !currentSessionId) return
@@ -64,7 +64,7 @@ const TurnsList = ({
     }
   }
 
-  if (!currentSessionId || !sessionData) {
+  if (!currentSessionId || !sessionDetail) {
     return (
       <div className={turnsColumn}>
         <div className={welcomeMessage}>
@@ -83,7 +83,7 @@ const TurnsList = ({
     <div className={turnsColumn}>
       <div className={turnsHeader}>
         <Heading level={2} className={h2Style}>
-          {sessionData.purpose}{' '}
+          {sessionDetail.purpose}{' '}
           {contextLimit > 0 && tokenCount !== null && `(${contextLeft}% context left)`}
         </Heading>
         <Button
@@ -97,7 +97,7 @@ const TurnsList = ({
       </div>
 
       <section className={turnsListSection} ref={turnsListRef}>
-        {sessionData.turns.map((turn: TurnData, index: number) => (
+        {sessionDetail.turns.map((turn: TurnData, index: number) => (
           <Turn
             key={index}
             turn={turn}
@@ -116,7 +116,7 @@ const TurnsList = ({
               content: streamedText,
               timestamp: new Date().toISOString(),
             }}
-            index={sessionData.turns.length} // 仮のインデックス
+            index={sessionDetail.turns.length} // 仮のインデックス
             sessionId={currentSessionId}
             expertMode={expertMode}
             onDeleteTurn={() => {}} // ストリーミング中は削除不可

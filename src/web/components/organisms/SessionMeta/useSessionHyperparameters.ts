@@ -1,16 +1,16 @@
 import { useState, useCallback } from 'react'
 
 import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
-import { SessionData } from '@/lib/api/session/getSession'
+import { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseSessionHyperparametersProps = {
-  sessionData: SessionData | null
+  sessionDetail: SessionDetail | null
   currentSessionId: string | null
   onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
 }
 
 export const useSessionHyperparameters = ({
-  sessionData,
+  sessionDetail,
   currentSessionId,
   onMetaSave,
 }: UseSessionHyperparametersProps): {
@@ -25,40 +25,40 @@ export const useSessionHyperparameters = ({
   handleTopKMouseUp: () => void
 } => {
   const [temperature, setTemperature] = useState(
-    sessionData?.hyperparameters?.temperature || 0.7,
+    sessionDetail?.hyperparameters?.temperature || 0.7,
   )
-  const [topP, setTopP] = useState(sessionData?.hyperparameters?.top_p || 0.9)
-  const [topK, setTopK] = useState(sessionData?.hyperparameters?.top_k || 5)
+  const [topP, setTopP] = useState(sessionDetail?.hyperparameters?.top_p || 0.9)
+  const [topK, setTopK] = useState(sessionDetail?.hyperparameters?.top_k || 5)
 
   const handleTemperatureMouseUp = useCallback((): void => {
-    if (!currentSessionId || !sessionData) return
+    if (!currentSessionId || !sessionDetail) return
     onMetaSave(currentSessionId, {
       hyperparameters: {
-        ...sessionData.hyperparameters,
+        ...sessionDetail.hyperparameters,
         temperature: temperature,
       },
     })
-  }, [currentSessionId, onMetaSave, temperature, sessionData])
+  }, [currentSessionId, onMetaSave, temperature, sessionDetail])
 
   const handleTopPMouseUp = useCallback((): void => {
-    if (!currentSessionId || !sessionData) return
+    if (!currentSessionId || !sessionDetail) return
     onMetaSave(currentSessionId, {
       hyperparameters: {
-        ...sessionData.hyperparameters,
+        ...sessionDetail.hyperparameters,
         top_p: topP,
       },
     })
-  }, [currentSessionId, onMetaSave, topP, sessionData])
+  }, [currentSessionId, onMetaSave, topP, sessionDetail])
 
   const handleTopKMouseUp = useCallback((): void => {
-    if (!currentSessionId || !sessionData) return
+    if (!currentSessionId || !sessionDetail) return
     onMetaSave(currentSessionId, {
       hyperparameters: {
-        ...sessionData.hyperparameters,
+        ...sessionDetail.hyperparameters,
         top_k: topK,
       },
     })
-  }, [currentSessionId, onMetaSave, topK, sessionData])
+  }, [currentSessionId, onMetaSave, topK, sessionDetail])
 
   return {
     temperature,

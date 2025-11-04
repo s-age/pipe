@@ -17,7 +17,7 @@ type UseStreamingInstruction = {
 
 export const useStreamingInstruction = (
   currentSessionId: string | null,
-  loadSessionDataAfterStreaming: () => Promise<void>,
+  loadSessionDetailAfterStreaming: () => Promise<void>,
 ): UseStreamingInstruction => {
   const [streamingTrigger, setStreamingTrigger] = useState<{
     instruction: string
@@ -52,10 +52,10 @@ export const useStreamingInstruction = (
         // Called when streaming finished (either successfully or with error).
         // Do not set component state synchronously inside an effect here — this callback
         // is invoked from the streaming hook after the fetch loop completes.
-        // We can safely call loadSessionDataAfterStreaming and then clear trigger/text.
+        // We can safely call loadSessionDetailAfterStreaming and then clear trigger/text.
         if (finalText.length > 0 || err) {
           // Fire-and-forget; the caller handles errors internally if needed
-          void loadSessionDataAfterStreaming()
+          void loadSessionDetailAfterStreaming()
         }
 
         // Clear trigger and streamed text. These are safe to call here because this

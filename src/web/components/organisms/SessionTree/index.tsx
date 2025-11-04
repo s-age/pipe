@@ -14,7 +14,7 @@ import {
   sessionIdStyle,
   stickyNewChatButtonContainer,
 } from './style.css'
-import { useSessionListHandlers } from './useSessionListHandlers'
+import { useSessionTreeHandlers } from './useSessionTreeHandlers'
 
 type SessionItemProps = {
   session: SessionOverview
@@ -49,18 +49,18 @@ const SessionItem = ({
   )
 }
 
-type SessionListProps = {
+type SessionTreeProps = {
   sessions: SessionOverview[]
   currentSessionId: string | null
   handleSessionSelect: (sessionId: string) => void
 }
 
-const SessionList = ({
+const SessionTree = ({
   sessions,
   currentSessionId,
   handleSessionSelect,
-}: SessionListProps): JSX.Element => {
-  const { handleNewChatClick } = useSessionListHandlers()
+}: SessionTreeProps): JSX.Element => {
+  const { handleNewChatClick } = useSessionTreeHandlers()
 
   return (
     <div className={sessionListColumn}>
@@ -94,4 +94,4 @@ const SessionList = ({
   )
 }
 
-export default SessionList
+export default SessionTree

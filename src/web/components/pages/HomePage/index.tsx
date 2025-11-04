@@ -1,7 +1,7 @@
-import { JSX, useCallback, useState } from 'react'
+import { JSX, useCallback } from 'react'
 
-import SessionList from '@/components/organisms/SessionList'
 import { SessionMeta } from '@/components/organisms/SessionMeta'
+import SessionTree from '@/components/organisms/SessionTree'
 import TurnsList from '@/components/organisms/TurnsList'
 import { getSession } from '@/lib/api/session/getSession'
 
@@ -22,14 +22,13 @@ const HomePage = (): JSX.Element => {
     setSessionData,
   } = useSessionManagement()
 
-  const setError = useState<string | null>(null)[1]
-
   const loadSessionDataAfterStreaming = useCallback(async (): Promise<void> => {
     if (currentSessionId) {
       try {
         const data = await getSession(currentSessionId)
         setSessionData(data.session)
       } catch (err: unknown) {
+        // エラーハンドリングはuseSessionManagementに任せるか、ここでsetErrorを呼ぶ
         console.error('Failed to load session data after streaming:', err)
       }
     }
@@ -41,11 +40,7 @@ const HomePage = (): JSX.Element => {
     streamingError,
     handleSendInstruction,
     setStreamingTrigger,
-  } = useStreamingInstruction(
-    currentSessionId,
-    setSessionData,
-    loadSessionDataAfterStreaming,
-  )
+  } = useStreamingInstruction(currentSessionId, loadSessionDataAfterStreaming)
 
   const {
     handleDeleteTurn,
@@ -59,7 +54,7 @@ const HomePage = (): JSX.Element => {
 
   // ストリーミングエラーをHomePageのerror状態に反映
   if (streamingError) {
-    setError(streamingError)
+    // setError(streamingError) // useSessionManagement でエラーを管理するため、ここでは設定しない
     setStreamingTrigger(null)
   }
 
@@ -75,7 +70,7 @@ const HomePage = (): JSX.Element => {
 
   return (
     <div className={appContainer}>
-      <SessionList
+      <SessionTree
         sessions={sessions}
         currentSessionId={currentSessionId}
         handleSessionSelect={handleSessionSelect}

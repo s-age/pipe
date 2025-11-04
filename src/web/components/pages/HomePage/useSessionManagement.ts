@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getSessions, SessionOverview } from '@/lib/api/sessions/getSessions'
-import { getSession, SessionData } from '@/lib/api/session/getSession'
+
+import { deleteSession } from '@/lib/api/session/deleteSession'
 import {
   editSessionMeta,
   EditSessionMetaRequest,
 } from '@/lib/api/session/editSessionMeta'
-import { deleteSession } from '@/lib/api/session/deleteSession'
+import { getSession, SessionData } from '@/lib/api/session/getSession'
+import { getSessions, SessionOverview } from '@/lib/api/sessions/getSessions'
 
-interface UseSessionManagement {
+type UseSessionManagement = {
   sessions: SessionOverview[]
   currentSessionId: string | null
   sessionData: SessionData | null

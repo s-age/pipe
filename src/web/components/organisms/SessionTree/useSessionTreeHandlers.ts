@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-export const useSessionListHandlers = (): {
+export const useSessionTreeHandlers = (): {
   handleNewChatClick: () => void
 } => {
   const handleNewChatClick = useCallback(() => {

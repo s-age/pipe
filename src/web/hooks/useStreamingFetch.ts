@@ -9,6 +9,11 @@ type StreamingFetchOptions = {
 export const useStreamingFetch = (
   url: string | null,
   options: StreamingFetchOptions = {},
+  callbacks?: {
+    onChunk?: (chunk: string) => void
+    // onComplete receives (error, finalStreamedText)
+    onComplete?: (error: string | null, finalStreamedText: string) => void
+  },
 ): {
   streamedText: string
   isLoading: boolean
@@ -44,6 +49,8 @@ export const useStreamingFetch = (
       setIsLoading(true)
       setError(null)
       setStreamedText('')
+      let localError: string | null = null
+      let accum = ''
 
       try {
         const response = await fetch(url, { ...stableOptions, signal })
@@ -67,14 +74,29 @@ export const useStreamingFetch = (
           const chunk = decoder.decode(value, { stream: true })
 
           if (chunk) {
+            accum += chunk
             setStreamedText((prev) => prev + chunk)
+            // notify optional chunk callback
+            try {
+              callbacks?.onChunk?.(chunk)
+            } catch (e) {
+              // swallow callback errors to not break the stream
+              console.error('[useStreamingFetch] onChunk callback error', e)
+            }
           }
         }
       } catch (err: unknown) {
         console.error('[ERROR] Failed to fetch stream:', err)
-        setError((err as Error).message || 'Failed to fetch stream.')
+        localError = (err as Error).message || 'Failed to fetch stream.'
+        setError(localError)
       } finally {
         setIsLoading(false)
+        // notify completion (pass error message or final streamed text)
+        try {
+          callbacks?.onComplete?.(localError, accum)
+        } catch (e) {
+          console.error('[useStreamingFetch] onComplete callback error', e)
+        }
       }
     }
 
@@ -85,9 +107,9 @@ export const useStreamingFetch = (
         controllerRef.current.abort()
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, stableOptions])
 
-  // 戻り値全体をuseMemoで安定化させる
   return useMemo(
     (): {
       streamedText: string

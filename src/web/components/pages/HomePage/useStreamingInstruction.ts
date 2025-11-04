@@ -1,25 +1,29 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+
 import { useStreamingFetch } from '@/hooks/useStreamingFetch'
 import { API_BASE_URL } from '@/lib/api/client'
-import { SessionData } from '@/lib/api/session/getSession'
 
-interface UseStreamingInstruction {
+type UseStreamingInstruction = {
   streamedText: string
   isStreaming: boolean
-  streamingError: string | null
+  streamingError: string | null // Use error directly from useStreamingFetch
   handleSendInstruction: (instruction: string) => Promise<void>
   setStreamedText: (text: string) => void
   streamingTrigger: { instruction: string; sessionId: string } | null
-  setStreamingTrigger: (trigger: { instruction: string; sessionId: string } | null) => void
+  setStreamingTrigger: (
+    trigger: { instruction: string; sessionId: string } | null,
+  ) => void
 }
 
 export const useStreamingInstruction = (
   currentSessionId: string | null,
-  setSessionData: (data: SessionData | null) => void,
   loadSessionDataAfterStreaming: () => Promise<void>,
 ): UseStreamingInstruction => {
-  const [streamingTrigger, setStreamingTrigger] = useState<{ instruction: string; sessionId: string } | null>(null)
-  const [error, setError] = useState<string | null>(null) // エラー状態を内部で管理
+  const [streamingTrigger, setStreamingTrigger] = useState<{
+    instruction: string
+    sessionId: string
+  } | null>(null)
+  // const [error, setError] = useState<string | null>(null) // Remove internal error state
 
   const memoizedStreamingOptions = useMemo((): RequestInit | undefined => {
     if (!streamingTrigger) return undefined
@@ -36,31 +40,33 @@ export const useStreamingInstruction = (
   const {
     streamedText,
     isLoading: isStreaming,
-    error: streamingError,
+    error: streamingError, // Get error directly from useStreamingFetch
     setStreamedText,
   } = useStreamingFetch(
     streamingTrigger
       ? `${API_BASE_URL}/session/${streamingTrigger.sessionId}/instruction`
       : null,
     memoizedStreamingOptions,
-  )
+    {
+      onComplete: (err, finalText) => {
+        // Called when streaming finished (either successfully or with error).
+        // Do not set component state synchronously inside an effect here — this callback
+        // is invoked from the streaming hook after the fetch loop completes.
+        // We can safely call loadSessionDataAfterStreaming and then clear trigger/text.
+        if (finalText.length > 0 || err) {
+          // Fire-and-forget; the caller handles errors internally if needed
+          void loadSessionDataAfterStreaming()
+        }
 
-  useEffect(() => {
-    if (streamingError) {
-      setError(streamingError)
-      setStreamingTrigger(null)
-    }
-  }, [streamingError])
-
-  useEffect(() => {
-    if (streamingTrigger && !isStreaming) {
-      if (streamedText.length > 0 || streamingError) {
-        loadSessionDataAfterStreaming()
+        // Clear trigger and streamed text. These are safe to call here because this
+        // callback is invoked after the streaming lifecycle finishes inside the hook.
         setStreamingTrigger(null)
         setStreamedText('')
-      }
-    }
-  }, [isStreaming, streamingTrigger, streamedText, streamingError, setStreamedText, loadSessionDataAfterStreaming])
+      },
+    },
+  )
+
+  // Completion is handled by useStreamingFetch onComplete callback passed above.
 
   const handleSendInstruction = useCallback(
     async (instruction: string): Promise<void> => {
@@ -74,7 +80,7 @@ export const useStreamingInstruction = (
   return {
     streamedText,
     isStreaming,
-    streamingError: error, // 内部のエラー状態を公開
+    streamingError, // Expose error directly from useStreamingFetch
     handleSendInstruction,
     setStreamedText,
     streamingTrigger,

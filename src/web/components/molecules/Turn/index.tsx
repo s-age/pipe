@@ -52,7 +52,7 @@ const Turn = ({
 }: TurnProps): JSX.Element => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState<string>(
-    (turn.content || turn.instruction || ''),
+    turn.content || turn.instruction || '',
   )
 
   const getHeaderContent = (type: string): string => {

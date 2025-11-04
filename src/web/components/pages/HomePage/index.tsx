@@ -109,7 +109,12 @@ const HomePage = (): JSX.Element => {
     const loadSessions = async (): Promise<void> => {
       try {
         const fetchedSessions = await getSessions()
-        setSessions(fetchedSessions.sessions)
+        setSessions(
+          fetchedSessions.sessions.map(([id, session]) => ({
+            ...session,
+            session_id: id,
+          })),
+        )
         // URLからセッションIDを取得し、現在のセッションを設定
         const pathParts = window.location.pathname.split('/')
         const id = pathParts[pathParts.length - 1]
@@ -160,7 +165,7 @@ const HomePage = (): JSX.Element => {
         setSessionData(data.session)
       }
       const fetchedSessions = await getSessions()
-      setSessions(fetchedSessions.sessions)
+      setSessions(fetchedSessions.sessions.map(([, session]) => session))
     } catch (err: unknown) {
       setError((err as Error).message || 'Failed to save session meta.')
     }
@@ -291,7 +296,7 @@ const HomePage = (): JSX.Element => {
     try {
       await deleteSession(sessionId)
       const fetchedSessions = await getSessions()
-      setSessions(fetchedSessions.sessions)
+      setSessions(fetchedSessions.sessions.map(([, session]) => session))
       setCurrentSessionId(null)
       setSessionData(null)
       window.history.pushState({}, '', '/') // URLをルートに戻す

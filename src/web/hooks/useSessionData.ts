@@ -29,9 +29,9 @@ export const useSessionData = (): UseSessionDataResult => {
           getSettings(),
         ])
         setSessions(
-          sessionsResponse.sessions.map((s: SessionOverview) => ({
-            value: s.session_id,
-            label: s.purpose,
+          sessionsResponse.sessions.map(([, session]: [string, SessionOverview]) => ({
+            value: session.session_id,
+            label: session.purpose,
           })),
         )
         setSettings(settingsData)

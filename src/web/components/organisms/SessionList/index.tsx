@@ -1,4 +1,4 @@
-import React, { JSX } from 'react'
+import { JSX } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Heading from '@/components/atoms/Heading'
@@ -15,12 +15,6 @@ import {
   stickyNewChatButtonContainer,
 } from './style.css'
 
-type SessionTreeNode = {
-  meta: SessionOverview | null
-  id?: string
-  children: Record<string, SessionTreeNode>
-}
-
 type SessionListProps = {
   sessions: SessionOverview[]
   currentSessionId: string | null
@@ -31,95 +25,46 @@ const SessionList = ({
   sessions,
   currentSessionId,
   onSessionSelect,
-}: SessionListProps): JSX.Element => {
-  // セッションツリーを構築するヘルパー関数
-  const buildSessionTree = (
-    sessionsData: SessionOverview[],
-  ): Record<string, SessionTreeNode> => {
-    const tree: Record<string, SessionTreeNode> = {}
-    sessionsData.forEach((session) => {
-      const id = session.session_id
-      const meta = session
-      const parts = id.split('/')
-      let currentLevel: Record<string, SessionTreeNode> = tree
-      parts.forEach((part, index) => {
-        if (!currentLevel[part]) {
-          currentLevel[part] = { meta: null, children: {} }
-        }
-        if (index === parts.length - 1) {
-          currentLevel[part].meta = meta
-          currentLevel[part].id = id
-        }
-        currentLevel = currentLevel[part].children
-      })
-    })
+}: SessionListProps): JSX.Element => (
+  <div className={sessionListColumn}>
+    <Heading level={2} className={h2Style}>
+      Sessions
+    </Heading>
+    <ul className={sessionListContainer}>
+      {sessions.map((session) => {
+        if (!session.session_id || typeof session.session_id !== 'string') {
+          console.warn('Skipping session with invalid session_id:', session)
 
-    return tree
-  }
+          return null // Invalid session, skip rendering
+        }
 
-  const createNode = (
-    branch: Record<string, SessionTreeNode>,
-    level: number,
-  ): React.ReactNode[] => {
-    const items: React.ReactNode[] = []
-    for (const key in branch) {
-      const node = branch[key]
-      if (node.meta && node.id) {
-        items.push(
-          <li key={node.id} className={sessionListItem}>
+        return (
+          <li key={session.session_id} className={sessionListItem}>
             <a
-              href={`/session/${node.id}`}
-              className={`${sessionLink} ${node.id === currentSessionId ? sessionLinkActive : ''}`.trim()}
+              href={`/session/${session.session_id}`}
+              className={`${sessionLink} ${session.session_id === currentSessionId ? sessionLinkActive : ''}`.trim()}
               onClick={(e) => {
                 e.preventDefault()
-                onSessionSelect(node.id!)
+                onSessionSelect(session.session_id)
               }}
             >
-              {node.meta.purpose}{' '}
-              <p className={sessionIdStyle}>{node.id.substring(0, 8)}</p>
+              {session.purpose}{' '}
+              <p className={sessionIdStyle}>{session.session_id.substring(0, 8)}</p>
             </a>
-            {Object.keys(node.children).length > 0 && (
-              <ul style={{ paddingLeft: '20px' }}>
-                {createNode(node.children, level + 1)}
-              </ul>
-            )}
-          </li>,
+          </li>
         )
-      } else if (Object.keys(node.children).length > 0) {
-        // メタデータがないが子がある場合（中間ディレクトリ）
-        items.push(
-          <li key={key} className={sessionListItem}>
-            <span style={{ fontWeight: 'bold' }}>{key}</span>
-            <ul style={{ paddingLeft: '20px' }}>
-              {createNode(node.children, level + 1)}
-            </ul>
-          </li>,
-        )
-      }
-    }
-
-    return items
-  }
-
-  const sessionTree = buildSessionTree(sessions)
-
-  return (
-    <div className={sessionListColumn}>
-      <Heading level={2} className={h2Style}>
-        Sessions
-      </Heading>
-      <ul className={sessionListContainer}>{createNode(sessionTree, 0)}</ul>
-      <div className={stickyNewChatButtonContainer}>
-        <Button
-          kind="primary"
-          size="default"
-          onClick={() => (window.location.href = '/start_session')}
-        >
-          + New Chat
-        </Button>
-      </div>
+      })}
+    </ul>
+    <div className={stickyNewChatButtonContainer}>
+      <Button
+        kind="primary"
+        size="default"
+        onClick={() => (window.location.href = '/start_session')}
+      >
+        + New Chat
+      </Button>
     </div>
-  )
-}
+  </div>
+)
 
 export default SessionList

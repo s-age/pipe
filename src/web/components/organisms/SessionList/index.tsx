@@ -16,15 +16,17 @@ import {
 } from './style.css'
 import { useSessionListHandlers } from './useSessionListHandlers'
 
+type SessionItemProps = {
+  session: SessionOverview
+  currentSessionId: string
+  handleSessionSelect: (sessionId: string) => void
+}
+
 const SessionItem = ({
   session,
   currentSessionId,
   handleSessionSelect,
-}: {
-  session: SessionOverview
-  currentSessionId: string
-  handleSessionSelect: (sessionId: string) => void
-}): JSX.Element => {
+}: SessionItemProps): JSX.Element => {
   const onClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement>): void => {
       event.preventDefault()

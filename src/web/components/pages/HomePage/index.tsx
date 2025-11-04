@@ -26,7 +26,6 @@ const HomePage = (): JSX.Element => {
   const [sessions, setSessions] = useState<SessionOverview[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [streamingTrigger, setStreamingTrigger] = useState<{
     instruction: string
@@ -123,8 +122,6 @@ const HomePage = (): JSX.Element => {
         }
       } catch (err: unknown) {
         setError((err as Error).message || 'Failed to load sessions.')
-      } finally {
-        setLoading(false)
       }
     }
     loadSessions()
@@ -133,7 +130,6 @@ const HomePage = (): JSX.Element => {
   useEffect((): void => {
     const loadSessionData = async (): Promise<void> => {
       if (currentSessionId) {
-        setLoading(true)
         try {
           const data = await getSession(currentSessionId)
           setSessionData(data.session)
@@ -143,15 +139,17 @@ const HomePage = (): JSX.Element => {
       } else {
         setSessionData(null)
       }
-      setLoading(false) // ロード完了後、必ずfalseに設定
     }
     loadSessionData()
   }, [currentSessionId])
 
-  const handleSessionSelect = (sessionId: string): void => {
-    setCurrentSessionId(sessionId)
-    window.history.pushState({}, '', `/session/${sessionId}`)
-  }
+  const handleSessionSelect = useCallback(
+    (sessionId: string): void => {
+      setCurrentSessionId(sessionId)
+      window.history.replaceState({}, '', `/session/${sessionId}`)
+    },
+    [setCurrentSessionId],
+  )
 
   const handleMetaSave = async (
     id: string,
@@ -305,10 +303,6 @@ const HomePage = (): JSX.Element => {
     }
   }
 
-  if (loading) {
-    return <div className={appContainer}>Loading...</div>
-  }
-
   if (error) {
     return (
       <div className={appContainer} style={{ color: 'red' }}>
@@ -322,7 +316,7 @@ const HomePage = (): JSX.Element => {
       <SessionList
         sessions={sessions}
         currentSessionId={currentSessionId}
-        onSessionSelect={handleSessionSelect}
+        handleSessionSelect={handleSessionSelect}
       />
       <TurnsList
         sessionData={sessionData}

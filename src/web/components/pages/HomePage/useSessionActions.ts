@@ -5,9 +5,10 @@ import { deleteTurn } from '@/lib/api/session/deleteTurn'
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
 import { editReferences } from '@/lib/api/session/editReferences'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
-import { editTodos, Todo } from '@/lib/api/session/editTodos'
+import { editTodos } from '@/lib/api/session/editTodos'
 import { forkSession } from '@/lib/api/session/forkSession'
 import { SessionDetail, getSession } from '@/lib/api/session/getSession'
+import { Todo } from '@/types/todo'
 
 type UseSessionActions = {
   handleDeleteTurn: (sessionId: string, turnIndex: number) => Promise<void>

@@ -7,9 +7,9 @@ import InputText from '@/components/atoms/InputText'
 import Label from '@/components/atoms/Label'
 import TextArea from '@/components/atoms/TextArea'
 import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
-import { Todo } from '@/lib/api/session/editTodos'
 import { SessionDetail } from '@/lib/api/session/getSession'
-import { Reference } from '@/lib/api/session/startSession'
+import { Reference } from '@/types/reference'
+import { Todo } from '@/types/todo'
 
 import {
   metaColumn,

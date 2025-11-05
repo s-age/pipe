@@ -3,7 +3,7 @@ import { useState, JSX } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Tooltip from '@/components/atoms/Tooltip'
-import { TurnData } from '@/lib/api/session/getSession'
+import { Turn } from '@/lib/api/session/getSession'
 
 import {
   turnHeader,
@@ -32,7 +32,7 @@ import {
 } from './style.css'
 
 type TurnProps = {
-  turn: TurnData
+  turn: Turn
   index: number
   sessionId: string
   expertMode: boolean
@@ -41,7 +41,7 @@ type TurnProps = {
   isStreaming?: boolean // 新しく追加
 }
 
-const Turn = ({
+const Component = ({
   turn,
   index,
   sessionId,
@@ -231,4 +231,4 @@ const Turn = ({
   )
 }
 
-export default Turn
+export default Component

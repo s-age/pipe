@@ -6,7 +6,7 @@ import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
 import TextArea from '@/components/atoms/TextArea'
 import Turn from '@/components/molecules/Turn'
-import { TurnData, SessionDetail } from '@/lib/api/session/getSession'
+import { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
 import { colors } from '@/styles/colors.css'
 
 import {
@@ -97,7 +97,7 @@ const TurnsList = ({
       </div>
 
       <section className={turnsListSection} ref={turnsListRef}>
-        {sessionDetail.turns.map((turn: TurnData, index: number) => (
+        {sessionDetail.turns.map((turn: TurnType, index: number) => (
           <Turn
             key={index}
             turn={turn}

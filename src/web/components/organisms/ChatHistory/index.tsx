@@ -17,30 +17,47 @@ import {
   instructionTextarea,
   welcomeMessage,
 } from './style.css'
+import { useStreamingInstruction } from './useStreamingInstruction'
+import { useTurnActions } from './useTurnActions'
 
-type TurnsListProps = {
+type ChatHistoryProps = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   expertMode: boolean
-  onDeleteTurn: (sessionId: string, turnIndex: number) => void
-  onForkSession: (sessionId: string, forkIndex: number) => void
-  onSendInstruction: (instruction: string) => void
-  onDeleteSession: (sessionId: string) => void // 追加
-  streamedText: string
-  isStreaming: boolean
+  setSessionDetail: (data: SessionDetail | null) => void
+  setError: (error: string | null) => void
+  refreshSessions: () => Promise<void>
 }
 
-const TurnsList = ({
+const ChatHistory = ({
   sessionDetail,
   currentSessionId,
   expertMode,
-  onDeleteTurn,
-  onForkSession,
-  onSendInstruction,
-  onDeleteSession, // 追加
-  streamedText,
-  isStreaming,
-}: TurnsListProps): JSX.Element => {
+  setSessionDetail,
+  setError,
+  refreshSessions,
+}: ChatHistoryProps): JSX.Element => {
+  const {
+    streamedText,
+    isStreaming,
+    streamingError,
+    onSendInstruction,
+    setStreamingTrigger,
+  } = useStreamingInstruction(currentSessionId, setSessionDetail)
+
+  const { handleDeleteTurn, handleForkSession, handleDeleteSession } = useTurnActions(
+    setError,
+    refreshSessions,
+  )
+
+  // ストリーミングエラーをHomePageのerror状態に反映
+  useEffect(() => {
+    if (streamingError) {
+      setError(streamingError)
+      setStreamingTrigger(null)
+    }
+  }, [streamingError, setError, setStreamingTrigger])
+
   const turnsListRef = useRef<HTMLDivElement>(null)
   const [instructionText, setInstructionText] = useState<string>('')
 
@@ -52,15 +69,17 @@ const TurnsList = ({
 
   useEffect(() => {
     scrollToBottom()
-  }, [sessionDetail, streamedText]) // sessionDetailまたはstreamedTextが更新されたらスクロール
+  }, [sessionDetail, streamedText])
 
   const handleSend = async (): Promise<void> => {
     if (!instructionText.trim() || !currentSessionId) return
     try {
       await onSendInstruction(instructionText)
+      await refreshSessions()
       setInstructionText('')
-    } catch (error) {
-      console.error('Failed to send instruction:', error)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send instruction')
+      console.error('Failed to send instruction:', err)
     }
   }
 
@@ -75,8 +94,8 @@ const TurnsList = ({
     )
   }
 
-  const contextLimit = 4000 // 仮の値
-  const tokenCount = 1000 // 仮の値
+  const contextLimit = 4000
+  const tokenCount = 1000
   const contextLeft = (((contextLimit - tokenCount) / contextLimit) * 100).toFixed(0)
 
   return (
@@ -89,7 +108,7 @@ const TurnsList = ({
         <Button
           kind="secondary"
           size="default"
-          onClick={() => currentSessionId && onDeleteSession(currentSessionId)}
+          onClick={() => currentSessionId && handleDeleteSession(currentSessionId)}
           style={{ backgroundColor: colors.error, color: colors.lightText }}
         >
           Delete Session
@@ -104,8 +123,8 @@ const TurnsList = ({
             index={index}
             sessionId={currentSessionId}
             expertMode={expertMode}
-            onDeleteTurn={onDeleteTurn}
-            onForkSession={onForkSession}
+            onDeleteTurn={handleDeleteTurn}
+            onForkSession={handleForkSession}
           />
         ))}
         {isStreaming && streamedText && (
@@ -116,11 +135,11 @@ const TurnsList = ({
               content: streamedText,
               timestamp: new Date().toISOString(),
             }}
-            index={sessionDetail.turns.length} // 仮のインデックス
+            index={sessionDetail.turns.length}
             sessionId={currentSessionId}
             expertMode={expertMode}
-            onDeleteTurn={() => {}} // ストリーミング中は削除不可
-            onForkSession={() => {}} // ストリーミング中はフォーク不可
+            onDeleteTurn={() => {}}
+            onForkSession={() => {}}
             isStreaming={isStreaming}
           />
         )}
@@ -141,7 +160,7 @@ const TurnsList = ({
               handleSend()
             }
           }}
-          disabled={isStreaming} // ストリーミング中は無効化
+          disabled={isStreaming}
         />
         <Button
           kind="primary"
@@ -156,4 +175,4 @@ const TurnsList = ({
   )
 }
 
-export default TurnsList
+export default ChatHistory

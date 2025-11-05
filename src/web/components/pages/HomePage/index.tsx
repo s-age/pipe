@@ -1,64 +1,82 @@
-import { JSX, useCallback } from 'react'
+import { JSX, useEffect } from 'react'
 
+import ChatHistory from '@/components/organisms/ChatHistory'
 import { SessionMeta } from '@/components/organisms/SessionMeta'
 import SessionTree from '@/components/organisms/SessionTree'
-import TurnsList from '@/components/organisms/TurnsList'
+import {
+  editSessionMeta,
+  EditSessionMetaRequest,
+} from '@/lib/api/session/editSessionMeta'
 import { getSession } from '@/lib/api/session/getSession'
+import { getSessions } from '@/lib/api/sessions/getSessions'
+import useSessionStore from '@/stores/useHomeStore'
 
 import { appContainer } from './style.css'
-import { useSessionActions } from './useSessionActions'
-import { useSessionManagement } from './useSessionManagement'
-import { useStreamingInstruction } from './useStreamingInstruction'
 
 const HomePage = (): JSX.Element => {
+  const { state, actions } = useSessionStore()
   const {
-    sessions,
-    currentSessionId,
+    sessionTree: { sessions, currentSessionId },
     sessionDetail,
     error,
-    handleSessionSelect,
-    handleMetaSave,
-    handleDeleteSession,
-    setSessionDetail,
-  } = useSessionManagement()
+  } = state
 
-  const loadSessionDetailAfterStreaming = useCallback(async (): Promise<void> => {
-    if (currentSessionId) {
+  // Initial session loading
+  useEffect(() => {
+    const loadSessions = async (): Promise<void> => {
       try {
-        const data = await getSession(currentSessionId)
-        setSessionDetail(data.session)
+        const fetchedSessions = await getSessions()
+        actions.setSessions(
+          fetchedSessions.sessions.map(([id, session]) => ({
+            ...session,
+            session_id: id,
+          })),
+        )
+        const pathParts = window.location.pathname.split('/')
+        const id = pathParts[pathParts.length - 1]
+        if (id && id !== 'session' && id !== '') {
+          actions.setCurrentSessionId(id)
+        }
+        actions.setError(null)
       } catch (err: unknown) {
-        // エラーハンドリングはuseSessionManagementに任せるか、ここでsetErrorを呼ぶ
-        console.error('Failed to load session data after streaming:', err)
+        actions.setError((err as Error).message || 'Failed to load sessions.')
       }
     }
-  }, [currentSessionId, setSessionDetail])
+    loadSessions()
+  }, [actions])
 
-  const {
-    streamedText,
-    isStreaming,
-    streamingError,
-    handleSendInstruction,
-    setStreamingTrigger,
-  } = useStreamingInstruction(currentSessionId, loadSessionDetailAfterStreaming)
+  // Load session detail when currentSessionId changes
+  useEffect(() => {
+    const loadSessionDetail = async (): Promise<void> => {
+      if (currentSessionId) {
+        try {
+          const data = await getSession(currentSessionId)
+          actions.setSessionDetail(data.session)
+          actions.setError(null)
+        } catch (err: unknown) {
+          actions.setError((err as Error).message || 'Failed to load session data.')
+        }
+      } else {
+        actions.setSessionDetail(null)
+      }
+    }
+    loadSessionDetail()
+  }, [currentSessionId, actions])
 
-  const {
-    handleDeleteTurn,
-    handleForkSession,
-    handleUpdateTodo,
-    handleDeleteAllTodos,
-    handleUpdateReferencePersist,
-    handleUpdateReferenceTtl,
-    handleUpdateReferenceDisabled,
-  } = useSessionActions(sessionDetail, setSessionDetail)
-
-  // ストリーミングエラーをHomePageのerror状態に反映
-  if (streamingError) {
-    // setError(streamingError) // useSessionManagement でエラーを管理するため、ここでは設定しない
-    setStreamingTrigger(null)
+  const handleMetaSave = async (
+    id: string,
+    meta: EditSessionMetaRequest,
+  ): Promise<void> => {
+    try {
+      await editSessionMeta(id, meta)
+      await actions.refreshSessions()
+      actions.setError(null)
+    } catch (err: unknown) {
+      actions.setError((err as Error).message || 'Failed to save session meta.')
+    }
   }
 
-  const expertMode = true // 仮の値
+  const expertMode = (state.settings.expertMode as boolean) ?? true
 
   if (error) {
     return (
@@ -73,29 +91,25 @@ const HomePage = (): JSX.Element => {
       <SessionTree
         sessions={sessions}
         currentSessionId={currentSessionId}
-        handleSessionSelect={handleSessionSelect}
+        selectSession={actions.selectSession}
+        setError={actions.setError}
       />
-      <TurnsList
-        sessionDetail={sessionDetail}
+      <ChatHistory
         currentSessionId={currentSessionId}
+        sessionDetail={sessionDetail}
         expertMode={expertMode}
-        onDeleteTurn={handleDeleteTurn}
-        onForkSession={handleForkSession}
-        onSendInstruction={handleSendInstruction}
-        onDeleteSession={handleDeleteSession}
-        streamedText={streamedText}
-        isStreaming={isStreaming}
+        setSessionDetail={actions.setSessionDetail}
+        setError={actions.setError}
+        refreshSessions={actions.refreshSessions}
       />
       <SessionMeta
         key={currentSessionId}
         sessionDetail={sessionDetail}
         currentSessionId={currentSessionId}
         onMetaSave={handleMetaSave}
-        onUpdateTodo={handleUpdateTodo}
-        onDeleteAllTodos={handleDeleteAllTodos}
-        onUpdateReferencePersist={handleUpdateReferencePersist}
-        onUpdateReferenceTtl={handleUpdateReferenceTtl}
-        onUpdateReferenceDisabled={handleUpdateReferenceDisabled}
+        setSessionDetail={actions.setSessionDetail}
+        setError={actions.setError}
+        refreshSessions={actions.refreshSessions}
       />
     </div>
   )

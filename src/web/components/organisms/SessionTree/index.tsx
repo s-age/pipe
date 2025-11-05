@@ -3,6 +3,7 @@ import { JSX, useCallback } from 'react'
 import Button from '@/components/atoms/Button'
 import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
+import { getSession, SessionDetail } from '@/lib/api/session/getSession'
 import { SessionOverview } from '@/lib/api/sessions/getSessions'
 
 import {
@@ -19,20 +20,35 @@ import { useSessionTreeHandlers } from './useSessionTreeHandlers'
 type SessionItemProps = {
   session: SessionOverview
   currentSessionId: string
-  handleSessionSelect: (sessionId: string) => void
+  selectSession: (id: string | null, detail: SessionDetail | null) => void
+  setError: (errorMessage: string | null) => void
 }
 
 const SessionItem = ({
   session,
   currentSessionId,
-  handleSessionSelect,
+  selectSession,
+  setError,
 }: SessionItemProps): JSX.Element => {
   const onClick = useCallback(
-    (event: React.MouseEvent<HTMLAnchorElement>): void => {
+    async (event: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
       event.preventDefault()
-      handleSessionSelect(session.session_id)
+
+      if (typeof session.session_id !== 'string') {
+        setError('Invalid session ID.')
+
+        return
+      }
+
+      try {
+        const sessionDetail = await getSession(session.session_id)
+        selectSession(session.session_id, sessionDetail.session)
+        window.history.replaceState({}, '', `/session/${session.session_id}`)
+      } catch (error) {
+        setError((error as Error).message || 'Failed to load session data.')
+      }
     },
-    [session.session_id, handleSessionSelect],
+    [selectSession, session.session_id, setError],
   )
 
   return (
@@ -52,13 +68,15 @@ const SessionItem = ({
 type SessionTreeProps = {
   sessions: SessionOverview[]
   currentSessionId: string | null
-  handleSessionSelect: (sessionId: string) => void
+  selectSession: (id: string | null, detail: SessionDetail | null) => void
+  setError: (errorMessage: string | null) => void
 }
 
 const SessionTree = ({
   sessions,
   currentSessionId,
-  handleSessionSelect,
+  selectSession,
+  setError,
 }: SessionTreeProps): JSX.Element => {
   const { handleNewChatClick } = useSessionTreeHandlers()
 
@@ -80,7 +98,8 @@ const SessionTree = ({
               key={session.session_id}
               session={session}
               currentSessionId={currentSessionId || ''}
-              handleSessionSelect={handleSessionSelect}
+              selectSession={selectSession}
+              setError={setError}
             />
           )
         })}

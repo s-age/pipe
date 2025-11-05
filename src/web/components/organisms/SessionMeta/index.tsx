@@ -6,6 +6,8 @@ import Checkbox from '@/components/atoms/Checkbox'
 import InputText from '@/components/atoms/InputText'
 import Label from '@/components/atoms/Label'
 import TextArea from '@/components/atoms/TextArea'
+import { useReferenceActions } from '@/components/organisms/SessionMeta/useReferenceActions'
+import { useTodoActions } from '@/components/organisms/SessionMeta/useTodoActions'
 import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import { SessionDetail } from '@/lib/api/session/getSession'
 import { Reference } from '@/types/reference'
@@ -47,26 +49,18 @@ type SessionMetaProps = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
-  onUpdateTodo: (sessionId: string, todos: Todo[]) => void
-  onDeleteAllTodos: (sessionId: string) => void
-  onUpdateReferencePersist: (sessionId: string, index: number, persist: boolean) => void
-  onUpdateReferenceTtl: (sessionId: string, index: number, ttl: number) => void
-  onUpdateReferenceDisabled: (
-    sessionId: string,
-    index: number,
-    disabled: boolean,
-  ) => void
+  setSessionDetail: (data: SessionDetail | null) => void
+  setError: (error: string | null) => void
+  refreshSessions: () => Promise<void>
 }
 
 export const SessionMeta = ({
   sessionDetail,
   currentSessionId,
   onMetaSave,
-  onUpdateTodo,
-  onDeleteAllTodos,
-  onUpdateReferencePersist,
-  onUpdateReferenceTtl,
-  onUpdateReferenceDisabled,
+  setSessionDetail,
+  setError,
+  refreshSessions,
 }: SessionMetaProps): JSX.Element => {
   const {
     purpose,
@@ -98,6 +92,18 @@ export const SessionMeta = ({
     handleTopKMouseUp,
   } = useSessionHyperparameters({ sessionDetail, currentSessionId, onMetaSave })
 
+  const { handleUpdateTodo, handleDeleteAllTodos } = useTodoActions(
+    setSessionDetail,
+    setError,
+    refreshSessions,
+  )
+
+  const {
+    handleUpdateReferencePersist,
+    handleUpdateReferenceTtl,
+    handleUpdateReferenceDisabled,
+  } = useReferenceActions(sessionDetail, setSessionDetail, setError, refreshSessions)
+
   const handleSaveMeta = (): void => {
     if (!currentSessionId || !sessionDetail) return
     const meta: EditSessionMetaRequest = {
@@ -126,21 +132,25 @@ export const SessionMeta = ({
     if (!currentSessionId || !sessionDetail) return
     const newTodos = [...sessionDetail.todos]
     newTodos[index].checked = !newTodos[index].checked
-    onUpdateTodo(currentSessionId, newTodos)
+    handleUpdateTodo(currentSessionId, newTodos)
   }
 
   const handleReferenceCheckboxChange = (index: number): void => {
     if (!currentSessionId || !sessionDetail) return
     const newReferences = [...sessionDetail.references]
     newReferences[index].disabled = !newReferences[index].disabled
-    onUpdateReferenceDisabled(currentSessionId, index, newReferences[index].disabled)
+    handleUpdateReferenceDisabled(
+      currentSessionId,
+      index,
+      newReferences[index].disabled,
+    )
   }
 
   const handleReferencePersistToggle = (index: number): void => {
     if (!currentSessionId || !sessionDetail) return
     const newReferences = [...sessionDetail.references]
     newReferences[index].persist = !newReferences[index].persist
-    onUpdateReferencePersist(currentSessionId, index, newReferences[index].persist)
+    handleUpdateReferencePersist(currentSessionId, index, newReferences[index].persist)
   }
 
   const handleReferenceTtlChange = (
@@ -155,7 +165,7 @@ export const SessionMeta = ({
         ? (currentTtl || 0) + 1
         : Math.max(0, (currentTtl || 0) - 1)
     newReferences[index].ttl = newTtl
-    onUpdateReferenceTtl(currentSessionId, index, newTtl)
+    handleUpdateReferenceTtl(currentSessionId, index, newTtl)
   }
 
   if (!currentSessionId || !sessionDetail) {
@@ -382,7 +392,7 @@ export const SessionMeta = ({
             <Button
               kind="secondary"
               size="default"
-              onClick={() => currentSessionId && onDeleteAllTodos(currentSessionId)}
+              onClick={() => currentSessionId && handleDeleteAllTodos(currentSessionId)}
             >
               Delete All
             </Button>

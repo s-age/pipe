@@ -2,12 +2,13 @@ import { useState, useMemo, useCallback } from 'react'
 
 import { useStreamingFetch } from '@/hooks/useStreamingFetch'
 import { API_BASE_URL } from '@/lib/api/client'
+import { getSession, SessionDetail } from '@/lib/api/session/getSession'
 
 type UseStreamingInstruction = {
   streamedText: string
   isStreaming: boolean
   streamingError: string | null // Use error directly from useStreamingFetch
-  handleSendInstruction: (instruction: string) => Promise<void>
+  onSendInstruction: (instruction: string) => Promise<void>
   setStreamedText: (text: string) => void
   streamingTrigger: { instruction: string; sessionId: string } | null
   setStreamingTrigger: (
@@ -17,7 +18,7 @@ type UseStreamingInstruction = {
 
 export const useStreamingInstruction = (
   currentSessionId: string | null,
-  loadSessionDetailAfterStreaming: () => Promise<void>,
+  setSessionDetail: (data: SessionDetail | null) => void,
 ): UseStreamingInstruction => {
   const [streamingTrigger, setStreamingTrigger] = useState<{
     instruction: string
@@ -50,16 +51,21 @@ export const useStreamingInstruction = (
     {
       onComplete: (err, finalText) => {
         // Called when streaming finished (either successfully or with error).
-        // Do not set component state synchronously inside an effect here — this callback
-        // is invoked from the streaming hook after the fetch loop completes.
-        // We can safely call loadSessionDetailAfterStreaming and then clear trigger/text.
+        // We will load the session detail here so the hook owns the post-stream refresh.
         if (finalText.length > 0 || err) {
-          // Fire-and-forget; the caller handles errors internally if needed
-          void loadSessionDetailAfterStreaming()
+          void (async (): Promise<void> => {
+            if (!currentSessionId) return
+            try {
+              const data = await getSession(currentSessionId)
+              setSessionDetail(data.session)
+            } catch (err: unknown) {
+              // Caller (useSessionManagement) manages error state; just log here.
+              console.error('Failed to load session data after streaming:', err)
+            }
+          })()
         }
 
-        // Clear trigger and streamed text. These are safe to call here because this
-        // callback is invoked after the streaming lifecycle finishes inside the hook.
+        // Clear trigger and streamed text.
         setStreamingTrigger(null)
         setStreamedText('')
       },
@@ -68,7 +74,7 @@ export const useStreamingInstruction = (
 
   // Completion is handled by useStreamingFetch onComplete callback passed above.
 
-  const handleSendInstruction = useCallback(
+  const onSendInstruction = useCallback(
     async (instruction: string): Promise<void> => {
       if (!currentSessionId) return
       console.log('Instruction to send:', instruction)
@@ -81,7 +87,7 @@ export const useStreamingInstruction = (
     streamedText,
     isStreaming,
     streamingError, // Expose error directly from useStreamingFetch
-    handleSendInstruction,
+    onSendInstruction,
     setStreamedText,
     streamingTrigger,
     setStreamingTrigger,

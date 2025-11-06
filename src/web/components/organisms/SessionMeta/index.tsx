@@ -1,26 +1,20 @@
-import clsx from 'clsx'
 import React, { JSX } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Checkbox from '@/components/atoms/Checkbox'
 import InputText from '@/components/atoms/InputText'
 import Label from '@/components/atoms/Label'
-import TextArea from '@/components/atoms/TextArea'
-import { useReferenceActions } from '@/components/organisms/SessionMeta/useReferenceActions'
+import { SessionBasicMetaForm } from '@/components/organisms/SessionBasicMetaForm'
 import { useTodoActions } from '@/components/organisms/SessionMeta/useTodoActions'
+import { SessionReferencesList } from '@/components/organisms/SessionReferencesList'
 import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import { SessionDetail } from '@/lib/api/session/getSession'
-import { Reference } from '@/types/reference'
 import { Todo } from '@/types/todo'
 
 import {
   metaColumn,
   sessionMetaSection,
   sessionMetaView,
-  metaItem,
-  metaItemLabel,
-  inputFullWidth,
-  textareaFullWidth,
   checkboxLabel,
   hyperparametersControl,
   sliderValue,
@@ -29,21 +23,12 @@ import {
   todoCheckboxLabel,
   todoTitle,
   noItemsMessage,
-  referencesList,
-  referenceItem,
-  referenceControls,
-  referenceLabel,
-  referencePath,
-  materialIcons,
-  ttlControls,
-  ttlValue,
-  referenceCheckboxMargin,
   stickySaveMetaButtonContainer,
-  lockIconStyle,
+  metaItem,
+  metaItemLabel,
+  todoCheckboxMargin,
 } from './style.css'
-import { useSessionBasicMeta } from './useSessionBasicMeta'
 import { useSessionHyperparameters } from './useSessionHyperparameters'
-import { colors } from '../../../styles/colors.css'
 
 type SessionMetaProps = {
   sessionDetail: SessionDetail | null
@@ -63,24 +48,6 @@ export const SessionMeta = ({
   refreshSessions,
 }: SessionMetaProps): JSX.Element => {
   const {
-    purpose,
-    setPurpose,
-    handlePurposeBlur,
-    background,
-    setBackground,
-    handleBackgroundBlur,
-    roles,
-    setRoles,
-    handleRolesBlur,
-    procedure,
-    setProcedure,
-    handleProcedureBlur,
-    artifacts,
-    setArtifacts,
-    handleArtifactsBlur,
-  } = useSessionBasicMeta({ sessionDetail, currentSessionId, onMetaSave })
-
-  const {
     temperature,
     setTemperature,
     handleTemperatureMouseUp,
@@ -98,26 +65,9 @@ export const SessionMeta = ({
     refreshSessions,
   )
 
-  const {
-    handleUpdateReferencePersist,
-    handleUpdateReferenceTtl,
-    handleUpdateReferenceDisabled,
-  } = useReferenceActions(sessionDetail, setSessionDetail, setError, refreshSessions)
-
   const handleSaveMeta = (): void => {
     if (!currentSessionId || !sessionDetail) return
     const meta: EditSessionMetaRequest = {
-      purpose: purpose,
-      background: background,
-      roles: roles
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-      procedure: procedure,
-      artifacts: artifacts
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
       multi_step_reasoning_enabled: sessionDetail.multi_step_reasoning_enabled, // これはチェックボックスなので即時反映
       hyperparameters: {
         temperature: temperature,
@@ -135,39 +85,6 @@ export const SessionMeta = ({
     handleUpdateTodo(currentSessionId, newTodos)
   }
 
-  const handleReferenceCheckboxChange = (index: number): void => {
-    if (!currentSessionId || !sessionDetail) return
-    const newReferences = [...sessionDetail.references]
-    newReferences[index].disabled = !newReferences[index].disabled
-    handleUpdateReferenceDisabled(
-      currentSessionId,
-      index,
-      newReferences[index].disabled,
-    )
-  }
-
-  const handleReferencePersistToggle = (index: number): void => {
-    if (!currentSessionId || !sessionDetail) return
-    const newReferences = [...sessionDetail.references]
-    newReferences[index].persist = !newReferences[index].persist
-    handleUpdateReferencePersist(currentSessionId, index, newReferences[index].persist)
-  }
-
-  const handleReferenceTtlChange = (
-    index: number,
-    action: 'increment' | 'decrement',
-  ): void => {
-    if (!currentSessionId || !sessionDetail) return
-    const newReferences = [...sessionDetail.references]
-    const currentTtl = newReferences[index].ttl !== null ? newReferences[index].ttl : 3
-    const newTtl =
-      action === 'increment'
-        ? (currentTtl || 0) + 1
-        : Math.max(0, (currentTtl || 0) - 1)
-    newReferences[index].ttl = newTtl
-    handleUpdateReferenceTtl(currentSessionId, index, newTtl)
-  }
-
   if (!currentSessionId || !sessionDetail) {
     return (
       <div className={metaColumn}>
@@ -181,143 +98,19 @@ export const SessionMeta = ({
       <input type="hidden" id="current-session-id" value={currentSessionId} />
       <section className={sessionMetaSection}>
         <div className={sessionMetaView}>
-          <div className={metaItem}>
-            <Label htmlFor="purpose" className={metaItemLabel}>
-              Purpose:
-            </Label>
-            <InputText
-              id="purpose"
-              value={purpose}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setPurpose(e.target.value)
-              }
-              onBlur={handlePurposeBlur}
-              className={inputFullWidth}
-            />
-          </div>
-          <div className={metaItem}>
-            <Label htmlFor="background" className={metaItemLabel}>
-              Background:
-            </Label>
-            <TextArea
-              id="background"
-              value={background}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setBackground(e.target.value)
-              }
-              onBlur={handleBackgroundBlur}
-              className={textareaFullWidth}
-            />
-          </div>
-          <div className={metaItem}>
-            <Label htmlFor="roles" className={metaItemLabel}>
-              Roles:
-            </Label>
-            <InputText
-              id="roles"
-              value={roles}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setRoles(e.target.value)
-              }
-              onBlur={handleRolesBlur}
-              className={inputFullWidth}
-            />
-          </div>
-          <div className={metaItem}>
-            <Label htmlFor="procedure" className={metaItemLabel}>
-              Procedure:
-            </Label>
-            <InputText
-              id="procedure"
-              value={procedure}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setProcedure(e.target.value)
-              }
-              onBlur={handleProcedureBlur}
-              className={inputFullWidth}
-            />
-          </div>
-          <div className={metaItem}>
-            <Label htmlFor="artifacts" className={metaItemLabel}>
-              Artifacts:
-            </Label>
-            <InputText
-              id="artifacts"
-              value={artifacts}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setArtifacts(e.target.value)
-              }
-              onBlur={handleArtifactsBlur}
-              className={inputFullWidth}
-            />
-          </div>
+          <SessionBasicMetaForm
+            sessionDetail={sessionDetail}
+            currentSessionId={currentSessionId}
+            onMetaSave={onMetaSave}
+          />
 
-          <div className={metaItem}>
-            <Label className={metaItemLabel}>References:</Label>
-            {sessionDetail.references.length > 0 ? (
-              <ul className={referencesList}>
-                {sessionDetail.references.map((reference: Reference, index: number) => (
-                  <li key={index} className={referenceItem}>
-                    <div className={referenceControls}>
-                      <Label className={referenceLabel}>
-                        <Checkbox
-                          checked={!reference.disabled}
-                          onChange={() => handleReferenceCheckboxChange(index)}
-                          className={referenceCheckboxMargin}
-                        />
-                        <Button
-                          kind="ghost"
-                          size="xsmall"
-                          style={{ minWidth: '32px' }}
-                          onClick={() => handleReferencePersistToggle(index)}
-                        >
-                          <span
-                            className={clsx(materialIcons, lockIconStyle)}
-                            data-locked={reference.persist}
-                          >
-                            {reference.persist ? 'lock' : 'lock_open'}
-                          </span>
-                        </Button>
-                        <span
-                          data-testid="reference-path"
-                          className={referencePath}
-                          style={{
-                            textDecoration: reference.disabled
-                              ? 'line-through'
-                              : 'none',
-                            color: reference.disabled ? colors.grayText : 'inherit',
-                          }}
-                        >
-                          {reference.path}
-                        </span>
-                      </Label>
-                      <div className={ttlControls}>
-                        <Button
-                          kind="primary"
-                          size="xsmall"
-                          onClick={() => handleReferenceTtlChange(index, 'decrement')}
-                        >
-                          -
-                        </Button>
-                        <span className={ttlValue}>
-                          {reference.ttl !== null ? reference.ttl : 3}
-                        </span>
-                        <Button
-                          kind="primary"
-                          size="xsmall"
-                          onClick={() => handleReferenceTtlChange(index, 'increment')}
-                        >
-                          +
-                        </Button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={noItemsMessage}>No references for this session.</p>
-            )}
-          </div>
+          <SessionReferencesList
+            sessionDetail={sessionDetail}
+            currentSessionId={currentSessionId}
+            setSessionDetail={setSessionDetail}
+            setError={setError}
+            refreshSessions={refreshSessions}
+          />
 
           <div className={metaItem}>
             <Label className={checkboxLabel}>
@@ -404,7 +197,7 @@ export const SessionMeta = ({
                       <Checkbox
                         checked={todo.checked}
                         onChange={() => handleTodoCheckboxChange(index)}
-                        className={referenceCheckboxMargin}
+                        className={todoCheckboxMargin}
                       />
                       <strong className={todoTitle}>{todo.title}</strong>
                     </Label>

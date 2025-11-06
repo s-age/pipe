@@ -124,66 +124,7 @@ export const noItemsMessage = style({
   fontStyle: 'italic',
 })
 
-export const referencesList = style({
-  listStyle: 'none',
-  paddingLeft: '0',
-})
-
-export const referenceItem = style({
-  marginBottom: '10px',
-})
-
-export const referenceControls = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-})
-
-export const referenceLabel = style({
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  flexGrow: '1',
-})
-
-globalStyle(`${referenceLabel} input[type="checkbox"]`, {
-  marginRight: '8px',
-})
-
-export const referencePath = style({
-  wordBreak: 'break-all',
-})
-
-export const materialIcons = style({
-  fontFamily: 'Material Icons',
-  fontSize: '16px',
-  verticalAlign: 'middle',
-})
-
-export const lockIconStyle = style({
-  selectors: {
-    '&[data-locked="true"]': {
-      color: colors.accent,
-    },
-    '&[data-locked="false"]': {
-      color: colors.lightText,
-    },
-  },
-})
-
-export const ttlControls = style({
-  display: 'flex',
-  alignItems: 'center',
-  marginLeft: '10px',
-})
-
-export const ttlValue = style({
-  padding: '0 8px',
-  fontWeight: 'bold',
-  color: colors.offWhite,
-})
-
-export const referenceCheckboxMargin = style({
+export const todoCheckboxMargin = style({
   marginRight: '8px',
 })
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-import { getSessions, SessionOverview } from '@/lib/api/sessions/getSessions'
+import { getSessionTree, SessionOverview } from '@/lib/api/sessionTree/getSessions'
 import { getSettings, Settings } from '@/lib/api/settings/getSettings'
 
 type SessionOption = {
@@ -25,7 +25,7 @@ export const useSessionDetail = (): UseSessionDetailResult => {
     const loadData = async (): Promise<void> => {
       try {
         const [sessionsResponse, settingsData] = await Promise.all([
-          getSessions(),
+          getSessionTree(),
           getSettings(),
         ])
         setSessions(

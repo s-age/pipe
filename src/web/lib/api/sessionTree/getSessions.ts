@@ -12,6 +12,6 @@ export type SessionOverview = {
   last_update: string
 }
 
-export const getSessions = async (): Promise<{
+export const getSessionTree = async (): Promise<{
   sessions: [string, SessionOverview][]
 }> => client.get<{ sessions: [string, SessionOverview][] }>(`/sessions`)

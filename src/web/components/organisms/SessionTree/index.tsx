@@ -4,7 +4,7 @@ import Button from '@/components/atoms/Button'
 import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
 import { getSession, SessionDetail } from '@/lib/api/session/getSession'
-import { SessionOverview } from '@/lib/api/sessions/getSessions'
+import { SessionOverview } from '@/lib/api/sessionTree/getSessions'
 
 import {
   sessionListColumn,

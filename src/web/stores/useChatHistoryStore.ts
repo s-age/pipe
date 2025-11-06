@@ -1,7 +1,7 @@
 import { useCallback, useReducer } from 'react'
 
 import { SessionDetail } from '@/lib/api/session/getSession'
-import { getSessions, SessionOverview } from '@/lib/api/sessions/getSessions'
+import { getSessionTree, SessionOverview } from '@/lib/api/sessionTree/getSessions'
 
 export type SessionTree = {
   sessions: SessionOverview[]
@@ -125,7 +125,7 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
 
   const refreshSessions = useCallback(async (): Promise<void> => {
     try {
-      const fetchedSessions = await getSessions()
+      const fetchedSessions = await getSessionTree()
       dispatch({
         type: 'SET_SESSIONS',
         payload: fetchedSessions.sessions.map(([id, session]) => ({

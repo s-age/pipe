@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import { getSessions } from '@/lib/api/sessions/getSessions'
+import { getSessionTree } from '@/lib/api/sessionTree/getSessions'
 import { Actions, State } from '@/stores/useChatHistoryStore'
 
 type UseSessionLoaderProps = {
@@ -17,7 +17,7 @@ export const useSessionLoader = ({ state, actions }: UseSessionLoaderProps): voi
   useEffect(() => {
     const loadSessions = async (): Promise<void> => {
       try {
-        const fetchedSessions = await getSessions()
+        const fetchedSessions = await getSessionTree()
         setSessions(
           fetchedSessions.sessions.map(([id, session]) => ({
             ...session,

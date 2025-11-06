@@ -1,4 +1,4 @@
-import { getSessions } from './getSessions'
+import { getSessionTree } from './getSessions'
 import type { SessionOverview } from './getSessions'
 
 type SessionsResponse = {
@@ -11,7 +11,7 @@ let sessionsCache: SessionsResponse | null = null
 export const fetchSessions = (): SessionsResponse => {
   if (!sessionsCache) {
     if (!sessionsPromise) {
-      sessionsPromise = getSessions()
+      sessionsPromise = getSessionTree()
     }
     throw sessionsPromise.then((data) => {
       sessionsCache = data

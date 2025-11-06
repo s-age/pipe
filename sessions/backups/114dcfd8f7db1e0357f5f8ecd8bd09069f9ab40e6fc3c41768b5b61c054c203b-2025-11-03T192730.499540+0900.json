@@ -1,0 +1,110 @@
+{
+    "session_id": "eec3a77d9e580127f428f57697469928b3db0fa462ce76f516ebf4893d27c685",
+    "created_at": "2025-11-03T08:03:58.431166+00:00",
+    "purpose": "Test",
+    "background": "Test",
+    "roles": [],
+    "multi_step_reasoning_enabled": false,
+    "token_count": 0,
+    "hyperparameters": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "top_k": 40.0
+    },
+    "references": [],
+    "artifacts": [],
+    "procedure": null,
+    "turns": [
+        {
+            "type": "user_task",
+            "instruction": "Say hello",
+            "timestamp": "2025-11-03T08:03:58.431280+00:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "\u5143\u6c17\u304b\uff1f",
+            "timestamp": "2025-11-03T17:53:01.534290+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "\u5143\u6c17\u3067\u3059\uff01\u4f55\u304b\u304a\u624b\u4f1d\u3044\u3067\u304d\u308b\u3053\u3068\u306f\u3042\u308a\u307e\u3059\u304b\uff1f\n",
+            "timestamp": "2025-11-03T17:53:07.792997+09:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "eec3a77d9e580127f428f57697469928b3db0fa462ce76f516ebf4893d27c685",
+            "timestamp": "2025-11-03T17:58:42.262176+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "\u5143\u6c17\u3067\u3059\uff01\u4f55\u304b\u304a\u624b\u4f1d\u3044\u3067\u304d\u308b\u3053\u3068\u306f\u3042\u308a\u307e\u3059\u304b\uff1f\n",
+            "timestamp": "2025-11-03T17:59:01.484392+09:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "eec3a77d9e580127f428f57697469928b3db0fa462ce76f516ebf4893d27c685",
+            "timestamp": "2025-11-03T18:00:44.629425+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "\u5143\u6c17\u3067\u3059\uff01\u4f55\u304b\u304a\u624b\u4f1d\u3044\u3067\u304d\u308b\u3053\u3068\u306f\u3042\u308a\u307e\u3059\u304b\uff1f\n",
+            "timestamp": "2025-11-03T18:00:52.043208+09:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "\u969b\u30c6\u30b9\u30c8\u3060",
+            "timestamp": "2025-11-03T18:02:56.368928+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "\u5143\u6c17\u3067\u3059\uff01\u4f55\u304b\u304a\u624b\u4f1d\u3044\u3067\u304d\u308b\u3053\u3068\u306f\u3042\u308a\u307e\u3059\u304b\uff1f\n",
+            "timestamp": "2025-11-03T18:03:02.251027+09:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "\u3082\u3046\u4e00\u5ea6\u30c6\u30b9\u30c8\u3060\u3002\n\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u3057\u305f\u3044\u306e\u306b\u3001\u3059\u3050\u306b\u30ad\u30e3\u30f3\u30bb\u30eb\u3055\u308c\u3066\u3057\u307e\u3046\u306e\u3067\u306d\u3002",
+            "timestamp": "2025-11-03T18:22:35.120350+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "`genai_example.py` \u306e\u5185\u5bb9\u3092\u51fa\u529b\u3057\u307e\u3057\u305f\u3002\u3053\u308c\u3067\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u304c\u3059\u3050\u306b\u30ad\u30e3\u30f3\u30bb\u30eb\u3055\u308c\u308b\u554f\u984c\u304c\u89e3\u6c7a\u3055\u308c\u305f\u304b\u3054\u78ba\u8a8d\u304f\u3060\u3055\u3044\u3002\u4ed6\u306b\u4f55\u304b\u304a\u624b\u4f1d\u3044\u3067\u304d\u308b\u3053\u3068\u306f\u3042\u308a\u307e\u3059\u304b\uff1f\n",
+            "timestamp": "2025-11-03T18:22:51.644154+09:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "\u306a\u304b\u306a\u304b\u3046\u307e\u304f\u3044\u304b\u306a\u3044\u306d",
+            "timestamp": "2025-11-03T18:26:58.393286+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "`genai_example.py` \u3092\u4fee\u6b63\u3057\u3001`client.models.generate_content` \u30e1\u30bd\u30c3\u30c9\u306b\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u3092\u6709\u52b9\u306b\u3059\u308b\u305f\u3081\u306e `stream=True` \u5f15\u6570\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002\u3053\u308c\u306b\u3088\u308a\u3001\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u304c\u671f\u5f85\u901a\u308a\u306b\u884c\u308f\u308c\u308b\u3088\u3046\u306b\u306a\u308b\u306f\u305a\u3067\u3059\u3002\n\n`genai_example.py` \u3092\u4fee\u6b63\u3057\u307e\u3057\u305f\u3002`client.models.generate_content` \u30e1\u30bd\u30c3\u30c9\u306b `stream=True` \u3092\u8ffd\u52a0\u3057\u3001\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u3092\u6709\u52b9\u306b\u3057\u307e\u3057\u305f\u3002\n\n\u3053\u308c\u3067\u3001\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u304c\u30ad\u30e3\u30f3\u30bb\u30eb\u3055\u308c\u308b\u554f\u984c\u304c\u89e3\u6c7a\u3055\u308c\u308b\u53ef\u80fd\u6027\u304c\u3042\u308a\u307e\u3059\u3002\n\n\u518d\u5ea6\u3001`genai_example.py` \u3092\u5b9f\u884c\u3057\u3066\u3001\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u304c\u6b63\u3057\u304f\u884c\u308f\u308c\u308b\u304b\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002\n\u4f55\u304b\u304a\u56f0\u308a\u306e\u3053\u3068\u304c\u3042\u308c\u3070\u3001\u307e\u305f\u304a\u77e5\u3089\u305b\u304f\u3060\u3055\u3044\u3002`genai_example.py` \u3092\u4fee\u6b63\u3057\u3001`client.models.generate_content` \u30e1\u30bd\u30c3\u30c9\u306b `stream=True` \u3092\u8ffd\u52a0\u3057\u307e\u3057\u305f\u3002\u3053\u308c\u306b\u3088\u308a\u3001\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u304c\u6709\u52b9\u306b\u306a\u308a\u307e\u3059\u3002\n\n\u518d\u5ea6 `genai_example.py` \u3092\u5b9f\u884c\u3057\u3066\u3001\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u304c\u6b63\u3057\u304f\u884c\u308f\u308c\u308b\u304b\u3054\u78ba\u8a8d\u304f\u3060\u3055\u3044\u3002\n",
+            "timestamp": "2025-11-03T18:27:14.768088+09:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "\u4eca\u5ea6\u306f\u3069\u3046\u3060\u308d\u3046\u304b\uff1f",
+            "timestamp": "2025-11-03T18:32:42.220832+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "`genai_example.py` \u306e\u5b9f\u884c\u306b\u6210\u529f\u3057\u3001\u300c\u3053\u3093\u306b\u3061\u306f\u3002\u300d\u3068\u3044\u3046\u5fdc\u7b54\u304c\u5f97\u3089\u308c\u307e\u3057\u305f\u3002`stream=True` \u306b\u95a2\u9023\u3059\u308b\u30a8\u30e9\u30fc\u306f\u89e3\u6c7a\u3055\u308c\u3001\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u306e\u554f\u984c\u306f\u4fee\u6b63\u3055\u308c\u305f\u3088\u3046\u3067\u3059\u3002\n",
+            "timestamp": "2025-11-03T18:33:25.399590+09:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "\u3044\u3044\u3084\u3001\u305d\u308c\u306f\u5143\u3005\u554f\u984c\u304c\u306a\u3044\u3093\u3060\u3088\u3002\n\u554f\u984c\u306fWebUI\u5074\u306a\u3093\u3060\u3002",
+            "timestamp": "2025-11-03T18:34:37.433808+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "`useStreamingFetch.ts`\u3092\u4fee\u6b63\u3057\u307e\u3057\u305f\u3002\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u304c\u5b8c\u5168\u306b\u7d42\u4e86\u3059\u308b\u307e\u3067`isLoading`\u304c`true`\u306b\u4fdd\u305f\u308c\u308b\u3088\u3046\u306b\u5909\u66f4\u3057\u307e\u3057\u305f\u3002\u3053\u308c\u306b\u3088\u308a\u3001\u30b9\u30c8\u30ea\u30fc\u30e0\u306e\u9014\u4e2d\u3067\u30ad\u30e3\u30f3\u30bb\u30eb\u3055\u308c\u308b\u554f\u984c\u304c\u89e3\u6c7a\u3055\u308c\u308b\u53ef\u80fd\u6027\u304c\u3042\u308a\u307e\u3059\u3002\n\n\u518d\u5ea6\u3001WebUI\u3067\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0\u51fa\u529b\u3092\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002\n",
+            "timestamp": "2025-11-03T18:35:26.713501+09:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "\u3059\u307e\u306a\u3044\u304c\u3001\u541b\u306f\u4f55\u3082\u3057\u306a\u3044\u3067\u304f\u308c\u3002\n\u3044\u308d\u3093\u306a\u3068\u3053\u308d\u3067\u554f\u984c\u304c\u51fa\u3066\u3057\u307e\u3046\u3002",
+            "timestamp": "2025-11-03T18:39:42.268522+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "\u627f\u77e5\u3044\u305f\u3057\u307e\u3057\u305f\u3002\u4eca\u56de\u306f\u4f55\u3082\u305b\u305a\u3001\u6b21\u306e\u6307\u793a\u3092\u304a\u5f85\u3061\u3057\u3066\u304a\u308a\u307e\u3059\u3002\n"

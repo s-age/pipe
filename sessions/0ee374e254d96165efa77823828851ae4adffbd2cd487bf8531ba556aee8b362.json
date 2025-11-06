@@ -1,0 +1,82 @@
+{
+    "session_id": "0ee374e254d96165efa77823828851ae4adffbd2cd487bf8531ba556aee8b362",
+    "created_at": "2025-11-02T10:03:01.883876+09:00",
+    "purpose": "Session for References Test",
+    "background": "Testing reference management.",
+    "roles": [],
+    "multi_step_reasoning_enabled": false,
+    "token_count": 10255,
+    "hyperparameters": {
+        "temperature": {
+            "value": 0.2
+        },
+        "top_p": {
+            "value": 0.5
+        },
+        "top_k": {
+            "value": 5.0
+        }
+    },
+    "references": [
+        {
+            "path": "/Users/s-age/gitrepos/pipe/README.md",
+            "disabled": true,
+            "ttl": 3,
+            "persist": false
+        }
+    ],
+    "artifacts": [],
+    "procedure": "",
+    "turns": [
+        {
+            "type": "user_task",
+            "instruction": "Initial instruction.",
+            "timestamp": "2025-11-02T10:03:02.117008+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "\u53c2\u7167\u7ba1\u7406\u306e\u30c6\u30b9\u30c8\u30bb\u30c3\u30b7\u30e7\u30f3\u3092\u958b\u59cb\u3057\u307e\u3059\u3002\u5177\u4f53\u7684\u306b\u3069\u306e\u3088\u3046\u306a\u53c2\u7167\u7ba1\u7406\u306e\u30c6\u30b9\u30c8\u3092\u884c\u3044\u307e\u3059\u304b\uff1f\u4f8b\u3048\u3070\u3001\u30d5\u30a1\u30a4\u30eb\u306e\u8aad\u307f\u8fbc\u307f\u3001\u53c2\u7167\u306e\u8ffd\u52a0\u3001\u524a\u9664\u306a\u3069\u3001\u6700\u521d\u306b\u884c\u3044\u305f\u3044\u64cd\u4f5c\u3092\u6559\u3048\u3066\u304f\u3060\u3055\u3044\u3002",
+            "timestamp": "2025-11-02T10:03:06.820817+09:00"
+        },
+        {
+            "type": "user_task",
+            "instruction": "Summary README.md",
+            "timestamp": "2025-11-02T10:03:07.465918+09:00"
+        },
+        {
+            "type": "function_calling",
+            "response": "read_file({\"absolute_path\": \"README.md\"})",
+            "timestamp": "2025-11-02T10:03:09.593029+09:00"
+        },
+        {
+            "type": "tool_response",
+            "name": "read_file",
+            "response": {
+                "status": "succeeded",
+                "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added or updated in session references."
+            },
+            "timestamp": "2025-11-02T10:03:09.604406+09:00"
+        },
+        {
+            "type": "function_calling",
+            "response": "create_verified_summary({\"start_turn\": 3, \"end_turn\": 4, \"policy\": \"pipe\u306e\u4e3b\u8981\u306a\u54f2\u5b66\u3001\u6a5f\u80fd\u3001\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3001\u304a\u3088\u3073\u4f7f\u7528\u65b9\u6cd5\u3092\u8981\u7d04\u3057\u3066\u304f\u3060\u3055\u3044\u3002\", \"target_length\": 500})",
+            "timestamp": "2025-11-02T10:03:12.557164+09:00"
+        },
+        {
+            "type": "tool_response",
+            "name": "create_verified_summary",
+            "response": {
+                "status": "failed",
+                "message": "This tool can only be executed by an agent with the 'compresser' role."
+            },
+            "timestamp": "2025-11-02T10:03:12.558580+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "`create_verified_summary`\u30c4\u30fc\u30eb\u306f\u3001`compresser`\u30ed\u30fc\u30eb\u3092\u6301\u3064\u30a8\u30fc\u30b8\u30a7\u30f3\u30c8\u306e\u307f\u304c\u5b9f\u884c\u3067\u304d\u307e\u3059\u3002\u3053\u306e\u6a5f\u80fd\u3092\u4f7f\u7528\u3059\u308b\u306b\u306f\u3001`compresser`\u30ed\u30fc\u30eb\u3092\u6307\u5b9a\u3057\u3066\u65b0\u3057\u3044\u30bb\u30c3\u30b7\u30e7\u30f3\u3092\u958b\u59cb\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002",
+            "timestamp": "2025-11-02T10:03:14.952674+09:00"
+        }
+    ],
+    "pools": [],
+    "todos": null
+}

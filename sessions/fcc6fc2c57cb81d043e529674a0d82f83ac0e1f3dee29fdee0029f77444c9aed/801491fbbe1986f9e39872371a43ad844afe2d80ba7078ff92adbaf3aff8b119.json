@@ -1,0 +1,125 @@
+{
+  "session_id": "fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed/801491fbbe1986f9e39872371a43ad844afe2d80ba7078ff92adbaf3aff8b119",
+  "created_at": "2025-10-25T08:18:43.015779+09:00",
+  "purpose": "Fork of: 子セッション作成テスト",
+  "background": "子セッション作成テスト",
+  "roles": [],
+  "multi_step_reasoning_enabled": false,
+  "token_count": 8240,
+  "references": [
+    {
+      "path": "/Users/s-age/gitrepos/pipe/README.md",
+      "disabled": false
+    }
+  ],
+  "turns": [
+    {
+      "type": "user_task",
+      "instruction": "TODOを作成して。\n- test1\n- test2",
+      "timestamp": "2025-10-25T10:01:51.374422+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"title\": \"test1\", \"checked\": false}, {\"checked\": false, \"title\": \"test2\", \"description\": \"\"}]})",
+      "timestamp": "2025-10-25T10:01:53.278588+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed/801491fbbe1986f9e39872371a43ad844afe2d80ba7078ff92adbaf3aff8b119."
+      },
+      "timestamp": "2025-10-25T10:01:53.307304+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "TODOを作成しました。\n- test1\n- test2",
+      "timestamp": "2025-10-25T10:01:54.713941+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "もう一度TODOを作成して。\n- test1\n- test2",
+      "timestamp": "2025-10-25T10:03:21.187235+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "edit_todos({\"todos\": [{\"description\": \"\", \"title\": \"test1\", \"checked\": false}, {\"title\": \"test2\", \"description\": \"\", \"checked\": false}]})",
+      "timestamp": "2025-10-25T10:03:23.371208+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "edit_todos",
+      "response": {
+        "status": "succeeded",
+        "message": "Todos successfully updated in session fcc6fc2c57cb81d043e529674a0d82f83ac0e1f3dee29fdee0029f77444c9aed/801491fbbe1986f9e39872371a43ad844afe2d80ba7078ff92adbaf3aff8b119."
+      },
+      "timestamp": "2025-10-25T10:03:23.397260+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "TODOを作成しました。\n- test1\n- test2",
+      "timestamp": "2025-10-25T10:03:25.077297+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "README.mdを読み込んで",
+      "timestamp": "2025-10-25T10:04:03.626433+09:00"
+    },
+    {
+      "type": "function_calling",
+      "response": "read_file({\"absolute_path\": \"README.md\"})",
+      "timestamp": "2025-10-25T10:04:05.104233+09:00"
+    },
+    {
+      "type": "tool_response",
+      "name": "read_file",
+      "response": {
+        "status": "succeeded",
+        "message": "File '/Users/s-age/gitrepos/pipe/README.md' has been added to the session references."
+      },
+      "timestamp": "2025-10-25T10:04:05.128845+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "README.mdを読み込みました。\n\nこのファイルは、LLMの文脈制御のためのツールである`pipe`について説明しています。`pipe`は、開発者が会話の文脈を完全に制御し、履歴を操作し、真の文脈エンジニアリングを実現できるように設計されています。主な特徴として、セッションベースの履歴、構造化されたJSONプロンプト、CLI駆動のワークフロー、拡張可能なバックエンド、Web UI、マルチエージェントシミュレーション、高度なエージェント駆動型圧縮などが挙げられています。",
+      "timestamp": "2025-10-25T10:04:08.751790+09:00"
+    },
+    {
+      "type": "user_task",
+      "instruction": "OKとだけ答えて",
+      "timestamp": "2025-10-25T10:10:02.539536+09:00"
+    },
+    {
+      "type": "model_response",
+      "content": "OK",
+      "timestamp": "2025-10-25T10:10:04.482414+09:00"
+    }
+  ],
+  "hyperparameters": {
+    "temperature": {
+      "value": 0.2,
+      "description": "Be precise and factual. A lower value is preferred for deterministic output."
+    },
+    "top_p": {
+      "value": 0.5,
+      "description": "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
+    },
+    "top_k": {
+      "value": 5,
+      "description": "Limit the generation to the top 5 most likely tokens at each step."
+    }
+  },
+  "todos": [
+    {
+      "description": "",
+      "title": "test1",
+      "checked": false
+    },
+    {
+      "title": "test2",
+      "description": "",
+      "checked": false
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+    "session_id": "276f1e1ab232308e78265d1bb4c471763be85e26df1ae5eb7cc2c6fe770a69ed/31caeeaaf4dfbf1c96a1ac69777e2844f490046237e5f70b8951274a73a0a164",
+    "created_at": "2025-11-02T08:58:15.246161+09:00",
+    "purpose": "Child session test",
+    "background": "This is a child session test.",
+    "roles": [],
+    "multi_step_reasoning_enabled": false,
+    "token_count": 2606,
+    "hyperparameters": {
+        "temperature": {
+            "value": 0.2
+        },
+        "top_p": {
+            "value": 0.5
+        },
+        "top_k": {
+            "value": 5.0
+        }
+    },
+    "references": [],
+    "artifacts": [],
+    "procedure": "",
+    "turns": [
+        {
+            "type": "user_task",
+            "instruction": "This is the first instruction for the child session.",
+            "timestamp": "2025-11-02T08:58:15.407217+09:00"
+        },
+        {
+            "type": "model_response",
+            "content": "\u3053\u308c\u306f\u5b50\u30bb\u30c3\u30b7\u30e7\u30f3\u306e\u6700\u521d\u306e\u6307\u793a\u3067\u3059\u3002",
+            "timestamp": "2025-11-02T08:58:19.160606+09:00"
+        }
+    ],
+    "pools": [],
+    "todos": null
+}

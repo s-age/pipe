@@ -1,6 +1,6 @@
 import { useCallback, useReducer } from 'react'
 
-import { getSession, SessionDetail } from '@/lib/api/session/getSession'
+import { SessionDetail } from '@/lib/api/session/getSession'
 import { getSessions, SessionOverview } from '@/lib/api/sessions/getSessions'
 
 export type SessionTree = {
@@ -131,15 +131,11 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
           session_id: id,
         })),
       })
-      if (state.sessionTree.currentSessionId) {
-        const data = await getSession(state.sessionTree.currentSessionId)
-        dispatch({ type: 'SET_SESSION_DETAIL', payload: data.session })
-      }
       setError(null)
     } catch (err: unknown) {
       setError((err as Error).message || 'Failed to refresh sessions.')
     }
-  }, [state.sessionTree.currentSessionId, setError])
+  }, [setError])
 
   const reset = useCallback(() => dispatch({ type: 'RESET' }), [])
 

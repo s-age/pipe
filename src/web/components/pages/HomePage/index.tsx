@@ -21,12 +21,21 @@ const HomePage = (): JSX.Element => {
     error,
   } = state
 
+  const {
+    setSessions,
+    setCurrentSessionId,
+    setSessionDetail,
+    selectSession,
+    setError,
+    refreshSessions,
+  } = actions
+
   // Initial session loading
   useEffect(() => {
     const loadSessions = async (): Promise<void> => {
       try {
         const fetchedSessions = await getSessions()
-        actions.setSessions(
+        setSessions(
           fetchedSessions.sessions.map(([id, session]) => ({
             ...session,
             session_id: id,
@@ -34,16 +43,17 @@ const HomePage = (): JSX.Element => {
         )
         const pathParts = window.location.pathname.split('/')
         const id = pathParts[pathParts.length - 1]
-        if (id && id !== 'session' && id !== '') {
-          actions.setCurrentSessionId(id)
+        // currentSessionIdがまだ設定されていない場合にのみURLからのIDを設定
+        if (id && id !== 'session' && id !== '' && !currentSessionId) {
+          setCurrentSessionId(id)
         }
-        actions.setError(null)
+        setError(null)
       } catch (err: unknown) {
-        actions.setError((err as Error).message || 'Failed to load sessions.')
+        setError((err as Error).message || 'Failed to load sessions.')
       }
     }
     loadSessions()
-  }, [actions])
+  }, [setSessions, setCurrentSessionId, setError, currentSessionId]) // 必要な個々の関数とcurrentSessionIdを依存配列に
 
   // Load session detail when currentSessionId changes
   useEffect(() => {
@@ -51,17 +61,17 @@ const HomePage = (): JSX.Element => {
       if (currentSessionId) {
         try {
           const data = await getSession(currentSessionId)
-          actions.setSessionDetail(data.session)
-          actions.setError(null)
+          setSessionDetail(data.session)
+          setError(null)
         } catch (err: unknown) {
-          actions.setError((err as Error).message || 'Failed to load session data.')
+          setError((err as Error).message || 'Failed to load session data.')
         }
       } else {
-        actions.setSessionDetail(null)
+        setSessionDetail(null)
       }
     }
     loadSessionDetail()
-  }, [currentSessionId, actions])
+  }, [currentSessionId, setSessionDetail, setError]) // 必要な個々の関数を依存配列に
 
   const handleMetaSave = async (
     id: string,
@@ -69,10 +79,10 @@ const HomePage = (): JSX.Element => {
   ): Promise<void> => {
     try {
       await editSessionMeta(id, meta)
-      await actions.refreshSessions()
-      actions.setError(null)
+      await refreshSessions()
+      setError(null)
     } catch (err: unknown) {
-      actions.setError((err as Error).message || 'Failed to save session meta.')
+      setError((err as Error).message || 'Failed to save session meta.')
     }
   }
 
@@ -91,25 +101,25 @@ const HomePage = (): JSX.Element => {
       <SessionTree
         sessions={sessions}
         currentSessionId={currentSessionId}
-        selectSession={actions.selectSession}
-        setError={actions.setError}
+        selectSession={selectSession}
+        setError={setError}
       />
       <ChatHistory
         currentSessionId={currentSessionId}
         sessionDetail={sessionDetail}
         expertMode={expertMode}
-        setSessionDetail={actions.setSessionDetail}
-        setError={actions.setError}
-        refreshSessions={actions.refreshSessions}
+        setSessionDetail={setSessionDetail}
+        setError={setError}
+        refreshSessions={refreshSessions}
       />
       <SessionMeta
         key={currentSessionId}
         sessionDetail={sessionDetail}
         currentSessionId={currentSessionId}
         onMetaSave={handleMetaSave}
-        setSessionDetail={actions.setSessionDetail}
-        setError={actions.setError}
-        refreshSessions={actions.refreshSessions}
+        setSessionDetail={setSessionDetail}
+        setError={setError}
+        refreshSessions={refreshSessions}
       />
     </div>
   )

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 
 import { useStreamingFetch } from '@/hooks/useStreamingFetch'
 import { API_BASE_URL } from '@/lib/api/client'
@@ -16,6 +16,15 @@ type UseStreamingInstruction = {
   ) => void
 }
 
+type SessionDetailCache = {
+  [sessionId: string]: {
+    detail: SessionDetail
+    timestamp: number
+  }
+}
+
+const SESSION_DETAIL_CACHE_TTL = 30000 // 30秒
+
 export const useStreamingInstruction = (
   currentSessionId: string | null,
   setSessionDetail: (data: SessionDetail | null) => void,
@@ -25,6 +34,38 @@ export const useStreamingInstruction = (
     sessionId: string
   } | null>(null)
   // const [error, setError] = useState<string | null>(null) // Remove internal error state
+
+  // セッション詳細のキャッシュ（useRef を使用して再レンダー時の初期化を防ぐ）
+  const sessionDetailCacheRef = useRef<SessionDetailCache>({})
+
+  const getSessionDetailFromCache = useCallback(
+    (sessionId: string): SessionDetail | null => {
+      const cached = sessionDetailCacheRef.current[sessionId]
+      if (!cached) {
+        return null
+      }
+
+      const now = Date.now()
+      if (now - cached.timestamp > SESSION_DETAIL_CACHE_TTL) {
+        delete sessionDetailCacheRef.current[sessionId]
+
+        return null
+      }
+
+      return cached.detail
+    },
+    [],
+  )
+
+  const cacheSessionDetail = useCallback(
+    (sessionId: string, detail: SessionDetail): void => {
+      sessionDetailCacheRef.current[sessionId] = {
+        detail,
+        timestamp: Date.now(),
+      }
+    },
+    [],
+  )
 
   const memoizedStreamingOptions = useMemo((): RequestInit | undefined => {
     if (!streamingTrigger) return undefined
@@ -54,9 +95,22 @@ export const useStreamingInstruction = (
         // We will load the session detail here so the hook owns the post-stream refresh.
         if (finalText.length > 0 || err) {
           void (async (): Promise<void> => {
-            if (!currentSessionId) return
+            if (!currentSessionId) {
+              return
+            }
+
+            // キャッシュから取得を試みる
+            const cachedDetail = getSessionDetailFromCache(currentSessionId)
+            if (cachedDetail) {
+              setSessionDetail(cachedDetail)
+
+              return
+            }
+
+            // キャッシュにない場合は API から取得
             try {
               const data = await getSession(currentSessionId)
+              cacheSessionDetail(currentSessionId, data.session)
               setSessionDetail(data.session)
             } catch (err: unknown) {
               // Caller (useSessionManagement) manages error state; just log here.

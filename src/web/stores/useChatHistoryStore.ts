@@ -76,18 +76,20 @@ export const reducer = (state: State, action: Action): State => {
   }
 }
 
+export type Actions = {
+  setSessions: (sessions: SessionOverview[]) => void
+  setCurrentSessionId: (id: string | null) => void
+  setSessionDetail: (detail: SessionDetail | null) => void
+  selectSession: (id: string | null, detail: SessionDetail | null) => void
+  updateSettings: (partial: Partial<Settings>) => void
+  setError: (error: string | null) => void
+  refreshSessions: () => Promise<void>
+  reset: () => void
+}
+
 export type UseSessionStoreReturn = {
   state: State
-  actions: {
-    setSessions: (sessions: SessionOverview[]) => void
-    setCurrentSessionId: (id: string | null) => void
-    setSessionDetail: (detail: SessionDetail | null) => void
-    selectSession: (id: string | null, detail: SessionDetail | null) => void
-    updateSettings: (partial: Partial<Settings>) => void
-    setError: (error: string | null) => void
-    refreshSessions: () => Promise<void>
-    reset: () => void
-  }
+  actions: Actions
 }
 
 export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn => {

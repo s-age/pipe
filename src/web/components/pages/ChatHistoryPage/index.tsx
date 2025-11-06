@@ -9,7 +9,7 @@ import {
 } from '@/lib/api/session/editSessionMeta'
 import { getSession } from '@/lib/api/session/getSession'
 import { getSessions } from '@/lib/api/sessions/getSessions'
-import useSessionStore from '@/stores/useHomeStore'
+import useSessionStore from '@/stores/useChatHistoryStore'
 
 import { appContainer } from './style.css'
 

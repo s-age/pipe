@@ -1,10 +1,10 @@
-import React from 'react'
+import { JSX } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
-import HomePage from './components/pages/HomePage/index'
+import HomePage from './components/pages/ChatHistoryPage/index'
 import StartSessionPage from './components/pages/StartSessionPage/index'
 
-const App: React.FC = () => (
+const App = (): JSX.Element => (
   <Router>
     <Routes>
       <Route path="/" element={<HomePage />} />

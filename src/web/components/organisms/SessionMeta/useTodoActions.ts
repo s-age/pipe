@@ -12,6 +12,7 @@ export const useTodoActions = (
 ): {
   handleUpdateTodo: (sessionId: string, todos: Todo[]) => Promise<void>
   handleDeleteAllTodos: (sessionId: string) => Promise<void>
+  handleTodoCheckboxChange: (sessionId: string, todos: Todo[], index: number) => void
 } => {
   const handleUpdateTodo = useCallback(
     async (sessionId: string, todos: Todo[]): Promise<void> => {
@@ -43,5 +44,14 @@ export const useTodoActions = (
     [setSessionDetail, setError, refreshSessions],
   )
 
-  return { handleUpdateTodo, handleDeleteAllTodos }
+  const handleTodoCheckboxChange = useCallback(
+    (sessionId: string, todos: Todo[], index: number): void => {
+      const newTodos = [...todos]
+      newTodos[index].checked = !newTodos[index].checked
+      handleUpdateTodo(sessionId, newTodos)
+    },
+    [handleUpdateTodo],
+  )
+
+  return { handleUpdateTodo, handleDeleteAllTodos, handleTodoCheckboxChange }
 }

@@ -22,7 +22,7 @@ import {
   lockIconStyle,
   noItemsMessage,
 } from './style.css'
-import { useReferenceActions } from './useReferenceActions'
+import { useSessionReferencesListLogic } from './useSessionReferencesListLogic'
 import { colors } from '../../../styles/colors.css'
 
 type SessionReferencesListProps = {
@@ -41,43 +41,16 @@ export const SessionReferencesList = ({
   refreshSessions,
 }: SessionReferencesListProps): JSX.Element => {
   const {
-    handleUpdateReferencePersist,
-    handleUpdateReferenceTtl,
-    handleUpdateReferenceDisabled,
-  } = useReferenceActions(sessionDetail, setSessionDetail, setError, refreshSessions)
-
-  const handleReferenceCheckboxChange = (index: number): void => {
-    if (!currentSessionId || !sessionDetail) return
-    const newReferences = [...sessionDetail.references]
-    newReferences[index].disabled = !newReferences[index].disabled
-    handleUpdateReferenceDisabled(
-      currentSessionId,
-      index,
-      newReferences[index].disabled,
-    )
-  }
-
-  const handleReferencePersistToggle = (index: number): void => {
-    if (!currentSessionId || !sessionDetail) return
-    const newReferences = [...sessionDetail.references]
-    newReferences[index].persist = !newReferences[index].persist
-    handleUpdateReferencePersist(currentSessionId, index, newReferences[index].persist)
-  }
-
-  const handleReferenceTtlChange = (
-    index: number,
-    action: 'increment' | 'decrement',
-  ): void => {
-    if (!currentSessionId || !sessionDetail) return
-    const newReferences = [...sessionDetail.references]
-    const currentTtl = newReferences[index].ttl !== null ? newReferences[index].ttl : 3
-    const newTtl =
-      action === 'increment'
-        ? (currentTtl || 0) + 1
-        : Math.max(0, (currentTtl || 0) - 1)
-    newReferences[index].ttl = newTtl
-    handleUpdateReferenceTtl(currentSessionId, index, newTtl)
-  }
+    handleReferenceCheckboxChange,
+    handleReferencePersistToggle,
+    handleReferenceTtlChange,
+  } = useSessionReferencesListLogic({
+    sessionDetail,
+    currentSessionId,
+    setSessionDetail,
+    setError,
+    refreshSessions,
+  })
 
   if (!sessionDetail || sessionDetail.references.length === 0) {
     return (

@@ -29,6 +29,7 @@ import {
   todoCheckboxMargin,
 } from './style.css'
 import { useSessionHyperparameters } from './useSessionHyperparameters'
+import { useSessionMetaLogic } from './useSessionMetaLogic'
 
 type SessionMetaProps = {
   sessionDetail: SessionDetail | null
@@ -59,31 +60,20 @@ export const SessionMeta = ({
     handleTopKMouseUp,
   } = useSessionHyperparameters({ sessionDetail, currentSessionId, onMetaSave })
 
-  const { handleUpdateTodo, handleDeleteAllTodos } = useTodoActions(
+  const { handleDeleteAllTodos, handleTodoCheckboxChange } = useTodoActions(
     setSessionDetail,
     setError,
     refreshSessions,
   )
 
-  const handleSaveMeta = (): void => {
-    if (!currentSessionId || !sessionDetail) return
-    const meta: EditSessionMetaRequest = {
-      multi_step_reasoning_enabled: sessionDetail.multi_step_reasoning_enabled, // これはチェックボックスなので即時反映
-      hyperparameters: {
-        temperature: temperature,
-        top_p: topP,
-        top_k: topK,
-      },
-    }
-    onMetaSave(currentSessionId, meta)
-  }
-
-  const handleTodoCheckboxChange = (index: number): void => {
-    if (!currentSessionId || !sessionDetail) return
-    const newTodos = [...sessionDetail.todos]
-    newTodos[index].checked = !newTodos[index].checked
-    handleUpdateTodo(currentSessionId, newTodos)
-  }
+  const { handleSaveMeta, handleMultiStepReasoningChange } = useSessionMetaLogic({
+    sessionDetail,
+    currentSessionId,
+    onMetaSave,
+    temperature,
+    topP,
+    topK,
+  })
 
   if (!currentSessionId || !sessionDetail) {
     return (
@@ -117,11 +107,7 @@ export const SessionMeta = ({
               <Checkbox
                 name="multi_step_reasoning"
                 checked={sessionDetail.multi_step_reasoning_enabled}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onMetaSave(currentSessionId, {
-                    multi_step_reasoning_enabled: e.target.checked,
-                  })
-                }
+                onChange={handleMultiStepReasoningChange}
               />
               <strong>Multi-step Reasoning</strong>
             </Label>
@@ -196,7 +182,14 @@ export const SessionMeta = ({
                     <Label className={todoCheckboxLabel}>
                       <Checkbox
                         checked={todo.checked}
-                        onChange={() => handleTodoCheckboxChange(index)}
+                        onChange={() =>
+                          currentSessionId &&
+                          handleTodoCheckboxChange(
+                            currentSessionId,
+                            sessionDetail.todos,
+                            index,
+                          )
+                        }
                         className={todoCheckboxMargin}
                       />
                       <strong className={todoTitle}>{todo.title}</strong>

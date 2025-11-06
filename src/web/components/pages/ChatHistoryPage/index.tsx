@@ -3,33 +3,28 @@ import { JSX } from 'react'
 import ChatHistory from '@/components/organisms/ChatHistory'
 import { SessionMeta } from '@/components/organisms/SessionMeta'
 import SessionTree from '@/components/organisms/SessionTree'
-import useSessionStore from '@/stores/useChatHistoryStore'
 
 import { appContainer } from './style.css'
-import { useSessionDetailLoader } from './useSessionDetailLoader'
-import { useSessionLoader } from './useSessionLoader'
-import { useSessionMetaSaver } from './useSessionMetaSaver'
+import { useChatHistoryPageLogic } from './useChatHistoryPageLogic.ts'
 
 const ChatHistoryPage = (): JSX.Element => {
-  const { state, actions } = useSessionStore()
   const {
-    sessionTree: { sessions, currentSessionId },
+    errorMessage,
+    sessions,
+    currentSessionId,
     sessionDetail,
-    error,
-  } = state
+    expertMode,
+    selectSession,
+    setSessionDetail,
+    setError,
+    refreshSessions,
+    handleMetaSave,
+  } = useChatHistoryPageLogic()
 
-  const { selectSession, setSessionDetail, setError, refreshSessions } = actions
-
-  useSessionLoader({ state, actions })
-  useSessionDetailLoader({ state, actions })
-  const { handleMetaSave } = useSessionMetaSaver({ actions })
-
-  const expertMode = (state.settings.expertMode as boolean) ?? true
-
-  if (error) {
+  if (errorMessage) {
     return (
       <div className={appContainer} style={{ color: 'red' }}>
-        Error: {error}
+        Error: {errorMessage}
       </div>
     )
   }

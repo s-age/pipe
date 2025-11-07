@@ -9,6 +9,7 @@ import Turn from '@/components/molecules/Turn'
 import { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
 import { colors } from '@/styles/colors.css'
 
+import { useTurnActions } from './hooks/useTurnActions'
 import {
   turnsColumn,
   turnsHeader,
@@ -17,8 +18,7 @@ import {
   instructionTextarea,
   welcomeMessage,
 } from './style.css'
-import { useStreamingInstruction } from './useStreamingInstruction'
-import { useTurnActions } from './useTurnActions'
+import { useStreamingInstruction } from '../../pages/ChatHistoryPage/hooks/useStreamingInstruction'
 
 type ChatHistoryProps = {
   sessionDetail: SessionDetail | null

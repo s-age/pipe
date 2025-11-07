@@ -3,7 +3,7 @@ import { JSX } from 'react'
 import ErrorMessage from '@/components/atoms/ErrorMessage'
 import LoadingSpinner from '@/components/atoms/LoadingSpinner'
 import StartSessionForm from '@/components/organisms/StartSessionForm'
-import { useSessionCreation } from '@/hooks/useSessionCreation'
+import { useSessionCreation } from '@/components/pages/StartSessionPage/hooks/useSessionCreation'
 
 import { useStartSessionData } from './hooks/useStartSessionData'
 import { pageContainer } from './style.css'

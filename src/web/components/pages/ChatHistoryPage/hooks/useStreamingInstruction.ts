@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from 'react'
 
-import { useStreamingFetch } from '@/hooks/useStreamingFetch'
+import { useStreamingFetch } from '@/components/pages/ChatHistoryPage/hooks/useStreamingFetch'
 import { API_BASE_URL } from '@/lib/api/client'
 import { getSession, SessionDetail } from '@/lib/api/session/getSession'
 

@@ -4,8 +4,8 @@ import ChatHistory from '@/components/organisms/ChatHistory'
 import { SessionMeta } from '@/components/organisms/SessionMeta'
 import SessionTree from '@/components/organisms/SessionTree'
 
+import { useChatHistoryPageLogic } from './hooks/useChatHistoryPageLogic.ts'
 import { appContainer } from './style.css'
-import { useChatHistoryPageLogic } from './useChatHistoryPageLogic.ts'
 
 const ChatHistoryPage = (): JSX.Element => {
   const {

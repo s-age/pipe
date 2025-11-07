@@ -2,7 +2,6 @@ import useSessionStore, { State, Actions } from '@/stores/useChatHistoryStore'
 
 import { useSessionDetailLoader } from './useSessionDetailLoader'
 import { useSessionLoader } from './useSessionLoader'
-import { useSessionMetaSaver } from './useSessionMetaSaver'
 
 type UseChatHistoryPageLogicReturn = {
   errorMessage: string | null
@@ -14,7 +13,7 @@ type UseChatHistoryPageLogicReturn = {
   setSessionDetail: Actions['setSessionDetail']
   setError: Actions['setError']
   refreshSessions: Actions['refreshSessions']
-  handleMetaSave: ReturnType<typeof useSessionMetaSaver>['handleMetaSave']
+  actions: Actions
 }
 
 export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
@@ -29,7 +28,6 @@ export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
 
   useSessionLoader({ state, actions })
   useSessionDetailLoader({ state, actions })
-  const { handleMetaSave } = useSessionMetaSaver({ actions })
 
   const expertMode = (state.settings.expertMode as boolean) ?? true
 
@@ -44,7 +42,7 @@ export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
       setSessionDetail,
       setError,
       refreshSessions,
-      handleMetaSave,
+      actions,
     }
   }
 
@@ -58,6 +56,6 @@ export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
     setSessionDetail,
     setError,
     refreshSessions,
-    handleMetaSave,
+    actions,
   }
 }

@@ -1,4 +1,4 @@
-import React, { JSX } from 'react'
+import { JSX } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Checkbox from '@/components/atoms/Checkbox'
@@ -7,8 +7,12 @@ import Label from '@/components/atoms/Label'
 import { SessionBasicMetaForm } from '@/components/organisms/SessionBasicMetaForm'
 import { useTodoActions } from '@/components/organisms/SessionMeta/useTodoActions'
 import { SessionReferencesList } from '@/components/organisms/SessionReferencesList'
-import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
+import {
+  editSessionMeta,
+  EditSessionMetaRequest,
+} from '@/lib/api/session/editSessionMeta'
 import { SessionDetail } from '@/lib/api/session/getSession'
+import { Actions } from '@/stores/useChatHistoryStore'
 import { Todo } from '@/types/todo'
 
 import {
@@ -31,23 +35,51 @@ import {
 import { useSessionHyperparameters } from './useSessionHyperparameters'
 import { useSessionMetaLogic } from './useSessionMetaLogic'
 
+type UseSessionMetaSaverProps = {
+  actions: Actions
+}
+
+const useSessionMetaSaver = ({
+  actions,
+}: UseSessionMetaSaverProps): {
+  handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
+} => {
+  const { setError, refreshSessions } = actions
+
+  const handleMetaSave = async (
+    id: string,
+    meta: EditSessionMetaRequest,
+  ): Promise<void> => {
+    try {
+      await editSessionMeta(id, meta)
+      await refreshSessions()
+      setError(null)
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to save session meta.')
+    }
+  }
+
+  return { handleMetaSave }
+}
+
 type SessionMetaProps = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
   setSessionDetail: (data: SessionDetail | null) => void
   setError: (error: string | null) => void
   refreshSessions: () => Promise<void>
+  actions: Actions
 }
 
 export const SessionMeta = ({
   sessionDetail,
   currentSessionId,
-  onMetaSave,
   setSessionDetail,
   setError,
   refreshSessions,
+  actions,
 }: SessionMetaProps): JSX.Element => {
+  const { handleMetaSave } = useSessionMetaSaver({ actions })
   const {
     temperature,
     setTemperature,
@@ -58,7 +90,11 @@ export const SessionMeta = ({
     topK,
     setTopK,
     handleTopKMouseUp,
-  } = useSessionHyperparameters({ sessionDetail, currentSessionId, onMetaSave })
+  } = useSessionHyperparameters({
+    sessionDetail,
+    currentSessionId,
+    onMetaSave: handleMetaSave,
+  })
 
   const { handleDeleteAllTodos, handleTodoCheckboxChange } = useTodoActions(
     setSessionDetail,
@@ -69,7 +105,7 @@ export const SessionMeta = ({
   const { handleSaveMeta, handleMultiStepReasoningChange } = useSessionMetaLogic({
     sessionDetail,
     currentSessionId,
-    onMetaSave,
+    onMetaSave: handleMetaSave,
     temperature,
     topP,
     topK,
@@ -90,8 +126,6 @@ export const SessionMeta = ({
         <div className={sessionMetaView}>
           <SessionBasicMetaForm
             sessionDetail={sessionDetail}
-            currentSessionId={currentSessionId}
-            onMetaSave={onMetaSave}
           />
 
           <SessionReferencesList

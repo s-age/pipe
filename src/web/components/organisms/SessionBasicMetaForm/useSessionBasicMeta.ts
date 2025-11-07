@@ -1,18 +1,13 @@
 import { useState, useCallback } from 'react'
 
-import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseSessionBasicMetaProps = {
   sessionDetail: SessionDetail | null
-  currentSessionId: string | null
-  onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
 }
 
 export const useSessionBasicMeta = ({
   sessionDetail,
-  currentSessionId,
-  onMetaSave,
 }: UseSessionBasicMetaProps): {
   purpose: string
   setPurpose: React.Dispatch<React.SetStateAction<string>>
@@ -37,39 +32,24 @@ export const useSessionBasicMeta = ({
   const [artifacts, setArtifacts] = useState(sessionDetail?.artifacts?.join(', ') || '')
 
   const handlePurposeBlur = useCallback((): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, { purpose: purpose })
-  }, [currentSessionId, onMetaSave, purpose])
+    // 自動保存は行わない
+  }, [])
 
   const handleBackgroundBlur = useCallback((): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, { background: background })
-  }, [currentSessionId, onMetaSave, background])
+    // 自動保存は行わない
+  }, [])
 
   const handleRolesBlur = useCallback((): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, {
-      roles: roles
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    })
-  }, [currentSessionId, onMetaSave, roles])
+    // 自動保存は行わない
+  }, [])
 
   const handleProcedureBlur = useCallback((): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, { procedure: procedure })
-  }, [currentSessionId, onMetaSave, procedure])
+    // 自動保存は行わない
+  }, [])
 
   const handleArtifactsBlur = useCallback((): void => {
-    if (!currentSessionId) return
-    onMetaSave(currentSessionId, {
-      artifacts: artifacts
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    })
-  }, [currentSessionId, onMetaSave, artifacts])
+    // 自動保存は行わない
+  }, [])
 
   return {
     purpose,

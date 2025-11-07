@@ -3,7 +3,6 @@ import { JSX } from 'react'
 import InputText from '@/components/atoms/InputText'
 import Label from '@/components/atoms/Label'
 import TextArea from '@/components/atoms/TextArea'
-import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import { SessionDetail } from '@/lib/api/session/getSession'
 
 import { metaItem, metaItemLabel, inputFullWidth, textareaFullWidth } from './style.css'
@@ -11,14 +10,10 @@ import { useSessionBasicMeta } from './useSessionBasicMeta'
 
 type SessionBasicMetaFormProps = {
   sessionDetail: SessionDetail | null
-  currentSessionId: string | null
-  onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
 }
 
 export const SessionBasicMetaForm = ({
   sessionDetail,
-  currentSessionId,
-  onMetaSave,
 }: SessionBasicMetaFormProps): JSX.Element => {
   const {
     purpose,
@@ -36,7 +31,7 @@ export const SessionBasicMetaForm = ({
     artifacts,
     setArtifacts,
     handleArtifactsBlur,
-  } = useSessionBasicMeta({ sessionDetail, currentSessionId, onMetaSave })
+  } = useSessionBasicMeta({ sessionDetail })
 
   return (
     <>

@@ -18,7 +18,7 @@ const ChatHistoryPage = (): JSX.Element => {
     setSessionDetail,
     setError,
     refreshSessions,
-    handleMetaSave,
+    actions,
   } = useChatHistoryPageLogic()
 
   if (errorMessage) {
@@ -49,10 +49,10 @@ const ChatHistoryPage = (): JSX.Element => {
         key={currentSessionId}
         sessionDetail={sessionDetail}
         currentSessionId={currentSessionId}
-        onMetaSave={handleMetaSave}
         setSessionDetail={setSessionDetail}
         setError={setError}
         refreshSessions={refreshSessions}
+        actions={actions}
       />
     </div>
   )

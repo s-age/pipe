@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import { getSessionTree } from '@/lib/api/sessionTree/getSessions'
+import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 import { Actions, State } from '@/stores/useChatHistoryStore'
 
 type UseSessionLoaderProps = {

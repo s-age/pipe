@@ -1,22 +1,19 @@
 import { useState, useEffect } from 'react'
 
-import { getSessionTree, SessionOverview } from '@/lib/api/sessionTree/getSessions'
-import { getSettings, Settings } from '@/lib/api/settings/getSettings'
+import { getSessionTree, SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import { getSettings } from '@/lib/api/settings/getSettings'
+import { SessionOption } from '@/types/session'
+import { Settings } from '@/types/settings'
 
-type SessionOption = {
-  value: string
-  label: string
-}
-
-type UseSessionDetailResult = {
-  sessions: SessionOption[]
+type UseStartSessionDataResult = {
+  sessionTree: SessionOption[]
   settings: Settings | null
   loading: boolean
   error: string | null
 }
 
-export const useSessionDetail = (): UseSessionDetailResult => {
-  const [sessions, setSessions] = useState<SessionOption[]>([])
+export const useStartSessionData = (): UseStartSessionDataResult => {
+  const [sessionTree, setSessionTree] = useState<SessionOption[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
@@ -28,7 +25,7 @@ export const useSessionDetail = (): UseSessionDetailResult => {
           getSessionTree(),
           getSettings(),
         ])
-        setSessions(
+        setSessionTree(
           sessionsResponse.sessions.map(([, session]: [string, SessionOverview]) => ({
             value: session.session_id,
             label: session.purpose,
@@ -44,5 +41,5 @@ export const useSessionDetail = (): UseSessionDetailResult => {
     loadData()
   }, [])
 
-  return { sessions, settings, loading, error }
+  return { sessionTree, settings, loading, error }
 }

@@ -1,14 +1,14 @@
 import { useCallback, useReducer } from 'react'
 
 import { SessionDetail } from '@/lib/api/session/getSession'
-import { getSessionTree, SessionOverview } from '@/lib/api/sessionTree/getSessions'
+import { getSessionTree, SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 export type SessionTree = {
   sessions: SessionOverview[]
   currentSessionId: string | null
 }
 
-export type Settings = Record<string, unknown>
+import { Settings } from '../types/settings'
 
 export type State = {
   sessionTree: SessionTree
@@ -20,7 +20,7 @@ export type State = {
 export const initialState: State = {
   sessionTree: { sessions: [], currentSessionId: null },
   sessionDetail: null,
-  settings: {},
+  settings: { parameters: { temperature: null, top_p: null, top_k: null } },
   error: null,
 }
 

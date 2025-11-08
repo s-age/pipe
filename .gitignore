@@ -7,6 +7,7 @@ venv/
 ENV/
 .gemini/
 .coverage
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -51,3 +52,6 @@ playwright-report/
 test-results/
 
 /sessions/
+
+*storybook.log
+storybook-static

@@ -124,9 +124,7 @@ export const SessionMeta = ({
       <input type="hidden" id="current-session-id" value={currentSessionId} />
       <section className={sessionMetaSection}>
         <div className={sessionMetaView}>
-          <SessionBasicMetaForm
-            sessionDetail={sessionDetail}
-          />
+          <SessionBasicMetaForm sessionDetail={sessionDetail} />
 
           <SessionReferencesList
             sessionDetail={sessionDetail}

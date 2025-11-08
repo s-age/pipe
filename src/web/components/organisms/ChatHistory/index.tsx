@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState, JSX } from 'react'
-import { ChangeEvent, KeyboardEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { JSX } from 'react'
+import type { ChangeEvent, KeyboardEvent } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
 import TextArea from '@/components/atoms/TextArea'
 import Turn from '@/components/molecules/Turn'
-import { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
+import type { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
 import { colors } from '@/styles/colors.css'
 
 import { useTurnActions } from './hooks/useTurnActions'
@@ -20,7 +21,7 @@ import {
 } from './style.css'
 import { useStreamingInstruction } from '../../pages/ChatHistoryPage/hooks/useStreamingInstruction'
 
-type ChatHistoryProps = {
+type ChatHistoryProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   expertMode: boolean
@@ -36,7 +37,7 @@ const ChatHistory = ({
   setSessionDetail,
   setError,
   refreshSessions,
-}: ChatHistoryProps): JSX.Element => {
+}: ChatHistoryProperties): JSX.Element => {
   const {
     streamedText,
     isStreaming,
@@ -58,12 +59,12 @@ const ChatHistory = ({
     }
   }, [streamingError, setError, setStreamingTrigger])
 
-  const turnsListRef = useRef<HTMLDivElement>(null)
+  const turnsListReference = useRef<HTMLDivElement>(null)
   const [instructionText, setInstructionText] = useState<string>('')
 
   const scrollToBottom = (): void => {
-    if (turnsListRef.current) {
-      turnsListRef.current.scrollTop = turnsListRef.current.scrollHeight
+    if (turnsListReference.current) {
+      turnsListReference.current.scrollTop = turnsListReference.current.scrollHeight
     }
   }
 
@@ -77,9 +78,9 @@ const ChatHistory = ({
       await onSendInstruction(instructionText)
       await refreshSessions()
       setInstructionText('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send instruction')
-      console.error('Failed to send instruction:', err)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to send instruction')
+      console.error('Failed to send instruction:', error)
     }
   }
 
@@ -115,7 +116,7 @@ const ChatHistory = ({
         </Button>
       </div>
 
-      <section className={turnsListSection} ref={turnsListRef}>
+      <section className={turnsListSection} ref={turnsListReference}>
         {sessionDetail.turns.map((turn: TurnType, index: number) => (
           <Turn
             key={index}
@@ -151,12 +152,12 @@ const ChatHistory = ({
           className={instructionTextarea}
           placeholder="Enter your instruction here..."
           value={instructionText}
-          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
-            setInstructionText(e.target.value)
+          onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
+            setInstructionText(event.target.value)
           }}
-          onKeyPress={(e: KeyboardEvent<HTMLTextAreaElement>) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
+          onKeyPress={(event: KeyboardEvent<HTMLTextAreaElement>) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault()
               handleSend()
             }
           }}

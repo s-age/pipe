@@ -1,11 +1,11 @@
-import { InputHTMLAttributes, JSX } from 'react'
+import type { InputHTMLAttributes, JSX } from 'react'
 
 import { inputStyle } from './style.css'
 
-type InputTextProps = {} & InputHTMLAttributes<HTMLInputElement>
+type InputTextProperties = {} & InputHTMLAttributes<HTMLInputElement>
 
-const InputText: (props: InputTextProps) => JSX.Element = (props) => (
-  <input type="text" className={inputStyle} {...props} />
+const InputText: (properties: InputTextProperties) => JSX.Element = (properties) => (
+  <input type="text" className={inputStyle} {...properties} />
 )
 
 export default InputText

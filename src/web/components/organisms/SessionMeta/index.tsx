@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import type { JSX } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Checkbox from '@/components/atoms/Checkbox'
@@ -7,13 +7,11 @@ import Label from '@/components/atoms/Label'
 import { SessionBasicMetaForm } from '@/components/organisms/SessionBasicMetaForm'
 import { useTodoActions } from '@/components/organisms/SessionMeta/useTodoActions'
 import { SessionReferencesList } from '@/components/organisms/SessionReferencesList'
-import {
-  editSessionMeta,
-  EditSessionMetaRequest,
-} from '@/lib/api/session/editSessionMeta'
-import { SessionDetail } from '@/lib/api/session/getSession'
-import { Actions } from '@/stores/useChatHistoryStore'
-import { Todo } from '@/types/todo'
+import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
+import { editSessionMeta } from '@/lib/api/session/editSessionMeta'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { Actions } from '@/stores/useChatHistoryStore'
+import type { Todo } from '@/types/todo'
 
 import {
   metaColumn,
@@ -35,13 +33,13 @@ import {
 import { useSessionHyperparameters } from './useSessionHyperparameters'
 import { useSessionMetaLogic } from './useSessionMetaLogic'
 
-type UseSessionMetaSaverProps = {
+type UseSessionMetaSaverProperties = {
   actions: Actions
 }
 
 const useSessionMetaSaver = ({
   actions,
-}: UseSessionMetaSaverProps): {
+}: UseSessionMetaSaverProperties): {
   handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
 } => {
   const { setError, refreshSessions } = actions
@@ -54,15 +52,15 @@ const useSessionMetaSaver = ({
       await editSessionMeta(id, meta)
       await refreshSessions()
       setError(null)
-    } catch (err: unknown) {
-      setError((err as Error).message || 'Failed to save session meta.')
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Failed to save session meta.')
     }
   }
 
   return { handleMetaSave }
 }
 
-type SessionMetaProps = {
+type SessionMetaProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   setSessionDetail: (data: SessionDetail | null) => void
@@ -78,7 +76,7 @@ export const SessionMeta = ({
   setError,
   refreshSessions,
   actions,
-}: SessionMetaProps): JSX.Element => {
+}: SessionMetaProperties): JSX.Element => {
   const { handleMetaSave } = useSessionMetaSaver({ actions })
   const {
     temperature,
@@ -156,8 +154,8 @@ export const SessionMeta = ({
                   max="2"
                   step="0.1"
                   value={temperature}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setTemperature(parseFloat(e.target.value))
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                    setTemperature(parseFloat(event.target.value))
                   }
                   onMouseUp={handleTemperatureMouseUp}
                 />
@@ -173,8 +171,8 @@ export const SessionMeta = ({
                   max="1"
                   step="0.1"
                   value={topP}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setTopP(parseFloat(e.target.value))
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                    setTopP(parseFloat(event.target.value))
                   }
                   onMouseUp={handleTopPMouseUp}
                 />
@@ -190,8 +188,8 @@ export const SessionMeta = ({
                   max="50"
                   step="1"
                   value={topK}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setTopK(parseInt(e.target.value, 10))
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                    setTopK(parseInt(event.target.value, 10))
                   }
                   onMouseUp={handleTopKMouseUp}
                 />

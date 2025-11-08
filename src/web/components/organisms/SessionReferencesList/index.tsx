@@ -1,11 +1,11 @@
 import clsx from 'clsx'
-import { JSX } from 'react'
+import type { JSX } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Checkbox from '@/components/atoms/Checkbox'
 import Label from '@/components/atoms/Label'
-import { SessionDetail } from '@/lib/api/session/getSession'
-import { Reference } from '@/types/reference'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { Reference } from '@/types/reference'
 
 import {
   metaItem,
@@ -25,7 +25,7 @@ import {
 import { useSessionReferencesListLogic } from './useSessionReferencesListLogic'
 import { colors } from '../../../styles/colors.css'
 
-type SessionReferencesListProps = {
+type SessionReferencesListProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   setSessionDetail: (data: SessionDetail | null) => void
@@ -39,7 +39,7 @@ export const SessionReferencesList = ({
   setSessionDetail,
   setError,
   refreshSessions,
-}: SessionReferencesListProps): JSX.Element => {
+}: SessionReferencesListProperties): JSX.Element => {
   const {
     handleReferenceCheckboxChange,
     handleReferencePersistToggle,

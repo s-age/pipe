@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { JSX } from 'react'
-import { useForm, useWatch, SubmitHandler } from 'react-hook-form'
+import type { JSX } from 'react'
+import type { SubmitHandler } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import * as z from 'zod'
 
 import Button from '@/components/atoms/Button'
@@ -9,8 +10,8 @@ import CheckboxField from '@/components/molecules/CheckboxField'
 import InputField from '@/components/molecules/InputField'
 import SelectField from '@/components/molecules/SelectField'
 import TextareaField from '@/components/molecules/TextareaField'
-import { StartSessionRequest } from '@/lib/api/session/startSession'
-import { Settings } from '@/lib/api/settings/getSettings'
+import type { StartSessionRequest } from '@/lib/api/session/startSession'
+import type { Settings } from '@/lib/api/settings/getSettings'
 
 import {
   formContainer,
@@ -25,9 +26,9 @@ const formSchema = z.object({
   background: z.string().min(1, 'Background is required'),
   roles: z
     .string()
-    .transform((val) =>
-      val
-        ? val
+    .transform((value) =>
+      value
+        ? value
             .split(',')
             .map((s) => s.trim())
             .filter(Boolean)
@@ -37,14 +38,14 @@ const formSchema = z.object({
     .default(null),
   parent: z
     .string()
-    .transform((val) => (val === '' ? null : val))
+    .transform((value) => (value === '' ? null : value))
     .nullable()
     .default(null),
   references: z
     .string()
-    .transform((val) =>
-      val
-        ? val
+    .transform((value) =>
+      value
+        ? value
             .split(',')
             .map((s) => s.trim())
             .filter(Boolean)
@@ -55,9 +56,9 @@ const formSchema = z.object({
     .default(null),
   artifacts: z
     .string()
-    .transform((val) =>
-      val
-        ? val
+    .transform((value) =>
+      value
+        ? value
             .split(',')
             .map((s) => s.trim())
             .filter(Boolean)
@@ -67,7 +68,7 @@ const formSchema = z.object({
     .default(null),
   procedure: z
     .string()
-    .transform((val) => (val === '' ? null : val))
+    .transform((value) => (value === '' ? null : value))
     .nullable()
     .default(null),
   instruction: z.string().min(1, 'First Instruction is required'),
@@ -84,13 +85,13 @@ const formSchema = z.object({
 
 type StartSessionFormInputs = z.infer<typeof formSchema>
 
-type StartSessionFormProps = {
+type StartSessionFormProperties = {
   onSubmit: SubmitHandler<StartSessionFormInputs>
   sessions: { value: string; label: string }[]
   defaultSettings: Settings | null
 }
 
-const StartSessionForm: (props: StartSessionFormProps) => JSX.Element = ({
+const StartSessionForm: (properties: StartSessionFormProperties) => JSX.Element = ({
   onSubmit,
   sessions,
   defaultSettings,

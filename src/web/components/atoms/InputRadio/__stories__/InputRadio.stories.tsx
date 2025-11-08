@@ -1,6 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import InputRadio from '../index'
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { JSX } from 'react'
+
 import { Form } from '@/components/organisms/Form'
+
+import InputRadio from '../index'
 
 const meta = {
   title: 'Atoms/InputRadio',
@@ -21,28 +24,27 @@ export const Default: Story = {
 }
 
 export const WithRHF: Story = {
-  render: () => {
-    const FormExample = () => {
-      return (
-        <Form onSubmit={(data) => console.log('submit', data)}>
-          <InputRadio name="option" value="A" label="A" />
-          <InputRadio name="option" value="B" label="B" />
-          <button type="submit">Submit</button>
-        </Form>
-      )
-    }
+  render: (): JSX.Element => {
+    const FormExample = (): JSX.Element => (
+      <Form onSubmit={(data) => console.log('submit', data)}>
+        <InputRadio name="option" value="A" label="A" />
+        <InputRadio name="option" value="B" label="B" />
+        <button type="submit">Submit</button>
+      </Form>
+    )
+
     return <FormExample />
   },
 }
 
 export const WithoutForm: Story = {
-  render: () => {
-    const PlainExample = () => {
-      const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        const fd = new FormData(e.currentTarget)
+  render: (): JSX.Element => {
+    const PlainExample = (): JSX.Element => {
+      const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+        event.preventDefault()
+        const fd = new FormData(event.currentTarget)
         const data = Object.fromEntries(fd.entries())
-        // eslint-disable-next-line no-console
+
         console.log('submit plain', data)
       }
 
@@ -54,6 +56,7 @@ export const WithoutForm: Story = {
         </form>
       )
     }
+
     return <PlainExample />
   },
 }

@@ -1,17 +1,17 @@
-import React, { InputHTMLAttributes, useMemo, JSX, useId } from 'react'
-
-import * as styles from './style.css'
-import {
-  FormMethods,
-  useFormContext as useRHFFormContext,
-} from '@/components/organisms/Form'
+import type { InputHTMLAttributes, JSX } from 'react'
+import React, { useMemo, useId } from 'react'
 import type {
   FieldValues,
   UseFormRegister,
   UseFormRegisterReturn,
 } from 'react-hook-form'
 
-type InputRadioProps = {
+import type { FormMethods } from '@/components/organisms/Form'
+import { useOptionalFormContext } from '@/components/organisms/Form'
+
+import * as styles from './style.css'
+
+type InputRadioProperties = {
   label?: React.ReactNode
   register?: UseFormRegister<FieldValues>
   name?: string
@@ -23,34 +23,32 @@ const InputRadio = ({
   label,
   id,
   ...rest
-}: InputRadioProps): JSX.Element => {
-  let provider: FormMethods<FieldValues> | undefined
-  try {
-    provider = useRHFFormContext()
-  } catch (error) {
-    provider = undefined
-  }
+}: InputRadioProperties): JSX.Element => {
+  const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined
 
-  const registerFn: UseFormRegister<FieldValues> | undefined =
+  const registerFunction: UseFormRegister<FieldValues> | undefined =
     register ?? provider?.register
 
-  const registerProps = useMemo<Partial<UseFormRegisterReturn>>(() => {
-    if (typeof registerFn === 'function' && name) {
+  const registerProperties = useMemo<Partial<UseFormRegisterReturn>>(() => {
+    if (typeof registerFunction === 'function' && name) {
       try {
-        return registerFn(name) as UseFormRegisterReturn
-      } catch (error) {
+        return registerFunction(name) as UseFormRegisterReturn
+      } catch {
         // register may throw in some edge cases; fall back
         return {}
       }
     }
+
     return {}
-  }, [registerFn, name])
+  }, [registerFunction, name])
 
   const reactId = useId()
-  const valueProp = rest.value as string | number | undefined
+  const valueProperty = rest.value as string | number | undefined
   const inputId =
     id ??
-    (typeof name === 'string' && valueProp ? `${name}-${String(valueProp)}` : reactId)
+    (typeof name === 'string' && valueProperty
+      ? `${name}-${String(valueProperty)}`
+      : reactId)
 
   return (
     <label className={styles.container} htmlFor={inputId}>
@@ -58,7 +56,7 @@ const InputRadio = ({
         id={inputId}
         type="radio"
         className={styles.hiddenInput}
-        {...registerProps}
+        {...registerProperties}
         name={name}
         {...rest}
       />

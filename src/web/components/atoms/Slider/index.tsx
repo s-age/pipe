@@ -1,14 +1,16 @@
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import type { InputHTMLAttributes } from 'react'
+import React, { useCallback, useId, useMemo, useState } from 'react'
+import type { InputHTMLAttributes, JSX } from 'react'
 import type {
   FieldValues,
   UseFormRegister,
   UseFormRegisterReturn,
 } from 'react-hook-form'
-import { useFormContext } from '@/components/organisms/Form'
+
+import { useOptionalFormContext } from '@/components/organisms/Form'
+
 import * as styles from './style.css'
 
-export type SliderProps = Omit<
+export type SliderProperties = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'onChange' | 'type'
 > & {
@@ -22,7 +24,7 @@ export type SliderProps = Omit<
   name?: string
 }
 
-export default function Slider(props: SliderProps) {
+const Slider = (properties: SliderProperties): JSX.Element => {
   const {
     min = 0,
     max = 100,
@@ -32,72 +34,64 @@ export default function Slider(props: SliderProps) {
     onChange,
     register,
     name,
-    id: idProp,
+    id: idProperty,
     ...rest
-  } = props
+  } = properties
 
   const fallbackId = useId()
-  const id = idProp ?? (name ? `${name}-slider` : `slider-${fallbackId}`)
+  const id = idProperty ?? (name ? `${name}-slider` : `slider-${fallbackId}`)
 
-  // try to obtain register from provider (may throw if not inside provider)
-  let providerRegister: UseFormRegister<FieldValues> | undefined
-  try {
-    // useFormContext throws if no provider, so guard in try/catch
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    providerRegister = useFormContext()?.register
-  } catch (err) {
-    providerRegister = undefined
-  }
+  // obtain register from optional provider (safe; doesn't throw)
+  const providerRegister: UseFormRegister<FieldValues> | undefined =
+    useOptionalFormContext()?.register
 
   // memoize register props if available
-  const registerProps = useMemo<UseFormRegisterReturn | undefined>(() => {
+  const registerProperties = useMemo<UseFormRegisterReturn | undefined>(() => {
     if (!name) return undefined
     if (register) return register(name)
     if (providerRegister) return providerRegister(name)
+
     return undefined
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [register, providerRegister, name])
 
   // internal state for uncontrolled usage
   const [internalValue, setInternalValue] = useState<number>(() => {
     if (typeof controlledValue === 'number') return controlledValue
     if (typeof defaultValue === 'number') return defaultValue
+
     return min
   })
+  const internalValueReference = React.useRef<number>(internalValue)
 
-  // keep internal in sync with controlled prop
-  useEffect(() => {
-    if (typeof controlledValue === 'number') setInternalValue(controlledValue)
-  }, [controlledValue])
+  // We intentionally avoid synchronously calling setState inside an effect.
+  // visibleValue derives directly from `controlledValue` when present, so
+  // there's no need to update internal state from an effect. We keep the
+  // internalValueRef for imperative updates from handleChange when uncontrolled.
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const v = Number(e.target.value)
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const v = Number(event.target.value)
       // call react-hook-form onChange if present (it expects the native event)
       try {
-        registerProps?.onChange?.(e as unknown as Event)
-      } catch (error) {
+        registerProperties?.onChange?.(event as unknown as Event)
+      } catch {
         // ignore
       }
       // update internal state if uncontrolled
-      if (typeof controlledValue !== 'number') setInternalValue(v)
+      if (typeof controlledValue !== 'number') {
+        setInternalValue(v)
+        internalValueReference.current = v
+      }
       onChange?.(v)
     },
-    [onChange, registerProps, controlledValue],
+    [onChange, registerProperties, controlledValue],
   )
 
-  // ref forwarding to satisfy register
-  const localRef = useRef<HTMLInputElement | null>(null)
-  useEffect(() => {
-    if (!registerProps || !localRef.current) return
-    try {
-      if (typeof registerProps.ref === 'function') registerProps.ref(localRef.current)
-      else if (registerProps.ref && 'current' in registerProps.ref)
-        (registerProps.ref as any).current = localRef.current
-    } catch (err) {
-      // ignore
-    }
-  }, [registerProps])
+  // We avoid mutating values returned from hooks. Instead, pass the registration
+  // ref directly to the native input. React Hook Form supports either a callback
+  // ref or a ref object returned from register(), so forwarding `registerProps.ref`
+  // as the input ref is sufficient. When no registerProps are present we leave
+  // the ref undefined.
 
   const visibleValue =
     typeof controlledValue === 'number' ? controlledValue : internalValue
@@ -148,7 +142,10 @@ export default function Slider(props: SliderProps) {
         <input
           {...rest}
           id={id}
-          ref={localRef}
+          ref={
+            (registerProperties as React.RefAttributes<HTMLInputElement>)?.ref ??
+            undefined
+          }
           className={styles.hiddenRange}
           type="range"
           min={min}
@@ -162,3 +159,4 @@ export default function Slider(props: SliderProps) {
     </div>
   )
 }
+export default Slider

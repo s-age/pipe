@@ -1,10 +1,12 @@
-import { JSX, useCallback } from 'react'
+import type { JSX } from 'react'
+import { useCallback } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
-import { getSession, SessionDetail } from '@/lib/api/session/getSession'
-import { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import { getSession } from '@/lib/api/session/getSession'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 import {
   sessionListColumn,
@@ -17,7 +19,7 @@ import {
 } from './style.css'
 import { useSessionTreeHandlers } from './useSessionTreeHandlers'
 
-type SessionItemProps = {
+type SessionItemProperties = {
   session: SessionOverview
   currentSessionId: string
   selectSession: (id: string | null, detail: SessionDetail | null) => void
@@ -29,7 +31,7 @@ const SessionItem = ({
   currentSessionId,
   selectSession,
   setError,
-}: SessionItemProps): JSX.Element => {
+}: SessionItemProperties): JSX.Element => {
   const onClick = useCallback(
     async (event: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
       event.preventDefault()
@@ -65,7 +67,7 @@ const SessionItem = ({
   )
 }
 
-type SessionTreeProps = {
+type SessionTreeProperties = {
   sessions: SessionOverview[]
   currentSessionId: string | null
   selectSession: (id: string | null, detail: SessionDetail | null) => void
@@ -77,7 +79,7 @@ const SessionTree = ({
   currentSessionId,
   selectSession,
   setError,
-}: SessionTreeProps): JSX.Element => {
+}: SessionTreeProperties): JSX.Element => {
   const { handleNewChatClick } = useSessionTreeHandlers()
 
   return (

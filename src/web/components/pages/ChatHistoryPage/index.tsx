@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import type { JSX } from 'react'
 
 import ChatHistory from '@/components/organisms/ChatHistory'
 import { SessionMeta } from '@/components/organisms/SessionMeta'

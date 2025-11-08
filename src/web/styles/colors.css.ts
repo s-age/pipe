@@ -11,4 +11,5 @@ export const colors = {
   accent: '#4aa6ac',
   accentHover: '#3c858a',
   purpleAccent: '#96297b',
+  warning: '#f59e0b',
 }

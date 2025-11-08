@@ -1,12 +1,13 @@
-import { JSX } from 'react'
-import { useController, UseControllerProps, FieldValues } from 'react-hook-form'
+import type { JSX } from 'react'
+import type { UseControllerProps, FieldValues } from 'react-hook-form'
+import { useController } from 'react-hook-form'
 
 import Label from '@/components/atoms/Label'
 import TextArea from '@/components/atoms/TextArea'
 
 import { errorMessageStyle } from './style.css'
 
-type TextareaFieldProps<TFieldValues extends FieldValues = FieldValues> = {
+type TextareaFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
   label: string
   id: string
   placeholder?: string
@@ -20,12 +21,12 @@ const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
   placeholder,
   readOnly,
   required,
-  ...props
-}: TextareaFieldProps<TFieldValues>): JSX.Element => {
+  ...properties
+}: TextareaFieldProperties<TFieldValues>): JSX.Element => {
   const {
     field,
     fieldState: { error },
-  } = useController(props)
+  } = useController(properties)
 
   return (
     <div>

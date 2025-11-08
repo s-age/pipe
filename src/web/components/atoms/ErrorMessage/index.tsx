@@ -1,12 +1,12 @@
-import { JSX } from 'react'
+import type { JSX } from 'react'
 
 import { errorMessageStyle } from './style.css'
 
-type ErrorMessageProps = {
+type ErrorMessageProperties = {
   message: string
 }
 
-const ErrorMessage = ({ message }: ErrorMessageProps): JSX.Element => (
+const ErrorMessage = ({ message }: ErrorMessageProperties): JSX.Element => (
   <p className={errorMessageStyle}>{message}</p>
 )
 

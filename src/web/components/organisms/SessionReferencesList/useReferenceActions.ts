@@ -3,12 +3,13 @@ import { useCallback } from 'react'
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
 import { editReferences } from '@/lib/api/session/editReferences'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
-import { getSession, SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import { getSession } from '@/lib/api/session/getSession'
 
 export const useReferenceActions = (
   sessionDetail: SessionDetail | null,
   setSessionDetail: (data: SessionDetail | null) => void,
-  setError: (err: string | null) => void,
+  setError: (error: string | null) => void,
   refreshSessions?: () => Promise<void>,
 ): {
   handleUpdateReferencePersist: (
@@ -34,8 +35,10 @@ export const useReferenceActions = (
         const data = await getSession(sessionId)
         setSessionDetail(data.session)
         if (refreshSessions) await refreshSessions()
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to update reference persist state.')
+      } catch (error: unknown) {
+        setError(
+          (error as Error).message || 'Failed to update reference persist state.',
+        )
       }
     },
     [setSessionDetail, setError, refreshSessions],
@@ -48,8 +51,8 @@ export const useReferenceActions = (
         const data = await getSession(sessionId)
         setSessionDetail(data.session)
         if (refreshSessions) await refreshSessions()
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to update reference TTL.')
+      } catch (error: unknown) {
+        setError((error as Error).message || 'Failed to update reference TTL.')
       }
     },
     [setSessionDetail, setError, refreshSessions],
@@ -65,8 +68,10 @@ export const useReferenceActions = (
         const data = await getSession(sessionId)
         setSessionDetail(data.session)
         if (refreshSessions) await refreshSessions()
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to update reference disabled state.')
+      } catch (error: unknown) {
+        setError(
+          (error as Error).message || 'Failed to update reference disabled state.',
+        )
       }
     },
     [sessionDetail, setSessionDetail, setError, refreshSessions],

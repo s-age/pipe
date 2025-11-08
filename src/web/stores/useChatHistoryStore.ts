@@ -1,14 +1,15 @@
 import { useCallback, useReducer } from 'react'
 
-import { SessionDetail } from '@/lib/api/session/getSession'
-import { getSessionTree, SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 
 export type SessionTree = {
   sessions: SessionOverview[]
   currentSessionId: string | null
 }
 
-import { Settings } from '../types/settings'
+import type { Settings } from '../types/settings'
 
 export type State = {
   sessionTree: SessionTree
@@ -134,8 +135,8 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
         })),
       })
       setError(null)
-    } catch (err: unknown) {
-      setError((err as Error).message || 'Failed to refresh sessions.')
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Failed to refresh sessions.')
     }
   }, [setError])
 

@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import type { JSX } from 'react'
 
 import ErrorMessage from '@/components/atoms/ErrorMessage'
 import LoadingSpinner from '@/components/atoms/LoadingSpinner'

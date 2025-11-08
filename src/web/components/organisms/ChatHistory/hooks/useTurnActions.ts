@@ -5,7 +5,7 @@ import { deleteTurn } from '@/lib/api/session/deleteTurn'
 import { forkSession } from '@/lib/api/session/forkSession'
 
 export const useTurnActions = (
-  setError: (err: string | null) => void,
+  setError: (error: string | null) => void,
   refreshSessions: () => Promise<void>,
 ): {
   handleDeleteTurn: (sessionId: string, turnIndex: number) => Promise<void>
@@ -18,8 +18,8 @@ export const useTurnActions = (
       try {
         await deleteTurn(sessionId, turnIndex)
         await refreshSessions()
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to delete turn.')
+      } catch (error: unknown) {
+        setError((error as Error).message || 'Failed to delete turn.')
       }
     },
     [setError, refreshSessions],
@@ -41,8 +41,8 @@ export const useTurnActions = (
         } else {
           throw new Error('Failed to fork session.')
         }
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to fork session.')
+      } catch (error: unknown) {
+        setError((error as Error).message || 'Failed to fork session.')
       }
     },
     [setError],
@@ -58,8 +58,8 @@ export const useTurnActions = (
         // setCurrentSessionId(null)
         // setSessionDetail(null)
         window.history.pushState({}, '', '/')
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to delete session.')
+      } catch (error: unknown) {
+        setError((error as Error).message || 'Failed to delete session.')
       }
     },
     [setError],

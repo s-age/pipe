@@ -2,7 +2,8 @@ import { useState, useMemo, useCallback, useRef } from 'react'
 
 import { useStreamingFetch } from '@/components/pages/ChatHistoryPage/hooks/useStreamingFetch'
 import { API_BASE_URL } from '@/lib/api/client'
-import { getSession, SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import { getSession } from '@/lib/api/session/getSession'
 
 type UseStreamingInstruction = {
   streamedText: string
@@ -36,18 +37,18 @@ export const useStreamingInstruction = (
   // const [error, setError] = useState<string | null>(null) // Remove internal error state
 
   // セッション詳細のキャッシュ（useRef を使用して再レンダー時の初期化を防ぐ）
-  const sessionDetailCacheRef = useRef<SessionDetailCache>({})
+  const sessionDetailCacheReference = useRef<SessionDetailCache>({})
 
   const getSessionDetailFromCache = useCallback(
     (sessionId: string): SessionDetail | null => {
-      const cached = sessionDetailCacheRef.current[sessionId]
+      const cached = sessionDetailCacheReference.current[sessionId]
       if (!cached) {
         return null
       }
 
       const now = Date.now()
       if (now - cached.timestamp > SESSION_DETAIL_CACHE_TTL) {
-        delete sessionDetailCacheRef.current[sessionId]
+        delete sessionDetailCacheReference.current[sessionId]
 
         return null
       }
@@ -59,7 +60,7 @@ export const useStreamingInstruction = (
 
   const cacheSessionDetail = useCallback(
     (sessionId: string, detail: SessionDetail): void => {
-      sessionDetailCacheRef.current[sessionId] = {
+      sessionDetailCacheReference.current[sessionId] = {
         detail,
         timestamp: Date.now(),
       }
@@ -90,10 +91,10 @@ export const useStreamingInstruction = (
       : null,
     memoizedStreamingOptions,
     {
-      onComplete: (err, finalText) => {
+      onComplete: (error, finalText) => {
         // Called when streaming finished (either successfully or with error).
         // We will load the session detail here so the hook owns the post-stream refresh.
-        if (finalText.length > 0 || err) {
+        if (finalText.length > 0 || error) {
           void (async (): Promise<void> => {
             if (!currentSessionId) {
               return
@@ -112,9 +113,9 @@ export const useStreamingInstruction = (
               const data = await getSession(currentSessionId)
               cacheSessionDetail(currentSessionId, data.session)
               setSessionDetail(data.session)
-            } catch (err: unknown) {
+            } catch (error: unknown) {
               // Caller (useSessionManagement) manages error state; just log here.
-              console.error('Failed to load session data after streaming:', err)
+              console.error('Failed to load session data after streaming:', error)
             }
           })()
         }

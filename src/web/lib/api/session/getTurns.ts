@@ -1,5 +1,5 @@
 import { client } from '../client'
-import { Turn } from './getSession'
+import type { Turn } from './getSession'
 
 export const getTurns = async (
   sessionId: string,

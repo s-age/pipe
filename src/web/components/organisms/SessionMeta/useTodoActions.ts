@@ -2,12 +2,13 @@ import { useCallback } from 'react'
 
 import { deleteTodos } from '@/lib/api/session/deleteTodos'
 import { editTodos } from '@/lib/api/session/editTodos'
-import { getSession, SessionDetail } from '@/lib/api/session/getSession'
-import { Todo } from '@/types/todo'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import { getSession } from '@/lib/api/session/getSession'
+import type { Todo } from '@/types/todo'
 
 export const useTodoActions = (
   setSessionDetail: (data: SessionDetail | null) => void,
-  setError: (err: string | null) => void,
+  setError: (error: string | null) => void,
   refreshSessions?: () => Promise<void>,
 ): {
   handleUpdateTodo: (sessionId: string, todos: Todo[]) => Promise<void>
@@ -19,8 +20,8 @@ export const useTodoActions = (
       try {
         await editTodos(sessionId, todos)
         if (refreshSessions) await refreshSessions()
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to update todos.')
+      } catch (error: unknown) {
+        setError((error as Error).message || 'Failed to update todos.')
       }
     },
     [setError, refreshSessions],
@@ -37,8 +38,8 @@ export const useTodoActions = (
         const data = await getSession(sessionId)
         setSessionDetail(data.session)
         if (refreshSessions) await refreshSessions()
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to delete all todos.')
+      } catch (error: unknown) {
+        setError((error as Error).message || 'Failed to delete all todos.')
       }
     },
     [setSessionDetail, setError, refreshSessions],

@@ -1,17 +1,17 @@
-import React, { InputHTMLAttributes, useMemo, JSX, useId } from 'react'
-
-import * as styles from './style.css'
-import {
-  FormMethods,
-  useFormContext as useRHFFormContext,
-} from '@/components/organisms/Form'
+import React, { useMemo, useId } from 'react'
+import type { JSX, InputHTMLAttributes } from 'react'
 import type {
   FieldValues,
   UseFormRegister,
   UseFormRegisterReturn,
 } from 'react-hook-form'
 
-type InputCheckboxProps = {
+import type { FormMethods } from '@/components/organisms/Form'
+import { useOptionalFormContext } from '@/components/organisms/Form'
+
+import * as styles from './style.css'
+
+type InputCheckboxProperties = {
   label?: React.ReactNode
   register?: UseFormRegister<FieldValues>
   name?: string
@@ -23,35 +23,32 @@ const InputCheckbox = ({
   label,
   id,
   ...rest
-}: InputCheckboxProps): JSX.Element => {
-  // Try to obtain register from provider if present. useRHFFormContext throws when no provider,
-  // so call it inside try/catch to avoid runtime error and fall back to undefined.
-  let provider: FormMethods<FieldValues> | undefined
-  try {
-    provider = useRHFFormContext()
-  } catch (error) {
-    provider = undefined
-  }
+}: InputCheckboxProperties): JSX.Element => {
+  // Use optional form context hook which returns undefined when no provider is present.
+  const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined
 
-  const registerFn: UseFormRegister<FieldValues> | undefined =
+  const registerFunction: UseFormRegister<FieldValues> | undefined =
     register ?? provider?.register
 
-  const registerProps = useMemo<Partial<UseFormRegisterReturn>>(() => {
-    if (typeof registerFn === 'function' && name) {
+  const registerProperties = useMemo<Partial<UseFormRegisterReturn>>(() => {
+    if (typeof registerFunction === 'function' && name) {
       try {
-        return registerFn(name) as UseFormRegisterReturn
-      } catch (error) {
+        return registerFunction(name) as UseFormRegisterReturn
+      } catch {
         return {}
       }
     }
+
     return {}
-  }, [registerFn, name])
+  }, [registerFunction, name])
 
   const reactId = useId()
-  const valueProp = rest.value as string | number | undefined
+  const valueProperty = rest.value as string | number | undefined
   const inputId =
     id ??
-    (typeof name === 'string' && valueProp ? `${name}-${String(valueProp)}` : reactId)
+    (typeof name === 'string' && valueProperty
+      ? `${name}-${String(valueProperty)}`
+      : reactId)
 
   return (
     <label className={styles.container} htmlFor={inputId}>
@@ -59,7 +56,7 @@ const InputCheckbox = ({
         id={inputId}
         type="checkbox"
         className={styles.hiddenInput}
-        {...registerProps}
+        {...registerProperties}
         name={name}
         {...rest}
       />

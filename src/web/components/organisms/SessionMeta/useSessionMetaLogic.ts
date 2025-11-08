@@ -1,9 +1,9 @@
-import React from 'react'
+import type React from 'react'
 
-import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
-import { SessionDetail } from '@/lib/api/session/getSession'
+import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 
-type UseSessionMetaLogicProps = {
+type UseSessionMetaLogicProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
@@ -19,9 +19,9 @@ export const useSessionMetaLogic = ({
   temperature,
   topP,
   topK,
-}: UseSessionMetaLogicProps): {
+}: UseSessionMetaLogicProperties): {
   handleSaveMeta: () => void
-  handleMultiStepReasoningChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  handleMultiStepReasoningChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 } => {
   const handleSaveMeta = (): void => {
     if (!currentSessionId || !sessionDetail) return
@@ -37,11 +37,11 @@ export const useSessionMetaLogic = ({
   }
 
   const handleMultiStepReasoningChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>,
   ): void => {
     if (!currentSessionId || !sessionDetail) return
     onMetaSave(currentSessionId, {
-      multi_step_reasoning_enabled: e.target.checked,
+      multi_step_reasoning_enabled: event.target.checked,
     })
   }
 

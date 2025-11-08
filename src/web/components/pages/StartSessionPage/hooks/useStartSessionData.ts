@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 
-import { getSessionTree, SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 import { getSettings } from '@/lib/api/settings/getSettings'
-import { SessionOption } from '@/types/session'
-import { Settings } from '@/types/settings'
+import type { SessionOption } from '@/types/session'
+import type { Settings } from '@/types/settings'
 
 type UseStartSessionDataResult = {
   sessionTree: SessionOption[]
@@ -32,8 +33,8 @@ export const useStartSessionData = (): UseStartSessionDataResult => {
           })),
         )
         setSettings(settingsData)
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to load initial data.')
+      } catch (error_: unknown) {
+        setError((error_ as Error).message || 'Failed to load initial data.')
       } finally {
         setLoading(false)
       }

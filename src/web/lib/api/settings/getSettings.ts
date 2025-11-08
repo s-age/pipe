@@ -1,4 +1,4 @@
-import { Hyperparameters } from '@/types/hyperparameters'
+import type { Hyperparameters } from '@/types/hyperparameters'
 
 import { client } from '../client'
 

@@ -1,16 +1,14 @@
-import {
-  editSessionMeta,
-  EditSessionMetaRequest,
-} from '@/lib/api/session/editSessionMeta'
-import { Actions } from '@/stores/useChatHistoryStore'
+import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
+import { editSessionMeta } from '@/lib/api/session/editSessionMeta'
+import type { Actions } from '@/stores/useChatHistoryStore'
 
-type UseSessionMetaSaverProps = {
+type UseSessionMetaSaverProperties = {
   actions: Actions
 }
 
 export const useSessionMetaSaver = ({
   actions,
-}: UseSessionMetaSaverProps): {
+}: UseSessionMetaSaverProperties): {
   handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
 } => {
   const { setError, refreshSessions } = actions
@@ -23,8 +21,8 @@ export const useSessionMetaSaver = ({
       await editSessionMeta(id, meta)
       await refreshSessions()
       setError(null)
-    } catch (err: unknown) {
-      setError((err as Error).message || 'Failed to save session meta.')
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Failed to save session meta.')
     }
   }
 

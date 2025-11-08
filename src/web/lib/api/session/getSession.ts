@@ -1,6 +1,6 @@
-import { Hyperparameters } from '@/types/hyperparameters'
-import { Reference } from '@/types/reference'
-import { Todo } from '@/types/todo'
+import type { Hyperparameters } from '@/types/hyperparameters'
+import type { Reference } from '@/types/reference'
+import type { Todo } from '@/types/todo'
 
 import { client } from '../client'
 

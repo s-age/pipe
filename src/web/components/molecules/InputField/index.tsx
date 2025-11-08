@@ -1,12 +1,13 @@
-import { JSX } from 'react'
-import { useController, UseControllerProps, FieldValues } from 'react-hook-form'
+import type { JSX } from 'react'
+import type { UseControllerProps, FieldValues } from 'react-hook-form'
+import { useController } from 'react-hook-form'
 
 import InputText from '@/components/atoms/InputText'
 import Label from '@/components/atoms/Label'
 
 import { errorMessageStyle, inputFieldStyle } from './style.css'
 
-type InputFieldProps<TFieldValues extends FieldValues = FieldValues> = {
+type InputFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
   label: string
   id: string
   type?: string
@@ -26,12 +27,12 @@ const InputField = <TFieldValues extends FieldValues = FieldValues>({
   min,
   max,
   step,
-  ...props
-}: InputFieldProps<TFieldValues>): JSX.Element => {
+  ...properties
+}: InputFieldProperties<TFieldValues>): JSX.Element => {
   const {
     field,
     fieldState: { error },
-  } = useController(props)
+  } = useController(properties)
 
   return (
     <div>

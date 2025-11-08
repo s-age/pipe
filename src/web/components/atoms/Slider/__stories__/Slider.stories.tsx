@@ -1,7 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { JSX } from 'react'
 import React, { useState } from 'react'
-import Slider from '../index'
+
 import { Form } from '@/components/organisms/Form'
+
+import Slider from '../index'
 
 const meta = {
   title: 'Atoms/Slider',
@@ -13,43 +16,44 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  render: () => {
-    const Example = () => {
+  render: (): JSX.Element => {
+    const Example = (): JSX.Element => {
       const [v, setV] = useState(40)
+
       return (
         <div style={{ width: 360 }}>
-          <Slider value={v} onChange={(val) => setV(val)} min={0} max={100} />
+          <Slider value={v} onChange={(value) => setV(value)} min={0} max={100} />
         </div>
       )
     }
+
     return <Example />
   },
 }
 
 export const WithRHF: Story = {
-  render: () => {
-    const Example = () => {
-      return (
-        <Form onSubmit={(data) => console.log('submit', data)}>
-          <div style={{ width: 360 }}>
-            <Slider name="volume" defaultValue={25} min={0} max={100} />
-          </div>
-          <button type="submit">Submit</button>
-        </Form>
-      )
-    }
+  render: (): JSX.Element => {
+    const Example = (): JSX.Element => (
+      <Form onSubmit={(data) => console.log('submit', data)}>
+        <div style={{ width: 360 }}>
+          <Slider name="volume" defaultValue={25} min={0} max={100} />
+        </div>
+        <button type="submit">Submit</button>
+      </Form>
+    )
+
     return <Example />
   },
 }
 
 export const WithoutForm: Story = {
-  render: () => {
-    const Example = () => {
-      const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        const fd = new FormData(e.currentTarget)
+  render: (): JSX.Element => {
+    const Example = (): JSX.Element => {
+      const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+        event.preventDefault()
+        const fd = new FormData(event.currentTarget)
         const data = Object.fromEntries(fd.entries())
-        // eslint-disable-next-line no-console
+
         console.log('submit plain', data)
       }
 
@@ -62,6 +66,7 @@ export const WithoutForm: Story = {
         </form>
       )
     }
+
     return <Example />
   },
 }

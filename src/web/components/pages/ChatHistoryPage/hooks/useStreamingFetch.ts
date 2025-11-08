@@ -23,7 +23,7 @@ export const useStreamingFetch = (
   const [streamedText, setStreamedText] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-  const controllerRef = useRef<AbortController | null>(null)
+  const controllerReference = useRef<AbortController | null>(null)
 
   // optionsが安定していることを保証するために useMemo を使用
   const stableOptions = useMemo((): StreamingFetchOptions => options, [options])
@@ -31,19 +31,19 @@ export const useStreamingFetch = (
   useEffect((): (() => void) => {
     if (!url) {
       setStreamedText('')
-      if (controllerRef.current) {
-        controllerRef.current.abort()
+      if (controllerReference.current) {
+        controllerReference.current.abort()
       }
 
       return (): void => {}
     }
 
     // 新しいリクエストが開始される前に古いコントローラをクリーンアップ
-    if (controllerRef.current) {
-      controllerRef.current.abort()
+    if (controllerReference.current) {
+      controllerReference.current.abort()
     }
-    controllerRef.current = new AbortController()
-    const signal = controllerRef.current.signal
+    controllerReference.current = new AbortController()
+    const signal = controllerReference.current.signal
 
     const fetchData = async (): Promise<void> => {
       setIsLoading(true)
@@ -75,27 +75,30 @@ export const useStreamingFetch = (
 
           if (chunk) {
             accum += chunk
-            setStreamedText((prev) => prev + chunk)
+            setStreamedText((previous) => previous + chunk)
             // notify optional chunk callback
             try {
               callbacks?.onChunk?.(chunk)
-            } catch (e) {
+            } catch (callbackError) {
               // swallow callback errors to not break the stream
-              console.error('[useStreamingFetch] onChunk callback error', e)
+              console.error('[useStreamingFetch] onChunk callback error', callbackError)
             }
           }
         }
-      } catch (err: unknown) {
-        console.error('[ERROR] Failed to fetch stream:', err)
-        localError = (err as Error).message || 'Failed to fetch stream.'
+      } catch (error_: unknown) {
+        console.error('[ERROR] Failed to fetch stream:', error_)
+        localError = (error_ as Error).message || 'Failed to fetch stream.'
         setError(localError)
       } finally {
         setIsLoading(false)
         // notify completion (pass error message or final streamed text)
         try {
           callbacks?.onComplete?.(localError, accum)
-        } catch (e) {
-          console.error('[useStreamingFetch] onComplete callback error', e)
+        } catch (onCompleteError) {
+          console.error(
+            '[useStreamingFetch] onComplete callback error',
+            onCompleteError,
+          )
         }
       }
     }
@@ -103,8 +106,8 @@ export const useStreamingFetch = (
     fetchData()
 
     return (): void => {
-      if (controllerRef.current) {
-        controllerRef.current.abort()
+      if (controllerReference.current) {
+        controllerReference.current.abort()
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,11 +1,11 @@
-import { InputHTMLAttributes, JSX } from 'react'
+import type { InputHTMLAttributes, JSX } from 'react'
 
 import { checkboxStyle } from './style.css'
 
-type CheckboxProps = {} & InputHTMLAttributes<HTMLInputElement>
+type CheckboxProperties = {} & InputHTMLAttributes<HTMLInputElement>
 
-const Checkbox: (props: CheckboxProps) => JSX.Element = (props) => (
-  <input type="checkbox" className={checkboxStyle} {...props} />
+const Checkbox: (properties: CheckboxProperties) => JSX.Element = (properties) => (
+  <input type="checkbox" className={checkboxStyle} {...properties} />
 )
 
 export default Checkbox

@@ -1,4 +1,4 @@
-import { Hyperparameters } from './hyperparameters'
+import type { Hyperparameters } from './hyperparameters'
 
 export type Settings = {
   parameters: Hyperparameters

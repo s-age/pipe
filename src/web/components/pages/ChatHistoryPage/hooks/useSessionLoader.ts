@@ -1,14 +1,17 @@
 import { useEffect } from 'react'
 
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
-import { Actions, State } from '@/stores/useChatHistoryStore'
+import type { Actions, State } from '@/stores/useChatHistoryStore'
 
-type UseSessionLoaderProps = {
+type UseSessionLoaderProperties = {
   state: State
   actions: Actions
 }
 
-export const useSessionLoader = ({ state, actions }: UseSessionLoaderProps): void => {
+export const useSessionLoader = ({
+  state,
+  actions,
+}: UseSessionLoaderProperties): void => {
   const {
     sessionTree: { currentSessionId },
   } = state
@@ -30,8 +33,8 @@ export const useSessionLoader = ({ state, actions }: UseSessionLoaderProps): voi
           setCurrentSessionId(id)
         }
         setError(null)
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Failed to load sessions.')
+      } catch (error: unknown) {
+        setError((error as Error).message || 'Failed to load sessions.')
       }
     }
     loadSessions()

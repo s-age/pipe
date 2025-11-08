@@ -1,8 +1,8 @@
-import { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useReferenceActions } from './useReferenceActions'
 
-type UseSessionReferencesListLogicProps = {
+type UseSessionReferencesListLogicProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   setSessionDetail: (data: SessionDetail | null) => void
@@ -16,7 +16,7 @@ export const useSessionReferencesListLogic = ({
   setSessionDetail,
   setError,
   refreshSessions,
-}: UseSessionReferencesListLogicProps): {
+}: UseSessionReferencesListLogicProperties): {
   handleReferenceCheckboxChange: (index: number) => void
   handleReferencePersistToggle: (index: number) => void
   handleReferenceTtlChange: (index: number, action: 'increment' | 'decrement') => void

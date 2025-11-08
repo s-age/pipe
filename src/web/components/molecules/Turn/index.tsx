@@ -1,9 +1,10 @@
 import { marked } from 'marked'
-import { useState, JSX } from 'react'
+import type { JSX } from 'react'
+import { useState } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Tooltip from '@/components/atoms/Tooltip'
-import { Turn } from '@/lib/api/session/getSession'
+import type { Turn } from '@/lib/api/session/getSession'
 
 import {
   turnHeader,
@@ -31,7 +32,7 @@ import {
   editButtonIcon,
 } from './style.css'
 
-type TurnProps = {
+type TurnProperties = {
   turn: Turn
   index: number
   sessionId: string
@@ -49,7 +50,7 @@ const Component = ({
   onDeleteTurn,
   onForkSession,
   isStreaming = false,
-}: TurnProps): JSX.Element => {
+}: TurnProperties): JSX.Element => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState<string>(
     turn.content || turn.instruction || '',
@@ -76,8 +77,8 @@ const Component = ({
     try {
       await navigator.clipboard.writeText(editedContent)
       alert('Copied!')
-    } catch (err) {
-      console.error('Failed to copy: ', err)
+    } catch (error) {
+      console.error('Failed to copy: ', error)
       alert('Failed to copy')
     }
   }
@@ -98,7 +99,7 @@ const Component = ({
           <textarea
             className={editTextArea}
             value={editedContent}
-            onChange={(e) => setEditedContent(e.target.value)}
+            onChange={(event) => setEditedContent(event.target.value)}
           />
           <div className={editButtonContainer}>
             <Button kind="primary" size="default" onClick={handleSaveEdit}>

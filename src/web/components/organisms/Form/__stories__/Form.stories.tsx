@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { Meta, StoryObj } from '@storybook/react'
-import React from 'react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { JSX } from 'react'
 import { z } from 'zod'
 
 import { Form, useFormContext } from '../index'
@@ -25,7 +25,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-const MyFormContent = (): React.JSX.Element => {
+const MyFormContent = (): JSX.Element => {
   const {
     register,
     formState: { errors },
@@ -49,8 +49,8 @@ const MyFormContent = (): React.JSX.Element => {
 }
 
 export const Default: Story = {
-  render: (args) => (
-    <Form {...args}>
+  render: (arguments_): JSX.Element => (
+    <Form {...arguments_}>
       <MyFormContent />
     </Form>
   ),

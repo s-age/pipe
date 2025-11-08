@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
 
-import { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
-import { SessionDetail } from '@/lib/api/session/getSession'
+import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 
-type UseSessionHyperparametersProps = {
+type UseSessionHyperparametersProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   onMetaSave: (sessionId: string, meta: EditSessionMetaRequest) => void
@@ -13,7 +13,7 @@ export const useSessionHyperparameters = ({
   sessionDetail,
   currentSessionId,
   onMetaSave,
-}: UseSessionHyperparametersProps): {
+}: UseSessionHyperparametersProperties): {
   temperature: number
   setTemperature: React.Dispatch<React.SetStateAction<number>>
   handleTemperatureMouseUp: () => void

@@ -1,21 +1,23 @@
-import React, { createContext, useContext, ReactNode } from 'react'
-import { useForm, UseFormProps, UseFormReturn, FieldValues } from 'react-hook-form'
+import type { ReactNode } from 'react'
+import React, { createContext, useContext } from 'react'
+import type { UseFormProps, UseFormReturn, FieldValues } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 
 export type FormMethods<TFieldValues extends FieldValues = FieldValues> =
   UseFormReturn<TFieldValues>
 
 const FormContext = createContext<FormMethods<FieldValues> | undefined>(undefined)
 
-export type FormProviderProps<TFieldValues extends FieldValues = FieldValues> =
+export type FormProviderProperties<TFieldValues extends FieldValues = FieldValues> =
   UseFormProps<TFieldValues> & {
     children: ReactNode
   }
 
 export const FormProvider = <TFieldValues extends FieldValues = FieldValues>({
   children,
-  ...props
-}: FormProviderProps<TFieldValues>): React.JSX.Element => {
-  const methods = useForm<TFieldValues>(props)
+  ...properties
+}: FormProviderProperties<TFieldValues>): React.JSX.Element => {
+  const methods = useForm<TFieldValues>(properties as UseFormProps<TFieldValues>)
 
   return (
     <FormContext.Provider value={methods as FormMethods<FieldValues>}>
@@ -35,7 +37,13 @@ export const useFormContext = <
   return context as FormMethods<TFieldValues>
 }
 
-export type FormProps<TFieldValues extends FieldValues = FieldValues> =
+// A safe variant that returns undefined when no provider is present.
+export const useOptionalFormContext = <
+  TFieldValues extends FieldValues = FieldValues,
+>(): FormMethods<TFieldValues> | undefined =>
+  useContext(FormContext) as FormMethods<TFieldValues> | undefined
+
+export type FormProperties<TFieldValues extends FieldValues = FieldValues> =
   UseFormProps<TFieldValues> & {
     children: ReactNode
     onSubmit: (data: TFieldValues) => void
@@ -44,12 +52,12 @@ export type FormProps<TFieldValues extends FieldValues = FieldValues> =
 export const Form = <TFieldValues extends FieldValues = FieldValues>({
   children,
   onSubmit,
-  ...props
-}: FormProps<TFieldValues>): React.JSX.Element => {
+  ...properties
+}: FormProperties<TFieldValues>): React.JSX.Element => {
   // Create form methods here and provide them to descendants.
   // Calling `useFormContext` here would fail because the Provider
   // wrapping the `<form>` would not yet be in scope for this hook.
-  const methods = useForm<TFieldValues>(props as UseFormProps<TFieldValues>)
+  const methods = useForm<TFieldValues>(properties as UseFormProps<TFieldValues>)
 
   return (
     <FormContext.Provider value={methods as FormMethods<FieldValues>}>

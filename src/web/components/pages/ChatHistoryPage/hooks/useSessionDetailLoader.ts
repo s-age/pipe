@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 
 import { getSession } from '@/lib/api/session/getSession'
-import { Actions, State } from '@/stores/useChatHistoryStore'
+import type { Actions, State } from '@/stores/useChatHistoryStore'
 
-type UseSessionDetailLoaderProps = {
+type UseSessionDetailLoaderProperties = {
   state: State
   actions: Actions
 }
@@ -11,7 +11,7 @@ type UseSessionDetailLoaderProps = {
 export const useSessionDetailLoader = ({
   state,
   actions,
-}: UseSessionDetailLoaderProps): void => {
+}: UseSessionDetailLoaderProperties): void => {
   const {
     sessionTree: { currentSessionId },
   } = state
@@ -24,8 +24,8 @@ export const useSessionDetailLoader = ({
           const data = await getSession(currentSessionId)
           setSessionDetail(data.session)
           setError(null)
-        } catch (err: unknown) {
-          setError((err as Error).message || 'Failed to load session data.')
+        } catch (error: unknown) {
+          setError((error as Error).message || 'Failed to load session data.')
         }
       } else {
         setSessionDetail(null)

@@ -1,14 +1,14 @@
 import { useState, useCallback } from 'react'
 
-import { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 
-type UseSessionBasicMetaProps = {
+type UseSessionBasicMetaProperties = {
   sessionDetail: SessionDetail | null
 }
 
 export const useSessionBasicMeta = ({
   sessionDetail,
-}: UseSessionBasicMetaProps): {
+}: UseSessionBasicMetaProperties): {
   purpose: string
   setPurpose: React.Dispatch<React.SetStateAction<string>>
   handlePurposeBlur: () => void

@@ -1,5 +1,6 @@
-import { JSX } from 'react'
-import { useController, UseControllerProps, FieldValues } from 'react-hook-form'
+import type { JSX } from 'react'
+import type { UseControllerProps, FieldValues } from 'react-hook-form'
+import { useController } from 'react-hook-form'
 
 import Label from '@/components/atoms/Label'
 import Select from '@/components/atoms/Select'
@@ -11,7 +12,7 @@ type SelectOption = {
   label: string
 }
 
-type SelectFieldProps<TFieldValues extends FieldValues = FieldValues> = {
+type SelectFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
   label: string
   id: string
   options: SelectOption[]
@@ -21,12 +22,12 @@ const SelectField = <TFieldValues extends FieldValues = FieldValues>({
   label,
   id,
   options,
-  ...props
-}: SelectFieldProps<TFieldValues>): JSX.Element => {
+  ...properties
+}: SelectFieldProperties<TFieldValues>): JSX.Element => {
   const {
     field,
     fieldState: { error },
-  } = useController(props)
+  } = useController(properties)
 
   return (
     <div>

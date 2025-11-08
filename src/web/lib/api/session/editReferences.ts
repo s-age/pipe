@@ -1,4 +1,4 @@
-import { Reference } from '@/types/reference'
+import type { Reference } from '@/types/reference'
 
 import { client } from '../client'
 

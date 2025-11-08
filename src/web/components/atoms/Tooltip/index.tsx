@@ -1,13 +1,14 @@
-import React, { useState, JSX } from 'react'
+import type { JSX } from 'react'
+import React, { useState } from 'react'
 
 import { tooltipContainer, tooltipText } from './style.css'
 
-type TooltipProps = {
+type TooltipProperties = {
   content: string
   children: React.ReactNode
 }
 
-const Tooltip: ({ content, children }: TooltipProps) => JSX.Element = ({
+const Tooltip: ({ content, children }: TooltipProperties) => JSX.Element = ({
   content,
   children,
 }) => {

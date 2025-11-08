@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 
-import { startSession, StartSessionRequest } from '@/lib/api/session/startSession'
+import type { StartSessionRequest } from '@/lib/api/session/startSession'
+import { startSession } from '@/lib/api/session/startSession'
 
 type UseSessionCreationResult = {
   handleSubmit: (data: StartSessionRequest) => Promise<void>
@@ -19,8 +20,10 @@ export const useSessionCreation = (): UseSessionCreationResult => {
       } else {
         setError('Failed to create session: No session ID returned.')
       }
-    } catch (err: unknown) {
-      setError((err as Error).message || 'An error occurred during session creation.')
+    } catch (error_: unknown) {
+      setError(
+        (error_ as Error).message || 'An error occurred during session creation.',
+      )
     }
   }, [])
 

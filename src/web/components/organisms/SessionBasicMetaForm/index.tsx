@@ -1,20 +1,20 @@
-import { JSX } from 'react'
+import type { JSX } from 'react'
 
 import InputText from '@/components/atoms/InputText'
 import Label from '@/components/atoms/Label'
 import TextArea from '@/components/atoms/TextArea'
-import { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { metaItem, metaItemLabel, inputFullWidth, textareaFullWidth } from './style.css'
 import { useSessionBasicMeta } from './useSessionBasicMeta'
 
-type SessionBasicMetaFormProps = {
+type SessionBasicMetaFormProperties = {
   sessionDetail: SessionDetail | null
 }
 
 export const SessionBasicMetaForm = ({
   sessionDetail,
-}: SessionBasicMetaFormProps): JSX.Element => {
+}: SessionBasicMetaFormProperties): JSX.Element => {
   const {
     purpose,
     setPurpose,
@@ -42,8 +42,8 @@ export const SessionBasicMetaForm = ({
         <InputText
           id="purpose"
           value={purpose}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setPurpose(e.target.value)
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            setPurpose(event.target.value)
           }
           onBlur={handlePurposeBlur}
           className={inputFullWidth}
@@ -56,8 +56,8 @@ export const SessionBasicMetaForm = ({
         <TextArea
           id="background"
           value={background}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-            setBackground(e.target.value)
+          onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
+            setBackground(event.target.value)
           }
           onBlur={handleBackgroundBlur}
           className={textareaFullWidth}
@@ -70,8 +70,8 @@ export const SessionBasicMetaForm = ({
         <InputText
           id="roles"
           value={roles}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setRoles(e.target.value)
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            setRoles(event.target.value)
           }
           onBlur={handleRolesBlur}
           className={inputFullWidth}
@@ -84,8 +84,8 @@ export const SessionBasicMetaForm = ({
         <InputText
           id="procedure"
           value={procedure}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setProcedure(e.target.value)
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            setProcedure(event.target.value)
           }
           onBlur={handleProcedureBlur}
           className={inputFullWidth}
@@ -98,8 +98,8 @@ export const SessionBasicMetaForm = ({
         <InputText
           id="artifacts"
           value={artifacts}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setArtifacts(e.target.value)
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            setArtifacts(event.target.value)
           }
           onBlur={handleArtifactsBlur}
           className={inputFullWidth}

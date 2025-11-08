@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 import { z } from 'zod'
@@ -9,6 +8,7 @@ import InputRadio from '@/components/atoms/InputRadio'
 import InputText from '@/components/atoms/InputText'
 import Slider from '@/components/atoms/Slider'
 import TextArea from '@/components/atoms/TextArea'
+import Fieldset from '@/components/molecules/Fieldset'
 import { Form, useFormContext } from '@/components/organisms/Form'
 
 const meta = {
@@ -32,38 +32,78 @@ export const Manual: Story = {
 
         return (
           <div style={{ display: 'grid', gap: 8 }}>
-            <InputText
-              name="firstName"
-              placeholder="First name"
-              register={methods.register}
-            />
+            <Fieldset legend="Name">
+              {() => (
+                <InputText
+                  name="firstName"
+                  placeholder="First name"
+                  register={methods.register}
+                />
+              )}
+            </Fieldset>
 
-            <div>
-              <div style={{ marginBottom: 6 }}>Choose one:</div>
-              <InputRadio name="choice" value="a" register={methods.register}>
-                Option A
-              </InputRadio>
-              <InputRadio name="choice" value="b" register={methods.register}>
-                Option B
-              </InputRadio>
-            </div>
+            <Fieldset legend="Choose one" hint="Pick a single option">
+              {(ids) => (
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <InputRadio
+                    name="choice"
+                    value="a"
+                    register={methods.register}
+                    aria-describedby={[ids.hintId, ids.errorId]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    Option A
+                  </InputRadio>
+                  <InputRadio
+                    name="choice"
+                    value="b"
+                    register={methods.register}
+                    aria-describedby={[ids.hintId, ids.errorId]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    Option B
+                  </InputRadio>
+                </div>
+              )}
+            </Fieldset>
 
-            <div>
-              <InputCheckbox name="agree" register={methods.register} />{' '}
-              <label>Agree to terms</label>
-            </div>
+            <Fieldset legend="Agreement">
+              {(ids) => (
+                <InputCheckbox
+                  name="agree"
+                  register={methods.register}
+                  aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+                >
+                  Agree to terms
+                </InputCheckbox>
+              )}
+            </Fieldset>
 
-            <TextArea
-              name="notes"
-              rows={4}
-              placeholder="Notes"
-              register={methods.register}
-            />
+            <Fieldset legend="Notes">
+              {(ids) => (
+                <TextArea
+                  name="notes"
+                  rows={4}
+                  placeholder="Notes"
+                  register={methods.register}
+                  aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+                />
+              )}
+            </Fieldset>
 
-            <div>
-              <label style={{ display: 'block', marginBottom: 6 }}>Rating</label>
-              <Slider name="rating" min={0} max={100} register={methods.register} />
-            </div>
+            <Fieldset legend="Rating" hint="0 = low, 100 = high">
+              {(ids) => (
+                <Slider
+                  name="rating"
+                  min={0}
+                  max={100}
+                  register={methods.register}
+                  aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+                />
+              )}
+            </Fieldset>
 
             <div style={{ display: 'flex', gap: 8 }}>
               <Button type="submit">Submit</Button>
@@ -106,11 +146,7 @@ export const Manual: Story = {
             other APIs.
           </p>
 
-          <Form
-            onSubmit={handleSubmit}
-            resolver={zodResolver(schema)}
-            defaultValues={defaultValues}
-          >
+          <Form onSubmit={handleSubmit} schema={schema} defaultValues={defaultValues}>
             <InnerForm />
           </Form>
         </div>

@@ -3,6 +3,10 @@ import type { JSX } from 'react'
 import { useState } from 'react'
 
 import Button from '@/components/atoms/Button'
+import IconCopy from '@/components/atoms/IconCopy'
+import IconDelete from '@/components/atoms/IconDelete'
+import IconEdit from '@/components/atoms/IconEdit'
+import IconFork from '@/components/atoms/IconFork'
 import Tooltip from '@/components/atoms/Tooltip'
 import type { Turn } from '@/lib/api/session/getSession'
 
@@ -25,7 +29,6 @@ import {
   userTaskAligned,
   otherTurnAligned,
   turnContentBase,
-  materialIcons,
   forkButtonIcon,
   deleteButtonIcon,
   copyButtonIcon,
@@ -37,8 +40,8 @@ type TurnProperties = {
   index: number
   sessionId: string
   expertMode: boolean
-  onDeleteTurn: (sessionId: string, turnIndex: number) => void
-  onForkSession: (sessionId: string, forkIndex: number) => void
+  onDeleteTurn: (sessionId: string, turnIndex: number) => void | Promise<void>
+  onForkSession: (sessionId: string, forkIndex: number) => void | Promise<void>
   isStreaming?: boolean // 新しく追加
 }
 
@@ -194,24 +197,20 @@ const Component = ({
                   size="xsmall"
                   onClick={() => onForkSession(sessionId, index)}
                 >
-                  <span className={`${materialIcons} ${forkButtonIcon}`}>
-                    call_split
-                  </span>
+                  <IconFork size={24} className={forkButtonIcon} />
                 </Button>
               </Tooltip>
             )}
             <Tooltip content="Copy Turn">
               <Button kind="ghost" size="xsmall" onClick={handleCopy}>
-                <span className={`${materialIcons} ${copyButtonIcon}`}>
-                  content_copy
-                </span>
+                <IconCopy size={24} className={copyButtonIcon} />
               </Button>
             </Tooltip>
             {expertMode &&
               (turn.type === 'user_task' || turn.type === 'model_response') && (
                 <Tooltip content="Edit Turn">
                   <Button kind="ghost" size="xsmall" onClick={() => setIsEditing(true)}>
-                    <span className={`${materialIcons} ${editButtonIcon}`}>edit</span>
+                    <IconEdit size={24} className={editButtonIcon} />
                   </Button>
                 </Tooltip>
               )}
@@ -221,7 +220,7 @@ const Component = ({
                 size="xsmall"
                 onClick={() => onDeleteTurn(sessionId, index)}
               >
-                <span className={`${materialIcons} ${deleteButtonIcon}`}>delete</span>
+                <IconDelete size={24} className={deleteButtonIcon} />
               </Button>
             </Tooltip>
           </div>

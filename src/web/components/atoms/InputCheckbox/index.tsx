@@ -38,8 +38,13 @@ const InputCheckbox = ({
         name={name}
         {...rest}
       />
-      <span className={styles.control} aria-hidden>
-        <svg className={styles.svg} viewBox="0 0 24 24" aria-hidden focusable="false">
+      <span className={styles.control} aria-hidden={true}>
+        <svg
+          className={styles.svg}
+          viewBox="0 0 24 24"
+          aria-hidden={true}
+          focusable="false"
+        >
           <path className={styles.check} d="M20 6L9 17l-5-5" fill="none" />
         </svg>
       </span>

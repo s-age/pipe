@@ -16,7 +16,7 @@ export const LoadingOverlay = (): JSX.Element | null => {
       aria-live="polite"
       aria-label="Loading"
     >
-      <div className={styles.spinner} aria-hidden />
+      <div className={styles.spinner} aria-hidden={true} />
       <span className={styles.visuallyHidden}>Loading</span>
     </div>
   )

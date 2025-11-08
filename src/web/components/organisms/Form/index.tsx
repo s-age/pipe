@@ -10,6 +10,7 @@ import type {
 import type { ZodTypeAny } from 'zod'
 
 import useFormMethods from './hooks/useFormMethods'
+import { formStyle } from './style.css'
 
 export type FormMethods<TFieldValues extends FieldValues = FieldValues> =
   UseFormReturn<TFieldValues>
@@ -68,7 +69,9 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <FormContext.Provider value={methods as FormMethods<FieldValues>}>
-      <form onSubmit={methods.handleSubmit(onSubmit)}>{children}</form>
+      <form className={formStyle} onSubmit={methods.handleSubmit(onSubmit)}>
+        {children}
+      </form>
     </FormContext.Provider>
   )
 }

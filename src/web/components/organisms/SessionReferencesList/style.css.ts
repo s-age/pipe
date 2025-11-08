@@ -1,5 +1,7 @@
 import { style } from '@vanilla-extract/css'
 
+import { colors } from '@/styles/colors.css'
+
 export const metaItem = style({
   marginBottom: '15px',
 })
@@ -8,6 +10,7 @@ export const metaItemLabel = style({
   display: 'block',
   marginBottom: '5px',
   fontWeight: 'bold',
+  color: colors.accent,
 })
 
 export const referencesList = style({
@@ -87,7 +90,7 @@ export const lockIconStyle = style({
 })
 
 export const noItemsMessage = style({
-  color: '#666',
+  color: colors.cyanAlt,
   fontStyle: 'italic',
   marginTop: '10px',
 })

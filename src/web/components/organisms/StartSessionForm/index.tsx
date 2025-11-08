@@ -135,14 +135,14 @@ const StartSessionForm: (properties: StartSessionFormProperties) => JSX.Element 
           name="purpose"
           label="Purpose:"
           id="purpose"
-          required
+          required={true}
         />
         <TextareaField
           control={control}
           name="background"
           label="Background:"
           id="background"
-          required
+          required={true}
         />
         <InputField
           control={control}
@@ -180,7 +180,7 @@ const StartSessionForm: (properties: StartSessionFormProperties) => JSX.Element 
           name="instruction"
           label="First Instruction:"
           id="instruction"
-          required
+          required={true}
         />
         <CheckboxField
           control={control}

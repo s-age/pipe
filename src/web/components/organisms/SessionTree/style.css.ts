@@ -5,54 +5,77 @@ import { colors } from '../../../styles/colors.css.ts'
 export const sessionListColumn = style({
   flex: '0 0 250px',
   overflowY: 'auto',
-  borderRight: `1px solid ${colors.mediumBackground}`,
-  backgroundColor: colors.darkBackground,
+  // teal/cyan sidebar
+  background: `linear-gradient(180deg, ${colors.cyanAlt} 0%, ${colors.cyan} 100%)`,
   display: 'flex',
   flexDirection: 'column',
+  borderRight: `1px solid rgba(0,0,0,0.08)`,
 })
 
 export const sessionListContainer = style({
   listStyle: 'none',
-  padding: '16px',
+  padding: '6px 8px',
   margin: '0',
   flexGrow: '1',
 })
 
 export const sessionListItem = style({
-  marginBottom: '8px',
+  marginBottom: '6px',
 })
 
 export const sessionLink = style({
   display: 'block',
-  padding: '8px',
-  borderRadius: '4px',
+  padding: '6px 8px',
+  borderRadius: '6px',
   textDecoration: 'none',
-  color: colors.lightText,
+  color: colors.offWhite,
+  fontWeight: 500,
+  fontSize: '0.95rem',
   ':hover': {
-    backgroundColor: colors.mediumBackground,
+    backgroundColor: 'rgba(0,0,0,0.12)',
   },
 })
 
 export const sessionLinkActive = style({
-  backgroundColor: colors.accent,
-  color: colors.darkBackground,
-  fontWeight: 'bold',
+  backgroundColor: 'rgba(0,0,0,0.32)',
+  color: colors.offWhite,
+  fontWeight: 700,
   ':hover': {
-    backgroundColor: colors.accentHover,
+    backgroundColor: 'rgba(0,0,0,0.36)',
   },
+  boxShadow: 'inset 4px 0 0 rgba(255,255,255,0.06)',
 })
 
 export const sessionIdStyle = style({
-  fontSize: '0.8em',
-  color: colors.lightText,
-  marginLeft: '8px',
+  fontSize: '0.75em',
+  color: colors.offWhite,
+  marginLeft: '6px',
 })
 
 export const stickyNewChatButtonContainer = style({
   position: 'sticky',
   bottom: 0,
   zIndex: 1,
-  padding: '12px',
-  borderTop: `1px solid ${colors.mediumBackground}`,
-  background: 'inherit',
+  padding: '8px',
+  borderTop: `1px solid rgba(0,0,0,0.06)`,
+  background: 'transparent',
+})
+
+export const newChatButton = style({
+  width: '56px',
+  height: '56px',
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  margin: '6px auto',
+  border: `2px solid rgba(255,255,255,0.12)`,
+  background: 'rgba(0,0,0,0.32)',
+  color: colors.offWhite,
+  boxShadow: `0 8px 20px rgba(0,0,0,0.22)`,
+  cursor: 'pointer',
+  ':hover': {
+    boxShadow: `0 12px 30px rgba(0,0,0,0.26)`,
+    transform: 'translateY(-1px)',
+  },
 })

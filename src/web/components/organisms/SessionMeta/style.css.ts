@@ -3,9 +3,16 @@ import { style, globalStyle } from '@vanilla-extract/css'
 import { colors } from '../../../styles/colors.css.ts'
 
 export const metaColumn = style({
-  flex: '0 0 300px',
+  // Use a fixed width and let height be governed by the parent panel.
+  width: '300px',
+  height: '100%',
   overflowY: 'auto',
   background: colors.darkBackground,
+  borderRadius: '10px',
+  // provide breathing room on the right so the panel isn't flush to the viewport edge
+  margin: '0 12px',
+  border: `1px solid ${colors.mediumBackground}`,
+  overflow: 'hidden',
 })
 
 export const sessionMetaSection = style({
@@ -15,6 +22,7 @@ export const sessionMetaSection = style({
   boxSizing: 'border-box',
   minHeight: '0',
   padding: '20px',
+  background: colors.mediumBackground,
 })
 
 export const sessionMetaView = style({
@@ -51,7 +59,7 @@ export const inputFullWidth = style({
   padding: '8px',
 
   ':focus': {
-    border: `1px solid ${colors.darkBlue}`,
+    border: `1px solid ${colors.cyanDark}`,
   },
 })
 
@@ -61,9 +69,11 @@ export const textareaFullWidth = style({
   background: colors.grayText,
   minHeight: '100px',
   marginTop: '10px',
+  borderRadius: '4px',
+  padding: '8px',
 
   ':focus': {
-    border: `1px solid ${colors.darkBlue}`,
+    border: `1px solid ${colors.cyanDark}`,
   },
 })
 

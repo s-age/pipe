@@ -50,7 +50,7 @@ const Slider = (properties: SliderProperties): JSX.Element => {
         className={styles.trackWrap}
         ref={containerRef as unknown as React.Ref<HTMLDivElement>}
       >
-        <svg className={styles.svg} viewBox={`0 0 ${svgWidth} 24`} aria-hidden>
+        <svg className={styles.svg} viewBox={`0 0 ${svgWidth} 24`} aria-hidden={true}>
           {/* track sits inside [thumbR, svgWidth - thumbR] so thumb never overflows */}
           <rect
             className={styles.track}

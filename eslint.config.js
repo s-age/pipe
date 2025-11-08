@@ -65,6 +65,16 @@ export default [
       ...pluginReactHooks.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off', // その後で上書き
       'react/prop-types': 'off', // prop-typesも無効化
+      'react/jsx-no-bind': [
+        'error',
+        {
+          allowArrowFunctions: false,
+          allowBind: false,
+          ignoreRefs: true,
+        },
+      ],
+      'react/jsx-boolean-value': ['error', 'always'],
+      'react/forbid-dom-props': ['error', { forbid: ['style'] }],
 
       // ✅ TypeScript
       'no-unused-vars': 'off', // Disable standard ESLint rules

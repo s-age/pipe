@@ -38,8 +38,13 @@ const InputRadio = ({
         name={name}
         {...rest}
       />
-      <span className={styles.control} aria-hidden>
-        <svg className={styles.svg} viewBox="0 0 24 24" aria-hidden focusable="false">
+      <span className={styles.control} aria-hidden={true}>
+        <svg
+          className={styles.svg}
+          viewBox="0 0 24 24"
+          aria-hidden={true}
+          focusable="false"
+        >
           <circle cx="12" cy="12" r="5" fill="transparent" />
         </svg>
       </span>

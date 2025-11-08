@@ -3,7 +3,7 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '../../../styles/colors.css'
 
 export const textareaStyle = style({
-  width: 'calc(100% - 22px)',
+  width: '100%',
   padding: '10px',
   marginBottom: '15px',
   border: `1px solid ${colors.lightText}`,

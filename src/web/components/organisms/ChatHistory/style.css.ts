@@ -2,51 +2,132 @@ import { style } from '@vanilla-extract/css'
 
 import { colors } from '../../../styles/colors.css.ts'
 
+// ChatHistory styles — use shared color tokens from `colors`.
 export const turnsColumn = style({
   overflowY: 'auto',
-  flex: '1',
+  // Make center column smaller than left by setting flex ratio 1 (left is 2)
+  flex: '1 1 0',
   display: 'flex',
   flexDirection: 'column',
-  background: colors.mediumBackground,
+  background: colors.darkBackground,
   borderRight: `1px solid ${colors.mediumBackground}`,
   minWidth: 0,
+  minHeight: 0,
+})
+
+export const chatRoot = style({
+  display: 'flex',
+  flexDirection: 'column',
+  flex: '1 1 0',
+  minHeight: 0,
 })
 
 export const turnsHeader = style({
-  padding: '16px',
+  padding: '8px',
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  borderBottom: `1px solid ${colors.mediumBackground}`,
+  color: colors.accent,
+  position: 'sticky',
+  top: 0,
+  zIndex: 2,
 })
 
 export const turnsListSection = style({
-  flex: '1',
+  flex: '1 1 0',
   overflowY: 'auto',
   padding: '16px',
+  color: colors.offWhite,
+  minHeight: 0,
 })
 
 export const newInstructionControl = style({
-  padding: '16px',
-  borderTop: `1px solid ${colors.mediumBackground}`,
+  padding: '12px',
+  gap: '12px',
+  alignItems: 'stretch',
+  position: 'sticky',
+  bottom: 0,
+  zIndex: 2,
+})
+
+// Ensure the form inside the sticky footer stretches and lays out its children
+// horizontally so the textarea can take available width next to the button.
+export const footerForm = style({
   display: 'flex',
-  gap: '10px',
-  alignItems: 'flex-end',
+  flex: '1 1 auto',
+  gap: '12px',
+  alignItems: 'stretch',
+  width: '100%',
 })
 
 export const instructionTextarea = style({
-  flex: '1',
-  minHeight: '60px',
+  flex: '1 1 auto',
+  width: '100%',
+  minHeight: '96px',
+  maxHeight: '240px',
   resize: 'vertical',
-  padding: '8px',
-  borderRadius: '4px',
-  border: `1px solid ${colors.darkBlue}`,
-  backgroundColor: colors.grayText,
+  padding: '12px',
+  borderRadius: '6px',
+  // no visible border by default; show accent border on focus
+  border: 'none',
+  backgroundColor: '#1b1d1e',
+  color: colors.offWhite,
+  // leave extra right padding for the overlaid send button
+  paddingRight: '80px',
+  '::placeholder': { color: colors.grayText },
+  ':focus': {
+    border: `1px solid ${colors.accent}`,
+    outline: 'none',
+    boxShadow: `0 0 0 2px ${colors.cyanBorderRGBA}`,
+  },
+})
+
+export const instructionWrapper = style({
+  position: 'relative',
+  width: '100%',
+  display: 'flex',
+  alignItems: 'stretch',
+})
+
+export const overlaySendButton = style({
+  position: 'absolute',
+  right: '12px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  width: '56px',
+  height: '56px',
+  borderRadius: '8px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: colors.cyan,
   color: colors.darkBackground,
+  border: `1px solid ${colors.cyanBorderRGBA}`,
+  cursor: 'pointer',
+  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+  // ensure it sits above the textarea
+  zIndex: 5,
+  selectors: {
+    '&:disabled, &[disabled]': {
+      background: colors.mediumBackground,
+      color: colors.grayText,
+      border: `1px solid ${colors.mediumBackground}`,
+      cursor: 'not-allowed',
+      opacity: 0.85,
+    },
+  },
 })
 
 export const welcomeMessage = style({
-  padding: '20px',
+  padding: '12px',
   textAlign: 'center',
   color: colors.grayText,
 })
+
+// Provide named accents for components that want to use the palette
+export const chatAccents = {
+  cyan: colors.cyan,
+  cyanAlt: colors.cyanAlt,
+  redAccent: colors.error,
+  redStrong: colors.error,
+}

@@ -1,15 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { JSX } from 'react'
-import type { ChangeEvent, KeyboardEvent } from 'react'
 
 import Button from '@/components/atoms/Button'
 import Heading from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
 import TextArea from '@/components/atoms/TextArea'
 import Turn from '@/components/molecules/Turn'
+import { Form } from '@/components/organisms/Form'
+import { useStreamingInstruction } from '@/components/pages/ChatHistoryPage/hooks/useStreamingInstruction'
 import type { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
 import { colors } from '@/styles/colors.css'
 
+import useInstructionForm from './hooks/useInstructionForm'
 import { useTurnActions } from './hooks/useTurnActions'
 import {
   turnsColumn,
@@ -19,7 +21,6 @@ import {
   instructionTextarea,
   welcomeMessage,
 } from './style.css'
-import { useStreamingInstruction } from '../../pages/ChatHistoryPage/hooks/useStreamingInstruction'
 
 type ChatHistoryProperties = {
   sessionDetail: SessionDetail | null
@@ -60,7 +61,6 @@ const ChatHistory = ({
   }, [streamingError, setError, setStreamingTrigger])
 
   const turnsListReference = useRef<HTMLDivElement>(null)
-  const [instructionText, setInstructionText] = useState<string>('')
 
   const scrollToBottom = (): void => {
     if (turnsListReference.current) {
@@ -72,16 +72,35 @@ const ChatHistory = ({
     scrollToBottom()
   }, [sessionDetail, streamedText])
 
-  const handleSend = async (): Promise<void> => {
-    if (!instructionText.trim() || !currentSessionId) return
-    try {
-      await onSendInstruction(instructionText)
-      await refreshSessions()
-      setInstructionText('')
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to send instruction')
-      console.error('Failed to send instruction:', error)
-    }
+  // InstructionForm hook encapsulates form context and submit/reset logic.
+  const InstructionForm = (): JSX.Element => {
+    const { register, submit } = useInstructionForm({
+      currentSessionId,
+      onSendInstruction,
+      refreshSessions,
+      setError,
+    })
+
+    return (
+      <>
+        <TextArea
+          id="new-instruction-text"
+          className={instructionTextarea}
+          placeholder="Enter your instruction here..."
+          name="instruction"
+          register={register}
+          disabled={isStreaming}
+        />
+        <Button
+          kind="primary"
+          size="default"
+          onClick={() => void submit()}
+          disabled={isStreaming}
+        >
+          {isStreaming ? 'Sending...' : 'Send Instruction'}
+        </Button>
+      </>
+    )
   }
 
   if (!currentSessionId || !sessionDetail) {
@@ -147,30 +166,25 @@ const ChatHistory = ({
       </section>
 
       <section className={newInstructionControl}>
-        <TextArea
-          id="new-instruction-text"
-          className={instructionTextarea}
-          placeholder="Enter your instruction here..."
-          value={instructionText}
-          onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
-            setInstructionText(event.target.value)
-          }}
-          onKeyPress={(event: KeyboardEvent<HTMLTextAreaElement>) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault()
-              handleSend()
+        <Form
+          onSubmit={async (data) => {
+            const instruction = (data as { instruction?: string }).instruction ?? ''
+            if (!instruction.trim() || !currentSessionId) return
+            try {
+              await onSendInstruction(instruction)
+              await refreshSessions()
+            } catch (error) {
+              setError(
+                error instanceof Error ? error.message : 'Failed to send instruction',
+              )
+              console.error('Failed to send instruction:', error)
             }
           }}
-          disabled={isStreaming}
-        />
-        <Button
-          kind="primary"
-          size="default"
-          onClick={handleSend}
-          disabled={isStreaming}
+          defaultValues={{ instruction: '' }}
         >
-          {isStreaming ? 'Sending...' : 'Send Instruction'}
-        </Button>
+          {/* InstructionForm uses the form context provided by Form */}
+          <InstructionForm />
+        </Form>
       </section>
     </div>
   )

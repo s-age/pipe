@@ -1,110 +1,98 @@
 import type { JSX } from 'react'
 
 import InputText from '@/components/atoms/InputText'
-import Label from '@/components/atoms/Label'
 import TextArea from '@/components/atoms/TextArea'
+import Fieldset from '@/components/molecules/Fieldset'
+import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { metaItem, metaItemLabel, inputFullWidth, textareaFullWidth } from './style.css'
-import { useSessionBasicMeta } from './useSessionBasicMeta'
 
 type SessionBasicMetaFormProperties = {
   sessionDetail: SessionDetail | null
 }
 
 export const SessionBasicMetaForm = ({
-  sessionDetail,
+  sessionDetail: _sessionDetail,
 }: SessionBasicMetaFormProperties): JSX.Element => {
-  const {
-    purpose,
-    setPurpose,
-    handlePurposeBlur,
-    background,
-    setBackground,
-    handleBackgroundBlur,
-    roles,
-    setRoles,
-    handleRolesBlur,
-    procedure,
-    setProcedure,
-    handleProcedureBlur,
-    artifacts,
-    setArtifacts,
-    handleArtifactsBlur,
-  } = useSessionBasicMeta({ sessionDetail })
+  const register = useOptionalFormContext()?.register
 
   return (
     <>
-      <div className={metaItem}>
-        <Label htmlFor="purpose" className={metaItemLabel}>
-          Purpose:
-        </Label>
-        <InputText
-          id="purpose"
-          value={purpose}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            setPurpose(event.target.value)
-          }
-          onBlur={handlePurposeBlur}
-          className={inputFullWidth}
-        />
-      </div>
-      <div className={metaItem}>
-        <Label htmlFor="background" className={metaItemLabel}>
-          Background:
-        </Label>
-        <TextArea
-          id="background"
-          value={background}
-          onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
-            setBackground(event.target.value)
-          }
-          onBlur={handleBackgroundBlur}
-          className={textareaFullWidth}
-        />
-      </div>
-      <div className={metaItem}>
-        <Label htmlFor="roles" className={metaItemLabel}>
-          Roles:
-        </Label>
-        <InputText
-          id="roles"
-          value={roles}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            setRoles(event.target.value)
-          }
-          onBlur={handleRolesBlur}
-          className={inputFullWidth}
-        />
-      </div>
-      <div className={metaItem}>
-        <Label htmlFor="procedure" className={metaItemLabel}>
-          Procedure:
-        </Label>
-        <InputText
-          id="procedure"
-          value={procedure}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            setProcedure(event.target.value)
-          }
-          onBlur={handleProcedureBlur}
-          className={inputFullWidth}
-        />
-      </div>
-      <div className={metaItem}>
-        <Label htmlFor="artifacts" className={metaItemLabel}>
-          Artifacts:
-        </Label>
-        <InputText
-          id="artifacts"
-          value={artifacts}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            setArtifacts(event.target.value)
-          }
-          onBlur={handleArtifactsBlur}
-          className={inputFullWidth}
-        />
-      </div>
+      <Fieldset
+        legend={<span className={metaItemLabel}>Purpose:</span>}
+        className={metaItem}
+      >
+        {(ids) => (
+          <InputText
+            id="purpose"
+            register={register}
+            name="purpose"
+            className={inputFullWidth}
+            aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+          />
+        )}
+      </Fieldset>
+
+      <Fieldset
+        legend={<span className={metaItemLabel}>Background:</span>}
+        className={metaItem}
+      >
+        {(ids) => (
+          <TextArea
+            id="background"
+            register={register}
+            name="background"
+            className={textareaFullWidth}
+            aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+          />
+        )}
+      </Fieldset>
+
+      <Fieldset
+        legend={<span className={metaItemLabel}>Roles:</span>}
+        className={metaItem}
+      >
+        {(ids) => (
+          <InputText
+            id="roles"
+            register={register}
+            name="roles"
+            className={inputFullWidth}
+            aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+          />
+        )}
+      </Fieldset>
+
+      <Fieldset
+        legend={<span className={metaItemLabel}>Procedure:</span>}
+        className={metaItem}
+      >
+        {(ids) => (
+          <InputText
+            id="procedure"
+            register={register}
+            name="procedure"
+            className={inputFullWidth}
+            aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+          />
+        )}
+      </Fieldset>
+
+      <Fieldset
+        legend={<span className={metaItemLabel}>Artifacts:</span>}
+        className={metaItem}
+      >
+        {(ids) => (
+          <InputText
+            id="artifacts"
+            register={register}
+            name="artifacts"
+            className={inputFullWidth}
+            aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+          />
+        )}
+      </Fieldset>
     </>
   )
 }

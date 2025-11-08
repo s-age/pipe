@@ -15,7 +15,14 @@ type TextAreaProperties = Omit<
 }
 
 const TextArea: (properties: TextAreaProperties) => JSX.Element = (properties) => {
-  const { onChange: _onChange, name, ...restProperties } = properties
+  const {
+    onChange: _onChange,
+    name,
+    register: _register,
+    ...restProperties
+  } = properties
+  // reference the binding to satisfy lint rules (we intentionally don't spread it)
+  void _register
   // intentionally reference `_onChange` so linters know it's excluded from
   // `restProps` which will be spread onto the native textarea. The component's
   // onChange has a different signature (value:string) and we bridge it via the hook.

@@ -16,3 +16,46 @@ export const selectStyle = style({
     outline: 'none',
   },
 })
+
+export const trigger = style({
+  display: 'inline-block',
+  width: '100%',
+  padding: '8px 12px',
+  color: colors.lightText,
+})
+
+export const panel = style({
+  listStyle: 'none',
+  padding: 8,
+  margin: 0,
+  background: colors.mediumBackground,
+  borderRadius: 6,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+})
+
+export const option = style({
+  padding: '8px 12px',
+  borderRadius: 4,
+  cursor: 'pointer',
+  background: 'transparent',
+  selectors: {
+    '&:not(:last-child)': {
+      marginBottom: '4px',
+    },
+  },
+})
+
+export const optionHighlighted = style({
+  background: colors.lightBlue,
+  color: colors.darkBackground,
+})
+
+export const searchInput = style({
+  width: '100%',
+  padding: '8px 10px',
+  marginBottom: 8,
+  borderRadius: 6,
+  border: `1px solid ${colors.lightText}`,
+  background: colors.darkBackground,
+  color: colors.lightText,
+})

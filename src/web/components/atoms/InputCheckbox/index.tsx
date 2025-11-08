@@ -1,14 +1,8 @@
-import React, { useMemo, useId } from 'react'
+import React from 'react'
 import type { JSX, InputHTMLAttributes } from 'react'
-import type {
-  FieldValues,
-  UseFormRegister,
-  UseFormRegisterReturn,
-} from 'react-hook-form'
+import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
-import type { FormMethods } from '@/components/organisms/Form'
-import { useOptionalFormContext } from '@/components/organisms/Form'
-
+import useInputCheckbox from './hooks/useInputCheckbox'
 import * as styles from './style.css'
 
 type InputCheckboxProperties = {
@@ -22,33 +16,17 @@ const InputCheckbox = ({
   name,
   label,
   id,
+  children,
   ...rest
 }: InputCheckboxProperties): JSX.Element => {
-  // Use optional form context hook which returns undefined when no provider is present.
-  const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined
+  const resolvedLabel = label ?? children
 
-  const registerFunction: UseFormRegister<FieldValues> | undefined =
-    register ?? provider?.register
-
-  const registerProperties = useMemo<Partial<UseFormRegisterReturn>>(() => {
-    if (typeof registerFunction === 'function' && name) {
-      try {
-        return registerFunction(name) as UseFormRegisterReturn
-      } catch {
-        return {}
-      }
-    }
-
-    return {}
-  }, [registerFunction, name])
-
-  const reactId = useId()
-  const valueProperty = rest.value as string | number | undefined
-  const inputId =
-    id ??
-    (typeof name === 'string' && valueProperty
-      ? `${name}-${String(valueProperty)}`
-      : reactId)
+  const { registerProperties, inputId } = useInputCheckbox({
+    register,
+    name,
+    id,
+    value: rest.value,
+  })
 
   return (
     <label className={styles.container} htmlFor={inputId}>
@@ -65,7 +43,7 @@ const InputCheckbox = ({
           <path className={styles.check} d="M20 6L9 17l-5-5" fill="none" />
         </svg>
       </span>
-      {label ? <span className={styles.labelText}>{label}</span> : null}
+      {resolvedLabel ? <span className={styles.labelText}>{resolvedLabel}</span> : null}
     </label>
   )
 }

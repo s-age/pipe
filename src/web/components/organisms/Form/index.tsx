@@ -1,37 +1,27 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import type { ReactNode } from 'react'
 import React, { createContext, useContext } from 'react'
-import type { UseFormProps, UseFormReturn, FieldValues } from 'react-hook-form'
-import { useForm } from 'react-hook-form'
+import type {
+  UseFormProps,
+  UseFormReturn,
+  FieldValues,
+  Resolver,
+} from 'react-hook-form'
+import type { ZodTypeAny } from 'zod'
+
+import useFormMethods from './hooks/useFormMethods'
 
 export type FormMethods<TFieldValues extends FieldValues = FieldValues> =
   UseFormReturn<TFieldValues>
 
 const FormContext = createContext<FormMethods<FieldValues> | undefined>(undefined)
 
-export type FormProviderProperties<TFieldValues extends FieldValues = FieldValues> =
-  UseFormProps<TFieldValues> & {
-    children: ReactNode
-  }
-
-export const FormProvider = <TFieldValues extends FieldValues = FieldValues>({
-  children,
-  ...properties
-}: FormProviderProperties<TFieldValues>): React.JSX.Element => {
-  const methods = useForm<TFieldValues>(properties as UseFormProps<TFieldValues>)
-
-  return (
-    <FormContext.Provider value={methods as FormMethods<FieldValues>}>
-      {children}
-    </FormContext.Provider>
-  )
-}
-
 export const useFormContext = <
   TFieldValues extends FieldValues = FieldValues,
 >(): FormMethods<TFieldValues> => {
   const context = useContext(FormContext)
   if (context === undefined) {
-    throw new Error('useFormContext must be used within a FormProvider')
+    throw new Error('useFormContext must be used within a Form')
   }
 
   return context as FormMethods<TFieldValues>
@@ -47,17 +37,34 @@ export type FormProperties<TFieldValues extends FieldValues = FieldValues> =
   UseFormProps<TFieldValues> & {
     children: ReactNode
     onSubmit: (data: TFieldValues) => void
+    /**
+     * Optional Zod schema. When provided and `resolver` is not supplied,
+     * the Form will create a zodResolver(schema) internally.
+     */
+    schema?: ZodTypeAny
   }
 
 export const Form = <TFieldValues extends FieldValues = FieldValues>({
   children,
   onSubmit,
+  schema,
+  resolver,
   ...properties
 }: FormProperties<TFieldValues>): React.JSX.Element => {
+  // Resolve which resolver to use. Priority:
+  // 1. explicit `resolver` prop
+  // 2. if `schema` provided, use zodResolver(schema)
+  // 3. otherwise undefined (no resolver)
+  const finalResolver =
+    resolver ?? (schema ? (zodResolver(schema) as Resolver<TFieldValues>) : undefined)
+
   // Create form methods here and provide them to descendants.
   // Calling `useFormContext` here would fail because the Provider
   // wrapping the `<form>` would not yet be in scope for this hook.
-  const methods = useForm<TFieldValues>(properties as UseFormProps<TFieldValues>)
+  const methods = useFormMethods<TFieldValues>({
+    ...(properties as UseFormProps<TFieldValues>),
+    resolver: finalResolver,
+  } as UseFormProps<TFieldValues>)
 
   return (
     <FormContext.Provider value={methods as FormMethods<FieldValues>}>

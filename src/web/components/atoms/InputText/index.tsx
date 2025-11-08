@@ -1,11 +1,26 @@
 import type { InputHTMLAttributes, JSX } from 'react'
+import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
+import useInputText from './hooks/useInputText'
 import { inputStyle } from './style.css'
 
-type InputTextProperties = {} & InputHTMLAttributes<HTMLInputElement>
+type InputTextProperties = {
+  register?: UseFormRegister<FieldValues>
+  name?: string
+} & InputHTMLAttributes<HTMLInputElement>
 
-const InputText: (properties: InputTextProperties) => JSX.Element = (properties) => (
-  <input type="text" className={inputStyle} {...properties} />
-)
+const InputText = ({ register, name, ...rest }: InputTextProperties): JSX.Element => {
+  const { registerProperties } = useInputText({ register, name })
+
+  return (
+    <input
+      type="text"
+      className={inputStyle}
+      {...registerProperties}
+      {...rest}
+      name={name}
+    />
+  )
+}
 
 export default InputText

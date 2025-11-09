@@ -1,5 +1,7 @@
 import { style } from '@vanilla-extract/css'
 
+import { colors } from '@/styles/colors.css'
+
 export const container = style({
   display: 'inline-flex',
   flexDirection: 'column',
@@ -36,11 +38,11 @@ export const track = style({
 })
 
 export const fill = style({
-  fill: 'var(--accent, #4f46e5)',
+  fill: `var(--accent, ${colors.cyan})`,
 })
 export const thumbCircle = style({
   fill: 'white',
-  stroke: 'var(--accent, #4f46e5)',
+  stroke: `var(--accent, ${colors.cyan})`,
   strokeWidth: 2,
   filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.12))',
 })

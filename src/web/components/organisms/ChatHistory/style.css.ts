@@ -9,8 +9,8 @@ export const turnsColumn = style({
   flex: '1 1 0',
   display: 'flex',
   flexDirection: 'column',
-  background: colors.darkBackground,
   borderRight: `1px solid ${colors.mediumBackground}`,
+  borderRadius: '10px',
   minWidth: 0,
   minHeight: 0,
 })

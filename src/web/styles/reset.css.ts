@@ -1,4 +1,5 @@
 import { globalStyle } from '@vanilla-extract/css'
+import './global.css'
 
 // Minimal reset/global base to ensure predictable layout and flexible containers
 globalStyle('*, *::before, *::after', {

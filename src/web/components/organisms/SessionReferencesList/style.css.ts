@@ -10,7 +10,7 @@ export const metaItemLabel = style({
   display: 'block',
   marginBottom: '5px',
   fontWeight: 'bold',
-  color: colors.accent,
+  color: colors.offWhite,
 })
 
 export const referencesList = style({
@@ -100,7 +100,7 @@ export const lockIconStyle = style({
 })
 
 export const noItemsMessage = style({
-  color: colors.cyanAlt,
+  color: colors.grayText,
   fontStyle: 'italic',
   marginTop: '10px',
 })

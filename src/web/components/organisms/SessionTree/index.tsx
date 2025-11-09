@@ -1,49 +1,12 @@
 import type { JSX } from 'react'
 
-import { Button } from '@/components/atoms/Button'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
-import { useSessionItemHandlers } from './hooks/useSessionItemHandlers'
-import {
-  sessionListColumn,
-  sessionListContainer,
-  sessionListItem,
-  sessionLink,
-  sessionLinkActive,
-  sessionIdStyle,
-  stickyNewChatButtonContainer,
-} from './style.css'
+import { SessionItem } from './SessionItem'
+import { SessionTreeFooter } from './SessionTreeFooter'
+import { sessionListColumn, sessionListContainer } from './style.css'
 import { useSessionTreeHandlers } from './useSessionTreeHandlers'
-
-type SessionItemProperties = {
-  session: SessionOverview
-  currentSessionId: string
-  selectSession: (id: string | null, detail: SessionDetail | null) => void
-  setError: (errorMessage: string | null) => void
-}
-
-const SessionItem = ({
-  session,
-  currentSessionId,
-  selectSession,
-  setError,
-}: SessionItemProperties): JSX.Element => {
-  const { onClick } = useSessionItemHandlers({ session, selectSession, setError })
-
-  return (
-    <li key={session.session_id} className={sessionListItem}>
-      <a
-        href={`/session/${session.session_id}`}
-        className={`${sessionLink} ${session.session_id === currentSessionId ? sessionLinkActive : ''}`.trim()}
-        onClick={onClick}
-      >
-        {session.purpose}{' '}
-        <p className={sessionIdStyle}>{session.session_id.substring(0, 8)}</p>
-      </a>
-    </li>
-  )
-}
 
 type SessionTreeProperties = {
   sessions: SessionOverview[]
@@ -81,11 +44,7 @@ export const SessionTree = ({
           )
         })}
       </ul>
-      <div className={stickyNewChatButtonContainer}>
-        <Button kind="primary" size="default" onClick={handleNewChatClick}>
-          + New Chat
-        </Button>
-      </div>
+      <SessionTreeFooter handleNewChatClick={handleNewChatClick} />
     </div>
   )
 }

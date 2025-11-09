@@ -1,10 +1,13 @@
 import { style } from '@vanilla-extract/css'
 
+import { colors } from '@/styles/colors.css'
+
 export const legendStyle = style({
   fontSize: 14,
   fontWeight: 600,
   margin: 0,
   padding: 0,
+  color: colors.offWhite,
 })
 
 export const visuallyHidden = style({

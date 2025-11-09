@@ -28,10 +28,11 @@ export const leftColumn = style({
 
 export const centerColumn = style({
   flex: '1 1 0',
-  padding: '12px',
+  padding: '0 12px',
   overflowY: 'auto',
   display: 'flex',
   flexDirection: 'column',
+  background: colors.panelBackground,
 })
 
 export const rightColumn = style({

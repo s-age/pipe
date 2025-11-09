@@ -1,14 +1,14 @@
-import type { JSX } from 'react'
+import React, { useCallback } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { Checkbox } from '@/components/atoms/Checkbox'
-import { InputText } from '@/components/atoms/InputText'
+import { InputCheckbox } from '@/components/atoms/InputCheckbox'
 import { Label } from '@/components/atoms/Label'
+import { Fieldset } from '@/components/molecules/Fieldset'
+import { Slider } from '@/components/molecules/Slider'
 import { SessionBasicMetaForm } from '@/components/organisms/SessionBasicMetaForm'
 import { useTodoActions } from '@/components/organisms/SessionMeta/useTodoActions'
 import { SessionReferencesList } from '@/components/organisms/SessionReferencesList'
-import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
-import { editSessionMeta } from '@/lib/api/session/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Actions } from '@/stores/useChatHistoryStore'
 import type { Todo } from '@/types/todo'
@@ -18,9 +18,8 @@ import {
   metaColumn,
   sessionMetaSection,
   sessionMetaView,
-  checkboxLabel,
   hyperparametersControl,
-  sliderValue,
+  sliderContainer,
   todosList,
   todoItem,
   todoCheckboxLabel,
@@ -28,38 +27,15 @@ import {
   noItemsMessage,
   stickySaveMetaButtonContainer,
   metaItem,
-  metaItemLabel,
+  deleteTodosButton,
+  multiStepLabel,
   todoCheckboxMargin,
 } from './style.css'
 import { useSessionHyperparameters } from './useSessionHyperparameters'
 import { useSessionMetaLogic } from './useSessionMetaLogic'
+import { useSessionMetaSaver } from './useSessionMetaSaver'
 
-type UseSessionMetaSaverProperties = {
-  actions: Actions
-}
-
-const useSessionMetaSaver = ({
-  actions,
-}: UseSessionMetaSaverProperties): {
-  handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
-} => {
-  const { setError, refreshSessions } = actions
-
-  const handleMetaSave = async (
-    id: string,
-    meta: EditSessionMetaRequest,
-  ): Promise<void> => {
-    try {
-      await editSessionMeta(id, meta)
-      await refreshSessions()
-      setError(null)
-    } catch (error: unknown) {
-      setError((error as Error).message || 'Failed to save session meta.')
-    }
-  }
-
-  return { handleMetaSave }
-}
+// `useSessionMetaSaver` extracted to its own hook file for reuse and testability
 
 type SessionMetaProperties = {
   sessionDetail: SessionDetail | null
@@ -77,8 +53,9 @@ export const SessionMeta = ({
   setError,
   refreshSessions,
   actions,
-}: SessionMetaProperties): JSX.Element => {
+}: SessionMetaProperties): React.JSX.Element => {
   const { handleMetaSave } = useSessionMetaSaver({ actions })
+
   const {
     temperature,
     setTemperature,
@@ -94,7 +71,26 @@ export const SessionMeta = ({
     currentSessionId,
     onMetaSave: handleMetaSave,
   })
+  const handleSliderTemperatureChange = useCallback(
+    (v: number): void => {
+      setTemperature(v)
+    },
+    [setTemperature],
+  )
 
+  const handleSliderTopPChange = useCallback(
+    (v: number): void => {
+      setTopP(v)
+    },
+    [setTopP],
+  )
+
+  const handleSliderTopKChange = useCallback(
+    (v: number): void => {
+      setTopK(v)
+    },
+    [setTopK],
+  )
   const { handleDeleteAllTodos, handleTodoCheckboxChange } = useTodoActions(
     setSessionDetail,
     setError,
@@ -110,13 +106,7 @@ export const SessionMeta = ({
     topK,
   })
 
-  const {
-    handleDeleteAll,
-    handleTodoCheckboxChangeWrapper,
-    handleTemperatureChange,
-    handleTopPChange,
-    handleTopKChange,
-  } = useSessionMetaHandlers({
+  const { handleDeleteAll, handleTodoCheckboxChangeWrapper } = useSessionMetaHandlers({
     currentSessionId,
     sessionDetail,
     handleDeleteAllTodos,
@@ -150,87 +140,99 @@ export const SessionMeta = ({
           />
 
           <div className={metaItem}>
-            <Label className={checkboxLabel}>
-              <Checkbox
-                name="multi_step_reasoning"
-                checked={sessionDetail.multi_step_reasoning_enabled}
-                onChange={handleMultiStepReasoningChange}
-              />
-              <strong>Multi-step Reasoning</strong>
-            </Label>
+            <InputCheckbox
+              name="multi_step_reasoning"
+              checked={sessionDetail.multi_step_reasoning_enabled}
+              onChange={handleMultiStepReasoningChange}
+            >
+              <strong className={multiStepLabel}>Multi-step Reasoning</strong>
+            </InputCheckbox>
           </div>
           <div className={metaItem}>
-            <Label className={metaItemLabel}>Hyperparameters:</Label>
-            <div className={hyperparametersControl}>
-              <Label>Temperature:</Label>
-              <div>
-                <span className={sliderValue}>{temperature}</span>
-                <InputText
-                  type="range"
-                  min="0"
-                  max="2"
-                  step="0.1"
-                  value={temperature}
-                  onChange={handleTemperatureChange}
-                  onMouseUp={handleTemperatureMouseUp}
-                />
-              </div>
-            </div>
-            <div className={hyperparametersControl}>
-              <Label>Top P:</Label>
-              <div>
-                <span className={sliderValue}>{topP}</span>
-                <InputText
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={topP}
-                  onChange={handleTopPChange}
-                  onMouseUp={handleTopPMouseUp}
-                />
-              </div>
-            </div>
-            <div className={hyperparametersControl}>
-              <Label>Top K:</Label>
-              <div>
-                <span className={sliderValue}>{topK}</span>
-                <InputText
-                  type="range"
-                  min="1"
-                  max="50"
-                  step="1"
-                  value={topK}
-                  onChange={handleTopKChange}
-                  onMouseUp={handleTopKMouseUp}
-                />
-              </div>
-            </div>
-          </div>
-          <div className={metaItem}>
-            <Label className={metaItemLabel}>Todos:</Label>
-            <Button kind="secondary" size="default" onClick={handleDeleteAll}>
-              Delete All
-            </Button>
-            {sessionDetail.todos.length > 0 ? (
-              <ul className={todosList}>
-                {sessionDetail.todos.map((todo: Todo, index: number) => (
-                  <li key={index} className={todoItem}>
-                    <Label className={todoCheckboxLabel}>
-                      <Checkbox
-                        checked={todo.checked}
-                        onChange={handleTodoCheckboxChangeWrapper}
-                        data-index={String(index)}
-                        className={todoCheckboxMargin}
+            <Fieldset legend="Hyperparameters">
+              {() => (
+                <div>
+                  <div className={hyperparametersControl}>
+                    <Label>Temperature:</Label>
+                    <div className={sliderContainer}>
+                      <Slider
+                        min={0}
+                        max={2}
+                        step={0.1}
+                        value={temperature}
+                        onChange={handleSliderTemperatureChange}
+                        onMouseUp={handleTemperatureMouseUp}
                       />
-                      <strong className={todoTitle}>{todo.title}</strong>
-                    </Label>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={noItemsMessage}>No todos for this session.</p>
-            )}
+                    </div>
+                  </div>
+
+                  <div className={hyperparametersControl}>
+                    <Label>Top P:</Label>
+                    <div className={sliderContainer}>
+                      <Slider
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        value={topP}
+                        onChange={handleSliderTopPChange}
+                        onMouseUp={handleTopPMouseUp}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={hyperparametersControl}>
+                    <Label>Top K:</Label>
+                    <div className={sliderContainer}>
+                      <Slider
+                        min={1}
+                        max={50}
+                        step={1}
+                        value={topK}
+                        onChange={handleSliderTopKChange}
+                        onMouseUp={handleTopKMouseUp}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </Fieldset>
+          </div>
+          <div className={metaItem}>
+            <Fieldset legend="Todos">
+              {() => (
+                <div>
+                  <Button
+                    className={deleteTodosButton}
+                    kind="secondary"
+                    size="default"
+                    onClick={handleDeleteAll}
+                  >
+                    Delete All
+                  </Button>
+
+                  {sessionDetail.todos.length > 0 ? (
+                    <ul className={todosList}>
+                      {sessionDetail.todos.map((todo: Todo, index: number) => (
+                        <li key={index} className={todoItem}>
+                          <div className={todoCheckboxLabel}>
+                            <div className={todoCheckboxMargin}>
+                              <Checkbox
+                                checked={todo.checked}
+                                onChange={handleTodoCheckboxChangeWrapper}
+                                data-index={String(index)}
+                              />
+                            </div>
+                            <strong className={todoTitle}>{todo.title}</strong>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className={noItemsMessage}>No todos for this session.</p>
+                  )}
+                </div>
+              )}
+            </Fieldset>
           </div>
         </div>
       </section>

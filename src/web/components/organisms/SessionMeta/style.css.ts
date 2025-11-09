@@ -12,7 +12,8 @@ export const metaColumn = style({
   // provide breathing room on the right so the panel isn't flush to the viewport edge
   margin: '0 12px',
   border: `1px solid ${colors.mediumBackground}`,
-  overflow: 'hidden',
+  // Keep horizontal overflow hidden but allow vertical scrolling via overflowY above.
+  overflowX: 'hidden',
 })
 
 export const sessionMetaSection = style({
@@ -51,29 +52,45 @@ export const metaItemLabel = style({
   color: colors.offWhite,
 })
 
+export const multiStepLabel = style({
+  color: colors.offWhite,
+  fontWeight: 'bold',
+})
+
 export const inputFullWidth = style({
   width: '100%',
   boxSizing: 'border-box',
-  background: colors.grayText,
+  // Make inputs visually match the panel: black background, gray border.
+  background: '#000',
+  color: colors.offWhite,
   borderRadius: '4px',
   padding: '8px',
 
+  border: `1px solid ${colors.grayText}`,
+
   ':focus': {
-    border: `1px solid ${colors.cyanDark}`,
+    outline: 'none',
+    border: `1px solid ${colors.cyan}`,
+    boxShadow: `0 0 0 3px ${colors.cyanBorderRGBA}`,
   },
 })
 
 export const textareaFullWidth = style({
   width: '100%',
   boxSizing: 'border-box',
-  background: colors.grayText,
+  background: '#000',
+  color: colors.offWhite,
   minHeight: '100px',
   marginTop: '10px',
   borderRadius: '4px',
   padding: '8px',
 
+  border: `1px solid ${colors.grayText}`,
+
   ':focus': {
-    border: `1px solid ${colors.cyanDark}`,
+    outline: 'none',
+    border: `1px solid ${colors.cyan}`,
+    boxShadow: `0 0 0 3px ${colors.cyanBorderRGBA}`,
   },
 })
 
@@ -100,6 +117,10 @@ export const sliderValue = style({
   width: '30px',
   textAlign: 'right',
   color: colors.offWhite,
+})
+
+export const sliderContainer = style({
+  flex: 1,
 })
 
 export const todosList = style({

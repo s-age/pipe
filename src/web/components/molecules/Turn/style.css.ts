@@ -6,7 +6,7 @@ import { colors } from '../../../styles/colors.css'
 export const turnWrapper = style({
   display: 'flex',
   width: '100%',
-  marginBottom: '16px', // 各ターンの下に余白
+  marginBottom: '8px',
 })
 
 // ユーザーのターンを右寄せにするためのスタイル
@@ -21,11 +21,17 @@ export const otherTurnAligned = style({
 
 // 各ターンのコンテンツ部分の共通スタイル
 export const turnContentBase = style({
-  backgroundColor: colors.grayText,
-  border: `1px solid ${colors.darkBackground}`,
+  border: `1px solid ${colors.accent}`,
   borderRadius: '8px',
   padding: '8px',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+  // Slightly stronger, soft shadow for better elevation. Added transition and
+  // hover lift so turns feel interactive without being flashy.
+  boxShadow: '0 6px 18px rgba(2,6,23,0.12)',
+  transition: 'transform 120ms ease, box-shadow 120ms ease',
+  ':hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 12px 30px rgba(2,6,23,0.18)',
+  },
   width: '75%', // 各ターンのコンテンツ幅
 })
 

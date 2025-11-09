@@ -4,7 +4,8 @@ import { colors } from '../../../styles/colors.css.ts'
 
 export const sessionListColumn = style({
   flex: '0 0 250px',
-  overflowY: 'auto',
+  // make the sidebar fill the viewport so flex footer can sit at the bottom
+  height: '100vh',
   // teal/cyan sidebar
   background: colors.cyanDark,
   display: 'flex',
@@ -17,6 +18,11 @@ export const sessionListContainer = style({
   padding: '6px 8px',
   margin: '0',
   flexGrow: '1',
+  overflowY: 'auto',
+  // allow the container to shrink within a flex column so overflow works
+  minHeight: 0,
+  // Make room for the fixed footer so the last list item is not hidden.
+  paddingBottom: '88px',
 })
 
 export const sessionListItem = style({
@@ -50,12 +56,15 @@ export const sessionIdStyle = style({
 })
 
 export const stickyNewChatButtonContainer = style({
-  position: 'sticky',
+  // Fixed overlay footer: always visible at the bottom of the viewport.
+  position: 'fixed',
+  left: 0,
   bottom: 0,
-  zIndex: 1,
+  width: '250px',
+  zIndex: 1000,
   padding: '8px',
   borderTop: `1px solid rgba(0,0,0,0.06)`,
-  background: 'transparent',
+  background: colors.cyanDark,
 })
 
 export const newChatButton = style({

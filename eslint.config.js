@@ -197,7 +197,7 @@ export default [
   {
     files: ['**/*.{ts,tsx}'],
     // 🚨 use*.ts[x] ファイルを除外
-    ignores: ['**/use*.{ts,tsx}'], // 👈 この行を追加
+    ignores: ['**/use*.{ts,tsx}'],
 
     rules: {
       'no-restricted-syntax': [
@@ -235,6 +235,17 @@ export default [
       // use*.ts[x] ファイルではフックの使用を許可するため、
       // 関数キーワード禁止ルールを無効化します。
       'no-restricted-syntax': 'off',
+    },
+  },
+  // atoms/{*ts,tsx} でuseStateを使うのを禁止するルール
+  {
+    files: ['src/web/components/atoms/**/*.{ts,tsx}'],
+    ignores: ['**/*.stories.tsx'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'CallExpression[callee.name=/useState/]' /* ... */ },
+      ],
     },
   },
   ...storybook.configs['flat/recommended'],

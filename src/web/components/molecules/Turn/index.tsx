@@ -6,7 +6,7 @@ import { IconCopy } from '@/components/atoms/IconCopy'
 import { IconDelete } from '@/components/atoms/IconDelete'
 import { IconEdit } from '@/components/atoms/IconEdit'
 import { IconFork } from '@/components/atoms/IconFork'
-import { Tooltip } from '@/components/atoms/Tooltip'
+import { Tooltip } from '@/components/molecules/Tooltip'
 import type { Turn } from '@/lib/api/session/getSession'
 
 import { useTurnHandlers } from './hooks/useTurnHandlers'

@@ -6,9 +6,9 @@ import { Button } from '@/components/atoms/Button'
 import { InputCheckbox } from '@/components/atoms/InputCheckbox'
 import { InputRadio } from '@/components/atoms/InputRadio'
 import { InputText } from '@/components/atoms/InputText'
-import { Slider } from '@/components/atoms/Slider'
 import { TextArea } from '@/components/atoms/TextArea'
 import { Fieldset } from '@/components/molecules/Fieldset'
+import { Slider } from '@/components/molecules/Slider'
 import { Form, useFormContext } from '@/components/organisms/Form'
 
 const Meta = {

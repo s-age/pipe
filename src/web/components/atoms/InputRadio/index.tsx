@@ -25,7 +25,7 @@ export const InputRadio = ({
     register,
     name,
     id,
-    value: rest.value,
+    value: rest.value
   })
 
   return (

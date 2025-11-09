@@ -16,7 +16,7 @@ import {
   fieldsetContainer,
   legendStyle,
   hyperparametersGrid,
-  errorMessageStyle,
+  errorMessageStyle
 } from './style.css'
 
 // Schema imported from ./schema
@@ -28,7 +28,7 @@ type StartSessionFormProperties = {
 }
 
 export const StartSessionForm: (
-  properties: StartSessionFormProperties,
+  properties: StartSessionFormProperties
 ) => JSX.Element = ({ onSubmit, sessions, defaultSettings }) => {
   const {
     control,
@@ -40,7 +40,7 @@ export const StartSessionForm: (
     topPValue,
     topKValue,
     parentSessionOptions,
-    handleCancel,
+    handleCancel
   } = useStartSessionForm({ onSubmit, sessions, defaultSettings })
 
   return (

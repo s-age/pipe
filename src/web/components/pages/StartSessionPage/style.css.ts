@@ -7,5 +7,5 @@ export const pageContainer = style({
   margin: '0',
   backgroundColor: colors.mediumBackground,
   color: colors.darkBackground,
-  padding: '16px',
+  padding: '16px'
 })

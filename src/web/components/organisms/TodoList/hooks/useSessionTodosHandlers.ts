@@ -22,7 +22,7 @@ export const useSessionTodosHandlers = ({
   currentSessionId,
   refreshSessions: _refreshSessions,
   // optional setter kept for compatibility; used to update local detail after actions
-  setSessionDetail: _setSessionDetail,
+  setSessionDetail: _setSessionDetail
 }: UseSessionTodosProperties): {
   handleUpdateTodo: (todos: Todo[]) => Promise<void>
   handleDeleteAllTodos: () => Promise<void>
@@ -49,7 +49,7 @@ export const useSessionTodosHandlers = ({
         throw error
       }
     },
-    [toast],
+    [toast]
   )
 
   const deleteAllTodos = useCallback(
@@ -67,7 +67,7 @@ export const useSessionTodosHandlers = ({
         throw error
       }
     },
-    [toast],
+    [toast]
   )
 
   // NOTE: getSession is available if callers need to fetch a fresh session.
@@ -87,7 +87,7 @@ export const useSessionTodosHandlers = ({
         // ignore: updateTodos already showed a toast on failure
       }
     },
-    [currentSessionId, updateTodos, _setSessionDetail],
+    [currentSessionId, updateTodos, _setSessionDetail]
   )
 
   const handleDeleteAllTodos = useCallback(async (): Promise<void> => {
@@ -111,7 +111,7 @@ export const useSessionTodosHandlers = ({
       newTodos[Number(index)].checked = !newTodos[Number(index)].checked
       void handleUpdateTodo(newTodos)
     },
-    [sessionDetail, handleUpdateTodo],
+    [sessionDetail, handleUpdateTodo]
   )
 
   const handleCheckboxChange = useCallback(
@@ -120,7 +120,7 @@ export const useSessionTodosHandlers = ({
       if (!index) return
       handleTodoCheckboxChange(Number(index))
     },
-    [handleTodoCheckboxChange],
+    [handleTodoCheckboxChange]
   )
 
   return {
@@ -128,6 +128,6 @@ export const useSessionTodosHandlers = ({
     handleDeleteAllTodos,
     handleTodoCheckboxChange,
     register,
-    handleCheckboxChange,
+    handleCheckboxChange
   }
 }

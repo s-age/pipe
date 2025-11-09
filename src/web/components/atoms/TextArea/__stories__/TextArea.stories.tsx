@@ -9,7 +9,7 @@ import { TextArea } from '../index'
 const Meta = {
   title: 'Atoms/TextArea',
   component: TextArea,
-  tags: ['autodocs'],
+  tags: ['autodocs']
 } satisfies StoryMeta<typeof TextArea>
 
 export default Meta
@@ -19,8 +19,8 @@ export const Default: Story = {
   args: {
     placeholder: 'Write something…',
     name: 'notes',
-    rows: 4,
-  },
+    rows: 4
+  }
 }
 
 export const Controlled: Story = {
@@ -37,7 +37,7 @@ export const Controlled: Story = {
     }
 
     return <ControlledExample />
-  },
+  }
 }
 
 export const WithRHF: Story = {
@@ -50,7 +50,7 @@ export const WithRHF: Story = {
     )
 
     return <FormExample />
-  },
+  }
 }
 
 export const WithoutForm: Story = {
@@ -73,5 +73,5 @@ export const WithoutForm: Story = {
     }
 
     return <PlainExample />
-  },
+  }
 }

@@ -8,7 +8,7 @@ import { Select } from '../index'
 const Meta = {
   title: 'Atoms/Select',
   component: Select,
-  tags: ['autodocs'],
+  tags: ['autodocs']
 } satisfies StoryMeta<typeof Select>
 
 export default Meta
@@ -18,8 +18,8 @@ export const Default: Story = {
   args: {
     options: ['Apple', 'Banana', 'Cherry'],
     placeholder: 'Choose a fruit',
-    name: 'fruit',
-  },
+    name: 'fruit'
+  }
 }
 
 export const Searchable: Story = {
@@ -27,8 +27,8 @@ export const Searchable: Story = {
     options: ['Apricot', 'Blueberry', 'Cantaloupe', 'Durian', 'Elderberry'],
     searchable: true,
     placeholder: 'Search fruits',
-    name: 'searchFruit',
-  },
+    name: 'searchFruit'
+  }
 }
 
 export const WithRHF: Story = {
@@ -39,7 +39,7 @@ export const WithRHF: Story = {
           name="favorite"
           options={[
             { value: 'a', label: 'Option A' },
-            { value: 'b', label: 'Option B' },
+            { value: 'b', label: 'Option B' }
           ]}
         />
         <button type="submit">Submit</button>
@@ -47,7 +47,7 @@ export const WithRHF: Story = {
     )
 
     return <FormExample />
-  },
+  }
 }
 
 export const WithoutForm: Story = {
@@ -70,5 +70,5 @@ export const WithoutForm: Story = {
     }
 
     return <PlainExample />
-  },
+  }
 }

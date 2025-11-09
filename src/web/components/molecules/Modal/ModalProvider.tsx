@@ -16,7 +16,7 @@ type ModalContextValue = {
 const ModalContext = React.createContext<ModalContextValue | null>(null)
 
 export const ModalProvider = ({
-  children,
+  children
 }: {
   children: React.ReactNode
 }): JSX.Element => {

@@ -25,7 +25,7 @@ export const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
 }: TextareaFieldProperties<TFieldValues>): JSX.Element => {
   const {
     field,
-    fieldState: { error },
+    fieldState: { error }
   } = useController(properties)
 
   return (

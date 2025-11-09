@@ -14,7 +14,7 @@ type UseSessionHyperparametersProperties = {
 export const useHyperParametersHandlers = ({
   sessionDetail,
   currentSessionId,
-  onMetaSave,
+  onMetaSave
 }: UseSessionHyperparametersProperties): {
   temperature: number
   setTemperature: React.Dispatch<React.SetStateAction<number>>
@@ -34,7 +34,7 @@ export const useHyperParametersHandlers = ({
   const [hpState, setHpState] = useState(() => ({
     temperature: sessionDetail?.hyperparameters?.temperature ?? 0.7,
     top_p: sessionDetail?.hyperparameters?.top_p ?? 0.9,
-    top_k: sessionDetail?.hyperparameters?.top_k ?? 5,
+    top_k: sessionDetail?.hyperparameters?.top_k ?? 5
   }))
 
   const { temperature, top_p: topP, top_k: topK } = hpState
@@ -46,7 +46,7 @@ export const useHyperParametersHandlers = ({
       temperature:
         typeof value === 'function'
           ? (value as (p: number) => number)(previous.temperature)
-          : value,
+          : value
     }))
   }
 
@@ -56,7 +56,7 @@ export const useHyperParametersHandlers = ({
       top_p:
         typeof value === 'function'
           ? (value as (p: number) => number)(previous.top_p)
-          : value,
+          : value
     }))
   }
 
@@ -66,7 +66,7 @@ export const useHyperParametersHandlers = ({
       top_k:
         typeof value === 'function'
           ? (value as (p: number) => number)(previous.top_k)
-          : value,
+          : value
     }))
   }
 
@@ -84,7 +84,7 @@ export const useHyperParametersHandlers = ({
     const incoming = {
       temperature: sessionDetail.hyperparameters?.temperature ?? hpState.temperature,
       top_p: sessionDetail.hyperparameters?.top_p ?? hpState.top_p,
-      top_k: sessionDetail.hyperparameters?.top_k ?? hpState.top_k,
+      top_k: sessionDetail.hyperparameters?.top_k ?? hpState.top_k
     }
 
     // Only update if any value actually differs.
@@ -110,7 +110,7 @@ export const useHyperParametersHandlers = ({
 
       if (onMetaSave)
         onMetaSave(currentSessionId, {
-          hyperparameters: result.session.hyperparameters,
+          hyperparameters: result.session.hyperparameters
         })
     } finally {
       // end interaction on commit (whether success or failure)
@@ -132,7 +132,7 @@ export const useHyperParametersHandlers = ({
 
       if (onMetaSave)
         onMetaSave(currentSessionId, {
-          hyperparameters: result.session.hyperparameters,
+          hyperparameters: result.session.hyperparameters
         })
     } finally {
       setIsInteracting(false)
@@ -153,7 +153,7 @@ export const useHyperParametersHandlers = ({
 
       if (onMetaSave)
         onMetaSave(currentSessionId, {
-          hyperparameters: result.session.hyperparameters,
+          hyperparameters: result.session.hyperparameters
         })
     } finally {
       setIsInteracting(false)
@@ -176,6 +176,6 @@ export const useHyperParametersHandlers = ({
     topK,
     setTopK,
     handleTopKMouseUp,
-    handleTopKMouseDown,
+    handleTopKMouseDown
   }
 }

@@ -31,7 +31,7 @@ export const InputField = <TFieldValues extends FieldValues = FieldValues>({
 }: InputFieldProperties<TFieldValues>): JSX.Element => {
   const {
     field,
-    fieldState: { error },
+    fieldState: { error }
   } = useController(properties)
 
   return (

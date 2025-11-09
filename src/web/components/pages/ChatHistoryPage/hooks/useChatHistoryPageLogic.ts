@@ -18,7 +18,7 @@ export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
   const { state, actions } = useSessionStore()
   const {
     sessionTree: { sessions, currentSessionId },
-    sessionDetail,
+    sessionDetail
   } = state
 
   const { selectSession, setSessionDetail, refreshSessions } = actions
@@ -35,6 +35,6 @@ export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
     selectSession,
     setSessionDetail,
     refreshSessions,
-    actions,
+    actions
   }
 }

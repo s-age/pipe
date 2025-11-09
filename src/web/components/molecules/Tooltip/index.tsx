@@ -11,7 +11,7 @@ type TooltipProperties = {
 
 export const Tooltip: ({ content, children }: TooltipProperties) => JSX.Element = ({
   content,
-  children,
+  children
 }) => {
   const { isVisible, handleMouseEnter, handleMouseLeave } = useTooltip()
 

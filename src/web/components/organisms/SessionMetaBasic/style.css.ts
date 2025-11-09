@@ -3,19 +3,19 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '../../../styles/colors.css.ts'
 
 export const metaItem = style({
-  marginBottom: '16px',
+  marginBottom: '16px'
 })
 
 export const multiStepLabel = style({
   color: colors.offWhite,
-  fontWeight: 'bold',
+  fontWeight: 'bold'
 })
 
 export const metaItemLabel = style({
   fontWeight: 'bold',
   marginBottom: '4px',
   display: 'block',
-  color: colors.offWhite,
+  color: colors.offWhite
 })
 
 export const inputFullWidth = style({
@@ -29,8 +29,8 @@ export const inputFullWidth = style({
   ':focus': {
     outline: 'none',
     border: `1px solid ${colors.cyan}`,
-    boxShadow: `0 0 0 3px ${colors.cyanBorderRGBA}`,
-  },
+    boxShadow: `0 0 0 3px ${colors.cyanBorderRGBA}`
+  }
 })
 
 export const textareaFullWidth = style({
@@ -46,6 +46,6 @@ export const textareaFullWidth = style({
   ':focus': {
     outline: 'none',
     border: `1px solid ${colors.cyan}`,
-    boxShadow: `0 0 0 3px ${colors.cyanBorderRGBA}`,
-  },
+    boxShadow: `0 0 0 3px ${colors.cyanBorderRGBA}`
+  }
 })

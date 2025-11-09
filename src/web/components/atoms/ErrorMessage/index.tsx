@@ -12,7 +12,7 @@ type ErrorMessageProperties = {
 
 export const ErrorMessage = ({
   message,
-  error,
+  error
 }: ErrorMessageProperties): JSX.Element | null => {
   const resolved =
     message ??

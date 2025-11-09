@@ -7,7 +7,7 @@ type IconProperties = {
 
 export const IconPaperPlane = ({
   className,
-  size = 24,
+  size = 24
 }: IconProperties): JSX.Element => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

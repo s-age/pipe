@@ -13,7 +13,7 @@ type UseStreamingInstruction = {
   setStreamedText: (text: string) => void
   streamingTrigger: { instruction: string; sessionId: string } | null
   setStreamingTrigger: (
-    trigger: { instruction: string; sessionId: string } | null,
+    trigger: { instruction: string; sessionId: string } | null
   ) => void
 }
 
@@ -28,7 +28,7 @@ const SESSION_DETAIL_CACHE_TTL = 30000 // 30秒
 
 export const useStreamingInstruction = (
   currentSessionId: string | null,
-  setSessionDetail: (data: SessionDetail | null) => void,
+  setSessionDetail: (data: SessionDetail | null) => void
 ): UseStreamingInstruction => {
   const [streamingTrigger, setStreamingTrigger] = useState<{
     instruction: string
@@ -55,17 +55,17 @@ export const useStreamingInstruction = (
 
       return cached.detail
     },
-    [],
+    []
   )
 
   const cacheSessionDetail = useCallback(
     (sessionId: string, detail: SessionDetail): void => {
       sessionDetailCacheReference.current[sessionId] = {
         detail,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       }
     },
-    [],
+    []
   )
 
   const memoizedStreamingOptions = useMemo((): RequestInit | undefined => {
@@ -74,9 +74,9 @@ export const useStreamingInstruction = (
     return {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ instruction: streamingTrigger.instruction }),
+      body: JSON.stringify({ instruction: streamingTrigger.instruction })
     }
   }, [streamingTrigger])
 
@@ -84,7 +84,7 @@ export const useStreamingInstruction = (
     streamedText,
     isLoading: isStreaming,
     error: streamingError, // Get error directly from useStreamingFetch
-    setStreamedText,
+    setStreamedText
   } = useStreamingFetch(
     streamingTrigger
       ? `${API_BASE_URL}/session/${streamingTrigger.sessionId}/instruction`
@@ -123,8 +123,8 @@ export const useStreamingInstruction = (
         // Clear trigger and streamed text.
         setStreamingTrigger(null)
         setStreamedText('')
-      },
-    },
+      }
+    }
   )
 
   // Completion is handled by useStreamingFetch onComplete callback passed above.
@@ -135,7 +135,7 @@ export const useStreamingInstruction = (
       console.log('Instruction to send:', instruction)
       setStreamingTrigger({ instruction, sessionId: currentSessionId })
     },
-    [currentSessionId, setStreamingTrigger],
+    [currentSessionId, setStreamingTrigger]
   )
 
   return {
@@ -145,6 +145,6 @@ export const useStreamingInstruction = (
     onSendInstruction,
     setStreamedText,
     streamingTrigger,
-    setStreamingTrigger,
+    setStreamingTrigger
   }
 }

@@ -5,7 +5,7 @@ import type {
   UseFormProps,
   UseFormReturn,
   FieldValues,
-  Resolver,
+  Resolver
 } from 'react-hook-form'
 import type { ZodTypeAny } from 'zod'
 
@@ -18,7 +18,7 @@ export type FormMethods<TFieldValues extends FieldValues = FieldValues> =
 const FormContext = createContext<FormMethods<FieldValues> | undefined>(undefined)
 
 export const useFormContext = <
-  TFieldValues extends FieldValues = FieldValues,
+  TFieldValues extends FieldValues = FieldValues
 >(): FormMethods<TFieldValues> => {
   const context = useContext(FormContext)
   if (context === undefined) {
@@ -30,7 +30,7 @@ export const useFormContext = <
 
 // A safe variant that returns undefined when no provider is present.
 export const useOptionalFormContext = <
-  TFieldValues extends FieldValues = FieldValues,
+  TFieldValues extends FieldValues = FieldValues
 >(): FormMethods<TFieldValues> | undefined =>
   useContext(FormContext) as FormMethods<TFieldValues> | undefined
 
@@ -64,7 +64,7 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
   // wrapping the `<form>` would not yet be in scope for this hook.
   const methods = useFormMethods<TFieldValues>({
     ...(properties as UseFormProps<TFieldValues>),
-    resolver: finalResolver,
+    resolver: finalResolver
   } as UseFormProps<TFieldValues>)
 
   // If the caller provides `defaultValues` and they change over time (for example

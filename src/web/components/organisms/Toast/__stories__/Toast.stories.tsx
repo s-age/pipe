@@ -19,8 +19,8 @@ const Meta = {
   component: Toasts,
   tags: ['autodocs'],
   decorators: [
-    (Story: () => JSX.Element): JSX.Element => <Wrapper>{<Story />}</Wrapper>,
-  ],
+    (Story: () => JSX.Element): JSX.Element => <Wrapper>{<Story />}</Wrapper>
+  ]
 } satisfies StoryMeta<typeof Toasts>
 
 export default Meta
@@ -62,5 +62,5 @@ const Controls = (): JSX.Element => {
 }
 
 export const Basic: Story = {
-  render: (): JSX.Element => <Controls />,
+  render: (): JSX.Element => <Controls />
 }

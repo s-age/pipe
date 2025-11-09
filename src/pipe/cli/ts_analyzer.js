@@ -21,16 +21,16 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
       name: p.getName(),
       type: p.getType().getText(),
       isStatic: p.isStatic(),
-      isReadonly: p.isReadonly(),
+      isReadonly: p.isReadonly()
     }))
     definitions.methods = classDeclaration.getMethods().map((m) => ({
       name: m.getName(),
       parameters: m.getParameters().map((p) => ({
         name: p.getName(),
-        type: p.getType().getText(),
+        type: p.getType().getText()
       })),
       returnType: m.getReturnType().getText(),
-      isStatic: m.isStatic(),
+      isStatic: m.isStatic()
     }))
 
     return definitions
@@ -42,7 +42,7 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
     definitions.type = 'function'
     definitions.parameters = functionDeclaration.getParameters().map((p) => ({
       name: p.getName(),
-      type: p.getType().getText(),
+      type: p.getType().getText()
     }))
     definitions.returnType = functionDeclaration.getReturnType().getText()
 
@@ -76,7 +76,7 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
             definitions.props = propsInterface.getProperties().map((p) => ({
               name: p.getName(),
               type: p.getType().getText(),
-              isOptional: p.hasQuestionToken(),
+              isOptional: p.hasQuestionToken()
             }))
 
             return definitions
@@ -88,7 +88,7 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
             definitions.props = aliasedType.getProperties().map((p) => ({
               name: p.getName(),
               type: p.getTypeAtLocation(propsTypeAlias).getText(),
-              isOptional: p.compilerObject.flags & 16777216,
+              isOptional: p.compilerObject.flags & 16777216
             }))
 
             return definitions
@@ -99,7 +99,7 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
       definitions.type = 'React.ArrowFunctionComponent'
       definitions.parameters = parameters.map((p) => ({
         name: p.getName(),
-        type: p.getType().getText(),
+        type: p.getType().getText()
       }))
       definitions.returnType = returnType
 
@@ -118,7 +118,7 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
     definitions.type = 'interface'
     definitions.properties = interfaceDeclaration.getProperties().map((p) => ({
       name: p.getName(),
-      type: p.getType().getText(),
+      type: p.getType().getText()
     }))
 
     return definitions
@@ -154,7 +154,7 @@ const getReferences = (filePath, symbolName, project) => {
           .getSourceFile()
           .getFullText()
           .split('\n')
-          [ref.getStartLineNumber() - 1].trim(),
+          [ref.getStartLineNumber() - 1].trim()
       })
     })
   }
@@ -251,16 +251,16 @@ const findSimilarCode = (
   symbolName,
   searchDirectory,
   maxResults = 3,
-  project,
+  project
 ) => {
   const baseInfo = getSnippetAndTypeDefinitions(baseFilePath, symbolName, project)
   if (!baseInfo.snippet) {
     console.error(
-      `DEBUG: No base snippet found for symbol '${symbolName}' in ${baseFilePath}`,
+      `DEBUG: No base snippet found for symbol '${symbolName}' in ${baseFilePath}`
     )
 
     return {
-      error: `No code snippet found for symbol '${symbolName}' in ${baseFilePath}`,
+      error: `No code snippet found for symbol '${symbolName}' in ${baseFilePath}`
     }
   }
 
@@ -285,7 +285,7 @@ const findSimilarCode = (
         tsFiles.push(fullPath)
       } else {
         process.stderr.write(
-          `DEBUG: Skipping non-TS/TSX or .css.ts file: ${fullPath}\n`,
+          `DEBUG: Skipping non-TS/TSX or .css.ts file: ${fullPath}\n`
         )
       }
     }
@@ -305,11 +305,11 @@ const findSimilarCode = (
     if (targetSymbol === 'index') {
       targetSymbol = path.basename(path.dirname(filePath))
       process.stderr.write(
-        `DEBUG: Inferred symbol for index.tsx: ${targetSymbol} from ${filePath}\n`,
+        `DEBUG: Inferred symbol for index.tsx: ${targetSymbol} from ${filePath}\n`
       )
     } else {
       process.stderr.write(
-        `DEBUG: Using file name as symbol: ${targetSymbol} for ${filePath}\n`,
+        `DEBUG: Using file name as symbol: ${targetSymbol} for ${filePath}\n`
       )
     }
 
@@ -317,27 +317,27 @@ const findSimilarCode = (
     if (otherSnippet) {
       const similarity = calculateSimilarity(baseSnippet, otherSnippet)
       process.stderr.write(
-        `DEBUG: Comparing ${symbolName} (base) with ${targetSymbol} (${filePath}). Similarity: ${similarity}\n`,
+        `DEBUG: Comparing ${symbolName} (base) with ${targetSymbol} (${filePath}). Similarity: ${similarity}\n`
       )
       if (similarity > 0.5) {
         // 類似度の閾値
         process.stderr.write(
-          `DEBUG: Found similar code (similarity > 0.5): ${targetSymbol} in ${filePath}\n`,
+          `DEBUG: Found similar code (similarity > 0.5): ${targetSymbol} in ${filePath}\n`
         )
         similarCodes.push({
           file_path: filePath,
           symbol_name: targetSymbol,
           similarity: similarity,
-          snippet: otherSnippet,
+          snippet: otherSnippet
         })
       } else {
         process.stderr.write(
-          `DEBUG: Similarity below threshold (0.5): ${targetSymbol} in ${filePath}\n`,
+          `DEBUG: Similarity below threshold (0.5): ${targetSymbol} in ${filePath}\n`
         )
       }
     } else {
       process.stderr.write(
-        `DEBUG: No snippet found for symbol '${targetSymbol}' in ${filePath}\n`,
+        `DEBUG: No snippet found for symbol '${targetSymbol}' in ${filePath}\n`
       )
     }
   }
@@ -346,13 +346,13 @@ const findSimilarCode = (
 
   return {
     base_symbol_type_definitions: baseTypeDefinitions,
-    similar_codes: similarCodes.slice(0, maxResults),
+    similar_codes: similarCodes.slice(0, maxResults)
   }
 }
 
 const main = async () => {
   const project = new Project({
-    tsConfigFilePath: path.join(projectRoot, 'src', 'web', 'tsconfig.json'),
+    tsConfigFilePath: path.join(projectRoot, 'src', 'web', 'tsconfig.json')
   })
 
   const args = process.argv.slice(2)
@@ -367,15 +367,15 @@ const main = async () => {
       JSON.stringify(
         { error: 'Missing required arguments: filePath, symbolName, or action.' },
         null,
-        2,
-      ),
+        2
+      )
     )
     process.exit(1)
   }
 
   if (!path.isAbsolute(filePath)) {
     console.log(
-      JSON.stringify({ error: `File path must be absolute: ${filePath}` }, null, 2),
+      JSON.stringify({ error: `File path must be absolute: ${filePath}` }, null, 2)
     )
     process.exit(1)
   }
@@ -390,7 +390,7 @@ const main = async () => {
   }
 
   process.stderr.write(
-    `DEBUG: Number of source files in project: ${project.getSourceFiles().length}\n`,
+    `DEBUG: Number of source files in project: ${project.getSourceFiles().length}\n`
   )
 
   let result = null
@@ -417,11 +417,11 @@ const main = async () => {
             JSON.stringify(
               {
                 error:
-                  'Missing required argument: searchDirectory for find_similar_code.',
+                  'Missing required argument: searchDirectory for find_similar_code.'
               },
               null,
-              2,
-            ),
+              2
+            )
           )
           process.exit(1)
         }
@@ -430,7 +430,7 @@ const main = async () => {
           symbolName,
           searchDirectory,
           maxResults,
-          project,
+          project
         )
         break
       default:

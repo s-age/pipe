@@ -10,20 +10,20 @@ export const appContainer = style({
   // page background: use app dark background so edges aren't white
   // make the outermost background pure black so panels sit on black
   background: '#000000',
-  padding: '0',
+  padding: '0'
 })
 
 export const mainContent = style({
   display: 'flex',
   flex: '1',
   overflow: 'hidden',
-  gap: '0',
+  gap: '0'
 })
 
 export const leftColumn = style({
   flex: '0 0 320px',
   padding: '0',
-  overflowY: 'auto',
+  overflowY: 'auto'
 })
 
 export const centerColumn = style({
@@ -32,7 +32,7 @@ export const centerColumn = style({
   overflowY: 'auto',
   display: 'flex',
   flexDirection: 'column',
-  background: colors.panelBackground,
+  background: colors.panelBackground
 })
 
 export const rightColumn = style({
@@ -44,7 +44,7 @@ export const rightColumn = style({
   flexDirection: 'column',
   boxSizing: 'content-box',
   // ensure right panel fills available height
-  alignItems: 'stretch',
+  alignItems: 'stretch'
 })
 
 export const panel = style({
@@ -59,13 +59,13 @@ export const panel = style({
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
-  flex: '1 1 auto',
+  flex: '1 1 auto'
 })
 
 export const panelBottomSpacing = style({
-  marginBottom: '8px',
+  marginBottom: '8px'
 })
 
 export const errorMessage = style({
-  color: 'red',
+  color: 'red'
 })

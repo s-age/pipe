@@ -13,7 +13,7 @@ import {
   multiStepLabel,
   metaItemLabel,
   inputFullWidth,
-  textareaFullWidth,
+  textareaFullWidth
 } from './style.css'
 
 type SessionMetaBasicProperties = {
@@ -28,14 +28,14 @@ export const SessionMetaBasic = ({
   sessionDetail,
   currentSessionId,
   refreshSessions,
-  setSessionDetail,
+  setSessionDetail
 }: SessionMetaBasicProperties): React.JSX.Element => {
   const register = useOptionalFormContext()?.register
   const { handleMultiStepReasoningChange } = useMultiStepReasoningHandlers({
     currentSessionId,
     sessionDetail,
     refreshSessions,
-    setSessionDetail,
+    setSessionDetail
   })
 
   return (

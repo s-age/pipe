@@ -7,5 +7,5 @@ import { App } from './App' // 後で作成するメインコンポーネント
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>,
+  </React.StrictMode>
 )

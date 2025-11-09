@@ -6,7 +6,7 @@ import { deleteTurn } from '@/lib/api/session/deleteTurn'
 import { forkSession } from '@/lib/api/session/forkSession'
 
 export const useTurnActions = (
-  refreshSessions: () => Promise<void>,
+  refreshSessions: () => Promise<void>
 ): {
   handleDeleteTurn: (sessionId: string, turnIndex: number) => Promise<void>
   handleForkSession: (sessionId: string, forkIndex: number) => Promise<void>
@@ -15,7 +15,6 @@ export const useTurnActions = (
   const toast = useToast()
   const handleDeleteTurn = useCallback(
     async (sessionId: string, turnIndex: number): Promise<void> => {
-      if (!window.confirm('Are you sure you want to delete this turn?')) return
       try {
         await deleteTurn(sessionId, turnIndex)
         await refreshSessions()
@@ -23,18 +22,11 @@ export const useTurnActions = (
         toast.failure((error as Error).message || 'Failed to delete turn.')
       }
     },
-    [refreshSessions, toast],
+    [refreshSessions, toast]
   )
 
   const handleForkSession = useCallback(
     async (sessionId: string, forkIndex: number): Promise<void> => {
-      if (
-        !window.confirm(
-          `Are you sure you want to fork this session at turn index ${forkIndex + 1}?`,
-        )
-      )
-        return
-
       try {
         const result = await forkSession(sessionId, forkIndex)
         if (result.new_session_id) {
@@ -46,7 +38,7 @@ export const useTurnActions = (
         toast.failure((error as Error).message || 'Failed to fork session.')
       }
     },
-    [toast],
+    [toast]
   )
 
   const handleDeleteSession = useCallback(
@@ -63,7 +55,7 @@ export const useTurnActions = (
         toast.failure((error as Error).message || 'Failed to delete session.')
       }
     },
-    [toast],
+    [toast]
   )
 
   return { handleDeleteTurn, handleForkSession, handleDeleteSession }

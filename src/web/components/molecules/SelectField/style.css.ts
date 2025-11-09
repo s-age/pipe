@@ -6,5 +6,5 @@ export const errorMessageStyle = style({
   color: colors.error,
   fontSize: '0.875em',
   marginTop: '-10px',
-  marginBottom: '15px',
+  marginBottom: '15px'
 })

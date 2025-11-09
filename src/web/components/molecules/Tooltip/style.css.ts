@@ -4,7 +4,7 @@ import { colors } from '../../../styles/colors.css'
 
 export const tooltipContainer = style({
   position: 'relative',
-  display: 'inline-block',
+  display: 'inline-block'
 })
 
 export const tooltipText = style({
@@ -26,7 +26,7 @@ export const tooltipText = style({
   selectors: {
     [`${tooltipContainer}:hover &`]: {
       visibility: 'visible',
-      opacity: 1,
-    },
-  },
+      opacity: 1
+    }
+  }
 })

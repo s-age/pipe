@@ -13,7 +13,7 @@ export const StartSessionPage: () => JSX.Element = () => {
     sessionTree,
     settings,
     loading,
-    error: sessionDataError,
+    error: sessionDataError
   } = useStartSessionData()
   const { handleSubmit } = useSessionCreation()
 

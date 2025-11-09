@@ -18,7 +18,7 @@ type UseStartSessionFormProperties = {
 export const useStartSessionForm = ({
   onSubmit,
   sessions,
-  defaultSettings,
+  defaultSettings
 }: UseStartSessionFormProperties): {
   control: UseFormReturn<StartSessionFormInputs>['control']
   handleSubmit: UseFormReturn<StartSessionFormInputs>['handleSubmit']
@@ -36,7 +36,7 @@ export const useStartSessionForm = ({
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-    reset,
+    reset
   } = useForm<StartSessionFormInputs>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,9 +52,9 @@ export const useStartSessionForm = ({
       hyperparameters: {
         temperature: defaultSettings?.parameters?.temperature ?? 0.7,
         top_p: defaultSettings?.parameters?.top_p ?? 0.9,
-        top_k: defaultSettings?.parameters?.top_k ?? 5,
-      },
-    },
+        top_k: defaultSettings?.parameters?.top_k ?? 5
+      }
+    }
   })
 
   const temperatureValue = useWatch({ control, name: 'hyperparameters.temperature' })
@@ -69,7 +69,7 @@ export const useStartSessionForm = ({
 
   const onFormSubmit = useCallback(
     (data: StartSessionFormInputs) => onSubmit(data as StartSessionRequest),
-    [onSubmit],
+    [onSubmit]
   )
 
   return {
@@ -83,6 +83,6 @@ export const useStartSessionForm = ({
     topKValue,
     parentSessionOptions,
     handleCancel,
-    reset,
+    reset
   }
 }

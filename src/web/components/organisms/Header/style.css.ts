@@ -21,12 +21,12 @@ export const headerContainer = style({
     #0A0A0A 100%
   )`,
   boxShadow: `inset 0 -1px 0 0 ${colors.mediumBackground}`,
-  color: colors.offWhite,
+  color: colors.offWhite
 })
 
 export const headerTitle = style({
   fontWeight: 'bold',
-  fontSize: '1.1rem',
+  fontSize: '1.1rem'
 })
 
 export const searchSquare = style({
@@ -39,14 +39,14 @@ export const searchSquare = style({
   background: 'rgba(0,0,0,0.35)',
   color: colors.offWhite,
   marginRight: '12px',
-  cursor: 'pointer',
+  cursor: 'pointer'
 })
 
 export const searchWrapper = style({
   flex: '1',
   display: 'flex',
   justifyContent: 'center',
-  position: 'relative',
+  position: 'relative'
 })
 
 export const searchInput = style({
@@ -62,7 +62,7 @@ export const searchInput = style({
   fontSize: '1rem',
   outline: 'none',
   boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
-  '::placeholder': { color: 'rgba(255,255,255,0.8)' },
+  '::placeholder': { color: 'rgba(255,255,255,0.8)' }
 })
 
 export const searchIconButton = style({
@@ -80,5 +80,5 @@ export const searchIconButton = style({
   color: colors.offWhite,
   zIndex: 2,
   cursor: 'pointer',
-  padding: 0,
+  padding: 0
 })

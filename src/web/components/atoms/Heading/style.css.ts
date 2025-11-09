@@ -6,9 +6,9 @@ export const h1Style = style({
   color: colors.accent,
   borderBottom: `1px solid ${colors.mediumBackground}`,
   paddingBottom: '12px',
-  marginBottom: '20px',
+  marginBottom: '20px'
 })
 
 export const h2Style = style({
-  color: colors.accent,
+  color: colors.accent
 })

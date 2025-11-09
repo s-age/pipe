@@ -6,7 +6,7 @@ export const container = style({
   display: 'inline-flex',
   alignItems: 'center',
   gap: '8px',
-  cursor: 'pointer',
+  cursor: 'pointer'
 })
 export const control = style({
   display: 'inline-flex',
@@ -17,17 +17,17 @@ export const control = style({
   border: `1px solid ${colors.lightText}`,
   borderRadius: '50%',
   background: 'transparent',
-  transition: 'all 0.12s ease',
+  transition: 'all 0.12s ease'
 })
 
 export const svg = style({
   width: '12px',
   height: '12px',
-  display: 'block',
+  display: 'block'
 })
 
 export const labelText = style({
-  userSelect: 'none',
+  userSelect: 'none'
 })
 
 export const hiddenInput = style({
@@ -39,18 +39,18 @@ export const hiddenInput = style({
   overflow: 'hidden',
   clip: 'rect(0 0 0 0)',
   whiteSpace: 'nowrap',
-  border: 0,
+  border: 0
 })
 
 globalStyle(`.${container} input:checked + .${control}`, {
   borderColor: colors.accent,
-  backgroundColor: colors.accent,
+  backgroundColor: colors.accent
 })
 
 globalStyle(`.${container} input:checked + .${control} svg circle`, {
-  fill: colors.accent,
+  fill: colors.accent
 })
 
 globalStyle(`.${container} input:focus + .${control}`, {
-  boxShadow: `0 0 0 3px ${colors.accent}33`,
+  boxShadow: `0 0 0 3px ${colors.accent}33`
 })

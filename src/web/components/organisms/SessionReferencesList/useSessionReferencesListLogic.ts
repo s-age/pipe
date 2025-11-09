@@ -13,7 +13,7 @@ export const useSessionReferencesListLogic = ({
   sessionDetail,
   currentSessionId,
   setSessionDetail,
-  refreshSessions,
+  refreshSessions
 }: UseSessionReferencesListLogicProperties): {
   handleReferenceCheckboxChange: (index: number) => void
   handleReferencePersistToggle: (index: number) => void
@@ -22,7 +22,7 @@ export const useSessionReferencesListLogic = ({
   const {
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
-    handleUpdateReferenceDisabled,
+    handleUpdateReferenceDisabled
   } = useReferenceActions(sessionDetail, setSessionDetail, refreshSessions)
 
   const handleReferenceCheckboxChange = (index: number): void => {
@@ -32,7 +32,7 @@ export const useSessionReferencesListLogic = ({
     handleUpdateReferenceDisabled(
       currentSessionId,
       index,
-      newReferences[index].disabled,
+      newReferences[index].disabled
     )
   }
 
@@ -45,7 +45,7 @@ export const useSessionReferencesListLogic = ({
 
   const handleReferenceTtlChange = (
     index: number,
-    action: 'increment' | 'decrement',
+    action: 'increment' | 'decrement'
   ): void => {
     if (!currentSessionId || !sessionDetail) return
     const newReferences = [...sessionDetail.references]
@@ -61,6 +61,6 @@ export const useSessionReferencesListLogic = ({
   return {
     handleReferenceCheckboxChange,
     handleReferencePersistToggle,
-    handleReferenceTtlChange,
+    handleReferenceTtlChange
   }
 }

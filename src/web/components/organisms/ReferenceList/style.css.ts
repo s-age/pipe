@@ -3,20 +3,20 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '@/styles/colors.css'
 
 export const metaItem = style({
-  marginBottom: '15px',
+  marginBottom: '15px'
 })
 
 export const metaItemLabel = style({
   display: 'block',
   marginBottom: '5px',
   fontWeight: 'bold',
-  color: colors.offWhite,
+  color: colors.offWhite
 })
 
 export const referencesList = style({
   listStyle: 'none',
   padding: 0,
-  margin: 0,
+  margin: 0
 })
 
 export const referenceItem = style({
@@ -24,21 +24,21 @@ export const referenceItem = style({
   padding: '8px',
   border: '1px solid #eee',
   borderRadius: '4px',
-  backgroundColor: '#f9f9f9',
+  backgroundColor: '#f9f9f9'
 })
 
 export const referenceControls = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  flexWrap: 'wrap',
+  flexWrap: 'wrap'
 })
 
 export const referenceLabel = style({
   display: 'flex',
   alignItems: 'center',
   flexGrow: 1,
-  marginRight: '10px',
+  marginRight: '10px'
 })
 
 export const referencePath = style({
@@ -48,9 +48,9 @@ export const referencePath = style({
   selectors: {
     '&[data-disabled="true"]': {
       textDecoration: 'line-through',
-      color: colors.grayText,
-    },
-  },
+      color: colors.grayText
+    }
+  }
 })
 
 export const materialIcons = style({
@@ -68,39 +68,39 @@ export const materialIcons = style({
   WebkitFontSmoothing: 'antialiased',
   textRendering: 'optimizeLegibility',
   MozOsxFontSmoothing: 'grayscale',
-  fontFeatureSettings: 'liga',
+  fontFeatureSettings: 'liga'
 })
 
 export const ttlControls = style({
   display: 'flex',
   alignItems: 'center',
-  gap: '5px',
+  gap: '5px'
 })
 
 export const ttlValue = style({
   minWidth: '20px',
-  textAlign: 'center',
+  textAlign: 'center'
 })
 
 export const referenceCheckboxMargin = style({
-  marginRight: '5px',
+  marginRight: '5px'
 })
 
 export const persistButton = style({
-  minWidth: '32px',
+  minWidth: '32px'
 })
 
 export const lockIconStyle = style({
   color: '#ccc',
   selectors: {
     '&[data-locked="true"]': {
-      color: '#007bff',
-    },
-  },
+      color: '#007bff'
+    }
+  }
 })
 
 export const noItemsMessage = style({
   color: colors.grayText,
   fontStyle: 'italic',
-  marginTop: '10px',
+  marginTop: '10px'
 })

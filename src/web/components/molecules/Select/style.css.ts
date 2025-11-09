@@ -13,15 +13,15 @@ export const selectStyle = style({
   cursor: 'pointer',
   ':focus': {
     borderColor: colors.accent,
-    outline: 'none',
-  },
+    outline: 'none'
+  }
 })
 
 export const trigger = style({
   display: 'inline-block',
   width: '100%',
   padding: '8px 12px',
-  color: colors.lightText,
+  color: colors.lightText
 })
 
 export const panel = style({
@@ -30,7 +30,7 @@ export const panel = style({
   margin: 0,
   background: colors.mediumBackground,
   borderRadius: 6,
-  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+  boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
 })
 
 export const option = style({
@@ -40,14 +40,14 @@ export const option = style({
   background: 'transparent',
   selectors: {
     '&:not(:last-child)': {
-      marginBottom: '4px',
-    },
-  },
+      marginBottom: '4px'
+    }
+  }
 })
 
 export const optionHighlighted = style({
   background: colors.lightBlue,
-  color: colors.darkBackground,
+  color: colors.darkBackground
 })
 
 export const searchInput = style({
@@ -57,5 +57,5 @@ export const searchInput = style({
   borderRadius: 6,
   border: `1px solid ${colors.lightText}`,
   background: colors.darkBackground,
-  color: colors.lightText,
+  color: colors.lightText
 })

@@ -15,7 +15,7 @@ type TextAreaProperties = Omit<
 }
 
 export const TextArea: (properties: TextAreaProperties) => JSX.Element = (
-  properties,
+  properties
 ) => {
   const {
     onChange: _onChange,
@@ -31,7 +31,7 @@ export const TextArea: (properties: TextAreaProperties) => JSX.Element = (
   void _onChange
 
   const { id, registerProperties, visibleValue, handleChange } = useTextArea(
-    properties as unknown as Parameters<typeof useTextArea>[0],
+    properties as unknown as Parameters<typeof useTextArea>[0]
   )
 
   return (

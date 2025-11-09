@@ -23,7 +23,7 @@ import {
   chatRoot,
   footerForm,
   instructionWrapper,
-  overlaySendButton,
+  overlaySendButton
 } from './style.css'
 
 type ChatHistoryProperties = {
@@ -40,7 +40,7 @@ const NOOP = (): void => {}
 
 export const ChatHistoryHeader = ({
   sessionDetail,
-  handleDeleteCurrentSession,
+  handleDeleteCurrentSession
 }: Pick<ChatHistoryProperties, 'sessionDetail'> & {
   handleDeleteCurrentSession: () => void
 }): JSX.Element => {
@@ -76,7 +76,7 @@ export const ChatHistoryList = ({
   streamedText,
   turnsListReference,
   handleDeleteTurn,
-  handleForkSession,
+  handleForkSession
 }: Pick<ChatHistoryProperties, 'sessionDetail' | 'currentSessionId' | 'expertMode'> & {
   isStreaming: boolean
   streamedText: string | null
@@ -111,7 +111,7 @@ export const ChatHistoryList = ({
                 expertMode={expertMode}
                 onDeleteTurn={handleDeleteTurn}
                 onForkSession={handleForkSession}
-              />,
+              />
             )
           }
 
@@ -123,7 +123,7 @@ export const ChatHistoryList = ({
             turn={{
               type: 'model_response',
               content: streamedText,
-              timestamp: new Date().toISOString(),
+              timestamp: new Date().toISOString()
             }}
             index={sessionDetail.turns.length}
             sessionId={currentSessionId}
@@ -142,7 +142,7 @@ export const ChatHistoryFooter = ({
   currentSessionId,
   onSendInstruction,
   refreshSessions,
-  isStreaming,
+  isStreaming
 }: {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
@@ -168,7 +168,7 @@ export const ChatHistoryInstructionForm = ({
   currentSessionId,
   onSendInstruction,
   refreshSessions,
-  isStreaming,
+  isStreaming
 }: {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
@@ -182,7 +182,7 @@ export const ChatHistoryInstructionForm = ({
     const { register, onTextAreaKeyDown, onSendClick } = useInstructionForm({
       currentSessionId,
       onSendInstruction,
-      refreshSessions,
+      refreshSessions
     })
 
     return (
@@ -228,7 +228,7 @@ export const ChatHistory = ({
   currentSessionId,
   expertMode,
   setSessionDetail,
-  refreshSessions,
+  refreshSessions
 }: ChatHistoryProperties): JSX.Element => {
   const {
     streamedText,
@@ -237,12 +237,12 @@ export const ChatHistory = ({
     handleDeleteTurn,
     handleForkSession,
     handleDeleteCurrentSession,
-    onSendInstruction,
+    onSendInstruction
   } = useChatHistoryLogic({
     currentSessionId,
     // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
     setSessionDetail: setSessionDetail as unknown as (data: unknown) => void,
-    refreshSessions,
+    refreshSessions
   })
   // scrolling handled in useChatHistoryLogic
 

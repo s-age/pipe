@@ -17,7 +17,7 @@ type SessionTreeProperties = {
 export const SessionTree = ({
   sessions,
   currentSessionId,
-  selectSession,
+  selectSession
 }: SessionTreeProperties): JSX.Element => {
   const { handleNewChatClick } = useSessionTreeHandlers()
 

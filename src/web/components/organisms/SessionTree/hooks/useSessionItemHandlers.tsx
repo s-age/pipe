@@ -7,7 +7,7 @@ import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 export const useSessionItemHandlers = ({
   session,
-  selectSession,
+  selectSession
 }: {
   session: SessionOverview
   selectSession: (id: string | null, detail: SessionDetail | null) => void
@@ -34,7 +34,7 @@ export const useSessionItemHandlers = ({
         toast.failure((error as Error).message || 'Failed to load session data.')
       }
     },
-    [selectSession, session.session_id, toast],
+    [selectSession, session.session_id, toast]
   )
 
   return { onClick }

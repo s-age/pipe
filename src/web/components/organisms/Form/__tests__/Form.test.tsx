@@ -9,7 +9,7 @@ import type { FormData } from './schema'
 const MyFormContent = (): React.JSX.Element => {
   const {
     register,
-    formState: { errors },
+    formState: { errors }
   } = useFormContext<FormData>()
 
   return (
@@ -31,14 +31,14 @@ describe('Form', () => {
     render(
       <Form onSubmit={handleSubmit} resolver={zodResolver(schema)}>
         <MyFormContent />
-      </Form>,
+      </Form>
     )
 
     fireEvent.change(screen.getByTestId('name-input'), {
-      target: { value: 'John Doe' },
+      target: { value: 'John Doe' }
     })
     fireEvent.change(screen.getByTestId('email-input'), {
-      target: { value: 'john.doe@example.com' },
+      target: { value: 'john.doe@example.com' }
     })
     fireEvent.click(screen.getByTestId('submit-button'))
 
@@ -46,9 +46,9 @@ describe('Form', () => {
       expect(handleSubmit).toHaveBeenCalledWith(
         {
           name: 'John Doe',
-          email: 'john.doe@example.com',
+          email: 'john.doe@example.com'
         },
-        expect.anything(),
+        expect.anything()
       )
     })
     expect(screen.queryByTestId('name-error')).not.toBeInTheDocument()
@@ -60,19 +60,19 @@ describe('Form', () => {
     render(
       <Form onSubmit={handleSubmit} resolver={zodResolver(schema)}>
         <MyFormContent />
-      </Form>,
+      </Form>
     )
 
     fireEvent.change(screen.getByTestId('name-input'), { target: { value: '' } })
     fireEvent.change(screen.getByTestId('email-input'), {
-      target: { value: 'invalid-email' },
+      target: { value: 'invalid-email' }
     })
     fireEvent.click(screen.getByTestId('submit-button'))
 
     await waitFor(() => {
       expect(screen.getByTestId('name-error')).toHaveTextContent('Name is required')
       expect(screen.getByTestId('email-error')).toHaveTextContent(
-        'Invalid email address',
+        'Invalid email address'
       )
     })
     expect(handleSubmit).not.toHaveBeenCalled()

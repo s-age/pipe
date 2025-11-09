@@ -5,12 +5,12 @@ import { colors } from '../../../styles/colors.css'
 export const inputFieldStyle = style({
   background: colors.lightText,
   borderRadius: '4px',
-  padding: '8px',
+  padding: '8px'
 })
 
 export const errorMessageStyle = style({
   color: colors.error,
   fontSize: '0.875em',
   marginTop: '-10px',
-  marginBottom: '15px',
+  marginBottom: '15px'
 })

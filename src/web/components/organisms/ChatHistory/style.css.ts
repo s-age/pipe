@@ -12,14 +12,14 @@ export const turnsColumn = style({
   borderRight: `1px solid ${colors.mediumBackground}`,
   borderRadius: '10px',
   minWidth: 0,
-  minHeight: 0,
+  minHeight: 0
 })
 
 export const chatRoot = style({
   display: 'flex',
   flexDirection: 'column',
   flex: '1 1 0',
-  minHeight: 0,
+  minHeight: 0
 })
 
 export const turnsHeader = style({
@@ -30,7 +30,7 @@ export const turnsHeader = style({
   color: colors.accent,
   position: 'sticky',
   top: 0,
-  zIndex: 2,
+  zIndex: 2
 })
 
 export const turnsListSection = style({
@@ -38,7 +38,7 @@ export const turnsListSection = style({
   overflowY: 'auto',
   padding: '16px',
   color: colors.offWhite,
-  minHeight: 0,
+  minHeight: 0
 })
 
 export const newInstructionControl = style({
@@ -47,7 +47,7 @@ export const newInstructionControl = style({
   alignItems: 'stretch',
   position: 'sticky',
   bottom: 0,
-  zIndex: 2,
+  zIndex: 2
 })
 
 // Ensure the form inside the sticky footer stretches and lays out its children
@@ -57,7 +57,7 @@ export const footerForm = style({
   flex: '1 1 auto',
   gap: '12px',
   alignItems: 'stretch',
-  width: '100%',
+  width: '100%'
 })
 
 export const instructionTextarea = style({
@@ -78,15 +78,15 @@ export const instructionTextarea = style({
   ':focus': {
     border: `1px solid ${colors.accent}`,
     outline: 'none',
-    boxShadow: `0 0 0 2px ${colors.cyanBorderRGBA}`,
-  },
+    boxShadow: `0 0 0 2px ${colors.cyanBorderRGBA}`
+  }
 })
 
 export const instructionWrapper = style({
   position: 'relative',
   width: '100%',
   display: 'flex',
-  alignItems: 'stretch',
+  alignItems: 'stretch'
 })
 
 export const overlaySendButton = style({
@@ -113,15 +113,15 @@ export const overlaySendButton = style({
       color: colors.grayText,
       border: `1px solid ${colors.mediumBackground}`,
       cursor: 'not-allowed',
-      opacity: 0.85,
-    },
-  },
+      opacity: 0.85
+    }
+  }
 })
 
 export const welcomeMessage = style({
   padding: '12px',
   textAlign: 'center',
-  color: colors.grayText,
+  color: colors.grayText
 })
 
 // Provide named accents for components that want to use the palette
@@ -129,5 +129,5 @@ export const chatAccents = {
   cyan: colors.cyan,
   cyanAlt: colors.cyanAlt,
   redAccent: colors.error,
-  redStrong: colors.error,
+  redStrong: colors.error
 }

@@ -10,7 +10,7 @@ export const overlay = style({
   alignItems: 'center',
   justifyContent: 'center',
   zIndex: 1000,
-  padding: '24px',
+  padding: '24px'
 })
 
 export const content = style({
@@ -21,5 +21,5 @@ export const content = style({
   maxWidth: '90%',
   boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
   border: `1px solid ${colors.grayText}`,
-  padding: '20px',
+  padding: '20px'
 })

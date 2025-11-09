@@ -10,7 +10,7 @@ type SessionReferencesHandlersProperties = {
 export const useSessionReferencesHandlers = ({
   handleReferenceCheckboxChange,
   handleReferencePersistToggle,
-  handleReferenceTtlChange,
+  handleReferenceTtlChange
 }: SessionReferencesHandlersProperties): {
   handleCheckboxChange: (event: ChangeEvent<HTMLInputElement>) => void
   handlePersistToggle: (event: MouseEvent<HTMLButtonElement>) => void
@@ -22,7 +22,7 @@ export const useSessionReferencesHandlers = ({
       if (!index) return
       handleReferenceCheckboxChange(Number(index))
     },
-    [handleReferenceCheckboxChange],
+    [handleReferenceCheckboxChange]
   )
 
   const handlePersistToggle = useCallback(
@@ -31,7 +31,7 @@ export const useSessionReferencesHandlers = ({
       if (!index) return
       handleReferencePersistToggle(Number(index))
     },
-    [handleReferencePersistToggle],
+    [handleReferencePersistToggle]
   )
 
   const handleTtlAction = useCallback(
@@ -44,7 +44,7 @@ export const useSessionReferencesHandlers = ({
       if (!index || !action) return
       handleReferenceTtlChange(Number(index), action)
     },
-    [handleReferenceTtlChange],
+    [handleReferenceTtlChange]
   )
 
   return { handleCheckboxChange, handlePersistToggle, handleTtlAction }

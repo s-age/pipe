@@ -1,5 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
 
+import { ConfirmModal } from '@/components/molecules/ConfirmModal'
+import { useModal } from '@/components/molecules/Modal/hooks/useModal'
 import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { useStreamingInstruction } from '@/components/pages/ChatHistoryPage/hooks/useStreamingInstruction'
 
@@ -27,14 +29,14 @@ type ChatHistoryLogicReturn = {
 export const useChatHistoryLogic = ({
   currentSessionId,
   setSessionDetail,
-  refreshSessions,
+  refreshSessions
 }: ChatHistoryProperties): ChatHistoryLogicReturn => {
   const {
     streamedText,
     isStreaming,
     streamingError,
     onSendInstruction,
-    setStreamingTrigger,
+    setStreamingTrigger
   } = useStreamingInstruction(currentSessionId, setSessionDetail)
 
   const { handleDeleteTurn, handleForkSession, handleDeleteSession } =
@@ -62,9 +64,42 @@ export const useChatHistoryLogic = ({
     scrollToBottom()
   }, [streamedText, currentSessionId, scrollToBottom])
 
+  const { show, hide } = useModal()
+
+  const modalIdReference = useRef<number | null>(null)
+
   const handleDeleteCurrentSession = useCallback((): void => {
-    if (currentSessionId) void handleDeleteSession(currentSessionId)
-  }, [currentSessionId, handleDeleteSession])
+    if (!currentSessionId) return
+
+    const sessionIdAtShow = currentSessionId
+
+    const handleConfirm = (): void => {
+      void handleDeleteSession(sessionIdAtShow)
+      if (modalIdReference.current !== null) {
+        hide(modalIdReference.current)
+        modalIdReference.current = null
+      }
+    }
+
+    const handleCancel = (): void => {
+      if (modalIdReference.current !== null) {
+        hide(modalIdReference.current)
+        modalIdReference.current = null
+      }
+    }
+
+    modalIdReference.current = show(
+      React.createElement(ConfirmModal, {
+        title: 'Delete Session',
+        message:
+          'Are you sure you want to delete this session? This action cannot be undone.',
+        onConfirm: handleConfirm,
+        onCancel: handleCancel,
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      })
+    )
+  }, [currentSessionId, handleDeleteSession, hide, show])
 
   return {
     streamedText,
@@ -75,7 +110,7 @@ export const useChatHistoryLogic = ({
     handleDeleteTurn,
     handleForkSession,
     handleDeleteSession,
-    onSendInstruction,
+    onSendInstruction
   }
 }
 

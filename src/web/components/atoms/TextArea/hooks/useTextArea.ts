@@ -3,7 +3,7 @@ import type { TextareaHTMLAttributes } from 'react'
 import type {
   FieldValues,
   UseFormRegister,
-  UseFormRegisterReturn,
+  UseFormRegisterReturn
 } from 'react-hook-form'
 
 import { useOptionalFormContext } from '@/components/organisms/Form'
@@ -31,7 +31,7 @@ export const useTextArea = ({
   onChange,
   register,
   name,
-  id: idProperty,
+  id: idProperty
 }: UseTextAreaProperties): UseTextAreaReturn => {
   const fallbackId = useId()
   const resolvedId =
@@ -58,7 +58,7 @@ export const useTextArea = ({
       }
       onChange?.(v)
     },
-    [onChange, registerProperties],
+    [onChange, registerProperties]
   )
 
   const visibleValue = controlledValue
@@ -67,7 +67,7 @@ export const useTextArea = ({
     id: resolvedId,
     registerProperties,
     visibleValue,
-    handleChange,
+    handleChange
   }
 }
 

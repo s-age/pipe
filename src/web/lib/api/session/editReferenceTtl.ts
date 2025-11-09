@@ -7,11 +7,11 @@ export type EditReferenceTtlRequest = {
 export const editReferenceTtl = async (
   sessionId: string,
   referenceIndex: number,
-  ttl: number,
+  ttl: number
 ): Promise<{ message: string }> =>
   client.patch<{ message: string }>(
     `/sessions/${sessionId}/references/${referenceIndex}/ttl`,
     {
-      body: { ttl },
-    },
+      body: { ttl }
+    }
   )

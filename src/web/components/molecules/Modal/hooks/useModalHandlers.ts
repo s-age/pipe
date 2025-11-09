@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react'
 
 export const useModalHandlers = (
   open: boolean,
-  onClose?: () => void,
+  onClose?: () => void
 ): {
   onOverlayMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void
   onContentMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void
@@ -11,14 +11,14 @@ export const useModalHandlers = (
     (event: React.MouseEvent<HTMLDivElement>): void => {
       if (event.target === event.currentTarget) onClose?.()
     },
-    [onClose],
+    [onClose]
   )
 
   const onContentMouseDown = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
       event.stopPropagation()
     },
-    [],
+    []
   )
 
   useEffect(() => {

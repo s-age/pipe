@@ -37,7 +37,7 @@ type Action =
 
 const initialState: State = {
   toasts: [],
-  loadingCount: 0,
+  loadingCount: 0
 }
 
 const reducer = (state: State, action: Action): State => {
@@ -49,7 +49,7 @@ const reducer = (state: State, action: Action): State => {
     case 'REMOVE_TOAST': {
       return {
         ...state,
-        toasts: state.toasts.filter((t) => t.id !== action.payload.id),
+        toasts: state.toasts.filter((t) => t.id !== action.payload.id)
       }
     }
     case 'CLEAR_TOASTS':
@@ -84,7 +84,7 @@ const genId = (prefix = 'toast'): string => {
 }
 
 export const AppStoreProvider = ({
-  children,
+  children
 }: React.PropsWithChildren<unknown>): JSX.Element => {
   const [state, dispatch] = useReducer(reducer, initialState)
 
@@ -95,7 +95,7 @@ export const AppStoreProvider = ({
       createdAt: Date.now(),
       duration: 5000,
       dismissible: true,
-      ...payload,
+      ...payload
     }
     dispatch({ type: 'PUSH_TOAST', payload: item })
 
@@ -104,7 +104,7 @@ export const AppStoreProvider = ({
 
   const removeToast = useCallback(
     (id: string) => dispatch({ type: 'REMOVE_TOAST', payload: { id } }),
-    [],
+    []
   )
   const clearToasts = useCallback(() => dispatch({ type: 'CLEAR_TOASTS' }), [])
   const showLoader = useCallback(() => dispatch({ type: 'SHOW_LOADER' }), [])
@@ -117,7 +117,7 @@ export const AppStoreProvider = ({
     clearToasts,
     showLoader,
     hideLoader,
-    isLoading: state.loadingCount > 0,
+    isLoading: state.loadingCount > 0
   }
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>

@@ -9,7 +9,7 @@ type SessionTreeFooterProperties = {
 }
 
 export const SessionTreeFooter = ({
-  handleNewChatClick,
+  handleNewChatClick
 }: SessionTreeFooterProperties): JSX.Element => (
   <div className={stickyNewChatButtonContainer}>
     <Button kind="primary" size="default" onClick={handleNewChatClick}>

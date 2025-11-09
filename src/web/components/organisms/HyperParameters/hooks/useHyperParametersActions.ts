@@ -8,7 +8,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 export const useHyperParametersActions = (): {
   updateHyperparameters: (
     sessionId: string,
-    payload: EditHyperparametersRequest,
+    payload: EditHyperparametersRequest
   ) => Promise<{ message: string; session: SessionDetail }>
 } => {
   const toast = useToast()
@@ -25,7 +25,7 @@ export const useHyperParametersActions = (): {
         throw error
       }
     },
-    [toast],
+    [toast]
   )
 
   return { updateHyperparameters }

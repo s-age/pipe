@@ -8,8 +8,8 @@ export type EditReferencesRequest = {
 
 export const editReferences = async (
   sessionId: string,
-  references: Reference[],
+  references: Reference[]
 ): Promise<{ message: string }> =>
   client.patch<{ message: string }>(`/sessions/${sessionId}/references`, {
-    body: { references },
+    body: { references }
   })

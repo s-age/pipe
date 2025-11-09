@@ -3,7 +3,7 @@ import type { JSX } from 'react'
 import {
   ChatHistoryHeader,
   ChatHistoryList,
-  ChatHistoryFooter,
+  ChatHistoryFooter
 } from '@/components/organisms/ChatHistory'
 import { useChatHistoryLogic } from '@/components/organisms/ChatHistory/hooks/useChatHistoryLogic'
 import { Header } from '@/components/organisms/Header'
@@ -18,7 +18,7 @@ import {
   centerColumn,
   rightColumn,
   panel,
-  panelBottomSpacing,
+  panelBottomSpacing
 } from './style.css'
 
 export const ChatHistoryPage = (): JSX.Element => {
@@ -30,7 +30,7 @@ export const ChatHistoryPage = (): JSX.Element => {
     selectSession,
     setSessionDetail,
     refreshSessions,
-    actions,
+    actions
   } = useChatHistoryPageLogic()
 
   const {
@@ -40,11 +40,11 @@ export const ChatHistoryPage = (): JSX.Element => {
     handleDeleteTurn,
     handleForkSession,
     handleDeleteCurrentSession,
-    onSendInstruction,
+    onSendInstruction
   } = useChatHistoryLogic({
     currentSessionId,
     setSessionDetail: setSessionDetail as unknown as (data: unknown) => void,
-    refreshSessions,
+    refreshSessions
   })
 
   return (

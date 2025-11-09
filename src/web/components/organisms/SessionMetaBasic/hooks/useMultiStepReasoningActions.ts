@@ -8,7 +8,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 export const useMultiStepReasoningActions = (): {
   updateMultiStepReasoning: (
     sessionId: string,
-    payload: EditMultiStepReasoningRequest,
+    payload: EditMultiStepReasoningRequest
   ) => Promise<{ message: string; session: SessionDetail }>
 } => {
   const toast = useToast()
@@ -22,12 +22,12 @@ export const useMultiStepReasoningActions = (): {
         return result
       } catch (error: unknown) {
         toast.failure(
-          (error as Error).message || 'Failed to update multi-step reasoning',
+          (error as Error).message || 'Failed to update multi-step reasoning'
         )
         throw error
       }
     },
-    [toast],
+    [toast]
   )
 
   return { updateMultiStepReasoning }

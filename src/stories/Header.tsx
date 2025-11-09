@@ -19,7 +19,7 @@ export const Header = ({
   user,
   onLogin,
   onLogout,
-  onCreateAccount,
+  onCreateAccount
 }: HeaderProperties): JSX.Element => (
   <header>
     <div className="storybook-header">

@@ -38,6 +38,6 @@ export type SessionDetail = {
 }
 
 export const getSession = async (
-  sessionId: string,
+  sessionId: string
 ): Promise<{ session: SessionDetail }> =>
   client.get<{ session: SessionDetail }>(`/session/${sessionId}`)

@@ -7,11 +7,11 @@ export type EditHyperparametersRequest = Partial<Hyperparameters>
 
 export const editHyperparameters = async (
   sessionId: string,
-  hyperparameters: EditHyperparametersRequest,
+  hyperparameters: EditHyperparametersRequest
 ): Promise<{ message: string; session: SessionDetail }> =>
   client.patch<{ message: string; session: SessionDetail }>(
     `/session/${sessionId}/hyperparameters`,
     {
-      body: hyperparameters,
-    },
+      body: hyperparameters
+    }
   )

@@ -19,7 +19,7 @@ type HyperParametersProperties = {
 export const HyperParameters = ({
   sessionDetail,
   currentSessionId,
-  actions,
+  actions
 }: HyperParametersProperties): React.JSX.Element => {
   useSessionMetaSaver({ actions })
 
@@ -35,7 +35,7 @@ export const HyperParameters = ({
     topK,
     setTopK,
     handleTopKMouseUp,
-    handleTopKMouseDown,
+    handleTopKMouseDown
   } = useHyperParametersHandlers({
     sessionDetail,
     currentSessionId,
@@ -44,9 +44,9 @@ export const HyperParameters = ({
       if (sessionDetail && meta.hyperparameters)
         actions.setSessionDetail({
           ...sessionDetail,
-          hyperparameters: meta.hyperparameters,
+          hyperparameters: meta.hyperparameters
         })
-    },
+    }
   })
 
   return (

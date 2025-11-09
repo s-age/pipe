@@ -15,10 +15,10 @@ export const useMultiStepReasoningHandlers = ({
   currentSessionId,
   sessionDetail,
   refreshSessions,
-  setSessionDetail,
+  setSessionDetail
 }: UseMultiStepReasoningHandlersProperties): {
   handleMultiStepReasoningChange: (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => Promise<void>
 } => {
   const { updateMultiStepReasoning } = useMultiStepReasoningActions()
@@ -33,7 +33,7 @@ export const useMultiStepReasoningHandlers = ({
         const checked = event.target.checked
 
         const result = await updateMultiStepReasoning(currentSessionId, {
-          multi_step_reasoning_enabled: checked,
+          multi_step_reasoning_enabled: checked
         })
 
         // Update local session detail immediately from the API response so the UI
@@ -53,8 +53,8 @@ export const useMultiStepReasoningHandlers = ({
       sessionDetail,
       refreshSessions,
       updateMultiStepReasoning,
-      setSessionDetail,
-    ],
+      setSessionDetail
+    ]
   )
 
   return { handleMultiStepReasoningChange }

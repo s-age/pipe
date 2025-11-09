@@ -38,5 +38,5 @@ export const colors = {
   darkBlue: '#137a7f',
   redAccent: '#FF3333',
   redStrong: '#FF0000',
-  darkGreen: '#0b4d37',
+  darkGreen: '#0b4d37'
 }

@@ -10,7 +10,7 @@ export const container = style({
   height: '40px',
   borderRadius: '8px',
   overflow: 'hidden',
-  boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
+  boxShadow: '0 6px 18px rgba(0,0,0,0.18)'
 })
 
 export const input = style({
@@ -21,7 +21,7 @@ export const input = style({
   background: colors.cyanDark,
   color: colors.offWhite,
   outline: 'none',
-  '::placeholder': { color: 'rgba(255,255,255,0.8)' },
+  '::placeholder': { color: 'rgba(255,255,255,0.8)' }
 })
 
 export const button = style({
@@ -33,5 +33,5 @@ export const button = style({
   color: colors.offWhite,
   border: 'none',
   cursor: 'pointer',
-  padding: 0,
+  padding: 0
 })

@@ -9,5 +9,5 @@ export const inputStyle = style({
   border: `1px solid ${colors.lightText}`,
   borderRadius: '4px',
   fontSize: '1em',
-  boxSizing: 'border-box',
+  boxSizing: 'border-box'
 })

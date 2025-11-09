@@ -12,5 +12,5 @@ export const textareaStyle = style({
   fontSize: '1em',
   boxSizing: 'border-box',
   minHeight: '100px',
-  resize: 'vertical',
+  resize: 'vertical'
 })

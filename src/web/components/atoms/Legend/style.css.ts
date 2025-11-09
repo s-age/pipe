@@ -7,7 +7,7 @@ export const legendStyle = style({
   fontWeight: 600,
   margin: 0,
   padding: 0,
-  color: colors.offWhite,
+  color: colors.offWhite
 })
 
 export const visuallyHidden = style({
@@ -19,5 +19,5 @@ export const visuallyHidden = style({
   overflow: 'hidden',
   clip: 'rect(0, 0, 0, 0)',
   whiteSpace: 'nowrap',
-  border: 0,
+  border: 0
 })

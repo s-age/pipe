@@ -12,10 +12,10 @@ type UseSessionLoaderProperties = {
 
 export const useSessionLoader = ({
   state,
-  actions,
+  actions
 }: UseSessionLoaderProperties): void => {
   const {
-    sessionTree: { currentSessionId },
+    sessionTree: { currentSessionId }
   } = state
   const { setSessions, setCurrentSessionId, setSessionDetail } = actions
   const toast = useToast()
@@ -44,8 +44,8 @@ export const useSessionLoader = ({
           setSessions(
             data.session_tree.map(([id, session]) => ({
               ...session,
-              session_id: id,
-            })),
+              session_id: id
+            }))
           )
           setSessionDetail(data.current_session)
         } else {
@@ -53,8 +53,8 @@ export const useSessionLoader = ({
           setSessions(
             fetchedSessions.sessions.map(([id, session]) => ({
               ...session,
-              session_id: id,
-            })),
+              session_id: id
+            }))
           )
           setSessionDetail(null)
         }

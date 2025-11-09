@@ -20,11 +20,11 @@ export const useSessionCreation = (): {
         }
       } catch (error_: unknown) {
         toast.failure(
-          (error_ as Error).message || 'An error occurred during session creation.',
+          (error_ as Error).message || 'An error occurred during session creation.'
         )
       }
     },
-    [toast],
+    [toast]
   )
 
   return { handleSubmit }

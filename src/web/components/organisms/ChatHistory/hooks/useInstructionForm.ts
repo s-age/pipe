@@ -20,7 +20,7 @@ export type UseInstructionFormReturn = {
 export const useInstructionForm = ({
   currentSessionId,
   onSendInstruction,
-  refreshSessions,
+  refreshSessions
 }: UseInstructionFormProperties): UseInstructionFormReturn => {
   const methods = useFormContext()
   const { register, handleSubmit, reset } = methods
@@ -36,7 +36,7 @@ export const useInstructionForm = ({
       reset({ instruction: '' })
     } catch (error) {
       toast.failure(
-        error instanceof Error ? error.message : 'Failed to send instruction',
+        error instanceof Error ? error.message : 'Failed to send instruction'
       )
       // keep logging for debugging
       console.error('Failed to send instruction:', error)

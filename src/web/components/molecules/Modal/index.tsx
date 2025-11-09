@@ -15,7 +15,7 @@ type ModalProperties = {
 export const Modal = ({
   open,
   onClose,
-  children,
+  children
 }: ModalProperties): JSX.Element | null => {
   const modalRoot = useModalRoot()
 
@@ -29,6 +29,6 @@ export const Modal = ({
         {children}
       </div>
     </div>,
-    modalRoot,
+    modalRoot
   )
 }

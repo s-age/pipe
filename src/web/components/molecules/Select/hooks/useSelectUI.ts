@@ -9,7 +9,7 @@ type UseSelectUIProperties = {
 export const useSelectUI = ({
   isOpen,
   close,
-  clearHighlight,
+  clearHighlight
 }: UseSelectUIProperties): {
   rootReference: React.RefObject<HTMLDivElement | null>
 } => {

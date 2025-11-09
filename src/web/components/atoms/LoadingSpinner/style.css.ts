@@ -7,5 +7,5 @@ export const loadingSpinnerStyle = style({
   height: '100vh',
   fontSize: '24px',
   fontWeight: 'bold',
-  color: '#333',
+  color: '#333'
 })

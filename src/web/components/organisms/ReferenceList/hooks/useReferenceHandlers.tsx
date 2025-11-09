@@ -14,7 +14,7 @@ type UseReferenceControlsProperties = {
 export const useReferenceControls = ({
   sessionDetail,
   currentSessionId,
-  refreshSessions,
+  refreshSessions
 }: UseReferenceControlsProperties): {
   // DOM-ready handlers
   handleCheckboxChange: (event: ChangeEvent<HTMLInputElement>) => void
@@ -29,7 +29,7 @@ export const useReferenceControls = ({
   const {
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
-    handleUpdateReferenceDisabled,
+    handleUpdateReferenceDisabled
   } = useReferenceActions(sessionDetail, refreshSessions)
 
   const toggleDisabled = useCallback(
@@ -39,16 +39,16 @@ export const useReferenceControls = ({
       const newReferences = [...sessionDetail.references]
       newReferences[index] = {
         ...newReferences[index],
-        disabled: !newReferences[index].disabled,
+        disabled: !newReferences[index].disabled
       }
 
       handleUpdateReferenceDisabled(
         currentSessionId,
         index,
-        !!newReferences[index].disabled,
+        !!newReferences[index].disabled
       )
     },
-    [currentSessionId, sessionDetail, handleUpdateReferenceDisabled],
+    [currentSessionId, sessionDetail, handleUpdateReferenceDisabled]
   )
 
   const togglePersist = useCallback(
@@ -58,16 +58,16 @@ export const useReferenceControls = ({
       const newReferences = [...sessionDetail.references]
       newReferences[index] = {
         ...newReferences[index],
-        persist: !newReferences[index].persist,
+        persist: !newReferences[index].persist
       }
 
       handleUpdateReferencePersist(
         currentSessionId,
         index,
-        !!newReferences[index].persist,
+        !!newReferences[index].persist
       )
     },
-    [currentSessionId, sessionDetail, handleUpdateReferencePersist],
+    [currentSessionId, sessionDetail, handleUpdateReferencePersist]
   )
 
   const changeTtl = useCallback(
@@ -87,7 +87,7 @@ export const useReferenceControls = ({
 
       handleUpdateReferenceTtl(currentSessionId, index, newTtl)
     },
-    [currentSessionId, sessionDetail, handleUpdateReferenceTtl],
+    [currentSessionId, sessionDetail, handleUpdateReferenceTtl]
   )
 
   const handleCheckboxChange = useCallback(
@@ -96,7 +96,7 @@ export const useReferenceControls = ({
       if (!index) return
       toggleDisabled(Number(index))
     },
-    [toggleDisabled],
+    [toggleDisabled]
   )
 
   const handlePersistToggle = useCallback(
@@ -105,7 +105,7 @@ export const useReferenceControls = ({
       if (!index) return
       togglePersist(Number(index))
     },
-    [togglePersist],
+    [togglePersist]
   )
 
   const handleTtlAction = useCallback(
@@ -118,7 +118,7 @@ export const useReferenceControls = ({
       if (!index || !action) return
       changeTtl(Number(index), action)
     },
-    [changeTtl],
+    [changeTtl]
   )
 
   return {
@@ -127,6 +127,6 @@ export const useReferenceControls = ({
     handleTtlAction,
     toggleDisabled,
     togglePersist,
-    changeTtl,
+    changeTtl
   }
 }

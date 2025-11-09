@@ -4,5 +4,5 @@ export const errorMessageStyle = style({
   color: 'red',
   fontWeight: 'bold',
   textAlign: 'center',
-  marginTop: '20px',
+  marginTop: '20px'
 })

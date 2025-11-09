@@ -13,7 +13,7 @@ type UseSessionMetaFormProperties = {
 export const useSessionMetaForm = ({
   sessionDetail,
   currentSessionId,
-  actions,
+  actions
 }: UseSessionMetaFormProperties): {
   defaultValues: Record<string, unknown>
   onSubmit: (data: EditSessionMetaRequest) => void
@@ -28,9 +28,9 @@ export const useSessionMetaForm = ({
       background: sessionDetail?.background ?? '',
       roles: sessionDetail?.roles?.join(', ') ?? '',
       procedure: sessionDetail?.procedure ?? '',
-      artifacts: sessionDetail?.artifacts?.join(', ') ?? '',
+      artifacts: sessionDetail?.artifacts?.join(', ') ?? ''
     }),
-    [sessionDetail],
+    [sessionDetail]
   )
 
   const onSubmit = React.useCallback(
@@ -55,7 +55,7 @@ export const useSessionMetaForm = ({
 
       void handleMetaSave(currentSessionId, mutable as EditSessionMetaRequest)
     },
-    [currentSessionId, handleMetaSave],
+    [currentSessionId, handleMetaSave]
   )
 
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -72,7 +72,7 @@ export const useSessionMetaForm = ({
         setIsSubmitting(false)
       }
     },
-    [onSubmit],
+    [onSubmit]
   )
 
   return { defaultValues, onSubmit: wrappedSubmit, isSubmitting, saved }

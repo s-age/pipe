@@ -17,8 +17,8 @@ export type StartSessionRequest = {
 }
 
 export const startSession = async (
-  data: StartSessionRequest,
+  data: StartSessionRequest
 ): Promise<{ session_id: string }> =>
   client.post<{ session_id: string }>(`/sessions/start`, {
-    body: data,
+    body: data
   })

@@ -14,7 +14,7 @@ import {
   metaColumn,
   sessionMetaSection,
   sessionMetaView,
-  stickySaveMetaButtonContainer,
+  stickySaveMetaButtonContainer
 } from './style.css'
 
 type SessionMetaProperties = {
@@ -30,12 +30,12 @@ export const SessionMeta = ({
   currentSessionId,
   setSessionDetail,
   refreshSessions,
-  actions,
+  actions
 }: SessionMetaProperties): React.JSX.Element => {
   const { defaultValues, onSubmit, isSubmitting, saved } = useSessionMetaForm({
     sessionDetail,
     currentSessionId,
-    actions,
+    actions
   })
 
   return (

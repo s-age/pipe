@@ -10,22 +10,22 @@ import { getSession } from '@/lib/api/session/getSession'
 export const useReferenceActions = (
   sessionDetail: SessionDetail | null,
   setSessionDetail: (data: SessionDetail | null) => void,
-  refreshSessions?: () => Promise<void>,
+  refreshSessions?: () => Promise<void>
 ): {
   handleUpdateReferencePersist: (
     sessionId: string,
     index: number,
-    persist: boolean,
+    persist: boolean
   ) => Promise<void>
   handleUpdateReferenceTtl: (
     sessionId: string,
     index: number,
-    ttl: number,
+    ttl: number
   ) => Promise<void>
   handleUpdateReferenceDisabled: (
     sessionId: string,
     index: number,
-    disabled: boolean,
+    disabled: boolean
   ) => Promise<void>
 } => {
   const toast = useToast()
@@ -39,11 +39,11 @@ export const useReferenceActions = (
         if (refreshSessions) await refreshSessions()
       } catch (error: unknown) {
         toast.failure(
-          (error as Error).message || 'Failed to update reference persist state.',
+          (error as Error).message || 'Failed to update reference persist state.'
         )
       }
     },
-    [setSessionDetail, refreshSessions, toast],
+    [setSessionDetail, refreshSessions, toast]
   )
 
   const handleUpdateReferenceTtl = useCallback(
@@ -57,7 +57,7 @@ export const useReferenceActions = (
         toast.failure((error as Error).message || 'Failed to update reference TTL.')
       }
     },
-    [setSessionDetail, refreshSessions, toast],
+    [setSessionDetail, refreshSessions, toast]
   )
 
   const handleUpdateReferenceDisabled = useCallback(
@@ -72,16 +72,16 @@ export const useReferenceActions = (
         if (refreshSessions) await refreshSessions()
       } catch (error: unknown) {
         toast.failure(
-          (error as Error).message || 'Failed to update reference disabled state.',
+          (error as Error).message || 'Failed to update reference disabled state.'
         )
       }
     },
-    [sessionDetail, setSessionDetail, refreshSessions, toast],
+    [sessionDetail, setSessionDetail, refreshSessions, toast]
   )
 
   return {
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
-    handleUpdateReferenceDisabled,
+    handleUpdateReferenceDisabled
   }
 }

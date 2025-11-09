@@ -9,7 +9,7 @@ import { Slider } from '../index'
 const Meta = {
   title: 'Atoms/Slider',
   component: Slider,
-  tags: ['autodocs'],
+  tags: ['autodocs']
 } satisfies StoryMeta<typeof Slider>
 
 export default Meta
@@ -33,7 +33,7 @@ export const Default: Story = {
     }
 
     return <Example />
-  },
+  }
 }
 
 export const WithRHF: Story = {
@@ -48,7 +48,7 @@ export const WithRHF: Story = {
     )
 
     return <Example />
-  },
+  }
 }
 
 export const WithoutForm: Story = {
@@ -73,5 +73,5 @@ export const WithoutForm: Story = {
     }
 
     return <Example />
-  },
+  }
 }

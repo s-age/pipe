@@ -521,7 +521,7 @@ paths:
           description: Internal server error
 
   # 10. セッションのフォーク (パスを複数形に変更)
-  /api/sessions/{session_id}/fork:
+  /api/session/{session_id}/fork/{fork_index}:
     post:
       summary: Fork a session from a specific turn
       parameters:
@@ -531,12 +531,18 @@ paths:
             type: string
           required: true
           description: The ID of the session to fork
+        - in: path
+          name: fork_index
+          schema:
+            type: integer
+          required: true
+          description: The turn index to fork from
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              # ForkSessionRequestをターンインデックスをボディに持つように修正
+              # ForkSessionRequestはsession_idをボディに持つように修正
               $ref: '#/components/schemas/ForkSessionRequest'
       responses:
         '200':
@@ -1238,12 +1244,11 @@ components:
     ForkSessionRequest:
       type: object
       properties:
-        # パスから{fork_index}を削除したため、ボディで渡す形に変更
-        fork_index:
-          type: integer
-          description: The turn index to fork from
+        session_id:
+          type: string
+          description: The ID of the session to fork
       required:
-        - fork_index
+        - session_id
     SendInstructionRequest:
       type: object
       properties:

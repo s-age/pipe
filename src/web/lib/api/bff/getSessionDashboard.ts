@@ -10,6 +10,6 @@ export type SessionDashboardResponse = {
 }
 
 export const getSessionDashboard = async (
-  sessionId: string,
+  sessionId: string
 ): Promise<SessionDashboardResponse> =>
   client.get<SessionDashboardResponse>(`/bff/session-dashboard/${sessionId}`)

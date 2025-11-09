@@ -8,8 +8,8 @@ export type EditTodosRequest = {
 
 export const editTodos = async (
   sessionId: string,
-  todos: Todo[],
+  todos: Todo[]
 ): Promise<{ message: string }> =>
   client.patch<{ message: string }>(`/session/${sessionId}/todos`, {
-    body: { todos },
+    body: { todos }
   })

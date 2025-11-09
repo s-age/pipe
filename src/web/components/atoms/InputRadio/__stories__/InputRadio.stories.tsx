@@ -9,7 +9,7 @@ export default {}
 export const Meta = {
   title: 'Atoms/InputRadio',
   component: InputRadio,
-  tags: ['autodocs'],
+  tags: ['autodocs']
 } satisfies StoryMeta<typeof InputRadio>
 
 type Story = StoryObj<typeof Meta>
@@ -19,8 +19,8 @@ export const Default: Story = {
     label: 'Option A',
     id: 'radio-default-a',
     value: 'A',
-    name: 'radio-default',
-  },
+    name: 'radio-default'
+  }
 }
 
 export const WithRHF: Story = {
@@ -34,7 +34,7 @@ export const WithRHF: Story = {
     )
 
     return <FormExample />
-  },
+  }
 }
 
 export const WithoutForm: Story = {
@@ -58,5 +58,5 @@ export const WithoutForm: Story = {
     }
 
     return <PlainExample />
-  },
+  }
 }

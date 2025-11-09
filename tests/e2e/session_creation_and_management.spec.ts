@@ -5,7 +5,7 @@ const NEW_SESSION_PAGE = 'http://127.0.0.1:5001/new_session'
 
 test.describe.serial('Session Creation and Management', () => {
   test('should create, fork, create child, modify, and delete sessions', async ({
-    page,
+    page
   }) => {
     // --- PART 1: Create and Fork Session ---
 
@@ -40,7 +40,7 @@ test.describe.serial('Session Creation and Management', () => {
 
     // Wait for navigation to the new forked session and store its URL
     await page.waitForURL((url) => url.toString() !== originalSessionUrl, {
-      timeout: 60000,
+      timeout: 60000
     })
     await expect(page.locator('#turns-column h2')).toContainText('Fork of: e2e test')
 
@@ -51,7 +51,7 @@ test.describe.serial('Session Creation and Management', () => {
   })
 
   test('should create a new session with various parameters, verify initial response, and edit meta-information', async ({
-    page,
+    page
   }) => {
     await page.goto(NEW_SESSION_PAGE)
 
@@ -119,11 +119,11 @@ test.describe.serial('Session Creation and Management', () => {
     await expect(page.locator('#turns-column h2')).toContainText(updatedPurpose)
     await expect(page.locator('[data-field="purpose"]')).toHaveValue(updatedPurpose)
     await expect(page.locator('[data-field="background"]')).toHaveValue(
-      updatedBackground,
+      updatedBackground
     )
     await expect(page.locator('[data-field="roles"]')).toHaveValue(updatedRoles)
     await expect(page.locator('[data-field="temperature"]')).toHaveValue(
-      updatedTemperature,
+      updatedTemperature
     )
     await expect(page.locator('[data-field="top_p"]')).toHaveValue(updatedTopP)
     await expect(page.locator('[data-field="top_k"]')).toHaveValue(updatedTopK)
@@ -169,7 +169,7 @@ test.describe.serial('Session Creation and Management', () => {
     await lastTurn.hover()
     await lastTurn.locator('.delete-btn').click()
     await expect(page.locator('.turn')).toHaveCount(initialTurnCount - 1, {
-      timeout: 15000,
+      timeout: 15000
     })
 
     // Edit the first turn
@@ -188,12 +188,12 @@ test.describe.serial('Session Creation and Management', () => {
 
     // Delete the forked session
     await expect(
-      page.locator('a').filter({ hasText: 'Child session test' }),
+      page.locator('a').filter({ hasText: 'Child session test' })
     ).toHaveCount(1)
     await page.locator('button:has-text("Delete Session")').click()
     await page.waitForURL(ROOT_PAGE)
     await expect(
-      page.locator('a').filter({ hasText: 'Child session test' }),
+      page.locator('a').filter({ hasText: 'Child session test' })
     ).toHaveCount(0)
   })
 
@@ -223,16 +223,16 @@ test.describe.serial('Session Creation and Management', () => {
 
     // Wait for navigation to the new forked session
     await page.waitForURL((url) => url.toString() !== originalSessionUrl, {
-      timeout: 60000,
+      timeout: 60000
     })
     const forkedSessionUrl = page.url()
 
     // Verify the forked session's URL, title, and number of turns
     expect(forkedSessionUrl).toMatch(
-      /http:\/\/127\.0\.0\.1:5001\/session\/[a-f0-9]{64}/,
+      /http:\/\/127\.0\.0\.1:5001\/session\/[a-f0-9]{64}/
     )
     await expect(page.locator('#turns-column h2')).toContainText(
-      'Fork of: Original Session for Fork Test',
+      'Fork of: Original Session for Fork Test'
     )
     await expect(page.locator('.turn')).toHaveCount(2) // System, User (forked at turn 1)
 

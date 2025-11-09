@@ -24,13 +24,13 @@ export const useStartSessionData = (): UseStartSessionDataResult => {
       try {
         const [sessionsResponse, settingsData] = await Promise.all([
           getSessionTree(),
-          getSettings(),
+          getSettings()
         ])
         setSessionTree(
           sessionsResponse.sessions.map(([, session]: [string, SessionOverview]) => ({
             value: session.session_id,
-            label: session.purpose,
-          })),
+            label: session.purpose
+          }))
         )
         setSettings(settingsData)
       } catch (error_: unknown) {

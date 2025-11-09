@@ -22,7 +22,7 @@ const allPositions: Position[] = [
   'top-right',
   'bottom-left',
   'bottom-center',
-  'bottom-right',
+  'bottom-right'
 ]
 
 const Icon = ({ status }: { status: string }): JSX.Element => {
@@ -83,7 +83,7 @@ export const Toasts = (): JSX.Element => {
     positionElements.push(
       <div key={pos} className={styles.container} data-pos={pos} data-posname={pos}>
         {children}
-      </div>,
+      </div>
     )
   }
 

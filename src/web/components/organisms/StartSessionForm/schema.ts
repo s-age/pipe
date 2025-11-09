@@ -10,7 +10,7 @@ export const formSchema = object({
             .split(',')
             .map((s) => s.trim())
             .filter(Boolean)
-        : null,
+        : null
     )
     .nullable()
     .default(null),
@@ -26,7 +26,7 @@ export const formSchema = object({
             .map((s) => s.trim())
             .filter(Boolean)
             .map((path) => ({ path }))
-        : null,
+        : null
     )
     .nullable()
     .default(null),
@@ -37,7 +37,7 @@ export const formSchema = object({
             .split(',')
             .map((s) => s.trim())
             .filter(Boolean)
-        : null,
+        : null
     )
     .nullable()
     .default(null),
@@ -50,10 +50,10 @@ export const formSchema = object({
   hyperparameters: object({
     temperature: coerce.number().min(0).max(2).nullable().default(0.7),
     top_p: coerce.number().min(0).max(1).nullable().default(0.9),
-    top_k: coerce.number().min(1).max(50).nullable().default(5),
+    top_k: coerce.number().min(1).max(50).nullable().default(5)
   })
     .nullable()
-    .default(null),
+    .default(null)
 })
 
 export type StartSessionFormInputs = TypeOf<typeof formSchema>

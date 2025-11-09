@@ -9,7 +9,7 @@ const allPositions = [
   'top-right',
   'bottom-left',
   'bottom-center',
-  'bottom-right',
+  'bottom-right'
 ] as const
 
 export const useGroupedToasts = (): {

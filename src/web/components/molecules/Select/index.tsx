@@ -10,7 +10,7 @@ import {
   panel,
   option,
   optionHighlighted,
-  searchInput,
+  searchInput
 } from './style.css'
 
 type SelectProperties = {
@@ -49,19 +49,19 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     handleSearchChange,
     handleOptionClickReact,
     handleMouseEnterReact,
-    handleMouseLeaveReact,
+    handleMouseLeaveReact
   } = useSelect({
     register,
     name,
     options: options ?? [],
     defaultValue: rest.defaultValue as string | undefined,
-    searchable,
+    searchable
   })
 
   const { rootReference } = useSelectUI({
     isOpen,
     close: () => setIsOpen(false),
-    clearHighlight: () => setHighlightedIndex(-1),
+    clearHighlight: () => setHighlightedIndex(-1)
   })
 
   // If no options specified and not searchable, fall back to native select for full compatibility

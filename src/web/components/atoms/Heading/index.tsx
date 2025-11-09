@@ -24,7 +24,7 @@ export const Heading: ({
   return React.createElement(
     Tag,
     { className: headingClassName, ...properties },
-    children,
+    children
   )
 }
 

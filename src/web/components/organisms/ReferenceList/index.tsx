@@ -22,7 +22,7 @@ import {
   referenceCheckboxMargin,
   lockIconStyle,
   persistButton,
-  noItemsMessage,
+  noItemsMessage
 } from './style.css'
 
 type ReferenceListProperties = {
@@ -36,7 +36,7 @@ export const ReferenceList = ({
   sessionDetail,
   currentSessionId,
   setSessionDetail: _setSessionDetail,
-  refreshSessions,
+  refreshSessions
 }: ReferenceListProperties): JSX.Element => {
   const { handleCheckboxChange, handlePersistToggle, handleTtlAction } =
     useReferenceControls({ sessionDetail, currentSessionId, refreshSessions })

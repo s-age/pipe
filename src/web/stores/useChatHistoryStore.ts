@@ -20,7 +20,7 @@ export type State = {
 export const initialState: State = {
   sessionTree: { sessions: [], currentSessionId: null },
   sessionDetail: null,
-  settings: { parameters: { temperature: null, top_p: null, top_k: null } },
+  settings: { parameters: { temperature: null, top_p: null, top_k: null } }
 }
 
 export type Action =
@@ -39,28 +39,28 @@ export const reducer = (state: State, action: Action): State => {
     case 'SET_SESSIONS':
       return {
         ...state,
-        sessionTree: { ...state.sessionTree, sessions: action.payload },
+        sessionTree: { ...state.sessionTree, sessions: action.payload }
       }
     case 'SET_CURRENT_SESSION_ID':
       return {
         ...state,
-        sessionTree: { ...state.sessionTree, currentSessionId: action.payload },
+        sessionTree: { ...state.sessionTree, currentSessionId: action.payload }
       }
     case 'SET_SESSION_DETAIL':
       return {
         ...state,
-        sessionDetail: action.payload,
+        sessionDetail: action.payload
       }
     case 'SET_SESSION_AND_CURRENT':
       return {
         ...state,
         sessionTree: { ...state.sessionTree, currentSessionId: action.payload.id },
-        sessionDetail: action.payload.detail,
+        sessionDetail: action.payload.detail
       }
     case 'UPDATE_SETTINGS':
       return {
         ...state,
-        settings: { ...state.settings, ...action.payload },
+        settings: { ...state.settings, ...action.payload }
       }
 
     case 'RESET':
@@ -115,7 +115,7 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
     (id: string | null, detail: SessionDetail | null) => {
       dispatch({ type: 'SET_SESSION_AND_CURRENT', payload: { id, detail } })
     },
-    [],
+    []
   )
 
   const updateSettings = useCallback((partial: Partial<Settings>) => {
@@ -126,7 +126,7 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
     const fetchedSessions = await getSessionTree()
     const newSessions = fetchedSessions.sessions.map(([id, session]) => ({
       ...session,
-      session_id: id,
+      session_id: id
     }))
 
     // Only update the store if sessions actually changed to avoid
@@ -153,7 +153,7 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
       updateSettings,
 
       refreshSessions,
-      reset,
-    },
+      reset
+    }
   }
 }

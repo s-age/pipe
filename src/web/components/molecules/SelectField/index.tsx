@@ -26,7 +26,7 @@ export const SelectField = <TFieldValues extends FieldValues = FieldValues>({
 }: SelectFieldProperties<TFieldValues>): JSX.Element => {
   const {
     field,
-    fieldState: { error },
+    fieldState: { error }
   } = useController(properties)
 
   return (

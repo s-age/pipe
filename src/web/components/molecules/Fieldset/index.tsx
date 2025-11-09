@@ -25,7 +25,7 @@ export const Fieldset = ({
   hint,
   error,
   children,
-  className,
+  className
 }: FieldsetProperties): JSX.Element => {
   const baseId = useId()
   const hintId = hint ? `${baseId}-hint` : undefined

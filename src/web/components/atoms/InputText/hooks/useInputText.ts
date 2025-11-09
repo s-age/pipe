@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type {
   FieldValues,
   UseFormRegister,
-  UseFormRegisterReturn,
+  UseFormRegisterReturn
 } from 'react-hook-form'
 
 import type { FormMethods } from '@/components/organisms/Form'
@@ -15,7 +15,7 @@ type UseInputTextProperties = {
 
 export const useInputText = ({
   register,
-  name,
+  name
 }: UseInputTextProperties): {
   registerProperties: Partial<UseFormRegisterReturn>
 } => {

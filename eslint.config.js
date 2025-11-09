@@ -59,6 +59,7 @@ export default [
 
       // ✅ Run Prettier as an ESLint rule (most reliable)
       'prettier/prettier': 'error',
+      'comma-dangle': ['error', 'never'],
 
       // ✅ React/Hooks
       ...pluginReact.configs.recommended.rules, // recommended rulesを先に適用

@@ -9,7 +9,7 @@ export default {}
 export const Meta = {
   title: 'Atoms/InputCheckbox',
   component: InputCheckbox,
-  tags: ['autodocs'],
+  tags: ['autodocs']
 } satisfies StoryMeta<typeof InputCheckbox>
 
 // Storybook meta is exported as a named export to comply with import/no-default-export
@@ -18,8 +18,8 @@ type Story = StoryObj<typeof Meta>
 export const Default: Story = {
   args: {
     label: 'Check me',
-    id: 'cb-default',
-  },
+    id: 'cb-default'
+  }
 }
 
 export const WithRHF: Story = {
@@ -33,7 +33,7 @@ export const WithRHF: Story = {
     )
 
     return <FormExample />
-  },
+  }
 }
 
 export const WithoutForm: Story = {
@@ -58,5 +58,5 @@ export const WithoutForm: Story = {
     }
 
     return <PlainExample />
-  },
+  }
 }

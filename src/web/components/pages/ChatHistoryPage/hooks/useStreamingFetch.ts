@@ -13,7 +13,7 @@ export const useStreamingFetch = (
     onChunk?: (chunk: string) => void
     // onComplete receives (error, finalStreamedText)
     onComplete?: (error: string | null, finalStreamedText: string) => void
-  },
+  }
 ): {
   streamedText: string
   isLoading: boolean
@@ -97,7 +97,7 @@ export const useStreamingFetch = (
         } catch (onCompleteError) {
           console.error(
             '[useStreamingFetch] onComplete callback error',
-            onCompleteError,
+            onCompleteError
           )
         }
       }
@@ -123,8 +123,8 @@ export const useStreamingFetch = (
       streamedText,
       isLoading,
       error,
-      setStreamedText,
+      setStreamedText
     }),
-    [streamedText, isLoading, error, setStreamedText],
+    [streamedText, isLoading, error, setStreamedText]
   )
 }

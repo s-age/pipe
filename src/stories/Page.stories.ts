@@ -9,8 +9,8 @@ export const Meta = {
   component: Page,
   parameters: {
     // More on how to position stories at: https://storybook.js.org/docs/configure/story-layout
-    layout: 'fullscreen',
-  },
+    layout: 'fullscreen'
+  }
 } satisfies StoryMeta<typeof Page>
 
 // Storybook meta is exported as a named export to comply with import/no-default-export
@@ -29,5 +29,5 @@ export const LoggedIn: Story = {
 
     const logoutButton = canvas.getByRole('button', { name: /Log out/i })
     await expect(logoutButton).toBeInTheDocument()
-  },
+  }
 }

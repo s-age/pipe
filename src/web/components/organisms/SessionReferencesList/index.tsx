@@ -22,7 +22,7 @@ import {
   referenceCheckboxMargin,
   lockIconStyle,
   persistButton,
-  noItemsMessage,
+  noItemsMessage
 } from './style.css'
 import { useSessionReferencesListLogic } from './useSessionReferencesListLogic'
 
@@ -37,24 +37,24 @@ export const SessionReferencesList = ({
   sessionDetail,
   currentSessionId,
   setSessionDetail,
-  refreshSessions,
+  refreshSessions
 }: SessionReferencesListProperties): JSX.Element => {
   const {
     handleReferenceCheckboxChange,
     handleReferencePersistToggle,
-    handleReferenceTtlChange,
+    handleReferenceTtlChange
   } = useSessionReferencesListLogic({
     sessionDetail,
     currentSessionId,
     setSessionDetail,
-    refreshSessions,
+    refreshSessions
   })
 
   const { handleCheckboxChange, handlePersistToggle, handleTtlAction } =
     useSessionReferencesHandlers({
       handleReferenceCheckboxChange,
       handleReferencePersistToggle,
-      handleReferenceTtlChange,
+      handleReferenceTtlChange
     })
 
   if (!sessionDetail || sessionDetail.references.length === 0) {

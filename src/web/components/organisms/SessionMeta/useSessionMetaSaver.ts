@@ -8,7 +8,7 @@ type UseSessionMetaSaverProperties = {
 }
 
 export const useSessionMetaSaver = ({
-  actions,
+  actions
 }: UseSessionMetaSaverProperties): {
   handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
 } => {
@@ -17,7 +17,7 @@ export const useSessionMetaSaver = ({
 
   const handleMetaSave = async (
     id: string,
-    meta: EditSessionMetaRequest,
+    meta: EditSessionMetaRequest
   ): Promise<void> => {
     try {
       await editSessionMeta(id, meta)

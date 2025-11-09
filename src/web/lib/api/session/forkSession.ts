@@ -6,8 +6,8 @@ export type ForkSessionRequest = {
 
 export const forkSession = async (
   sessionId: string,
-  forkIndex: number,
+  forkIndex: number
 ): Promise<{ new_session_id: string }> =>
   client.post<{ new_session_id: string }>(`/sessions/${sessionId}/fork`, {
-    body: { fork_index: forkIndex },
+    body: { fork_index: forkIndex }
   })

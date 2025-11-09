@@ -10,16 +10,16 @@ export const Meta = {
   component: Button,
   parameters: {
     // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
-    layout: 'centered',
+    layout: 'centered'
   },
   // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
   tags: ['autodocs'],
   // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {
-    backgroundColor: { control: 'color' },
+    backgroundColor: { control: 'color' }
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#story-args
-  args: { onClick: fn() },
+  args: { onClick: fn() }
 } satisfies StoryMeta<typeof Button>
 
 // Storybook meta is exported as a named export to comply with import/no-default-export
@@ -29,26 +29,26 @@ type Story = StoryObj<typeof Meta>
 export const Primary: Story = {
   args: {
     primary: true,
-    label: 'Button',
-  },
+    label: 'Button'
+  }
 }
 
 export const Secondary: Story = {
   args: {
-    label: 'Button',
-  },
+    label: 'Button'
+  }
 }
 
 export const Large: Story = {
   args: {
     size: 'large',
-    label: 'Button',
-  },
+    label: 'Button'
+  }
 }
 
 export const Small: Story = {
   args: {
     size: 'small',
-    label: 'Button',
-  },
+    label: 'Button'
+  }
 }

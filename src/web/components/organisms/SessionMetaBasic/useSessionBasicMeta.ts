@@ -12,7 +12,7 @@ type UseSessionBasicMetaProperties = {
 export const useSessionBasicMeta = ({
   sessionDetail,
   currentSessionId,
-  onMetaSave,
+  onMetaSave
 }: UseSessionBasicMetaProperties): {
   purpose: string
   setPurpose: React.Dispatch<React.SetStateAction<string>>
@@ -52,7 +52,7 @@ export const useSessionBasicMeta = ({
       roles: roles
         .split(',')
         .map((s) => s.trim())
-        .filter(Boolean),
+        .filter(Boolean)
     })
   }, [currentSessionId, onMetaSave, roles])
 
@@ -67,7 +67,7 @@ export const useSessionBasicMeta = ({
       artifacts: artifacts
         .split(',')
         .map((s) => s.trim())
-        .filter(Boolean),
+        .filter(Boolean)
     })
   }, [currentSessionId, onMetaSave, artifacts])
 
@@ -86,6 +86,6 @@ export const useSessionBasicMeta = ({
     handleProcedureBlur,
     artifacts,
     setArtifacts,
-    handleArtifactsBlur,
+    handleArtifactsBlur
   }
 }

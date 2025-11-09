@@ -37,7 +37,7 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
     trackX,
     trackWidth,
     fillWidth,
-    thumbCx,
+    thumbCx
   } = useSlider(properties)
 
   return (

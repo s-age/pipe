@@ -28,7 +28,7 @@ export const useToast = (): UseToast => {
 
   const show = useCallback(
     (parameters: ToastParameters): string => pushToast(parameters),
-    [pushToast],
+    [pushToast]
   )
 
   return {
@@ -50,6 +50,6 @@ export const useToast = (): UseToast => {
         return pushToast({ status: 'warning', title: titleOrParameters })
 
       return pushToast({ ...(titleOrParameters as ToastParameters), status: 'warning' })
-    },
+    }
   }
 }

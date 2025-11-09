@@ -6,17 +6,17 @@ import { colors } from '../../../styles/colors.css'
 export const turnWrapper = style({
   display: 'flex',
   width: '100%',
-  marginBottom: '8px',
+  marginBottom: '8px'
 })
 
 // ユーザーのターンを右寄せにするためのスタイル
 export const userTaskAligned = style({
-  justifyContent: 'flex-end',
+  justifyContent: 'flex-end'
 })
 
 // モデルの応答などを左寄せにするためのスタイル
 export const otherTurnAligned = style({
-  justifyContent: 'flex-start',
+  justifyContent: 'flex-start'
 })
 
 // 各ターンのコンテンツ部分の共通スタイル
@@ -30,53 +30,53 @@ export const turnContentBase = style({
   transition: 'transform 120ms ease, box-shadow 120ms ease',
   ':hover': {
     transform: 'translateY(-2px)',
-    boxShadow: '0 12px 30px rgba(2,6,23,0.18)',
+    boxShadow: '0 12px 30px rgba(2,6,23,0.18)'
   },
-  width: '75%', // 各ターンのコンテンツ幅
+  width: '75%' // 各ターンのコンテンツ幅
 })
 
 export const turnHeader = style({
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
+  alignItems: 'center'
 })
 
 export const turnHeaderInfo = style({
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'center'
 })
 
 export const turnIndexStyle = style({
   marginRight: '8px',
-  fontWeight: 'bold',
+  fontWeight: 'bold'
 })
 
 export const turnTimestamp = style({
   fontWeight: 'normal',
-  marginLeft: '8px',
+  marginLeft: '8px'
 })
 
 export const turnHeaderControls = style({
   display: 'flex',
-  gap: '4px',
+  gap: '4px'
 })
 
 export const turnContent = style({
   wordWrap: 'break-word',
   whiteSpace: 'pre-wrap',
   color: colors.offWhite,
-  padding: '0 12px',
+  padding: '0 12px'
 })
 
 export const rawMarkdown = style({
-  display: 'none',
+  display: 'none'
 })
 
 export const renderedMarkdown = style({
   // GitHub Markdown CSSを適用するためのクラス名
   // className="markdown-body"
   padding: '12px',
-  marginTop: '8px',
+  marginTop: '8px'
 })
 
 globalStyle(`${renderedMarkdown}.markdown-body`, {
@@ -87,24 +87,24 @@ globalStyle(`${renderedMarkdown}.markdown-body`, {
 export const toolResponseContent = style({
   padding: '12px',
   borderRadius: '4px',
-  color: colors.offWhite,
+  color: colors.offWhite
 })
 
 export const statusSuccess = style({
   color: colors.accent,
-  fontWeight: 'bold',
+  fontWeight: 'bold'
 })
 
 export const statusError = style({
   color: colors.error,
-  fontWeight: 'bold',
+  fontWeight: 'bold'
 })
 
 export const editablePre = style({
   padding: '0 12px',
   borderRadius: '4px',
   color: colors.offWhite,
-  boxSizing: 'border-box',
+  boxSizing: 'border-box'
 })
 
 export const editTextArea = style({
@@ -117,42 +117,42 @@ export const editTextArea = style({
   whiteSpace: 'pre-wrap',
   wordWrap: 'break-word',
   backgroundColor: colors.darkBackground,
-  color: colors.offWhite,
+  color: colors.offWhite
 })
 
 export const editButtonContainer = style({
   textAlign: 'right',
-  marginTop: '12px',
+  marginTop: '12px'
 })
 
 export const materialIcons = style({
   fontFamily: 'Material Icons',
   fontSize: '16px',
-  verticalAlign: 'middle',
+  verticalAlign: 'middle'
 })
 
 export const forkButtonIcon = style({
   background: colors.purpleAccent,
   borderRadius: '4px',
-  padding: '4px',
+  padding: '4px'
 })
 
 export const deleteButtonIcon = style({
   background: colors.error,
   borderRadius: '4px',
-  padding: '4px',
+  padding: '4px'
 })
 
 export const copyButtonIcon = style({
   background: colors.lightBlue,
   borderRadius: '4px',
   padding: '4px',
-  color: colors.darkBackground,
+  color: colors.darkBackground
 })
 
 export const editButtonIcon = style({
   background: colors.mediumBlue,
   borderRadius: '4px',
   padding: '4px',
-  color: colors.mediumBackground,
+  color: colors.mediumBackground
 })

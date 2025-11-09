@@ -15,8 +15,8 @@ export type EditSessionMetaRequest = {
 
 export const editSessionMeta = async (
   sessionId: string,
-  meta: EditSessionMetaRequest,
+  meta: EditSessionMetaRequest
 ): Promise<{ message: string }> =>
   client.patch<{ message: string }>(`/session/${sessionId}/meta`, {
-    body: meta,
+    body: meta
   })

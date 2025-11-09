@@ -16,7 +16,7 @@ export const InputSearch = ({
   placeholder = 'Search...',
   value,
   onChange,
-  onSubmit,
+  onSubmit
 }: InputSearchProperties): JSX.Element => {
   const { handleSubmit, handleChange } = useInputSearch({ value, onChange, onSubmit })
 

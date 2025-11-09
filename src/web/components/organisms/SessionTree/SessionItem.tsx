@@ -8,7 +8,7 @@ import {
   sessionListItem,
   sessionLink,
   sessionLinkActive,
-  sessionIdStyle,
+  sessionIdStyle
 } from './style.css'
 
 type SessionItemProperties = {
@@ -20,7 +20,7 @@ type SessionItemProperties = {
 export const SessionItem = ({
   session,
   currentSessionId,
-  selectSession,
+  selectSession
 }: SessionItemProperties): JSX.Element => {
   const { onClick } = useSessionItemHandlers({ session, selectSession })
 

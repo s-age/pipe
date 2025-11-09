@@ -10,7 +10,7 @@ export const useModal = (): {
 
   const show = React.useCallback(
     (content: React.ReactNode): number => context.show(content),
-    [context],
+    [context]
   )
 
   const hide = React.useCallback((id?: number): void => context.hide(id), [context])

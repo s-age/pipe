@@ -8,7 +8,7 @@ import { ModalProvider } from '@/components/molecules/Modal/ModalProvider'
 
 const Meta = {
   title: 'Atoms/Modal',
-  tags: ['autodocs'],
+  tags: ['autodocs']
 } satisfies StoryMeta<unknown>
 
 export default Meta
@@ -27,7 +27,7 @@ const Demo = (): JSX.Element => {
             Close
           </Button>
         </div>
-      </div>,
+      </div>
     )
   }, [show, hide])
 
@@ -45,5 +45,5 @@ export const Default: Story = {
     <ModalProvider>
       <Demo />
     </ModalProvider>
-  ),
+  )
 }

@@ -6,7 +6,7 @@ const ANIM_DURATION = 180
 
 export const useToastItem = (
   item: ToastItemType,
-  removeToast: (id: string) => void,
+  removeToast: (id: string) => void
 ): {
   hovering: boolean
   exiting: boolean
@@ -31,7 +31,7 @@ export const useToastItem = (
         setExiting(true)
         finishTimerReference.current = window.setTimeout(
           () => removeToast(item.id),
-          ANIM_DURATION,
+          ANIM_DURATION
         )
       }, ms)
     }
@@ -56,7 +56,7 @@ export const useToastItem = (
         const elapsed = Date.now() - startAtReference.current
         remainingReference.current = Math.max(
           0,
-          (remainingReference.current ?? 0) - elapsed,
+          (remainingReference.current ?? 0) - elapsed
         )
         clearTimeout(autoTimerReference.current)
         autoTimerReference.current = null
@@ -72,7 +72,7 @@ export const useToastItem = (
           setExiting(true)
           finishTimerReference.current = window.setTimeout(
             () => removeToast(item.id),
-            ANIM_DURATION,
+            ANIM_DURATION
           )
         }, remainingReference.current)
       }
@@ -89,7 +89,7 @@ export const useToastItem = (
     setExiting(true)
     finishTimerReference.current = window.setTimeout(
       () => removeToast(item.id),
-      ANIM_DURATION,
+      ANIM_DURATION
     )
   }, [exiting, item.id, removeToast])
 
@@ -109,6 +109,6 @@ export const useToastItem = (
     handleMouseEnter,
     handleMouseLeave,
     handleClose,
-    statusClass,
+    statusClass
   }
 }

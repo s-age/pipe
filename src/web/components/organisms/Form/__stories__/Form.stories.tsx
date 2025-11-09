@@ -14,7 +14,7 @@ import { Form, useFormContext } from '@/components/organisms/Form'
 const Meta = {
   title: 'Organisms/Form — Manual',
   // We use a loose Meta type to avoid forcing `args` for Form's required props
-  tags: ['autodocs'],
+  tags: ['autodocs']
 } satisfies StoryMeta<unknown>
 
 export default Meta
@@ -120,7 +120,7 @@ export const Manual: Story = {
         choice: z.string(),
         agree: z.boolean().optional(),
         notes: z.string().optional(),
-        rating: z.number().min(0).max(100).optional(),
+        rating: z.number().min(0).max(100).optional()
       })
 
       const defaultValues = {
@@ -130,7 +130,7 @@ export const Manual: Story = {
         agree: false,
         notes: '',
         // keep rating centered as an example; change to 0 if you want left-aligned
-        rating: 50,
+        rating: 50
       }
 
       const handleSubmit = (data: unknown): void => {
@@ -165,5 +165,5 @@ export const Manual: Story = {
         <WithRHFExample />
       </div>
     )
-  },
+  }
 }

@@ -10,12 +10,12 @@ export const overlay = style({
   justifyContent: 'center',
   backgroundColor: 'rgba(0,0,0,0.36)',
   zIndex: 2000,
-  pointerEvents: 'auto',
+  pointerEvents: 'auto'
 })
 
 const spin = keyframes({
   '0%': { transform: 'rotate(0deg)' },
-  '100%': { transform: 'rotate(360deg)' },
+  '100%': { transform: 'rotate(360deg)' }
 })
 
 export const spinner = style({
@@ -31,7 +31,7 @@ export const spinner = style({
   animationName: spin,
   animationDuration: '900ms',
   animationTimingFunction: 'linear',
-  animationIterationCount: 'infinite',
+  animationIterationCount: 'infinite'
 })
 
 export const visuallyHidden = style({
@@ -43,5 +43,5 @@ export const visuallyHidden = style({
   overflow: 'hidden',
   clip: 'rect(0, 0, 0, 0)',
   whiteSpace: 'nowrap',
-  border: 0,
+  border: 0
 })

@@ -9,7 +9,7 @@ type Properties = {
 export const useInputSearch = ({
   value,
   onChange,
-  onSubmit,
+  onSubmit
 }: Properties): {
   handleSubmit: (event: FormEvent) => void
   handleChange: (event: ChangeEvent<HTMLInputElement>) => void
@@ -19,14 +19,14 @@ export const useInputSearch = ({
       event.preventDefault()
       if (onSubmit) onSubmit((value ?? '') as string)
     },
-    [onSubmit, value],
+    [onSubmit, value]
   )
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
       if (onChange) onChange(event.target.value)
     },
-    [onChange],
+    [onChange]
   )
 
   return { handleSubmit, handleChange }

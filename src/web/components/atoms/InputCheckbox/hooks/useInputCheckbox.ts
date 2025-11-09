@@ -3,7 +3,7 @@ import type { InputHTMLAttributes } from 'react'
 import type {
   FieldValues,
   UseFormRegister,
-  UseFormRegisterReturn,
+  UseFormRegisterReturn
 } from 'react-hook-form'
 
 import type { FormMethods } from '@/components/organisms/Form'
@@ -20,7 +20,7 @@ export const useInputCheckbox = ({
   register,
   name,
   id,
-  value,
+  value
 }: UseInputCheckboxProperties): {
   registerProperties: Partial<UseFormRegisterReturn>
   inputId: string

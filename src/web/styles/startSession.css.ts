@@ -12,14 +12,14 @@ const colors = {
   grayText: '#8c97a4',
   accent: '#4aa6ac',
   accentHover: '#3c858a',
-  purpleAccent: '#96297b',
+  purpleAccent: '#96297b'
 }
 
 export const bodyStyle = style({
   fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
   margin: '20px',
   backgroundColor: colors.darkBackground,
-  color: colors.lightText,
+  color: colors.lightText
 })
 
 export const containerStyle = style({
@@ -28,21 +28,21 @@ export const containerStyle = style({
   backgroundColor: colors.mediumBackground,
   padding: '28px',
   borderRadius: '8px',
-  boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+  boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
 })
 
 export const h1Style = style({
   color: colors.accent,
   borderBottom: `1px solid ${colors.mediumBackground}`,
   paddingBottom: '12px',
-  marginBottom: '20px',
+  marginBottom: '20px'
 })
 
 export const labelStyle = style({
   display: 'block',
   marginBottom: '4px',
   fontWeight: 'bold',
-  color: colors.accent,
+  color: colors.accent
 })
 
 export const inputFieldStyle = style({
@@ -54,33 +54,33 @@ export const inputFieldStyle = style({
   fontSize: '1em',
   boxSizing: 'border-box',
   backgroundColor: colors.darkBackground,
-  color: colors.lightText,
+  color: colors.lightText
 })
 
 export const textareaFieldStyle = style({
   minHeight: '100px',
-  resize: 'vertical',
+  resize: 'vertical'
 })
 
 export const errorMessage = style({
   color: colors.error,
-  marginTop: '12px',
+  marginTop: '12px'
 })
 
 export const fieldsetStyle = style({
   border: `1px solid ${colors.mediumBackground}`,
   padding: '16px',
   borderRadius: '4px',
-  marginBottom: '16px',
+  marginBottom: '16px'
 })
 
 export const legendStyle = style({
   padding: '0 4px',
-  color: colors.accent,
+  color: colors.accent
 })
 
 export const gridContainer = style({
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-  gap: '16px',
+  gap: '16px'
 })

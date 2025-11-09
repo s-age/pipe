@@ -15,7 +15,7 @@ import {
   todoTitle,
   noItemsMessage,
   deleteTodosButton,
-  todoCheckboxMargin,
+  todoCheckboxMargin
 } from './style.css'
 
 type TodoListProperties = {
@@ -29,13 +29,13 @@ export const TodoList = ({
   sessionDetail,
   currentSessionId,
   setSessionDetail: _setSessionDetail,
-  refreshSessions,
+  refreshSessions
 }: TodoListProperties): React.JSX.Element => {
   const { register, handleDeleteAllTodos, handleCheckboxChange } =
     useSessionTodosHandlers({
       sessionDetail,
       currentSessionId,
-      refreshSessions,
+      refreshSessions
     })
 
   return (

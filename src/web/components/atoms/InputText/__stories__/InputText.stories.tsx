@@ -9,7 +9,7 @@ import { InputText } from '../index'
 const Meta = {
   title: 'Atoms/InputText',
   component: InputText,
-  tags: ['autodocs'],
+  tags: ['autodocs']
 } satisfies StoryMeta<typeof InputText>
 
 export default Meta
@@ -18,8 +18,8 @@ type Story = StoryObj<typeof Meta>
 export const Default: Story = {
   args: {
     placeholder: 'Type here…',
-    name: 'simpleText',
-  },
+    name: 'simpleText'
+  }
 }
 
 export const Controlled: Story = {
@@ -41,7 +41,7 @@ export const Controlled: Story = {
     }
 
     return <ControlledExample />
-  },
+  }
 }
 
 export const WithRHF: Story = {
@@ -54,7 +54,7 @@ export const WithRHF: Story = {
     )
 
     return <FormExample />
-  },
+  }
 }
 
 export const WithoutForm: Story = {
@@ -77,5 +77,5 @@ export const WithoutForm: Story = {
     }
 
     return <PlainExample />
-  },
+  }
 }

@@ -11,11 +11,11 @@ export const useSessionTodosActions = (): {
   updateTodos: (
     sessionId: string,
     todos: Todo[],
-    refreshSessions?: () => Promise<void>,
+    refreshSessions?: () => Promise<void>
   ) => Promise<void>
   deleteAllTodos: (
     sessionId: string,
-    refreshSessions?: () => Promise<void>,
+    refreshSessions?: () => Promise<void>
   ) => Promise<void>
   fetchSession: (sessionId: string) => Promise<SessionDetail>
 } => {
@@ -32,7 +32,7 @@ export const useSessionTodosActions = (): {
         throw error
       }
     },
-    [toast],
+    [toast]
   )
 
   const deleteAllTodos = useCallback(
@@ -52,7 +52,7 @@ export const useSessionTodosActions = (): {
         throw error
       }
     },
-    [toast],
+    [toast]
   )
 
   const fetchSession = useCallback(async (sessionId: string) => {

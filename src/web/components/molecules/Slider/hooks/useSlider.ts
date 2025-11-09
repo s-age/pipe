@@ -3,7 +3,7 @@ import type { InputHTMLAttributes } from 'react'
 import type {
   FieldValues,
   UseFormRegister,
-  UseFormRegisterReturn,
+  UseFormRegisterReturn
 } from 'react-hook-form'
 
 import { useOptionalFormContext } from '@/components/organisms/Form'
@@ -49,7 +49,7 @@ export const useSlider = ({
   onChange,
   register,
   name,
-  id: idProperty,
+  id: idProperty
 }: UseSliderProperties): UseSliderReturn => {
   const fallbackId = useId()
   const id = idProperty ?? (name ? `${name}-slider` : `slider-${fallbackId}`)
@@ -92,7 +92,7 @@ export const useSlider = ({
       }
       onChange?.(v)
     },
-    [onChange, registerProperties, controlledValue],
+    [onChange, registerProperties, controlledValue]
   )
 
   const visibleValue =
@@ -135,7 +135,7 @@ export const useSlider = ({
   const trackWidth = svgWidth - 2 * pad
   const ratio = useMemo(
     () => Math.max(0, Math.min(1, (visibleValue - min) / (max - min || 1))),
-    [visibleValue, min, max],
+    [visibleValue, min, max]
   )
   const fillWidth = ratio * trackWidth
   const thumbCx = trackX + fillWidth
@@ -156,7 +156,7 @@ export const useSlider = ({
     trackX,
     trackWidth,
     fillWidth,
-    thumbCx,
+    thumbCx
   }
 }
 

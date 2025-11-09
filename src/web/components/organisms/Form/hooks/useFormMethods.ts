@@ -7,7 +7,7 @@ import type { UseFormProps, UseFormReturn, FieldValues } from 'react-hook-form'
  * and initialization in one place and makes the components thinner.
  */
 export const useFormMethods = <TFieldValues extends FieldValues = FieldValues>(
-  properties?: UseFormProps<TFieldValues>,
+  properties?: UseFormProps<TFieldValues>
 ): UseFormReturn<TFieldValues> =>
   useForm<TFieldValues>(properties as UseFormProps<TFieldValues>)
 

@@ -10,7 +10,7 @@ export const sessionListColumn = style({
   background: colors.cyanDark,
   display: 'flex',
   flexDirection: 'column',
-  borderRight: `1px solid rgba(0,0,0,0.08)`,
+  borderRight: `1px solid rgba(0,0,0,0.08)`
 })
 
 export const sessionListContainer = style({
@@ -22,11 +22,11 @@ export const sessionListContainer = style({
   // allow the container to shrink within a flex column so overflow works
   minHeight: 0,
   // Make room for the fixed footer so the last list item is not hidden.
-  paddingBottom: '88px',
+  paddingBottom: '88px'
 })
 
 export const sessionListItem = style({
-  marginBottom: '6px',
+  marginBottom: '6px'
 })
 
 export const sessionLink = style({
@@ -38,21 +38,21 @@ export const sessionLink = style({
   fontWeight: 500,
   fontSize: '0.95rem',
   ':hover': {
-    backgroundColor: colors.cyanAlt,
-  },
+    backgroundColor: colors.cyanAlt
+  }
 })
 
 export const sessionLinkActive = style({
   backgroundColor: colors.cyan,
   color: colors.offWhite,
   fontWeight: 700,
-  boxShadow: 'inset 4px 0 0 rgba(255,255,255,0.06)',
+  boxShadow: 'inset 4px 0 0 rgba(255,255,255,0.06)'
 })
 
 export const sessionIdStyle = style({
   fontSize: '0.75em',
   color: colors.offWhite,
-  marginLeft: '6px',
+  marginLeft: '6px'
 })
 
 export const stickyNewChatButtonContainer = style({
@@ -64,7 +64,7 @@ export const stickyNewChatButtonContainer = style({
   zIndex: 1000,
   padding: '8px',
   borderTop: `1px solid rgba(0,0,0,0.06)`,
-  background: colors.cyanDark,
+  background: colors.cyanDark
 })
 
 export const newChatButton = style({
@@ -82,6 +82,6 @@ export const newChatButton = style({
   cursor: 'pointer',
   ':hover': {
     boxShadow: `0 12px 30px rgba(0,0,0,0.26)`,
-    transform: 'translateY(-1px)',
-  },
+    transform: 'translateY(-1px)'
+  }
 })

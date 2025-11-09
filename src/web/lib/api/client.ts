@@ -16,18 +16,18 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
 const request = async <T>(
   method: string,
   url: string,
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<T> => {
   const headers = {
     'Content-Type': 'application/json',
-    ...options?.headers,
+    ...options?.headers
   }
 
   const config: Omit<RequestInit, 'body'> & { body?: BodyInit | null } = {
     method,
     headers,
     ...options,
-    body: options?.body ? JSON.stringify(options.body) : undefined,
+    body: options?.body ? JSON.stringify(options.body) : undefined
   }
 
   const response = await fetch(url, config)
@@ -66,5 +66,5 @@ export const client = {
     request<T>('PATCH', `${API_BASE_URL}${url}`, options),
 
   delete: <T>(url: string, options?: RequestOptions): Promise<T> =>
-    request<T>('DELETE', `${API_BASE_URL}${url}`, options),
+    request<T>('DELETE', `${API_BASE_URL}${url}`, options)
 }

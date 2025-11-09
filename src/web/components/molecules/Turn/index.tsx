@@ -32,7 +32,7 @@ import {
   forkButtonIcon,
   deleteButtonIcon,
   copyButtonIcon,
-  editButtonIcon,
+  editButtonIcon
 } from './style.css'
 
 type TurnProperties = {
@@ -51,7 +51,7 @@ const Component = ({
   expertMode,
   onDeleteTurn,
   onForkSession,
-  isStreaming = false,
+  isStreaming = false
 }: TurnProperties): JSX.Element => {
   const {
     isEditing,
@@ -62,7 +62,7 @@ const Component = ({
     handleStartEdit,
     handleFork,
     handleDelete,
-    handleSaveEdit,
+    handleSaveEdit
   } = useTurnHandlers({ turn, index, sessionId, onDeleteTurn, onForkSession })
 
   const getHeaderContent = (type: string): string => {
@@ -127,7 +127,7 @@ const Component = ({
               <div
                 className={`${renderedMarkdown} markdown-body`}
                 dangerouslySetInnerHTML={{
-                  __html: marked.parse(markdownContent.trim()),
+                  __html: marked.parse(markdownContent.trim())
                 }}
               />
             )}

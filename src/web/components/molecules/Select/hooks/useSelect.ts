@@ -2,12 +2,12 @@ import { useCallback, useMemo, useState, useRef } from 'react'
 import type {
   ChangeEvent,
   KeyboardEvent as ReactKeyboardEvent,
-  MouseEvent as ReactMouseEvent,
+  MouseEvent as ReactMouseEvent
 } from 'react'
 import type {
   FieldValues,
   UseFormRegister,
-  UseFormRegisterReturn,
+  UseFormRegisterReturn
 } from 'react-hook-form'
 
 import type { FormMethods } from '@/components/organisms/Form'
@@ -51,7 +51,7 @@ export const useSelect = ({
   name,
   options = [],
   defaultValue,
-  searchable = false,
+  searchable = false
 }: UseSelectProperties): UseSelectReturn => {
   // Resolve register from prop or optional provider
   const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined
@@ -73,7 +73,7 @@ export const useSelect = ({
   // normalize options
   const normalizedOptions = useMemo<SelectOption[]>(
     () => options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o)),
-    [options],
+    [options]
   )
 
   const [query, setQuery] = useState<string>('')
@@ -87,7 +87,7 @@ export const useSelect = ({
 
     return normalizedOptions.filter(
       (o) =>
-        String(o.label).toLowerCase().includes(q) || o.value.toLowerCase().includes(q),
+        String(o.label).toLowerCase().includes(q) || o.value.toLowerCase().includes(q)
     )
   }, [normalizedOptions, query, searchable])
 
@@ -120,17 +120,17 @@ export const useSelect = ({
         setIsOpen(false)
       }
     },
-    [isOpen, filtered, highlightedIndex, handleSelect],
+    [isOpen, filtered, highlightedIndex, handleSelect]
   )
 
   const handleKeyDownReact = useCallback(
     (event: ReactKeyboardEvent) => handleKeyDown(event.nativeEvent as KeyboardEvent),
-    [handleKeyDown],
+    [handleKeyDown]
   )
 
   const handleSearchChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value),
-    [],
+    []
   )
 
   const handleOptionClickReact = useCallback(
@@ -138,7 +138,7 @@ export const useSelect = ({
       const v = (event.currentTarget as HTMLElement).dataset.value
       if (v) handleSelect(v)
     },
-    [handleSelect],
+    [handleSelect]
   )
 
   const handleMouseEnterReact = useCallback((event: ReactMouseEvent<HTMLLIElement>) => {
@@ -167,7 +167,7 @@ export const useSelect = ({
     handleSearchChange,
     handleOptionClickReact,
     handleMouseEnterReact,
-    handleMouseLeaveReact,
+    handleMouseLeaveReact
   }
 }
 

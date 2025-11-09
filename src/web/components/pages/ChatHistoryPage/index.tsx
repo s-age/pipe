@@ -19,19 +19,16 @@ import {
   rightColumn,
   panel,
   panelBottomSpacing,
-  errorMessage as errorMessageStyle,
 } from './style.css'
 
 export const ChatHistoryPage = (): JSX.Element => {
   const {
-    errorMessage,
     sessions,
     currentSessionId,
     sessionDetail,
     expertMode,
     selectSession,
     setSessionDetail,
-    setError,
     refreshSessions,
     actions,
   } = useChatHistoryPageLogic()
@@ -47,17 +44,8 @@ export const ChatHistoryPage = (): JSX.Element => {
   } = useChatHistoryLogic({
     currentSessionId,
     setSessionDetail: setSessionDetail as unknown as (data: unknown) => void,
-    setError,
     refreshSessions,
   })
-
-  if (errorMessage) {
-    return (
-      <div className={appContainer}>
-        <div className={errorMessageStyle}>Error: {errorMessage}</div>
-      </div>
-    )
-  }
 
   return (
     <div className={appContainer}>
@@ -68,7 +56,6 @@ export const ChatHistoryPage = (): JSX.Element => {
             sessions={sessions}
             currentSessionId={currentSessionId}
             selectSession={selectSession}
-            setError={setError}
           />
         </div>
 
@@ -98,7 +85,6 @@ export const ChatHistoryPage = (): JSX.Element => {
             currentSessionId={currentSessionId}
             onSendInstruction={onSendInstruction}
             refreshSessions={refreshSessions}
-            setError={setError}
             isStreaming={isStreaming}
           />
         </div>
@@ -109,7 +95,6 @@ export const ChatHistoryPage = (): JSX.Element => {
             sessionDetail={sessionDetail}
             currentSessionId={currentSessionId}
             setSessionDetail={setSessionDetail}
-            setError={setError}
             refreshSessions={refreshSessions}
             actions={actions}
           />

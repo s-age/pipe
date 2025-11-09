@@ -12,14 +12,12 @@ type SessionTreeProperties = {
   sessions: SessionOverview[]
   currentSessionId: string | null
   selectSession: (id: string | null, detail: SessionDetail | null) => void
-  setError: (errorMessage: string | null) => void
 }
 
 export const SessionTree = ({
   sessions,
   currentSessionId,
   selectSession,
-  setError,
 }: SessionTreeProperties): JSX.Element => {
   const { handleNewChatClick } = useSessionTreeHandlers()
 
@@ -39,7 +37,6 @@ export const SessionTree = ({
               session={session}
               currentSessionId={currentSessionId || ''}
               selectSession={selectSession}
-              setError={setError}
             />
           )
         })}

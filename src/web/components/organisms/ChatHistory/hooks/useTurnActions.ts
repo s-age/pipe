@@ -1,17 +1,18 @@
 import { useCallback } from 'react'
 
+import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { deleteSession } from '@/lib/api/session/deleteSession'
 import { deleteTurn } from '@/lib/api/session/deleteTurn'
 import { forkSession } from '@/lib/api/session/forkSession'
 
 export const useTurnActions = (
-  setError: (error: string | null) => void,
   refreshSessions: () => Promise<void>,
 ): {
   handleDeleteTurn: (sessionId: string, turnIndex: number) => Promise<void>
   handleForkSession: (sessionId: string, forkIndex: number) => Promise<void>
   handleDeleteSession: (sessionId: string) => Promise<void>
 } => {
+  const toast = useToast()
   const handleDeleteTurn = useCallback(
     async (sessionId: string, turnIndex: number): Promise<void> => {
       if (!window.confirm('Are you sure you want to delete this turn?')) return
@@ -19,10 +20,10 @@ export const useTurnActions = (
         await deleteTurn(sessionId, turnIndex)
         await refreshSessions()
       } catch (error: unknown) {
-        setError((error as Error).message || 'Failed to delete turn.')
+        toast.failure((error as Error).message || 'Failed to delete turn.')
       }
     },
-    [setError, refreshSessions],
+    [refreshSessions, toast],
   )
 
   const handleForkSession = useCallback(
@@ -42,10 +43,10 @@ export const useTurnActions = (
           throw new Error('Failed to fork session.')
         }
       } catch (error: unknown) {
-        setError((error as Error).message || 'Failed to fork session.')
+        toast.failure((error as Error).message || 'Failed to fork session.')
       }
     },
-    [setError],
+    [toast],
   )
 
   const handleDeleteSession = useCallback(
@@ -59,10 +60,10 @@ export const useTurnActions = (
         // setSessionDetail(null)
         window.history.pushState({}, '', '/')
       } catch (error: unknown) {
-        setError((error as Error).message || 'Failed to delete session.')
+        toast.failure((error as Error).message || 'Failed to delete session.')
       }
     },
-    [setError],
+    [toast],
   )
 
   return { handleDeleteTurn, handleForkSession, handleDeleteSession }

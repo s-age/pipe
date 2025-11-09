@@ -31,7 +31,6 @@ type ChatHistoryProperties = {
   currentSessionId: string | null
   expertMode: boolean
   setSessionDetail: (data: SessionDetail | null) => void
-  setError: (error: string | null) => void
   refreshSessions: () => Promise<void>
 }
 
@@ -143,13 +142,11 @@ export const ChatHistoryFooter = ({
   currentSessionId,
   onSendInstruction,
   refreshSessions,
-  setError,
   isStreaming,
 }: {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
   refreshSessions: () => Promise<void>
-  setError: (message: string | null) => void
   isStreaming: boolean
 }): JSX.Element => (
   // The instruction form itself now owns the Form and submit handler to avoid
@@ -161,7 +158,6 @@ export const ChatHistoryFooter = ({
         currentSessionId={currentSessionId}
         onSendInstruction={onSendInstruction}
         refreshSessions={refreshSessions}
-        setError={setError}
         isStreaming={isStreaming}
       />
     </div>
@@ -172,13 +168,11 @@ export const ChatHistoryInstructionForm = ({
   currentSessionId,
   onSendInstruction,
   refreshSessions,
-  setError,
   isStreaming,
 }: {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
   refreshSessions: () => Promise<void>
-  setError: (message: string | null) => void
   isStreaming: boolean
 }): JSX.Element => {
   // We must call `useInstructionForm` inside the `Form` provider created by
@@ -189,7 +183,6 @@ export const ChatHistoryInstructionForm = ({
       currentSessionId,
       onSendInstruction,
       refreshSessions,
-      setError,
     })
 
     return (
@@ -235,7 +228,6 @@ export const ChatHistory = ({
   currentSessionId,
   expertMode,
   setSessionDetail,
-  setError,
   refreshSessions,
 }: ChatHistoryProperties): JSX.Element => {
   const {
@@ -250,7 +242,6 @@ export const ChatHistory = ({
     currentSessionId,
     // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
     setSessionDetail: setSessionDetail as unknown as (data: unknown) => void,
-    setError,
     refreshSessions,
   })
   // scrolling handled in useChatHistoryLogic
@@ -275,7 +266,6 @@ export const ChatHistory = ({
         currentSessionId={currentSessionId}
         onSendInstruction={onSendInstruction}
         refreshSessions={refreshSessions}
-        setError={setError}
         isStreaming={isStreaming}
       />
     </div>

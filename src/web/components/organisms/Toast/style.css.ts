@@ -79,7 +79,7 @@ export const toast = style({
 })
 
 const fadeIn = keyframes({
-  '0%': { opacity: 0, transform: 'translateY(-6px) scale(0.98)' },
+  '0%': { opacity: 1, transform: 'translateY(-6px) scale(0.98)' },
   '100%': { opacity: 1, transform: 'translateY(0) scale(1)' },
 })
 
@@ -144,18 +144,18 @@ export const close = style({
 
 export const statusSuccess = style({
   borderLeftColor: colors.accent,
-  backgroundColor: `${colors.accent}22`,
+  backgroundColor: colors.offWhite,
   color: colors.darkBackground,
 })
 
 export const statusFailure = style({
   borderLeftColor: colors.error,
-  backgroundColor: `${colors.error}22`,
+  backgroundColor: colors.offWhite,
   color: colors.darkBackground,
 })
 
 export const statusWarning = style({
   borderLeftColor: colors.warning,
-  backgroundColor: `${colors.warning}22`,
+  backgroundColor: colors.offWhite,
   color: colors.darkBackground,
 })

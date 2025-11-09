@@ -7,7 +7,7 @@ import { Label } from '@/components/atoms/Label'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Reference } from '@/types/reference'
 
-import { useSessionReferencesHandlers } from './hooks/useSessionReferencesHandlers'
+import { useReferenceControls } from './hooks/useReferenceHandlers'
 import {
   metaItem,
   metaItemLabel,
@@ -24,38 +24,22 @@ import {
   persistButton,
   noItemsMessage,
 } from './style.css'
-import { useSessionReferencesListLogic } from './useSessionReferencesListLogic'
 
-type SessionReferencesListProperties = {
+type ReferenceListProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   setSessionDetail: (data: SessionDetail | null) => void
   refreshSessions: () => Promise<void>
 }
 
-export const SessionReferencesList = ({
+export const ReferenceList = ({
   sessionDetail,
   currentSessionId,
-  setSessionDetail,
+  setSessionDetail: _setSessionDetail,
   refreshSessions,
-}: SessionReferencesListProperties): JSX.Element => {
-  const {
-    handleReferenceCheckboxChange,
-    handleReferencePersistToggle,
-    handleReferenceTtlChange,
-  } = useSessionReferencesListLogic({
-    sessionDetail,
-    currentSessionId,
-    setSessionDetail,
-    refreshSessions,
-  })
-
+}: ReferenceListProperties): JSX.Element => {
   const { handleCheckboxChange, handlePersistToggle, handleTtlAction } =
-    useSessionReferencesHandlers({
-      handleReferenceCheckboxChange,
-      handleReferencePersistToggle,
-      handleReferenceTtlChange,
-    })
+    useReferenceControls({ sessionDetail, currentSessionId, refreshSessions })
 
   if (!sessionDetail || sessionDetail.references.length === 0) {
     return (

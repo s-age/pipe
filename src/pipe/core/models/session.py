@@ -203,7 +203,27 @@ class Session(BaseModel):
         if "token_count" in new_meta_data:
             self.token_count = new_meta_data["token_count"]
         if "hyperparameters" in new_meta_data:
-            self.hyperparameters = Hyperparameters(**new_meta_data["hyperparameters"])
+            # Merge provided hyperparameter fields into existing hyperparameters
+            # so clients can send partial updates (e.g., only temperature).
+            from pipe.core.models.hyperparameters import Hyperparameters
+
+            provided = new_meta_data["hyperparameters"] or {}
+
+            # Start from current hyperparameters, otherwise from class default
+            if self.hyperparameters is not None:
+                base_dict = self.hyperparameters.model_dump()
+            elif (
+                default_hp := getattr(self.__class__, "default_hyperparameters", None)
+            ) is not None:
+                base_dict = default_hp.model_dump()
+            else:
+                base_dict = {}
+
+            # Merge provided values over base
+            merged = {**base_dict, **provided}
+
+            # Create a new Hyperparameters instance from the merged dict
+            self.hyperparameters = Hyperparameters(**merged)
 
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the session suitable for templates."""

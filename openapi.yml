@@ -499,6 +499,493 @@ paths:
         '500':
           description: Internal server error
 
+  # --- Singular form routes to match implementation in src/pipe/web/app.py ---
+  /api/session/start:
+    post:
+      summary: Start a new session (singular path used by the Flask app)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSessionRequest'
+      responses:
+        '200':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+        '422':
+          description: Validation error
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}:
+    get:
+      summary: Get a specific session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session to retrieve
+      responses:
+        '200':
+          description: Session data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    type: object
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session to delete
+      responses:
+        '200':
+          description: Session deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/turn/{turn_index}:
+    delete:
+      summary: Delete a specific turn from a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: turn_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the turn to delete
+      responses:
+        '200':
+          description: Turn deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Turn index out of range
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/turns/{turn_index}:
+    patch:
+      summary: Edit a specific turn in a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: turn_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the turn to edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Turn updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: No data provided or turn index out of range
+        '403':
+          description: Value error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/meta:
+    patch:
+      summary: Edit session metadata (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditSessionMetaRequest'
+      responses:
+        '200':
+          description: Session metadata updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/todos:
+    patch:
+      summary: Edit session todos (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTodosRequest'
+      responses:
+        '200':
+          description: Session todos updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete all todos from a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      responses:
+        '200':
+          description: Todos deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/references:
+    patch:
+      summary: Edit session references (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReferencesRequest'
+      responses:
+        '200':
+          description: Session references updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/references/{reference_index}/persist:
+    patch:
+      summary: Edit reference persist state (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: reference_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the reference to edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReferencePersistRequest'
+      responses:
+        '200':
+          description: Reference persist state updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '400':
+          description: Reference index out of range
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/references/{reference_index}/ttl:
+    patch:
+      summary: Edit reference TTL (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: reference_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the reference to edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReferenceTtlRequest'
+      responses:
+        '200':
+          description: Reference TTL updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '400':
+          description: Reference index out of range
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/hyperparameters:
+    patch:
+      summary: Edit only hyperparameters for a session (temperature, top_p/topP, top_k/topK)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditHyperparametersRequest'
+      responses:
+        '200':
+          description: Session hyperparameters updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: No data provided or no hyperparameter fields
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/session/fork/{fork_index}:
+    post:
+      summary: Fork a session from a specific turn (singular path used by Flask app)
+      parameters:
+        - in: path
+          name: fork_index
+          schema:
+            type: integer
+          required: true
+          description: The turn index to fork from
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: string
+      responses:
+        '200':
+          description: Session forked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  new_session_id:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '400':
+          description: Fork turn index out of range
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/instruction:
+    post:
+      summary: Send an instruction to a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendInstructionRequest'
+      responses:
+        '200':
+          description: Instruction sent successfully (streaming response)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          description: Too many tasks in processing pool
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/session/{session_id}/turns:
+    get:
+      summary: Get session turns (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: query
+          name: since
+          schema:
+            type: integer
+            default: 0
+          description: The index from which to retrieve turns
+      responses:
+        '200':
+          description: List of turns
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  turns:
+                    type: array
+                    items:
+                      type: object
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
 components:
   schemas:
     StartSessionRequest:
@@ -633,6 +1120,27 @@ components:
           nullable: true
         top_k:
           type: number
+          nullable: true
+    EditHyperparametersRequest:
+      type: object
+      description: |
+        Accepts hyperparameter fields to update. Supports snake_case keys (`top_p`, `top_k`)
+        and camelCase variants (`topP`, `topK`). Only provided fields will be updated.
+      properties:
+        temperature:
+          type: number
+          nullable: true
+        top_p:
+          type: number
+          nullable: true
+        topP:
+          type: number
+          nullable: true
+        top_k:
+          type: integer
+          nullable: true
+        topK:
+          type: integer
           nullable: true
     Reference:
       type: object

@@ -1,3 +1,4 @@
+import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import { editSessionMeta } from '@/lib/api/session/editSessionMeta'
 import type { Actions } from '@/stores/useChatHistoryStore'
@@ -11,7 +12,8 @@ export const useSessionMetaSaver = ({
 }: UseSessionMetaSaverProperties): {
   handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
 } => {
-  const { setError, refreshSessions } = actions
+  const { refreshSessions } = actions
+  const toast = useToast()
 
   const handleMetaSave = async (
     id: string,
@@ -20,9 +22,10 @@ export const useSessionMetaSaver = ({
     try {
       await editSessionMeta(id, meta)
       await refreshSessions()
-      setError(null)
+      toast.success('Session metadata saved')
     } catch (error: unknown) {
-      setError((error as Error).message || 'Failed to save session meta.')
+      const message = (error as Error).message || 'Failed to save session meta.'
+      toast.failure(message)
     }
   }
 

@@ -15,9 +15,9 @@ export const StartSessionPage: () => JSX.Element = () => {
     loading,
     error: sessionDataError,
   } = useStartSessionData()
-  const { handleSubmit, error: sessionCreationError } = useSessionCreation()
+  const { handleSubmit } = useSessionCreation()
 
-  const error = sessionDataError || sessionCreationError
+  const error = sessionDataError
 
   if (loading) {
     return <LoadingSpinner />

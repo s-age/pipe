@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 
+import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
 import { editReferences } from '@/lib/api/session/editReferences'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
@@ -9,7 +10,6 @@ import { getSession } from '@/lib/api/session/getSession'
 export const useReferenceActions = (
   sessionDetail: SessionDetail | null,
   setSessionDetail: (data: SessionDetail | null) => void,
-  setError: (error: string | null) => void,
   refreshSessions?: () => Promise<void>,
 ): {
   handleUpdateReferencePersist: (
@@ -28,6 +28,8 @@ export const useReferenceActions = (
     disabled: boolean,
   ) => Promise<void>
 } => {
+  const toast = useToast()
+
   const handleUpdateReferencePersist = useCallback(
     async (sessionId: string, index: number, persist: boolean): Promise<void> => {
       try {
@@ -36,12 +38,12 @@ export const useReferenceActions = (
         setSessionDetail(data.session)
         if (refreshSessions) await refreshSessions()
       } catch (error: unknown) {
-        setError(
+        toast.failure(
           (error as Error).message || 'Failed to update reference persist state.',
         )
       }
     },
-    [setSessionDetail, setError, refreshSessions],
+    [setSessionDetail, refreshSessions, toast],
   )
 
   const handleUpdateReferenceTtl = useCallback(
@@ -52,10 +54,10 @@ export const useReferenceActions = (
         setSessionDetail(data.session)
         if (refreshSessions) await refreshSessions()
       } catch (error: unknown) {
-        setError((error as Error).message || 'Failed to update reference TTL.')
+        toast.failure((error as Error).message || 'Failed to update reference TTL.')
       }
     },
-    [setSessionDetail, setError, refreshSessions],
+    [setSessionDetail, refreshSessions, toast],
   )
 
   const handleUpdateReferenceDisabled = useCallback(
@@ -69,12 +71,12 @@ export const useReferenceActions = (
         setSessionDetail(data.session)
         if (refreshSessions) await refreshSessions()
       } catch (error: unknown) {
-        setError(
+        toast.failure(
           (error as Error).message || 'Failed to update reference disabled state.',
         )
       }
     },
-    [sessionDetail, setSessionDetail, setError, refreshSessions],
+    [sessionDetail, setSessionDetail, refreshSessions, toast],
   )
 
   return {

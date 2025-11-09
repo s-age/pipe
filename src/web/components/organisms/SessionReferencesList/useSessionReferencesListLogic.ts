@@ -6,7 +6,6 @@ type UseSessionReferencesListLogicProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   setSessionDetail: (data: SessionDetail | null) => void
-  setError: (error: string | null) => void
   refreshSessions: () => Promise<void>
 }
 
@@ -14,7 +13,6 @@ export const useSessionReferencesListLogic = ({
   sessionDetail,
   currentSessionId,
   setSessionDetail,
-  setError,
   refreshSessions,
 }: UseSessionReferencesListLogicProperties): {
   handleReferenceCheckboxChange: (index: number) => void
@@ -25,7 +23,7 @@ export const useSessionReferencesListLogic = ({
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
     handleUpdateReferenceDisabled,
-  } = useReferenceActions(sessionDetail, setSessionDetail, setError, refreshSessions)
+  } = useReferenceActions(sessionDetail, setSessionDetail, refreshSessions)
 
   const handleReferenceCheckboxChange = (index: number): void => {
     if (!currentSessionId || !sessionDetail) return

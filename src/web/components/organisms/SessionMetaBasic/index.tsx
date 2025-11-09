@@ -1,21 +1,42 @@
-import type { JSX } from 'react'
+import React from 'react'
 
+import { InputCheckbox } from '@/components/atoms/InputCheckbox'
 import { InputText } from '@/components/atoms/InputText'
 import { TextArea } from '@/components/atoms/TextArea'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
-import { metaItem, metaItemLabel, inputFullWidth, textareaFullWidth } from './style.css'
+import { useMultiStepReasoningHandlers } from './hooks/useMultiStepReasoningHandlers'
+import {
+  metaItem,
+  multiStepLabel,
+  metaItemLabel,
+  inputFullWidth,
+  textareaFullWidth,
+} from './style.css'
 
-type SessionBasicMetaFormProperties = {
+type SessionMetaBasicProperties = {
   sessionDetail: SessionDetail | null
+  currentSessionId: string | null
+  _setError?: (error: string | null) => void
+  refreshSessions: () => Promise<void>
+  setSessionDetail?: (data: SessionDetail | null) => void
 }
 
-export const SessionBasicMetaForm = ({
-  sessionDetail: _sessionDetail,
-}: SessionBasicMetaFormProperties): JSX.Element => {
+export const SessionMetaBasic = ({
+  sessionDetail,
+  currentSessionId,
+  refreshSessions,
+  setSessionDetail,
+}: SessionMetaBasicProperties): React.JSX.Element => {
   const register = useOptionalFormContext()?.register
+  const { handleMultiStepReasoningChange } = useMultiStepReasoningHandlers({
+    currentSessionId,
+    sessionDetail,
+    refreshSessions,
+    setSessionDetail,
+  })
 
   return (
     <>
@@ -93,6 +114,16 @@ export const SessionBasicMetaForm = ({
           />
         )}
       </Fieldset>
+
+      <div className={metaItem}>
+        <InputCheckbox
+          name="multi_step_reasoning"
+          checked={sessionDetail?.multi_step_reasoning_enabled ?? false}
+          onChange={handleMultiStepReasoningChange}
+        >
+          <strong className={multiStepLabel}>Multi-step Reasoning</strong>
+        </InputCheckbox>
+      </div>
     </>
   )
 }

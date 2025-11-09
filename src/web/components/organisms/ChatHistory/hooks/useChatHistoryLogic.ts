@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 
+import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { useStreamingInstruction } from '@/components/pages/ChatHistoryPage/hooks/useStreamingInstruction'
 
 import { useTurnActions } from './useTurnActions'
@@ -8,7 +9,6 @@ type ChatHistoryProperties = {
   currentSessionId: string | null
   // keep the setter type loose here to avoid import-order lint churn
   setSessionDetail: (data: unknown) => void
-  setError: (error: string | null) => void
   refreshSessions: () => Promise<void>
 }
 
@@ -27,7 +27,6 @@ type ChatHistoryLogicReturn = {
 export const useChatHistoryLogic = ({
   currentSessionId,
   setSessionDetail,
-  setError,
   refreshSessions,
 }: ChatHistoryProperties): ChatHistoryLogicReturn => {
   const {
@@ -38,18 +37,17 @@ export const useChatHistoryLogic = ({
     setStreamingTrigger,
   } = useStreamingInstruction(currentSessionId, setSessionDetail)
 
-  const { handleDeleteTurn, handleForkSession, handleDeleteSession } = useTurnActions(
-    setError,
-    refreshSessions,
-  )
+  const { handleDeleteTurn, handleForkSession, handleDeleteSession } =
+    useTurnActions(refreshSessions)
+  const toast = useToast()
 
   // propagate streaming errors
   useEffect(() => {
     if (streamingError) {
-      setError(streamingError)
+      toast.failure(streamingError)
       setStreamingTrigger(null)
     }
-  }, [streamingError, setError, setStreamingTrigger])
+  }, [streamingError, setStreamingTrigger, toast])
 
   const turnsListReference = useRef<HTMLDivElement | null>(null)
 

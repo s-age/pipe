@@ -1,28 +1,31 @@
 import { style } from '@vanilla-extract/css'
 
-import { colors } from '@/styles/colors.css'
+import { colors } from '../../../styles/colors.css.ts'
 
 export const metaItem = style({
-  marginBottom: '15px',
+  marginBottom: '16px',
+})
+
+export const multiStepLabel = style({
+  color: colors.offWhite,
+  fontWeight: 'bold',
 })
 
 export const metaItemLabel = style({
-  display: 'block',
-  marginBottom: '5px',
   fontWeight: 'bold',
+  marginBottom: '4px',
+  display: 'block',
   color: colors.offWhite,
 })
 
 export const inputFullWidth = style({
   width: '100%',
   boxSizing: 'border-box',
-  // Match SessionMeta inputs: black background, gray border, cyan focus ring
   background: '#000',
   color: colors.offWhite,
+  borderRadius: '4px',
   padding: '8px',
   border: `1px solid ${colors.grayText}`,
-  borderRadius: '4px',
-
   ':focus': {
     outline: 'none',
     border: `1px solid ${colors.cyan}`,
@@ -35,12 +38,11 @@ export const textareaFullWidth = style({
   boxSizing: 'border-box',
   background: '#000',
   color: colors.offWhite,
+  minHeight: '100px',
+  marginTop: '10px',
+  borderRadius: '4px',
   padding: '8px',
   border: `1px solid ${colors.grayText}`,
-  borderRadius: '4px',
-  minHeight: '80px',
-  resize: 'vertical',
-
   ':focus': {
     outline: 'none',
     border: `1px solid ${colors.cyan}`,

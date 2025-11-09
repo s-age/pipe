@@ -1,4 +1,4 @@
-import { useCallback, useReducer } from 'react'
+import { useCallback, useReducer, useEffect, useRef } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
@@ -15,14 +15,12 @@ export type State = {
   sessionTree: SessionTree
   sessionDetail: SessionDetail | null
   settings: Settings
-  error: string | null
 }
 
 export const initialState: State = {
   sessionTree: { sessions: [], currentSessionId: null },
   sessionDetail: null,
   settings: { parameters: { temperature: null, top_p: null, top_k: null } },
-  error: null,
 }
 
 export type Action =
@@ -34,7 +32,6 @@ export type Action =
       payload: { id: string | null; detail: SessionDetail | null }
     }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<Settings> }
-  | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'RESET' }
 
 export const reducer = (state: State, action: Action): State => {
@@ -65,11 +62,7 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         settings: { ...state.settings, ...action.payload },
       }
-    case 'SET_ERROR':
-      return {
-        ...state,
-        error: action.payload,
-      }
+
     case 'RESET':
       return initialState
     default:
@@ -83,7 +76,6 @@ export type Actions = {
   setSessionDetail: (detail: SessionDetail | null) => void
   selectSession: (id: string | null, detail: SessionDetail | null) => void
   updateSettings: (partial: Partial<Settings>) => void
-  setError: (error: string | null) => void
   refreshSessions: () => Promise<void>
   reset: () => void
 }
@@ -109,6 +101,16 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
     dispatch({ type: 'SET_SESSION_DETAIL', payload: detail })
   }, [])
 
+  // Keep a ref to the current sessions array so callbacks (like refreshSessions)
+  // can read the latest value without closing over `state` and changing
+  // their identity when the sessions change. This prevents effects that
+  // depend on `refreshSessions` from re-running just because the function
+  // identity changed.
+  const sessionsReference = useRef<SessionOverview[]>(state.sessionTree.sessions)
+  useEffect(() => {
+    sessionsReference.current = state.sessionTree.sessions
+  }, [state.sessionTree.sessions])
+
   const selectSession = useCallback(
     (id: string | null, detail: SessionDetail | null) => {
       dispatch({ type: 'SET_SESSION_AND_CURRENT', payload: { id, detail } })
@@ -120,25 +122,24 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
     dispatch({ type: 'UPDATE_SETTINGS', payload: partial })
   }, [])
 
-  const setError = useCallback((error: string | null) => {
-    dispatch({ type: 'SET_ERROR', payload: error })
-  }, [])
-
   const refreshSessions = useCallback(async (): Promise<void> => {
-    try {
-      const fetchedSessions = await getSessionTree()
-      dispatch({
-        type: 'SET_SESSIONS',
-        payload: fetchedSessions.sessions.map(([id, session]) => ({
-          ...session,
-          session_id: id,
-        })),
-      })
-      setError(null)
-    } catch (error: unknown) {
-      setError((error as Error).message || 'Failed to refresh sessions.')
+    const fetchedSessions = await getSessionTree()
+    const newSessions = fetchedSessions.sessions.map(([id, session]) => ({
+      ...session,
+      session_id: id,
+    }))
+
+    // Only update the store if sessions actually changed to avoid
+    // retriggering dependent effects (prevents potential refresh loops).
+    const old = sessionsReference.current
+    const equal =
+      old.length === newSessions.length &&
+      old.every((s, i) => s.session_id === newSessions[i].session_id)
+
+    if (!equal) {
+      dispatch({ type: 'SET_SESSIONS', payload: newSessions })
     }
-  }, [setError])
+  }, [])
 
   const reset = useCallback(() => dispatch({ type: 'RESET' }), [])
 
@@ -150,11 +151,9 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
       setSessionDetail,
       selectSession,
       updateSettings,
-      setError,
+
       refreshSessions,
       reset,
     },
   }
 }
-
-// (Removed temporary default export) Use named export `useSessionStore`.

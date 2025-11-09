@@ -8,6 +8,12 @@ from flask_cors import CORS
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
+from pipe.web.requests.sessions.edit_hyperparameters import (
+    EditHyperparametersRequest,
+)
+from pipe.web.requests.sessions.edit_multi_step_reasoning import (
+    EditMultiStepReasoningRequest,
+)
 from pipe.web.requests.sessions.edit_reference_persist import (
     EditReferencePersistRequest,
 )
@@ -73,7 +79,28 @@ template_dir = os.path.join(project_root, "templates")
 assets_dir = os.path.join(project_root, "assets")
 
 app = Flask(__name__, template_folder=template_dir, static_folder=assets_dir)
-CORS(app)
+# Ensure CORS explicitly allows common HTTP methods (including PATCH) for API routes.
+# Some environments/proxies may block PATCH preflight;
+# being explicit avoids 405 on OPTIONS/PATCH.
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": "*",
+            "methods": ["GET", "HEAD", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
+        }
+    },
+)
+
+
+@app.before_request
+def _log_incoming_request():
+    # small debug logging so dev can see whether OPTIONS or PATCH actually reach Flask
+    try:
+        print(f"DEBUG: incoming {request.method} {request.path}")
+    except Exception:
+        pass
+
 
 config_path = os.path.join(project_root, "setting.yml")
 settings_dict = load_settings(config_path)
@@ -176,6 +203,62 @@ def create_new_session_api():
                 "details": e.stderr,
             }
         ), 500
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
+@app.route("/api/session/<path:session_id>/raw", methods=["GET"])
+def get_session_raw_file(session_id):
+    """Return raw session JSON file from disk for debugging/persistence verification.
+
+    WARNING: This is a debugging endpoint and should be removed or protected in
+    production. It reads the file written by the repository and returns its JSON
+    content so you can confirm the session was persisted to disk.
+    """
+    try:
+        repo = session_service.repository
+        # Use the repository helper to compute the path
+        session_path = repo._get_path_for_id(session_id)
+        exists = os.path.exists(session_path)
+        result: dict = {
+            "computed_path": session_path,
+            "sessions_dir": repo.sessions_dir,
+            "exists": exists,
+        }
+
+        if exists:
+            with open(session_path) as f:
+                data = json.load(f)
+            result["file"] = data
+            return jsonify(result), 200
+
+        # If file not present at computed path, try to find backups for the session id
+        backups_dir = getattr(
+            repo, "backups_dir", os.path.join(repo.sessions_dir, "backups")
+        )
+        matches = []
+        if os.path.isdir(backups_dir):
+            for name in os.listdir(backups_dir):
+                path = os.path.join(backups_dir, name)
+                try:
+                    with open(path) as bf:
+                        bd = json.load(bf)
+                        if bd.get("session_id") == session_id:
+                            matches.append({"backup_file": path, "content": bd})
+                except Exception:
+                    continue
+
+        result["backups_found"] = len(matches)
+        if matches:
+            # return the latest backup (by file mtime)
+            matches_sorted = sorted(
+                matches,
+                key=lambda m: os.path.getmtime(m["backup_file"]),
+                reverse=True,
+            )
+            result["latest_backup"] = matches_sorted[0]
+
+        return jsonify(result), 404
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
@@ -327,6 +410,120 @@ def edit_session_meta_api(session_id):
         return jsonify({"message": "Session not found."}), 404
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+
+@app.route("/api/session/<path:session_id>/hyperparameters", methods=["PATCH", "POST"])
+def edit_hyperparameters_api(session_id):
+    """Update only hyperparameters for a session.
+
+    Accepts a JSON body with any of: temperature, top_p, top_k, topP, topK
+    camelCase variants will be normalized to snake_case.
+    """
+    try:
+        # Validate and normalize the incoming hyperparameters request
+        try:
+            request_data = EditHyperparametersRequest(**request.get_json())
+        except ValidationError as e:
+            return jsonify({"message": str(e)}), 422
+        except Exception:
+            return jsonify({"message": "No data provided."}), 400
+
+        hyperparams = request_data.model_dump(exclude_unset=True)
+
+        # Delegate to the existing session metadata update method
+        session_service.edit_session_meta(session_id, {"hyperparameters": hyperparams})
+
+        # Return the full saved session so clients can rely on server-side
+        # normalization/merging and immediately display authoritative state.
+        session = session_service.get_session(session_id)
+        if not session:
+            return jsonify({"message": "Session not found."}), 404
+
+        return (
+            jsonify(
+                {
+                    "message": f"Session {session_id} hyperparameters updated.",
+                    "session": session.to_dict(),
+                }
+            ),
+            200,
+        )
+    except FileNotFoundError:
+        return jsonify({"message": "Session not found."}), 404
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
+@app.route("/api/session/<path:session_id>/hyperparameters", methods=["OPTIONS"])
+def edit_hyperparameters_options(session_id):
+    # Explicitly handle preflight in case a proxy or environment fails to respond.
+    from flask import make_response
+
+    resp = make_response(("", 200))
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Methods"] = (
+        "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
+    )
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return resp
+
+
+@app.route(
+    "/api/session/<path:session_id>/multi-step-reasoning", methods=["PATCH", "POST"]
+)
+def edit_multi_step_reasoning_api(session_id):
+    """Toggle multi-step reasoning for a session.
+
+    Accepts JSON: { "multi_step_reasoning_enabled": true|false }
+    Returns the full saved session so clients can display authoritative state.
+    """
+    try:
+        try:
+            request_data = EditMultiStepReasoningRequest(**request.get_json())
+        except ValidationError as e:
+            return jsonify({"message": str(e)}), 422
+        except Exception:
+            return jsonify({"message": "No data provided."}), 400
+
+        session_service.edit_session_meta(
+            session_id,
+            {"multi_step_reasoning_enabled": request_data.multi_step_reasoning_enabled},
+        )
+
+        session = session_service.get_session(session_id)
+        if not session:
+            return jsonify({"message": "Session not found."}), 404
+
+        return (
+            jsonify(
+                {
+                    "message": f"Session {session_id} multi-step reasoning updated.",
+                    "session": session.to_dict(),
+                }
+            ),
+            200,
+        )
+    except FileNotFoundError:
+        return jsonify({"message": "Session not found."}), 404
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
+@app.route("/api/session/<path:session_id>/multi-step-reasoning", methods=["OPTIONS"])
+def edit_multi_step_reasoning_options(session_id):
+    # Explicitly handle preflight similar to other endpoints
+    from flask import make_response
+
+    resp = make_response(("", 200))
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Methods"] = (
+        "GET, HEAD, POST, OPTIONS",
+        "PUT",
+        "PATCH",
+        "DELETE",
+    )
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return resp
 
 
 @app.route("/api/session/<path:session_id>/todos", methods=["PATCH"])
@@ -557,6 +754,31 @@ def get_settings_api():
 if __name__ == "__main__":
     project_root_for_check = os.path.dirname(os.path.abspath(__file__))
     if check_and_show_warning(project_root_for_check):
+        # Debug: print URL map so we can inspect which methods are registered
+        try:
+            for rule in app.url_map.iter_rules():
+                print(f"DEBUG: route {rule.rule} methods={sorted(rule.methods or [])}")
+        except Exception:
+            pass
+
+        # Print runtime path diagnostics so we can detect mismatches between
+        # the module-computed project_root and the runtime working directory.
+        try:
+            import os as _os
+
+            print(f"DEBUG: module project_root = {project_root}")
+            print(f"DEBUG: current working dir = {_os.getcwd()}")
+            # session_service created at module import; print its repository path
+            repo = getattr(session_service, "repository", None)
+            if repo is not None:
+                print(
+                    f"DEBUG: session repository sessions_dir = "
+                    f"{getattr(repo, 'sessions_dir', None)}"
+                )
+            else:
+                print("DEBUG: session_service.repository not available")
+        except Exception:
+            pass
         app.run(host="0.0.0.0", port=5001, debug=False)
     else:
         sys.exit(1)

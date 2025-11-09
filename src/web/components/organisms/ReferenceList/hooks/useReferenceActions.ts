@@ -1,15 +1,13 @@
 import { useCallback } from 'react'
 
+import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
 import { editReferences } from '@/lib/api/session/editReferences'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { getSession } from '@/lib/api/session/getSession'
 
 export const useReferenceActions = (
   sessionDetail: SessionDetail | null,
-  setSessionDetail: (data: SessionDetail | null) => void,
-  setError: (error: string | null) => void,
   refreshSessions?: () => Promise<void>,
 ): {
   handleUpdateReferencePersist: (
@@ -28,34 +26,32 @@ export const useReferenceActions = (
     disabled: boolean,
   ) => Promise<void>
 } => {
+  const toast = useToast()
   const handleUpdateReferencePersist = useCallback(
     async (sessionId: string, index: number, persist: boolean): Promise<void> => {
       try {
         await editReferencePersist(sessionId, index, persist)
-        const data = await getSession(sessionId)
-        setSessionDetail(data.session)
+        // Prefer refreshSessions to allow parent to re-fetch canonical session state
         if (refreshSessions) await refreshSessions()
       } catch (error: unknown) {
-        setError(
+        toast.failure(
           (error as Error).message || 'Failed to update reference persist state.',
         )
       }
     },
-    [setSessionDetail, setError, refreshSessions],
+    [toast, refreshSessions],
   )
 
   const handleUpdateReferenceTtl = useCallback(
     async (sessionId: string, index: number, ttl: number): Promise<void> => {
       try {
         await editReferenceTtl(sessionId, index, ttl)
-        const data = await getSession(sessionId)
-        setSessionDetail(data.session)
         if (refreshSessions) await refreshSessions()
       } catch (error: unknown) {
-        setError((error as Error).message || 'Failed to update reference TTL.')
+        toast.failure((error as Error).message || 'Failed to update reference TTL.')
       }
     },
-    [setSessionDetail, setError, refreshSessions],
+    [toast, refreshSessions],
   )
 
   const handleUpdateReferenceDisabled = useCallback(
@@ -65,16 +61,14 @@ export const useReferenceActions = (
         const newReferences = [...sessionDetail.references]
         newReferences[index] = { ...newReferences[index], disabled }
         await editReferences(sessionId, newReferences)
-        const data = await getSession(sessionId)
-        setSessionDetail(data.session)
         if (refreshSessions) await refreshSessions()
       } catch (error: unknown) {
-        setError(
+        toast.failure(
           (error as Error).message || 'Failed to update reference disabled state.',
         )
       }
     },
-    [sessionDetail, setSessionDetail, setError, refreshSessions],
+    [sessionDetail, toast, refreshSessions],
   )
 
   return {

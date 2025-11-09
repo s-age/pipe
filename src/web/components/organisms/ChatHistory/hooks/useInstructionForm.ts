@@ -1,12 +1,12 @@
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
 import { useFormContext } from '@/components/organisms/Form'
+import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 
 export type UseInstructionFormProperties = {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
   refreshSessions: () => Promise<void>
-  setError: (error: string | null) => void
 }
 
 export type UseInstructionFormReturn = {
@@ -21,10 +21,10 @@ export const useInstructionForm = ({
   currentSessionId,
   onSendInstruction,
   refreshSessions,
-  setError,
 }: UseInstructionFormProperties): UseInstructionFormReturn => {
   const methods = useFormContext()
   const { register, handleSubmit, reset } = methods
+  const toast = useToast()
 
   const submit = handleSubmit(async (data) => {
     const instruction = (data as { instruction?: string }).instruction ?? ''
@@ -35,7 +35,9 @@ export const useInstructionForm = ({
       await refreshSessions()
       reset({ instruction: '' })
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to send instruction')
+      toast.failure(
+        error instanceof Error ? error.message : 'Failed to send instruction',
+      )
       // keep logging for debugging
       console.error('Failed to send instruction:', error)
     }

@@ -15,16 +15,14 @@ type SessionItemProperties = {
   session: SessionOverview
   currentSessionId: string
   selectSession: (id: string | null, detail: SessionDetail | null) => void
-  setError: (errorMessage: string | null) => void
 }
 
 export const SessionItem = ({
   session,
   currentSessionId,
   selectSession,
-  setError,
 }: SessionItemProperties): JSX.Element => {
-  const { onClick } = useSessionItemHandlers({ session, selectSession, setError })
+  const { onClick } = useSessionItemHandlers({ session, selectSession })
 
   return (
     <li key={session.session_id} className={sessionListItem}>

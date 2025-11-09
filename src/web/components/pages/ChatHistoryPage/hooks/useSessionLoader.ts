@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 
+import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 import type { Actions, State } from '@/stores/useChatHistoryStore'
 
@@ -15,7 +16,8 @@ export const useSessionLoader = ({
   const {
     sessionTree: { currentSessionId },
   } = state
-  const { setSessions, setCurrentSessionId, setError } = actions
+  const { setSessions, setCurrentSessionId } = actions
+  const toast = useToast()
 
   useEffect(() => {
     const loadSessions = async (): Promise<void> => {
@@ -32,11 +34,11 @@ export const useSessionLoader = ({
         if (id && id !== 'session' && id !== '' && !currentSessionId) {
           setCurrentSessionId(id)
         }
-        setError(null)
       } catch (error: unknown) {
-        setError((error as Error).message || 'Failed to load sessions.')
+        toast.failure((error as Error).message || 'Failed to load sessions.')
       }
     }
     loadSessions()
-  }, [setSessions, setCurrentSessionId, setError, currentSessionId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 }

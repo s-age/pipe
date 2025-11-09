@@ -11,13 +11,9 @@ type UseTurnHandlersProperties = {
   onForkSession: (sessionId: string, forkIndex: number) => void | Promise<void>
 }
 
-export function useTurnHandlers({
-  turn,
-  index,
-  sessionId,
-  onDeleteTurn,
-  onForkSession,
-}: UseTurnHandlersProperties): {
+export const useTurnHandlers = (
+  properties: UseTurnHandlersProperties,
+): {
   isEditing: boolean
   editedContent: string
   handleCopy: () => Promise<void>
@@ -27,19 +23,19 @@ export function useTurnHandlers({
   handleFork: () => void
   handleDelete: () => void
   handleSaveEdit: () => void
-} {
-  const [isEditing, setIsEditing] = useState(false)
+} => {
+  const { turn, index, sessionId, onDeleteTurn, onForkSession } = properties
+
+  const [isEditing, setIsEditing] = useState<boolean>(false)
   const [editedContent, setEditedContent] = useState<string>(
-    turn.content || turn.instruction || '',
+    turn.content ?? turn.instruction ?? '',
   )
 
   const handleCopy = useCallback(async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(editedContent)
-      alert('Copied!')
     } catch (error) {
       console.error('Failed to copy: ', error)
-      alert('Failed to copy')
     }
   }, [editedContent])
 
@@ -52,22 +48,20 @@ export function useTurnHandlers({
 
   const handleCancelEdit = useCallback((): void => {
     setIsEditing(false)
-  }, [])
+    setEditedContent(turn.content ?? turn.instruction ?? '')
+  }, [turn.content, turn.instruction])
 
-  const handleStartEdit = useCallback((): void => {
-    setIsEditing(true)
-  }, [])
+  const handleStartEdit = useCallback((): void => setIsEditing(true), [])
 
   const handleFork = useCallback((): void => {
-    onForkSession(sessionId, index)
+    void onForkSession(sessionId, index)
   }, [onForkSession, sessionId, index])
 
   const handleDelete = useCallback((): void => {
-    onDeleteTurn(sessionId, index)
+    void onDeleteTurn(sessionId, index)
   }, [onDeleteTurn, sessionId, index])
 
   const handleSaveEdit = useCallback((): void => {
-    // TODO: API呼び出しを実装する
     console.log(`Saving turn ${index} with new content: ${editedContent}`)
     setIsEditing(false)
   }, [index, editedContent])

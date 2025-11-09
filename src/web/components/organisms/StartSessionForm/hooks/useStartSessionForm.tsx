@@ -15,7 +15,7 @@ type UseStartSessionFormProperties = {
   defaultSettings: Settings | null
 }
 
-export function useStartSessionForm({
+export const useStartSessionForm = ({
   onSubmit,
   sessions,
   defaultSettings,
@@ -31,7 +31,7 @@ export function useStartSessionForm({
   parentSessionOptions: { value: string; label: string }[]
   handleCancel: () => void
   reset: UseFormReturn<StartSessionFormInputs>['reset']
-} {
+} => {
   const {
     handleSubmit,
     control,

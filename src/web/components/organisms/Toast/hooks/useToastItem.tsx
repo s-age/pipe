@@ -4,7 +4,7 @@ import type { ToastItem as ToastItemType } from '@/stores/useAppStore'
 
 const ANIM_DURATION = 180
 
-export function useToastItem(
+export const useToastItem = (
   item: ToastItemType,
   removeToast: (id: string) => void,
 ): {
@@ -14,7 +14,7 @@ export function useToastItem(
   handleMouseLeave: () => void
   handleClose: () => void
   statusClass: 'statusSuccess' | 'statusFailure' | 'statusWarning'
-} {
+} => {
   const autoTimerReference = useRef<number | null>(null)
   const finishTimerReference = useRef<number | null>(null)
   const startAtReference = useRef<number | null>(null)

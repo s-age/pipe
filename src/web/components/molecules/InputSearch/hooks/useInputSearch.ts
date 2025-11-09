@@ -6,11 +6,14 @@ type Properties = {
   onChange?: (value: string) => void
   onSubmit?: (value: string) => void
 }
-
-export function useInputSearch({ value, onChange, onSubmit }: Properties): {
+export const useInputSearch = ({
+  value,
+  onChange,
+  onSubmit,
+}: Properties): {
   handleSubmit: (event: FormEvent) => void
   handleChange: (event: ChangeEvent<HTMLInputElement>) => void
-} {
+} => {
   const handleSubmit = useCallback(
     (event: FormEvent): void => {
       event.preventDefault()

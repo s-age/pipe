@@ -12,9 +12,9 @@ const allPositions = [
   'bottom-right',
 ] as const
 
-export function useGroupedToasts(): {
+export const useGroupedToasts = (): {
   grouped: Record<string, ToastItemType[]>
-} {
+} => {
   const { state } = useAppStore()
 
   const grouped = useMemo<Record<string, ToastItemType[]>>(() => {

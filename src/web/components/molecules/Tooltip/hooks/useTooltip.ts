@@ -1,10 +1,10 @@
 import { useCallback, useState } from 'react'
 
-export function useTooltip(): {
+export const useTooltip = (): {
   isVisible: boolean
   handleMouseEnter: () => void
   handleMouseLeave: () => void
-} {
+} => {
   const [isVisible, setIsVisible] = useState(false)
 
   const handleMouseEnter = useCallback(() => setIsVisible(true), [])

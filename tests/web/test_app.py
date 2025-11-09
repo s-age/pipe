@@ -114,6 +114,18 @@ class TestAppApi(unittest.TestCase):
         self.assertIn("sessions", data)
         self.assertEqual(data["sessions"], mock_sessions)
 
+    def test_get_session_tree_api_v1(self):
+        """Tests the v1 API endpoint for getting session tree."""
+        mock_sessions = [["session1", {"purpose": "Test 1"}]]
+        (
+            self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
+        ) = mock_sessions
+        response = self.client.get("/api/v1/session_tree")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertIn("sessions", data)
+        self.assertEqual(data["sessions"], mock_sessions)
+
     def test_get_session_api_success(self):
         """Tests successfully getting a single session via API."""
         session_id = "test_id"
@@ -267,7 +279,7 @@ class TestAppApi(unittest.TestCase):
         self.mock_session_service.fork_session.return_value = "new_forked_id"
         payload = {"session_id": "original_id"}
         response = self.client.post(
-            "/api/session/fork/1",
+            "/api/session/original_id/fork/1",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -281,7 +293,7 @@ class TestAppApi(unittest.TestCase):
         self.mock_session_service.fork_session.side_effect = FileNotFoundError
         payload = {"session_id": "original_id"}
         response = self.client.post(
-            "/api/session/fork/1",
+            "/api/session/original_id/fork/1",
             data=json.dumps(payload),
             content_type="application/json",
         )

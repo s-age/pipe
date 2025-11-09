@@ -9,12 +9,13 @@ function isScrolledToBottom() {
   if (!turnsList) return false
   // 少しの誤差を許容するための閾値（例: 1px）
   const threshold = 1
+
   return (
     turnsList.scrollHeight - turnsList.scrollTop - turnsList.clientHeight <= threshold
   )
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   buildSessionTree()
 
   if (window.marked) {
@@ -47,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
           )
         })
     }
+
     return response.json()
   }
 
@@ -130,6 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       ul.appendChild(li)
     }
+
     return ul
   }
 
@@ -165,9 +168,10 @@ document.addEventListener('DOMContentLoaded', function () {
     textArea.select()
     try {
       document.execCommand('copy')
+
       return Promise.resolve()
-    } catch (err) {
-      return Promise.reject(err)
+    } catch (error) {
+      return Promise.reject(error)
     } finally {
       document.body.removeChild(textArea)
     }
@@ -200,6 +204,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function toggleEdit(editButton, sessionId, turnIndex, turnType) {
     if (turnType !== 'user_task' && turnType !== 'model_response') {
       alert(`Editing turns of type '${turnType}' is not allowed.`)
+
       return
     }
     const turnElement = document.getElementById(`turn-${turnIndex}`)
@@ -460,6 +465,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   userTurnPlaceholder,
                   modelTurnPlaceholder,
                 ])
+
                 return
               }
 
@@ -476,6 +482,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     userTurnPlaceholder,
                     modelTurnPlaceholder,
                   ])
+
                   return
                 }
 
@@ -494,6 +501,7 @@ document.addEventListener('DOMContentLoaded', function () {
                       // Remove the placeholders on error
                       userTurnPlaceholder.remove()
                       modelTurnPlaceholder.remove()
+
                       return
                     }
                   } catch (e) {
@@ -592,6 +600,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
             <div class="turn-content">${turnContentHTML}</div>
         `
+
     return turnElement
   }
 
@@ -629,21 +638,21 @@ document.addEventListener('DOMContentLoaded', function () {
       if (sessionDetail.references && sessionDetail.references.length > 0) {
         referencesList.style.display = 'block'
         noReferencesMessage.style.display = 'none'
-        sessionDetail.references.forEach((ref, index) => {
+        sessionDetail.references.forEach((reference, index) => {
           const li = document.createElement('li')
           li.style.marginBottom = '10px'
-          const textDecoration = ref.disabled ? 'line-through' : 'none'
-          const color = ref.disabled ? '#888' : 'inherit'
-          const ttl = ref.ttl !== null ? ref.ttl : 3
+          const textDecoration = reference.disabled ? 'line-through' : 'none'
+          const color = reference.disabled ? '#888' : 'inherit'
+          const ttl = reference.ttl !== null ? reference.ttl : 3
 
           li.innerHTML = `
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <label style="cursor: pointer; display: flex; align-items: center; flex-grow: 1;">
-                                <input type="checkbox" class="reference-checkbox" data-index="${index}" ${!ref.disabled ? 'checked' : ''} style="margin-right: 8px;">
-                                <button class="action-btn reference-persist-toggle" data-index="${index}" data-persist="${ref.persist ? 'true' : 'false'}" style="background: none; border: none; padding: 0; cursor: pointer; margin-right: 5px;">
-                                    <span class="material-icons" style="font-size: 16px; vertical-align: middle; color: ${ref.persist ? '#007bff' : '#ccc'};">lock</span>
+                                <input type="checkbox" class="reference-checkbox" data-index="${index}" ${!reference.disabled ? 'checked' : ''} style="margin-right: 8px;">
+                                <button class="action-btn reference-persist-toggle" data-index="${index}" data-persist="${reference.persist ? 'true' : 'false'}" style="background: none; border: none; padding: 0; cursor: pointer; margin-right: 5px;">
+                                    <span class="material-icons" style="font-size: 16px; vertical-align: middle; color: ${reference.persist ? '#007bff' : '#ccc'};">lock</span>
                                 </button>
-                                <span data-testid="reference-path" style="word-break: break-all; text-decoration: ${textDecoration}; color: ${color};">${ref.path}</span>
+                                <span data-testid="reference-path" style="word-break: break-all; text-decoration: ${textDecoration}; color: ${color};">${reference.path}</span>
                             </label>
                             <div class="ttl-controls" style="display: flex; align-items: center; margin-left: 10px;">
                                 <button class="ttl-btn" data-index="${index}" data-action="decrement">-</button>
@@ -671,7 +680,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function fetchAndReplaceTurns(sessionId, startIndex, placeholders) {
     const fetchSessionDetail = fetch(`/api/session/${sessionId}`).then(handleResponse)
-    const fetchSessionList = fetch('/api/sessions').then(handleResponse)
+    const fetchSessionList = fetch('/api/v1/session_tree').then(handleResponse)
 
     Promise.all([fetchSessionDetail, fetchSessionList])
       .then(([sessionResult, sessionsResult]) => {
@@ -769,8 +778,8 @@ document.addEventListener('DOMContentLoaded', function () {
               this.textContent = originalText
             }, 2000)
           })
-          .catch((err) => {
-            console.error('Failed to copy turn content: ', err)
+          .catch((error) => {
+            console.error('Failed to copy turn content: ', error)
             alert('Failed to copy')
           })
       })
@@ -834,7 +843,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })
 
-  document.getElementById('todos-list')?.addEventListener('change', function (event) {
+  document.getElementById('todos-list')?.addEventListener('change', (event) => {
     if (event.target.classList.contains('todo-checkbox')) {
       const checkbox = event.target
       const index = parseInt(checkbox.dataset.index, 10)
@@ -870,29 +879,27 @@ document.addEventListener('DOMContentLoaded', function () {
       })
   }
 
-  document
-    .getElementById('references-list')
-    ?.addEventListener('change', function (event) {
-      if (event.target.classList.contains('reference-checkbox')) {
-        const sessionId = document.getElementById('current-session-id').value
-        let references = sessionDetail.references || []
-        const checkbox = event.target
-        const index = parseInt(checkbox.dataset.index, 10)
-        if (references[index]) {
-          references[index].disabled = !checkbox.checked
-        }
-        const label = checkbox.closest('label')
-        const span = label.querySelector('span')
-        if (checkbox.checked) {
-          span.style.textDecoration = 'none'
-          span.style.color = 'inherit'
-        } else {
-          span.style.textDecoration = 'line-through'
-          span.style.color = '#888'
-        }
-        saveReferences(sessionId, references)
+  document.getElementById('references-list')?.addEventListener('change', (event) => {
+    if (event.target.classList.contains('reference-checkbox')) {
+      const sessionId = document.getElementById('current-session-id').value
+      let references = sessionDetail.references || []
+      const checkbox = event.target
+      const index = parseInt(checkbox.dataset.index, 10)
+      if (references[index]) {
+        references[index].disabled = !checkbox.checked
       }
-    })
+      const label = checkbox.closest('label')
+      const span = label.querySelector('span')
+      if (checkbox.checked) {
+        span.style.textDecoration = 'none'
+        span.style.color = 'inherit'
+      } else {
+        span.style.textDecoration = 'line-through'
+        span.style.color = '#888'
+      }
+      saveReferences(sessionId, references)
+    }
+  })
 
   function saveReferences(sessionId, references, reload = false) {
     const payload = { references }
@@ -918,49 +925,47 @@ document.addEventListener('DOMContentLoaded', function () {
       })
   }
 
-  document
-    .getElementById('references-list')
-    ?.addEventListener('click', function (event) {
-      if (event.target.closest('.reference-persist-toggle')) {
-        const button = event.target.closest('.reference-persist-toggle')
-        const index = parseInt(button.dataset.index, 10)
-        const sessionId = document.getElementById('current-session-id').value
-        let references = sessionDetail.references || []
+  document.getElementById('references-list')?.addEventListener('click', (event) => {
+    if (event.target.closest('.reference-persist-toggle')) {
+      const button = event.target.closest('.reference-persist-toggle')
+      const index = parseInt(button.dataset.index, 10)
+      const sessionId = document.getElementById('current-session-id').value
+      let references = sessionDetail.references || []
 
-        if (references[index]) {
-          const currentPersist = button.dataset.persist === 'true'
-          const newPersist = !currentPersist
-          references[index].persist = newPersist
+      if (references[index]) {
+        const currentPersist = button.dataset.persist === 'true'
+        const newPersist = !currentPersist
+        references[index].persist = newPersist
 
-          // Update UI immediately
-          button.dataset.persist = newPersist ? 'true' : 'false'
-          const iconSpan = button.querySelector('.material-icons')
-          if (iconSpan) {
-            iconSpan.style.color = newPersist ? '#007bff' : '#ccc'
-          }
-
-          updateReferencePersist(sessionId, index, newPersist)
-        }
-      }
-      if (event.target.classList.contains('ttl-btn')) {
-        const button = event.target
-        const index = parseInt(button.dataset.index, 10)
-        const action = button.dataset.action
-        const sessionId = document.getElementById('current-session-id').value
-
-        const ttlSpan = button.parentElement.querySelector('.ttl-value')
-        let currentTtl = parseInt(ttlSpan.textContent, 10)
-
-        let newTtl
-        if (action === 'increment') {
-          newTtl = currentTtl + 1
-        } else {
-          newTtl = Math.max(0, currentTtl - 1) // TTL cannot be negative
+        // Update UI immediately
+        button.dataset.persist = newPersist ? 'true' : 'false'
+        const iconSpan = button.querySelector('.material-icons')
+        if (iconSpan) {
+          iconSpan.style.color = newPersist ? '#007bff' : '#ccc'
         }
 
-        updateReferenceTtl(sessionId, index, newTtl, ttlSpan)
+        updateReferencePersist(sessionId, index, newPersist)
       }
-    })
+    }
+    if (event.target.classList.contains('ttl-btn')) {
+      const button = event.target
+      const index = parseInt(button.dataset.index, 10)
+      const action = button.dataset.action
+      const sessionId = document.getElementById('current-session-id').value
+
+      const ttlSpan = button.parentElement.querySelector('.ttl-value')
+      let currentTtl = parseInt(ttlSpan.textContent, 10)
+
+      let newTtl
+      if (action === 'increment') {
+        newTtl = currentTtl + 1
+      } else {
+        newTtl = Math.max(0, currentTtl - 1) // TTL cannot be negative
+      }
+
+      updateReferenceTtl(sessionId, index, newTtl, ttlSpan)
+    }
+  })
 
   function updateReferencePersist(sessionId, index, newPersist) {
     fetch(`/api/session/${sessionId}/references/persist/${index}`, {

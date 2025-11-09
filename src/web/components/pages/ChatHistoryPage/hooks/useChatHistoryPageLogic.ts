@@ -1,7 +1,6 @@
 import type { State, Actions } from '@/stores/useChatHistoryStore'
 import { useSessionStore } from '@/stores/useChatHistoryStore'
 
-import { useSessionDetailLoader } from './useSessionDetailLoader'
 import { useSessionLoader } from './useSessionLoader'
 
 type UseChatHistoryPageLogicReturn = {
@@ -25,7 +24,6 @@ export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
   const { selectSession, setSessionDetail, refreshSessions } = actions
 
   useSessionLoader({ state, actions })
-  useSessionDetailLoader({ state, actions })
 
   const expertMode = (state.settings.expertMode as boolean) ?? true
 

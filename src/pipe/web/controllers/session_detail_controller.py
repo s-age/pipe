@@ -1,0 +1,33 @@
+from typing import Any
+
+from flask import Request
+from pipe.web.actions import SessionGetAction, SessionTreeAction
+
+
+class SessionDetailController:
+    def __init__(self, session_service, settings):
+        self.session_service = session_service
+        self.settings = settings
+
+    def get_session_with_tree(
+        self, session_id: str, request_data: Request | None = None
+    ) -> tuple[dict[str, Any], int]:
+        session_tree_action = SessionTreeAction(params={}, request_data=request_data)
+        tree_response, tree_status = session_tree_action.execute()
+
+        if tree_status != 200:
+            return tree_response, tree_status
+
+        session_action = SessionGetAction(
+            params={"session_id": session_id}, request_data=request_data
+        )
+        session_response, session_status = session_action.execute()
+
+        if session_status != 200:
+            return session_response, session_status
+
+        return {
+            "session_tree": tree_response.get("sessions", []),
+            "current_session": session_response.get("session", {}),
+            "settings": self.settings.model_dump(),
+        }, 200

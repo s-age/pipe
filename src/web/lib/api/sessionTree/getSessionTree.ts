@@ -14,4 +14,4 @@ export type SessionOverview = {
 
 export const getSessionTree = async (): Promise<{
   sessions: [string, SessionOverview][]
-}> => client.get<{ sessions: [string, SessionOverview][] }>(`/sessions`)
+}> => client.get<{ sessions: [string, SessionOverview][] }>(`/session_tree`)

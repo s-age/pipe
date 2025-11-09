@@ -1,4 +1,6 @@
-fix: Resolve JSX closing tag errors in Turn.tsx
+refactor(frontend): Integrate BFF endpoint for session loading and remove redundant loader
 
-- Corrected the JSX structure in `Turn.tsx` to ensure all `div` elements are properly closed.
-- Ensured the `turnWrapper` and `turnContentBase` divs have their corresponding closing tags.
+- Integrated the new BFF endpoint (`/api/v1/bff/session-dashboard/<path:session_id>`) into `useSessionLoader.ts` to fetch session tree and current session details in a single request, optimizing initial load times.
+- Removed the redundant `useSessionDetailLoader.ts` hook as its functionality is now covered by the BFF endpoint.
+- Updated `useChatHistoryPageLogic.ts` to reflect the removal of `useSessionDetailLoader`.
+- Modified `src/pipe/web/app.py` to use `request_data` in `dispatch_action` calls for consistency.

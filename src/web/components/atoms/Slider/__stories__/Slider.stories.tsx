@@ -1,19 +1,19 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 import React, { useState } from 'react'
 
 import { Form } from '@/components/organisms/Form'
 
-import Slider from '../index'
+import { Slider } from '../index'
 
-const meta = {
+const Meta = {
   title: 'Atoms/Slider',
   component: Slider,
   tags: ['autodocs'],
-} satisfies Meta<typeof Slider>
+} satisfies StoryMeta<typeof Slider>
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default Meta
+type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {
   render: (): JSX.Element => {
@@ -22,7 +22,12 @@ export const Default: Story = {
 
       return (
         <div style={{ width: 360 }}>
-          <Slider value={v} onChange={(value) => setV(value)} min={0} max={100} />
+          <Slider
+            value={v}
+            onChange={(value: number) => setV(value)}
+            min={0}
+            max={100}
+          />
         </div>
       )
     }

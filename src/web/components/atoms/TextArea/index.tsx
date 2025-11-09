@@ -2,7 +2,7 @@ import React from 'react'
 import type { TextareaHTMLAttributes, JSX } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
-import useTextArea from './hooks/useTextArea'
+import { useTextArea } from './hooks/useTextArea'
 import { textareaStyle } from './style.css'
 
 type TextAreaProperties = Omit<
@@ -14,7 +14,9 @@ type TextAreaProperties = Omit<
   name?: string
 }
 
-const TextArea: (properties: TextAreaProperties) => JSX.Element = (properties) => {
+export const TextArea: (properties: TextAreaProperties) => JSX.Element = (
+  properties,
+) => {
   const {
     onChange: _onChange,
     name,
@@ -48,4 +50,4 @@ const TextArea: (properties: TextAreaProperties) => JSX.Element = (properties) =
   )
 }
 
-export default TextArea
+// (Removed temporary default export) Use named export `TextArea`.

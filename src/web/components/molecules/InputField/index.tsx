@@ -2,8 +2,8 @@ import type { JSX } from 'react'
 import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
-import InputText from '@/components/atoms/InputText'
-import Label from '@/components/atoms/Label'
+import { InputText } from '@/components/atoms/InputText'
+import { Label } from '@/components/atoms/Label'
 
 import { errorMessageStyle, inputFieldStyle } from './style.css'
 
@@ -18,7 +18,7 @@ type InputFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
   step?: string
 } & UseControllerProps<TFieldValues>
 
-const InputField = <TFieldValues extends FieldValues = FieldValues>({
+export const InputField = <TFieldValues extends FieldValues = FieldValues>({
   label,
   id,
   type = 'text',
@@ -53,4 +53,4 @@ const InputField = <TFieldValues extends FieldValues = FieldValues>({
   )
 }
 
-export default InputField
+// Default export removed — use named export `InputField`

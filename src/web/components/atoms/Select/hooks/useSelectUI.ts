@@ -38,4 +38,4 @@ export const useSelectUI = ({
   return { rootReference }
 }
 
-export default useSelectUI
+// (Removed temporary default export) Use named export `useSelectUI`.

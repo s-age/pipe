@@ -157,4 +157,4 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
   }
 }
 
-export default useSessionStore
+// (Removed temporary default export) Use named export `useSessionStore`.

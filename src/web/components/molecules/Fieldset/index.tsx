@@ -2,8 +2,8 @@ import { useId } from 'react'
 import type { JSX, ReactNode } from 'react'
 import type { FieldError } from 'react-hook-form'
 
-import ErrorMessage from '@/components/atoms/ErrorMessage'
-import Legend from '@/components/atoms/Legend'
+import { ErrorMessage } from '@/components/atoms/ErrorMessage'
+import { Legend } from '@/components/atoms/Legend'
 
 import * as styles from './style.css'
 
@@ -20,7 +20,7 @@ type FieldsetProperties = {
   className?: string
 }
 
-const Fieldset = ({
+export const Fieldset = ({
   legend,
   hint,
   error,
@@ -61,4 +61,4 @@ const Fieldset = ({
   )
 }
 
-export default Fieldset
+// Default export removed — use named export `Fieldset`

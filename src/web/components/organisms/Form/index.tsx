@@ -9,7 +9,7 @@ import type {
 } from 'react-hook-form'
 import type { ZodTypeAny } from 'zod'
 
-import useFormMethods from './hooks/useFormMethods'
+import { useFormMethods } from './hooks/useFormMethods'
 import { formStyle } from './style.css'
 
 export type FormMethods<TFieldValues extends FieldValues = FieldValues> =

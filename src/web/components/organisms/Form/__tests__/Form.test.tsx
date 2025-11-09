@@ -1,16 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
-import { z } from 'zod'
 
 import { Form, useFormContext } from '../index'
-
-const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email address'),
-})
-
-type FormData = z.infer<typeof schema>
+import { schema } from './schema'
+import type { FormData } from './schema'
 
 const MyFormContent = (): React.JSX.Element => {
   const {

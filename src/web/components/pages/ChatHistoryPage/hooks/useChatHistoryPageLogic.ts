@@ -1,5 +1,5 @@
 import type { State, Actions } from '@/stores/useChatHistoryStore'
-import useSessionStore from '@/stores/useChatHistoryStore'
+import { useSessionStore } from '@/stores/useChatHistoryStore'
 
 import { useSessionDetailLoader } from './useSessionDetailLoader'
 import { useSessionLoader } from './useSessionLoader'

@@ -1,18 +1,18 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 
 import { Form } from '@/components/organisms/Form'
 
-import InputRadio from '../index'
+import { InputRadio } from '../index'
 
-const meta = {
+export default {}
+export const Meta = {
   title: 'Atoms/InputRadio',
   component: InputRadio,
   tags: ['autodocs'],
-} satisfies Meta<typeof InputRadio>
+} satisfies StoryMeta<typeof InputRadio>
 
-export default meta
-type Story = StoryObj<typeof meta>
+type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {
   args: {

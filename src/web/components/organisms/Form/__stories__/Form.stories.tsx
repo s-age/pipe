@@ -1,24 +1,24 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 import { z } from 'zod'
 
-import Button from '@/components/atoms/Button'
-import InputCheckbox from '@/components/atoms/InputCheckbox'
-import InputRadio from '@/components/atoms/InputRadio'
-import InputText from '@/components/atoms/InputText'
-import Slider from '@/components/atoms/Slider'
-import TextArea from '@/components/atoms/TextArea'
-import Fieldset from '@/components/molecules/Fieldset'
+import { Button } from '@/components/atoms/Button'
+import { InputCheckbox } from '@/components/atoms/InputCheckbox'
+import { InputRadio } from '@/components/atoms/InputRadio'
+import { InputText } from '@/components/atoms/InputText'
+import { Slider } from '@/components/atoms/Slider'
+import { TextArea } from '@/components/atoms/TextArea'
+import { Fieldset } from '@/components/molecules/Fieldset'
 import { Form, useFormContext } from '@/components/organisms/Form'
 
-const meta = {
+const Meta = {
   title: 'Organisms/Form — Manual',
   // We use a loose Meta type to avoid forcing `args` for Form's required props
   tags: ['autodocs'],
-} satisfies Meta<unknown>
+} satisfies StoryMeta<unknown>
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default Meta
+type Story = StoryObj<typeof Meta>
 
 // This story is intended as an annotated manual for LLMs and humans alike.
 // It demonstrates how to compose the project's form primitives both with

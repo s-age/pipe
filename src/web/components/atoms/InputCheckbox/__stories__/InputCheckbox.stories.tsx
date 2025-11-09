@@ -1,18 +1,19 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 
 import { Form } from '@/components/organisms/Form'
 
-import InputCheckbox from '../index'
+import { InputCheckbox } from '../index'
 
-const meta = {
+export default {}
+export const Meta = {
   title: 'Atoms/InputCheckbox',
   component: InputCheckbox,
   tags: ['autodocs'],
-} satisfies Meta<typeof InputCheckbox>
+} satisfies StoryMeta<typeof InputCheckbox>
 
-export default meta
-type Story = StoryObj<typeof meta>
+// Storybook meta is exported as a named export to comply with import/no-default-export
+type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {
   args: {

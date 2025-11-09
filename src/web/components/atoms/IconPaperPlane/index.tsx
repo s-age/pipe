@@ -5,7 +5,10 @@ type IconProperties = {
   size?: number
 }
 
-const IconPaperPlane = ({ className, size = 24 }: IconProperties): JSX.Element => (
+export const IconPaperPlane = ({
+  className,
+  size = 24,
+}: IconProperties): JSX.Element => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -25,4 +28,4 @@ const IconPaperPlane = ({ className, size = 24 }: IconProperties): JSX.Element =
   </svg>
 )
 
-export default IconPaperPlane
+// Default export removed — use named export `IconPaperPlane`

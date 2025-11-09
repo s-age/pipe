@@ -12,9 +12,12 @@ export type UseInstructionFormProperties = {
 export type UseInstructionFormReturn = {
   register: UseFormRegister<FieldValues>
   submit: () => Promise<void>
+  // React event-friendly handlers
+  onTextAreaKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void
+  onSendClick: () => void
 }
 
-const useInstructionForm = ({
+export const useInstructionForm = ({
   currentSessionId,
   onSendInstruction,
   refreshSessions,
@@ -38,7 +41,16 @@ const useInstructionForm = ({
     }
   })
 
-  return { register, submit }
-}
+  const onTextAreaKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      void submit()
+    }
+  }
 
-export default useInstructionForm
+  const onSendClick = (): void => {
+    void submit()
+  }
+
+  return { register, submit, onTextAreaKeyDown, onSendClick }
+}

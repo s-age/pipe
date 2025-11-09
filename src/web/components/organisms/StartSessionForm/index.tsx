@@ -1,18 +1,16 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import type { JSX } from 'react'
 import type { SubmitHandler } from 'react-hook-form'
-import { useForm, useWatch } from 'react-hook-form'
-import * as z from 'zod'
 
-import Button from '@/components/atoms/Button'
-import Heading from '@/components/atoms/Heading'
-import CheckboxField from '@/components/molecules/CheckboxField'
-import InputField from '@/components/molecules/InputField'
-import SelectField from '@/components/molecules/SelectField'
-import TextareaField from '@/components/molecules/TextareaField'
-import type { StartSessionRequest } from '@/lib/api/session/startSession'
+import { Button } from '@/components/atoms/Button'
+import { Heading } from '@/components/atoms/Heading'
+import { CheckboxField } from '@/components/molecules/CheckboxField'
+import { InputField } from '@/components/molecules/InputField'
+import { SelectField } from '@/components/molecules/SelectField'
+import { TextareaField } from '@/components/molecules/TextareaField'
 import type { Settings } from '@/lib/api/settings/getSettings'
 
+import { useStartSessionForm } from './hooks/useStartSessionForm'
+import type { StartSessionFormInputs } from './schema'
 import {
   formContainer,
   fieldsetContainer,
@@ -21,69 +19,7 @@ import {
   errorMessageStyle,
 } from './style.css'
 
-const formSchema = z.object({
-  purpose: z.string().min(1, 'Purpose is required'),
-  background: z.string().min(1, 'Background is required'),
-  roles: z
-    .string()
-    .transform((value) =>
-      value
-        ? value
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : null,
-    )
-    .nullable()
-    .default(null),
-  parent: z
-    .string()
-    .transform((value) => (value === '' ? null : value))
-    .nullable()
-    .default(null),
-  references: z
-    .string()
-    .transform((value) =>
-      value
-        ? value
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-            .map((path) => ({ path }))
-        : null,
-    )
-    .nullable()
-    .default(null),
-  artifacts: z
-    .string()
-    .transform((value) =>
-      value
-        ? value
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : null,
-    )
-    .nullable()
-    .default(null),
-  procedure: z
-    .string()
-    .transform((value) => (value === '' ? null : value))
-    .nullable()
-    .default(null),
-  instruction: z.string().min(1, 'First Instruction is required'),
-  multi_step_reasoning_enabled: z.boolean().default(false),
-  hyperparameters: z
-    .object({
-      temperature: z.coerce.number().min(0).max(2).nullable().default(0.7),
-      top_p: z.coerce.number().min(0).max(1).nullable().default(0.9),
-      top_k: z.coerce.number().min(1).max(50).nullable().default(5),
-    })
-    .nullable()
-    .default(null),
-})
-
-type StartSessionFormInputs = z.infer<typeof formSchema>
+// Schema imported from ./schema
 
 type StartSessionFormProperties = {
   onSubmit: SubmitHandler<StartSessionFormInputs>
@@ -91,45 +27,26 @@ type StartSessionFormProperties = {
   defaultSettings: Settings | null
 }
 
-const StartSessionForm: (properties: StartSessionFormProperties) => JSX.Element = ({
-  onSubmit,
-  sessions,
-  defaultSettings,
-}) => {
+export const StartSessionForm: (
+  properties: StartSessionFormProperties,
+) => JSX.Element = ({ onSubmit, sessions, defaultSettings }) => {
   const {
-    handleSubmit,
     control,
-    formState: { errors, isSubmitting },
-  } = useForm<StartSessionFormInputs>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      purpose: '',
-      background: '',
-      roles: null,
-      parent: null,
-      references: null,
-      artifacts: null,
-      procedure: null,
-      instruction: '',
-      multi_step_reasoning_enabled: false,
-      hyperparameters: {
-        temperature: defaultSettings?.parameters?.temperature ?? 0.7,
-        top_p: defaultSettings?.parameters?.top_p ?? 0.9,
-        top_k: defaultSettings?.parameters?.top_k ?? 5,
-      },
-    },
-  })
-
-  const temperatureValue = useWatch({ control, name: 'hyperparameters.temperature' })
-  const topPValue = useWatch({ control, name: 'hyperparameters.top_p' })
-  const topKValue = useWatch({ control, name: 'hyperparameters.top_k' })
-
-  const parentSessionOptions = [{ value: '', label: 'None' }, ...sessions]
+    handleSubmit: formHandleSubmit,
+    onFormSubmit,
+    errors,
+    isSubmitting,
+    temperatureValue,
+    topPValue,
+    topKValue,
+    parentSessionOptions,
+    handleCancel,
+  } = useStartSessionForm({ onSubmit, sessions, defaultSettings })
 
   return (
     <div className={formContainer}>
       <Heading level={1}>Create New Session</Heading>
-      <form onSubmit={handleSubmit((data) => onSubmit(data as StartSessionRequest))}>
+      <form onSubmit={formHandleSubmit(onFormSubmit)}>
         <InputField
           control={control}
           name="purpose"
@@ -228,12 +145,7 @@ const StartSessionForm: (properties: StartSessionFormProperties) => JSX.Element 
         <Button type="submit" kind="primary" size="default" disabled={isSubmitting}>
           {isSubmitting ? 'Creating...' : 'Create Session'}
         </Button>
-        <Button
-          type="button"
-          kind="secondary"
-          size="default"
-          onClick={() => (window.location.href = '/')}
-        >
+        <Button type="button" kind="secondary" size="default" onClick={handleCancel}>
           Cancel
         </Button>
         {Object.keys(errors).length > 0 && (
@@ -244,4 +156,4 @@ const StartSessionForm: (properties: StartSessionFormProperties) => JSX.Element 
   )
 }
 
-export default StartSessionForm
+// Default export removed — use named export `StartSessionForm`

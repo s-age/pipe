@@ -1,8 +1,8 @@
-import { useCallback, type JSX, type ChangeEvent } from 'react'
-import type { FormEvent } from 'react'
+import type { JSX } from 'react'
 
-import IconSearch from '@/components/atoms/IconSearch'
+import { IconSearch } from '@/components/atoms/IconSearch'
 
+import { useInputSearch } from './hooks/useInputSearch'
 import { container, input, button } from './style.css'
 
 type InputSearchProperties = {
@@ -12,26 +12,13 @@ type InputSearchProperties = {
   onSubmit?: (value: string) => void
 }
 
-const InputSearch = ({
+export const InputSearch = ({
   placeholder = 'Search...',
   value,
   onChange,
   onSubmit,
 }: InputSearchProperties): JSX.Element => {
-  const handleSubmit = useCallback(
-    (event: FormEvent): void => {
-      event.preventDefault()
-      if (onSubmit) onSubmit((value ?? '') as string)
-    },
-    [onSubmit, value],
-  )
-
-  const handleChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>): void => {
-      if (onChange) onChange(event.target.value)
-    },
-    [onChange],
-  )
+  const { handleSubmit, handleChange } = useInputSearch({ value, onChange, onSubmit })
 
   return (
     <form className={container} onSubmit={handleSubmit} role="search">
@@ -49,4 +36,4 @@ const InputSearch = ({
   )
 }
 
-export default InputSearch
+// Default export removed — use named export `InputSearch`

@@ -45,6 +45,12 @@ export const referencePath = style({
   marginLeft: '5px',
   wordBreak: 'break-all',
   flexGrow: 1,
+  selectors: {
+    '&[data-disabled="true"]': {
+      textDecoration: 'line-through',
+      color: colors.grayText,
+    },
+  },
 })
 
 export const materialIcons = style({
@@ -78,6 +84,10 @@ export const ttlValue = style({
 
 export const referenceCheckboxMargin = style({
   marginRight: '5px',
+})
+
+export const persistButton = style({
+  minWidth: '32px',
 })
 
 export const lockIconStyle = style({

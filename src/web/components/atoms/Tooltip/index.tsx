@@ -1,6 +1,7 @@
 import type { JSX } from 'react'
-import React, { useState } from 'react'
+import React from 'react'
 
+import { useTooltip } from './hooks/useTooltip'
 import { tooltipContainer, tooltipText } from './style.css'
 
 type TooltipProperties = {
@@ -8,17 +9,17 @@ type TooltipProperties = {
   children: React.ReactNode
 }
 
-const Tooltip: ({ content, children }: TooltipProperties) => JSX.Element = ({
+export const Tooltip: ({ content, children }: TooltipProperties) => JSX.Element = ({
   content,
   children,
 }) => {
-  const [isVisible, setIsVisible] = useState(false)
+  const { isVisible, handleMouseEnter, handleMouseLeave } = useTooltip()
 
   return (
     <div
       className={tooltipContainer}
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {children}
       {isVisible && <div className={tooltipText}>{content}</div>}
@@ -26,4 +27,4 @@ const Tooltip: ({ content, children }: TooltipProperties) => JSX.Element = ({
   )
 }
 
-export default Tooltip
+// (Removed temporary default export) Use named export `Tooltip`.

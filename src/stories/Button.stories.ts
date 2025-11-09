@@ -1,10 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
 
 import { Button } from './Button'
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
-const meta = {
+export default { component: Button }
+export const Meta = {
   title: 'Example/Button',
   component: Button,
   parameters: {
@@ -19,10 +20,10 @@ const meta = {
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#story-args
   args: { onClick: fn() },
-} satisfies Meta<typeof Button>
+} satisfies StoryMeta<typeof Button>
 
-export default meta
-type Story = StoryObj<typeof meta>
+// Storybook meta is exported as a named export to comply with import/no-default-export
+type Story = StoryObj<typeof Meta>
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const Primary: Story = {

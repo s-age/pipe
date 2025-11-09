@@ -1,13 +1,10 @@
 import type { JSX } from 'react'
-import { useCallback } from 'react'
 
-import Button from '@/components/atoms/Button'
-import Heading from '@/components/atoms/Heading'
-import { h2Style } from '@/components/atoms/Heading/style.css'
+import { Button } from '@/components/atoms/Button'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { getSession } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
+import { useSessionItemHandlers } from './hooks/useSessionItemHandlers'
 import {
   sessionListColumn,
   sessionListContainer,
@@ -32,26 +29,7 @@ const SessionItem = ({
   selectSession,
   setError,
 }: SessionItemProperties): JSX.Element => {
-  const onClick = useCallback(
-    async (event: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
-      event.preventDefault()
-
-      if (typeof session.session_id !== 'string') {
-        setError('Invalid session ID.')
-
-        return
-      }
-
-      try {
-        const sessionDetail = await getSession(session.session_id)
-        selectSession(session.session_id, sessionDetail.session)
-        window.history.replaceState({}, '', `/session/${session.session_id}`)
-      } catch (error) {
-        setError((error as Error).message || 'Failed to load session data.')
-      }
-    },
-    [selectSession, session.session_id, setError],
-  )
+  const { onClick } = useSessionItemHandlers({ session, selectSession, setError })
 
   return (
     <li key={session.session_id} className={sessionListItem}>
@@ -74,7 +52,7 @@ type SessionTreeProperties = {
   setError: (errorMessage: string | null) => void
 }
 
-const SessionTree = ({
+export const SessionTree = ({
   sessions,
   currentSessionId,
   selectSession,
@@ -84,9 +62,6 @@ const SessionTree = ({
 
   return (
     <div className={sessionListColumn}>
-      <Heading level={2} className={h2Style}>
-        Sessions
-      </Heading>
       <ul className={sessionListContainer}>
         {sessions.map((session) => {
           if (!session.session_id || typeof session.session_id !== 'string') {
@@ -114,5 +89,3 @@ const SessionTree = ({
     </div>
   )
 }
-
-export default SessionTree

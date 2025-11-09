@@ -2,7 +2,7 @@ import React from 'react'
 import type { InputHTMLAttributes, JSX } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
-import useSlider from './hooks/useSlider'
+import { useSlider } from './hooks/useSlider'
 import * as styles from './style.css'
 
 export type SliderProperties = Omit<
@@ -19,7 +19,7 @@ export type SliderProperties = Omit<
   name?: string
 }
 
-const Slider = (properties: SliderProperties): JSX.Element => {
+export const Slider = (properties: SliderProperties): JSX.Element => {
   const { onChange: _onChange, min, max, step, name, ...restProperties } = properties
   // intentionally reference the extracted `_onChange` so linters know it's
   // intentionally excluded from `...restProperties` which is spread into the
@@ -94,4 +94,4 @@ const Slider = (properties: SliderProperties): JSX.Element => {
   )
 }
 
-export default Slider
+// (Removed temporary default export) Use named export `Slider`.

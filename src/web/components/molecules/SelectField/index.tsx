@@ -2,8 +2,8 @@ import type { JSX } from 'react'
 import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
-import Label from '@/components/atoms/Label'
-import Select from '@/components/atoms/Select'
+import { Label } from '@/components/atoms/Label'
+import { Select } from '@/components/atoms/Select'
 
 import { errorMessageStyle } from './style.css'
 
@@ -18,7 +18,7 @@ type SelectFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
   options: SelectOption[]
 } & UseControllerProps<TFieldValues>
 
-const SelectField = <TFieldValues extends FieldValues = FieldValues>({
+export const SelectField = <TFieldValues extends FieldValues = FieldValues>({
   label,
   id,
   options,
@@ -44,4 +44,4 @@ const SelectField = <TFieldValues extends FieldValues = FieldValues>({
   )
 }
 
-export default SelectField
+// Default export removed — use named export `SelectField`

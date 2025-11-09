@@ -2,8 +2,8 @@ import type { JSX } from 'react'
 
 import { loadingSpinnerStyle } from './style.css'
 
-const LoadingSpinner: () => JSX.Element = () => (
+export const LoadingSpinner: () => JSX.Element = () => (
   <div className={loadingSpinnerStyle}>Loading...</div>
 )
 
-export default LoadingSpinner
+// (Removed temporary default export) Use named export `LoadingSpinner`.

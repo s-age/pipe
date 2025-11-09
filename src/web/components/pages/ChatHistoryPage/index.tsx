@@ -4,11 +4,11 @@ import {
   ChatHistoryHeader,
   ChatHistoryList,
   ChatHistoryFooter,
-  useChatHistoryLogic,
 } from '@/components/organisms/ChatHistory'
-import Header from '@/components/organisms/Header'
+import { useChatHistoryLogic } from '@/components/organisms/ChatHistory/hooks/useChatHistoryLogic'
+import { Header } from '@/components/organisms/Header'
 import { SessionMeta } from '@/components/organisms/SessionMeta'
-import SessionTree from '@/components/organisms/SessionTree'
+import { SessionTree } from '@/components/organisms/SessionTree'
 
 import { useChatHistoryPageLogic } from './hooks/useChatHistoryPageLogic.ts'
 import {
@@ -18,9 +18,11 @@ import {
   centerColumn,
   rightColumn,
   panel,
+  panelBottomSpacing,
+  errorMessage as errorMessageStyle,
 } from './style.css'
 
-const ChatHistoryPage = (): JSX.Element => {
+export const ChatHistoryPage = (): JSX.Element => {
   const {
     errorMessage,
     sessions,
@@ -40,19 +42,19 @@ const ChatHistoryPage = (): JSX.Element => {
     turnsListReference,
     handleDeleteTurn,
     handleForkSession,
-    handleDeleteSession,
+    handleDeleteCurrentSession,
     onSendInstruction,
   } = useChatHistoryLogic({
     currentSessionId,
-    setSessionDetail,
+    setSessionDetail: setSessionDetail as unknown as (data: unknown) => void,
     setError,
     refreshSessions,
   })
 
   if (errorMessage) {
     return (
-      <div className={appContainer} style={{ color: 'red' }}>
-        Error: {errorMessage}
+      <div className={appContainer}>
+        <div className={errorMessageStyle}>Error: {errorMessage}</div>
       </div>
     )
   }
@@ -74,11 +76,10 @@ const ChatHistoryPage = (): JSX.Element => {
           {/* Header sits above the boxed panel */}
           <ChatHistoryHeader
             sessionDetail={sessionDetail}
-            currentSessionId={currentSessionId}
-            handleDeleteSession={handleDeleteSession}
+            handleDeleteCurrentSession={handleDeleteCurrentSession}
           />
 
-          <div className={panel} style={{ marginBottom: '8px' }}>
+          <div className={`${panel} ${panelBottomSpacing}`}>
             {/* Panel contains only the turns list */}
             <ChatHistoryList
               sessionDetail={sessionDetail}
@@ -118,4 +119,4 @@ const ChatHistoryPage = (): JSX.Element => {
   )
 }
 
-export default ChatHistoryPage
+// Default export removed — use named export `ChatHistoryPage`

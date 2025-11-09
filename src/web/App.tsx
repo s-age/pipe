@@ -1,10 +1,10 @@
 import type { JSX } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
-import HomePage from './components/pages/ChatHistoryPage/index'
-import StartSessionPage from './components/pages/StartSessionPage/index'
+import { ChatHistoryPage as HomePage } from './components/pages/ChatHistoryPage/index'
+import { StartSessionPage } from './components/pages/StartSessionPage/index'
 
-const App = (): JSX.Element => (
+export const App = (): JSX.Element => (
   <Router>
     <Routes>
       <Route path="/" element={<HomePage />} />
@@ -14,4 +14,4 @@ const App = (): JSX.Element => (
   </Router>
 )
 
-export default App
+// Default export removed — use named export `App`

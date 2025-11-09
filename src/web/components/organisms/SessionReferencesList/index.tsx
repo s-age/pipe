@@ -1,12 +1,13 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
 
-import Button from '@/components/atoms/Button'
-import Checkbox from '@/components/atoms/Checkbox'
-import Label from '@/components/atoms/Label'
+import { Button } from '@/components/atoms/Button'
+import { Checkbox } from '@/components/atoms/Checkbox'
+import { Label } from '@/components/atoms/Label'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Reference } from '@/types/reference'
 
+import { useSessionReferencesHandlers } from './hooks/useSessionReferencesHandlers'
 import {
   metaItem,
   metaItemLabel,
@@ -20,10 +21,10 @@ import {
   ttlValue,
   referenceCheckboxMargin,
   lockIconStyle,
+  persistButton,
   noItemsMessage,
 } from './style.css'
 import { useSessionReferencesListLogic } from './useSessionReferencesListLogic'
-import { colors } from '../../../styles/colors.css'
 
 type SessionReferencesListProperties = {
   sessionDetail: SessionDetail | null
@@ -52,6 +53,13 @@ export const SessionReferencesList = ({
     refreshSessions,
   })
 
+  const { handleCheckboxChange, handlePersistToggle, handleTtlAction } =
+    useSessionReferencesHandlers({
+      handleReferenceCheckboxChange,
+      handleReferencePersistToggle,
+      handleReferenceTtlChange,
+    })
+
   if (!sessionDetail || sessionDetail.references.length === 0) {
     return (
       <div className={metaItem}>
@@ -71,14 +79,16 @@ export const SessionReferencesList = ({
               <Label className={referenceLabel}>
                 <Checkbox
                   checked={!reference.disabled}
-                  onChange={() => handleReferenceCheckboxChange(index)}
+                  onChange={handleCheckboxChange}
+                  data-index={String(index)}
                   className={referenceCheckboxMargin}
                 />
                 <Button
                   kind="ghost"
                   size="xsmall"
-                  style={{ minWidth: '32px' }}
-                  onClick={() => handleReferencePersistToggle(index)}
+                  className={persistButton}
+                  onClick={handlePersistToggle}
+                  data-index={String(index)}
                 >
                   <span
                     className={clsx(materialIcons, lockIconStyle)}
@@ -90,10 +100,7 @@ export const SessionReferencesList = ({
                 <span
                   data-testid="reference-path"
                   className={referencePath}
-                  style={{
-                    textDecoration: reference.disabled ? 'line-through' : 'none',
-                    color: reference.disabled ? colors.grayText : 'inherit',
-                  }}
+                  data-disabled={String(Boolean(reference.disabled))}
                 >
                   {reference.path}
                 </span>
@@ -102,7 +109,9 @@ export const SessionReferencesList = ({
                 <Button
                   kind="primary"
                   size="xsmall"
-                  onClick={() => handleReferenceTtlChange(index, 'decrement')}
+                  onClick={handleTtlAction}
+                  data-index={String(index)}
+                  data-action="decrement"
                 >
                   -
                 </Button>
@@ -112,7 +121,9 @@ export const SessionReferencesList = ({
                 <Button
                   kind="primary"
                   size="xsmall"
-                  onClick={() => handleReferenceTtlChange(index, 'increment')}
+                  onClick={handleTtlAction}
+                  data-index={String(index)}
+                  data-action="increment"
                 >
                   +
                 </Button>

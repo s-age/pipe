@@ -1,9 +1,9 @@
 import type { JSX } from 'react'
 
-import Button from '@/components/atoms/Button'
-import Checkbox from '@/components/atoms/Checkbox'
-import InputText from '@/components/atoms/InputText'
-import Label from '@/components/atoms/Label'
+import { Button } from '@/components/atoms/Button'
+import { Checkbox } from '@/components/atoms/Checkbox'
+import { InputText } from '@/components/atoms/InputText'
+import { Label } from '@/components/atoms/Label'
 import { SessionBasicMetaForm } from '@/components/organisms/SessionBasicMetaForm'
 import { useTodoActions } from '@/components/organisms/SessionMeta/useTodoActions'
 import { SessionReferencesList } from '@/components/organisms/SessionReferencesList'
@@ -13,6 +13,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Actions } from '@/stores/useChatHistoryStore'
 import type { Todo } from '@/types/todo'
 
+import { useSessionMetaHandlers } from './hooks/useSessionMetaHandlers'
 import {
   metaColumn,
   sessionMetaSection,
@@ -109,6 +110,22 @@ export const SessionMeta = ({
     topK,
   })
 
+  const {
+    handleDeleteAll,
+    handleTodoCheckboxChangeWrapper,
+    handleTemperatureChange,
+    handleTopPChange,
+    handleTopKChange,
+  } = useSessionMetaHandlers({
+    currentSessionId,
+    sessionDetail,
+    handleDeleteAllTodos,
+    handleTodoCheckboxChange,
+    setTemperature,
+    setTopP,
+    setTopK,
+  })
+
   if (!currentSessionId || !sessionDetail) {
     return (
       <div className={metaColumn}>
@@ -154,9 +171,7 @@ export const SessionMeta = ({
                   max="2"
                   step="0.1"
                   value={temperature}
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    setTemperature(parseFloat(event.target.value))
-                  }
+                  onChange={handleTemperatureChange}
                   onMouseUp={handleTemperatureMouseUp}
                 />
               </div>
@@ -171,9 +186,7 @@ export const SessionMeta = ({
                   max="1"
                   step="0.1"
                   value={topP}
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    setTopP(parseFloat(event.target.value))
-                  }
+                  onChange={handleTopPChange}
                   onMouseUp={handleTopPMouseUp}
                 />
               </div>
@@ -188,9 +201,7 @@ export const SessionMeta = ({
                   max="50"
                   step="1"
                   value={topK}
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    setTopK(parseInt(event.target.value, 10))
-                  }
+                  onChange={handleTopKChange}
                   onMouseUp={handleTopKMouseUp}
                 />
               </div>
@@ -198,11 +209,7 @@ export const SessionMeta = ({
           </div>
           <div className={metaItem}>
             <Label className={metaItemLabel}>Todos:</Label>
-            <Button
-              kind="secondary"
-              size="default"
-              onClick={() => currentSessionId && handleDeleteAllTodos(currentSessionId)}
-            >
+            <Button kind="secondary" size="default" onClick={handleDeleteAll}>
               Delete All
             </Button>
             {sessionDetail.todos.length > 0 ? (
@@ -212,14 +219,8 @@ export const SessionMeta = ({
                     <Label className={todoCheckboxLabel}>
                       <Checkbox
                         checked={todo.checked}
-                        onChange={() =>
-                          currentSessionId &&
-                          handleTodoCheckboxChange(
-                            currentSessionId,
-                            sessionDetail.todos,
-                            index,
-                          )
-                        }
+                        onChange={handleTodoCheckboxChangeWrapper}
+                        data-index={String(index)}
                         className={todoCheckboxMargin}
                       />
                       <strong className={todoTitle}>{todo.title}</strong>

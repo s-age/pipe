@@ -4,8 +4,8 @@ import { labelStyle } from './style.css'
 
 type LabelProperties = {} & LabelHTMLAttributes<HTMLLabelElement>
 
-const Label: (properties: LabelProperties) => JSX.Element = (properties) => (
+export const Label: (properties: LabelProperties) => JSX.Element = (properties) => (
   <label className={labelStyle} {...properties} />
 )
 
-export default Label
+// Default export removed — use named export `Label`

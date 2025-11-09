@@ -2,8 +2,8 @@ import type { SelectHTMLAttributes, JSX } from 'react'
 import type { UseFormRegister } from 'react-hook-form'
 
 import type { SelectOption } from './hooks/useSelect'
-import useSelect from './hooks/useSelect'
-import useSelectUI from './hooks/useSelectUI'
+import { useSelect } from './hooks/useSelect'
+import { useSelectUI } from './hooks/useSelectUI'
 import {
   selectStyle,
   trigger,
@@ -21,7 +21,7 @@ type SelectProperties = {
   placeholder?: string
 } & SelectHTMLAttributes<HTMLSelectElement>
 
-const Select = (properties: SelectProperties): JSX.Element => {
+export const Select = (properties: SelectProperties): JSX.Element => {
   const {
     register,
     name,
@@ -37,16 +37,19 @@ const Select = (properties: SelectProperties): JSX.Element => {
     normalizedOptions,
     filteredOptions,
     selectedValue,
-    setSelectedValue,
     isOpen,
     setIsOpen,
     toggleOpen,
     query,
-    setQuery,
     listReference,
-    handleKeyDown,
     highlightedIndex,
     setHighlightedIndex,
+    // React-friendly handlers from the hook
+    handleKeyDownReact,
+    handleSearchChange,
+    handleOptionClickReact,
+    handleMouseEnterReact,
+    handleMouseLeaveReact,
   } = useSelect({
     register,
     name,
@@ -79,7 +82,7 @@ const Select = (properties: SelectProperties): JSX.Element => {
         {...registerProperties}
         name={name}
         value={selectedValue ?? rest.value}
-        style={{ display: 'none' }}
+        hidden={true}
       >
         {(normalizedOptions ?? []).map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -94,7 +97,7 @@ const Select = (properties: SelectProperties): JSX.Element => {
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={toggleOpen}
-        onKeyDown={(event) => handleKeyDown(event.nativeEvent as KeyboardEvent)}
+        onKeyDown={handleKeyDownReact}
         className={trigger}
       >
         <span>{selectedLabel}</span>
@@ -105,7 +108,7 @@ const Select = (properties: SelectProperties): JSX.Element => {
             <input
               type="text"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={handleSearchChange}
               aria-label="Search options"
               className={searchInput}
             />
@@ -121,13 +124,14 @@ const Select = (properties: SelectProperties): JSX.Element => {
               <li
                 key={opt.value}
                 role="option"
-                onClick={() => setSelectedValue(opt.value)}
-                onMouseEnter={() => setHighlightedIndex(index)}
-                onMouseLeave={() => setHighlightedIndex(-1)}
+                onClick={handleOptionClickReact}
+                onMouseEnter={handleMouseEnterReact}
+                onMouseLeave={handleMouseLeaveReact}
                 className={
                   highlightedIndex === index ? `${option} ${optionHighlighted}` : option
                 }
                 data-value={opt.value}
+                data-index={String(index)}
               >
                 {opt.label}
               </li>
@@ -139,4 +143,4 @@ const Select = (properties: SelectProperties): JSX.Element => {
   )
 }
 
-export default Select
+// (Removed temporary default export) Use named export `Select`.

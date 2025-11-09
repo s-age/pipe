@@ -10,18 +10,19 @@ type ButtonProperties = {
   hasBorder?: boolean
 } & ButtonHTMLAttributes<HTMLButtonElement>
 
-const Button: (properties: ButtonProperties) => JSX.Element = ({
+export const Button = ({
   kind = 'primary',
   size = 'default',
   text,
   hasBorder = true,
   className,
   ...properties
-}) => (
+}: ButtonProperties): JSX.Element => (
   <button
     className={clsx(button({ kind, size, text, hasBorder }), className)}
     {...properties}
   />
 )
 
-export default Button
+// Button is now a named export. Remove the default export to comply with
+// the project's `import/no-default-export` rule.

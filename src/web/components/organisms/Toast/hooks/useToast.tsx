@@ -23,7 +23,7 @@ type UseToast = {
   warning: (titleOrParameters: string | Partial<ToastParameters>) => string
 }
 
-const useToast = (): UseToast => {
+export const useToast = (): UseToast => {
   const { pushToast } = useAppStore()
 
   const show = useCallback(
@@ -53,5 +53,3 @@ const useToast = (): UseToast => {
     },
   }
 }
-
-export default useToast

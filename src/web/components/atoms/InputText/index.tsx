@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes, JSX } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
-import useInputText from './hooks/useInputText'
+import { useInputText } from './hooks/useInputText'
 import { inputStyle } from './style.css'
 
 type InputTextProperties = {
@@ -9,7 +9,11 @@ type InputTextProperties = {
   name?: string
 } & InputHTMLAttributes<HTMLInputElement>
 
-const InputText = ({ register, name, ...rest }: InputTextProperties): JSX.Element => {
+export const InputText = ({
+  register,
+  name,
+  ...rest
+}: InputTextProperties): JSX.Element => {
   const { registerProperties } = useInputText({ register, name })
 
   return (
@@ -23,4 +27,4 @@ const InputText = ({ register, name, ...rest }: InputTextProperties): JSX.Elemen
   )
 }
 
-export default InputText
+// Default export removed — use named export `InputText`

@@ -6,7 +6,7 @@ export const sessionListColumn = style({
   flex: '0 0 250px',
   overflowY: 'auto',
   // teal/cyan sidebar
-  background: `linear-gradient(180deg, ${colors.cyanAlt} 0%, ${colors.cyan} 100%)`,
+  background: colors.cyanDark,
   display: 'flex',
   flexDirection: 'column',
   borderRight: `1px solid rgba(0,0,0,0.08)`,
@@ -32,17 +32,14 @@ export const sessionLink = style({
   fontWeight: 500,
   fontSize: '0.95rem',
   ':hover': {
-    backgroundColor: 'rgba(0,0,0,0.12)',
+    backgroundColor: colors.cyanAlt,
   },
 })
 
 export const sessionLinkActive = style({
-  backgroundColor: 'rgba(0,0,0,0.32)',
+  backgroundColor: colors.cyan,
   color: colors.offWhite,
   fontWeight: 700,
-  ':hover': {
-    backgroundColor: 'rgba(0,0,0,0.36)',
-  },
   boxShadow: 'inset 4px 0 0 rgba(255,255,255,0.06)',
 })
 

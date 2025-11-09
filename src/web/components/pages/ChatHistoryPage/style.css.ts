@@ -60,3 +60,11 @@ export const panel = style({
   flexDirection: 'column',
   flex: '1 1 auto',
 })
+
+export const panelBottomSpacing = style({
+  marginBottom: '8px',
+})
+
+export const errorMessage = style({
+  color: 'red',
+})

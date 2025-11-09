@@ -1,15 +1,15 @@
 import { marked } from 'marked'
 import type { JSX } from 'react'
-import { useState } from 'react'
 
-import Button from '@/components/atoms/Button'
-import IconCopy from '@/components/atoms/IconCopy'
-import IconDelete from '@/components/atoms/IconDelete'
-import IconEdit from '@/components/atoms/IconEdit'
-import IconFork from '@/components/atoms/IconFork'
-import Tooltip from '@/components/atoms/Tooltip'
+import { Button } from '@/components/atoms/Button'
+import { IconCopy } from '@/components/atoms/IconCopy'
+import { IconDelete } from '@/components/atoms/IconDelete'
+import { IconEdit } from '@/components/atoms/IconEdit'
+import { IconFork } from '@/components/atoms/IconFork'
+import { Tooltip } from '@/components/atoms/Tooltip'
 import type { Turn } from '@/lib/api/session/getSession'
 
+import { useTurnHandlers } from './hooks/useTurnHandlers'
 import {
   turnHeader,
   turnHeaderInfo,
@@ -44,7 +44,6 @@ type TurnProperties = {
   onForkSession: (sessionId: string, forkIndex: number) => void | Promise<void>
   isStreaming?: boolean // 新しく追加
 }
-
 const Component = ({
   turn,
   index,
@@ -54,10 +53,17 @@ const Component = ({
   onForkSession,
   isStreaming = false,
 }: TurnProperties): JSX.Element => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedContent, setEditedContent] = useState<string>(
-    turn.content || turn.instruction || '',
-  )
+  const {
+    isEditing,
+    editedContent,
+    handleCopy,
+    handleEditedChange,
+    handleCancelEdit,
+    handleStartEdit,
+    handleFork,
+    handleDelete,
+    handleSaveEdit,
+  } = useTurnHandlers({ turn, index, sessionId, onDeleteTurn, onForkSession })
 
   const getHeaderContent = (type: string): string => {
     switch (type) {
@@ -76,22 +82,6 @@ const Component = ({
     }
   }
 
-  const handleCopy = async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(editedContent)
-      alert('Copied!')
-    } catch (error) {
-      console.error('Failed to copy: ', error)
-      alert('Failed to copy')
-    }
-  }
-
-  const handleSaveEdit = (): void => {
-    // TODO: API呼び出しを実装する
-    console.log(`Saving turn ${index} with new content: ${editedContent}`)
-    setIsEditing(false)
-  }
-
   const renderTurnContent = (): JSX.Element | null => {
     let markdownContent = ''
     let statusClass = ''
@@ -102,13 +92,13 @@ const Component = ({
           <textarea
             className={editTextArea}
             value={editedContent}
-            onChange={(event) => setEditedContent(event.target.value)}
+            onChange={handleEditedChange}
           />
           <div className={editButtonContainer}>
             <Button kind="primary" size="default" onClick={handleSaveEdit}>
               Save
             </Button>
-            <Button kind="secondary" size="default" onClick={() => setIsEditing(false)}>
+            <Button kind="secondary" size="default" onClick={handleCancelEdit}>
               Cancel
             </Button>
           </div>
@@ -192,11 +182,7 @@ const Component = ({
           <div className={turnHeaderControls}>
             {turn.type === 'model_response' && (
               <Tooltip content="Fork Session">
-                <Button
-                  kind="ghost"
-                  size="xsmall"
-                  onClick={() => onForkSession(sessionId, index)}
-                >
+                <Button kind="ghost" size="xsmall" onClick={handleFork}>
                   <IconFork size={24} className={forkButtonIcon} />
                 </Button>
               </Tooltip>
@@ -209,17 +195,13 @@ const Component = ({
             {expertMode &&
               (turn.type === 'user_task' || turn.type === 'model_response') && (
                 <Tooltip content="Edit Turn">
-                  <Button kind="ghost" size="xsmall" onClick={() => setIsEditing(true)}>
+                  <Button kind="ghost" size="xsmall" onClick={handleStartEdit}>
                     <IconEdit size={24} className={editButtonIcon} />
                   </Button>
                 </Tooltip>
               )}
             <Tooltip content="Delete Turn">
-              <Button
-                kind="ghost"
-                size="xsmall"
-                onClick={() => onDeleteTurn(sessionId, index)}
-              >
+              <Button kind="ghost" size="xsmall" onClick={handleDelete}>
                 <IconDelete size={24} className={deleteButtonIcon} />
               </Button>
             </Tooltip>
@@ -231,4 +213,7 @@ const Component = ({
   )
 }
 
-export default Component
+// Export a named Turn component for consistency with the project's export rules
+export const TurnComponent = Component
+
+// Default export removed — use named export `TurnComponent`

@@ -5,7 +5,7 @@ type IconProperties = {
   size?: number
 }
 
-const IconDelete = ({ className, size = 20 }: IconProperties): JSX.Element => (
+export const IconDelete = ({ className, size = 20 }: IconProperties): JSX.Element => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -25,4 +25,4 @@ const IconDelete = ({ className, size = 20 }: IconProperties): JSX.Element => (
   </svg>
 )
 
-export default IconDelete
+// Default export removed — use named export `IconDelete`

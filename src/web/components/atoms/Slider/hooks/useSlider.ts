@@ -160,4 +160,4 @@ export const useSlider = ({
   }
 }
 
-export default useSlider
+// (Removed temporary default export) Use named export `useSlider`.

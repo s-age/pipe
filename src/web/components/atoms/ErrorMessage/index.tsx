@@ -10,7 +10,7 @@ type ErrorMessageProperties = {
   error?: FieldError
 }
 
-const ErrorMessage = ({
+export const ErrorMessage = ({
   message,
   error,
 }: ErrorMessageProperties): JSX.Element | null => {
@@ -27,4 +27,4 @@ const ErrorMessage = ({
   return <p className={errorMessageStyle}>{resolved}</p>
 }
 
-export default ErrorMessage
+// Default export removed — use named export `ErrorMessage`

@@ -2,8 +2,8 @@ import type { JSX } from 'react'
 import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
-import Checkbox from '@/components/atoms/Checkbox'
-import Label from '@/components/atoms/Label'
+import { Checkbox } from '@/components/atoms/Checkbox'
+import { Label } from '@/components/atoms/Label'
 
 import { checkboxContainer, labelStyle } from './style.css'
 
@@ -12,7 +12,7 @@ type CheckboxFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
   id: string
 } & UseControllerProps<TFieldValues>
 
-const CheckboxField = <TFieldValues extends FieldValues = FieldValues>({
+export const CheckboxField = <TFieldValues extends FieldValues = FieldValues>({
   label,
   id,
   ...properties
@@ -35,4 +35,4 @@ const CheckboxField = <TFieldValues extends FieldValues = FieldValues>({
   )
 }
 
-export default CheckboxField
+// Default export removed — use named export `CheckboxField`

@@ -1,4 +1,4 @@
-import { useCallback, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useId, useMemo } from 'react'
 import type { TextareaHTMLAttributes } from 'react'
 import type {
   FieldValues,
@@ -12,8 +12,7 @@ export type UseTextAreaProperties = Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
   'onChange'
 > & {
-  value?: string
-  defaultValue?: string
+  value: string
   onChange?: (value: string) => void
   register?: UseFormRegister<FieldValues>
   name?: string
@@ -29,7 +28,6 @@ export type UseTextAreaReturn = {
 
 export const useTextArea = ({
   value: controlledValue,
-  defaultValue,
   onChange,
   register,
   name,
@@ -50,14 +48,6 @@ export const useTextArea = ({
     return undefined
   }, [register, providerRegister, name])
 
-  const [internalValue, setInternalValue] = useState<string>(() => {
-    if (typeof controlledValue === 'string') return controlledValue
-    if (typeof defaultValue === 'string') return defaultValue
-
-    return ''
-  })
-  const internalReference = useRef<string>(internalValue)
-
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       const v = event.target.value
@@ -66,17 +56,12 @@ export const useTextArea = ({
       } catch {
         // ignore
       }
-      if (typeof controlledValue !== 'string') {
-        setInternalValue(v)
-        internalReference.current = v
-      }
       onChange?.(v)
     },
-    [onChange, registerProperties, controlledValue],
+    [onChange, registerProperties],
   )
 
-  const visibleValue =
-    typeof controlledValue === 'string' ? controlledValue : internalValue
+  const visibleValue = controlledValue
 
   return {
     id: resolvedId,
@@ -86,4 +71,4 @@ export const useTextArea = ({
   }
 }
 
-export default useTextArea
+// (Removed temporary default export) Use named export `useTextArea`.

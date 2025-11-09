@@ -7,7 +7,7 @@ type LegendProperties = HTMLAttributes<HTMLLegendElement> & {
   visuallyHidden?: boolean
 }
 
-const Legend = ({
+export const Legend = ({
   children,
   visuallyHidden: hide = false,
   ...rest
@@ -17,4 +17,4 @@ const Legend = ({
   </legend>
 )
 
-export default Legend
+// (Removed temporary default export) Use named export `Legend`.

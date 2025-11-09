@@ -53,4 +53,4 @@ export const useInputRadio = ({
   return { registerProperties, inputId }
 }
 
-export default useInputRadio
+// (Removed temporary default export) Use named export `useInputRadio`.

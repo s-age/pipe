@@ -11,4 +11,4 @@ export const useFormMethods = <TFieldValues extends FieldValues = FieldValues>(
 ): UseFormReturn<TFieldValues> =>
   useForm<TFieldValues>(properties as UseFormProps<TFieldValues>)
 
-export default useFormMethods
+// Default export removed — use named export `useFormMethods`

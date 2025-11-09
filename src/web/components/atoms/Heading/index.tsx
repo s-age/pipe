@@ -7,7 +7,7 @@ type HeadingProperties = {
   level?: 1 | 2 | 3 | 4 | 5 | 6
 } & HTMLAttributes<HTMLHeadingElement>
 
-const Heading: ({
+export const Heading: ({
   level,
   children,
   className,
@@ -28,4 +28,4 @@ const Heading: ({
   )
 }
 
-export default Heading
+// Default export removed — use named export `Heading`

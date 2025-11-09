@@ -1,19 +1,19 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import React, { useState } from 'react'
 import type { JSX } from 'react'
 
 import { Form } from '@/components/organisms/Form'
 
-import TextArea from '../index'
+import { TextArea } from '../index'
 
-const meta = {
+const Meta = {
   title: 'Atoms/TextArea',
   component: TextArea,
   tags: ['autodocs'],
-} satisfies Meta<typeof TextArea>
+} satisfies StoryMeta<typeof TextArea>
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default Meta
+type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {
   args: {
@@ -30,7 +30,7 @@ export const Controlled: Story = {
 
       return (
         <div>
-          <TextArea value={value} onChange={(v) => setValue(v)} rows={6} />
+          <TextArea value={value} onChange={(v: string) => setValue(v)} rows={6} />
           <div style={{ marginTop: 8 }}>Current: {value}</div>
         </div>
       )

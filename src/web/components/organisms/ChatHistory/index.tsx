@@ -1,20 +1,18 @@
-import { useEffect, useRef } from 'react'
 import type { JSX } from 'react'
 
-import Button from '@/components/atoms/Button'
-import Heading from '@/components/atoms/Heading'
+import { Button } from '@/components/atoms/Button'
+import { Heading } from '@/components/atoms/Heading'
 import { h2Style } from '@/components/atoms/Heading/style.css'
-import IconDelete from '@/components/atoms/IconDelete'
-import IconPaperPlane from '@/components/atoms/IconPaperPlane'
-import TextArea from '@/components/atoms/TextArea'
-import Turn from '@/components/molecules/Turn'
+import { IconDelete } from '@/components/atoms/IconDelete'
+import { IconPaperPlane } from '@/components/atoms/IconPaperPlane'
+import { TextArea } from '@/components/atoms/TextArea'
+import { TurnComponent as Turn } from '@/components/molecules/Turn'
 import { Form } from '@/components/organisms/Form'
-import { useStreamingInstruction } from '@/components/pages/ChatHistoryPage/hooks/useStreamingInstruction'
 import type { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
 import { colors } from '@/styles/colors.css'
 
-import useInstructionForm from './hooks/useInstructionForm'
-import { useTurnActions } from './hooks/useTurnActions'
+import { useChatHistoryLogic } from './hooks/useChatHistoryLogic'
+import { useInstructionForm } from './hooks/useInstructionForm'
 import {
   turnsColumn,
   turnsHeader,
@@ -37,79 +35,21 @@ type ChatHistoryProperties = {
   refreshSessions: () => Promise<void>
 }
 
-type ChatHistoryLogicReturn = {
-  streamedText: string | null
-  isStreaming: boolean
-  turnsListReference: React.RefObject<HTMLDivElement | null>
-  scrollToBottom: () => void
-  handleDeleteTurn: (sessionId: string, turnIndex: number) => Promise<void>
-  handleForkSession: (sessionId: string, forkIndex: number) => Promise<void>
-  handleDeleteSession: (sessionId: string) => Promise<void>
-  onSendInstruction: (instruction: string) => Promise<void>
-}
+// useChatHistoryLogic を hooks フォルダに移動しました
 
-export const useChatHistoryLogic = ({
-  currentSessionId,
-  setSessionDetail,
-  setError,
-  refreshSessions,
-}: Pick<
-  ChatHistoryProperties,
-  'currentSessionId' | 'setSessionDetail' | 'setError' | 'refreshSessions'
->): ChatHistoryLogicReturn => {
-  const {
-    streamedText,
-    isStreaming,
-    streamingError,
-    onSendInstruction,
-    setStreamingTrigger,
-  } = useStreamingInstruction(currentSessionId, setSessionDetail)
-
-  const { handleDeleteTurn, handleForkSession, handleDeleteSession } = useTurnActions(
-    setError,
-    refreshSessions,
-  )
-
-  // propagate streaming errors
-  useEffect(() => {
-    if (streamingError) {
-      setError(streamingError)
-      setStreamingTrigger(null)
-    }
-  }, [streamingError, setError, setStreamingTrigger])
-
-  const turnsListReference = useRef<HTMLDivElement | null>(null)
-
-  const scrollToBottom = (): void => {
-    if (turnsListReference.current) {
-      turnsListReference.current.scrollTop = turnsListReference.current.scrollHeight
-    }
-  }
-
-  return {
-    streamedText,
-    isStreaming,
-    turnsListReference,
-    scrollToBottom,
-    handleDeleteTurn,
-    handleForkSession,
-    handleDeleteSession,
-    onSendInstruction,
-  }
-}
+const NOOP = (): void => {}
 
 export const ChatHistoryHeader = ({
   sessionDetail,
-  currentSessionId,
-  handleDeleteSession,
-}: Pick<ChatHistoryProperties, 'sessionDetail' | 'currentSessionId'> & {
-  handleDeleteSession: (id: string) => Promise<void>
+  handleDeleteCurrentSession,
+}: Pick<ChatHistoryProperties, 'sessionDetail'> & {
+  handleDeleteCurrentSession: () => void
 }): JSX.Element => {
-  if (!sessionDetail) return <div />
-
   const contextLimit = 4000
   const tokenCount = 1000
   const contextLeft = (((contextLimit - tokenCount) / contextLimit) * 100).toFixed(0)
+
+  if (!sessionDetail) return <div />
 
   return (
     <div className={turnsHeader}>
@@ -120,7 +60,7 @@ export const ChatHistoryHeader = ({
       <Button
         kind="secondary"
         size="default"
-        onClick={() => currentSessionId && handleDeleteSession(currentSessionId)}
+        onClick={handleDeleteCurrentSession}
         style={{ backgroundColor: colors.error, color: colors.lightText }}
       >
         <IconDelete size={16} />
@@ -159,17 +99,25 @@ export const ChatHistoryList = ({
   return (
     <div className={turnsColumn}>
       <section className={turnsListSection} ref={turnsListReference}>
-        {sessionDetail.turns.map((turn: TurnType, index: number) => (
-          <Turn
-            key={index}
-            turn={turn}
-            index={index}
-            sessionId={currentSessionId}
-            expertMode={expertMode}
-            onDeleteTurn={handleDeleteTurn}
-            onForkSession={handleForkSession}
-          />
-        ))}
+        {((): JSX.Element[] => {
+          const nodes: JSX.Element[] = []
+          for (let i = 0; i < sessionDetail.turns.length; i += 1) {
+            const turn: TurnType = sessionDetail.turns[i]
+            nodes.push(
+              <Turn
+                key={i}
+                turn={turn}
+                index={i}
+                sessionId={currentSessionId}
+                expertMode={expertMode}
+                onDeleteTurn={handleDeleteTurn}
+                onForkSession={handleForkSession}
+              />,
+            )
+          }
+
+          return nodes
+        })()}
         {isStreaming && streamedText && (
           <Turn
             key="streaming-response"
@@ -181,8 +129,8 @@ export const ChatHistoryList = ({
             index={sessionDetail.turns.length}
             sessionId={currentSessionId}
             expertMode={expertMode}
-            onDeleteTurn={() => {}}
-            onForkSession={() => {}}
+            onDeleteTurn={NOOP}
+            onForkSession={NOOP}
             isStreaming={isStreaming}
           />
         )}
@@ -203,10 +151,41 @@ export const ChatHistoryFooter = ({
   refreshSessions: () => Promise<void>
   setError: (message: string | null) => void
   isStreaming: boolean
+}): JSX.Element => (
+  // The instruction form itself now owns the Form and submit handler to avoid
+  // creating a new function reference in this component's render.
+  <section className={newInstructionControl}>
+    <div className={footerForm}>
+      {}
+      <ChatHistoryInstructionForm
+        currentSessionId={currentSessionId}
+        onSendInstruction={onSendInstruction}
+        refreshSessions={refreshSessions}
+        setError={setError}
+        isStreaming={isStreaming}
+      />
+    </div>
+  </section>
+)
+
+export const ChatHistoryInstructionForm = ({
+  currentSessionId,
+  onSendInstruction,
+  refreshSessions,
+  setError,
+  isStreaming,
+}: {
+  currentSessionId: string | null
+  onSendInstruction: (instruction: string) => Promise<void>
+  refreshSessions: () => Promise<void>
+  setError: (message: string | null) => void
+  isStreaming: boolean
 }): JSX.Element => {
-  // InstructionForm hook encapsulates form context and submit/reset logic.
-  const InstructionForm = (): JSX.Element => {
-    const { register, submit } = useInstructionForm({
+  // We must call `useInstructionForm` inside the `Form` provider created by
+  // `Form`. To ensure `useFormContext` is available we define an inner
+  // component that consumes the context.
+  const Inner = (): JSX.Element => {
+    const { register, onTextAreaKeyDown, onSendClick } = useInstructionForm({
       currentSessionId,
       onSendInstruction,
       refreshSessions,
@@ -214,66 +193,44 @@ export const ChatHistoryFooter = ({
     })
 
     return (
-      <>
-        <div className={instructionWrapper}>
-          <TextArea
-            id="new-instruction-text"
-            className={instructionTextarea}
-            placeholder="Enter your instruction here..."
-            name="instruction"
-            register={register}
-            disabled={isStreaming}
-            onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                void submit()
-              }
-            }}
-          />
-          <Button
-            className={overlaySendButton}
-            kind="primary"
-            size="default"
-            onClick={() => void submit()}
-            disabled={isStreaming}
-            tabIndex={0}
-            aria-label="Send Instruction"
-          >
-            <IconPaperPlane />
-          </Button>
-        </div>
-      </>
+      <div className={instructionWrapper}>
+        <TextArea
+          id="new-instruction-text"
+          className={instructionTextarea}
+          placeholder="Enter your instruction here..."
+          name="instruction"
+          register={register}
+          disabled={isStreaming}
+          onKeyDown={onTextAreaKeyDown}
+        />
+        <Button
+          className={overlaySendButton}
+          kind="primary"
+          size="default"
+          onClick={onSendClick}
+          disabled={isStreaming}
+          tabIndex={0}
+          aria-label="Send Instruction"
+        >
+          <IconPaperPlane />
+        </Button>
+      </div>
     )
   }
 
+  // The Form component provides the form context; we pass a no-op onSubmit
+  // because the inner handlers (onTextAreaKeyDown/onSendClick) call the
+  // `submit` returned by `useInstructionForm` directly. The no-op prevents
+  // a double-submit when the user triggers a native form submit.
   return (
-    <section className={newInstructionControl}>
-      <Form
-        onSubmit={async (data) => {
-          const instruction = (data as { instruction?: string }).instruction ?? ''
-          if (!instruction.trim() || !currentSessionId) return
-          try {
-            await onSendInstruction(instruction)
-            await refreshSessions()
-          } catch (error) {
-            setError(
-              error instanceof Error ? error.message : 'Failed to send instruction',
-            )
-            console.error('Failed to send instruction:', error)
-          }
-        }}
-        defaultValues={{ instruction: '' }}
-      >
-        <div className={footerForm}>
-          <InstructionForm />
-        </div>
-      </Form>
-    </section>
+    <Form onSubmit={NOOP} defaultValues={{ instruction: '' }}>
+      <Inner />
+    </Form>
   )
 }
 
 // Keep a default export for backward compatibility (renders the full composed view)
-const ChatHistory = ({
+export const ChatHistory = ({
   sessionDetail,
   currentSessionId,
   expertMode,
@@ -285,28 +242,24 @@ const ChatHistory = ({
     streamedText,
     isStreaming,
     turnsListReference,
-    scrollToBottom,
     handleDeleteTurn,
     handleForkSession,
-    handleDeleteSession,
+    handleDeleteCurrentSession,
     onSendInstruction,
   } = useChatHistoryLogic({
     currentSessionId,
-    setSessionDetail,
+    // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
+    setSessionDetail: setSessionDetail as unknown as (data: unknown) => void,
     setError,
     refreshSessions,
   })
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [sessionDetail, streamedText, scrollToBottom])
+  // scrolling handled in useChatHistoryLogic
 
   return (
     <div className={chatRoot}>
       <ChatHistoryHeader
         sessionDetail={sessionDetail}
-        currentSessionId={currentSessionId}
-        handleDeleteSession={handleDeleteSession}
+        handleDeleteCurrentSession={handleDeleteCurrentSession}
       />
       <ChatHistoryList
         sessionDetail={sessionDetail}
@@ -329,4 +282,4 @@ const ChatHistory = ({
   )
 }
 
-export default ChatHistory
+// Default export removed — use named export `ChatHistory`

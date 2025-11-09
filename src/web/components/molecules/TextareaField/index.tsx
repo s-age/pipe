@@ -2,8 +2,8 @@ import type { JSX } from 'react'
 import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
-import Label from '@/components/atoms/Label'
-import TextArea from '@/components/atoms/TextArea'
+import { Label } from '@/components/atoms/Label'
+import { TextArea } from '@/components/atoms/TextArea'
 
 import { errorMessageStyle } from './style.css'
 
@@ -15,7 +15,7 @@ type TextareaFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
   required?: boolean
 } & UseControllerProps<TFieldValues>
 
-const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
+export const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
   label,
   id,
   placeholder,
@@ -43,4 +43,4 @@ const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
   )
 }
 
-export default TextareaField
+// Default export removed — use named export `TextareaField`

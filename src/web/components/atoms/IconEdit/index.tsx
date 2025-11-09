@@ -5,7 +5,7 @@ type IconProperties = {
   size?: number
 }
 
-const IconEdit = ({ className, size = 20 }: IconProperties): JSX.Element => (
+export const IconEdit = ({ className, size = 20 }: IconProperties): JSX.Element => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -25,4 +25,4 @@ const IconEdit = ({ className, size = 20 }: IconProperties): JSX.Element => (
   </svg>
 )
 
-export default IconEdit
+// Default export removed — use named export `IconEdit`

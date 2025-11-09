@@ -1,19 +1,20 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import { expect, userEvent, within } from 'storybook/test'
 
 import { Page } from './Page'
 
-const meta = {
+export default { component: Page }
+export const Meta = {
   title: 'Example/Page',
   component: Page,
   parameters: {
     // More on how to position stories at: https://storybook.js.org/docs/configure/story-layout
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof Page>
+} satisfies StoryMeta<typeof Page>
 
-export default meta
-type Story = StoryObj<typeof meta>
+// Storybook meta is exported as a named export to comply with import/no-default-export
+type Story = StoryObj<typeof Meta>
 
 export const LoggedOut: Story = {}
 

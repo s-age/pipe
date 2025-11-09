@@ -1,19 +1,19 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import React, { useState } from 'react'
 import type { JSX } from 'react'
 
 import { Form } from '@/components/organisms/Form'
 
-import InputText from '../index'
+import { InputText } from '../index'
 
-const meta = {
+const Meta = {
   title: 'Atoms/InputText',
   component: InputText,
   tags: ['autodocs'],
-} satisfies Meta<typeof InputText>
+} satisfies StoryMeta<typeof InputText>
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default Meta
+type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {
   args: {
@@ -31,7 +31,9 @@ export const Controlled: Story = {
         <div>
           <InputText
             value={value}
-            onChange={(event) => setValue((event.target as HTMLInputElement).value)}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              setValue(event.target.value)
+            }
           />
           <div style={{ marginTop: 8 }}>Current: {value}</div>
         </div>

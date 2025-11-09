@@ -2,7 +2,7 @@ import React from 'react'
 import type { InputHTMLAttributes, JSX } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
-import useInputRadio from './hooks/useInputRadio'
+import { useInputRadio } from './hooks/useInputRadio'
 import * as styles from './style.css'
 
 type InputRadioProperties = {
@@ -11,7 +11,7 @@ type InputRadioProperties = {
   name?: string
 } & InputHTMLAttributes<HTMLInputElement>
 
-const InputRadio = ({
+export const InputRadio = ({
   register,
   name,
   label,
@@ -53,4 +53,4 @@ const InputRadio = ({
   )
 }
 
-export default InputRadio
+// (Removed temporary default export) Use named export `InputRadio`.

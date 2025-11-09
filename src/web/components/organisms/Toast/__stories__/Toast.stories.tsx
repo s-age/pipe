@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import React from 'react'
 import type { JSX } from 'react'
 
 import { AppStoreProvider } from '@/stores/useAppStore'
 
-import useToast from '../hooks/useToast'
-import Toasts from '../index'
+import { useToast } from '../hooks/useToast'
+import { Toasts } from '../index'
 
 const Wrapper = ({ children }: React.PropsWithChildren<unknown>): JSX.Element => (
   <AppStoreProvider>
@@ -14,17 +14,17 @@ const Wrapper = ({ children }: React.PropsWithChildren<unknown>): JSX.Element =>
   </AppStoreProvider>
 )
 
-const meta = {
+const Meta = {
   title: 'Organisms/Toast',
   component: Toasts,
   tags: ['autodocs'],
   decorators: [
     (Story: () => JSX.Element): JSX.Element => <Wrapper>{<Story />}</Wrapper>,
   ],
-} satisfies Meta<typeof Toasts>
+} satisfies StoryMeta<typeof Toasts>
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default Meta
+type Story = StoryObj<typeof Meta>
 
 const Controls = (): JSX.Element => {
   const t = useToast()

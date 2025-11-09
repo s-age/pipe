@@ -2,7 +2,7 @@ import React from 'react'
 import type { JSX, InputHTMLAttributes } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
-import useInputCheckbox from './hooks/useInputCheckbox'
+import { useInputCheckbox } from './hooks/useInputCheckbox'
 import * as styles from './style.css'
 
 type InputCheckboxProperties = {
@@ -11,7 +11,7 @@ type InputCheckboxProperties = {
   name?: string
 } & InputHTMLAttributes<HTMLInputElement>
 
-const InputCheckbox = ({
+export const InputCheckbox = ({
   register,
   name,
   label,
@@ -53,4 +53,4 @@ const InputCheckbox = ({
   )
 }
 
-export default InputCheckbox
+// (Removed temporary default export) Use named export `InputCheckbox`.

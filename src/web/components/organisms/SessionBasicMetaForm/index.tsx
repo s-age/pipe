@@ -1,8 +1,8 @@
 import type { JSX } from 'react'
 
-import InputText from '@/components/atoms/InputText'
-import TextArea from '@/components/atoms/TextArea'
-import Fieldset from '@/components/molecules/Fieldset'
+import { InputText } from '@/components/atoms/InputText'
+import { TextArea } from '@/components/atoms/TextArea'
+import { Fieldset } from '@/components/molecules/Fieldset'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 

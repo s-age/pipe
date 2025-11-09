@@ -1,14 +1,14 @@
 import type { JSX } from 'react'
 
-import ErrorMessage from '@/components/atoms/ErrorMessage'
-import LoadingSpinner from '@/components/atoms/LoadingSpinner'
-import StartSessionForm from '@/components/organisms/StartSessionForm'
+import { ErrorMessage } from '@/components/atoms/ErrorMessage'
+import { LoadingSpinner } from '@/components/atoms/LoadingSpinner'
+import { StartSessionForm } from '@/components/organisms/StartSessionForm'
 import { useSessionCreation } from '@/components/pages/StartSessionPage/hooks/useSessionCreation'
 
 import { useStartSessionData } from './hooks/useStartSessionData'
 import { pageContainer } from './style.css'
 
-const StartSessionPage: () => JSX.Element = () => {
+export const StartSessionPage: () => JSX.Element = () => {
   const {
     sessionTree,
     settings,
@@ -43,4 +43,4 @@ const StartSessionPage: () => JSX.Element = () => {
   )
 }
 
-export default StartSessionPage
+// Default export removed — use named export `StartSessionPage`

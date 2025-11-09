@@ -130,4 +130,4 @@ export const useAppStore = (): AppStoreContextValue => {
   return context
 }
 
-export default useAppStore
+// (Removed temporary default export) Use named export `useAppStore`.

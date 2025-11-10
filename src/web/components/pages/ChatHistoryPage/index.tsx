@@ -1,12 +1,6 @@
 import type { JSX } from 'react'
 
-import {
-  ChatHistoryHeader,
-  ChatHistoryList,
-  ChatHistoryFooter
-} from '@/components/organisms/ChatHistory'
-import { useChatHistoryHandlers } from '@/components/organisms/ChatHistory/hooks/useChatHistoryHandlers'
-import { useChatHistoryLogic } from '@/components/organisms/ChatHistory/hooks/useChatHistoryLogic'
+import { ChatHistory } from '@/components/organisms/ChatHistory'
 import { Header } from '@/components/organisms/Header'
 import { SessionMeta } from '@/components/organisms/SessionMeta'
 import { SessionTree } from '@/components/organisms/SessionTree'
@@ -17,9 +11,7 @@ import {
   mainContent,
   leftColumn,
   centerColumn,
-  rightColumn,
-  panel,
-  panelBottomSpacing
+  rightColumn
 } from './style.css'
 
 export const ChatHistoryPage = (): JSX.Element => {
@@ -32,16 +24,6 @@ export const ChatHistoryPage = (): JSX.Element => {
     setSessionDetail,
     onRefresh
   } = useChatHistoryPageLogic()
-
-  const { handleDeleteCurrentSession } = useChatHistoryHandlers({
-    currentSessionId
-  })
-
-  const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
-    useChatHistoryLogic({
-      currentSessionId,
-      setSessionDetail: setSessionDetail as unknown as (data: unknown) => void
-    })
 
   return (
     <div className={appContainer}>
@@ -56,30 +38,12 @@ export const ChatHistoryPage = (): JSX.Element => {
         </div>
 
         <div className={centerColumn}>
-          {/* Header sits above the boxed panel */}
-          <ChatHistoryHeader
+          <ChatHistory
             sessionDetail={sessionDetail}
-            handleDeleteCurrentSession={handleDeleteCurrentSession}
-          />
-
-          <div className={`${panel} ${panelBottomSpacing}`}>
-            {/* Panel contains only the turns list */}
-            <ChatHistoryList
-              sessionDetail={sessionDetail}
-              currentSessionId={currentSessionId}
-              expertMode={expertMode}
-              isStreaming={isStreaming}
-              streamedText={streamedText}
-              turnsListReference={turnsListReference}
-              onRefresh={onRefresh}
-            />
-          </div>
-
-          {/* Footer / new-instruction sits below the panel */}
-          <ChatHistoryFooter
             currentSessionId={currentSessionId}
-            onSendInstruction={onSendInstruction}
-            isStreaming={isStreaming}
+            expertMode={expertMode}
+            setSessionDetail={setSessionDetail}
+            onRefresh={onRefresh}
           />
         </div>
 

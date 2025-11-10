@@ -41,6 +41,25 @@ export const turnsListSection = style({
   minHeight: 0
 })
 
+export const panel = style({
+  // panels should be slightly lighter than the page background
+  background: colors.darkBackground,
+  borderRadius: '10px',
+  padding: '12px',
+  // slightly softer shadow so the page edge doesn't read as white
+  boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
+  color: colors.offWhite,
+  height: '100%',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
+  flex: '1 1 auto'
+})
+
+export const panelBottomSpacing = style({
+  marginBottom: '8px'
+})
+
 export const newInstructionControl = style({
   padding: '12px',
   gap: '12px',

@@ -25,14 +25,14 @@ import {
   editablePre,
   editTextArea,
   editButtonContainer,
+  editButtonIcon,
   turnWrapper,
   userTaskAligned,
   otherTurnAligned,
   turnContentBase,
   forkButtonIcon,
   deleteButtonIcon,
-  copyButtonIcon,
-  editButtonIcon
+  copyButtonIcon
 } from './style.css'
 
 type TurnProperties = {
@@ -40,8 +40,7 @@ type TurnProperties = {
   index: number
   sessionId: string
   expertMode: boolean
-  onDeleteTurn: (sessionId: string, turnIndex: number) => void | Promise<void>
-  onForkSession: (sessionId: string, forkIndex: number) => void | Promise<void>
+  onRefresh: () => Promise<void>
   isStreaming?: boolean // 新しく追加
 }
 const Component = ({
@@ -49,8 +48,7 @@ const Component = ({
   index,
   sessionId,
   expertMode,
-  onDeleteTurn,
-  onForkSession,
+  onRefresh,
   isStreaming = false
 }: TurnProperties): JSX.Element => {
   const {
@@ -63,7 +61,7 @@ const Component = ({
     handleFork,
     handleDelete,
     handleSaveEdit
-  } = useTurnHandlers({ turn, index, sessionId, onDeleteTurn, onForkSession })
+  } = useTurnHandlers({ turn, index, sessionId, onRefresh })
 
   const getHeaderContent = (type: string): string => {
     switch (type) {

@@ -3,14 +3,14 @@ import type { ChangeEvent } from 'react'
 
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { useModal } from '@/components/molecules/Modal/hooks/useModal'
+import { useTurnActions } from '@/components/organisms/ChatHistory/hooks/useTurnActions'
 import type { Turn } from '@/lib/api/session/getSession'
 
 type UseTurnHandlersProperties = {
   turn: Turn
   index: number
   sessionId: string
-  onDeleteTurn: (sessionId: string, turnIndex: number) => void | Promise<void>
-  onForkSession: (sessionId: string, forkIndex: number) => void | Promise<void>
+  onRefresh: () => Promise<void>
 }
 
 export const useTurnHandlers = (
@@ -26,8 +26,10 @@ export const useTurnHandlers = (
   handleDelete: () => void
   handleSaveEdit: () => void
 } => {
-  const { turn, index, sessionId, onDeleteTurn, onForkSession } = properties
+  const { turn, index, sessionId, onRefresh } = properties
   const { show, hide } = useModal()
+  const { deleteTurnAction, forkSessionAction, editTurnAction } =
+    useTurnActions(onRefresh)
 
   const modalIdReference = useRef<number | null>(null)
 
@@ -58,13 +60,13 @@ export const useTurnHandlers = (
 
   const handleStartEdit = useCallback((): void => setIsEditing(true), [])
 
-  const handleConfirmFork = useCallback((): void => {
+  const handleConfirmFork = useCallback(async (): Promise<void> => {
     if (modalIdReference.current !== null) {
-      void onForkSession(sessionId, index)
+      await forkSessionAction(sessionId, index)
       hide(modalIdReference.current)
       modalIdReference.current = null
     }
-  }, [onForkSession, sessionId, index, hide])
+  }, [forkSessionAction, sessionId, index, hide])
 
   const handleCancelFork = useCallback((): void => {
     if (modalIdReference.current !== null) {
@@ -86,13 +88,13 @@ export const useTurnHandlers = (
     )
   }, [show, handleConfirmFork, handleCancelFork])
 
-  const handleConfirmDelete = useCallback((): void => {
+  const handleConfirmDelete = useCallback(async (): Promise<void> => {
     if (modalIdReference.current !== null) {
-      void onDeleteTurn(sessionId, index)
+      await deleteTurnAction(sessionId, index)
       hide(modalIdReference.current)
       modalIdReference.current = null
     }
-  }, [onDeleteTurn, sessionId, index, hide])
+  }, [deleteTurnAction, sessionId, index, hide])
 
   const handleCancelDelete = useCallback((): void => {
     if (modalIdReference.current !== null) {
@@ -114,10 +116,11 @@ export const useTurnHandlers = (
     )
   }, [show, handleConfirmDelete, handleCancelDelete])
 
-  const handleSaveEdit = useCallback((): void => {
+  const handleSaveEdit = useCallback(async (): Promise<void> => {
     console.log(`Saving turn ${index} with new content: ${editedContent}`)
+    await editTurnAction(sessionId, index, editedContent)
     setIsEditing(false)
-  }, [index, editedContent])
+  }, [index, editedContent, sessionId, editTurnAction])
 
   return {
     isEditing,

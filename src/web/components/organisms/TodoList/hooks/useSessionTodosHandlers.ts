@@ -12,7 +12,6 @@ import type { Todo } from '@/types/todo'
 type UseSessionTodosProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  refreshSessions: () => Promise<void>
   // optional setter kept for compatibility; not used here
   setSessionDetail?: (data: SessionDetail | null) => void
 }
@@ -20,8 +19,6 @@ type UseSessionTodosProperties = {
 export const useSessionTodosHandlers = ({
   sessionDetail,
   currentSessionId,
-  refreshSessions: _refreshSessions,
-  // optional setter kept for compatibility; used to update local detail after actions
   setSessionDetail: _setSessionDetail
 }: UseSessionTodosProperties): {
   handleUpdateTodo: (todos: Todo[]) => Promise<void>

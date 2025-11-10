@@ -3,25 +3,25 @@ import React from 'react'
 import { useSessionMetaSaver } from '@/components/organisms/SessionMeta/useSessionMetaSaver'
 import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import type { Actions } from '@/stores/useChatHistoryStore'
 
 type UseSessionMetaFormProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  actions: Actions
+  onRefresh: () => Promise<void>
 }
 export const useSessionMetaForm = ({
   sessionDetail,
   currentSessionId,
-  actions
+  onRefresh
 }: UseSessionMetaFormProperties): {
   defaultValues: Record<string, unknown>
   onSubmit: (data: EditSessionMetaRequest) => void
   isSubmitting: boolean
   saved: boolean
 } => {
-  const { handleMetaSave } = useSessionMetaSaver({ actions })
+  const { handleMetaSave } = useSessionMetaSaver({ onRefresh })
 
+  console.log({ sessionDetail })
   const defaultValues = React.useMemo(
     () => ({
       purpose: sessionDetail?.purpose ?? '',

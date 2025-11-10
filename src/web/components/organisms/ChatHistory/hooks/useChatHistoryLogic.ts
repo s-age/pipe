@@ -4,6 +4,9 @@ import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { useModal } from '@/components/molecules/Modal/hooks/useModal'
 import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { useStreamingInstruction } from '@/components/pages/ChatHistoryPage/hooks/useStreamingInstruction'
+import { getSession } from '@/lib/api/session/getSession'
+import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
+import { useSessionStore } from '@/stores/useChatHistoryStore'
 
 import { useTurnActions } from './useTurnActions'
 
@@ -11,7 +14,7 @@ type ChatHistoryProperties = {
   currentSessionId: string | null
   // keep the setter type loose here to avoid import-order lint churn
   setSessionDetail: (data: unknown) => void
-  refreshSessions: () => Promise<void>
+  // refreshSessions: (sessionDetail: SessionDetail, sessions?: SessionOverview[]) => void // Removed as onRefresh handles this
 }
 
 type ChatHistoryLogicReturn = {
@@ -20,16 +23,15 @@ type ChatHistoryLogicReturn = {
   turnsListReference: React.RefObject<HTMLDivElement | null>
   scrollToBottom: () => void
   handleDeleteCurrentSession: () => void
-  handleDeleteTurn: (sessionId: string, turnIndex: number) => Promise<void>
-  handleForkSession: (sessionId: string, forkIndex: number) => Promise<void>
+  deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
+  forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
   handleDeleteSession: (sessionId: string) => Promise<void>
   onSendInstruction: (instruction: string) => Promise<void>
 }
 
 export const useChatHistoryLogic = ({
   currentSessionId,
-  setSessionDetail,
-  refreshSessions
+  setSessionDetail
 }: ChatHistoryProperties): ChatHistoryLogicReturn => {
   const {
     streamedText,
@@ -39,8 +41,22 @@ export const useChatHistoryLogic = ({
     setStreamingTrigger
   } = useStreamingInstruction(currentSessionId, setSessionDetail)
 
-  const { handleDeleteTurn, handleForkSession, handleDeleteSession } =
-    useTurnActions(refreshSessions)
+  const { actions } = useSessionStore()
+  const { refreshSessions: refreshSessionsInStore } = actions
+
+  const onRefresh = useCallback(async (): Promise<void> => {
+    if (currentSessionId) {
+      const fetchedSessionDetailResponse = await getSession(currentSessionId)
+      const fetchedSessionTree = await getSessionTree()
+      const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
+        ...session,
+        session_id: id
+      }))
+      refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
+    }
+  }, [currentSessionId, refreshSessionsInStore])
+
+  const { deleteTurnAction, forkSessionAction } = useTurnActions(onRefresh)
   const toast = useToast()
 
   // propagate streaming errors
@@ -67,6 +83,18 @@ export const useChatHistoryLogic = ({
   const { show, hide } = useModal()
 
   const modalIdReference = useRef<number | null>(null)
+
+  const handleDeleteSession = useCallback(
+    async (sessionId: string): Promise<void> => {
+      // This is a placeholder for the actual delete session API call
+      console.log(`Deleting session ${sessionId}`)
+      // After deleting the session, we need to refresh the session tree
+      // and potentially clear the current session detail if the deleted session was the current one.
+      // For now, we'll just call the onRefresh to update the session tree.
+      await onRefresh()
+    },
+    [onRefresh]
+  )
 
   const handleDeleteCurrentSession = useCallback((): void => {
     if (!currentSessionId) return
@@ -107,8 +135,8 @@ export const useChatHistoryLogic = ({
     turnsListReference,
     scrollToBottom,
     handleDeleteCurrentSession,
-    handleDeleteTurn,
-    handleForkSession,
+    deleteTurnAction,
+    forkSessionAction,
     handleDeleteSession,
     onSendInstruction
   }

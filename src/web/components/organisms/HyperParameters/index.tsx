@@ -5,7 +5,6 @@ import { Fieldset } from '@/components/molecules/Fieldset'
 import { Slider } from '@/components/molecules/Slider'
 import { useSessionMetaSaver } from '@/components/organisms/SessionMeta/useSessionMetaSaver'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import type { Actions } from '@/stores/useChatHistoryStore'
 
 import { useHyperParametersHandlers } from './hooks/useHyperParametersHandlers'
 import { metaItem, hyperparametersControl, sliderContainer } from './style.css'
@@ -13,15 +12,15 @@ import { metaItem, hyperparametersControl, sliderContainer } from './style.css'
 type HyperParametersProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  actions: Actions
+  onRefresh: () => Promise<void>
 }
 
 export const HyperParameters = ({
   sessionDetail,
   currentSessionId,
-  actions
+  onRefresh
 }: HyperParametersProperties): React.JSX.Element => {
-  useSessionMetaSaver({ actions })
+  useSessionMetaSaver({ onRefresh })
 
   const {
     temperature,
@@ -39,14 +38,11 @@ export const HyperParameters = ({
   } = useHyperParametersHandlers({
     sessionDetail,
     currentSessionId,
-    onMetaSave: (_id, meta) => {
-      // Update local store immediately with authoritative hyperparameters from server
-      if (sessionDetail && meta.hyperparameters)
-        actions.setSessionDetail({
-          ...sessionDetail,
-          hyperparameters: meta.hyperparameters
-        })
-    }
+    // Return the onRefresh promise so the handlers can await the canonical
+    // refresh and keep `isInteracting` true until the server state is
+    // reflected. This prevents an intermediate overwrite from the stale
+    // `sessionDetail` while a background refresh is in-flight.
+    onMetaSave: (_id, _meta) => onRefresh()
   })
 
   return (

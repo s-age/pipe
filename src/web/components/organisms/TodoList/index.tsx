@@ -21,21 +21,16 @@ import {
 type TodoListProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  setSessionDetail: (data: SessionDetail | null) => void
-  refreshSessions: () => Promise<void>
 }
 
 export const TodoList = ({
   sessionDetail,
-  currentSessionId,
-  setSessionDetail: _setSessionDetail,
-  refreshSessions
+  currentSessionId
 }: TodoListProperties): React.JSX.Element => {
   const { register, handleDeleteAllTodos, handleCheckboxChange } =
     useSessionTodosHandlers({
       sessionDetail,
-      currentSessionId,
-      refreshSessions
+      currentSessionId
     })
 
   return (

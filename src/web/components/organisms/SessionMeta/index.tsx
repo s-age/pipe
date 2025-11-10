@@ -1,4 +1,4 @@
-import React from 'react'
+import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { Form } from '@/components/organisms/Form'
@@ -8,7 +8,6 @@ import { useSessionMetaForm } from '@/components/organisms/SessionMeta/hooks/use
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import type { Actions } from '@/stores/useChatHistoryStore'
 
 import {
   metaColumn,
@@ -21,22 +20,24 @@ type SessionMetaProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   setSessionDetail: (data: SessionDetail | null) => void
-  refreshSessions: () => Promise<void>
-  actions: Actions
+  onRefresh: () => Promise<void>
 }
 
 export const SessionMeta = ({
   sessionDetail,
   currentSessionId,
   setSessionDetail,
-  refreshSessions,
-  actions
-}: SessionMetaProperties): React.JSX.Element => {
+  onRefresh
+}: SessionMetaProperties): JSX.Element | null => {
   const { defaultValues, onSubmit, isSubmitting, saved } = useSessionMetaForm({
     sessionDetail,
     currentSessionId,
-    actions
+    onRefresh
   })
+
+  if (sessionDetail === null) {
+    return null
+  }
 
   return (
     <Form defaultValues={defaultValues} onSubmit={onSubmit}>
@@ -47,28 +48,25 @@ export const SessionMeta = ({
             <SessionMetaBasic
               sessionDetail={sessionDetail}
               currentSessionId={currentSessionId}
-              refreshSessions={refreshSessions}
-              setSessionDetail={setSessionDetail}
+              onRefresh={onRefresh}
             />
 
             <ReferenceList
               sessionDetail={sessionDetail}
               currentSessionId={currentSessionId}
               setSessionDetail={setSessionDetail}
-              refreshSessions={refreshSessions}
+              refreshSessions={onRefresh}
             />
 
             <HyperParameters
               sessionDetail={sessionDetail}
               currentSessionId={currentSessionId}
-              actions={actions}
+              onRefresh={onRefresh}
             />
 
             <TodoList
               sessionDetail={sessionDetail}
               currentSessionId={currentSessionId}
-              setSessionDetail={setSessionDetail}
-              refreshSessions={refreshSessions}
             />
           </div>
         </section>

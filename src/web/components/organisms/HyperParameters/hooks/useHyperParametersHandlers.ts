@@ -8,7 +8,7 @@ import { useHyperParametersActions } from './useHyperParametersActions'
 type UseSessionHyperparametersProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  onMetaSave?: (sessionId: string, meta: EditSessionMetaRequest) => void
+  onMetaSave?: (sessionId: string, meta: EditSessionMetaRequest) => void | Promise<void>
 }
 
 export const useHyperParametersHandlers = ({
@@ -109,7 +109,7 @@ export const useHyperParametersHandlers = ({
       const result = await updateHyperparameters(currentSessionId, payload)
 
       if (onMetaSave)
-        onMetaSave(currentSessionId, {
+        await onMetaSave(currentSessionId, {
           hyperparameters: result.session.hyperparameters
         })
     } finally {
@@ -131,7 +131,7 @@ export const useHyperParametersHandlers = ({
       const result = await updateHyperparameters(currentSessionId, payload)
 
       if (onMetaSave)
-        onMetaSave(currentSessionId, {
+        await onMetaSave(currentSessionId, {
           hyperparameters: result.session.hyperparameters
         })
     } finally {
@@ -152,7 +152,7 @@ export const useHyperParametersHandlers = ({
       const result = await updateHyperparameters(currentSessionId, payload)
 
       if (onMetaSave)
-        onMetaSave(currentSessionId, {
+        await onMetaSave(currentSessionId, {
           hyperparameters: result.session.hyperparameters
         })
     } finally {

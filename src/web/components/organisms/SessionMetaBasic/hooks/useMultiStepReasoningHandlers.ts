@@ -7,14 +7,14 @@ import { useMultiStepReasoningActions } from './useMultiStepReasoningActions'
 type UseMultiStepReasoningHandlersProperties = {
   currentSessionId: string | null
   sessionDetail: SessionDetail | null
-  refreshSessions: () => Promise<void>
+  onRefresh: () => Promise<void>
   setSessionDetail?: (data: SessionDetail | null) => void
 }
 
 export const useMultiStepReasoningHandlers = ({
   currentSessionId,
   sessionDetail,
-  refreshSessions,
+  onRefresh,
   setSessionDetail
 }: UseMultiStepReasoningHandlersProperties): {
   handleMultiStepReasoningChange: (
@@ -43,7 +43,7 @@ export const useMultiStepReasoningHandlers = ({
         }
 
         // Also refresh the session list if needed (keeps the session tree canonical).
-        await refreshSessions()
+        await onRefresh()
       } catch {
         // Toasts are displayed by the action hook. Swallow here to keep UI stable.
       }
@@ -51,7 +51,7 @@ export const useMultiStepReasoningHandlers = ({
     [
       currentSessionId,
       sessionDetail,
-      refreshSessions,
+      onRefresh,
       updateMultiStepReasoning,
       setSessionDetail
     ]

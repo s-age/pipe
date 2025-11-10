@@ -29,22 +29,18 @@ export const ChatHistoryPage = (): JSX.Element => {
     expertMode,
     selectSession,
     setSessionDetail,
-    refreshSessions,
-    actions
+    onRefresh
   } = useChatHistoryPageLogic()
 
   const {
     streamedText,
     isStreaming,
     turnsListReference,
-    handleDeleteTurn,
-    handleForkSession,
     handleDeleteCurrentSession,
     onSendInstruction
   } = useChatHistoryLogic({
     currentSessionId,
-    setSessionDetail: setSessionDetail as unknown as (data: unknown) => void,
-    refreshSessions
+    setSessionDetail: setSessionDetail as unknown as (data: unknown) => void
   })
 
   return (
@@ -75,8 +71,7 @@ export const ChatHistoryPage = (): JSX.Element => {
               isStreaming={isStreaming}
               streamedText={streamedText}
               turnsListReference={turnsListReference}
-              handleDeleteTurn={handleDeleteTurn}
-              handleForkSession={handleForkSession}
+              onRefresh={onRefresh}
             />
           </div>
 
@@ -84,7 +79,7 @@ export const ChatHistoryPage = (): JSX.Element => {
           <ChatHistoryFooter
             currentSessionId={currentSessionId}
             onSendInstruction={onSendInstruction}
-            refreshSessions={refreshSessions}
+            refreshSessions={onRefresh}
             isStreaming={isStreaming}
           />
         </div>
@@ -95,8 +90,7 @@ export const ChatHistoryPage = (): JSX.Element => {
             sessionDetail={sessionDetail}
             currentSessionId={currentSessionId}
             setSessionDetail={setSessionDetail}
-            refreshSessions={refreshSessions}
-            actions={actions}
+            onRefresh={onRefresh}
           />
         </div>
       </div>

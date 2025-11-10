@@ -1,62 +1,47 @@
 import { useCallback } from 'react'
 
-import { useToast } from '@/components/organisms/Toast/hooks/useToast'
-import { deleteSession } from '@/lib/api/session/deleteSession'
 import { deleteTurn } from '@/lib/api/session/deleteTurn'
+import { editTurn } from '@/lib/api/session/editTurn'
 import { forkSession } from '@/lib/api/session/forkSession'
 
 export const useTurnActions = (
-  refreshSessions: () => Promise<void>
+  onRefresh: () => Promise<void>
 ): {
-  handleDeleteTurn: (sessionId: string, turnIndex: number) => Promise<void>
-  handleForkSession: (sessionId: string, forkIndex: number) => Promise<void>
-  handleDeleteSession: (sessionId: string) => Promise<void>
+  deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
+  forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
+  editTurnAction: (
+    sessionId: string,
+    turnIndex: number,
+    newContent: string
+  ) => Promise<void>
 } => {
-  const toast = useToast()
-  const handleDeleteTurn = useCallback(
+  const deleteTurnAction = useCallback(
     async (sessionId: string, turnIndex: number): Promise<void> => {
-      try {
-        await deleteTurn(sessionId, turnIndex)
-        await refreshSessions()
-      } catch (error: unknown) {
-        toast.failure((error as Error).message || 'Failed to delete turn.')
-      }
+      await deleteTurn(sessionId, turnIndex)
+      await onRefresh()
     },
-    [refreshSessions, toast]
+    [onRefresh]
   )
 
-  const handleForkSession = useCallback(
+  const forkSessionAction = useCallback(
     async (sessionId: string, forkIndex: number): Promise<void> => {
-      try {
-        const result = await forkSession(sessionId, forkIndex)
-        if (result.new_session_id) {
-          window.location.href = `/session/${result.new_session_id}`
-        } else {
-          throw new Error('Failed to fork session.')
-        }
-      } catch (error: unknown) {
-        toast.failure((error as Error).message || 'Failed to fork session.')
-      }
+      await forkSession(sessionId, forkIndex)
+      await onRefresh()
     },
-    [toast]
+    [onRefresh]
   )
 
-  const handleDeleteSession = useCallback(
-    async (sessionId: string): Promise<void> => {
-      if (!window.confirm('Are you sure you want to delete this session?')) return
-      try {
-        await deleteSession(sessionId)
-        // const fetchedSessions = await getSessions()
-        // setSessions(fetchedSessions.sessions.map(([, session]) => session))
-        // setCurrentSessionId(null)
-        // setSessionDetail(null)
-        window.history.pushState({}, '', '/')
-      } catch (error: unknown) {
-        toast.failure((error as Error).message || 'Failed to delete session.')
-      }
+  const editTurnAction = useCallback(
+    async (sessionId: string, turnIndex: number, newContent: string): Promise<void> => {
+      await editTurn(sessionId, turnIndex, { content: newContent })
+      await onRefresh()
     },
-    [toast]
+    [onRefresh]
   )
 
-  return { handleDeleteTurn, handleForkSession, handleDeleteSession }
+  return {
+    deleteTurnAction,
+    forkSessionAction,
+    editTurnAction
+  }
 }

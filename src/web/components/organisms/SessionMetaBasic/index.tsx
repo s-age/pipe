@@ -20,21 +20,21 @@ type SessionMetaBasicProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   _setError?: (error: string | null) => void
-  refreshSessions: () => Promise<void>
+  onRefresh: () => Promise<void>
   setSessionDetail?: (data: SessionDetail | null) => void
 }
 
 export const SessionMetaBasic = ({
   sessionDetail,
   currentSessionId,
-  refreshSessions,
+  onRefresh,
   setSessionDetail
 }: SessionMetaBasicProperties): React.JSX.Element => {
   const register = useOptionalFormContext()?.register
   const { handleMultiStepReasoningChange } = useMultiStepReasoningHandlers({
     currentSessionId,
     sessionDetail,
-    refreshSessions,
+    onRefresh,
     setSessionDetail
   })
 

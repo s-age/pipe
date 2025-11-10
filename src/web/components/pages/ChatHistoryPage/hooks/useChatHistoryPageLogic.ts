@@ -1,3 +1,6 @@
+import { useCallback } from 'react'
+
+import { getSessionDashboard } from '@/lib/api/bff/getSessionDashboard'
 import type { State, Actions } from '@/stores/useChatHistoryStore'
 import { useSessionStore } from '@/stores/useChatHistoryStore'
 
@@ -10,8 +13,7 @@ type UseChatHistoryPageLogicReturn = {
   expertMode: boolean
   selectSession: Actions['selectSession']
   setSessionDetail: Actions['setSessionDetail']
-  refreshSessions: Actions['refreshSessions']
-  actions: Actions
+  onRefresh: () => Promise<void>
 }
 
 export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
@@ -22,6 +24,19 @@ export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
   } = state
 
   const { selectSession, setSessionDetail, refreshSessions } = actions
+
+  const onRefresh = useCallback(async (): Promise<void> => {
+    if (currentSessionId) {
+      const dashBoard = await getSessionDashboard(currentSessionId)
+      refreshSessions(
+        dashBoard.current_session,
+        dashBoard.session_tree.map(([id, session]) => ({
+          ...session,
+          session_id: id
+        }))
+      )
+    }
+  }, [currentSessionId, refreshSessions])
 
   useSessionLoader({ state, actions })
 
@@ -34,7 +49,6 @@ export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
     expertMode,
     selectSession,
     setSessionDetail,
-    refreshSessions,
-    actions
+    onRefresh
   }
 }

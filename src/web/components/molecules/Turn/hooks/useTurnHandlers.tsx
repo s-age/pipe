@@ -4,6 +4,7 @@ import type { ChangeEvent } from 'react'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { useModal } from '@/components/molecules/Modal/hooks/useModal'
 import { useTurnActions } from '@/components/organisms/ChatHistory/hooks/useTurnActions'
+import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import type { Turn } from '@/lib/api/session/getSession'
 
 type UseTurnHandlersProperties = {
@@ -38,13 +39,16 @@ export const useTurnHandlers = (
     turn.content ?? turn.instruction ?? ''
   )
 
+  const toast = useToast()
+
   const handleCopy = useCallback(async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(editedContent)
-    } catch (error) {
-      console.error('Failed to copy: ', error)
+      toast.success('Copied to clipboard')
+    } catch {
+      toast.failure('Failed to copy to clipboard')
     }
-  }, [editedContent])
+  }, [editedContent, toast])
 
   const handleEditedChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>): void => {

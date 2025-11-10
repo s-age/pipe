@@ -11,6 +11,7 @@ import { Form } from '@/components/organisms/Form'
 import type { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
 import { colors } from '@/styles/colors.css'
 
+import { useChatHistoryHandlers } from './hooks/useChatHistoryHandlers'
 import { useChatHistoryLogic } from './hooks/useChatHistoryLogic'
 import { useInstructionForm } from './hooks/useInstructionForm'
 import {
@@ -137,12 +138,10 @@ export const ChatHistoryList = ({
 export const ChatHistoryFooter = ({
   currentSessionId,
   onSendInstruction,
-  refreshSessions,
   isStreaming
 }: {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
-  refreshSessions: () => Promise<void>
   isStreaming: boolean
 }): JSX.Element => (
   // The instruction form itself now owns the Form and submit handler to avoid
@@ -153,7 +152,6 @@ export const ChatHistoryFooter = ({
       <ChatHistoryInstructionForm
         currentSessionId={currentSessionId}
         onSendInstruction={onSendInstruction}
-        refreshSessions={refreshSessions}
         isStreaming={isStreaming}
       />
     </div>
@@ -163,12 +161,10 @@ export const ChatHistoryFooter = ({
 export const ChatHistoryInstructionForm = ({
   currentSessionId,
   onSendInstruction,
-  refreshSessions,
   isStreaming
 }: {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
-  refreshSessions: () => Promise<void>
   isStreaming: boolean
 }): JSX.Element => {
   // We must call `useInstructionForm` inside the `Form` provider created by
@@ -177,8 +173,7 @@ export const ChatHistoryInstructionForm = ({
   const Inner = (): JSX.Element => {
     const { register, onTextAreaKeyDown, onSendClick } = useInstructionForm({
       currentSessionId,
-      onSendInstruction,
-      refreshSessions
+      onSendInstruction
     })
 
     return (
@@ -226,17 +221,16 @@ export const ChatHistory = ({
   setSessionDetail,
   onRefresh
 }: ChatHistoryProperties): JSX.Element => {
-  const {
-    streamedText,
-    isStreaming,
-    turnsListReference,
-    handleDeleteCurrentSession,
-    onSendInstruction
-  } = useChatHistoryLogic({
-    currentSessionId,
-    // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
-    setSessionDetail: setSessionDetail as unknown as (data: unknown) => void
+  const { handleDeleteCurrentSession } = useChatHistoryHandlers({
+    currentSessionId
   })
+
+  const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
+    useChatHistoryLogic({
+      currentSessionId,
+      // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
+      setSessionDetail: setSessionDetail as unknown as (data: unknown) => void
+    })
   // scrolling handled in useChatHistoryLogic
 
   return (
@@ -257,7 +251,6 @@ export const ChatHistory = ({
       <ChatHistoryFooter
         currentSessionId={currentSessionId}
         onSendInstruction={onSendInstruction}
-        refreshSessions={onRefresh}
         isStreaming={isStreaming}
       />
     </div>

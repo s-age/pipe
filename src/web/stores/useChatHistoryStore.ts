@@ -75,7 +75,10 @@ export type Actions = {
   setSessionDetail: (detail: SessionDetail | null) => void
   selectSession: (id: string | null, detail: SessionDetail | null) => void
   updateSettings: (partial: Partial<Settings>) => void
-  refreshSessions: (sessionDetail: SessionDetail, sessions?: SessionOverview[]) => void
+  refreshSessions: (
+    sessionDetail: SessionDetail | null,
+    sessions?: SessionOverview[]
+  ) => void
   reset: () => void
 }
 
@@ -112,7 +115,7 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
   }, [])
 
   const refreshSessions = useCallback(
-    (sessionDetail: SessionDetail, sessions?: SessionOverview[]): void => {
+    (sessionDetail: SessionDetail | null, sessions?: SessionOverview[]): void => {
       dispatch({ type: 'SET_SESSION_DETAIL', payload: sessionDetail })
       if (sessions) {
         dispatch({ type: 'SET_SESSIONS', payload: sessions })

@@ -6,7 +6,6 @@ import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 export type UseInstructionFormProperties = {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
-  refreshSessions: () => Promise<void>
 }
 
 export type UseInstructionFormReturn = {
@@ -19,8 +18,7 @@ export type UseInstructionFormReturn = {
 
 export const useInstructionForm = ({
   currentSessionId,
-  onSendInstruction,
-  refreshSessions
+  onSendInstruction
 }: UseInstructionFormProperties): UseInstructionFormReturn => {
   const methods = useFormContext()
   const { register, handleSubmit, reset } = methods
@@ -32,7 +30,6 @@ export const useInstructionForm = ({
 
     try {
       await onSendInstruction(instruction)
-      await refreshSessions()
       reset({ instruction: '' })
     } catch (error) {
       toast.failure(

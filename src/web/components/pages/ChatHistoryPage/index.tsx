@@ -5,6 +5,7 @@ import {
   ChatHistoryList,
   ChatHistoryFooter
 } from '@/components/organisms/ChatHistory'
+import { useChatHistoryHandlers } from '@/components/organisms/ChatHistory/hooks/useChatHistoryHandlers'
 import { useChatHistoryLogic } from '@/components/organisms/ChatHistory/hooks/useChatHistoryLogic'
 import { Header } from '@/components/organisms/Header'
 import { SessionMeta } from '@/components/organisms/SessionMeta'
@@ -32,16 +33,15 @@ export const ChatHistoryPage = (): JSX.Element => {
     onRefresh
   } = useChatHistoryPageLogic()
 
-  const {
-    streamedText,
-    isStreaming,
-    turnsListReference,
-    handleDeleteCurrentSession,
-    onSendInstruction
-  } = useChatHistoryLogic({
-    currentSessionId,
-    setSessionDetail: setSessionDetail as unknown as (data: unknown) => void
+  const { handleDeleteCurrentSession } = useChatHistoryHandlers({
+    currentSessionId
   })
+
+  const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
+    useChatHistoryLogic({
+      currentSessionId,
+      setSessionDetail: setSessionDetail as unknown as (data: unknown) => void
+    })
 
   return (
     <div className={appContainer}>
@@ -79,7 +79,6 @@ export const ChatHistoryPage = (): JSX.Element => {
           <ChatHistoryFooter
             currentSessionId={currentSessionId}
             onSendInstruction={onSendInstruction}
-            refreshSessions={onRefresh}
             isStreaming={isStreaming}
           />
         </div>

@@ -1,16 +1,9 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-  useCallback,
-  type RefObject
-} from 'react'
+import { useState, useEffect, useRef, useCallback, type RefObject } from 'react'
 
 import { useToast } from '@/components/organisms/Toast/hooks/useToast'
-import { API_BASE_URL } from '@/lib/api/client'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { getSession } from '@/lib/api/session/getSession'
+import { streamInstruction } from '@/lib/api/session/streamInstruction'
 
 type SessionDetailCache = {
   [sessionId: string]: {
@@ -20,12 +13,6 @@ type SessionDetailCache = {
 }
 
 const SESSION_DETAIL_CACHE_TTL = 30000 // 30秒
-
-type StreamingFetchOptions = {
-  method?: string
-  headers?: HeadersInit
-  body?: BodyInit | null
-}
 
 type ChatStreamingProperties = {
   currentSessionId: string | null
@@ -86,30 +73,9 @@ export const useChatStreaming = ({
     []
   )
 
-  // Streaming options
-  const memoizedStreamingOptions = useMemo((): StreamingFetchOptions | undefined => {
-    if (!streamingTrigger) return undefined
-
-    return {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ instruction: streamingTrigger.instruction })
-    }
-  }, [streamingTrigger])
-
-  const streamingUrl = useMemo(
-    (): string | null =>
-      streamingTrigger
-        ? `${API_BASE_URL}/session/${streamingTrigger.sessionId}/instruction`
-        : null,
-    [streamingTrigger]
-  )
-
   // Streaming fetch effect (merged from useStreamingFetch)
   useEffect((): (() => void) => {
-    if (!streamingUrl) {
+    if (!streamingTrigger) {
       setStreamedText('')
       if (controllerReference.current) {
         controllerReference.current.abort()
@@ -133,21 +99,12 @@ export const useChatStreaming = ({
       let accum = ''
 
       try {
-        const response = await fetch(streamingUrl, {
-          ...memoizedStreamingOptions,
+        const stream = await streamInstruction(streamingTrigger.sessionId, {
+          instruction: streamingTrigger.instruction,
           signal
         })
 
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.message || `HTTP Error: ${response.status}`)
-        }
-
-        if (!response.body) {
-          throw new Error('Response body is empty.')
-        }
-
-        const reader = response.body.getReader()
+        const reader = stream.getReader()
         const decoder = new TextDecoder()
         let done = false
 
@@ -208,8 +165,7 @@ export const useChatStreaming = ({
       }
     }
   }, [
-    streamingUrl,
-    memoizedStreamingOptions,
+    streamingTrigger,
     currentSessionId,
     setSessionDetail,
     getSessionDetailFromCache,

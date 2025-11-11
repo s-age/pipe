@@ -1,8 +1,7 @@
 import unittest
 
-from pydantic import ValidationError
-
 from pipe.web.requests.sessions.edit_turn import EditTurnRequest
+from pydantic import ValidationError
 
 
 class TestEditTurnRequest(unittest.TestCase):

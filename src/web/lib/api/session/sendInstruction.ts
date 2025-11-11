@@ -7,7 +7,7 @@ export type SendInstructionRequest = {
 export const sendInstruction = async (
   sessionId: string,
   instruction: string
-): Promise<unknown> =>
-  client.post<unknown>(`/session/${sessionId}/instruction`, {
+): Promise<{ message: string }> =>
+  client.post<{ message: string }>(`/session/${sessionId}/instruction`, {
     body: { instruction }
   })

@@ -211,7 +211,7 @@ class TestAppApi(unittest.TestCase):
         """Tests that empty content is rejected."""
         session_id = "sid"
         turn_index = 0
-        
+
         # Test empty content
         payload = {"content": ""}
         response = self.client.patch(
@@ -221,7 +221,7 @@ class TestAppApi(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn("cannot be empty", response.get_json()["message"].lower())
-        
+
         # Test whitespace-only content
         payload = {"content": "   "}
         response = self.client.patch(
@@ -236,7 +236,7 @@ class TestAppApi(unittest.TestCase):
         """Tests that empty instruction is rejected."""
         session_id = "sid"
         turn_index = 0
-        
+
         # Test empty instruction
         payload = {"instruction": ""}
         response = self.client.patch(
@@ -246,7 +246,7 @@ class TestAppApi(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn("cannot be empty", response.get_json()["message"].lower())
-        
+
         # Test whitespace-only instruction
         payload = {"instruction": "   \n\t  "}
         response = self.client.patch(

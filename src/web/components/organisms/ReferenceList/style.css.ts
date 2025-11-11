@@ -8,7 +8,7 @@ export const metaItem = style({
 
 export const metaItemLabel = style({
   display: 'block',
-  marginBottom: '5px',
+  marginRight: '4px',
   fontWeight: 'bold',
   color: colors.offWhite
 })
@@ -20,11 +20,14 @@ export const referencesList = style({
 })
 
 export const referenceItem = style({
-  marginBottom: '8px',
-  padding: '8px',
+  marginBottom: '20px',
+  padding: '12px',
   color: colors.offWhite,
   border: `1px solid ${colors.cyanAlt}`,
-  borderRadius: '4px'
+  borderRadius: '8px',
+  backgroundColor: colors.mediumBackground,
+  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+  transition: 'box-shadow 0.2s ease'
 })
 
 export const referenceControls = style({
@@ -38,7 +41,7 @@ export const referenceLabel = style({
   display: 'flex',
   alignItems: 'center',
   flexGrow: 1,
-  marginRight: '10px'
+  margin: '0 12px 12px 0'
 })
 
 export const referencePath = style({
@@ -91,10 +94,11 @@ export const persistButton = style({
 })
 
 export const lockIconStyle = style({
-  color: '#ccc',
+  color: colors.grayText,
+  transition: 'color 0.2s ease',
   selectors: {
     '&[data-locked="true"]': {
-      color: '#007bff'
+      color: colors.cyan
     }
   }
 })

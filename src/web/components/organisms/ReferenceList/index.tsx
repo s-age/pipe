@@ -1,9 +1,11 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
+import { useCallback } from 'react'
 
 import { Button } from '@/components/atoms/Button'
-import { Checkbox } from '@/components/atoms/Checkbox'
 import { Label } from '@/components/atoms/Label'
+import { ToggleSwitch } from '@/components/molecules/ToggleSwitch'
+import { Tooltip } from '@/components/molecules/Tooltip'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Reference } from '@/types/reference'
 
@@ -19,7 +21,6 @@ import {
   materialIcons,
   ttlControls,
   ttlValue,
-  referenceCheckboxMargin,
   lockIconStyle,
   persistButton,
   noItemsMessage
@@ -32,20 +33,45 @@ type ReferenceListProperties = {
   refreshSessions: () => Promise<void>
 }
 
+const ReferenceToggle = ({
+  index,
+  reference,
+  onToggle
+}: {
+  index: number
+  reference: Reference
+  onToggle: (index: number) => void
+}): JSX.Element => {
+  const handleChange = useCallback(() => {
+    onToggle(index)
+  }, [onToggle, index])
+
+  return (
+    <Tooltip content="Toggle reference enabled">
+      <ToggleSwitch
+        checked={!reference.disabled}
+        onChange={handleChange}
+        ariaLabel={`Toggle reference ${reference.path} enabled`}
+      />
+    </Tooltip>
+  )
+}
+
 export const ReferenceList = ({
   sessionDetail,
   currentSessionId,
   setSessionDetail: _setSessionDetail,
   refreshSessions
 }: ReferenceListProperties): JSX.Element => {
-  const { handleCheckboxChange, handlePersistToggle, handleTtlAction } =
-    useReferenceControls({ sessionDetail, currentSessionId, refreshSessions })
+  const { handlePersistToggle, handleTtlAction, toggleDisabled } = useReferenceControls(
+    { sessionDetail, currentSessionId, refreshSessions }
+  )
 
   if (!sessionDetail || sessionDetail.references.length === 0) {
     return (
       <div className={metaItem}>
         <Label className={metaItemLabel}>References:</Label>
-        <p className={noItemsMessage}>No references for this session.</p>
+        <p className={noItemsMessage}>No references yet. Add one to get started!</p>
       </div>
     )
   }
@@ -57,27 +83,30 @@ export const ReferenceList = ({
         {sessionDetail.references.map((reference: Reference, index: number) => (
           <li key={index} className={referenceItem}>
             <div className={referenceControls}>
-              <Label className={referenceLabel}>
-                <Checkbox
-                  checked={!reference.disabled}
-                  onChange={handleCheckboxChange}
-                  data-index={String(index)}
-                  className={referenceCheckboxMargin}
-                />
-                <Button
-                  kind="ghost"
-                  size="xsmall"
-                  className={persistButton}
-                  onClick={handlePersistToggle}
-                  data-index={String(index)}
+              <div className={referenceLabel}>
+                <Tooltip
+                  content={reference.persist ? 'Unlock reference' : 'Lock reference'}
                 >
-                  <span
-                    className={clsx(materialIcons, lockIconStyle)}
-                    data-locked={reference.persist}
+                  <Button
+                    kind="ghost"
+                    size="xsmall"
+                    className={persistButton}
+                    onClick={handlePersistToggle}
+                    data-index={String(index)}
+                    aria-label={
+                      reference.persist
+                        ? `Unlock reference ${reference.path}`
+                        : `Lock reference ${reference.path}`
+                    }
                   >
-                    {reference.persist ? 'lock' : 'lock_open'}
-                  </span>
-                </Button>
+                    <span
+                      className={clsx(materialIcons, lockIconStyle)}
+                      data-locked={reference.persist}
+                    >
+                      {reference.persist ? 'lock' : 'lock_open'}
+                    </span>
+                  </Button>
+                </Tooltip>
                 <span
                   data-testid="reference-path"
                   className={referencePath}
@@ -85,30 +114,41 @@ export const ReferenceList = ({
                 >
                   {reference.path}
                 </span>
-              </Label>
+              </div>
               <div className={ttlControls}>
-                <Button
-                  kind="primary"
-                  size="xsmall"
-                  onClick={handleTtlAction}
-                  data-index={String(index)}
-                  data-action="decrement"
-                >
-                  -
-                </Button>
+                <Tooltip content="Decrease TTL">
+                  <Button
+                    kind="primary"
+                    size="xsmall"
+                    onClick={handleTtlAction}
+                    data-index={String(index)}
+                    data-action="decrement"
+                    aria-label={`Decrease TTL for ${reference.path}`}
+                  >
+                    -
+                  </Button>
+                </Tooltip>
                 <span className={ttlValue}>
                   {reference.ttl !== null ? reference.ttl : 3}
                 </span>
-                <Button
-                  kind="primary"
-                  size="xsmall"
-                  onClick={handleTtlAction}
-                  data-index={String(index)}
-                  data-action="increment"
-                >
-                  +
-                </Button>
+                <Tooltip content="Increase TTL">
+                  <Button
+                    kind="primary"
+                    size="xsmall"
+                    onClick={handleTtlAction}
+                    data-index={String(index)}
+                    data-action="increment"
+                    aria-label={`Increase TTL for ${reference.path}`}
+                  >
+                    +
+                  </Button>
+                </Tooltip>
               </div>
+              <ReferenceToggle
+                index={index}
+                reference={reference}
+                onToggle={toggleDisabled}
+              />
             </div>
           </li>
         ))}

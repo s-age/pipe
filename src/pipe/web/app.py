@@ -168,7 +168,7 @@ def dispatch_action(
             ReferenceTtlEditAction,
         ),
         ("session/{session_id}/references", "PATCH", ReferencesEditAction),
-        ("session/{session_id}/turns/{turn_index}", "PATCH", TurnEditAction),
+        ("session/{session_id}/turn/{turn_index}", "PATCH", TurnEditAction),
         ("session/{session_id}/turns", "GET", SessionTurnsGetAction),
         ("session/{session_id}/turn/{turn_index}", "DELETE", TurnDeleteAction),
         ("session/{session_id}/fork/{fork_index}", "POST", SessionForkAction),
@@ -230,14 +230,6 @@ def start_session_form():
     )
 
 
-@app.route("/api/session/start", methods=["POST"])
-def create_new_session_api():
-    response_data, status_code = dispatch_action(
-        action="session/start", params={}, request_data=request
-    )
-    return jsonify(response_data), status_code
-
-
 @app.route("/api/v1/session/start", methods=["POST"])
 def create_new_session_api_v1():
     response_data, status_code = dispatch_action(
@@ -246,7 +238,7 @@ def create_new_session_api_v1():
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/raw", methods=["GET"])
+@app.route("/api/v1/session/<path:session_id>/raw", methods=["GET"])
 def get_session_raw_file(session_id):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/raw",
@@ -321,17 +313,6 @@ def view_session(session_id):
     )
 
 
-@app.route("/api/sessions", methods=["GET"])
-def get_sessions_api():
-    """Deprecated: Use /api/v1/session_tree instead."""
-    try:
-        sessions_collection = session_service.list_sessions()
-        sorted_sessions = sessions_collection.get_sorted_by_last_updated()
-        return jsonify({"sessions": sorted_sessions}), 200
-    except Exception as e:
-        return jsonify({"message": str(e)}), 500
-
-
 @app.route("/api/v1/session_tree", methods=["GET"])
 def get_session_tree_api():
     """Get session tree data (v1 API)."""
@@ -344,7 +325,7 @@ def get_session_tree_api():
         return jsonify({"message": str(e)}), 500
 
 
-@app.route("/api/session/<path:session_id>", methods=["GET", "DELETE"])
+@app.route("/api/v1/session/<path:session_id>", methods=["GET", "DELETE"])
 def session_api(session_id):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}",
@@ -356,7 +337,9 @@ def session_api(session_id):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/turn/<int:turn_index>", methods=["DELETE"])
+@app.route(
+    "/api/v1/session/<path:session_id>/turn/<int:turn_index>", methods=["DELETE"]
+)
 def delete_turn_api(session_id, turn_index):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/turn/{turn_index}",
@@ -368,10 +351,10 @@ def delete_turn_api(session_id, turn_index):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/turns/<int:turn_index>", methods=["PATCH"])
+@app.route("/api/v1/session/<path:session_id>/turn/<int:turn_index>", methods=["PATCH"])
 def edit_turn_api(session_id, turn_index):
     response_data, status_code = dispatch_action(
-        action=f"session/{session_id}/turns/{turn_index}",
+        action=f"session/{session_id}/turn/{turn_index}",
         params={"session_id": session_id, "turn_index": turn_index},
         request_data=request,
     )
@@ -380,7 +363,7 @@ def edit_turn_api(session_id, turn_index):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/meta", methods=["PATCH"])
+@app.route("/api/v1/session/<path:session_id>/meta", methods=["PATCH"])
 def edit_session_meta_api(session_id):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/meta",
@@ -390,7 +373,9 @@ def edit_session_meta_api(session_id):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/hyperparameters", methods=["PATCH", "POST"])
+@app.route(
+    "/api/v1/session/<path:session_id>/hyperparameters", methods=["PATCH", "POST"]
+)
 def edit_hyperparameters_api(session_id):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/hyperparameters",
@@ -400,7 +385,7 @@ def edit_hyperparameters_api(session_id):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/hyperparameters", methods=["OPTIONS"])
+@app.route("/api/v1/session/<path:session_id>/hyperparameters", methods=["OPTIONS"])
 def edit_hyperparameters_options(session_id):
     from flask import make_response
 
@@ -414,7 +399,7 @@ def edit_hyperparameters_options(session_id):
 
 
 @app.route(
-    "/api/session/<path:session_id>/multi-step-reasoning", methods=["PATCH", "POST"]
+    "/api/v1/session/<path:session_id>/multi-step-reasoning", methods=["PATCH", "POST"]
 )
 def edit_multi_step_reasoning_api(session_id):
     response_data, status_code = dispatch_action(
@@ -425,7 +410,9 @@ def edit_multi_step_reasoning_api(session_id):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/multi-step-reasoning", methods=["OPTIONS"])
+@app.route(
+    "/api/v1/session/<path:session_id>/multi-step-reasoning", methods=["OPTIONS"]
+)
 def edit_multi_step_reasoning_options(session_id):
     from flask import make_response
 
@@ -438,7 +425,7 @@ def edit_multi_step_reasoning_options(session_id):
     return resp
 
 
-@app.route("/api/session/<path:session_id>/todos", methods=["PATCH"])
+@app.route("/api/v1/session/<path:session_id>/todos", methods=["PATCH"])
 def edit_todos_api(session_id):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/todos",
@@ -448,7 +435,7 @@ def edit_todos_api(session_id):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/references", methods=["PATCH"])
+@app.route("/api/v1/session/<path:session_id>/references", methods=["PATCH"])
 def edit_references_api(session_id):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/references",
@@ -459,7 +446,7 @@ def edit_references_api(session_id):
 
 
 @app.route(
-    "/api/session/<path:session_id>/references/<int:reference_index>/persist",
+    "/api/v1/session/<path:session_id>/references/<int:reference_index>/persist",
     methods=["PATCH"],
 )
 def edit_reference_persist_api(session_id, reference_index):
@@ -472,7 +459,7 @@ def edit_reference_persist_api(session_id, reference_index):
 
 
 @app.route(
-    "/api/session/<path:session_id>/references/<int:reference_index>/ttl",
+    "/api/v1/session/<path:session_id>/references/<int:reference_index>/ttl",
     methods=["PATCH"],
 )
 def edit_reference_ttl_api(session_id, reference_index):
@@ -484,7 +471,7 @@ def edit_reference_ttl_api(session_id, reference_index):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/todos", methods=["DELETE"])
+@app.route("/api/v1/session/<path:session_id>/todos", methods=["DELETE"])
 def delete_todos_api(session_id):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/todos",
@@ -494,7 +481,7 @@ def delete_todos_api(session_id):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/fork/<int:fork_index>", methods=["POST"])
+@app.route("/api/v1/session/<path:session_id>/fork/<int:fork_index>", methods=["POST"])
 def fork_session_api(session_id, fork_index):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/fork/{fork_index}",
@@ -504,7 +491,7 @@ def fork_session_api(session_id, fork_index):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/instruction", methods=["POST"])
+@app.route("/api/v1/session/<path:session_id>/instruction", methods=["POST"])
 def send_instruction_api(session_id):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/instruction",
@@ -516,7 +503,7 @@ def send_instruction_api(session_id):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/session/<path:session_id>/turns", methods=["GET"])
+@app.route("/api/v1/session/<path:session_id>/turns", methods=["GET"])
 def get_session_turns_api(session_id):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/turns",
@@ -526,7 +513,7 @@ def get_session_turns_api(session_id):
     return jsonify(response_data), status_code
 
 
-@app.route("/api/settings", methods=["GET"])
+@app.route("/api/v1/settings", methods=["GET"])
 def get_settings_api():
     response_data, status_code = dispatch_action(
         action="settings", params={}, request_data=request
@@ -592,7 +579,7 @@ def dispatch_action_endpoint(action: str):
         params.update(request.args.to_dict())
 
         # For fork action, session_id is in the request body
-        if action.startswith("session/fork/") and request.method == "POST":
+        if action.startswith("v1/session/fork/") and request.method == "POST":
             try:
                 request_json = request.get_json()
                 if request_json and "session_id" in request_json:
@@ -600,6 +587,10 @@ def dispatch_action_endpoint(action: str):
             except Exception:
                 # Ignore if JSON body is not present or malformed for other actions
                 pass
+
+        # Remove 'v1/' prefix from action before dispatching to internal handler
+        if action.startswith("v1/"):
+            action = action[3:]
 
         if action.startswith("session/"):
             parts = action.split("/")

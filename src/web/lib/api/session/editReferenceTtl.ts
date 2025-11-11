@@ -10,7 +10,7 @@ export const editReferenceTtl = async (
   ttl: number
 ): Promise<{ message: string }> =>
   client.patch<{ message: string }>(
-    `/sessions/${sessionId}/references/${referenceIndex}/ttl`,
+    `/session/${sessionId}/references/${referenceIndex}/ttl`,
     {
       body: { ttl }
     }

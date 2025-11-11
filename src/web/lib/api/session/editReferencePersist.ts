@@ -10,7 +10,7 @@ export const editReferencePersist = async (
   persist: boolean
 ): Promise<{ message: string }> =>
   client.patch<{ message: string }>(
-    `/sessions/${sessionId}/references/${referenceIndex}/persist`,
+    `/session/${sessionId}/references/${referenceIndex}/persist`,
     {
       body: { persist }
     }

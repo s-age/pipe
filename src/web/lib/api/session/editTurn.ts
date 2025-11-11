@@ -5,6 +5,6 @@ export const editTurn = async (
   turnIndex: number,
   data: Record<string, unknown>
 ): Promise<{ message: string }> =>
-  client.patch<{ message: string }>(`/session/${sessionId}/turns/${turnIndex}`, {
+  client.patch<{ message: string }>(`/session/${sessionId}/turn/${turnIndex}`, {
     body: data
   })

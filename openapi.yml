@@ -143,512 +143,34 @@ paths:
 
   # Legacy Endpoints (Deprecated - use v1 instead)
 
-  # 1. セッション開始
-  /api/sessions/start: # リソースコレクションに対するアクションとして修正
-    post:
-      summary: Start a new session (DEPRECATED - use /api/v1/session/start)
-      deprecated: true
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StartSessionRequest'
-      responses:
-        '200':
-          description: Session created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  session_id:
-                    type: string
-        '422':
-          description: Validation error
-        '500':
-          description: Internal server error
 
-  # 2. 全セッション取得 (RESTful: 複数形)
-  /api/sessions:
-    get:
-      summary: Get all sessions (DEPRECATED - use /api/v1/session_tree)
-      deprecated: true
-      responses:
-        '200':
-          description: List of sessions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  sessions:
-                    type: array
-                    items:
-                      type: object # TODO: Define Session schema
-        '500':
-          description: Internal server error
 
-  # 3. 単一セッションの操作 (RESTful: 複数形 + ID)
-  /api/sessions/{session_id}:
-    get:
-      summary: Get a specific session
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session to retrieve
-      responses:
-        '200':
-          description: Session data
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  session:
-                    type: object # TODO: Define Session schema
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
-    delete:
-      summary: Delete a session
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session to delete
-      responses:
-        '200':
-          description: Session deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '500':
-          description: Internal server error
 
-  # 4. 特定ターンの削除 (RESTful: 複数形 + インデックス)
-  /api/sessions/{session_id}/turns/{turn_index}:
-    delete:
-      summary: Delete a specific turn from a session
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-        - in: path
-          name: turn_index
-          schema:
-            type: integer
-          required: true
-          description: The index of the turn to delete
-      responses:
-        '200':
-          description: Turn deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '400':
-          description: Turn index out of range
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
 
-    patch: # ターン全体の編集
-      summary: Edit a specific turn in a session
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-        - in: path
-          name: turn_index
-          schema:
-            type: integer
-          required: true
-          description: The index of the turn to edit
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object # Dynamic content, so just object
-      responses:
-        '200':
-          description: Turn updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '400':
-          description: No data provided or turn index out of range
-        '403':
-          description: Value error
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
 
-  # 5. メタデータの編集
-  /api/sessions/{session_id}/meta:
-    patch:
-      summary: Edit session metadata
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditSessionMetaRequest'
-      responses:
-        '200':
-          description: Session metadata updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '422':
-          description: Validation error
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
 
-  # 6. ToDoリストの編集と一括削除
-  /api/sessions/{session_id}/todos:
-    patch:
-      summary: Edit session todos (replace/update list)
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditTodosRequest'
-      responses:
-        '200':
-          description: Session todos updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '422':
-          description: Validation error
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
 
-    delete:
-      summary: Delete all todos from a session
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-      responses:
-        '200':
-          description: Todos deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
 
-  # 7. 参照リストの編集
-  /api/sessions/{session_id}/references:
-    patch:
-      summary: Edit session references (replace/update list)
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditReferencesRequest'
-      responses:
-        '200':
-          description: Session references updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '422':
-          description: Validation error
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
 
-  # 8. 個別参照のpersist状態編集 (YAML構造を修正し、パスを複数形に変更)
-  /api/sessions/{session_id}/references/{reference_index}/persist:
-    patch:
-      summary: Edit reference persist state
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-        - in: path
-          name: reference_index
-          schema:
-            type: integer
-          required: true
-          description: The index of the reference to edit
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditReferencePersistRequest'
-      responses:
-        '200':
-          description: Reference persist state updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '422':
-          description: Validation error
-        '404':
-          description: Session not found
-        '400':
-          description: Reference index out of range
-        '500':
-          description: Internal server error
 
-  # 9. 個別参照のTTL編集 (YAML構造を修正し、パスを複数形に変更)
-  /api/sessions/{session_id}/references/{reference_index}/ttl:
-    patch:
-      summary: Edit reference TTL
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-        - in: path
-          name: reference_index
-          schema:
-            type: integer
-          required: true
-          description: The index of the reference to edit
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditReferenceTtlRequest'
-      responses:
-        '200':
-          description: Reference TTL updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '422':
-          description: Validation error
-        '404':
-          description: Session not found
-        '400':
-          description: Reference index out of range
-        '500':
-          description: Internal server error
 
-  # 10. セッションのフォーク (パスを複数形に変更)
-  /api/session/{session_id}/fork/{fork_index}:
-    post:
-      summary: Fork a session from a specific turn
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session to fork
-        - in: path
-          name: fork_index
-          schema:
-            type: integer
-          required: true
-          description: The turn index to fork from
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              # ForkSessionRequestはsession_idをボディに持つように修正
-              $ref: '#/components/schemas/ForkSessionRequest'
-      responses:
-        '200':
-          description: Session Forked successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  new_session_id:
-                    type: string
-        '422':
-          description: Validation error
-        '404':
-          description: Session not found
-        '400':
-          description: Fork turn index out of range
-        '500':
-          description: Internal server error
 
-  # 11. インストラクション送信 (パスを複数形に変更)
-  /api/sessions/{session_id}/instruction:
-    post:
-      summary: Send an instruction to a session
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SendInstructionRequest'
-      responses:
-        '200':
-          description: Instruction sent successfully (streaming response)
-          content:
-            text/event-stream:
-              schema:
-                type: string
-        '400':
-          description: Too many tasks in processing pool
-        '422':
-          description: Validation error
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
 
-  # 12. ターン取得 (パスを複数形に変更)
-  /api/sessions/{session_id}/turns:
-    get:
-      summary: Get session turns
-      parameters:
-        - in: path
-          name: session_id
-          schema:
-            type: string
-          required: true
-          description: The ID of the session
-        - in: query
-          name: since
-          schema:
-            type: integer
-            default: 0
-          description: The index from which to retrieve turns
-      responses:
-        '200':
-          description: List of turns
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  turns:
-                    type: array
-                    items:
-                      type: object # TODO: Define Turn schema
-        '404':
-          description: Session not found
-        '500':
-          description: Internal server error
 
-  # 13. 設定の取得
-  /api/settings:
-    get:
-      summary: Get application settings
-      responses:
-        '200':
-          description: Application settings
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  settings:
-                    type: object # TODO: Define Settings schema
-        '500':
-          description: Internal server error
+
+
+
+
+
+
+
+
+
+
+
 
   # --- Singular form routes to match implementation in src/pipe/web/app.py ---
-  /api/session/start:
+  /api/v1/session/start:
     post:
       summary: Start a new session (singular path used by the Flask app)
       requestBody:
@@ -672,7 +194,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}:
+  /api/v1/session/{session_id}:
     get:
       summary: Get a specific session (singular path)
       parameters:
@@ -718,7 +240,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/turn/{turn_index}:
+  /api/v1/session/{session_id}/turn/{turn_index}:
     delete:
       summary: Delete a specific turn from a session (singular path)
       parameters:
@@ -751,7 +273,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/turns/{turn_index}:
+  /api/v1/session/{session_id}/turns/{turn_index}:
     patch:
       summary: Edit a specific turn in a session (singular path)
       parameters:
@@ -792,7 +314,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/meta:
+  /api/v1/session/{session_id}/meta:
     patch:
       summary: Edit session metadata (singular path)
       parameters:
@@ -825,7 +347,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/todos:
+  /api/v1/session/{session_id}/todos:
     patch:
       summary: Edit session todos (singular path)
       parameters:
@@ -881,7 +403,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/references:
+  /api/v1/session/{session_id}/references:
     patch:
       summary: Edit session references (singular path)
       parameters:
@@ -914,7 +436,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/references/{reference_index}/persist:
+  /api/v1/session/{session_id}/references/{reference_index}/persist:
     patch:
       summary: Edit reference persist state (singular path)
       parameters:
@@ -955,7 +477,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/references/{reference_index}/ttl:
+  /api/v1/session/{session_id}/references/{reference_index}/ttl:
     patch:
       summary: Edit reference TTL (singular path)
       parameters:
@@ -996,7 +518,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/hyperparameters:
+  /api/v1/session/{session_id}/hyperparameters:
     patch:
       summary: Edit only hyperparameters for a session (temperature, top_p/topP, top_k/topK)
       parameters:
@@ -1031,7 +553,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/fork/{fork_index}:
+  /api/v1/session/fork/{fork_index}:
     post:
       summary: Fork a session from a specific turn (singular path used by Flask app)
       parameters:
@@ -1069,7 +591,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/instruction:
+  /api/v1/session/{session_id}/instruction:
     post:
       summary: Send an instruction to a session (singular path)
       parameters:
@@ -1101,7 +623,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/session/{session_id}/turns:
+  /api/v1/session/{session_id}/turns:
     get:
       summary: Get session turns (singular path)
       parameters:

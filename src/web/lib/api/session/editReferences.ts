@@ -10,6 +10,6 @@ export const editReferences = async (
   sessionId: string,
   references: Reference[]
 ): Promise<{ message: string }> =>
-  client.patch<{ message: string }>(`/sessions/${sessionId}/references`, {
+  client.patch<{ message: string }>(`/session/${sessionId}/references`, {
     body: { references }
   })

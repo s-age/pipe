@@ -409,8 +409,8 @@ class TestAppApi(unittest.TestCase):
         session_id = "test_session_id"
 
         # Mock SessionTreeAction dependencies (uses self.mock_session_service)
-        self.mock_session_service.list_sessions.return_value \
-            .get_sorted_by_last_updated.return_value = [
+        mock_list_sessions = self.mock_session_service.list_sessions
+        mock_list_sessions.return_value.get_sorted_by_last_updated.return_value = [
             ["session1", {"purpose": "Test 1"}],
             ["session2", {"purpose": "Test 2"}],
         ]

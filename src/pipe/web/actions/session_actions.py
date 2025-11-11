@@ -6,7 +6,6 @@ from typing import Any
 
 from flask import Response, stream_with_context
 from pipe.web.actions.base_action import BaseAction
-from pipe.web.requests.sessions.fork_session import ForkSessionRequest
 from pipe.web.requests.sessions.send_instruction import SendInstructionRequest
 from pipe.web.requests.sessions.start_session import StartSessionRequest
 from pydantic import ValidationError

@@ -580,8 +580,6 @@ def dispatch_action_endpoint(action: str):
         params = dict(request.view_args or {})
         params.update(request.args.to_dict())
 
-
-
         # Remove 'v1/' prefix from action before dispatching to internal handler
         if action.startswith("v1/"):
             action = action[3:]

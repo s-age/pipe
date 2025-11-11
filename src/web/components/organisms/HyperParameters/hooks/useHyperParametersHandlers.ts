@@ -1,6 +1,5 @@
 import { useState, useCallback, useLayoutEffect } from 'react'
 
-import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useHyperParametersActions } from './useHyperParametersActions'
@@ -8,13 +7,13 @@ import { useHyperParametersActions } from './useHyperParametersActions'
 type UseSessionHyperparametersProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  onMetaSave?: (sessionId: string, meta: EditSessionMetaRequest) => void | Promise<void>
+  onSessionUpdate: (session: SessionDetail) => void
 }
 
 export const useHyperParametersHandlers = ({
   sessionDetail,
   currentSessionId,
-  onMetaSave
+  onSessionUpdate
 }: UseSessionHyperparametersProperties): {
   temperature: number
   setTemperature: React.Dispatch<React.SetStateAction<number>>
@@ -107,16 +106,18 @@ export const useHyperParametersHandlers = ({
 
     try {
       const result = await updateHyperparameters(currentSessionId, payload)
-
-      if (onMetaSave)
-        await onMetaSave(currentSessionId, {
-          hyperparameters: result.session.hyperparameters
-        })
+      onSessionUpdate(result.session)
     } finally {
       // end interaction on commit (whether success or failure)
       setIsInteracting(false)
     }
-  }, [currentSessionId, onMetaSave, temperature, sessionDetail, updateHyperparameters])
+  }, [
+    currentSessionId,
+    temperature,
+    sessionDetail,
+    updateHyperparameters,
+    onSessionUpdate
+  ])
 
   const handleTemperatureMouseDown = useCallback((): void => {
     setIsInteracting(true)
@@ -129,15 +130,11 @@ export const useHyperParametersHandlers = ({
 
     try {
       const result = await updateHyperparameters(currentSessionId, payload)
-
-      if (onMetaSave)
-        await onMetaSave(currentSessionId, {
-          hyperparameters: result.session.hyperparameters
-        })
+      onSessionUpdate(result.session)
     } finally {
       setIsInteracting(false)
     }
-  }, [currentSessionId, onMetaSave, topP, sessionDetail, updateHyperparameters])
+  }, [currentSessionId, topP, sessionDetail, updateHyperparameters, onSessionUpdate])
 
   const handleTopPMouseDown = useCallback((): void => {
     setIsInteracting(true)
@@ -150,15 +147,11 @@ export const useHyperParametersHandlers = ({
 
     try {
       const result = await updateHyperparameters(currentSessionId, payload)
-
-      if (onMetaSave)
-        await onMetaSave(currentSessionId, {
-          hyperparameters: result.session.hyperparameters
-        })
+      onSessionUpdate(result.session)
     } finally {
       setIsInteracting(false)
     }
-  }, [currentSessionId, onMetaSave, topK, sessionDetail, updateHyperparameters])
+  }, [currentSessionId, topK, sessionDetail, updateHyperparameters, onSessionUpdate])
 
   const handleTopKMouseDown = useCallback((): void => {
     setIsInteracting(true)

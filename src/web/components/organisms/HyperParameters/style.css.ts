@@ -6,11 +6,17 @@ export const metaItem = style({
 
 export const hyperparametersControl = style({
   display: 'flex',
-  justifyContent: 'space-between',
   alignItems: 'center',
-  marginBottom: '10px'
+  marginBottom: '10px',
+  gap: '16px'
+})
+
+export const labelContainer = style({
+  flex: 1,
+  textAlign: 'center'
 })
 
 export const sliderContainer = style({
-  flex: 1
+  width: '120px',
+  flexShrink: 0
 })

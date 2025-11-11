@@ -72,7 +72,7 @@ export const SessionMeta = ({
             <HyperParameters
               sessionDetail={sessionDetail}
               currentSessionId={currentSessionId}
-              onRefresh={onRefresh}
+              onSessionUpdate={setSessionDetail}
             />
 
             <TodoList

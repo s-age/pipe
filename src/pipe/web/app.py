@@ -580,15 +580,7 @@ def dispatch_action_endpoint(action: str):
         params = dict(request.view_args or {})
         params.update(request.args.to_dict())
 
-        # For fork action, session_id is in the request body
-        if action.startswith("v1/session/fork/") and request.method == "POST":
-            try:
-                request_json = request.get_json()
-                if request_json and "session_id" in request_json:
-                    params["session_id"] = request_json["session_id"]
-            except Exception:
-                # Ignore if JSON body is not present or malformed for other actions
-                pass
+
 
         # Remove 'v1/' prefix from action before dispatching to internal handler
         if action.startswith("v1/"):

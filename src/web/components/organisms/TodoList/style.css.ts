@@ -20,6 +20,7 @@ export const todoItem = style({
 export const todoCheckboxLabel = style({
   cursor: 'pointer',
   display: 'flex',
+  color: colors.offWhite,
   alignItems: 'center',
   flexGrow: '1'
 })

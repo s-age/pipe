@@ -3,25 +3,27 @@ import React from 'react'
 import { Label } from '@/components/atoms/Label'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { Slider } from '@/components/molecules/Slider'
-import { useSessionMetaActions } from '@/components/organisms/SessionMeta/hooks/useSessionMetaActions'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useHyperParametersHandlers } from './hooks/useHyperParametersHandlers'
-import { metaItem, hyperparametersControl, sliderContainer } from './style.css'
+import {
+  metaItem,
+  hyperparametersControl,
+  sliderContainer,
+  labelContainer
+} from './style.css'
 
 type HyperParametersProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  onRefresh: () => Promise<void>
+  onSessionUpdate: (session: SessionDetail) => void
 }
 
 export const HyperParameters = ({
   sessionDetail,
   currentSessionId,
-  onRefresh
+  onSessionUpdate
 }: HyperParametersProperties): React.JSX.Element => {
-  useSessionMetaActions({ onRefresh })
-
   const {
     temperature,
     setTemperature,
@@ -38,11 +40,7 @@ export const HyperParameters = ({
   } = useHyperParametersHandlers({
     sessionDetail,
     currentSessionId,
-    // Return the onRefresh promise so the handlers can await the canonical
-    // refresh and keep `isInteracting` true until the server state is
-    // reflected. This prevents an intermediate overwrite from the stale
-    // `sessionDetail` while a background refresh is in-flight.
-    onMetaSave: (_id, _meta) => onRefresh()
+    onSessionUpdate
   })
 
   return (
@@ -51,7 +49,9 @@ export const HyperParameters = ({
         {() => (
           <div>
             <div className={hyperparametersControl}>
-              <Label>Temperature:</Label>
+              <div className={labelContainer}>
+                <Label>Temperature:</Label>
+              </div>
               <div className={sliderContainer}>
                 <Slider
                   min={0}
@@ -61,18 +61,21 @@ export const HyperParameters = ({
                   onChange={setTemperature}
                   onMouseDown={handleTemperatureMouseDown}
                   onMouseUp={handleTemperatureMouseUp}
+                  tabIndex={-1}
                 />
               </div>
             </div>
 
             <div className={hyperparametersControl}>
-              <Label>Top P:</Label>
+              <div className={labelContainer}>
+                <Label>Top P:</Label>
+              </div>
               <div className={sliderContainer}>
                 <Slider
                   min={0}
                   max={1}
                   step={0.1}
-                  value={topP}
+                  defaultValue={topP}
                   onChange={setTopP}
                   onMouseDown={handleTopPMouseDown}
                   onMouseUp={handleTopPMouseUp}
@@ -81,13 +84,15 @@ export const HyperParameters = ({
             </div>
 
             <div className={hyperparametersControl}>
-              <Label>Top K:</Label>
+              <div className={labelContainer}>
+                <Label>Top K:</Label>
+              </div>
               <div className={sliderContainer}>
                 <Slider
                   min={1}
                   max={50}
                   step={1}
-                  value={topK}
+                  defaultValue={topK}
                   onChange={setTopK}
                   onMouseDown={handleTopKMouseDown}
                   onMouseUp={handleTopKMouseUp}

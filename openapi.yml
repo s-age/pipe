@@ -577,10 +577,16 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/session/fork/{fork_index}:
+  /api/v1/session/{session_id}/fork/{fork_index}:
     post:
       summary: Fork a session from a specific turn (singular path used by Flask app)
       parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session to fork
         - in: path
           name: fork_index
           schema:
@@ -588,14 +594,11 @@ paths:
           required: true
           description: The turn index to fork from
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               type: object
-              properties:
-                session_id:
-                  type: string
       responses:
         '200':
           description: Session forked successfully

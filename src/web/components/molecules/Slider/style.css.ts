@@ -3,18 +3,20 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '@/styles/colors.css'
 
 export const container = style({
-  display: 'inline-flex',
-  flexDirection: 'column',
-  gap: '6px',
-  width: '100%'
+  position: 'relative',
+  width: '100%',
+  height: 48
 })
 
 export const label = style({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
+  position: 'absolute',
+  top: '0',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
   fontSize: '12px',
-  color: 'var(--text-muted, #666)'
+  color: colors.offWhite,
+  pointerEvents: 'none',
+  zIndex: 1
 })
 
 export const valueLabel = style({
@@ -24,12 +26,12 @@ export const valueLabel = style({
 export const trackWrap = style({
   position: 'relative',
   width: '100%',
-  height: 36
+  height: 48
 })
 
 export const svg = style({
   width: '100%',
-  height: 36,
+  height: 48,
   display: 'block'
 })
 

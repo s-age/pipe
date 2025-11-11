@@ -251,14 +251,16 @@ class SessionForkAction(BaseAction):
             return {"message": "fork_index must be an integer"}, 400
 
         try:
-            request_data = ForkSessionRequest(**self.request_data.get_json())
-            session_id = request_data.session_id
+            session_id = self.params.get("session_id")
+            if not session_id:
+                return {"message": "session_id is required"}, 400
 
             new_session_id = session_service.fork_session(session_id, fork_index)
             if new_session_id:
                 return {"new_session_id": new_session_id}, 200
             else:
                 return {"message": "Failed to fork session."}, 500
+
         except ValidationError as e:
             return {"message": str(e)}, 422
         except FileNotFoundError:

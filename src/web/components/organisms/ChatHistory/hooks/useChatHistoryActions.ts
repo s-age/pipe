@@ -60,10 +60,11 @@ export const useChatHistoryActions = ({
 
   const forkSessionAction = useCallback(
     async (sessionId: string, forkIndex: number): Promise<void> => {
-      await forkSession(sessionId, forkIndex)
-      await refreshSession()
+      const response = await forkSession(sessionId, forkIndex)
+      // Navigate to the new session
+      window.location.href = `/session/${response.new_session_id}`
     },
-    [refreshSession]
+    []
   )
 
   const editTurnAction = useCallback(

@@ -6,14 +6,14 @@ import { getSettings } from '@/lib/api/settings/getSettings'
 import type { SessionOption } from '@/types/session'
 import type { Settings } from '@/types/settings'
 
-type UseStartSessionDataResult = {
+type UseStartSessionPageLifecycleResult = {
   sessionTree: SessionOption[]
   settings: Settings | null
   loading: boolean
   error: string | null
 }
 
-export const useStartSessionData = (): UseStartSessionDataResult => {
+export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResult => {
   const [sessionTree, setSessionTree] = useState<SessionOption[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [error, setError] = useState<string | null>(null)

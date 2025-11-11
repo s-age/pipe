@@ -1,8 +1,10 @@
 import type { JSX } from 'react'
+import { useRef, useCallback } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
+import { useSessionTreeLifecycle } from './hooks/useSessionTreeLifecycle'
 import { SessionItem } from './SessionItem'
 import { SessionTreeFooter } from './SessionTreeFooter'
 import { sessionListColumn, sessionListContainer } from './style.css'
@@ -20,6 +22,26 @@ export const SessionTree = ({
   selectSession
 }: SessionTreeProperties): JSX.Element => {
   const { handleNewChatClick } = useSessionTreeHandlers()
+  const sessionReferences = useRef<Map<string, HTMLLIElement>>(new Map())
+
+  // Handle scroll to selected session on mount and selection change
+  useSessionTreeLifecycle({
+    currentSessionId,
+    sessions,
+    sessionReferences
+  })
+
+  const setSessionReference = useCallback(
+    (sessionId: string) =>
+      (element: HTMLLIElement | null): void => {
+        if (element) {
+          sessionReferences.current.set(sessionId, element)
+        } else {
+          sessionReferences.current.delete(sessionId)
+        }
+      },
+    []
+  )
 
   return (
     <div className={sessionListColumn}>
@@ -37,6 +59,7 @@ export const SessionTree = ({
               session={session}
               currentSessionId={currentSessionId || ''}
               selectSession={selectSession}
+              ref={setSessionReference(session.session_id)}
             />
           )
         })}

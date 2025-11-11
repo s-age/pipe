@@ -106,7 +106,14 @@ export const Manual: Story = {
             </Fieldset>
 
             <div style={{ display: 'flex', gap: 8 }}>
-              <Button type="submit">Submit</Button>
+              <Button
+                type="submit"
+                onClick={(data: unknown): void => {
+                  console.log('RHF submit (via Form)', data)
+                }}
+              >
+                Submit
+              </Button>
               <Button type="button" kind="ghost">
                 Cancel
               </Button>
@@ -133,10 +140,6 @@ export const Manual: Story = {
         rating: 50
       }
 
-      const handleSubmit = (data: unknown): void => {
-        console.log('RHF submit (via Form)', data)
-      }
-
       return (
         <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 6 }}>
           <h3>With react-hook-form (Form + useFormContext)</h3>
@@ -146,7 +149,7 @@ export const Manual: Story = {
             other APIs.
           </p>
 
-          <Form onSubmit={handleSubmit} schema={schema} defaultValues={defaultValues}>
+          <Form schema={schema} defaultValues={defaultValues}>
             <InnerForm />
           </Form>
         </div>

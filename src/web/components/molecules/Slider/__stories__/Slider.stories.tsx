@@ -2,6 +2,7 @@ import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 import React, { useState } from 'react'
 
+import { Button } from '@/components/atoms/Button'
 import { Form } from '@/components/organisms/Form'
 
 import { Slider } from '../index'
@@ -39,11 +40,13 @@ export const Default: Story = {
 export const WithRHF: Story = {
   render: (): JSX.Element => {
     const Example = (): JSX.Element => (
-      <Form onSubmit={(data) => console.log('submit', data)}>
+      <Form>
         <div style={{ width: 360 }}>
           <Slider name="volume" defaultValue={25} min={0} max={100} />
         </div>
-        <button type="submit">Submit</button>
+        <Button type="submit" onClick={(data) => console.log('submit', data)}>
+          Submit
+        </Button>
       </Form>
     )
 

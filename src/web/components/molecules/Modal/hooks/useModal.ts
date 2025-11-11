@@ -17,5 +17,3 @@ export const useModal = (): {
 
   return { show, hide }
 }
-
-// named export already declared above

@@ -25,10 +25,12 @@ export const Default: Story = {
 export const WithRHF: Story = {
   render: (): JSX.Element => {
     const FormExample = (): JSX.Element => (
-      <Form onSubmit={(data) => console.log('submit', data)}>
+      <Form>
         <InputCheckbox name="apple" label="Apple" />
         <InputCheckbox name="banana" label="Banana" />
-        <button type="submit">Submit</button>
+        <button type="submit" onClick={(data) => console.log('submit', data)}>
+          Submit
+        </button>
       </Form>
     )
 

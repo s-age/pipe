@@ -4,8 +4,8 @@ import {} from 'react'
 import { useAppStore } from '@/stores/useAppStore'
 import type { ToastItem as ToastItemType } from '@/stores/useAppStore'
 
-import { useGroupedToasts } from './hooks/useGroupedToasts'
-import { useToastItem } from './hooks/useToastItem'
+import { useToastHandlers } from './hooks/useToastHandlers'
+import { useToastItemLifecycle } from './hooks/useToastItemLifecycle'
 import * as styles from './style.css'
 
 type Position =
@@ -36,7 +36,7 @@ const ToastItem = ({ item }: { item: ToastItemType }): JSX.Element => {
   const { removeToast } = useAppStore()
 
   const { handleMouseEnter, handleMouseLeave, handleClose, exiting, statusClass } =
-    useToastItem(item, removeToast)
+    useToastItemLifecycle(item, removeToast)
 
   const statusClassName =
     statusClass === 'statusSuccess'
@@ -72,7 +72,7 @@ const ToastItem = ({ item }: { item: ToastItemType }): JSX.Element => {
 }
 
 export const Toasts = (): JSX.Element => {
-  const { grouped } = useGroupedToasts()
+  const { grouped } = useToastHandlers()
 
   const positionElements: JSX.Element[] = []
   for (const pos of allPositions) {

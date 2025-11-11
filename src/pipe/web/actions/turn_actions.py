@@ -56,6 +56,8 @@ class TurnDeleteAction(BaseAction):
 class TurnEditAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
         from pipe.web.app import session_service
+        from pipe.web.requests.sessions.edit_turn import EditTurnRequest
+        from pydantic import ValidationError
 
         session_id = self.params.get("session_id")
         turn_index = self.params.get("turn_index")
@@ -73,7 +75,15 @@ class TurnEditAction(BaseAction):
             if not new_data:
                 return {"message": "No data provided."}, 400
 
-            session_service.edit_turn(session_id, turn_index, new_data)
+            # Validate request using Pydantic model
+            try:
+                edit_request = EditTurnRequest(**new_data)
+                validated_data = edit_request.model_dump()
+            except ValidationError as e:
+                error_messages = [err["msg"] for err in e.errors()]
+                return {"message": "; ".join(error_messages)}, 400
+
+            session_service.edit_turn(session_id, turn_index, validated_data)
             return {
                 "message": f"Turn {turn_index + 1} from session {session_id} updated.",
             }, 200

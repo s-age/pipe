@@ -2,11 +2,17 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
+import { Button } from '@/components/atoms/Button'
+
 import { Form, useFormContext } from '../index'
 import { schema } from './schema'
 import type { FormData } from './schema'
 
-const MyFormContent = (): React.JSX.Element => {
+const MyFormContent = ({
+  handleSubmit
+}: {
+  handleSubmit: () => void
+}): React.JSX.Element => {
   const {
     register,
     formState: { errors }
@@ -18,19 +24,20 @@ const MyFormContent = (): React.JSX.Element => {
       {errors.name && <p data-testid="name-error">{errors.name.message}</p>}
       <input data-testid="email-input" type="email" {...register('email')} />
       {errors.email && <p data-testid="email-error">{errors.email.message}</p>}
-      <button type="submit" data-testid="submit-button">
+      <Button type="submit" data-testid="submit-button" onSubmit={handleSubmit}>
         Submit
-      </button>
+      </Button>
     </div>
   )
 }
 
 describe('Form', () => {
+  const handleSubmit = jest.fn()
+
   it('renders and submits successfully with valid data', async () => {
-    const handleSubmit = jest.fn()
     render(
-      <Form onSubmit={handleSubmit} resolver={zodResolver(schema)}>
-        <MyFormContent />
+      <Form resolver={zodResolver(schema)}>
+        <MyFormContent handleSubmit={handleSubmit} />
       </Form>
     )
 
@@ -56,10 +63,9 @@ describe('Form', () => {
   })
 
   it('shows validation errors with invalid data', async () => {
-    const handleSubmit = jest.fn()
     render(
-      <Form onSubmit={handleSubmit} resolver={zodResolver(schema)}>
-        <MyFormContent />
+      <Form resolver={zodResolver(schema)}>
+        <MyFormContent handleSubmit={handleSubmit} />
       </Form>
     )
 

@@ -12,7 +12,7 @@ const allPositions = [
   'bottom-right'
 ] as const
 
-export const useGroupedToasts = (): {
+export const useToastHandlers = (): {
   grouped: Record<string, ToastItemType[]>
 } => {
   const { state } = useAppStore()

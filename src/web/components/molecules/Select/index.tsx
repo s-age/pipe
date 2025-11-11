@@ -1,9 +1,10 @@
 import type { SelectHTMLAttributes, JSX } from 'react'
 import type { UseFormRegister } from 'react-hook-form'
 
-import type { SelectOption } from './hooks/useSelect'
 import { useSelect } from './hooks/useSelect'
-import { useSelectUI } from './hooks/useSelectUI'
+import type { SelectOption } from './hooks/useSelect'
+import { useSelectHandlers } from './hooks/useSelectHandlers'
+import { useSelectUI } from './hooks/useSelectLifecycle'
 import {
   selectStyle,
   trigger,
@@ -39,23 +40,35 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     selectedValue,
     isOpen,
     setIsOpen,
-    toggleOpen,
     query,
+    setQuery,
     listReference,
     highlightedIndex,
     setHighlightedIndex,
-    // React-friendly handlers from the hook
-    handleKeyDownReact,
-    handleSearchChange,
-    handleOptionClickReact,
-    handleMouseEnterReact,
-    handleMouseLeaveReact
+    setSelectedValue
   } = useSelect({
     register,
     name,
     options: options ?? [],
     defaultValue: rest.defaultValue as string | undefined,
     searchable
+  })
+
+  const {
+    toggleOpen,
+    handleKeyDownReact,
+    handleSearchChange,
+    handleOptionClickReact,
+    handleMouseEnterReact,
+    handleMouseLeaveReact
+  } = useSelectHandlers({
+    isOpen,
+    setIsOpen,
+    filteredOptions,
+    highlightedIndex,
+    setHighlightedIndex,
+    setSelectedValue,
+    setQuery
   })
 
   const { rootReference } = useSelectUI({

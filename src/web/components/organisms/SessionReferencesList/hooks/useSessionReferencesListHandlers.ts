@@ -2,19 +2,19 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useReferenceActions } from './useReferenceActions'
 
-type UseSessionReferencesListLogicProperties = {
+type UseSessionReferencesListHandlersProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   setSessionDetail: (data: SessionDetail | null) => void
   refreshSessions: () => Promise<void>
 }
 
-export const useSessionReferencesListLogic = ({
+export const useSessionReferencesListHandlers = ({
   sessionDetail,
   currentSessionId,
   setSessionDetail,
   refreshSessions
-}: UseSessionReferencesListLogicProperties): {
+}: UseSessionReferencesListHandlersProperties): {
   handleReferenceCheckboxChange: (index: number) => void
   handleReferencePersistToggle: (index: number) => void
   handleReferenceTtlChange: (index: number, action: 'increment' | 'decrement') => void

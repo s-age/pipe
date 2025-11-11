@@ -3,9 +3,9 @@ import type { JSX } from 'react'
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner'
 import { StartSessionForm } from '@/components/organisms/StartSessionForm'
-import { useSessionCreation } from '@/components/pages/StartSessionPage/hooks/useSessionCreation'
 
-import { useStartSessionData } from './hooks/useStartSessionData'
+import { useStartSessionPageHandlers } from './hooks/useStartSessionPageHandlers'
+import { useStartSessionPageLifecycle } from './hooks/useStartSessionPageLifecycle'
 import { pageContainer } from './style.css'
 
 export const StartSessionPage: () => JSX.Element = () => {
@@ -14,8 +14,8 @@ export const StartSessionPage: () => JSX.Element = () => {
     settings,
     loading,
     error: sessionDataError
-  } = useStartSessionData()
-  const { handleSubmit } = useSessionCreation()
+  } = useStartSessionPageLifecycle()
+  const { handleSubmit } = useStartSessionPageHandlers()
 
   const error = sessionDataError
 

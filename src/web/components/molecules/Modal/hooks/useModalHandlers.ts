@@ -1,5 +1,18 @@
 import { useCallback, useEffect } from 'react'
 
+// Module-level modal root creation. Keep it at module scope so it's created
+// once when the module is imported (avoids reading refs during render).
+const MODAL_ROOT_ID = 'modal-root'
+
+let modalRoot = document.getElementById(MODAL_ROOT_ID) as HTMLElement | null
+if (!modalRoot) {
+  modalRoot = document.createElement('div')
+  modalRoot.id = MODAL_ROOT_ID
+  document.body.appendChild(modalRoot)
+}
+
+export const getModalRoot = (): HTMLElement | null => modalRoot
+
 export const useModalHandlers = (
   open: boolean,
   onClose?: () => void
@@ -33,5 +46,3 @@ export const useModalHandlers = (
 
   return { onOverlayMouseDown, onContentMouseDown }
 }
-
-// prefer named exports (already a named export above)

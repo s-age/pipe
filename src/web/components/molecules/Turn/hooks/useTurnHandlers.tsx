@@ -1,9 +1,8 @@
-import { useCallback, useState, useRef } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
 
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { useModal } from '@/components/molecules/Modal/hooks/useModal'
-import { useTurnActions } from '@/components/organisms/ChatHistory/hooks/useTurnActions'
 import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import type { Turn } from '@/lib/api/session/getSession'
 
@@ -12,6 +11,14 @@ type UseTurnHandlersProperties = {
   index: number
   sessionId: string
   onRefresh: () => Promise<void>
+  deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
+  forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
+  editTurnAction: (
+    sessionId: string,
+    turnIndex: number,
+    newContent: string,
+    turn: Turn
+  ) => Promise<void>
 }
 
 export const useTurnHandlers = (
@@ -27,10 +34,16 @@ export const useTurnHandlers = (
   handleDelete: () => void
   handleSaveEdit: () => void
 } => {
-  const { turn, index, sessionId, onRefresh } = properties
+  const {
+    turn,
+    index,
+    sessionId,
+    onRefresh,
+    deleteTurnAction,
+    forkSessionAction,
+    editTurnAction
+  } = properties
   const { show, hide } = useModal()
-  const { deleteTurnAction, forkSessionAction, editTurnAction } =
-    useTurnActions(onRefresh)
 
   const modalIdReference = useRef<number | null>(null)
 
@@ -38,6 +51,15 @@ export const useTurnHandlers = (
   const [editedContent, setEditedContent] = useState<string>(
     turn.content ?? turn.instruction ?? ''
   )
+
+  // Reset editedContent when turn content changes (after refresh) and not in edit mode
+  useEffect(() => {
+    if (!isEditing) {
+      const newContent = turn.content ?? turn.instruction ?? ''
+
+      setEditedContent(newContent)
+    }
+  }, [turn.content, turn.instruction, isEditing])
 
   const toast = useToast()
 
@@ -94,11 +116,18 @@ export const useTurnHandlers = (
 
   const handleConfirmDelete = useCallback(async (): Promise<void> => {
     if (modalIdReference.current !== null) {
-      await deleteTurnAction(sessionId, index)
-      hide(modalIdReference.current)
-      modalIdReference.current = null
+      try {
+        await deleteTurnAction(sessionId, index)
+        await onRefresh()
+        toast.success('Turn deleted successfully')
+      } catch {
+        toast.failure('Failed to delete turn.')
+      } finally {
+        hide(modalIdReference.current)
+        modalIdReference.current = null
+      }
     }
-  }, [deleteTurnAction, sessionId, index, hide])
+  }, [deleteTurnAction, sessionId, index, onRefresh, toast, hide])
 
   const handleCancelDelete = useCallback((): void => {
     if (modalIdReference.current !== null) {
@@ -121,10 +150,26 @@ export const useTurnHandlers = (
   }, [show, handleConfirmDelete, handleCancelDelete])
 
   const handleSaveEdit = useCallback(async (): Promise<void> => {
-    console.log(`Saving turn ${index} with new content: ${editedContent}`)
-    await editTurnAction(sessionId, index, editedContent)
-    setIsEditing(false)
-  }, [index, editedContent, sessionId, editTurnAction])
+    // Client-side validation
+    if (editedContent.trim().length <= 0) {
+      toast.failure('Content cannot be empty')
+
+      return
+    }
+
+    try {
+      await editTurnAction(sessionId, index, editedContent, turn)
+      await onRefresh()
+
+      setIsEditing(false)
+      setEditedContent(turn.content ?? turn.instruction ?? '')
+      toast.success('Turn updated successfully')
+    } catch (error) {
+      toast.failure(
+        `Failed to save changes: ${error instanceof Error ? error.message : String(error)}  `
+      )
+    }
+  }, [editTurnAction, sessionId, index, editedContent, turn, toast, onRefresh])
 
   return {
     isEditing,

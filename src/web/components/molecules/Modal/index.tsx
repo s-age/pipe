@@ -2,8 +2,7 @@ import type { JSX } from 'react'
 import React from 'react'
 import { createPortal } from 'react-dom'
 
-import { useModalHandlers } from './hooks/useModalHandlers'
-import { useModalRoot } from './hooks/useModalRoot'
+import { getModalRoot, useModalHandlers } from './hooks/useModalHandlers'
 import * as styles from './style.css'
 
 type ModalProperties = {
@@ -17,7 +16,7 @@ export const Modal = ({
   onClose,
   children
 }: ModalProperties): JSX.Element | null => {
-  const modalRoot = useModalRoot()
+  const modalRoot = getModalRoot()
 
   const { onOverlayMouseDown, onContentMouseDown } = useModalHandlers(open, onClose)
 

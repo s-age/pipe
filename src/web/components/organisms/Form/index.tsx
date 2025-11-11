@@ -1,43 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { ReactNode } from 'react'
-import React, { createContext, useContext } from 'react'
-import type {
-  UseFormProps,
-  UseFormReturn,
-  FieldValues,
-  Resolver
-} from 'react-hook-form'
+import React from 'react'
+import { useForm } from 'react-hook-form'
+import type { UseFormProps, FieldValues, Resolver } from 'react-hook-form'
 import type { ZodTypeAny } from 'zod'
 
-import { useFormMethods } from './hooks/useFormMethods'
+import { FormContext } from './FormContext'
+import type { FormMethods } from './FormContext'
 import { formStyle } from './style.css'
 
-export type FormMethods<TFieldValues extends FieldValues = FieldValues> =
-  UseFormReturn<TFieldValues>
-
-const FormContext = createContext<FormMethods<FieldValues> | undefined>(undefined)
-
-export const useFormContext = <
-  TFieldValues extends FieldValues = FieldValues
->(): FormMethods<TFieldValues> => {
-  const context = useContext(FormContext)
-  if (context === undefined) {
-    throw new Error('useFormContext must be used within a Form')
-  }
-
-  return context as FormMethods<TFieldValues>
-}
-
-// A safe variant that returns undefined when no provider is present.
-export const useOptionalFormContext = <
-  TFieldValues extends FieldValues = FieldValues
->(): FormMethods<TFieldValues> | undefined =>
-  useContext(FormContext) as FormMethods<TFieldValues> | undefined
+export { useFormContext, useOptionalFormContext } from './FormContext'
+export type { FormMethods } from './FormContext'
 
 export type FormProperties<TFieldValues extends FieldValues = FieldValues> =
   UseFormProps<TFieldValues> & {
     children: ReactNode
-    onSubmit: (data: TFieldValues) => void
     /**
      * Optional Zod schema. When provided and `resolver` is not supplied,
      * the Form will create a zodResolver(schema) internally.
@@ -47,7 +24,6 @@ export type FormProperties<TFieldValues extends FieldValues = FieldValues> =
 
 export const Form = <TFieldValues extends FieldValues = FieldValues>({
   children,
-  onSubmit,
   schema,
   resolver,
   ...properties
@@ -62,7 +38,7 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
   // Create form methods here and provide them to descendants.
   // Calling `useFormContext` here would fail because the Provider
   // wrapping the `<form>` would not yet be in scope for this hook.
-  const methods = useFormMethods<TFieldValues>({
+  const methods = useForm<TFieldValues>({
     ...(properties as UseFormProps<TFieldValues>),
     resolver: finalResolver
   } as UseFormProps<TFieldValues>)
@@ -82,9 +58,16 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [(properties as UseFormProps<TFieldValues>)?.defaultValues])
 
+  const handleFormSubmit = React.useCallback(
+    (event: React.FormEvent<HTMLFormElement>): void => {
+      event.preventDefault()
+    },
+    []
+  )
+
   return (
     <FormContext.Provider value={methods as FormMethods<FieldValues>}>
-      <form className={formStyle} onSubmit={methods.handleSubmit(onSubmit)}>
+      <form className={formStyle} onSubmit={handleFormSubmit}>
         {children}
       </form>
     </FormContext.Provider>

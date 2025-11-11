@@ -5,7 +5,7 @@ import { Header } from '@/components/organisms/Header'
 import { SessionMeta } from '@/components/organisms/SessionMeta'
 import { SessionTree } from '@/components/organisms/SessionTree'
 
-import { useChatHistoryPageLogic } from './hooks/useChatHistoryPageLogic.ts'
+import { useChatHistoryPageHandlers } from './hooks/useChatHistoryPageHandlers'
 import {
   appContainer,
   mainContent,
@@ -23,7 +23,7 @@ export const ChatHistoryPage = (): JSX.Element => {
     selectSession,
     setSessionDetail,
     onRefresh
-  } = useChatHistoryPageLogic()
+  } = useChatHistoryPageHandlers()
 
   return (
     <div className={appContainer}>
@@ -43,7 +43,6 @@ export const ChatHistoryPage = (): JSX.Element => {
             currentSessionId={currentSessionId}
             expertMode={expertMode}
             setSessionDetail={setSessionDetail}
-            onRefresh={onRefresh}
           />
         </div>
 

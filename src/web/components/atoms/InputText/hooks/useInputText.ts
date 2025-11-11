@@ -38,5 +38,3 @@ export const useInputText = ({
 
   return { registerProperties }
 }
-
-// Default export removed — use named export `useInputText`

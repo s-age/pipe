@@ -8,6 +8,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Reference } from '@/types/reference'
 
 import { useSessionReferencesHandlers } from './hooks/useSessionReferencesHandlers'
+import { useSessionReferencesListHandlers } from './hooks/useSessionReferencesListHandlers'
 import {
   metaItem,
   metaItemLabel,
@@ -24,7 +25,6 @@ import {
   persistButton,
   noItemsMessage
 } from './style.css'
-import { useSessionReferencesListLogic } from './useSessionReferencesListLogic'
 
 type SessionReferencesListProperties = {
   sessionDetail: SessionDetail | null
@@ -43,7 +43,7 @@ export const SessionReferencesList = ({
     handleReferenceCheckboxChange,
     handleReferencePersistToggle,
     handleReferenceTtlChange
-  } = useSessionReferencesListLogic({
+  } = useSessionReferencesListHandlers({
     sessionDetail,
     currentSessionId,
     setSessionDetail,

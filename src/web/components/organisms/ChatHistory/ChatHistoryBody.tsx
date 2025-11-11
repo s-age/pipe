@@ -4,6 +4,7 @@ import { Heading } from '@/components/atoms/Heading'
 import { TurnComponent as Turn } from '@/components/molecules/Turn'
 import type { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
 
+import { ChatHistoryTurn } from './ChatHistoryTurn'
 import {
   turnsColumn,
   turnsListSection,
@@ -45,24 +46,30 @@ export const ChatHistoryBody = ({
   return (
     <div className={`${panel} ${panelBottomSpacing}`}>
       <section className={turnsListSection} ref={turnsListReference}>
-        {((): JSX.Element[] => {
-          const nodes: JSX.Element[] = []
-          for (let i = 0; i < sessionDetail.turns.length; i += 1) {
-            const turn: TurnType = sessionDetail.turns[i]
-            nodes.push(
-              <Turn
-                key={i}
-                turn={turn}
-                index={i}
-                sessionId={currentSessionId}
-                expertMode={expertMode}
-                onRefresh={onRefresh}
-              />
+        {sessionDetail.turns.map((turn: TurnType, i: number) => {
+          // Use a composite key that includes content/instruction to force remount on edit
+          // Simple hash function to keep key reasonable length
+          const content = turn.content ?? turn.instruction ?? ''
+          const simpleHash = content
+            .split('')
+            .reduce(
+              (accumulator, char) =>
+                ((accumulator << 5) - accumulator + char.charCodeAt(0)) | 0,
+              0
             )
-          }
+          const key = `${turn.timestamp}-${i}-${simpleHash}`
 
-          return nodes
-        })()}
+          return (
+            <ChatHistoryTurn
+              key={key}
+              turn={turn}
+              index={i}
+              currentSessionId={currentSessionId}
+              expertMode={expertMode}
+              onRefresh={onRefresh}
+            />
+          )
+        })}
         {isStreaming && streamedText && (
           <Turn
             key="streaming-response"
@@ -72,9 +79,7 @@ export const ChatHistoryBody = ({
               timestamp: new Date().toISOString()
             }}
             index={sessionDetail.turns.length}
-            sessionId={currentSessionId}
             expertMode={expertMode}
-            onRefresh={onRefresh}
             isStreaming={isStreaming}
           />
         )}

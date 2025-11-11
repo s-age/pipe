@@ -1,27 +1,26 @@
 import React from 'react'
 
-import { useSessionMetaSaver } from '@/components/organisms/SessionMeta/useSessionMetaSaver'
+import { useSessionMetaActions } from '@/components/organisms/SessionMeta/hooks/useSessionMetaActions'
 import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
-type UseSessionMetaFormProperties = {
+type UseSessionMetaHandlersProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   onRefresh: () => Promise<void>
 }
-export const useSessionMetaForm = ({
+export const useSessionMetaHandlers = ({
   sessionDetail,
   currentSessionId,
   onRefresh
-}: UseSessionMetaFormProperties): {
+}: UseSessionMetaHandlersProperties): {
   defaultValues: Record<string, unknown>
   onSubmit: (data: EditSessionMetaRequest) => void
   isSubmitting: boolean
   saved: boolean
 } => {
-  const { handleMetaSave } = useSessionMetaSaver({ onRefresh })
+  const { handleMetaSave } = useSessionMetaActions({ onRefresh })
 
-  console.log({ sessionDetail })
   const defaultValues = React.useMemo(
     () => ({
       purpose: sessionDetail?.purpose ?? '',

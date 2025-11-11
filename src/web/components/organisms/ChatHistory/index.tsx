@@ -5,8 +5,9 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import { ChatHistoryBody } from './ChatHistoryBody'
 import { ChatHistoryFooter } from './ChatHistoryFooter'
 import { ChatHistoryHeader } from './ChatHistoryHeader'
+import { useChatHistoryActions } from './hooks/useChatHistoryActions'
 import { useChatHistoryHandlers } from './hooks/useChatHistoryHandlers'
-import { useChatHistoryLogic } from './hooks/useChatHistoryLogic'
+import { useChatStreaming } from './hooks/useChatStreaming'
 import { chatRoot } from './style.css'
 
 type ChatHistoryProperties = {
@@ -14,7 +15,6 @@ type ChatHistoryProperties = {
   currentSessionId: string | null
   expertMode: boolean
   setSessionDetail: (data: SessionDetail | null) => void
-  onRefresh: () => Promise<void>
 }
 
 // Keep a default export for backward compatibility (renders the full composed view)
@@ -22,20 +22,20 @@ export const ChatHistory = ({
   sessionDetail,
   currentSessionId,
   expertMode,
-  setSessionDetail,
-  onRefresh
+  setSessionDetail
 }: ChatHistoryProperties): JSX.Element => {
-  const { handleDeleteCurrentSession } = useChatHistoryHandlers({
-    currentSessionId
-  })
-
   const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
-    useChatHistoryLogic({
+    useChatStreaming({
       currentSessionId,
       // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
       setSessionDetail: setSessionDetail as unknown as (data: unknown) => void
     })
-  // scrolling handled in useChatHistoryLogic
+
+  const { handleDeleteCurrentSession } = useChatHistoryHandlers({
+    currentSessionId
+  })
+
+  const { refreshSession } = useChatHistoryActions({ currentSessionId })
 
   return (
     <div className={chatRoot}>
@@ -50,7 +50,7 @@ export const ChatHistory = ({
         isStreaming={isStreaming}
         streamedText={streamedText}
         turnsListReference={turnsListReference}
-        onRefresh={onRefresh}
+        onRefresh={refreshSession}
       />
       <ChatHistoryFooter
         currentSessionId={currentSessionId}

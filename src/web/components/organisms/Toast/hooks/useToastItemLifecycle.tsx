@@ -4,7 +4,7 @@ import type { ToastItem as ToastItemType } from '@/stores/useAppStore'
 
 const ANIM_DURATION = 180
 
-export const useToastItem = (
+export const useToastItemLifecycle = (
   item: ToastItemType,
   removeToast: (id: string) => void
 ): {

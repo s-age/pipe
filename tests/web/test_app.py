@@ -207,6 +207,56 @@ class TestAppApi(unittest.TestCase):
             session_id, turn_index, payload
         )
 
+    def test_edit_turn_api_empty_content(self):
+        """Tests that empty content is rejected."""
+        session_id = "sid"
+        turn_index = 0
+        
+        # Test empty content
+        payload = {"content": ""}
+        response = self.client.patch(
+            f"/api/session/{session_id}/turns/{turn_index}",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("cannot be empty", response.get_json()["message"].lower())
+        
+        # Test whitespace-only content
+        payload = {"content": "   "}
+        response = self.client.patch(
+            f"/api/session/{session_id}/turns/{turn_index}",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("cannot be empty", response.get_json()["message"].lower())
+
+    def test_edit_turn_api_empty_instruction(self):
+        """Tests that empty instruction is rejected."""
+        session_id = "sid"
+        turn_index = 0
+        
+        # Test empty instruction
+        payload = {"instruction": ""}
+        response = self.client.patch(
+            f"/api/session/{session_id}/turns/{turn_index}",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("cannot be empty", response.get_json()["message"].lower())
+        
+        # Test whitespace-only instruction
+        payload = {"instruction": "   \n\t  "}
+        response = self.client.patch(
+            f"/api/session/{session_id}/turns/{turn_index}",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("cannot be empty", response.get_json()["message"].lower())
+
     def test_edit_session_meta_api_success(self):
         """Tests successfully editing session metadata via API."""
         session_id = "sid"

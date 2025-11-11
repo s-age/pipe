@@ -1,10 +1,11 @@
 import type { JSX } from 'react'
+import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
-import { Form } from '@/components/organisms/Form'
+import { Form, useFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
-import { useSessionMetaForm } from '@/components/organisms/SessionMeta/hooks/useSessionMetaForm'
+import { useSessionMetaHandlers } from '@/components/organisms/SessionMeta/hooks/useSessionMetaHandlers'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -29,7 +30,7 @@ export const SessionMeta = ({
   setSessionDetail,
   onRefresh
 }: SessionMetaProperties): JSX.Element | null => {
-  const { defaultValues, onSubmit, isSubmitting, saved } = useSessionMetaForm({
+  const { defaultValues, onSubmit, isSubmitting, saved } = useSessionMetaHandlers({
     sessionDetail,
     currentSessionId,
     onRefresh
@@ -39,8 +40,14 @@ export const SessionMeta = ({
     return null
   }
 
-  return (
-    <Form defaultValues={defaultValues} onSubmit={onSubmit}>
+  const MetaContent = (): JSX.Element => {
+    const { handleSubmit } = useFormContext()
+
+    const handleSaveClick = React.useCallback((): void => {
+      void handleSubmit(onSubmit)()
+    }, [handleSubmit])
+
+    return (
       <div className={metaColumn}>
         <input type="hidden" id="current-session-id" value={currentSessionId ?? ''} />
         <section className={sessionMetaSection}>
@@ -72,12 +79,24 @@ export const SessionMeta = ({
         </section>
 
         <div className={stickySaveMetaButtonContainer}>
-          <Button kind="primary" size="default" type="submit" disabled={isSubmitting}>
+          <Button
+            kind="primary"
+            size="default"
+            type="button"
+            disabled={isSubmitting}
+            onClick={handleSaveClick}
+          >
             {isSubmitting ? 'Saving...' : 'Save Meta'}
           </Button>
           {saved ? <span>Saved</span> : null}
         </div>
       </div>
+    )
+  }
+
+  return (
+    <Form defaultValues={defaultValues}>
+      <MetaContent />
     </Form>
   )
 }

@@ -1,7 +1,7 @@
 import type { JSX } from 'react'
 import React from 'react'
 
-import { useTooltip } from './hooks/useTooltip'
+import { useTooltip } from './hooks/useTooltipHandlers'
 import { tooltipContainer, tooltipText } from './style.css'
 
 type TooltipProperties = {

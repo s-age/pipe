@@ -2,7 +2,7 @@ import React from 'react'
 import type { InputHTMLAttributes, JSX } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
-import { useSlider } from './hooks/useSlider'
+import { useSlider } from './hooks/useSliderHandlers'
 import * as styles from './style.css'
 
 export type SliderProperties = Omit<

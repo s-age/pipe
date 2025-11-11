@@ -9,7 +9,6 @@ import { IconFork } from '@/components/atoms/IconFork'
 import { Tooltip } from '@/components/molecules/Tooltip'
 import type { Turn } from '@/lib/api/session/getSession'
 
-import { useTurnHandlers } from './hooks/useTurnHandlers'
 import {
   turnHeader,
   turnHeaderInfo,
@@ -38,31 +37,35 @@ import {
 type TurnProperties = {
   turn: Turn
   index: number
-  sessionId: string
   expertMode: boolean
-  onRefresh: () => Promise<void>
-  isStreaming?: boolean // 新しく追加
+  isStreaming?: boolean
+  // Turn handlers passed from parent
+  isEditing?: boolean
+  editedContent?: string
+  onCopy?: () => Promise<void>
+  onEditedChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
+  onCancelEdit?: () => void
+  onStartEdit?: () => void
+  onFork?: () => void
+  onDelete?: () => void
+  onSaveEdit?: () => void
 }
+
 const Component = ({
   turn,
   index,
-  sessionId,
   expertMode,
-  onRefresh,
-  isStreaming = false
+  isStreaming = false,
+  isEditing = false,
+  editedContent = '',
+  onCopy,
+  onEditedChange,
+  onCancelEdit,
+  onStartEdit,
+  onFork,
+  onDelete,
+  onSaveEdit
 }: TurnProperties): JSX.Element => {
-  const {
-    isEditing,
-    editedContent,
-    handleCopy,
-    handleEditedChange,
-    handleCancelEdit,
-    handleStartEdit,
-    handleFork,
-    handleDelete,
-    handleSaveEdit
-  } = useTurnHandlers({ turn, index, sessionId, onRefresh })
-
   const getHeaderContent = (type: string): string => {
     switch (type) {
       case 'user_task':
@@ -90,13 +93,13 @@ const Component = ({
           <textarea
             className={editTextArea}
             value={editedContent}
-            onChange={handleEditedChange}
+            onChange={onEditedChange}
           />
           <div className={editButtonContainer}>
-            <Button kind="primary" size="default" onClick={handleSaveEdit}>
+            <Button kind="primary" size="default" onClick={onSaveEdit}>
               Save
             </Button>
-            <Button kind="secondary" size="default" onClick={handleCancelEdit}>
+            <Button kind="secondary" size="default" onClick={onCancelEdit}>
               Cancel
             </Button>
           </div>
@@ -178,31 +181,36 @@ const Component = ({
             <span className={turnTimestamp}>{timestamp}</span>
           </span>
           <div className={turnHeaderControls}>
-            {turn.type === 'model_response' && (
+            {turn.type === 'model_response' && onFork && (
               <Tooltip content="Fork Session">
-                <Button kind="ghost" size="xsmall" onClick={handleFork}>
+                <Button kind="ghost" size="xsmall" onClick={onFork}>
                   <IconFork size={24} className={forkButtonIcon} />
                 </Button>
               </Tooltip>
             )}
-            <Tooltip content="Copy Turn">
-              <Button kind="ghost" size="xsmall" onClick={handleCopy}>
-                <IconCopy size={24} className={copyButtonIcon} />
-              </Button>
-            </Tooltip>
+            {onCopy && (
+              <Tooltip content="Copy Turn">
+                <Button kind="ghost" size="xsmall" onClick={onCopy}>
+                  <IconCopy size={24} className={copyButtonIcon} />
+                </Button>
+              </Tooltip>
+            )}
             {expertMode &&
-              (turn.type === 'user_task' || turn.type === 'model_response') && (
+              (turn.type === 'user_task' || turn.type === 'model_response') &&
+              onStartEdit && (
                 <Tooltip content="Edit Turn">
-                  <Button kind="ghost" size="xsmall" onClick={handleStartEdit}>
+                  <Button kind="ghost" size="xsmall" onClick={onStartEdit}>
                     <IconEdit size={24} className={editButtonIcon} />
                   </Button>
                 </Tooltip>
               )}
-            <Tooltip content="Delete Turn">
-              <Button kind="ghost" size="xsmall" onClick={handleDelete}>
-                <IconDelete size={24} className={deleteButtonIcon} />
-              </Button>
-            </Tooltip>
+            {onDelete && (
+              <Tooltip content="Delete Turn">
+                <Button kind="ghost" size="xsmall" onClick={onDelete}>
+                  <IconDelete size={24} className={deleteButtonIcon} />
+                </Button>
+              </Tooltip>
+            )}
           </div>
         </div>
         {renderTurnContent()}

@@ -2,7 +2,7 @@ import type { JSX } from 'react'
 
 import { IconSearch } from '@/components/atoms/IconSearch'
 
-import { useInputSearch } from './hooks/useInputSearch'
+import { useInputSearch } from './hooks/useInputSearchHandlers'
 import { container, input, button } from './style.css'
 
 type InputSearchProperties = {

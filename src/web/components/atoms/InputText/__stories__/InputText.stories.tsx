@@ -47,9 +47,11 @@ export const Controlled: Story = {
 export const WithRHF: Story = {
   render: (): JSX.Element => {
     const FormExample = (): JSX.Element => (
-      <Form onSubmit={(data) => console.log('submit', data)}>
+      <Form>
         <InputText name="firstName" placeholder="First name" />
-        <button type="submit">Submit</button>
+        <button type="submit" onClick={(data) => console.log('submit', data)}>
+          Submit
+        </button>
       </Form>
     )
 

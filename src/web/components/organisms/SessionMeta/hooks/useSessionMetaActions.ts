@@ -2,13 +2,13 @@ import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import { editSessionMeta } from '@/lib/api/session/editSessionMeta'
 
-type UseSessionMetaSaverProperties = {
+type UseSessionMetaActionsProperties = {
   onRefresh: () => Promise<void>
 }
 
-export const useSessionMetaSaver = ({
+export const useSessionMetaActions = ({
   onRefresh
-}: UseSessionMetaSaverProperties): {
+}: UseSessionMetaActionsProperties): {
   handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
 } => {
   const toast = useToast()
@@ -20,9 +20,11 @@ export const useSessionMetaSaver = ({
     try {
       await editSessionMeta(id, meta)
       await onRefresh()
+      // show a transient toast
       toast.success('Session metadata saved')
     } catch (error: unknown) {
       const message = (error as Error).message || 'Failed to save session meta.'
+      // use toast for user-visible error and clear persistent setError state
       toast.failure(message)
     }
   }

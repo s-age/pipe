@@ -1,12 +1,10 @@
-import { useCallback } from 'react'
-
-import { getSessionDashboard } from '@/lib/api/bff/getSessionDashboard'
 import type { State, Actions } from '@/stores/useChatHistoryStore'
 import { useSessionStore } from '@/stores/useChatHistoryStore'
 
-import { useSessionLoader } from './useSessionLoader'
+import { useChatHistoryPageActions } from './useChatHistoryPageActions'
+import { useSessionLoader } from './useChatHistoryPageLifecycle'
 
-type UseChatHistoryPageLogicReturn = {
+type UseChatHistoryPageHandlersReturn = {
   sessions: State['sessionTree']['sessions']
   currentSessionId: State['sessionTree']['currentSessionId']
   sessionDetail: State['sessionDetail']
@@ -16,7 +14,7 @@ type UseChatHistoryPageLogicReturn = {
   onRefresh: () => Promise<void>
 }
 
-export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
+export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn => {
   const { state, actions } = useSessionStore()
   const {
     sessionTree: { sessions, currentSessionId },
@@ -25,18 +23,7 @@ export const useChatHistoryPageLogic = (): UseChatHistoryPageLogicReturn => {
 
   const { selectSession, setSessionDetail, refreshSessions } = actions
 
-  const onRefresh = useCallback(async (): Promise<void> => {
-    if (currentSessionId) {
-      const dashBoard = await getSessionDashboard(currentSessionId)
-      refreshSessions(
-        dashBoard.current_session,
-        dashBoard.session_tree.map(([id, session]) => ({
-          ...session,
-          session_id: id
-        }))
-      )
-    }
-  }, [currentSessionId, refreshSessions])
+  const { onRefresh } = useChatHistoryPageActions({ currentSessionId, refreshSessions })
 
   useSessionLoader({ state, actions })
 

@@ -1,4 +1,4 @@
-import type { JSX } from 'react'
+import { forwardRef } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
@@ -17,23 +17,23 @@ type SessionItemProperties = {
   selectSession: (id: string | null, detail: SessionDetail | null) => void
 }
 
-export const SessionItem = ({
-  session,
-  currentSessionId,
-  selectSession
-}: SessionItemProperties): JSX.Element => {
-  const { onClick } = useSessionItemHandlers({ session, selectSession })
+export const SessionItem = forwardRef<HTMLLIElement, SessionItemProperties>(
+  ({ session, currentSessionId, selectSession }, reference) => {
+    const { onClick } = useSessionItemHandlers({ session, selectSession })
 
-  return (
-    <li key={session.session_id} className={sessionListItem}>
-      <a
-        href={`/session/${session.session_id}`}
-        className={`${sessionLink} ${session.session_id === currentSessionId ? sessionLinkActive : ''}`.trim()}
-        onClick={onClick}
-      >
-        {session.purpose}{' '}
-        <p className={sessionIdStyle}>{session.session_id.substring(0, 8)}</p>
-      </a>
-    </li>
-  )
-}
+    return (
+      <li key={session.session_id} className={sessionListItem} ref={reference}>
+        <a
+          href={`/session/${session.session_id}`}
+          className={`${sessionLink} ${session.session_id === currentSessionId ? sessionLinkActive : ''}`.trim()}
+          onClick={onClick}
+        >
+          {session.purpose}{' '}
+          <p className={sessionIdStyle}>{session.session_id.substring(0, 8)}</p>
+        </a>
+      </li>
+    )
+  }
+)
+
+SessionItem.displayName = 'SessionItem'

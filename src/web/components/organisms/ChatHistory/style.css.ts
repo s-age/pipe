@@ -79,64 +79,6 @@ export const footerForm = style({
   width: '100%'
 })
 
-export const instructionTextarea = style({
-  flex: '1 1 auto',
-  width: '100%',
-  minHeight: '96px',
-  maxHeight: '240px',
-  resize: 'vertical',
-  padding: '12px',
-  borderRadius: '6px',
-  // no visible border by default; show accent border on focus
-  border: 'none',
-  backgroundColor: '#1b1d1e',
-  color: colors.offWhite,
-  // leave extra right padding for the overlaid send button
-  paddingRight: '80px',
-  '::placeholder': { color: colors.grayText },
-  ':focus': {
-    border: `1px solid ${colors.accent}`,
-    outline: 'none',
-    boxShadow: `0 0 0 2px ${colors.cyanBorderRGBA}`
-  }
-})
-
-export const instructionWrapper = style({
-  position: 'relative',
-  width: '100%',
-  display: 'flex',
-  alignItems: 'stretch'
-})
-
-export const overlaySendButton = style({
-  position: 'absolute',
-  right: '12px',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  width: '56px',
-  height: '56px',
-  borderRadius: '8px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: colors.cyan,
-  color: colors.darkBackground,
-  border: `1px solid ${colors.cyanBorderRGBA}`,
-  cursor: 'pointer',
-  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-  // ensure it sits above the textarea
-  zIndex: 5,
-  selectors: {
-    '&:disabled, &[disabled]': {
-      background: colors.mediumBackground,
-      color: colors.grayText,
-      border: `1px solid ${colors.mediumBackground}`,
-      cursor: 'not-allowed',
-      opacity: 0.85
-    }
-  }
-})
-
 export const welcomeMessage = style({
   padding: '12px',
   textAlign: 'center',

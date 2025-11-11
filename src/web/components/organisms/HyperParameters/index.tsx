@@ -3,7 +3,7 @@ import React from 'react'
 import { Label } from '@/components/atoms/Label'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { Slider } from '@/components/molecules/Slider'
-import { useSessionMetaSaver } from '@/components/organisms/SessionMeta/useSessionMetaSaver'
+import { useSessionMetaActions } from '@/components/organisms/SessionMeta/hooks/useSessionMetaActions'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useHyperParametersHandlers } from './hooks/useHyperParametersHandlers'
@@ -20,7 +20,7 @@ export const HyperParameters = ({
   currentSessionId,
   onRefresh
 }: HyperParametersProperties): React.JSX.Element => {
-  useSessionMetaSaver({ onRefresh })
+  useSessionMetaActions({ onRefresh })
 
   const {
     temperature,

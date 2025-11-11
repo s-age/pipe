@@ -1,6 +1,7 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 
+import { Button } from '@/components/atoms/Button'
 import { Form } from '@/components/organisms/Form'
 
 import { Select } from '../index'
@@ -34,7 +35,7 @@ export const Searchable: Story = {
 export const WithRHF: Story = {
   render: (): JSX.Element => {
     const FormExample = (): JSX.Element => (
-      <Form onSubmit={(data) => console.log('submit', data)}>
+      <Form>
         <Select
           name="favorite"
           options={[
@@ -42,7 +43,9 @@ export const WithRHF: Story = {
             { value: 'b', label: 'Option B' }
           ]}
         />
-        <button type="submit">Submit</button>
+        <Button type="submit" onClick={(data) => console.log('submit', data)}>
+          Submit
+        </Button>
       </Form>
     )
 

@@ -3,23 +3,22 @@ import type { FieldValues, UseFormRegister } from 'react-hook-form'
 import { useFormContext } from '@/components/organisms/Form'
 import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 
-export type UseInstructionFormProperties = {
+export type UseInstructionFormHandlersProperties = {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
 }
 
-export type UseInstructionFormReturn = {
+export type UseInstructionFormHandlersReturn = {
   register: UseFormRegister<FieldValues>
   submit: () => Promise<void>
-  // React event-friendly handlers
   onTextAreaKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void
   onSendClick: () => void
 }
 
-export const useInstructionForm = ({
+export const useInstructionFormHandlers = ({
   currentSessionId,
   onSendInstruction
-}: UseInstructionFormProperties): UseInstructionFormReturn => {
+}: UseInstructionFormHandlersProperties): UseInstructionFormHandlersReturn => {
   const methods = useFormContext()
   const { register, handleSubmit, reset } = methods
   const toast = useToast()
@@ -35,7 +34,6 @@ export const useInstructionForm = ({
       toast.failure(
         error instanceof Error ? error.message : 'Failed to send instruction'
       )
-      // keep logging for debugging
       console.error('Failed to send instruction:', error)
     }
   })

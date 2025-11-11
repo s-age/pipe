@@ -22,9 +22,9 @@ export const referencesList = style({
 export const referenceItem = style({
   marginBottom: '8px',
   padding: '8px',
-  border: '1px solid #eee',
-  borderRadius: '4px',
-  backgroundColor: '#f9f9f9'
+  color: colors.offWhite,
+  border: `1px solid ${colors.cyanAlt}`,
+  borderRadius: '4px'
 })
 
 export const referenceControls = style({

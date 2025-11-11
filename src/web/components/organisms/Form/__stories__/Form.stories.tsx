@@ -3,12 +3,12 @@ import type { JSX } from 'react'
 import { z } from 'zod'
 
 import { Button } from '@/components/atoms/Button'
-import { InputCheckbox } from '@/components/atoms/InputCheckbox'
-import { InputRadio } from '@/components/atoms/InputRadio'
-import { InputText } from '@/components/atoms/InputText'
-import { TextArea } from '@/components/atoms/TextArea'
 import { Fieldset } from '@/components/molecules/Fieldset'
+import { InputCheckbox } from '@/components/molecules/InputCheckbox'
+import { InputRadio } from '@/components/molecules/InputRadio'
+import { InputText } from '@/components/molecules/InputText'
 import { Slider } from '@/components/molecules/Slider'
+import { TextArea } from '@/components/molecules/TextArea'
 import { Form, useFormContext } from '@/components/organisms/Form'
 
 const Meta = {

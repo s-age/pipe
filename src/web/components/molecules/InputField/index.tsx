@@ -2,8 +2,8 @@ import type { JSX } from 'react'
 import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
-import { InputText } from '@/components/atoms/InputText'
 import { Label } from '@/components/atoms/Label'
+import { InputText } from '@/components/molecules/InputText'
 
 import { errorMessageStyle, inputFieldStyle } from './style.css'
 

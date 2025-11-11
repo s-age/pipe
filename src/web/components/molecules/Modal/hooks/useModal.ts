@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { useModalContext } from '../ModalProvider'
+import { useModalContext } from '@/stores/useModalStore'
 
 export const useModal = (): {
   show: (content: React.ReactNode) => number

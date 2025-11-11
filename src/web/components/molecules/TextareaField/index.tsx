@@ -3,7 +3,7 @@ import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
 import { Label } from '@/components/atoms/Label'
-import { TextArea } from '@/components/atoms/TextArea'
+import { TextArea } from '@/components/molecules/TextArea'
 
 import { errorMessageStyle } from './style.css'
 

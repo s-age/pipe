@@ -2,7 +2,7 @@ import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { IconPaperPlane } from '@/components/atoms/IconPaperPlane'
-import { TextArea } from '@/components/atoms/TextArea'
+import { TextArea } from '@/components/molecules/TextArea'
 import { Form } from '@/components/organisms/Form'
 
 import { useInstructionFormHandlers } from './hooks/useInstructionFormHandlers'

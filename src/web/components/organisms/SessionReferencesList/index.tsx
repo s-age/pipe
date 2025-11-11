@@ -2,8 +2,8 @@ import clsx from 'clsx'
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
-import { Checkbox } from '@/components/atoms/Checkbox'
 import { Label } from '@/components/atoms/Label'
+import { InputCheckbox } from '@/components/molecules/InputCheckbox'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Reference } from '@/types/reference'
 
@@ -74,7 +74,7 @@ export const SessionReferencesList = ({
           <li key={index} className={referenceItem}>
             <div className={referenceControls}>
               <Label className={referenceLabel}>
-                <Checkbox
+                <InputCheckbox
                   checked={!reference.disabled}
                   onChange={handleCheckboxChange}
                   data-index={String(index)}

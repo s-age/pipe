@@ -1,9 +1,9 @@
 import React from 'react'
 
-import { InputCheckbox } from '@/components/atoms/InputCheckbox'
-import { InputText } from '@/components/atoms/InputText'
-import { TextArea } from '@/components/atoms/TextArea'
 import { Fieldset } from '@/components/molecules/Fieldset'
+import { InputCheckbox } from '@/components/molecules/InputCheckbox'
+import { InputText } from '@/components/molecules/InputText'
+import { TextArea } from '@/components/molecules/TextArea'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 

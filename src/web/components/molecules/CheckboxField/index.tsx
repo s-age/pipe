@@ -2,8 +2,8 @@ import type { JSX } from 'react'
 import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
-import { Checkbox } from '@/components/atoms/Checkbox'
 import { Label } from '@/components/atoms/Label'
+import { InputCheckbox } from '@/components/molecules/InputCheckbox'
 
 import { checkboxContainer, labelStyle } from './style.css'
 
@@ -21,7 +21,7 @@ export const CheckboxField = <TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <div className={checkboxContainer}>
-      <Checkbox
+      <InputCheckbox
         id={id}
         checked={field.value}
         onChange={field.onChange}

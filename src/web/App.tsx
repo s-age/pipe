@@ -1,7 +1,7 @@
 import type { JSX } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
-import { ModalProvider } from '@/components/molecules/Modal/ModalProvider'
+import { ModalProvider } from '@/stores/useModalStore'
 
 import { Toasts } from './components/organisms/Toast'
 import { ChatHistoryPage } from './components/pages/ChatHistoryPage'

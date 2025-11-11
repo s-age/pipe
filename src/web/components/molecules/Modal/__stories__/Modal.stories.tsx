@@ -4,7 +4,7 @@ import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { useModal } from '@/components/molecules/Modal/hooks/useModal'
-import { ModalProvider } from '@/components/molecules/Modal/ModalProvider'
+import { ModalProvider } from '@/stores/useModalStore'
 
 const Meta = {
   title: 'Atoms/Modal',

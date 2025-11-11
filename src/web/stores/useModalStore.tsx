@@ -1,7 +1,7 @@
 import type { JSX } from 'react'
 import React from 'react'
 
-import { Modal } from './index'
+import { Modal } from '@/components/molecules/Modal'
 
 type ModalEntry = {
   id: number

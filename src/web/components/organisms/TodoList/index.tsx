@@ -1,8 +1,8 @@
 import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
-import { InputCheckbox } from '@/components/atoms/InputCheckbox'
 import { Fieldset } from '@/components/molecules/Fieldset'
+import { InputCheckbox } from '@/components/molecules/InputCheckbox'
 import { useSessionTodosHandlers } from '@/components/organisms/TodoList/hooks/useSessionTodosHandlers'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Todo } from '@/types/todo'

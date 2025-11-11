@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.reference import Reference
+from pipe.core.models.role import RoleOption
 from pipe.core.models.session import Session
 
 # The Flask app object needs to be imported for testing
@@ -401,6 +402,48 @@ class TestAppApi(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    @patch("pipe.web.actions.get_roles_action.RoleService")
+    def test_get_session_dashboard_api_success(self, MockRoleServiceForGetRolesAction):
+        """Tests the /api/v1/bff/session-dashboard/{session_id} endpoint."""
+        session_id = "test_session_id"
+
+        # Mock SessionTreeAction dependencies (uses self.mock_session_service)
+        self.mock_session_service.list_sessions.return_value.\
+            get_sorted_by_last_updated.return_value = [
+                ["session1", {"purpose": "Test 1"}],
+                ["session2", {"purpose": "Test 2"}],
+            ]
+
+        # Mock SessionGetAction dependencies (uses self.mock_session_service)
+        mock_session = MagicMock(spec=Session)
+        mock_session.to_dict.return_value = {"id": session_id, "purpose": "Details"}
+        self.mock_session_service.get_session.return_value = mock_session
+
+        # Mock GetRolesAction dependencies
+        mock_role_service = MockRoleServiceForGetRolesAction.return_value
+        mock_role_service.get_all_role_options.return_value = [
+            RoleOption(label="python/developer", value="roles/python/developer.md"),
+            RoleOption(label="engineer", value="roles/engineer.md"),
+        ]
+
+        response = self.client.get(f"/api/v1/bff/session-dashboard/{session_id}")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+
+        self.assertIn("session_tree", data)
+        self.assertIn("current_session", data)
+        self.assertIn("settings", data)
+        self.assertIn("role_options", data)
+
+        self.assertEqual(len(data["session_tree"]), 2)
+        self.assertEqual(data["current_session"]["purpose"], "Details")
+        self.assertIsInstance(data["settings"], dict)
+        self.assertEqual(len(data["role_options"]), 2)
+        self.assertEqual(data["role_options"][0]["label"], "python/developer")
+        self.assertEqual(data["role_options"][0]["value"], "roles/python/developer.md")
+        self.assertEqual(data["role_options"][1]["label"], "engineer")
+        self.assertEqual(data["role_options"][1]["value"], "roles/engineer.md")
 
 
 class TestAppViews(unittest.TestCase):

@@ -1,5 +1,6 @@
 import { useCallback, useReducer } from 'react'
 
+import type { RoleOption } from '@/lib/api/roles/getRoles'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
@@ -14,12 +15,14 @@ export type State = {
   sessionTree: SessionTree
   sessionDetail: SessionDetail | null
   settings: Settings
+  roleOptions: RoleOption[]
 }
 
 export const initialState: State = {
   sessionTree: { sessions: [], currentSessionId: null },
   sessionDetail: null,
-  settings: { parameters: { temperature: null, top_p: null, top_k: null } }
+  settings: { parameters: { temperature: null, top_p: null, top_k: null } },
+  roleOptions: []
 }
 
 export type Action =
@@ -31,6 +34,7 @@ export type Action =
       payload: { id: string | null; detail: SessionDetail | null }
     }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<Settings> }
+  | { type: 'SET_ROLE_OPTIONS'; payload: RoleOption[] }
   | { type: 'RESET' }
 
 export const reducer = (state: State, action: Action): State => {
@@ -61,7 +65,11 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         settings: { ...state.settings, ...action.payload }
       }
-
+    case 'SET_ROLE_OPTIONS':
+      return {
+        ...state,
+        roleOptions: action.payload
+      }
     case 'RESET':
       return initialState
     default:
@@ -75,6 +83,7 @@ export type Actions = {
   setSessionDetail: (detail: SessionDetail | null) => void
   selectSession: (id: string | null, detail: SessionDetail | null) => void
   updateSettings: (partial: Partial<Settings>) => void
+  setRoleOptions: (roleOptions: RoleOption[]) => void
   refreshSessions: (
     sessionDetail: SessionDetail | null,
     sessions?: SessionOverview[]
@@ -114,6 +123,10 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
     dispatch({ type: 'UPDATE_SETTINGS', payload: partial })
   }, [])
 
+  const setRoleOptions = useCallback((roleOptions: RoleOption[]) => {
+    dispatch({ type: 'SET_ROLE_OPTIONS', payload: roleOptions })
+  }, [])
+
   const refreshSessions = useCallback(
     (sessionDetail: SessionDetail | null, sessions?: SessionOverview[]): void => {
       dispatch({ type: 'SET_SESSION_DETAIL', payload: sessionDetail })
@@ -134,6 +147,7 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
       setSessionDetail,
       selectSession,
       updateSettings,
+      setRoleOptions,
       refreshSessions,
       reset
     }

@@ -8,6 +8,7 @@ type UseChatHistoryPageHandlersReturn = {
   sessions: State['sessionTree']['sessions']
   currentSessionId: State['sessionTree']['currentSessionId']
   sessionDetail: State['sessionDetail']
+  roleOptions: State['roleOptions']
   expertMode: boolean
   selectSession: Actions['selectSession']
   setSessionDetail: Actions['setSessionDetail']
@@ -18,7 +19,8 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
   const { state, actions } = useSessionStore()
   const {
     sessionTree: { sessions, currentSessionId },
-    sessionDetail
+    sessionDetail,
+    roleOptions
   } = state
 
   const { selectSession, setSessionDetail, refreshSessions } = actions
@@ -33,6 +35,7 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
     sessions,
     currentSessionId,
     sessionDetail,
+    roleOptions,
     expertMode,
     selectSession,
     setSessionDetail,

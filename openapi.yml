@@ -43,8 +43,32 @@ paths:
                   settings:
                     type: object
                     description: System settings
+                  role_options:
+                    type: array
+                    description: List of available role options
+                    items:
+                      $ref: '#/components/schemas/RoleOption'
         '404':
           description: Session not found
+        '500':
+          description: Internal server error
+
+  # Roles (v1)
+  /api/v1/roles:
+    get:
+      summary: Get available roles (v1)
+      description: Returns a list of available roles for selection, including their labels and values.
+      tags:
+        - v1
+      responses:
+        '200':
+          description: List of role options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleOption'
         '500':
           description: Internal server error
 
@@ -658,6 +682,18 @@ paths:
 
 components:
   schemas:
+    RoleOption:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Display label for the role (e.g., 'python/developer')
+        value:
+          type: string
+          description: Unique identifier for the role (e.g., 'roles/python/developer.md')
+      required:
+        - label
+        - value
     StartSessionRequest:
       type: object
       properties:

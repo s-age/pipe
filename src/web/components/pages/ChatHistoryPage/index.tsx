@@ -19,6 +19,7 @@ export const ChatHistoryPage = (): JSX.Element => {
     sessions,
     currentSessionId,
     sessionDetail,
+    roleOptions,
     expertMode,
     selectSession,
     setSessionDetail,
@@ -53,6 +54,7 @@ export const ChatHistoryPage = (): JSX.Element => {
             currentSessionId={currentSessionId}
             setSessionDetail={setSessionDetail}
             onRefresh={onRefresh}
+            roleOptions={roleOptions}
           />
         </div>
       </div>

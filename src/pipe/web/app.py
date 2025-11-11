@@ -9,6 +9,7 @@ from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
 from pipe.web.actions import (
+    GetRolesAction,
     HyperparametersEditAction,
     MultiStepReasoningEditAction,
     ReferencePersistEditAction,
@@ -174,6 +175,7 @@ def dispatch_action(
         ("session/{session_id}/fork/{fork_index}", "POST", SessionForkAction),
         ("session/{session_id}", "GET", SessionGetAction),
         ("session/{session_id}", "DELETE", SessionDeleteAction),
+        ("roles", "GET", GetRolesAction),
     ]
 
     for route_pattern, route_method, action_class in route_map:

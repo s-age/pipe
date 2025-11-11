@@ -1,3 +1,4 @@
+import type { RoleOption } from '@/lib/api/roles/getRoles'
 import type { Hyperparameters } from '@/types/hyperparameters'
 import type { Reference } from '@/types/reference'
 import type { Todo } from '@/types/todo'
@@ -35,6 +36,7 @@ export type SessionDetail = {
   todos: Todo[]
   references: Reference[]
   turns: Turn[]
+  roleOptions?: RoleOption[]
 }
 
 export const getSession = async (

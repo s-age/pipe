@@ -25,9 +25,9 @@ export const useSessionMetaHandlers = ({
     () => ({
       purpose: sessionDetail?.purpose ?? '',
       background: sessionDetail?.background ?? '',
-      roles: sessionDetail?.roles?.join(', ') ?? '',
+      roles: sessionDetail?.roles ?? [],
       procedure: sessionDetail?.procedure ?? '',
-      artifacts: sessionDetail?.artifacts?.join(', ') ?? ''
+      artifacts: sessionDetail?.artifacts ?? []
     }),
     [sessionDetail]
   )

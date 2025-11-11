@@ -17,7 +17,7 @@ export const useSessionLoader = ({
   const {
     sessionTree: { currentSessionId }
   } = state
-  const { setSessions, setCurrentSessionId, setSessionDetail } = actions
+  const { setSessions, setCurrentSessionId, setSessionDetail, setRoleOptions } = actions
   const toast = useToast()
 
   useEffect(() => {
@@ -48,6 +48,7 @@ export const useSessionLoader = ({
             }))
           )
           setSessionDetail(data.current_session)
+          setRoleOptions(data.role_options)
         } else {
           const fetchedSessions = await getSessionTree()
           setSessions(

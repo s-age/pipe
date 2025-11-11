@@ -24,5 +24,3 @@ export const IconSearch = ({ className, size = 20 }: IconProperties): JSX.Elemen
     <path d="M21 21l-4.35-4.35" />
   </svg>
 )
-
-// Default export removed — use named export `IconSearch`

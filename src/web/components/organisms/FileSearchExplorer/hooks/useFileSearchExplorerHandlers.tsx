@@ -17,7 +17,9 @@ export const useFileSearchExplorerHandlers = (
   handleQueryChange: (event: ChangeEvent<HTMLInputElement>) => void
   handlePathConfirm: (path: string) => Promise<void>
   handleKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void
-  handleSuggestionClick: (suggestion: string) => void
+  handleSuggestionClick: (
+    suggestion: string | { name: string; isDirectory: boolean }
+  ) => void
   actions: ReturnType<typeof useFileSearchExplorerActions>
 } => {
   const [pathList, setPathList] = useState<string[]>([])
@@ -111,10 +113,12 @@ export const useFileSearchExplorerHandlers = (
 
   const handleSuggestionClick = useCallback(
     // eslint-disable-next-line react-hooks/preserve-manual-memoization
-    (suggestion: string): void => {
+    (suggestion: string | { name: string; isDirectory: boolean }): void => {
+      const suggestionName =
+        typeof suggestion === 'string' ? suggestion : suggestion.name
       const parts = query.split('/')
       const pathParts = parts.slice(0, -1).filter((p) => p)
-      const newPath = [...pathParts, suggestion].join('/')
+      const newPath = [...pathParts, suggestionName].join('/')
       setQuery(newPath)
       setSuggestions([])
       inputReference?.current?.focus()

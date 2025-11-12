@@ -32,16 +32,21 @@ export const referenceItem = style({
 
 export const referenceControls = style({
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  flexWrap: 'wrap'
+  flexDirection: 'column',
+  gap: '8px'
 })
 
 export const referenceLabel = style({
   display: 'flex',
   alignItems: 'center',
-  flexGrow: 1,
-  margin: '0 12px 12px 0'
+  width: '100%'
+})
+
+export const referenceActions = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%'
 })
 
 export const referencePath = style({

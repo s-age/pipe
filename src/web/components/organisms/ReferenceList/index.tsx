@@ -84,6 +84,8 @@ export const ReferenceList = ({
     inputValue,
     suggestions,
     selectedIndex,
+    inputReference,
+    suggestionListReference,
     handleFocus,
     handleInputChange,
     handleKeyDown,
@@ -97,6 +99,7 @@ export const ReferenceList = ({
         <Label className={metaItemLabel}>References:</Label>
         <div className={addReferenceContainer}>
           <input
+            ref={inputReference}
             type="text"
             value={inputValue}
             onChange={handleInputChange}
@@ -109,7 +112,7 @@ export const ReferenceList = ({
             Add
           </button>
           {suggestions.length > 0 && (
-            <ul className={suggestionList}>
+            <ul ref={suggestionListReference} className={suggestionList}>
               {suggestions.map((suggestion, index) => (
                 <SuggestionItem
                   key={index}
@@ -131,6 +134,7 @@ export const ReferenceList = ({
       <Label className={metaItemLabel}>References:</Label>
       <div className={addReferenceContainer}>
         <input
+          ref={inputReference}
           type="text"
           value={inputValue}
           onChange={handleInputChange}
@@ -143,7 +147,7 @@ export const ReferenceList = ({
           Add
         </button>
         {suggestions.length > 0 && (
-          <ul className={suggestionList}>
+          <ul ref={suggestionListReference} className={suggestionList}>
             {suggestions.map((suggestion, index) => (
               <SuggestionItem
                 key={index}

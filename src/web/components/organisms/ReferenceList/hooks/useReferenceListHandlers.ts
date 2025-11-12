@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export const useReferenceListHandlers = (actions: {
   loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
@@ -10,6 +10,8 @@ export const useReferenceListHandlers = (actions: {
   inputValue: string
   suggestions: { name: string; isDirectory: boolean }[]
   selectedIndex: number
+  inputReference: React.RefObject<HTMLInputElement | null>
+  suggestionListReference: React.RefObject<HTMLUListElement | null>
   handleFocus: () => Promise<void>
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => Promise<void>
@@ -26,10 +28,28 @@ export const useReferenceListHandlers = (actions: {
     { name: string; isDirectory: boolean }[]
   >([])
   const [selectedIndex, setSelectedIndex] = useState<number>(-1)
+  const inputReference = useRef<HTMLInputElement>(null)
+  const suggestionListReference = useRef<HTMLUListElement>(null)
 
   useEffect(() => {
-    void actions.loadRootSuggestions().then(setRootSuggestions)
-  }, [actions])
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (
+        inputReference.current &&
+        suggestionListReference.current &&
+        !inputReference.current.contains(event.target as Node) &&
+        !suggestionListReference.current.contains(event.target as Node)
+      ) {
+        setSuggestions([])
+        setSelectedIndex(-1)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return (): void => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const handleFocus = useCallback(async () => {
     if (rootSuggestions.length === 0) {
@@ -101,6 +121,10 @@ export const useReferenceListHandlers = (actions: {
           setInputValue('')
           setSuggestions([])
         }
+      } else if (event.key === 'Escape') {
+        event.preventDefault()
+        setSuggestions([])
+        setSelectedIndex(-1)
       }
     },
     [suggestions, selectedIndex, inputValue, actions]
@@ -139,6 +163,8 @@ export const useReferenceListHandlers = (actions: {
     inputValue,
     suggestions,
     selectedIndex,
+    inputReference,
+    suggestionListReference,
     handleFocus,
     handleInputChange,
     handleKeyDown,

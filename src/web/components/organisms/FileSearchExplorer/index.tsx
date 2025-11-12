@@ -66,7 +66,6 @@ export const FileSearchExplorer = ({
   } = handlers
 
   useEffect(() => {
-    console.log('FileSearchExplorer onPathChange called with:', pathList)
     onPathChange?.(pathList)
   }, [pathList, onPathChange])
 

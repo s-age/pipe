@@ -12,8 +12,7 @@ import {
   artifactsList,
   artifactItem,
   artifactPath,
-  removeArtifactButton,
-  debugInfo
+  removeArtifactButton
 } from './style.css'
 
 type ArtifactsSelectorProperties = {
@@ -25,19 +24,11 @@ export const ArtifactsSelector = ({
 }: ArtifactsSelectorProperties): React.JSX.Element => {
   const formContext = useOptionalFormContext()
   const setValue = formContext?.setValue
-  const getValues = formContext?.getValues
   const watchedArtifacts = useWatch({
     control: formContext?.control,
     name: 'artifacts'
     // defaultValue: []
   })
-
-  // Try to get the current value directly from form
-  const currentArtifacts = getValues ? getValues('artifacts') : undefined
-
-  console.log('ArtifactsSelector - watchedArtifacts:', watchedArtifacts)
-  console.log('ArtifactsSelector - currentArtifacts (getValues):', currentArtifacts)
-  console.log('ArtifactsSelector - formContext:', formContext)
 
   const selectedArtifacts: string[] = useMemo(() => {
     if (Array.isArray(watchedArtifacts)) {
@@ -52,10 +43,8 @@ export const ArtifactsSelector = ({
 
   const handleArtifactsPathChange = useCallback(
     (paths: string[]) => {
-      console.log('handleArtifactsPathChange called with:', paths)
       if (setValue) {
         setValue('artifacts', paths.join(', '))
-        console.log('setValue called with:', paths.join(', '))
       }
     },
     [setValue]
@@ -80,14 +69,6 @@ export const ArtifactsSelector = ({
       legend={<span className={metaItemLabel}>{legend}</span>}
       className={metaItem}
     >
-      <div className={debugInfo}>
-        Debug: watchedArtifacts = {JSON.stringify(watchedArtifacts)} (type:{' '}
-        {typeof watchedArtifacts})
-      </div>
-      <div className={debugInfo}>
-        Debug: currentArtifacts = {JSON.stringify(currentArtifacts)} (type:{' '}
-        {typeof currentArtifacts})
-      </div>
       <FileSearchExplorer onPathChange={handleArtifactsPathChange} />
       {selectedArtifacts.length > 0 && (
         <div className={artifactsList}>

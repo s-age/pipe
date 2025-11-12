@@ -24,12 +24,14 @@ export const useReferenceControls = ({
   toggleDisabled: (index: number) => void
   togglePersist: (index: number) => void
   changeTtl: (index: number, action: 'increment' | 'decrement') => void
+  handleAddReference: (path: string) => Promise<void>
 } => {
   // We keep API actions separated for testability / reuse
   const {
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
-    handleUpdateReferenceDisabled
+    handleUpdateReferenceDisabled,
+    handleAddReference: addReference
   } = useReferenceActions(sessionDetail, refreshSessions)
 
   const toggleDisabled = useCallback(
@@ -121,12 +123,21 @@ export const useReferenceControls = ({
     [changeTtl]
   )
 
+  const handleAddReference = useCallback(
+    async (path: string): Promise<void> => {
+      if (!currentSessionId) return
+      await addReference(currentSessionId, path)
+    },
+    [currentSessionId, addReference]
+  )
+
   return {
     handleCheckboxChange,
     handlePersistToggle,
     handleTtlAction,
     toggleDisabled,
     togglePersist,
-    changeTtl
+    changeTtl,
+    handleAddReference
   }
 }

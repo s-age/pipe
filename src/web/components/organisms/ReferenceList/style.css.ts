@@ -108,3 +108,60 @@ export const noItemsMessage = style({
   fontStyle: 'italic',
   marginTop: '10px'
 })
+
+export const addReferenceContainer = style({
+  display: 'flex',
+  gap: '10px',
+  marginBottom: '15px',
+  alignItems: 'center',
+  position: 'relative'
+})
+
+export const addReferenceInput = style({
+  flexGrow: 1,
+  padding: '8px',
+  border: `1px solid ${colors.cyanAlt}`,
+  borderRadius: '4px',
+  backgroundColor: colors.mediumBackground,
+  color: colors.offWhite
+})
+
+export const addReferenceButton = style({
+  padding: '8px 12px',
+  border: `1px solid ${colors.cyanAlt}`,
+  borderRadius: '4px',
+  backgroundColor: colors.cyan,
+  color: colors.offWhite,
+  cursor: 'pointer',
+  transition: 'background-color 0.2s ease'
+})
+
+export const suggestionList = style({
+  position: 'absolute',
+  top: '100%',
+  left: '0',
+  right: '0',
+  marginTop: '5px',
+  padding: '0',
+  height: '150px',
+  overflowY: 'scroll',
+  backgroundColor: colors.mediumBackground,
+  border: `1px solid ${colors.cyanAlt}`,
+  borderRadius: '4px',
+  zIndex: 10
+})
+
+export const suggestionItem = style({
+  padding: '4px 8px',
+  cursor: 'pointer',
+  listStyle: 'none',
+  color: 'white'
+})
+
+export const selectedSuggestionItem = style([
+  suggestionItem,
+  {
+    backgroundColor: colors.cyan,
+    color: colors.uiBackground
+  }
+])

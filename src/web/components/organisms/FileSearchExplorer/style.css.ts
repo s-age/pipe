@@ -1,5 +1,7 @@
 import { style } from '@vanilla-extract/css'
 
+import { colors } from '@/styles/colors.css'
+
 export const container = style({
   padding: '5px',
   position: 'relative',
@@ -50,14 +52,16 @@ export const suggestionList = style({
 })
 
 export const suggestionItem = style({
-  padding: '4px 0',
+  padding: '4px 8px',
   cursor: 'pointer',
-  listStyle: 'none'
+  listStyle: 'none',
+  color: 'white'
 })
 
 export const selectedSuggestionItem = style([
   suggestionItem,
   {
-    backgroundColor: '#e0e0e0'
+    backgroundColor: colors.cyan,
+    color: colors.uiBackground
   }
 ])

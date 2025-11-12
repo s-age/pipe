@@ -109,17 +109,14 @@ export const useReferenceListHandlers = (actions: {
             const entries = await actions.loadSubDirectorySuggestions(pathParts)
             setSuggestions(entries)
           } else {
-            // ファイルが選択された場合は直接参照を追加
-            await actions.addReference(selected.name)
-            setInputValue('')
+            // ファイルが選択された場合はinputの値を選択したファイル名に設定
+            setInputValue(selected.name)
+            if (event.currentTarget) {
+              event.currentTarget.value = selected.name
+            }
             setSuggestions([])
           }
           setSelectedIndex(-1)
-        } else if (inputValue.trim()) {
-          // 補完候補が選択されていないがinputに値がある場合はAddと同じ動作
-          await actions.addReference(inputValue.trim())
-          setInputValue('')
-          setSuggestions([])
         }
       } else if (event.key === 'Escape') {
         event.preventDefault()

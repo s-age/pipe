@@ -6,31 +6,11 @@ export const metaItem = style({
   marginBottom: '16px'
 })
 
-export const multiStepLabel = style({
-  color: colors.offWhite,
-  fontWeight: 'bold'
-})
-
 export const metaItemLabel = style({
   fontWeight: 'bold',
   marginBottom: '4px',
   display: 'block',
   color: colors.offWhite
-})
-
-export const inputFullWidth = style({
-  width: '100%',
-  boxSizing: 'border-box',
-  background: '#000',
-  color: colors.offWhite,
-  borderRadius: '4px',
-  padding: '8px',
-  border: `1px solid ${colors.grayText}`,
-  ':focus': {
-    outline: 'none',
-    border: `1px solid ${colors.cyan}`,
-    boxShadow: `0 0 0 3px ${colors.cyanBorderRGBA}`
-  }
 })
 
 export const artifactsList = style({
@@ -56,4 +36,15 @@ export const removeArtifactButton = style({
   marginLeft: '8px',
   minWidth: '24px',
   height: '24px'
+})
+
+export const debugInfo = style({
+  backgroundColor: '#f0f0f0',
+  border: '1px solid #ccc',
+  padding: '4px',
+  marginBottom: '8px',
+  fontSize: '12px',
+  color: '#333',
+  fontFamily: 'monospace',
+  borderRadius: '4px'
 })

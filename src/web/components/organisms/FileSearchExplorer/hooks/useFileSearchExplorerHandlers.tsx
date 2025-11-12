@@ -2,7 +2,6 @@ import type { ChangeEvent, KeyboardEvent, RefObject } from 'react'
 import { useState, useCallback, useEffect } from 'react'
 
 import { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
-import { useFileSearchExplorerLifecycle } from './useFileSearchExplorerLifecycle'
 
 export const useFileSearchExplorerHandlers = (
   inputReference?: RefObject<HTMLInputElement | null>
@@ -34,14 +33,13 @@ export const useFileSearchExplorerHandlers = (
   useEffect(() => {
     void actions.getLsData({ final_path_list: [] }).then((lsResult) => {
       if (lsResult) {
-        const rootEntries = lsResult.entries.map((entry) => entry.name)
+        const rootEntries = lsResult.entries.map((entry) =>
+          entry.is_dir ? `${entry.name}/` : entry.name
+        )
         setRootSuggestions(rootEntries)
       }
     })
   }, [actions])
-
-  // Use lifecycle hook
-  void useFileSearchExplorerLifecycle({ query, actions })
 
   const handleTagDelete = useCallback(
     (index: number): void => {
@@ -53,7 +51,8 @@ export const useFileSearchExplorerHandlers = (
   )
 
   const handleQueryChange = useCallback(
-    (newQuery: string): void => {
+    (event: ChangeEvent<HTMLInputElement>): void => {
+      const newQuery = event.target.value
       console.log('handleQueryChange called with:', newQuery)
       setQuery(newQuery)
       setSelectedIndex(-1)
@@ -71,7 +70,7 @@ export const useFileSearchExplorerHandlers = (
             if (lsResult) {
               const filtered = lsResult.entries
                 .filter((entry) => entry.name.startsWith(prefix))
-                .map((entry) => entry.name)
+                .map((entry) => (entry.is_dir ? `${entry.name}/` : entry.name))
               console.log('filtered suggestions:', filtered)
               setSuggestions(filtered)
             }
@@ -106,7 +105,7 @@ export const useFileSearchExplorerHandlers = (
 
   const handleInputChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
-      handleQueryChange(event.target.value)
+      handleQueryChange(event)
     },
     [handleQueryChange]
   )
@@ -116,20 +115,41 @@ export const useFileSearchExplorerHandlers = (
     (suggestion: string | { name: string; isDirectory: boolean }): void => {
       const suggestionName =
         typeof suggestion === 'string' ? suggestion : suggestion.name
-      const parts = query.split('/')
-      const pathParts = parts.slice(0, -1).filter((p) => p)
-      const newPath = [...pathParts, suggestionName].join('/')
-      setQuery(newPath)
-      setSuggestions([])
+
+      if (suggestionName.endsWith('/')) {
+        // Directory: navigate into it
+        const parts = query.split('/')
+        const pathParts = parts.slice(0, -1).filter((p) => p)
+        const newPath = [...pathParts, suggestionName.slice(0, -1)].join('/') + '/'
+        console.log('handleSuggestionClick: navigating to directory:', newPath)
+        setQuery(newPath)
+        setSuggestions([])
+      } else {
+        // File: add to pathList
+        const parts = query.split('/')
+        const pathParts = parts.slice(0, -1).filter((p) => p)
+        const newPath = [...pathParts, suggestionName].join('/')
+        console.log('handleSuggestionClick: adding file to pathList:', newPath)
+        setPathList([...pathList, newPath])
+        setQuery('')
+        setSuggestions([])
+      }
       inputReference?.current?.focus()
     },
-    [query, inputReference]
+    [query, pathList, inputReference]
   )
 
   const handleKeyDown = useCallback(
     // eslint-disable-next-line react-hooks/preserve-manual-memoization
     (event: KeyboardEvent<HTMLInputElement>): void => {
-      console.log('handleKeyDown:', event.key, 'selectedIndex:', selectedIndex)
+      console.log(
+        'handleKeyDown called:',
+        event.key,
+        'selectedIndex:',
+        selectedIndex,
+        'suggestions.length:',
+        suggestions.length
+      )
       if (suggestions.length > 0) {
         if (event.key === 'ArrowDown') {
           event.preventDefault()
@@ -141,6 +161,9 @@ export const useFileSearchExplorerHandlers = (
           )
         } else if (event.key === 'Enter' && selectedIndex >= 0) {
           event.preventDefault()
+          console.log(
+            'Enter pressed with suggestion selected, calling handleSuggestionClick'
+          )
           const selectedSuggestion = suggestions[selectedIndex]
           handleSuggestionClick(selectedSuggestion)
           inputReference?.current?.focus()
@@ -149,6 +172,7 @@ export const useFileSearchExplorerHandlers = (
           setSelectedIndex(-1)
         }
       } else if (event.key === 'Enter') {
+        console.log('Enter pressed without suggestions, calling handlePathConfirm')
         void handlePathConfirm(query)
       }
     },

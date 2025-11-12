@@ -1,22 +1,18 @@
 import React from 'react'
 
+import { ArtifactsSelector } from '@/components/molecules/ArtifactsSelector'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { InputCheckbox } from '@/components/molecules/InputCheckbox'
 import { InputText } from '@/components/molecules/InputText'
 import { RolesSelect } from '@/components/molecules/RolesSelect'
 import { TextArea } from '@/components/molecules/TextArea'
+import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { RoleOption } from '@/lib/api/roles/getRoles'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useMultiStepReasoningHandlers } from './hooks/useMultiStepReasoningHandlers'
-import {
-  metaItem,
-  multiStepLabel,
-  metaItemLabel,
-  inputFullWidth,
-  textareaFullWidth
-} from './style.css'
+import { metaItem, multiStepLabel, metaItemLabel, inputFullWidth } from './style.css'
 
 type SessionMetaBasicProperties = {
   sessionDetail: SessionDetail | null
@@ -34,13 +30,24 @@ export const SessionMetaBasic = ({
   setSessionDetail,
   roleOptions
 }: SessionMetaBasicProperties): React.JSX.Element => {
-  const register = useOptionalFormContext()?.register
+  const formContext = useOptionalFormContext()
+  const register = formContext?.register
+  const setValue = formContext?.setValue
   const { handleMultiStepReasoningChange } = useMultiStepReasoningHandlers({
     currentSessionId,
     sessionDetail,
     onRefresh,
     setSessionDetail
   })
+
+  const handleProcedurePathChange = React.useCallback(
+    (paths: string[]) => {
+      if (setValue) {
+        setValue('procedure', paths[0] || '')
+      }
+    },
+    [setValue]
+  )
 
   return (
     <>
@@ -68,7 +75,7 @@ export const SessionMetaBasic = ({
             id="background"
             register={register}
             name="background"
-            className={textareaFullWidth}
+            className={inputFullWidth}
             aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
           />
         )}
@@ -96,31 +103,10 @@ export const SessionMetaBasic = ({
         legend={<span className={metaItemLabel}>Procedure:</span>}
         className={metaItem}
       >
-        {(ids) => (
-          <InputText
-            id="procedure"
-            register={register}
-            name="procedure"
-            className={inputFullWidth}
-            aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
-          />
-        )}
+        <FileSearchExplorer onPathChange={handleProcedurePathChange} />
       </Fieldset>
 
-      <Fieldset
-        legend={<span className={metaItemLabel}>Artifacts:</span>}
-        className={metaItem}
-      >
-        {(ids) => (
-          <InputText
-            id="artifacts"
-            register={register}
-            name="artifacts"
-            className={inputFullWidth}
-            aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
-          />
-        )}
-      </Fieldset>
+      <ArtifactsSelector />
 
       <div className={metaItem}>
         <InputCheckbox

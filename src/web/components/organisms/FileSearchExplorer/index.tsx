@@ -1,5 +1,5 @@
 import type { JSX } from 'react'
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 
 import { useFileSearchExplorerHandlers } from './hooks/useFileSearchExplorerHandlers'
 import { PathTag } from './PathTag'
@@ -40,13 +40,18 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProperties>(
       onKeyDown={onKeyDown}
       placeholder="Search files or directories..."
       className={searchInput}
+      autoComplete="off"
     />
   )
 )
 
 SearchInput.displayName = 'SearchInput'
 
-export const FileSearchExplorer = (): JSX.Element => {
+export const FileSearchExplorer = ({
+  onPathChange
+}: {
+  onPathChange?: (paths: string[]) => void
+} = {}): JSX.Element => {
   const inputReference = useRef<HTMLInputElement>(null)
   const handlers = useFileSearchExplorerHandlers(inputReference)
   const {
@@ -59,6 +64,11 @@ export const FileSearchExplorer = (): JSX.Element => {
     handleKeyDown,
     handleSuggestionClick
   } = handlers
+
+  useEffect(() => {
+    console.log('FileSearchExplorer onPathChange called with:', pathList)
+    onPathChange?.(pathList)
+  }, [pathList, onPathChange])
 
   return (
     <div className={container}>

@@ -93,7 +93,10 @@ export const ReferenceList = ({
     handleAdd
   } = useReferenceListHandlers(actions)
 
-  if (!sessionDetail || sessionDetail.references.length === 0) {
+  // Use sessionDetail references for display
+  const currentReferences = sessionDetail?.references || []
+
+  if (!sessionDetail || currentReferences.length === 0) {
     return (
       <div className={metaItem}>
         <Label className={metaItemLabel}>References:</Label>
@@ -160,7 +163,7 @@ export const ReferenceList = ({
         )}
       </div>
       <ul className={referencesList}>
-        {sessionDetail.references.map((reference: Reference, index: number) => (
+        {currentReferences.map((reference: Reference, index: number) => (
           <li key={index} className={referenceItem}>
             <div className={referenceControls}>
               <div className={referenceLabel}>

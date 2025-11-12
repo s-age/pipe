@@ -683,6 +683,92 @@ paths:
         '500':
           description: Internal server error
 
+  /api/v1/settings:
+    get:
+      summary: Get system settings (singular path)
+      responses:
+        '200':
+          description: System settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  settings:
+                    type: object
+        '500':
+          description: Internal server error
+
+  # File Search Endpoints
+  /api/v1/search_l2:
+    post:
+      summary: Search for level 1 candidates and prefetch level 2 data
+      tags:
+        - file-search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchL2Request'
+      responses:
+        '200':
+          description: Level 1 candidates and prefetched level 2 data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchL2Response'
+        '400':
+          description: Invalid request payload
+        '500':
+          description: Internal server error
+
+  /api/v1/ls:
+    post:
+      summary: Get ls-like data for a final path
+      tags:
+        - file-search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LsRequest'
+      responses:
+        '200':
+          description: List of file/directory entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LsEntry'
+        '400':
+          description: Invalid request payload
+        '500':
+          description: Internal server error
+
+  /api/v1/index_files:
+    post:
+      summary: Create or update the Whoosh file index
+      tags:
+        - file-search
+      responses:
+        '200':
+          description: File index created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal server error
+
 components:
   schemas:
     RoleOption:
@@ -879,3 +965,82 @@ components:
           default: false
       required:
         - title
+    SearchL2Request:
+      type: object
+      properties:
+        current_path_list:
+          type: array
+          items:
+            type: string
+          description: Current confirmed path list (e.g., ['src', 'components'])
+      required:
+        - current_path_list
+        - query
+    SearchL2Response:
+      type: object
+      properties:
+        level_1_candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Level1Candidate'
+          description: List of 1st level search candidates
+        level_2_prefetched:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/Level1Candidate'
+          description: 2nd level prefetched data (directory name -> candidate list)
+      required:
+        - level_1_candidates
+        - level_2_prefetched
+    Level1Candidate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: File or directory name
+        is_dir:
+          type: boolean
+          description: Flag indicating if it's a directory
+        path_segment:
+          type: string
+          description: Path segment
+      required:
+        - name
+        - is_dir
+        - path_segment
+    LsRequest:
+      type: object
+      properties:
+        final_path_list:
+          type: array
+          items:
+            type: string
+          description: Final confirmed path list (e.g., ['src', 'components', 'Header'])
+      required:
+        - final_path_list
+    LsEntry:
+      type: object
+      properties:
+        name:
+          type: string
+          description: File or directory name
+        is_dir:
+          type: boolean
+          description: Flag indicating if it's a directory
+        size:
+          type: integer
+          nullable: true
+          description: File size in bytes
+        last_modified:
+          type: number
+          nullable: true
+          description: Last modified timestamp (UNIX timestamp)
+        path:
+          type: string
+          description: Full path of the file
+      required:
+        - name
+        - is_dir
+        - path

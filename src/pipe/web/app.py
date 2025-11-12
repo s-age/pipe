@@ -3,6 +3,7 @@ import os
 import sys
 import zoneinfo
 
+import yaml
 from flask import Flask, Request, Response, abort, jsonify, render_template, request
 from flask_cors import CORS
 from pipe.core.factories.service_factory import ServiceFactory
@@ -29,6 +30,11 @@ from pipe.web.actions import (
     TodosEditAction,
     TurnDeleteAction,
     TurnEditAction,
+)
+from pipe.web.actions.file_search_actions import (
+    IndexFilesAction,
+    LsAction,
+    SearchL2Action,
 )
 from pipe.web.controllers import SessionDetailController
 
@@ -71,8 +77,12 @@ def check_and_show_warning(project_root: str) -> bool:
 def load_settings(config_path: str) -> dict:
     try:
         return read_yaml_file(config_path)
-    except FileNotFoundError:
-        return {}
+    except (FileNotFoundError, yaml.YAMLError):
+        default_path = config_path.replace("setting.yml", "setting.default.yml")
+        try:
+            return read_yaml_file(default_path)
+        except (FileNotFoundError, yaml.YAMLError):
+            return {}
 
 
 # Correctly determine the project root, which is three levels up from the current script
@@ -109,6 +119,9 @@ def _log_incoming_request():
         pass
 
 
+project_root = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..")
+)
 config_path = os.path.join(project_root, "setting.yml")
 settings_dict = load_settings(config_path)
 settings = Settings(**settings_dict)
@@ -130,6 +143,13 @@ session_service = ServiceFactory(project_root, settings).create_session_service(
 # Naming convention: /api/v1/bff/<feature>-dashboard/{id}
 # Example: /api/v1/bff/session-dashboard/{session_id} aggregates session data
 session_detail_controller = SessionDetailController(session_service, settings)
+
+file_indexer_service = ServiceFactory(
+    project_root, settings
+).create_file_indexer_service()
+search_l2_action = SearchL2Action(file_indexer_service, {})
+ls_action = LsAction(file_indexer_service, {})
+index_files_action = IndexFilesAction(file_indexer_service, {})
 
 
 def dispatch_action(
@@ -176,6 +196,9 @@ def dispatch_action(
         ("session/{session_id}", "GET", SessionGetAction),
         ("session/{session_id}", "DELETE", SessionDeleteAction),
         ("roles", "GET", GetRolesAction),
+        ("search_l2", "POST", search_l2_action),
+        ("ls", "POST", ls_action),
+        ("index_files", "POST", index_files_action),
     ]
 
     for route_pattern, route_method, action_class in route_map:
@@ -199,7 +222,15 @@ def dispatch_action(
 
         if match:
             try:
-                action_instance = action_class(params=params, request_data=request_data)
+                if isinstance(action_class, type):
+                    action_instance = action_class(
+                        params=params,
+                        request_data=request_data,
+                    )
+                else:
+                    action_instance = action_class
+                    action_instance.params = params
+                    action_instance.request_data = request_data
                 return action_instance.execute()
             except Exception as e:
                 return {"message": str(e)}, 500
@@ -579,10 +610,6 @@ def dispatch_action_endpoint(action: str):
 
         params = dict(request.view_args or {})
         params.update(request.args.to_dict())
-
-        # Remove 'v1/' prefix from action before dispatching to internal handler
-        if action.startswith("v1/"):
-            action = action[3:]
 
         if action.startswith("session/"):
             parts = action.split("/")

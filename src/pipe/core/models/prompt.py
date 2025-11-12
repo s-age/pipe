@@ -140,11 +140,11 @@ class Prompt(BaseModel):
             "artifacts": artifacts if artifacts else None,
             "procedure": session.procedure if session.procedure else None,
             "procedure_content": procedure_content if procedure_content else None,
-            "reasoning_process": {
-                "description": "Think step-by-step to achieve the goal."
-            }
-            if session.multi_step_reasoning_enabled
-            else None,
+            "reasoning_process": (
+                {"description": "Think step-by-step to achieve the goal."}
+                if session.multi_step_reasoning_enabled
+                else None
+            ),
         }
 
         return cls(**prompt_data)

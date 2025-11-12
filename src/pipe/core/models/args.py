@@ -39,22 +39,28 @@ class TaktArgs:
             session=parsed_args.session,
             purpose=parsed_args.purpose,
             background=parsed_args.background,
-            roles=[r.strip() for r in parsed_args.roles.split(",")]
-            if parsed_args.roles
-            else [],
+            roles=(
+                [r.strip() for r in parsed_args.roles.split(",")]
+                if parsed_args.roles
+                else []
+            ),
             parent=parsed_args.parent,
             instruction=parsed_args.instruction,
-            references=[r.strip() for r in parsed_args.references.split(",")]
-            if parsed_args.references
-            else [],
-            references_persist=[
-                r.strip() for r in parsed_args.references_persist.split(",")
-            ]
-            if parsed_args.references_persist
-            else [],
-            artifacts=[r.strip() for r in parsed_args.artifacts.split(",")]
-            if parsed_args.artifacts
-            else [],
+            references=(
+                [r.strip() for r in parsed_args.references.split(",")]
+                if parsed_args.references
+                else []
+            ),
+            references_persist=(
+                [r.strip() for r in parsed_args.references_persist.split(",")]
+                if parsed_args.references_persist
+                else []
+            ),
+            artifacts=(
+                [r.strip() for r in parsed_args.artifacts.split(",")]
+                if parsed_args.artifacts
+                else []
+            ),
             procedure=parsed_args.procedure,
             multi_step_reasoning=parsed_args.multi_step_reasoning,
             fork=parsed_args.fork,

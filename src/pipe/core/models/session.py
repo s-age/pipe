@@ -235,9 +235,9 @@ class Session(BaseModel):
             "roles": self.roles,
             "multi_step_reasoning_enabled": self.multi_step_reasoning_enabled,
             "token_count": self.token_count,
-            "hyperparameters": self.hyperparameters.model_dump()
-            if self.hyperparameters
-            else None,
+            "hyperparameters": (
+                self.hyperparameters.model_dump() if self.hyperparameters else None
+            ),
             "references": [r.model_dump() for r in self.references],
             "artifacts": self.artifacts,
             "procedure": self.procedure,

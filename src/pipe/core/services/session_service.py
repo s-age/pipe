@@ -411,9 +411,11 @@ class SessionService:
             roles=roles,
             multi_step_reasoning_enabled=multi_step_reasoning_enabled,
             token_count=token_count,
-            hyperparameters=hyperparameters
-            if hyperparameters is not None
-            else default_hyperparameters,
+            hyperparameters=(
+                hyperparameters
+                if hyperparameters is not None
+                else default_hyperparameters
+            ),
             artifacts=artifacts or [],
             procedure=procedure,
         )

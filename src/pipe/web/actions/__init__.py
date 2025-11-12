@@ -1,6 +1,7 @@
 """Web API Actions module."""
 
 from pipe.web.actions.base_action import BaseAction
+from pipe.web.actions.file_search_actions import LsAction, SearchL2Action
 from pipe.web.actions.get_roles_action import GetRolesAction
 from pipe.web.actions.meta_actions import (
     HyperparametersEditAction,
@@ -52,4 +53,6 @@ __all__ = [
     "ReferenceTtlEditAction",
     "SettingsGetAction",
     "GetRolesAction",
+    "LsAction",
+    "SearchL2Action",
 ]

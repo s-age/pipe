@@ -181,11 +181,14 @@ class SessionInstructionAction(BaseAction):
                 def error_generate():
                     yield f"data: {json.dumps({'error': error_message})}\n\n"
 
-                return Response(
-                    stream_with_context(error_generate()),
-                    mimetype="text/event-stream",
-                    status=400,
-                ), 400
+                return (
+                    Response(
+                        stream_with_context(error_generate()),
+                        mimetype="text/event-stream",
+                        status=400,
+                    ),
+                    400,
+                )
 
             enable_multi_step_reasoning = session_data.multi_step_reasoning_enabled
 

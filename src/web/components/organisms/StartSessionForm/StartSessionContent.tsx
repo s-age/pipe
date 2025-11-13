@@ -19,7 +19,6 @@ type StartSessionContentProperties = {
   handleCancel: () => void
   handleCreateClick: () => void
   noop: () => Promise<void>
-  noopSetSessionDetail: (_data: SessionDetail | null) => void
   noopOnSessionUpdate: (_data: SessionDetail | null) => void
 }
 
@@ -27,7 +26,6 @@ export const StartSessionContent = ({
   handleCancel,
   handleCreateClick,
   noop,
-  noopSetSessionDetail,
   noopOnSessionUpdate
 }: StartSessionContentProperties): JSX.Element => {
   const {
@@ -50,11 +48,7 @@ export const StartSessionContent = ({
         )}
       </Fieldset>
 
-      <ReferenceList
-        sessionDetail={null}
-        currentSessionId={null}
-        setSessionDetail={noopSetSessionDetail}
-      />
+      <ReferenceList currentSessionId={null} />
 
       <HyperParameters
         sessionDetail={null}

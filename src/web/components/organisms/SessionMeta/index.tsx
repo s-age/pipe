@@ -6,6 +6,7 @@ import { Form, useFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { useSessionMetaHandlers } from '@/components/organisms/SessionMeta/hooks/useSessionMetaHandlers'
+import { sessionMetaSchema } from '@/components/organisms/SessionMeta/schema'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -44,7 +45,7 @@ export const SessionMeta = ({
     const { handleSubmit } = useFormContext()
 
     const handleSaveClick = React.useCallback((): void => {
-      void handleSubmit(onSubmit)()
+      void handleSubmit(onSubmit as never)()
     }, [handleSubmit])
 
     return (
@@ -58,12 +59,7 @@ export const SessionMeta = ({
               onRefresh={onRefresh}
             />
 
-            <ReferenceList
-              sessionDetail={sessionDetail}
-              currentSessionId={currentSessionId}
-              setSessionDetail={setSessionDetail}
-              refreshSessions={onRefresh}
-            />
+            <ReferenceList currentSessionId={currentSessionId} />
 
             <HyperParameters
               sessionDetail={sessionDetail}
@@ -95,7 +91,7 @@ export const SessionMeta = ({
   }
 
   return (
-    <Form defaultValues={defaultValues}>
+    <Form defaultValues={defaultValues} schema={sessionMetaSchema}>
       <MetaContent />
     </Form>
   )

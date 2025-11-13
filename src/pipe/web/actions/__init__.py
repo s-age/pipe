@@ -56,4 +56,5 @@ __all__ = [
     "GetRolesAction",
     "LsAction",
     "SearchL2Action",
+    "GetProceduresAction",
 ]

@@ -9,7 +9,9 @@ class GetProceduresAction:
     def __init__(self, params: dict, request_data: Request | None = None):
         self.params = params
         self.request_data = request_data
-        procedures_root_dir = Path(__file__).parent.parent.parent.parent.parent / "procedures"
+        procedures_root_dir = (
+            Path(__file__).parent.parent.parent.parent.parent / "procedures"
+        )
         self.procedure_repository = ProcedureRepository(procedures_root_dir)
         self.procedure_service = ProcedureService(self.procedure_repository)
 

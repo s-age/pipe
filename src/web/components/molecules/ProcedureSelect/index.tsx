@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import type { JSX, ChangeEvent, KeyboardEvent } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import type { JSX, KeyboardEvent } from 'react'
 
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import { getProcedures, type ProcedureOption } from '@/lib/api/procedures/getProcedures'
@@ -9,9 +9,7 @@ import {
   input,
   suggestionList,
   suggestionItem,
-  selectedSuggestionItem,
-  selectedProcedureContainer,
-  selectedProcedureTag
+  selectedSuggestionItem
 } from './style.css'
 
 type ProcedureSelectProperties = {
@@ -22,13 +20,9 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const { placeholder = 'Select procedure' } = properties
 
   const formContext = useOptionalFormContext()
-  const watch = formContext?.watch
-  const setValue = formContext?.setValue
-
-  const selectedProcedure = watch?.('procedure') || null
+  const currentValue = formContext?.watch?.('procedure') || ''
 
   const [procedureOptions, setProcedureOptions] = useState<ProcedureOption[]>([])
-  const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [isLoaded, setIsLoaded] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -51,78 +45,49 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
     void loadProcedures()
   }, [isLoaded])
 
-  // Compute display query from selectedProcedure
-  const displayQuery = useMemo(() => {
-    if (selectedProcedure) {
-      const procedure = procedureOptions.find((p) => p.value === selectedProcedure)
-
-      return procedure ? procedure.label : ''
-    }
-
-    return query
-  }, [selectedProcedure, procedureOptions, query])
-
-  const handleInputChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.value
-      if (selectedProcedure) {
-        // If editing while selected, clear selection
-        setValue?.('procedure', null)
-      }
-      setQuery(value)
-      setShowSuggestions(true)
-    },
-    [selectedProcedure, setValue]
-  )
-
   const handleInputFocus = useCallback(() => {
     setShowSuggestions(true)
-  }, [])
+  }, [setShowSuggestions])
 
   const handleInputBlur = useCallback(() => {
     setTimeout(() => setShowSuggestions(false), 200)
-  }, [])
+  }, [setShowSuggestions])
 
   const handleProcedureSelect = useCallback(
-    (procedure: ProcedureOption) => {
-      setValue?.('procedure', procedure.value)
-      setQuery('')
+    (procedureValue: string) => {
+      formContext?.setValue?.('procedure', procedureValue)
       setShowSuggestions(false)
       setSelectedIndex(-1)
+      inputReference.current?.blur()
     },
-    [setValue]
+    [formContext, setShowSuggestions, setSelectedIndex]
   )
 
-  const handleProcedureRemove = useCallback(() => {
-    setValue?.('procedure', null)
-    setQuery('')
-  }, [setValue])
+  const filteredProcedures = procedureOptions.filter((procedure) =>
+    procedure.value.toLowerCase().includes(currentValue.toLowerCase())
+  )
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
-      if (!showSuggestions || procedureOptions.length === 0) return
-
-      const filtered = procedureOptions.filter((procedure) =>
-        procedure.label.toLowerCase().includes(query.toLowerCase())
-      )
+      if (!showSuggestions || filteredProcedures.length === 0) return
 
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault()
           setSelectedIndex((previous) =>
-            previous < filtered.length - 1 ? previous + 1 : 0
+            previous < filteredProcedures.length - 1 ? previous + 1 : 0
           )
           break
         case 'ArrowUp':
           event.preventDefault()
           setSelectedIndex((previous) =>
-            previous > 0 ? previous - 1 : filtered.length - 1
+            previous > 0 ? previous - 1 : filteredProcedures.length - 1
           )
           break
         case 'Enter':
           event.preventDefault()
-          if (selectedIndex >= 0 && selectedIndex < filtered.length) {
-            handleProcedureSelect(filtered[selectedIndex])
+          if (selectedIndex >= 0 && selectedIndex < filteredProcedures.length) {
+            handleProcedureSelect(filteredProcedures[selectedIndex].value)
           }
           break
         case 'Escape':
@@ -131,11 +96,17 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
           inputReference.current?.blur()
           break
         default:
-          console.log('Unhandled key:', event.key)
           break
       }
     },
-    [showSuggestions, procedureOptions, query, selectedIndex, handleProcedureSelect]
+    [
+      showSuggestions,
+      filteredProcedures,
+      selectedIndex,
+      handleProcedureSelect,
+      setSelectedIndex,
+      setShowSuggestions
+    ]
   )
 
   // Scroll selected item into view when selectedIndex changes
@@ -156,57 +127,41 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const handleSuggestionClick = useCallback(
     (event: React.MouseEvent<HTMLLIElement>) => {
       const procedureValue = event.currentTarget.dataset.procedure
-      const procedure = procedureOptions.find((p) => p.value === procedureValue)
-      if (procedure) {
-        handleProcedureSelect(procedure)
+      if (procedureValue) {
+        handleProcedureSelect(procedureValue)
       }
     },
-    [procedureOptions, handleProcedureSelect]
-  )
-
-  const filteredProcedures = procedureOptions.filter((procedure) =>
-    procedure.label.toLowerCase().includes(query.toLowerCase())
+    [handleProcedureSelect]
   )
 
   return (
     <div className={container}>
-      <div className={container}>
-        <input
-          ref={inputReference}
-          type="text"
-          value={displayQuery}
-          onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          onBlur={handleInputBlur}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className={input}
-          autoComplete="off"
-          {...formContext?.register('procedure')}
-        />
-        {showSuggestions && filteredProcedures.length > 0 && (
-          <ul className={suggestionList} ref={suggestionListReference}>
-            {filteredProcedures.map((procedure, index) => (
-              <li
-                key={procedure.value}
-                className={
-                  index === selectedIndex ? selectedSuggestionItem : suggestionItem
-                }
-                onClick={handleSuggestionClick}
-                data-procedure={procedure.value}
-              >
-                {procedure.label}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      {selectedProcedure && (
-        <div className={selectedProcedureContainer}>
-          <span className={selectedProcedureTag} onClick={handleProcedureRemove}>
-            {procedureOptions.find((p) => p.value === selectedProcedure)?.label} ×
-          </span>
-        </div>
+      <input
+        ref={inputReference}
+        type="text"
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        className={input}
+        autoComplete="off"
+        {...formContext?.register('procedure')}
+      />
+      {showSuggestions && filteredProcedures.length > 0 && (
+        <ul className={suggestionList} ref={suggestionListReference}>
+          {filteredProcedures.map((procedure, index) => (
+            <li
+              key={procedure.value}
+              className={
+                index === selectedIndex ? selectedSuggestionItem : suggestionItem
+              }
+              onClick={handleSuggestionClick}
+              data-procedure={procedure.value}
+            >
+              {procedure.label}
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   )

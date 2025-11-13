@@ -16,24 +16,17 @@ import {
 
 type RolesSelectProperties = {
   placeholder?: string
-  sessionDetail?: SessionDetail | null
+  sessionDetail: SessionDetail | null
   onChange?: (roles: string[]) => void
-  className?: string
-  'aria-describedby'?: string
 }
 
 export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
-  const {
-    placeholder = 'Select roles',
-    sessionDetail,
-    onChange,
-    className: _className,
-    'aria-describedby': _ariaDescribedBy
-  } = properties
+  const { placeholder = 'Select roles', sessionDetail, onChange } = properties
+  console.log('sessionDetail.roles', sessionDetail?.roles ?? [])
 
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
   const [selectedRoles, setSelectedRoles] = useState<string[]>(
-    sessionDetail?.roles || []
+    sessionDetail?.roles ?? []
   )
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -42,10 +35,17 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
   const inputReference = useRef<HTMLInputElement>(null)
   const suggestionListReference = useRef<HTMLUListElement>(null)
 
-  // Load roles on mount
-  useEffect(() => {
-    const loadRoles = async (): Promise<void> => {
-      if (!isLoaded) {
+  const handleInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setQuery(event.target.value)
+    setShowSuggestions(true)
+  }, [])
+
+  const handleInputFocus = useCallback(() => {
+    setShowSuggestions(true)
+
+    // Load roles on first focus
+    if (!isLoaded) {
+      const loadRoles = async (): Promise<void> => {
         try {
           const roles = await getRoles()
           setRoleOptions(roles)
@@ -54,18 +54,9 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
           console.error('Failed to fetch roles:', error)
         }
       }
+      void loadRoles()
     }
-    void loadRoles()
   }, [isLoaded])
-
-  const handleInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.target.value)
-    setShowSuggestions(true)
-  }, [])
-
-  const handleInputFocus = useCallback(() => {
-    setShowSuggestions(true)
-  }, [])
 
   const handleInputBlur = useCallback(() => {
     setTimeout(() => setShowSuggestions(false), 200)
@@ -206,17 +197,19 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
       <div className={selectedRolesContainer}>
         {selectedRoles.map((roleValue) => {
           const role = roleOptions.find((r) => r.value === roleValue)
+          // Display the role even if roleOptions hasn't loaded yet
+          const displayLabel = role?.label ?? roleValue
 
-          return role ? (
+          return (
             <span
               key={roleValue}
               className={selectedRoleTag}
               onClick={handleTagClick}
               data-role={roleValue}
             >
-              {role.label} ×
+              {displayLabel} ×
             </span>
-          ) : null
+          )
         })}
       </div>
     </div>

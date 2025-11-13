@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { JSX, KeyboardEvent } from 'react'
 
+import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import { getProcedures, type ProcedureOption } from '@/lib/api/procedures/getProcedures'
 
@@ -21,6 +22,7 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
 
   const formContext = useOptionalFormContext()
   const currentValue = formContext?.watch?.('procedure') || ''
+  const error = formContext?.formState?.errors?.procedure
 
   const [procedureOptions, setProcedureOptions] = useState<ProcedureOption[]>([])
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -29,10 +31,12 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const inputReference = useRef<HTMLInputElement>(null)
   const suggestionListReference = useRef<HTMLUListElement>(null)
 
-  // Load procedures on mount
-  useEffect(() => {
-    const loadProcedures = async (): Promise<void> => {
-      if (!isLoaded) {
+  const handleInputFocus = useCallback(() => {
+    setShowSuggestions(true)
+
+    // Load procedures on first focus
+    if (!isLoaded) {
+      const loadProcedures = async (): Promise<void> => {
         try {
           const procedures = await getProcedures()
           setProcedureOptions(procedures)
@@ -41,13 +45,9 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
           console.error('Failed to fetch procedures:', error)
         }
       }
+      void loadProcedures()
     }
-    void loadProcedures()
-  }, [isLoaded])
-
-  const handleInputFocus = useCallback(() => {
-    setShowSuggestions(true)
-  }, [setShowSuggestions])
+  }, [setShowSuggestions, isLoaded])
 
   const handleInputBlur = useCallback(() => {
     setTimeout(() => setShowSuggestions(false), 200)
@@ -147,6 +147,7 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
         autoComplete="off"
         {...formContext?.register('procedure')}
       />
+      {error && <ErrorMessage error={error as never} />}
       {showSuggestions && filteredProcedures.length > 0 && (
         <ul className={suggestionList} ref={suggestionListReference}>
           {filteredProcedures.map((procedure, index) => (

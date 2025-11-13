@@ -155,6 +155,77 @@ export const useSelectLifecycle = ({ isOpen, close }) => {
 }
 ```
 
+## Special Purpose Hooks
+
+### `useInitialLoading` - StrictMode-Safe Data Loading
+
+A utility hook for initial data fetching that executes only once, even in React StrictMode.
+
+**Problem:** React 19 StrictMode double-invokes effects in development, causing duplicate API calls on component mount.
+
+**Solution:** `useInitialLoading` uses `useRef` to track execution state and prevent duplicate calls.
+
+```typescript
+// Implementation
+import { useEffect, useRef } from 'react'
+
+export const useInitialLoading = (loadFunction: () => Promise<void>): void => {
+  const initializedReference = useRef(false)
+
+  useEffect(() => {
+    if (initializedReference.current) {
+      return
+    }
+    initializedReference.current = true
+    void loadFunction()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+}
+```
+
+**Usage:**
+
+```typescript
+// In a page or component
+export const useChatHistoryPageLifecycle = ({ state, actions }) => {
+  const { setSessions, setSessionDetail } = actions
+  const toast = useToast()
+
+  const loadSessions = useCallback(async () => {
+    try {
+      const data = await getSessionDashboard(sessionId)
+      setSessions(data.session_tree)
+      setSessionDetail(data.current_session)
+    } catch (error) {
+      toast.failure('Failed to load sessions.')
+    }
+  }, [setSessions, setSessionDetail, toast])
+
+  useInitialLoading(loadSessions)
+}
+```
+
+**When to use:**
+
+- ✅ Initial page data fetching on mount
+- ✅ One-time setup operations with side effects
+- ✅ API calls that should only happen once per component lifecycle
+
+**When NOT to use:**
+
+- ❌ Effects that should re-run on dependency changes (use regular `useEffect`)
+- ❌ User-triggered actions (use Handlers pattern)
+- ❌ Cleanup operations or subscriptions
+
+**Benefits:**
+
+- Prevents duplicate API calls in StrictMode
+- Clear intent: "this only runs once on mount"
+- Reusable pattern across the codebase
+- Simple implementation without external dependencies
+
+**File Location:** `src/web/hooks/useInitialLoading.ts`
+
 ## Further Reading
 
 - [Actions Pattern](./useActions.md) - API call wrappers

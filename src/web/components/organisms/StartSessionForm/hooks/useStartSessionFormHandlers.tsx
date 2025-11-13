@@ -17,7 +17,7 @@ export const useStartSessionFormHandlers = ({
   handleCancel: () => void
   handleCreateClick: () => void
   noop: () => Promise<void>
-  noopSetSessionDetail: (_data: SessionDetail | null) => void
+
   noopOnSessionUpdate: (_data: SessionDetail | null) => void
 } => {
   const toast = useToast()
@@ -50,15 +50,12 @@ export const useStartSessionFormHandlers = ({
 
   const noop = useCallback(async () => {}, [])
 
-  const noopSetSessionDetail = useCallback((_data: SessionDetail | null) => {}, [])
-
   const noopOnSessionUpdate = useCallback((_data: SessionDetail | null) => {}, [])
 
   return {
     handleCancel,
     handleCreateClick,
     noop,
-    noopSetSessionDetail,
     noopOnSessionUpdate
   }
 }

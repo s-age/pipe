@@ -12,25 +12,34 @@ export const pathDisplayContainer = style({
   display: 'flex',
   flexWrap: 'wrap',
   gap: '5px',
-  marginBottom: '10px'
+  margin: '8px 0'
 })
 
 export const pathTag = style({
-  padding: '4px 8px',
-  border: '1px solid #ccc',
-  borderRadius: '4px',
-  backgroundColor: colors.uiBackground,
-  color: 'white',
-  wordBreak: 'break-all'
+  backgroundColor: colors.cyan,
+  color: colors.uiBackground,
+  padding: '2px 6px',
+  borderRadius: '3px',
+  fontSize: '12px',
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '8px',
+  wordBreak: 'break-all',
+  ':hover': {
+    opacity: 0.8
+  }
 })
 
 export const pathTagDeleteButton = style({
-  marginLeft: '5px',
-  border: 'none',
   background: 'none',
+  border: 'none',
+  color: 'inherit',
   cursor: 'pointer',
-  fontWeight: 'bold',
-  color: '#888'
+  padding: '0',
+  fontSize: '14px',
+  lineHeight: '1',
+  fontWeight: 'bold'
 })
 
 export const searchInput = style({

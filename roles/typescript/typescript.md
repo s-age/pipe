@@ -653,6 +653,70 @@ When these tools are available, use them in your workflow:
 
 **Note:** These tools are provided by advanced TypeScript language servers and may not be available in all development environments. Check your tooling documentation for availability.
 
+## React StrictMode Considerations
+
+### ❌ 7. Unguarded `useEffect` for Initial Data Loading
+
+**Rule:** Never use plain `useEffect` for initial data fetching without StrictMode protection. Use `useInitialLoading` custom hook instead.
+
+```typescript
+// ❌ BAD: Will execute twice in StrictMode
+useEffect(() => {
+  const loadData = async () => {
+    const data = await fetchData()
+    setData(data)
+  }
+  loadData()
+}, [])
+
+// ✅ GOOD: Use useInitialLoading hook
+import { useInitialLoading } from '@/hooks/useInitialLoading'
+
+const loadData = useCallback(async () => {
+  const data = await fetchData()
+  setData(data)
+}, [])
+
+useInitialLoading(loadData)
+```
+
+**Reason:** React 19 StrictMode intentionally double-invokes effects in development to help identify issues. For initial data loading that should only happen once (like API calls on page mount), this causes duplicate requests.
+
+**The `useInitialLoading` Hook:**
+
+```typescript
+// src/web/hooks/useInitialLoading.ts
+import { useEffect, useRef } from 'react'
+
+export const useInitialLoading = (loadFunction: () => Promise<void>): void => {
+  const initializedReference = useRef(false)
+
+  useEffect(() => {
+    if (initializedReference.current) {
+      return
+    }
+    initializedReference.current = true
+    void loadFunction()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+}
+```
+
+**When to use `useInitialLoading`:**
+
+- ✅ Initial page data fetching (on mount)
+- ✅ One-time setup operations with side effects
+- ✅ API calls that should only happen once per component lifecycle
+
+**When NOT to use `useInitialLoading`:**
+
+- ❌ Effects that should re-run on dependency changes
+- ❌ User-triggered actions (use Handlers pattern)
+- ❌ Cleanup operations
+- ❌ Subscriptions that need to re-establish
+
+**Enforcement:** Code review
+
 ## Integration with Other Roles
 
 This document provides **project-wide TypeScript conventions**. For domain-specific guidelines, refer to:

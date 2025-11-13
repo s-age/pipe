@@ -1,5 +1,5 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react'
-import { useState, useCallback, useEffect } from 'react'
+import { useCallback, useState } from 'react'
 
 import { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
 
@@ -19,6 +19,7 @@ export const useFileSearchExplorerHandlers = (
   handleSuggestionClick: (
     suggestion: string | { name: string; isDirectory: boolean }
   ) => void
+  handleInputFocus: () => void
   actions: ReturnType<typeof useFileSearchExplorerActions>
 } => {
   const [pathList, setPathList] = useState<string[]>([])
@@ -29,17 +30,21 @@ export const useFileSearchExplorerHandlers = (
 
   const actions = useFileSearchExplorerActions()
 
-  // Load root suggestions on mount
-  useEffect(() => {
-    void actions.getLsData({ final_path_list: [] }).then((lsResult) => {
+  const loadRootSuggestionsIfNeeded = useCallback(async () => {
+    if (rootSuggestions.length === 0) {
+      const lsResult = await actions.getLsData({ final_path_list: [] })
       if (lsResult) {
         const rootEntries = lsResult.entries.map((entry) =>
           entry.is_dir ? `${entry.name}/` : entry.name
         )
         setRootSuggestions(rootEntries)
+
+        return rootEntries
       }
-    })
-  }, [actions])
+    }
+
+    return rootSuggestions
+  }, [actions, rootSuggestions])
 
   const handleTagDelete = useCallback(
     (index: number): void => {
@@ -51,7 +56,7 @@ export const useFileSearchExplorerHandlers = (
   )
 
   const handleQueryChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>): void => {
+    async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
       const newQuery = event.target.value
       setQuery(newQuery)
       setSelectedIndex(-1)
@@ -71,18 +76,24 @@ export const useFileSearchExplorerHandlers = (
           })
         } else {
           // For root '/', show root suggestions
-          const filtered = rootSuggestions.filter((name) => name.startsWith(prefix))
+          const currentRootSuggestions = await loadRootSuggestionsIfNeeded()
+          const filtered = currentRootSuggestions.filter((name) =>
+            name.startsWith(prefix)
+          )
           setSuggestions(filtered)
         }
       } else if (newQuery.length > 0) {
         // For non-slash queries, show filtered root suggestions
-        const filtered = rootSuggestions.filter((name) => name.startsWith(newQuery))
+        const currentRootSuggestions = await loadRootSuggestionsIfNeeded()
+        const filtered = currentRootSuggestions.filter((name) =>
+          name.startsWith(newQuery)
+        )
         setSuggestions(filtered)
       } else {
         setSuggestions([])
       }
     },
-    [actions, rootSuggestions]
+    [actions, loadRootSuggestionsIfNeeded]
   )
 
   const handlePathConfirm = useCallback(
@@ -96,7 +107,7 @@ export const useFileSearchExplorerHandlers = (
 
   const handleInputChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
-      handleQueryChange(event)
+      void handleQueryChange(event)
     },
     [handleQueryChange]
   )
@@ -172,6 +183,10 @@ export const useFileSearchExplorerHandlers = (
     ]
   )
 
+  const handleInputFocus = useCallback(() => {
+    void loadRootSuggestionsIfNeeded()
+  }, [loadRootSuggestionsIfNeeded])
+
   return {
     pathList,
     query,
@@ -184,6 +199,7 @@ export const useFileSearchExplorerHandlers = (
     handlePathConfirm,
     handleKeyDown,
     handleSuggestionClick,
+    handleInputFocus,
     actions
   }
 }

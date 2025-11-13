@@ -15,30 +15,41 @@ export const metaItemLabel = style({
 })
 
 export const artifactsList = style({
-  marginTop: '8px'
+  marginTop: '8px',
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '4px'
 })
 
 export const artifactItem = style({
-  display: 'flex',
+  backgroundColor: colors.cyan,
+  color: colors.uiBackground,
+  padding: '2px 6px',
+  borderRadius: '3px',
+  fontSize: '12px',
+  cursor: 'pointer',
+  display: 'inline-flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '4px 8px',
-  marginBottom: '4px',
-  backgroundColor: colors.uiBackground,
-  borderRadius: '4px',
-  maxWidth: '100%'
+  gap: '4px',
+  ':hover': {
+    opacity: 0.8
+  }
 })
 
 export const artifactPath = style({
-  fontSize: '14px',
-  flexGrow: 1,
+  fontSize: '12px',
   wordBreak: 'break-all'
 })
 
 export const removeArtifactButton = style({
-  marginLeft: '8px',
-  minWidth: '24px',
-  height: '24px'
+  background: 'none',
+  border: 'none',
+  color: 'inherit',
+  cursor: 'pointer',
+  padding: '0',
+  fontSize: '14px',
+  lineHeight: '1',
+  fontWeight: 'bold'
 })
 
 export const debugInfo = style({

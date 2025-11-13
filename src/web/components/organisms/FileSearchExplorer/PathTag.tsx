@@ -15,12 +15,26 @@ export const PathTag = React.memo(
       onDelete(index)
     }, [onDelete, index])
 
+    const handleKeyDown = useCallback(
+      (event: React.KeyboardEvent<HTMLSpanElement>): void => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onDelete(index)
+        }
+      },
+      [onDelete, index]
+    )
+
     return (
-      <span className={pathTag}>
-        {path}
-        <button onClick={handleClick} className={pathTagDeleteButton}>
-          x
-        </button>
+      <span
+        className={pathTag}
+        onClick={handleClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+      >
+        <span>{path}</span>
+        <span className={pathTagDeleteButton}>×</span>
       </span>
     )
   }

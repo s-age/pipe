@@ -15,18 +15,39 @@ const Meta = {
 export default Meta
 type Story = StoryObj<typeof Meta>
 
+const STUB_SESSION_DETAIL = {
+  purpose: 'Example session',
+  background: 'This is an example session for demonstration purposes.',
+  roles: ['admin', 'editor'],
+  artifacts: [],
+  procedure: 'standard',
+  references: [],
+  hyperparameters: {
+    temperature: 0.7,
+    top_p: 0.9,
+    top_k: 5
+  },
+  id: undefined,
+  multi_step_reasoning_enabled: false,
+  todos: [],
+  turns: []
+}
+
 export const Default: Story = {
   args: {
+    sessionDetail: STUB_SESSION_DETAIL,
     placeholder: 'Select roles'
   }
 }
 
 export const WithRHF: Story = {
-  args: {},
+  args: {
+    sessionDetail: STUB_SESSION_DETAIL
+  },
   render: (): JSX.Element => {
     const FormExample = (): JSX.Element => (
       <Form>
-        <RolesSelect />
+        <RolesSelect sessionDetail={STUB_SESSION_DETAIL} />
         <Button type="submit" onClick={(data) => console.log('submit', data)}>
           Submit
         </Button>
@@ -38,10 +59,12 @@ export const WithRHF: Story = {
 }
 
 export const WithoutForm: Story = {
-  args: {},
+  args: {
+    sessionDetail: STUB_SESSION_DETAIL
+  },
   render: (): JSX.Element => (
     <div>
-      <RolesSelect />
+      <RolesSelect sessionDetail={STUB_SESSION_DETAIL} />
     </div>
   )
 }

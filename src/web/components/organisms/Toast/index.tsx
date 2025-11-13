@@ -1,9 +1,10 @@
 import type { JSX } from 'react'
-import {} from 'react'
+import React from 'react'
 
 import { useAppStore } from '@/stores/useAppStore'
 import type { ToastItem as ToastItemType } from '@/stores/useAppStore'
 
+import { useToastEventListener } from './hooks/useToastEventListener'
 import { useToastHandlers } from './hooks/useToastHandlers'
 import { useToastItemLifecycle } from './hooks/useToastItemLifecycle'
 import * as styles from './style.css'
@@ -71,7 +72,8 @@ const ToastItem = ({ item }: { item: ToastItemType }): JSX.Element => {
   )
 }
 
-export const Toasts = (): JSX.Element => {
+const ToastsComponent = (): JSX.Element => {
+  useToastEventListener()
   const { grouped } = useToastHandlers()
 
   const positionElements: JSX.Element[] = []
@@ -90,4 +92,4 @@ export const Toasts = (): JSX.Element => {
   return <>{positionElements}</>
 }
 
-// Default export removed — use named export `Toasts`
+export const Toasts = React.memo(ToastsComponent)

@@ -58,6 +58,14 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [(properties as UseFormProps<TFieldValues>)?.defaultValues])
 
+  // Log validation errors to console
+  React.useEffect(() => {
+    const errors = methods.formState.errors
+    if (errors && Object.keys(errors).length > 0) {
+      console.error('Form validation errors:', errors)
+    }
+  }, [methods.formState.errors])
+
   const handleFormSubmit = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>): void => {
       event.preventDefault()

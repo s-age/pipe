@@ -14,7 +14,7 @@ export const StartSessionForm = (): JSX.Element => (
       purpose: '',
       roles: null,
       parent: null,
-      references: null,
+      references: [],
       procedure: null,
       instruction: '',
       multi_step_reasoning_enabled: false,

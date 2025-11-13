@@ -28,16 +28,18 @@ type SearchInputProperties = {
   value: string
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void
+  onFocus?: () => void
 }
 
 const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProperties>(
-  ({ value, onChange, onKeyDown }, reference) => (
+  ({ value, onChange, onKeyDown, onFocus }, reference) => (
     <input
       ref={reference}
       type="text"
       value={value}
       onChange={onChange}
       onKeyDown={onKeyDown}
+      onFocus={onFocus}
       placeholder="Search files or directories..."
       className={searchInput}
       autoComplete="off"
@@ -62,7 +64,8 @@ export const FileSearchExplorer = ({
     handleTagDelete,
     handleQueryChange,
     handleKeyDown,
-    handleSuggestionClick
+    handleSuggestionClick,
+    handleInputFocus
   } = handlers
 
   useEffect(() => {
@@ -88,6 +91,7 @@ export const FileSearchExplorer = ({
         value={query}
         onChange={handleQueryChange}
         onKeyDown={handleKeyDown}
+        onFocus={handleInputFocus}
       />
       <PathDisplay pathList={pathList} onTagDelete={handleTagDelete} />
     </div>

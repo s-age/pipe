@@ -361,6 +361,50 @@ describe('ChatHistoryPage', () => {
 
 ## Common Patterns
 
+### Initial Data Loading (StrictMode-Safe)
+
+Use `useInitialLoading` for one-time data fetching on page mount:
+
+```typescript
+// In useChatHistoryPageLifecycle.ts
+import { useCallback } from 'react'
+import { useInitialLoading } from '@/hooks/useInitialLoading'
+
+export const useSessionLoader = ({ state, actions }) => {
+  const { setSessions, setSessionDetail } = actions
+  const toast = useToast()
+
+  const loadSessions = useCallback(async () => {
+    try {
+      const data = await getSessionDashboard(sessionId)
+      setSessions(data.session_tree)
+      setSessionDetail(data.current_session)
+    } catch (error) {
+      toast.failure('Failed to load sessions.')
+    }
+  }, [setSessions, setSessionDetail, toast])
+
+  // Executes only once, even in React StrictMode
+  useInitialLoading(loadSessions)
+}
+```
+
+**Why `useInitialLoading`?**
+
+React 19 StrictMode double-invokes effects in development. Using plain `useEffect` for initial API calls would cause duplicate requests. `useInitialLoading` prevents this by using `useRef` to track execution state.
+
+**When to use:**
+
+- ✅ Initial page data fetching on mount
+- ✅ One-time setup operations with side effects
+
+**When NOT to use:**
+
+- ❌ Effects that should re-run on dependency changes (use regular `useEffect`)
+- ❌ User-triggered actions (use Handlers pattern)
+
+See [useInitialLoading documentation](../hooks/hooks.md#useinitialloading---strictmode-safe-data-loading) for more details.
+
 ### Loading States
 
 ```typescript

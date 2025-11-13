@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { useSessionMetaActions } from '@/components/organisms/SessionMeta/hooks/useSessionMetaActions'
+import type { SessionMetaFormInputs } from '@/components/organisms/SessionMeta/schema'
 import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
@@ -14,45 +15,38 @@ export const useSessionMetaHandlers = ({
   currentSessionId,
   onRefresh
 }: UseSessionMetaHandlersProperties): {
-  defaultValues: Record<string, unknown>
-  onSubmit: (data: EditSessionMetaRequest) => void
+  defaultValues: SessionMetaFormInputs
+  onSubmit: (data: SessionMetaFormInputs) => void
   isSubmitting: boolean
   saved: boolean
 } => {
   const { handleMetaSave } = useSessionMetaActions({ onRefresh })
 
-  const defaultValues = React.useMemo(
+  const defaultValues = React.useMemo<SessionMetaFormInputs>(
     () => ({
-      purpose: sessionDetail?.purpose ?? '',
-      background: sessionDetail?.background ?? '',
-      roles: sessionDetail?.roles ?? [],
-      procedure: sessionDetail?.procedure ?? '',
-      artifacts: sessionDetail?.artifacts ?? []
+      purpose: sessionDetail?.purpose ?? null,
+      background: sessionDetail?.background ?? null,
+      roles: sessionDetail?.roles ?? null,
+      procedure: sessionDetail?.procedure ?? null,
+      references:
+        sessionDetail?.references?.map((reference) => ({
+          path: reference.path,
+          ttl: reference.ttl ?? 3,
+          persist: reference.persist ?? false,
+          disabled: reference.disabled ?? false
+        })) ?? [],
+      artifacts: sessionDetail?.artifacts ?? null,
+      hyperparameters: sessionDetail?.hyperparameters ?? null
     }),
     [sessionDetail]
   )
 
   const onSubmit = React.useCallback(
-    (data: EditSessionMetaRequest) => {
+    (data: SessionMetaFormInputs) => {
       if (!currentSessionId) return
 
-      const mutable: Record<string, unknown> = { ...data }
-
-      if (typeof mutable.roles === 'string') {
-        mutable.roles = mutable.roles
-          .split(',')
-          .map((s: string) => s.trim())
-          .filter(Boolean)
-      }
-
-      if (typeof mutable.artifacts === 'string') {
-        mutable.artifacts = mutable.artifacts
-          .split(',')
-          .map((s: string) => s.trim())
-          .filter(Boolean)
-      }
-
-      void handleMetaSave(currentSessionId, mutable as EditSessionMetaRequest)
+      // roles, artifacts, references, procedure はすべて既に正しい形式なので変換不要
+      void handleMetaSave(currentSessionId, data as EditSessionMetaRequest)
     },
     [currentSessionId, handleMetaSave]
   )
@@ -61,7 +55,7 @@ export const useSessionMetaHandlers = ({
   const [saved, setSaved] = React.useState(false)
 
   const wrappedSubmit = React.useCallback(
-    async (data: Record<string, unknown>) => {
+    async (data: SessionMetaFormInputs) => {
       setIsSubmitting(true)
       try {
         await onSubmit(data)

@@ -1,6 +1,6 @@
 import { array, boolean, coerce, object, string, type TypeOf } from 'zod'
 
-import { optionalNumber, optionalString, requiredString } from '@/lib/validation'
+import { optionalNumber, optionalString } from '@/lib/validation'
 
 const referenceSchema = object({
   path: string(),
@@ -9,16 +9,13 @@ const referenceSchema = object({
   disabled: boolean().optional().default(false)
 })
 
-export const formSchema = object({
-  purpose: requiredString('Purpose'),
-  background: requiredString('Background'),
+export const sessionMetaSchema = object({
+  purpose: optionalString(),
+  background: optionalString(),
   roles: array(string()).nullable().default(null),
-  parent: optionalString(),
+  procedure: optionalString(),
   references: array(referenceSchema).default([]),
   artifacts: array(string()).nullable().default(null),
-  procedure: optionalString(),
-  instruction: requiredString('First Instruction'),
-  multi_step_reasoning_enabled: boolean().default(false),
   hyperparameters: object({
     temperature: optionalNumber(0, 2).default(0.7),
     top_p: optionalNumber(0, 1).default(0.9),
@@ -28,4 +25,4 @@ export const formSchema = object({
     .default(null)
 })
 
-export type StartSessionFormInputs = TypeOf<typeof formSchema>
+export type SessionMetaFormInputs = TypeOf<typeof sessionMetaSchema>

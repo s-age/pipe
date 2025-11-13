@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 
-import { useAppStore } from '@/stores/useAppStore'
-import type { ToastItem as ToastItemType } from '@/stores/useAppStore'
+import type { ToastItem } from './useToastEventListener'
 
 const allPositions = [
   'top-left',
@@ -12,22 +11,22 @@ const allPositions = [
   'bottom-right'
 ] as const
 
-export const useToastHandlers = (): {
-  grouped: Record<string, ToastItemType[]>
+export const useToastHandlers = (
+  toasts: ToastItem[]
+): {
+  grouped: Record<string, ToastItem[]>
 } => {
-  const { state } = useAppStore()
-
-  const grouped = useMemo<Record<string, ToastItemType[]>>(() => {
-    const map: Record<string, ToastItemType[]> = {}
+  const grouped = useMemo<Record<string, ToastItem[]>>(() => {
+    const map: Record<string, ToastItem[]> = {}
     for (const p of allPositions) map[p] = []
-    for (const t of state.toasts) {
+    for (const t of toasts) {
       const pos = (t.position as string) ?? 'top-right'
       if (!map[pos]) map[pos] = []
-      map[pos].push(t as ToastItemType)
+      map[pos].push(t)
     }
 
     return map
-  }, [state.toasts])
+  }, [toasts])
 
   return { grouped }
 }

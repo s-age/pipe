@@ -1,17 +1,50 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { onToastEvent } from '@/lib/toastEvents'
 import type { ToastEventData } from '@/lib/toastEvents'
-import { useAppStore } from '@/stores/useAppStore'
 
-export const useToastEventListener = (): void => {
-  const { pushToast } = useAppStore()
+export type ToastItem = {
+  id: string
+  status: string
+  position?: string
+  title?: string
+  description?: string
+  duration?: number | null
+  dismissible?: boolean
+  createdAt: number
+}
+
+let idCounter = 0
+const genId = (): string => {
+  idCounter += 1
+
+  return `toast-${Date.now()}-${idCounter}`
+}
+
+export const useToastEventListener = (): {
+  toasts: ToastItem[]
+  removeToast: (id: string) => void
+} => {
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((previous) => previous.filter((t) => t.id !== id))
+  }, [])
 
   useEffect(() => {
     const unsubscribe = onToastEvent((data: ToastEventData) => {
-      pushToast(data)
+      const item: ToastItem = {
+        id: genId(),
+        createdAt: Date.now(),
+        duration: 5000,
+        dismissible: true,
+        ...data
+      }
+      setToasts((previous) => [...previous, item])
     })
 
     return unsubscribe
-  }, [pushToast])
+  }, [])
+
+  return { toasts, removeToast }
 }

@@ -1,10 +1,9 @@
 import type { JSX } from 'react'
 import React from 'react'
-
-import { useAppStore } from '@/stores/useAppStore'
-import type { ToastItem as ToastItemType } from '@/stores/useAppStore'
+import { createPortal } from 'react-dom'
 
 import { useToastEventListener } from './hooks/useToastEventListener'
+import type { ToastItem } from './hooks/useToastEventListener'
 import { useToastHandlers } from './hooks/useToastHandlers'
 import { useToastItemLifecycle } from './hooks/useToastItemLifecycle'
 import * as styles from './style.css'
@@ -33,9 +32,13 @@ const Icon = ({ status }: { status: string }): JSX.Element => {
   return <span className={styles.icon}>!</span>
 }
 
-const ToastItem = ({ item }: { item: ToastItemType }): JSX.Element => {
-  const { removeToast } = useAppStore()
-
+const ToastItem = ({
+  item,
+  removeToast
+}: {
+  item: ToastItem
+  removeToast: (id: string) => void
+}): JSX.Element => {
   const { handleMouseEnter, handleMouseLeave, handleClose, exiting, statusClass } =
     useToastItemLifecycle(item, removeToast)
 
@@ -73,14 +76,14 @@ const ToastItem = ({ item }: { item: ToastItemType }): JSX.Element => {
 }
 
 const ToastsComponent = (): JSX.Element => {
-  useToastEventListener()
-  const { grouped } = useToastHandlers()
+  const { toasts, removeToast } = useToastEventListener()
+  const { grouped } = useToastHandlers(toasts)
 
   const positionElements: JSX.Element[] = []
   for (const pos of allPositions) {
     const children: JSX.Element[] = []
     for (const item of grouped[pos]) {
-      children.push(<ToastItem key={item.id} item={item} />)
+      children.push(<ToastItem key={item.id} item={item} removeToast={removeToast} />)
     }
     positionElements.push(
       <div key={pos} className={styles.container} data-pos={pos} data-posname={pos}>
@@ -89,7 +92,7 @@ const ToastsComponent = (): JSX.Element => {
     )
   }
 
-  return <>{positionElements}</>
+  return createPortal(<>{positionElements}</>, document.body)
 }
 
-export const Toasts = React.memo(ToastsComponent)
+export const Toasts = ToastsComponent

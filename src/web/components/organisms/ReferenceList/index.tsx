@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
@@ -48,6 +48,7 @@ export const ReferenceList = ({
   currentSessionId
 }: ReferenceListProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
+  const [, forceUpdate] = useState({})
   const watchedReferences = formContext?.watch?.('references')
   const references = useMemo(
     () => (watchedReferences || []) as Reference[],
@@ -128,6 +129,8 @@ export const ReferenceList = ({
         formContext?.setValue?.('references', updatedReferences, {
           shouldDirty: true
         })
+        // Force re-render to update UI
+        forceUpdate({})
 
         emitToast.success(
           `Reference ${newPersist ? 'locked' : 'unlocked'}: ${references[index].path}`
@@ -165,6 +168,7 @@ export const ReferenceList = ({
         formContext?.setValue?.('references', updatedReferences, {
           shouldDirty: true
         })
+        forceUpdate({})
 
         emitToast.success(`TTL updated to ${newTtl}: ${references[index].path}`)
       } catch (error) {

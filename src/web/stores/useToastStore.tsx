@@ -1,11 +1,5 @@
 import type { JSX } from 'react'
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useReducer
-} from 'react'
+import React, { createContext, useCallback, useContext, useReducer } from 'react'
 
 // Types
 export type ToastPosition =
@@ -31,25 +25,20 @@ export type ToastItem = {
 
 type State = {
   toasts: ToastItem[]
-  loadingCount: number
 }
 
 type Action =
   | { type: 'PUSH_TOAST'; payload: ToastItem }
   | { type: 'REMOVE_TOAST'; payload: { id: string } }
   | { type: 'CLEAR_TOASTS' }
-  | { type: 'SHOW_LOADER' }
-  | { type: 'HIDE_LOADER' }
 
 const initialState: State = {
-  toasts: [],
-  loadingCount: 0
+  toasts: []
 }
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case 'PUSH_TOAST': {
-      // Append newest to the end (chronological). Rendering will handle visual stacking per-position.
       return { ...state, toasts: [...state.toasts, action.payload] }
     }
     case 'REMOVE_TOAST': {
@@ -60,27 +49,19 @@ const reducer = (state: State, action: Action): State => {
     }
     case 'CLEAR_TOASTS':
       return { ...state, toasts: [] }
-    case 'SHOW_LOADER':
-      return { ...state, loadingCount: state.loadingCount + 1 }
-    case 'HIDE_LOADER':
-      return { ...state, loadingCount: Math.max(0, state.loadingCount - 1) }
     default:
       return state
   }
 }
 
-// Context value
-type AppStoreContextValue = {
-  state: State
+type ToastStoreContextValue = {
+  toasts: ToastItem[]
   pushToast: (payload: Omit<ToastItem, 'id' | 'createdAt'>) => string
   removeToast: (id: string) => void
   clearToasts: () => void
-  showLoader: () => void
-  hideLoader: () => void
-  isLoading: boolean
 }
 
-const AppStoreContext = createContext<AppStoreContextValue | undefined>(undefined)
+const ToastStoreContext = createContext<ToastStoreContextValue | undefined>(undefined)
 
 let idCounter = 0
 const genId = (prefix = 'toast'): string => {
@@ -89,7 +70,7 @@ const genId = (prefix = 'toast'): string => {
   return `${prefix}-${Date.now()}-${idCounter}`
 }
 
-export const AppStoreProvider = ({
+export const ToastStoreProvider = ({
   children
 }: React.PropsWithChildren<unknown>): JSX.Element => {
   const [state, dispatch] = useReducer(reducer, initialState)
@@ -112,33 +93,26 @@ export const AppStoreProvider = ({
     (id: string) => dispatch({ type: 'REMOVE_TOAST', payload: { id } }),
     []
   )
+
   const clearToasts = useCallback(() => dispatch({ type: 'CLEAR_TOASTS' }), [])
-  const showLoader = useCallback(() => dispatch({ type: 'SHOW_LOADER' }), [])
-  const hideLoader = useCallback(() => dispatch({ type: 'HIDE_LOADER' }), [])
 
-  const isLoading = useMemo(() => state.loadingCount > 0, [state.loadingCount])
+  // Don't memoize value - toast updates should only affect Toast component
+  const value: ToastStoreContextValue = {
+    toasts: state.toasts,
+    pushToast,
+    removeToast,
+    clearToasts
+  }
 
-  const value: AppStoreContextValue = useMemo(
-    () => ({
-      state,
-      pushToast,
-      removeToast,
-      clearToasts,
-      showLoader,
-      hideLoader,
-      isLoading
-    }),
-    [state, pushToast, removeToast, clearToasts, showLoader, hideLoader, isLoading]
+  return (
+    <ToastStoreContext.Provider value={value}>{children}</ToastStoreContext.Provider>
   )
-
-  return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>
 }
 
-export const useAppStore = (): AppStoreContextValue => {
-  const context = useContext(AppStoreContext)
-  if (!context) throw new Error('useAppStore must be used within an AppStoreProvider')
+export const useToastStore = (): ToastStoreContextValue => {
+  const context = useContext(ToastStoreContext)
+  if (!context)
+    throw new Error('useToastStore must be used within a ToastStoreProvider')
 
   return context
 }
-
-// (Removed temporary default export) Use named export `useAppStore`.

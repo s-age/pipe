@@ -4,9 +4,9 @@ import { ArtifactsSelector } from '@/components/molecules/ArtifactsSelector'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { InputCheckbox } from '@/components/molecules/InputCheckbox'
 import { InputText } from '@/components/molecules/InputText'
+import { ProcedureSelect } from '@/components/molecules/ProcedureSelect'
 import { RolesSelect } from '@/components/molecules/RolesSelect'
 import { TextArea } from '@/components/molecules/TextArea'
-import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
@@ -37,11 +37,9 @@ export const SessionMetaBasic = ({
     setSessionDetail
   })
 
-  const handleProcedurePathChange = React.useCallback(
-    (paths: string[]) => {
-      if (setValue) {
-        setValue('procedure', paths[0] || '')
-      }
+  const handleRolesChange = React.useCallback(
+    (roles: string[]) => {
+      setValue?.('roles', roles)
     },
     [setValue]
   )
@@ -84,12 +82,9 @@ export const SessionMetaBasic = ({
       >
         {(ids) => (
           <RolesSelect
-            id="roles"
-            register={register}
-            name="roles"
             placeholder="Select roles"
             sessionDetail={sessionDetail}
-            className={inputFullWidth}
+            onChange={handleRolesChange}
             aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
           />
         )}
@@ -99,7 +94,7 @@ export const SessionMetaBasic = ({
         legend={<span className={metaItemLabel}>Procedure:</span>}
         className={metaItem}
       >
-        <FileSearchExplorer onPathChange={handleProcedurePathChange} />
+        <ProcedureSelect placeholder="Select procedure" />
       </Fieldset>
 
       <ArtifactsSelector />

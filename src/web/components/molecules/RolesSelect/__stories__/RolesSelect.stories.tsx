@@ -17,8 +17,7 @@ type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {
   args: {
-    placeholder: 'Select roles',
-    name: 'roles'
+    placeholder: 'Select roles'
   }
 }
 
@@ -27,7 +26,7 @@ export const WithRHF: Story = {
   render: (): JSX.Element => {
     const FormExample = (): JSX.Element => (
       <Form>
-        <RolesSelect name="roles" />
+        <RolesSelect />
         <Button type="submit" onClick={(data) => console.log('submit', data)}>
           Submit
         </Button>
@@ -42,7 +41,7 @@ export const WithoutForm: Story = {
   args: {},
   render: (): JSX.Element => (
     <div>
-      <RolesSelect name="roles" />
+      <RolesSelect />
     </div>
   )
 }

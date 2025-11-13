@@ -18,10 +18,18 @@ type RolesSelectProperties = {
   placeholder?: string
   sessionDetail?: SessionDetail | null
   onChange?: (roles: string[]) => void
+  className?: string
+  'aria-describedby'?: string
 }
 
 export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
-  const { placeholder = 'Select roles', sessionDetail, onChange } = properties
+  const {
+    placeholder = 'Select roles',
+    sessionDetail,
+    onChange,
+    className: _className,
+    'aria-describedby': _ariaDescribedBy
+  } = properties
 
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
   const [selectedRoles, setSelectedRoles] = useState<string[]>(

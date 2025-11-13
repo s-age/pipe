@@ -72,6 +72,25 @@ paths:
         '500':
           description: Internal server error
 
+  # Procedures (v1)
+  /api/v1/procedures:
+    get:
+      summary: Get available procedures (v1)
+      description: Returns a list of available procedures for selection, including their labels and values.
+      tags:
+        - v1
+      responses:
+        '200':
+          description: List of procedure options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcedureOption'
+        '500':
+          description: Internal server error
+
   # Session Tree (v1)
   /api/v1/session_tree:
     get:
@@ -780,6 +799,18 @@ components:
         value:
           type: string
           description: Unique identifier for the role (e.g., 'roles/python/developer.md')
+      required:
+        - label
+        - value
+    ProcedureOption:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Display label for the procedure (e.g., 'reversi_game')
+        value:
+          type: string
+          description: Unique identifier for the procedure (e.g., 'procedures/reversi_game.md')
       required:
         - label
         - value

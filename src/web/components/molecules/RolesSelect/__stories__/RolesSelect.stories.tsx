@@ -18,19 +18,16 @@ type Story = StoryObj<typeof Meta>
 export const Default: Story = {
   args: {
     placeholder: 'Select roles',
-    name: 'roles',
-    roleOptions: []
+    name: 'roles'
   }
 }
 
 export const WithRHF: Story = {
-  args: {
-    roleOptions: []
-  },
+  args: {},
   render: (): JSX.Element => {
     const FormExample = (): JSX.Element => (
       <Form>
-        <RolesSelect name="roles" roleOptions={[]} />
+        <RolesSelect name="roles" />
         <Button type="submit" onClick={(data) => console.log('submit', data)}>
           Submit
         </Button>
@@ -42,12 +39,10 @@ export const WithRHF: Story = {
 }
 
 export const WithoutForm: Story = {
-  args: {
-    roleOptions: []
-  },
+  args: {},
   render: (): JSX.Element => (
     <div>
-      <RolesSelect name="roles" roleOptions={[]} />
+      <RolesSelect name="roles" />
     </div>
   )
 }

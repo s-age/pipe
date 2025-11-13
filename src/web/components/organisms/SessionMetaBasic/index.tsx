@@ -8,7 +8,6 @@ import { RolesSelect } from '@/components/molecules/RolesSelect'
 import { TextArea } from '@/components/molecules/TextArea'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
-import type { RoleOption } from '@/lib/api/roles/getRoles'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useMultiStepReasoningHandlers } from './hooks/useMultiStepReasoningHandlers'
@@ -20,15 +19,13 @@ type SessionMetaBasicProperties = {
   _setError?: (error: string | null) => void
   onRefresh: () => Promise<void>
   setSessionDetail?: (data: SessionDetail | null) => void
-  roleOptions: RoleOption[]
 }
 
 export const SessionMetaBasic = ({
   sessionDetail,
   currentSessionId,
   onRefresh,
-  setSessionDetail,
-  roleOptions
+  setSessionDetail
 }: SessionMetaBasicProperties): React.JSX.Element => {
   const formContext = useOptionalFormContext()
   const register = formContext?.register
@@ -92,7 +89,6 @@ export const SessionMetaBasic = ({
             name="roles"
             placeholder="Select roles"
             sessionDetail={sessionDetail}
-            roleOptions={roleOptions}
             className={inputFullWidth}
             aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
           />

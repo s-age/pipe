@@ -19,18 +19,7 @@ export const metaItemLabel = style({
 })
 
 export const inputFullWidth = style({
-  width: '100%',
-  boxSizing: 'border-box',
-  background: '#000',
-  color: colors.offWhite,
-  borderRadius: '4px',
-  padding: '8px',
-  border: `1px solid ${colors.grayText}`,
-  ':focus': {
-    outline: 'none',
-    border: `1px solid ${colors.cyan}`,
-    boxShadow: `0 0 0 3px ${colors.cyanBorderRGBA}`
-  }
+  width: '100%'
 })
 
 export const artifactsList = style({

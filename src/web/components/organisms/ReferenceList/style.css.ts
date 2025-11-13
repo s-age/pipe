@@ -21,7 +21,7 @@ export const referencesList = style({
 
 export const referenceItem = style({
   marginBottom: '20px',
-  padding: '12px',
+  padding: '4px',
   color: colors.offWhite,
   border: `1px solid ${colors.cyanAlt}`,
   borderRadius: '8px',
@@ -46,11 +46,13 @@ export const referenceActions = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  width: '100%'
+  width: '100%',
+  padding: '0 8px'
 })
 
 export const referencePath = style({
   marginLeft: '5px',
+  fontSize: '12px',
   wordBreak: 'break-all',
   flexGrow: 1,
   selectors: {
@@ -124,11 +126,7 @@ export const addReferenceContainer = style({
 
 export const addReferenceInput = style({
   flexGrow: 1,
-  padding: '8px',
-  border: `1px solid ${colors.cyanAlt}`,
-  borderRadius: '4px',
-  backgroundColor: colors.mediumBackground,
-  color: colors.offWhite
+  padding: '8px'
 })
 
 export const addReferenceButton = style({

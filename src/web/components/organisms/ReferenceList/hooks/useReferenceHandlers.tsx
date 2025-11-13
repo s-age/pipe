@@ -8,7 +8,7 @@ import { useReferenceActions } from './useReferenceActions'
 type UseReferenceControlsProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  refreshSessions: () => Promise<void>
+  refreshSessions?: () => Promise<void>
 }
 
 export const useReferenceControls = ({

@@ -8,7 +8,6 @@ import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { useSessionMetaHandlers } from '@/components/organisms/SessionMeta/hooks/useSessionMetaHandlers'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import { TodoList } from '@/components/organisms/TodoList'
-import type { RoleOption } from '@/lib/api/roles/getRoles'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import {
@@ -23,15 +22,13 @@ type SessionMetaProperties = {
   currentSessionId: string | null
   setSessionDetail: (data: SessionDetail | null) => void
   onRefresh: () => Promise<void>
-  roleOptions: RoleOption[]
 }
 
 export const SessionMeta = ({
   sessionDetail,
   currentSessionId,
   setSessionDetail,
-  onRefresh,
-  roleOptions
+  onRefresh
 }: SessionMetaProperties): JSX.Element | null => {
   const { defaultValues, onSubmit, isSubmitting, saved } = useSessionMetaHandlers({
     sessionDetail,
@@ -59,7 +56,6 @@ export const SessionMeta = ({
               sessionDetail={sessionDetail}
               currentSessionId={currentSessionId}
               onRefresh={onRefresh}
-              roleOptions={roleOptions}
             />
 
             <ReferenceList

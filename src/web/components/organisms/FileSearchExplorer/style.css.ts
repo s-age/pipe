@@ -35,11 +35,7 @@ export const pathTagDeleteButton = style({
 
 export const searchInput = style({
   width: '100%',
-  padding: '8px',
-  border: '1px solid #ccc',
-  borderRadius: '4px',
-  backgroundColor: colors.uiBackground,
-  color: 'white'
+  padding: '8px'
 })
 
 export const suggestionList = style({

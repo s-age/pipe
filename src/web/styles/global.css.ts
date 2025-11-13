@@ -1,5 +1,8 @@
 import { globalStyle } from '@vanilla-extract/css'
 
+import './reset.css'
+import { colors } from './colors.css.ts'
+
 // Global app styles (font stack and other app-wide defaults)
 // To load the Inter font, add one of the following to your app:
 // 1) Add this <link> to your HTML <head> (quick):
@@ -12,4 +15,19 @@ globalStyle('html, body, #root', {
   // Prevent the app from shrinking below 1280px wide. Layouts can still
   // horizontally scroll if the viewport is smaller than this.
   minWidth: '1280px'
+})
+
+globalStyle('input, textarea', {
+  boxSizing: 'border-box',
+  background: colors.uiBackground,
+  color: colors.grayText,
+  borderRadius: '4px',
+  padding: '8px',
+  border: `1px solid ${colors.grayText}`
+})
+
+globalStyle('input:focus, textarea:focus', {
+  border: `1px solid ${colors.cyan}`,
+  boxShadow: `0 0 0 1px ${colors.cyanBorderRGBA}`,
+  outline: 'none'
 })

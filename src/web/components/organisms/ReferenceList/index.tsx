@@ -38,7 +38,7 @@ type ReferenceListProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
   setSessionDetail: (data: SessionDetail | null) => void
-  refreshSessions: () => Promise<void>
+  refreshSessions?: () => Promise<void>
 }
 
 const ReferenceToggle = ({

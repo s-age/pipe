@@ -4,18 +4,11 @@ import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner'
 import { StartSessionForm } from '@/components/organisms/StartSessionForm'
 
-import { useStartSessionPageHandlers } from './hooks/useStartSessionPageHandlers'
 import { useStartSessionPageLifecycle } from './hooks/useStartSessionPageLifecycle'
 import { pageContainer } from './style.css'
 
 export const StartSessionPage: () => JSX.Element = () => {
-  const {
-    sessionTree,
-    settings,
-    loading,
-    error: sessionDataError
-  } = useStartSessionPageLifecycle()
-  const { handleSubmit } = useStartSessionPageHandlers()
+  const { loading, error: sessionDataError } = useStartSessionPageLifecycle()
 
   const error = sessionDataError
 
@@ -33,11 +26,7 @@ export const StartSessionPage: () => JSX.Element = () => {
 
   return (
     <div className={pageContainer}>
-      <StartSessionForm
-        onSubmit={handleSubmit}
-        sessions={sessionTree}
-        defaultSettings={settings}
-      />
+      <StartSessionForm />
       {error && <ErrorMessage message={error} />}
     </div>
   )

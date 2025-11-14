@@ -26,7 +26,7 @@ export const InstructionForm = ({
   const Inner = (): JSX.Element => {
     useInstructionFormLifecycle({ isStreaming })
 
-    const { register, onTextAreaKeyDown, onSendClick } = useInstructionFormHandlers({
+    const { register, onSendClick } = useInstructionFormHandlers({
       currentSessionId,
       onSendInstruction
     })
@@ -40,7 +40,6 @@ export const InstructionForm = ({
           name="instruction"
           register={register}
           disabled={isStreaming}
-          onKeyDown={onTextAreaKeyDown}
         />
         <Button
           className={overlaySendButton}

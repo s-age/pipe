@@ -34,17 +34,19 @@ export const ToggleSwitch = ({
     disabled
   })
 
-  const handleInputChange = useCallback(() => {}, [])
+  const handleInputClick = useCallback((event: React.MouseEvent<HTMLInputElement>) => {
+    event.preventDefault()
+  }, [])
 
   return (
-    <div className={toggleSwitch} onClick={handleToggle}>
+    <label className={toggleSwitch} onClick={handleToggle}>
       <input
         type="checkbox"
         className={toggleInput}
         checked={isChecked}
-        onChange={handleInputChange}
         disabled={disabled}
         aria-label={ariaLabel}
+        onClick={handleInputClick}
       />
       <span
         className={clsx(toggleSlider, {
@@ -52,6 +54,6 @@ export const ToggleSwitch = ({
         })}
       />
       {label && <Label className={toggleLabel}>{label}</Label>}
-    </div>
+    </label>
   )
 }

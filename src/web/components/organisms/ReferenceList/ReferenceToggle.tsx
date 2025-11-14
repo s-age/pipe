@@ -1,5 +1,5 @@
 import type { JSX } from 'react'
-import { useCallback } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 
 import { ToggleSwitch } from '@/components/molecules/ToggleSwitch'
 import { Tooltip } from '@/components/molecules/Tooltip'
@@ -16,9 +16,22 @@ export const ReferenceToggle = ({
   reference,
   onToggle
 }: ReferenceToggleProperties): JSX.Element => {
+  const timeoutReference = useRef<NodeJS.Timeout | null>(null)
+
+  const debouncedOnToggle = useMemo(
+    () =>
+      (index: number): void => {
+        if (timeoutReference.current) {
+          clearTimeout(timeoutReference.current)
+        }
+        timeoutReference.current = setTimeout(() => onToggle(index), 100)
+      },
+    [onToggle]
+  )
+
   const handleChange = useCallback(() => {
-    onToggle(index)
-  }, [onToggle, index])
+    debouncedOnToggle(index)
+  }, [debouncedOnToggle, index])
 
   return (
     <Tooltip content="Toggle reference enabled">

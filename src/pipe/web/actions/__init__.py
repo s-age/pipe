@@ -13,6 +13,7 @@ from pipe.web.actions.meta_actions import (
 )
 from pipe.web.actions.reference_actions import (
     ReferencePersistEditAction,
+    ReferenceToggleDisabledAction,
     ReferencesEditAction,
     ReferenceTtlEditAction,
 )
@@ -51,6 +52,7 @@ __all__ = [
     "TodosDeleteAction",
     "ReferencesEditAction",
     "ReferencePersistEditAction",
+    "ReferenceToggleDisabledAction",
     "ReferenceTtlEditAction",
     "SettingsGetAction",
     "GetRolesAction",

@@ -222,6 +222,16 @@ class SessionService:
         update_reference_persist(session.references, file_path, new_persist_state)
         self._save_session(session)
 
+    def toggle_reference_disabled_in_session(self, session_id: str, file_path: str):
+        session = self._fetch_session(session_id)
+        if not session:
+            return
+
+        from pipe.core.domains.references import toggle_reference_disabled
+
+        toggle_reference_disabled(session.references, file_path)
+        self._save_session(session)
+
     def decrement_all_references_ttl_in_session(self, session_id: str):
         session = self._fetch_session(session_id)
         if not session:

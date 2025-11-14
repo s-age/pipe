@@ -561,6 +561,42 @@ paths:
         '500':
           description: Internal server error
 
+  /api/v1/session/{session_id}/references/{reference_index}/toggle:
+    patch:
+      summary: Toggle reference disabled state (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: reference_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the reference to toggle
+      responses:
+        '200':
+          description: Reference disabled state toggled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  disabled:
+                    type: boolean
+                    description: The new disabled state after toggle
+        '404':
+          description: Session not found
+        '400':
+          description: Reference index out of range
+        '500':
+          description: Internal server error
+
   /api/v1/session/{session_id}/hyperparameters:
     patch:
       summary: Edit only hyperparameters for a session (temperature, top_p/topP, top_k/topK)

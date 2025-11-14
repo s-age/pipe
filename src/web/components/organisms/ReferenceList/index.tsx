@@ -10,8 +10,8 @@ import { useFileSearchExplorerActions } from '@/components/organisms/FileSearchE
 import { SuggestionItem } from '@/components/organisms/FileSearchExplorer/SuggestionItem'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
-import { editReferences } from '@/lib/api/session/editReferences'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
+import { toggleReferenceDisabled } from '@/lib/api/session/toggleReferenceDisabled'
 import { emitToast } from '@/lib/toastEvents'
 import type { Reference } from '@/types/reference'
 
@@ -117,10 +117,12 @@ export const ReferenceList = ({
   const handlePersistToggle = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
       if (!currentSessionId) return
+
       const index = Number(event.currentTarget.dataset.index)
       const newPersist = !references[index].persist
       try {
         await editReferencePersist(currentSessionId, index, newPersist)
+
         const updatedReferences = [...references]
         updatedReferences[index] = {
           ...updatedReferences[index],
@@ -129,6 +131,7 @@ export const ReferenceList = ({
         formContext?.setValue?.('references', updatedReferences, {
           shouldDirty: true
         })
+
         // Force re-render to update UI
         forceUpdate({})
 
@@ -140,7 +143,35 @@ export const ReferenceList = ({
         emitToast.failure('Failed to update reference lock state')
       }
     },
-    [references, formContext, currentSessionId]
+    [references, currentSessionId, formContext]
+  )
+
+  const handleToggleDisabled = useCallback(
+    async (index: number) => {
+      if (!currentSessionId) return
+
+      try {
+        await toggleReferenceDisabled(currentSessionId, index)
+
+        const updatedReferences = [...references]
+        updatedReferences[index] = {
+          ...updatedReferences[index],
+          disabled: !updatedReferences[index].disabled
+        }
+        formContext?.setValue?.('references', updatedReferences, {
+          shouldDirty: true
+        })
+
+        // Force re-render to update UI
+        forceUpdate({})
+
+        emitToast.success('Reference toggled successfully')
+      } catch (error) {
+        console.error('Failed to toggle reference:', error)
+        emitToast.failure('Failed to toggle reference')
+      }
+    },
+    [currentSessionId, references, formContext]
   )
 
   const handleTtlAction = useCallback(
@@ -174,24 +205,6 @@ export const ReferenceList = ({
       } catch (error) {
         console.error('Failed to update TTL:', error)
         emitToast.failure('Failed to update TTL')
-      }
-    },
-    [references, formContext, currentSessionId]
-  )
-
-  const toggleDisabled = useCallback(
-    async (index: number) => {
-      if (!currentSessionId) return
-      const updatedReferences = [...references]
-      updatedReferences[index] = {
-        ...updatedReferences[index],
-        disabled: !updatedReferences[index].disabled
-      }
-      try {
-        await editReferences(currentSessionId, updatedReferences)
-        formContext?.setValue?.('references', updatedReferences)
-      } catch (error) {
-        console.error('Failed to toggle disabled:', error)
       }
     },
     [references, formContext, currentSessionId]
@@ -300,7 +313,7 @@ export const ReferenceList = ({
                   <ReferenceToggle
                     index={index}
                     reference={reference}
-                    onToggle={toggleDisabled}
+                    onToggle={handleToggleDisabled}
                   />
                 </div>
               </div>

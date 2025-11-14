@@ -15,6 +15,7 @@ from pipe.web.actions import (
     HyperparametersEditAction,
     MultiStepReasoningEditAction,
     ReferencePersistEditAction,
+    ReferenceToggleDisabledAction,
     ReferencesEditAction,
     ReferenceTtlEditAction,
     SessionDeleteAction,
@@ -183,6 +184,11 @@ def dispatch_action(
             "session/{session_id}/references/{reference_index}/persist",
             "PATCH",
             ReferencePersistEditAction,
+        ),
+        (
+            "session/{session_id}/references/{reference_index}/toggle",
+            "PATCH",
+            ReferenceToggleDisabledAction,
         ),
         (
             "session/{session_id}/references/{reference_index}/ttl",
@@ -487,6 +493,19 @@ def edit_references_api(session_id):
 def edit_reference_persist_api(session_id, reference_index):
     response_data, status_code = dispatch_action(
         action=f"session/{session_id}/references/{reference_index}/persist",
+        params={"session_id": session_id, "reference_index": reference_index},
+        request_data=request,
+    )
+    return jsonify(response_data), status_code
+
+
+@app.route(
+    "/api/v1/session/<path:session_id>/references/<int:reference_index>/toggle",
+    methods=["PATCH"],
+)
+def toggle_reference_disabled_api(session_id, reference_index):
+    response_data, status_code = dispatch_action(
+        action=f"session/{session_id}/references/{reference_index}/toggle",
         params={"session_id": session_id, "reference_index": reference_index},
         request_data=request,
     )

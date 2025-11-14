@@ -2,7 +2,7 @@ import React, { useCallback, useRef } from 'react'
 
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { useModal } from '@/components/molecules/Modal/hooks/useModal'
-import { useToast } from '@/components/organisms/Toast/hooks/useToast'
+import { emitToast } from '@/lib/toastEvents'
 
 import { useChatHistoryActions } from './useChatHistoryActions'
 
@@ -17,7 +17,6 @@ export const useChatHistoryHandlers = ({
   handleDeleteSession: (sessionId: string) => Promise<void>
 } => {
   const { show, hide } = useModal()
-  const toast = useToast()
   const { deleteSessionAction } = useChatHistoryActions({ currentSessionId })
 
   const modalIdReference = useRef<number | null>(null)
@@ -26,13 +25,13 @@ export const useChatHistoryHandlers = ({
     async (sessionId: string): Promise<void> => {
       try {
         await deleteSessionAction(sessionId)
-        toast.success('Session deleted')
+        emitToast.success('Session deleted')
         location.href = '/'
       } catch {
-        toast.failure('Failed to delete session.')
+        emitToast.failure('Failed to delete session.')
       }
     },
-    [deleteSessionAction, toast]
+    [deleteSessionAction]
   )
 
   const handleDeleteCurrentSession = useCallback((): void => {

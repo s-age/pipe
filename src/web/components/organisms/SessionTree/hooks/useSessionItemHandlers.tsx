@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 
-import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { getSession } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import { emitToast } from '@/lib/toastEvents'
 
 export const useSessionItemHandlers = ({
   session,
@@ -14,14 +14,12 @@ export const useSessionItemHandlers = ({
 }): {
   onClick: (event: React.MouseEvent<HTMLAnchorElement>) => Promise<void>
 } => {
-  const toast = useToast()
-
   const onClick = useCallback(
     async (event: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
       event.preventDefault()
 
       if (typeof session.session_id !== 'string') {
-        toast.failure('Invalid session ID.')
+        emitToast.failure('Invalid session ID.')
 
         return
       }
@@ -31,13 +29,11 @@ export const useSessionItemHandlers = ({
         selectSession(session.session_id, sessionDetail.session)
         window.history.replaceState({}, '', `/session/${session.session_id}`)
       } catch (error) {
-        toast.failure((error as Error).message || 'Failed to load session data.')
+        emitToast.failure((error as Error).message || 'Failed to load session data.')
       }
     },
-    [selectSession, session.session_id, toast]
+    [selectSession, session.session_id]
   )
 
   return { onClick }
 }
-
-// Default export removed — use named export `useSessionItemHandlers`

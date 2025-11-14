@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback, type RefObject } from 'react'
 
-import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { getSession } from '@/lib/api/session/getSession'
 import { streamInstruction } from '@/lib/api/session/streamInstruction'
+import { emitToast } from '@/lib/toastEvents'
 
 type SessionDetailCache = {
   [sessionId: string]: {
@@ -41,7 +41,6 @@ export const useChatStreaming = ({
   const controllerReference = useRef<AbortController | null>(null)
   const sessionDetailCacheReference = useRef<SessionDetailCache>({})
   const turnsListReference = useRef<HTMLDivElement | null>(null)
-  const toast = useToast()
 
   // Session detail cache helpers
   const getSessionDetailFromCache = useCallback(
@@ -175,10 +174,10 @@ export const useChatStreaming = ({
   // Propagate streaming errors
   useEffect(() => {
     if (error) {
-      toast.failure(error)
+      emitToast.failure(error)
       setStreamingTrigger(null)
     }
-  }, [error, toast])
+  }, [error])
 
   // Scroll management
   const scrollToBottom = useCallback((): void => {

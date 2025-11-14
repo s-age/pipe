@@ -1,7 +1,7 @@
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
 import { useFormContext } from '@/components/organisms/Form'
-import { useToast } from '@/components/organisms/Toast/hooks/useToast'
+import { emitToast } from '@/lib/toastEvents'
 
 export type UseInstructionFormHandlersProperties = {
   currentSessionId: string | null
@@ -21,7 +21,6 @@ export const useInstructionFormHandlers = ({
 }: UseInstructionFormHandlersProperties): UseInstructionFormHandlersReturn => {
   const methods = useFormContext()
   const { register, handleSubmit, reset } = methods
-  const toast = useToast()
 
   const submit = handleSubmit(async (data) => {
     const instruction = (data as { instruction?: string }).instruction ?? ''
@@ -31,7 +30,7 @@ export const useInstructionFormHandlers = ({
       await onSendInstruction(instruction)
       reset({ instruction: '' })
     } catch (error) {
-      toast.failure(
+      emitToast.failure(
         error instanceof Error ? error.message : 'Failed to send instruction'
       )
       console.error('Failed to send instruction:', error)

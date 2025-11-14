@@ -1,10 +1,10 @@
-import { useCallback, useState, useRef, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { useModal } from '@/components/molecules/Modal/hooks/useModal'
-import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import type { Turn } from '@/lib/api/session/getSession'
+import { emitToast } from '@/lib/toastEvents'
 
 type UseTurnHandlersProperties = {
   turn: Turn
@@ -61,16 +61,14 @@ export const useTurnHandlers = (
     }
   }, [turn.content, turn.instruction, isEditing])
 
-  const toast = useToast()
-
   const handleCopy = useCallback(async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(editedContent)
-      toast.success('Copied to clipboard')
+      emitToast.success('Copied to clipboard')
     } catch {
-      toast.failure('Failed to copy to clipboard')
+      emitToast.failure('Failed to copy to clipboard')
     }
-  }, [editedContent, toast])
+  }, [editedContent])
 
   const handleEditedChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>): void => {
@@ -119,15 +117,15 @@ export const useTurnHandlers = (
       try {
         await deleteTurnAction(sessionId, index)
         await onRefresh()
-        toast.success('Turn deleted successfully')
+        emitToast.success('Turn deleted successfully')
       } catch {
-        toast.failure('Failed to delete turn.')
+        emitToast.failure('Failed to delete turn.')
       } finally {
         hide(modalIdReference.current)
         modalIdReference.current = null
       }
     }
-  }, [deleteTurnAction, sessionId, index, onRefresh, toast, hide])
+  }, [deleteTurnAction, sessionId, index, onRefresh, hide])
 
   const handleCancelDelete = useCallback((): void => {
     if (modalIdReference.current !== null) {
@@ -152,7 +150,7 @@ export const useTurnHandlers = (
   const handleSaveEdit = useCallback(async (): Promise<void> => {
     // Client-side validation
     if (editedContent.trim().length <= 0) {
-      toast.failure('Content cannot be empty')
+      emitToast.failure('Content cannot be empty')
 
       return
     }
@@ -163,13 +161,13 @@ export const useTurnHandlers = (
 
       setIsEditing(false)
       setEditedContent(turn.content ?? turn.instruction ?? '')
-      toast.success('Turn updated successfully')
+      emitToast.success('Turn updated successfully')
     } catch (error) {
-      toast.failure(
-        `Failed to save changes: ${error instanceof Error ? error.message : String(error)}  `
+      emitToast.failure(
+        `Failed to save changes: ${error instanceof Error ? error.message : String(error)}`
       )
     }
-  }, [editTurnAction, sessionId, index, editedContent, turn, toast, onRefresh])
+  }, [editTurnAction, sessionId, index, editedContent, turn, onRefresh])
 
   return {
     isEditing,

@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 
-import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { useInitialLoading } from '@/hooks/useInitialLoading'
 import { getSessionDashboard } from '@/lib/api/bff/getSessionDashboard'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
+import { emitToast } from '@/lib/toastEvents'
 import type { Actions, State } from '@/stores/useChatHistoryStore'
 
 type UseSessionLoaderProperties = {
@@ -19,7 +19,6 @@ export const useSessionLoader = ({
     sessionTree: { currentSessionId }
   } = state
   const { setSessions, setCurrentSessionId, setSessionDetail, setRoleOptions } = actions
-  const toast = useToast()
 
   const loadSessions = useCallback(async (): Promise<void> => {
     try {
@@ -60,15 +59,14 @@ export const useSessionLoader = ({
         setSessionDetail(null)
       }
     } catch (error: unknown) {
-      toast.failure((error as Error).message || 'Failed to load sessions.')
+      emitToast.failure((error as Error).message || 'Failed to load sessions.')
     }
   }, [
     currentSessionId,
     setCurrentSessionId,
     setSessions,
     setSessionDetail,
-    setRoleOptions,
-    toast
+    setRoleOptions
   ])
 
   useInitialLoading(loadSessions)

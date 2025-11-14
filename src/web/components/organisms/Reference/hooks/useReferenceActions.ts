@@ -2,11 +2,10 @@ import { useCallback } from 'react'
 
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
+import { toggleReferenceDisabled } from '@/lib/api/session/toggleReferenceDisabled'
 import { emitToast } from '@/lib/toastEvents'
 
-export const useReferenceActions = (
-  refreshSessions?: () => Promise<void>
-): {
+export const useReferenceActions = (): {
   handleUpdateReferencePersist: (
     sessionId: string,
     index: number,
@@ -17,6 +16,7 @@ export const useReferenceActions = (
     index: number,
     ttl: number
   ) => Promise<void>
+  handleToggleReferenceDisabled: (sessionId: string, index: number) => Promise<void>
 } => {
   const handleUpdateReferencePersist = useCallback(
     async (
@@ -28,8 +28,7 @@ export const useReferenceActions = (
 
       try {
         await editReferencePersist(sessionId, index, persist)
-        // Prefer refreshSessions to allow parent to re-fetch canonical session state
-        if (refreshSessions) await refreshSessions()
+        // Removed refreshSessions to prevent scroll reset
 
         emitToast.success('Reference persist state updated successfully')
       } catch (error: unknown) {
@@ -38,7 +37,7 @@ export const useReferenceActions = (
         )
       }
     },
-    [refreshSessions]
+    []
   )
 
   const handleUpdateReferenceTtl = useCallback(
@@ -47,18 +46,35 @@ export const useReferenceActions = (
 
       try {
         await editReferenceTtl(sessionId, index, ttl)
-        if (refreshSessions) await refreshSessions()
+        // Removed refreshSessions to prevent scroll reset
 
         emitToast.success('Reference TTL updated successfully')
       } catch (error: unknown) {
         emitToast.failure((error as Error).message || 'Failed to update reference TTL.')
       }
     },
-    [refreshSessions]
+    []
+  )
+
+  const handleToggleReferenceDisabled = useCallback(
+    async (sessionId: string | null, index: number): Promise<void> => {
+      if (!sessionId) return
+
+      try {
+        await toggleReferenceDisabled(sessionId, index)
+        // Removed refreshSessions to prevent scroll reset
+
+        emitToast.success('Reference toggled successfully')
+      } catch (error: unknown) {
+        emitToast.failure((error as Error).message || 'Failed to toggle reference.')
+      }
+    },
+    []
   )
 
   return {
     handleUpdateReferencePersist,
-    handleUpdateReferenceTtl
+    handleUpdateReferenceTtl,
+    handleToggleReferenceDisabled
   }
 }

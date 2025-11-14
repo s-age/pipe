@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { onToastEvent } from '@/lib/toastEvents'
 import type { ToastEventData } from '@/lib/toastEvents'
+import type { ToastPosition, ToastStatus } from '@/stores/useAppStore'
 
 export type ToastItem = {
   id: string
-  status: string
-  position?: string
+  status: ToastStatus
+  position?: ToastPosition
   title?: string
   description?: string
   duration?: number | null

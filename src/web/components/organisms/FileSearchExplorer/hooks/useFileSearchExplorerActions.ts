@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 
-import { useToast } from '@/components/organisms/Toast/hooks/useToast' // Corrected path using alias
 import type {
   SearchL2Request,
   LsRequest,
@@ -8,13 +7,12 @@ import type {
   LsResponse
 } from '@/lib/api/fileSearchExplorer'
 import { fileSearchExplorerApi } from '@/lib/api/fileSearchExplorer'
+import { emitToast } from '@/lib/toastEvents'
 
 export const useFileSearchExplorerActions = (): {
   searchL2: (request: SearchL2Request) => Promise<SearchL2Response | undefined>
   getLsData: (request: LsRequest) => Promise<LsResponse | undefined>
 } => {
-  const toast = useToast()
-
   const actions = useMemo(
     () => ({
       searchL2: async (
@@ -23,10 +21,9 @@ export const useFileSearchExplorerActions = (): {
         try {
           const result = await fileSearchExplorerApi.searchL2(request)
 
-          // toast.success('Search completed'); // Success toast often not needed
           return result
         } catch (error: unknown) {
-          toast.failure((error as Error).message)
+          emitToast.failure((error as Error).message)
 
           return undefined
         }
@@ -38,13 +35,12 @@ export const useFileSearchExplorerActions = (): {
 
           return result
         } catch (error: unknown) {
-          toast.failure((error as Error).message)
+          emitToast.failure((error as Error).message)
 
           return undefined
         }
       }
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
 

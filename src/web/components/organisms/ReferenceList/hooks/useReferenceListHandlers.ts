@@ -1,171 +1,78 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useMemo } from 'react'
+import type { UseFormReturn } from 'react-hook-form'
 
-export const useReferenceListHandlers = (actions: {
-  loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
-  loadSubDirectorySuggestions: (
-    pathParts: string[]
-  ) => Promise<{ name: string; isDirectory: boolean }[]>
-  addReference: (path: string) => Promise<void>
-}): {
+import { useFileSearchExplorerActions } from '@/components/organisms/FileSearchExplorer/hooks/useFileSearchExplorerActions'
+import type { Reference } from '@/types/reference'
+
+export const useReferenceListHandlers = (
+  formContext: UseFormReturn | undefined,
+  references: Reference[],
   inputValue: string
-  suggestions: { name: string; isDirectory: boolean }[]
-  selectedIndex: number
-  inputReference: React.RefObject<HTMLInputElement | null>
-  suggestionListReference: React.RefObject<HTMLUListElement | null>
-  handleFocus: () => Promise<void>
-  handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
-  handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => Promise<void>
-  handleSuggestionClick: (
-    suggestion: string | { name: string; isDirectory: boolean }
-  ) => Promise<void>
+): {
+  actions: {
+    loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
+    loadSubDirectorySuggestions: (
+      pathParts: string[]
+    ) => Promise<{ name: string; isDirectory: boolean }[]>
+    addReference: (path: string) => Promise<void>
+  }
   handleAdd: () => Promise<void>
 } => {
-  const [inputValue, setInputValue] = useState('')
-  const [suggestions, setSuggestions] = useState<
-    { name: string; isDirectory: boolean }[]
-  >([])
-  const [rootSuggestions, setRootSuggestions] = useState<
-    { name: string; isDirectory: boolean }[]
-  >([])
-  const [selectedIndex, setSelectedIndex] = useState<number>(-1)
-  const inputReference = useRef<HTMLInputElement>(null)
-  const suggestionListReference = useRef<HTMLUListElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent): void => {
-      if (
-        inputReference.current &&
-        suggestionListReference.current &&
-        !inputReference.current.contains(event.target as Node) &&
-        !suggestionListReference.current.contains(event.target as Node)
-      ) {
-        setSuggestions([])
-        setSelectedIndex(-1)
+  const addReference = useCallback(
+    async (path: string): Promise<void> => {
+      const newReference: Reference = {
+        path,
+        ttl: 3,
+        persist: false,
+        disabled: false
       }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-
-    return (): void => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  const handleFocus = useCallback(async () => {
-    if (rootSuggestions.length === 0) {
-      const rootEntries = await actions.loadRootSuggestions()
-      setRootSuggestions(rootEntries)
-    }
-  }, [actions, rootSuggestions.length])
-
-  const handleInputChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.value
-      setInputValue(value)
-      setSelectedIndex(-1)
-      if (value.includes('/')) {
-        const parts = value.split('/')
-        const pathParts = parts.slice(0, -1).filter((p) => p)
-        const prefix = parts[parts.length - 1] || ''
-        if (pathParts.length > 0) {
-          const entries = await actions.loadSubDirectorySuggestions(pathParts)
-          const filtered = entries.filter((entry) => entry.name.startsWith(prefix))
-          setSuggestions(filtered)
-        } else {
-          const filtered = rootSuggestions.filter((item) =>
-            item.name.startsWith(prefix)
-          )
-          setSuggestions(filtered)
-        }
-      } else if (value.length > 0) {
-        const filtered = rootSuggestions.filter((item) => item.name.startsWith(value))
-        setSuggestions(filtered)
-      } else {
-        setSuggestions([])
-      }
+      formContext?.setValue?.('references', [...references, newReference])
     },
-    [actions, rootSuggestions]
+    [formContext, references]
   )
 
-  const handleKeyDown = useCallback(
-    async (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (suggestions.length === 0) return
-      if (event.key === 'ArrowDown') {
-        event.preventDefault()
-        setSelectedIndex((previous) => (previous + 1) % suggestions.length)
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault()
-        setSelectedIndex(
-          (previous) => (previous - 1 + suggestions.length) % suggestions.length
-        )
-      } else if (event.key === 'Enter') {
-        event.preventDefault()
-        if (selectedIndex >= 0) {
-          const selected = suggestions[selectedIndex]
-          if (selected.isDirectory) {
-            const newPath = `${inputValue.split('/').slice(0, -1).join('/')}/${selected.name}/`
-            setInputValue(newPath)
-            const pathParts = newPath.split('/').filter((p) => p)
-            const entries = await actions.loadSubDirectorySuggestions(pathParts)
-            setSuggestions(entries)
-          } else {
-            // ファイルが選択された場合はinputの値を選択したファイル名に設定
-            setInputValue(selected.name)
-            if (event.currentTarget) {
-              event.currentTarget.value = selected.name
-            }
-            setSuggestions([])
-          }
-          setSelectedIndex(-1)
+  const fileActions = useFileSearchExplorerActions()
+  const actions = useMemo(
+    () => ({
+      loadRootSuggestions: async (): Promise<
+        { name: string; isDirectory: boolean }[]
+      > => {
+        const lsResult = await fileActions.getLsData({ final_path_list: [] })
+        if (lsResult) {
+          return lsResult.entries.map((entry) => ({
+            name: entry.name,
+            isDirectory: entry.is_dir
+          }))
         }
-      } else if (event.key === 'Escape') {
-        event.preventDefault()
-        setSuggestions([])
-        setSelectedIndex(-1)
-      }
-    },
-    [suggestions, selectedIndex, inputValue, actions]
-  )
 
-  const handleSuggestionClick = useCallback(
-    async (suggestion: string | { name: string; isDirectory: boolean }) => {
-      if (typeof suggestion === 'string') {
-        setInputValue(suggestion)
-      } else {
-        if (suggestion.isDirectory) {
-          const newPath = `${inputValue.split('/').slice(0, -1).join('/')}/${suggestion.name}/`
-          setInputValue(newPath)
-          const pathParts = newPath.split('/').filter((p) => p)
-          const entries = await actions.loadSubDirectorySuggestions(pathParts)
-          setSuggestions(entries)
-        } else {
-          setInputValue(suggestion.name)
+        return []
+      },
+      loadSubDirectorySuggestions: async (
+        pathParts: string[]
+      ): Promise<{ name: string; isDirectory: boolean }[]> => {
+        const lsResult = await fileActions.getLsData({ final_path_list: pathParts })
+        if (lsResult) {
+          return lsResult.entries.map((entry) => ({
+            name: entry.name,
+            isDirectory: entry.is_dir
+          }))
         }
-      }
-      setSelectedIndex(-1)
-    },
-    [inputValue, actions]
+
+        return []
+      },
+      addReference
+    }),
+    [addReference, fileActions]
   )
 
   const handleAdd = useCallback(async () => {
     if (inputValue.trim()) {
-      await actions.addReference(inputValue.trim())
-      setInputValue('')
-      setSuggestions([])
-      setSelectedIndex(-1)
+      await addReference(inputValue.trim())
     }
-  }, [inputValue, actions])
+  }, [inputValue, addReference])
 
   return {
-    inputValue,
-    suggestions,
-    selectedIndex,
-    inputReference,
-    suggestionListReference,
-    handleFocus,
-    handleInputChange,
-    handleKeyDown,
-    handleSuggestionClick,
+    actions,
     handleAdd
   }
 }

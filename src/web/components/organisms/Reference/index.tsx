@@ -1,6 +1,5 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
 import { Button } from '@/components/atoms/Button'
@@ -9,6 +8,7 @@ import { Tooltip } from '@/components/molecules/Tooltip'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceHandlers } from './hooks/useReferenceHandlers'
+import { useReferenceLifecycle } from './hooks/useReferenceLifecycle'
 import {
   referenceItem,
   referenceControls,
@@ -35,36 +35,15 @@ export const ReferenceComponent = ({
   currentSessionId,
   formContext
 }: ReferenceProperties): JSX.Element => {
-  const [localReference, setLocalReference] = useState(reference)
+  const { localReference, setLocalReference } = useReferenceLifecycle(reference)
 
-  // Update local state when prop changes
-  useEffect(() => {
-    setLocalReference(reference)
-  }, [reference])
-
-  const { handlePersistToggle, handleToggleDisabled, handleTtlAction } =
-    useReferenceHandlers(
-      currentSessionId,
-      localReference,
-      index,
-      formContext,
-      setLocalReference
-    )
-  const timeoutReference = useRef<NodeJS.Timeout | null>(null)
-
-  const debouncedOnToggle = useMemo(
-    (): (() => void) => () => {
-      if (timeoutReference.current) {
-        clearTimeout(timeoutReference.current)
-      }
-      timeoutReference.current = setTimeout(() => handleToggleDisabled(), 100)
-    },
-    [handleToggleDisabled]
+  const { handlePersistToggle, handleTtlAction, handleChange } = useReferenceHandlers(
+    currentSessionId,
+    localReference,
+    index,
+    formContext,
+    setLocalReference
   )
-
-  const handleChange = useCallback(() => {
-    debouncedOnToggle()
-  }, [debouncedOnToggle])
 
   return (
     <li className={referenceItem}>

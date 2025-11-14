@@ -1,16 +1,16 @@
 import type { JSX } from 'react'
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useWatch } from 'react-hook-form'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
-import { useFileSearchExplorerActions } from '@/components/organisms/FileSearchExplorer/hooks/useFileSearchExplorerActions'
 import { SuggestionItem } from '@/components/organisms/FileSearchExplorer/SuggestionItem'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { Reference } from '@/types/reference'
 
 import { ReferenceComponent } from '../Reference'
 import { useReferenceListHandlers } from './hooks/useReferenceListHandlers'
+import { useReferenceListSuggest } from './hooks/useReferenceListSuggest'
 import {
   metaItem,
   metaItemLabel,
@@ -42,51 +42,7 @@ export const ReferenceList = ({
   )
 
   const errors = formContext?.formState?.errors?.references
-  const addReference = useCallback(
-    async (path: string): Promise<void> => {
-      const newReference: Reference = {
-        path,
-        ttl: 3,
-        persist: false,
-        disabled: false
-      }
-      formContext?.setValue?.('references', [...references, newReference])
-    },
-    [formContext, references]
-  )
-  const fileActions = useFileSearchExplorerActions()
-  const actions = useMemo(
-    () => ({
-      loadRootSuggestions: async (): Promise<
-        { name: string; isDirectory: boolean }[]
-      > => {
-        const lsResult = await fileActions.getLsData({ final_path_list: [] })
-        if (lsResult) {
-          return lsResult.entries.map((entry) => ({
-            name: entry.name,
-            isDirectory: entry.is_dir
-          }))
-        }
-
-        return []
-      },
-      loadSubDirectorySuggestions: async (
-        pathParts: string[]
-      ): Promise<{ name: string; isDirectory: boolean }[]> => {
-        const lsResult = await fileActions.getLsData({ final_path_list: pathParts })
-        if (lsResult) {
-          return lsResult.entries.map((entry) => ({
-            name: entry.name,
-            isDirectory: entry.is_dir
-          }))
-        }
-
-        return []
-      },
-      addReference
-    }),
-    [addReference, fileActions]
-  )
+  const { actions } = useReferenceListHandlers(formContext, references, '')
   const {
     inputValue,
     suggestions,
@@ -96,9 +52,9 @@ export const ReferenceList = ({
     handleFocus,
     handleInputChange,
     handleKeyDown,
-    handleSuggestionClick,
-    handleAdd
-  } = useReferenceListHandlers(actions)
+    handleSuggestionClick
+  } = useReferenceListSuggest(actions)
+  const { handleAdd } = useReferenceListHandlers(formContext, references, inputValue)
 
   return (
     <div className={metaItem}>

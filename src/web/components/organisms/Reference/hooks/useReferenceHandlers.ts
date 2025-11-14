@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
 import type { Reference } from '@/types/reference'
@@ -13,14 +13,16 @@ export const useReferenceHandlers = (
   setLocalReference?: React.Dispatch<React.SetStateAction<Reference>>
 ): {
   handlePersistToggle: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
-  handleToggleDisabled: () => Promise<void>
   handleTtlAction: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
+  handleChange: () => void
 } => {
   const {
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
     handleToggleReferenceDisabled
   } = useReferenceActions()
+
+  const timeoutReference = useRef<NodeJS.Timeout | null>(null)
 
   const handlePersistToggle = useCallback(
     async (_event: React.MouseEvent<HTMLButtonElement>) => {
@@ -118,9 +120,23 @@ export const useReferenceHandlers = (
     ]
   )
 
+  const debouncedOnToggle = useMemo(
+    (): (() => void) => () => {
+      if (timeoutReference.current) {
+        clearTimeout(timeoutReference.current)
+      }
+      timeoutReference.current = setTimeout(() => handleToggleDisabled(), 100)
+    },
+    [handleToggleDisabled]
+  )
+
+  const handleChange = useCallback(() => {
+    debouncedOnToggle()
+  }, [debouncedOnToggle])
+
   return {
     handlePersistToggle,
-    handleToggleDisabled,
-    handleTtlAction
+    handleTtlAction,
+    handleChange
   }
 }

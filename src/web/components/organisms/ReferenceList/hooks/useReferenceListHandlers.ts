@@ -6,8 +6,7 @@ import type { Reference } from '@/types/reference'
 
 export const useReferenceListHandlers = (
   formContext: UseFormReturn | undefined,
-  references: Reference[],
-  inputValue: string
+  references: Reference[]
 ): {
   actions: {
     loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
@@ -16,7 +15,6 @@ export const useReferenceListHandlers = (
     ) => Promise<{ name: string; isDirectory: boolean }[]>
     addReference: (path: string) => Promise<void>
   }
-  handleAdd: () => Promise<void>
 } => {
   const addReference = useCallback(
     async (path: string): Promise<void> => {
@@ -65,14 +63,7 @@ export const useReferenceListHandlers = (
     [addReference, fileActions]
   )
 
-  const handleAdd = useCallback(async () => {
-    if (inputValue.trim()) {
-      await addReference(inputValue.trim())
-    }
-  }, [inputValue, addReference])
-
   return {
-    actions,
-    handleAdd
+    actions
   }
 }

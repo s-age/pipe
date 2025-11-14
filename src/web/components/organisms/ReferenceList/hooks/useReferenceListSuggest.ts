@@ -1,12 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-export const useReferenceListSuggest = (actions: {
-  loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
-  loadSubDirectorySuggestions: (
-    pathParts: string[]
-  ) => Promise<{ name: string; isDirectory: boolean }[]>
-  addReference: (path: string) => Promise<void>
-}): {
+import type { Reference } from '@/types/reference'
+
+export const useReferenceListSuggest = (
+  actions: {
+    loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
+    loadSubDirectorySuggestions: (
+      pathParts: string[]
+    ) => Promise<{ name: string; isDirectory: boolean }[]>
+    addReference: (path: string) => Promise<void>
+  },
+  existingReferences: Reference[]
+): {
   inputValue: string
   suggestions: { name: string; isDirectory: boolean }[]
   selectedIndex: number
@@ -29,6 +34,12 @@ export const useReferenceListSuggest = (actions: {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1)
   const inputReference = useRef<HTMLInputElement>(null)
   const suggestionListReference = useRef<HTMLUListElement>(null)
+
+  // Get paths of existing references for filtering
+  const existingPaths = useMemo(
+    () => new Set(existingReferences.map((reference) => reference.path)),
+    [existingReferences]
+  )
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
@@ -53,11 +64,21 @@ export const useReferenceListSuggest = (actions: {
   const handleFocus = useCallback(async (): Promise<void> => {
     if (rootSuggestions.length === 0) {
       const suggestions = await actions.loadRootSuggestions()
-      setRootSuggestions(suggestions)
+      // Filter out already selected references when loading for the first time
+      const filteredSuggestions = suggestions.filter(
+        (suggestion) => !existingPaths.has(suggestion.name)
+      )
+      setRootSuggestions(filteredSuggestions)
+      setSuggestions(filteredSuggestions)
+    } else {
+      // Filter out already selected references from cached rootSuggestions
+      const filteredSuggestions = rootSuggestions.filter(
+        (suggestion) => !existingPaths.has(suggestion.name)
+      )
+      setSuggestions(filteredSuggestions)
     }
-    setSuggestions(rootSuggestions)
     setSelectedIndex(-1)
-  }, [actions, rootSuggestions])
+  }, [actions, rootSuggestions, existingPaths])
 
   const handleInputChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
@@ -65,7 +86,11 @@ export const useReferenceListSuggest = (actions: {
       setInputValue(value)
 
       if (value.trim() === '') {
-        setSuggestions(rootSuggestions)
+        // Filter out already selected references
+        const filteredSuggestions = rootSuggestions.filter(
+          (suggestion) => !existingPaths.has(suggestion.name)
+        )
+        setSuggestions(filteredSuggestions)
         setSelectedIndex(-1)
 
         return
@@ -79,7 +104,11 @@ export const useReferenceListSuggest = (actions: {
         const filteredSuggestions = rootSuggestions.filter((suggestion) =>
           suggestion.name.toLowerCase().startsWith(lastPart.toLowerCase())
         )
-        setSuggestions(filteredSuggestions)
+        // Filter out already selected references
+        const finalSuggestions = filteredSuggestions.filter(
+          (suggestion) => !existingPaths.has(suggestion.name)
+        )
+        setSuggestions(finalSuggestions)
         setSelectedIndex(-1)
       } else {
         // Subdirectory suggestions
@@ -89,11 +118,16 @@ export const useReferenceListSuggest = (actions: {
         const filteredSuggestions = subSuggestions.filter((suggestion) =>
           suggestion.name.toLowerCase().startsWith(lastPart.toLowerCase())
         )
-        setSuggestions(filteredSuggestions)
+        // Filter out already selected references (full path)
+        const currentPath = parentPathParts.join('/')
+        const finalSuggestions = filteredSuggestions.filter(
+          (suggestion) => !existingPaths.has(`${currentPath}/${suggestion.name}`)
+        )
+        setSuggestions(finalSuggestions)
         setSelectedIndex(-1)
       }
     },
-    [actions, rootSuggestions]
+    [actions, rootSuggestions, existingPaths]
   )
 
   const handleSuggestionClick = useCallback(
@@ -115,9 +149,14 @@ export const useReferenceListSuggest = (actions: {
           // Load subdirectory suggestions
           const subPathParts = newPath.split('/').filter((part) => part !== '')
           const subSuggestions = await actions.loadSubDirectorySuggestions(subPathParts)
-          setSuggestions(subSuggestions)
+          // Filter out already selected references
+          const filteredSuggestions = subSuggestions.filter(
+            (subSuggestion) => !existingPaths.has(`${newPath}/${subSuggestion.name}`)
+          )
+          setSuggestions(filteredSuggestions)
           setSelectedIndex(-1)
         } else {
+          // Only add files, not directories
           setInputValue(newPath)
           await actions.addReference(newPath)
           setInputValue('')
@@ -131,9 +170,15 @@ export const useReferenceListSuggest = (actions: {
           const subSuggestions = await actions.loadSubDirectorySuggestions([
             suggestionName
           ])
-          setSuggestions(subSuggestions)
+          // Filter out already selected references
+          const filteredSuggestions = subSuggestions.filter(
+            (subSuggestion) =>
+              !existingPaths.has(`${suggestionName}/${subSuggestion.name}`)
+          )
+          setSuggestions(filteredSuggestions)
           setSelectedIndex(-1)
         } else {
+          // Only add files, not directories
           setInputValue(suggestionName)
           await actions.addReference(suggestionName)
           setInputValue('')
@@ -142,7 +187,7 @@ export const useReferenceListSuggest = (actions: {
         }
       }
     },
-    [inputValue, actions]
+    [inputValue, actions, existingPaths]
   )
 
   const handleKeyDown = useCallback(
@@ -165,12 +210,17 @@ export const useReferenceListSuggest = (actions: {
         case 'Enter':
           event.preventDefault()
           if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
-            await handleSuggestionClick(suggestions[selectedIndex])
+            const selectedSuggestion = suggestions[selectedIndex]
+            // Only submit files from suggestions, not directories
+            if (!selectedSuggestion.isDirectory) {
+              await handleSuggestionClick(selectedSuggestion)
+            } else {
+              // For directories, just navigate into them
+              await handleSuggestionClick(selectedSuggestion)
+            }
           } else {
-            await actions.addReference(inputValue)
-            setInputValue('')
-            setSuggestions([])
-            setSelectedIndex(-1)
+            // Don't allow direct submission of paths not in suggestions
+            // User must select from suggestions to ensure the file exists
           }
           break
         case 'Escape':
@@ -179,7 +229,7 @@ export const useReferenceListSuggest = (actions: {
           break
       }
     },
-    [suggestions, selectedIndex, inputValue, actions, handleSuggestionClick]
+    [suggestions, selectedIndex, handleSuggestionClick]
   )
 
   return {

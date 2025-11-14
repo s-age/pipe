@@ -18,7 +18,6 @@ import {
   noItemsMessage,
   addReferenceContainer,
   addReferenceInput,
-  addReferenceButton,
   suggestionList
 } from './style.css'
 
@@ -28,7 +27,7 @@ type ReferenceListProperties = {
 }
 
 export const ReferenceList = ({
-  placeholder = 'Enter reference path...',
+  placeholder = 'Type to search files... (select from suggestions)',
   currentSessionId
 }: ReferenceListProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
@@ -42,7 +41,7 @@ export const ReferenceList = ({
   )
 
   const errors = formContext?.formState?.errors?.references
-  const { actions } = useReferenceListHandlers(formContext, references, '')
+  const { actions } = useReferenceListHandlers(formContext, references)
   const {
     inputValue,
     suggestions,
@@ -53,8 +52,7 @@ export const ReferenceList = ({
     handleInputChange,
     handleKeyDown,
     handleSuggestionClick
-  } = useReferenceListSuggest(actions)
-  const { handleAdd } = useReferenceListHandlers(formContext, references, inputValue)
+  } = useReferenceListSuggest(actions, references)
 
   return (
     <div className={metaItem}>
@@ -70,9 +68,6 @@ export const ReferenceList = ({
           placeholder={placeholder}
           className={addReferenceInput}
         />
-        <button onClick={handleAdd} className={addReferenceButton}>
-          Add
-        </button>
         {suggestions.length > 0 && (
           <ul ref={suggestionListReference} className={suggestionList}>
             {suggestions.map((suggestion, index) => (

@@ -1,7 +1,6 @@
 import { useCallback } from 'react'
 import type { SubmitHandler } from 'react-hook-form'
 
-import type { SessionDetail } from '@/lib/api/session/getSession'
 import { startSession } from '@/lib/api/session/startSession'
 import { emitToast } from '@/lib/toastEvents'
 
@@ -16,7 +15,6 @@ export const useStartSessionFormHandlers = ({
 }: UseStartSessionFormHandlersProperties): {
   handleCancel: () => void
   handleCreateClick: () => void
-  noopOnSessionUpdate: (_data: SessionDetail | null) => void
 } => {
   const handleCancel = useCallback(() => {
     window.location.href = '/'
@@ -44,11 +42,8 @@ export const useStartSessionFormHandlers = ({
     void handleSubmit(onFormSubmit)()
   }, [handleSubmit, onFormSubmit])
 
-  const noopOnSessionUpdate = useCallback((_data: SessionDetail | null) => {}, [])
-
   return {
     handleCancel,
-    handleCreateClick,
-    noopOnSessionUpdate
+    handleCreateClick
   }
 }

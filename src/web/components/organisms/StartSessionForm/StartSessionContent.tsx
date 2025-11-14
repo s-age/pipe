@@ -9,7 +9,6 @@ import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import { TodoList } from '@/components/organisms/TodoList'
-import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import type { StartSessionFormInputs } from './schema'
 import { formContainer } from './style.css'
@@ -18,13 +17,11 @@ import { metaItemLabel } from '../SessionMetaBasic/style.css'
 type StartSessionContentProperties = {
   handleCancel: () => void
   handleCreateClick: () => void
-  noopOnSessionUpdate: (_data: SessionDetail | null) => void
 }
 
 export const StartSessionContent = ({
   handleCancel,
-  handleCreateClick,
-  noopOnSessionUpdate
+  handleCreateClick
 }: StartSessionContentProperties): JSX.Element => {
   const {
     formState: { isSubmitting }
@@ -48,11 +45,7 @@ export const StartSessionContent = ({
 
       <ReferenceList currentSessionId={null} />
 
-      <HyperParameters
-        sessionDetail={null}
-        currentSessionId={null}
-        onSessionUpdate={noopOnSessionUpdate}
-      />
+      <HyperParameters sessionDetail={null} currentSessionId={null} />
 
       <TodoList sessionDetail={null} currentSessionId={null} />
 

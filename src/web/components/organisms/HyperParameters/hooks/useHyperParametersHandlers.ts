@@ -7,13 +7,11 @@ import { useHyperParametersActions } from './useHyperParametersActions'
 type UseSessionHyperparametersProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  onSessionUpdate: (session: SessionDetail) => void
 }
 
 export const useHyperParametersHandlers = ({
   sessionDetail,
-  currentSessionId,
-  onSessionUpdate
+  currentSessionId
 }: UseSessionHyperparametersProperties): {
   temperature: number
   setTemperature: React.Dispatch<React.SetStateAction<number>>
@@ -105,19 +103,13 @@ export const useHyperParametersHandlers = ({
     const payload = { temperature }
 
     try {
-      const result = await updateHyperparameters(currentSessionId, payload)
-      onSessionUpdate(result.session)
+      await updateHyperparameters(currentSessionId, payload)
+      // No need to update session detail as hyperparameters don't affect session tree
     } finally {
       // end interaction on commit (whether success or failure)
       setIsInteracting(false)
     }
-  }, [
-    currentSessionId,
-    temperature,
-    sessionDetail,
-    updateHyperparameters,
-    onSessionUpdate
-  ])
+  }, [currentSessionId, temperature, sessionDetail, updateHyperparameters])
 
   const handleTemperatureMouseDown = useCallback((): void => {
     setIsInteracting(true)
@@ -129,12 +121,12 @@ export const useHyperParametersHandlers = ({
     const payload = { top_p: topP }
 
     try {
-      const result = await updateHyperparameters(currentSessionId, payload)
-      onSessionUpdate(result.session)
+      await updateHyperparameters(currentSessionId, payload)
+      // No need to update session detail as hyperparameters don't affect session tree
     } finally {
       setIsInteracting(false)
     }
-  }, [currentSessionId, topP, sessionDetail, updateHyperparameters, onSessionUpdate])
+  }, [currentSessionId, topP, sessionDetail, updateHyperparameters])
 
   const handleTopPMouseDown = useCallback((): void => {
     setIsInteracting(true)
@@ -146,12 +138,12 @@ export const useHyperParametersHandlers = ({
     const payload = { top_k: topK }
 
     try {
-      const result = await updateHyperparameters(currentSessionId, payload)
-      onSessionUpdate(result.session)
+      await updateHyperparameters(currentSessionId, payload)
+      // No need to update session detail as hyperparameters don't affect session tree
     } finally {
       setIsInteracting(false)
     }
-  }, [currentSessionId, topK, sessionDetail, updateHyperparameters, onSessionUpdate])
+  }, [currentSessionId, topK, sessionDetail, updateHyperparameters])
 
   const handleTopKMouseDown = useCallback((): void => {
     setIsInteracting(true)

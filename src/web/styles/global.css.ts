@@ -14,7 +14,9 @@ globalStyle('html, body, #root', {
     'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
   // Prevent the app from shrinking below 1280px wide. Layouts can still
   // horizontally scroll if the viewport is smaller than this.
-  minWidth: '1280px'
+  minWidth: '1280px',
+  height: '100%',
+  overflow: 'hidden'
 })
 
 globalStyle('input, textarea', {

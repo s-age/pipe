@@ -27,14 +27,12 @@ import {
 type SessionMetaProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  setSessionDetail: (data: SessionDetail | null) => void
   onRefresh: () => Promise<void>
 }
 
 export const SessionMeta = ({
   sessionDetail,
   currentSessionId,
-  setSessionDetail,
   onRefresh
 }: SessionMetaProperties): JSX.Element | null => {
   const { defaultValues, onSubmit, isSubmitting, saved } = useSessionMetaHandlers({
@@ -82,7 +80,6 @@ export const SessionMeta = ({
             <HyperParameters
               sessionDetail={sessionDetail}
               currentSessionId={currentSessionId}
-              onSessionUpdate={setSessionDetail}
             />
 
             <TodoList

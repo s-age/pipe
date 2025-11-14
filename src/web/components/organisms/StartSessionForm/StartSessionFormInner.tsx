@@ -9,14 +9,14 @@ import { StartSessionContent } from './StartSessionContent'
 export const StartSessionFormInner = (): JSX.Element => {
   const { handleSubmit } = useFormContext<StartSessionFormInputs>()
 
-  const { handleCancel, handleCreateClick, noopOnSessionUpdate } =
-    useStartSessionFormHandlers({ handleSubmit })
+  const { handleCancel, handleCreateClick } = useStartSessionFormHandlers({
+    handleSubmit
+  })
 
   return (
     <StartSessionContent
       handleCancel={handleCancel}
       handleCreateClick={handleCreateClick}
-      noopOnSessionUpdate={noopOnSessionUpdate}
     />
   )
 }

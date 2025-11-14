@@ -51,7 +51,6 @@ export const ChatHistoryPage = (): JSX.Element => {
             key={currentSessionId}
             sessionDetail={sessionDetail}
             currentSessionId={currentSessionId}
-            setSessionDetail={setSessionDetail}
             onRefresh={onRefresh}
           />
         </div>

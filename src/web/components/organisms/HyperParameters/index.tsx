@@ -16,13 +16,11 @@ import {
 type HyperParametersProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  onSessionUpdate: (session: SessionDetail) => void
 }
 
 export const HyperParameters = ({
   sessionDetail,
-  currentSessionId,
-  onSessionUpdate
+  currentSessionId
 }: HyperParametersProperties): React.JSX.Element => {
   const {
     temperature,
@@ -39,8 +37,7 @@ export const HyperParameters = ({
     handleTopKMouseDown
   } = useHyperParametersHandlers({
     sessionDetail,
-    currentSessionId,
-    onSessionUpdate
+    currentSessionId
   })
 
   return (

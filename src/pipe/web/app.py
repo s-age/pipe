@@ -451,9 +451,7 @@ def edit_multi_step_reasoning_api(session_id):
     return jsonify(response_data), status_code
 
 
-@app.route(
-    "/api/v1/session/<path:session_id>/multi_step_reasoning", methods=["PATCH"]
-)
+@app.route("/api/v1/session/<path:session_id>/multi_step_reasoning", methods=["PATCH"])
 def edit_multi_step_reasoning_underscore_api(session_id):
     """Alternative endpoint with underscore naming (matches OpenAPI spec)."""
     response_data, status_code = dispatch_action(

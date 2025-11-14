@@ -56,7 +56,7 @@ export const suggestionList = style({
   marginTop: '5px',
   padding: '0',
   height: '150px',
-  overflowY: 'scroll',
+  overflowY: 'auto',
   backgroundColor: colors.mediumBackground,
   border: `1px solid ${colors.cyanAlt}`,
   borderRadius: '4px',

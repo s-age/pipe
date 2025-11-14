@@ -16,7 +16,7 @@ globalStyle('html, body, #root', {
   // horizontally scroll if the viewport is smaller than this.
   minWidth: '1280px',
   height: '100%',
-  overflow: 'hidden'
+  contain: 'paint'
 })
 
 globalStyle('input, textarea', {

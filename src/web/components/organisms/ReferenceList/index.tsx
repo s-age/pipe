@@ -1,11 +1,8 @@
-import clsx from 'clsx'
 import type { JSX } from 'react'
 import { useCallback, useMemo, useState } from 'react'
 
-import { Button } from '@/components/atoms/Button'
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
-import { Tooltip } from '@/components/molecules/Tooltip'
 import { useFileSearchExplorerActions } from '@/components/organisms/FileSearchExplorer/hooks/useFileSearchExplorerActions'
 import { SuggestionItem } from '@/components/organisms/FileSearchExplorer/SuggestionItem'
 import { useOptionalFormContext } from '@/components/organisms/Form'
@@ -15,27 +12,17 @@ import { toggleReferenceDisabled } from '@/lib/api/session/toggleReferenceDisabl
 import { emitToast } from '@/lib/toastEvents'
 import type { Reference } from '@/types/reference'
 
+import { ReferenceComponent } from '../Reference'
 import { useReferenceListHandlers } from './hooks/useReferenceListHandlers'
-import { ReferenceToggle } from './ReferenceToggle'
 import {
   metaItem,
   metaItemLabel,
   referencesList,
-  referenceItem,
-  referenceControls,
-  referenceLabel,
-  referencePath,
-  materialIcons,
-  ttlControls,
-  ttlValue,
-  lockIconStyle,
-  persistButton,
   noItemsMessage,
   addReferenceContainer,
   addReferenceInput,
   addReferenceButton,
-  suggestionList,
-  referenceActions
+  suggestionList
 } from './style.css'
 
 type ReferenceListProperties = {
@@ -246,78 +233,14 @@ export const ReferenceList = ({
       ) : (
         <ul className={referencesList}>
           {references.map((reference: Reference, index: number) => (
-            <li key={index} className={referenceItem}>
-              <div className={referenceControls}>
-                <div className={referenceLabel}>
-                  <Tooltip
-                    content={reference.persist ? 'Unlock reference' : 'Lock reference'}
-                  >
-                    <Button
-                      kind="ghost"
-                      size="xsmall"
-                      className={persistButton}
-                      onClick={handlePersistToggle}
-                      data-index={String(index)}
-                      aria-label={
-                        reference.persist
-                          ? `Unlock reference ${reference.path}`
-                          : `Lock reference ${reference.path}`
-                      }
-                    >
-                      <span
-                        className={clsx(materialIcons, lockIconStyle)}
-                        data-locked={reference.persist}
-                      >
-                        {reference.persist ? 'lock' : 'lock_open'}
-                      </span>
-                    </Button>
-                  </Tooltip>
-                  <span
-                    data-testid="reference-path"
-                    className={referencePath}
-                    data-disabled={String(Boolean(reference.disabled))}
-                  >
-                    {reference.path}
-                  </span>
-                </div>
-                <div className={referenceActions}>
-                  <div className={ttlControls}>
-                    <Tooltip content="Decrease TTL">
-                      <Button
-                        kind="primary"
-                        size="xsmall"
-                        onClick={handleTtlAction}
-                        data-index={String(index)}
-                        data-action="decrement"
-                        aria-label={`Decrease TTL for ${reference.path}`}
-                      >
-                        -
-                      </Button>
-                    </Tooltip>
-                    <span className={ttlValue}>
-                      {reference.ttl !== null ? reference.ttl : 3}
-                    </span>
-                    <Tooltip content="Increase TTL">
-                      <Button
-                        kind="primary"
-                        size="xsmall"
-                        onClick={handleTtlAction}
-                        data-index={String(index)}
-                        data-action="increment"
-                        aria-label={`Increase TTL for ${reference.path}`}
-                      >
-                        +
-                      </Button>
-                    </Tooltip>
-                  </div>
-                  <ReferenceToggle
-                    index={index}
-                    reference={reference}
-                    onToggle={handleToggleDisabled}
-                  />
-                </div>
-              </div>
-            </li>
+            <ReferenceComponent
+              key={index}
+              reference={reference}
+              index={index}
+              onPersistToggle={handlePersistToggle}
+              onTtlAction={handleTtlAction}
+              onToggleDisabled={handleToggleDisabled}
+            />
           ))}
         </ul>
       )}

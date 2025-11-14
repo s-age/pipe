@@ -2,9 +2,7 @@ import { useCallback } from 'react'
 
 import { useToast } from '@/components/organisms/Toast/hooks/useToast'
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
-import { editReferences } from '@/lib/api/session/editReferences'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
-import type { Reference } from '@/types/reference'
 
 export const useReferenceActions = (
   refreshSessions?: () => Promise<void>
@@ -19,7 +17,6 @@ export const useReferenceActions = (
     index: number,
     ttl: number
   ) => Promise<void>
-  handleAddReference: (sessionId: string, path: string) => Promise<void>
 } => {
   const toast = useToast()
   const handleUpdateReferencePersist = useCallback(
@@ -61,31 +58,8 @@ export const useReferenceActions = (
     [toast, refreshSessions]
   )
 
-  const handleAddReference = useCallback(
-    async (sessionId: string, path: string): Promise<void> => {
-      if (!sessionId) return
-      try {
-        const newReference: Reference = {
-          path,
-          disabled: false,
-          persist: false,
-          ttl: 3
-        }
-        // const newReferences = [...sessionDetail.references, newReference]
-        const newReferences = [newReference] // --- IGNORE ---
-        await editReferences(sessionId, newReferences)
-        if (refreshSessions) await refreshSessions()
-      } catch (error: unknown) {
-        toast.failure((error as Error).message || 'Failed to add reference.')
-      }
-    },
-    // [sessionDetail, toast, refreshSessions]
-    [toast, refreshSessions]
-  )
-
   return {
     handleUpdateReferencePersist,
-    handleUpdateReferenceTtl,
-    handleAddReference
+    handleUpdateReferenceTtl
   }
 }

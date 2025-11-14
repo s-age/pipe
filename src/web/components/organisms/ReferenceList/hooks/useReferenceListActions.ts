@@ -1,9 +1,10 @@
 import { useCallback } from 'react'
 
 import { useFileSearchExplorerActions } from '@/components/organisms/FileSearchExplorer/hooks/useFileSearchExplorerActions'
+import { editReferences } from '@/lib/api/session/editReferences'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-
-import { useReferenceActions } from './useReferenceActions'
+import { emitToast } from '@/lib/toastEvents'
+import type { Reference } from '@/types/reference'
 
 export const useReferenceListActions = (
   sessionDetail: SessionDetail | null,
@@ -16,8 +17,28 @@ export const useReferenceListActions = (
   ) => Promise<{ name: string; isDirectory: boolean }[]>
   addReference: (path: string) => Promise<void>
 } => {
-  const referenceActions = useReferenceActions(sessionDetail, refreshSessions)
   const fileActions = useFileSearchExplorerActions()
+
+  const handleAddReference = useCallback(
+    async (sessionId: string, path: string): Promise<void> => {
+      if (!sessionId) return
+      try {
+        const newReference: Reference = {
+          path,
+          disabled: false,
+          persist: false,
+          ttl: 3
+        }
+        // const newReferences = [...sessionDetail.references, newReference]
+        const newReferences = [newReference] // --- IGNORE ---
+        await editReferences(sessionId, newReferences)
+        if (refreshSessions) await refreshSessions()
+      } catch (error: unknown) {
+        emitToast.failure((error as Error).message || 'Failed to add reference.')
+      }
+    },
+    [refreshSessions]
+  )
 
   const loadRootSuggestions = useCallback(async () => {
     if (sessionDetail?.references) {
@@ -55,10 +76,10 @@ export const useReferenceListActions = (
   const addReference = useCallback(
     async (path: string) => {
       if (currentSessionId) {
-        await referenceActions.handleAddReference(currentSessionId, path)
+        await handleAddReference(currentSessionId, path)
       }
     },
-    [referenceActions, currentSessionId]
+    [handleAddReference, currentSessionId]
   )
 
   return {

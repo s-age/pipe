@@ -1,11 +1,14 @@
-import type { JSX } from 'react'
+import type { JSX, SVGAttributes } from 'react'
 
 type IconProperties = {
-  className?: string
   size?: number
-}
+} & SVGAttributes<SVGSVGElement>
 
-export const IconDelete = ({ className, size = 20 }: IconProperties): JSX.Element => (
+export const IconDelete = ({
+  size = 20,
+  className,
+  ...properties
+}: IconProperties): JSX.Element => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -15,6 +18,7 @@ export const IconDelete = ({ className, size = 20 }: IconProperties): JSX.Elemen
     className={className}
     aria-hidden="true"
     focusable="false"
+    {...properties}
   >
     {/* Lid */}
     <rect x="3.8" y="4" width="42.0" height="4.4" rx="0.9" />

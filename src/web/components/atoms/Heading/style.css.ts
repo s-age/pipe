@@ -1,14 +1,26 @@
-import { style } from '@vanilla-extract/css'
+import { recipe } from '@vanilla-extract/recipes'
 
 import { colors } from '../../../styles/colors.css'
 
-export const h1Style = style({
-  color: colors.accent,
-  borderBottom: `1px solid ${colors.mediumBackground}`,
-  paddingBottom: '12px',
-  marginBottom: '20px'
-})
-
-export const h2Style = style({
-  color: colors.accent
+export const heading = recipe({
+  base: {
+    color: colors.accent
+  },
+  variants: {
+    level: {
+      1: {
+        borderBottom: `1px solid ${colors.mediumBackground}`,
+        paddingBottom: '12px',
+        marginBottom: '20px'
+      },
+      2: {},
+      3: {},
+      4: {},
+      5: {},
+      6: {}
+    }
+  },
+  defaultVariants: {
+    level: 1
+  }
 })

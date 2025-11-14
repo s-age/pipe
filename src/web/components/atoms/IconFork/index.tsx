@@ -1,11 +1,14 @@
-import type { JSX } from 'react'
+import type { JSX, SVGAttributes } from 'react'
 
 type IconProperties = {
-  className?: string
   size?: number
-}
+} & SVGAttributes<SVGSVGElement>
 
-export const IconFork = ({ className, size = 20 }: IconProperties): JSX.Element => (
+export const IconFork = ({
+  size = 20,
+  className,
+  ...properties
+}: IconProperties): JSX.Element => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -19,6 +22,7 @@ export const IconFork = ({ className, size = 20 }: IconProperties): JSX.Element 
     className={className}
     aria-hidden="true"
     focusable="false"
+    {...properties}
   >
     {/* Top-left node */}
     <circle cx="6" cy="6" r="2" />

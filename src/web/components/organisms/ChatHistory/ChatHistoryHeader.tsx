@@ -2,7 +2,6 @@ import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
-import { h2Style } from '@/components/atoms/Heading/style.css'
 import { IconDelete } from '@/components/atoms/IconDelete'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { colors } from '@/styles/colors.css'
@@ -26,7 +25,7 @@ export const ChatHistoryHeader = ({
 
   return (
     <div className={turnsHeader}>
-      <Heading level={2} className={h2Style}>
+      <Heading level={2}>
         {sessionDetail.purpose}{' '}
         {contextLimit > 0 && tokenCount !== null && `(${contextLeft}% context left)`}
       </Heading>

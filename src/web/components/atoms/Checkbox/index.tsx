@@ -1,11 +1,20 @@
+import clsx from 'clsx'
+import { forwardRef } from 'react'
 import type { InputHTMLAttributes, JSX } from 'react'
 
 import { checkboxStyle } from './style.css'
 
 type CheckboxProperties = {} & InputHTMLAttributes<HTMLInputElement>
 
-export const Checkbox: (properties: CheckboxProperties) => JSX.Element = (
-  properties
-) => <input type="checkbox" className={checkboxStyle} {...properties} />
+export const Checkbox = forwardRef<HTMLInputElement, CheckboxProperties>(
+  ({ className, ...properties }, reference): JSX.Element => (
+    <input
+      ref={reference}
+      type="checkbox"
+      className={clsx(checkboxStyle, className)}
+      {...properties}
+    />
+  )
+)
 
-// Default export removed — use named export `Checkbox`
+Checkbox.displayName = 'Checkbox'

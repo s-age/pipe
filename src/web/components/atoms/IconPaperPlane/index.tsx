@@ -1,13 +1,13 @@
-import type { JSX } from 'react'
+import type { JSX, SVGAttributes } from 'react'
 
 type IconProperties = {
-  className?: string
   size?: number
-}
+} & SVGAttributes<SVGSVGElement>
 
 export const IconPaperPlane = ({
+  size = 24,
   className,
-  size = 24
+  ...properties
 }: IconProperties): JSX.Element => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -22,6 +22,7 @@ export const IconPaperPlane = ({
     className={className}
     aria-hidden="true"
     focusable="false"
+    {...properties}
   >
     <path d="M44 4L22 26" />
     <path d="M44 4l-14 40-8-18-18-8 40-14z" />

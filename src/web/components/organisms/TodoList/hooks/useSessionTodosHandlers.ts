@@ -9,14 +9,11 @@ import type { Todo } from '@/types/todo'
 type UseSessionTodosProperties = {
   sessionDetail: SessionDetail | null
   currentSessionId: string | null
-  // optional setter kept for compatibility; not used here
-  setSessionDetail?: (data: SessionDetail | null) => void
 }
 
 export const useSessionTodosHandlers = ({
   sessionDetail,
-  currentSessionId,
-  setSessionDetail: _setSessionDetail // 互換性のため受け取るが使わない
+  currentSessionId
 }: UseSessionTodosProperties): {
   handleUpdateTodo: (todos: Todo[]) => Promise<void>
   handleDeleteAllTodos: () => Promise<void>

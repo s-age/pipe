@@ -1,11 +1,14 @@
-import type { JSX } from 'react'
+import type { JSX, SVGAttributes } from 'react'
 
 type IconProperties = {
-  className?: string
   size?: number
-}
+} & SVGAttributes<SVGSVGElement>
 
-export const IconSearch = ({ className, size = 20 }: IconProperties): JSX.Element => (
+export const IconSearch = ({
+  size = 20,
+  className,
+  ...properties
+}: IconProperties): JSX.Element => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -19,6 +22,7 @@ export const IconSearch = ({ className, size = 20 }: IconProperties): JSX.Elemen
     className={className}
     aria-hidden="true"
     focusable="false"
+    {...properties}
   >
     <circle cx="11" cy="11" r="6" />
     <path d="M21 21l-4.35-4.35" />

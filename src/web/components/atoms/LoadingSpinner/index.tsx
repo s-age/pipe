@@ -1,9 +1,17 @@
-import type { JSX } from 'react'
+import clsx from 'clsx'
+import type { HTMLAttributes, JSX } from 'react'
 
 import { loadingSpinnerStyle } from './style.css'
 
-export const LoadingSpinner: () => JSX.Element = () => (
-  <div className={loadingSpinnerStyle}>Loading...</div>
+type LoadingSpinnerProperties = {} & HTMLAttributes<HTMLDivElement>
+
+export const LoadingSpinner = ({
+  className,
+  ...properties
+}: LoadingSpinnerProperties): JSX.Element => (
+  <div className={clsx(loadingSpinnerStyle, className)} {...properties}>
+    Loading...
+  </div>
 )
 
 // (Removed temporary default export) Use named export `LoadingSpinner`.

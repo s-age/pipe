@@ -53,5 +53,3 @@ export const useInputCheckbox = ({
 
   return { registerProperties, inputId }
 }
-
-// (Removed temporary default export) Use named export `useInputCheckbox`.

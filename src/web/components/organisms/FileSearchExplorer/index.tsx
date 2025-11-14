@@ -55,6 +55,7 @@ export const FileSearchExplorer = ({
   onPathChange?: (paths: string[]) => void
 } = {}): JSX.Element => {
   const inputReference = useRef<HTMLInputElement>(null)
+  const suggestionListReference = useRef<HTMLUListElement>(null)
   const handlers = useFileSearchExplorerHandlers(inputReference)
   const {
     pathList,
@@ -65,17 +66,40 @@ export const FileSearchExplorer = ({
     handleQueryChange,
     handleKeyDown,
     handleSuggestionClick,
-    handleInputFocus
+    handleInputFocus,
+    setSuggestions,
+    setSelectedIndex
   } = handlers
 
   useEffect(() => {
     onPathChange?.(pathList)
   }, [pathList, onPathChange])
 
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (
+        inputReference.current &&
+        suggestionListReference.current &&
+        !inputReference.current.contains(event.target as Node) &&
+        !suggestionListReference.current.contains(event.target as Node)
+      ) {
+        setSuggestions([])
+        setSelectedIndex(-1)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return (): void => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [setSuggestions, setSelectedIndex])
+
   return (
     <div className={container}>
       {suggestions.length > 0 && (
-        <ul className={suggestionList}>
+        <ul className={suggestionList} ref={suggestionListReference}>
           {suggestions.map((suggestion, index) => (
             <SuggestionItem
               key={index}

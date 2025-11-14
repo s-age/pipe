@@ -3,7 +3,6 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '@/styles/colors.css'
 
 export const container = style({
-  padding: '5px',
   position: 'relative',
   maxWidth: '100%'
 })
@@ -44,19 +43,23 @@ export const pathTagDeleteButton = style({
 
 export const searchInput = style({
   width: '100%',
-  padding: '8px'
+  border: `1px solid ${colors.cyanAlt}`,
+  borderRadius: '4px',
+  color: colors.offWhite
 })
 
 export const suggestionList = style({
   position: 'absolute',
-  top: '100%',
+  top: '45px',
   left: '0',
   right: '0',
   marginTop: '5px',
   padding: '0',
   height: '150px',
   overflowY: 'scroll',
-  backgroundColor: colors.uiBackground,
+  backgroundColor: colors.mediumBackground,
+  border: `1px solid ${colors.cyanAlt}`,
+  borderRadius: '4px',
   zIndex: 10
 })
 
@@ -64,8 +67,12 @@ export const suggestionItem = style({
   padding: '4px 8px',
   cursor: 'pointer',
   listStyle: 'none',
-  color: 'white',
-  backgroundColor: colors.uiBackground
+  color: colors.offWhite,
+  backgroundColor: colors.mediumBackground,
+  ':hover': {
+    backgroundColor: colors.cyan,
+    color: colors.uiBackground
+  }
 })
 
 export const selectedSuggestionItem = style([

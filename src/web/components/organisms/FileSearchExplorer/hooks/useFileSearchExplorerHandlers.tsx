@@ -1,5 +1,5 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
 
@@ -12,6 +12,8 @@ export const useFileSearchExplorerHandlers = (
   selectedIndex: number
   setPathList: (pathList: string[]) => void
   setQuery: (query: string) => void
+  setSuggestions: (suggestions: string[]) => void
+  setSelectedIndex: (index: number) => void
   handleTagDelete: (index: number) => void
   handleQueryChange: (event: ChangeEvent<HTMLInputElement>) => void
   handlePathConfirm: (path: string) => Promise<void>
@@ -29,6 +31,27 @@ export const useFileSearchExplorerHandlers = (
   const [selectedIndex, setSelectedIndex] = useState<number>(-1)
 
   const actions = useFileSearchExplorerActions()
+
+  // Create a Set of existing paths for efficient lookup
+  const existingPaths = useMemo(() => new Set(pathList), [pathList])
+
+  // Filter out already selected paths from suggestions
+  const filterExistingPaths = useCallback(
+    (suggestions: string[], currentPath: string[] = []): string[] =>
+      suggestions.filter((suggestion) => {
+        // Remove trailing slash for comparison
+        const cleanSuggestion = suggestion.endsWith('/')
+          ? suggestion.slice(0, -1)
+          : suggestion
+        const fullPath =
+          currentPath.length > 0
+            ? [...currentPath, cleanSuggestion].join('/')
+            : cleanSuggestion
+
+        return !existingPaths.has(fullPath)
+      }),
+    [existingPaths]
+  )
 
   const loadRootSuggestionsIfNeeded = useCallback(async () => {
     if (rootSuggestions.length === 0) {
@@ -71,7 +94,9 @@ export const useFileSearchExplorerHandlers = (
               const filtered = lsResult.entries
                 .filter((entry) => entry.name.startsWith(prefix))
                 .map((entry) => (entry.is_dir ? `${entry.name}/` : entry.name))
-              setSuggestions(filtered)
+              // Filter out already selected paths
+              const filteredWithoutDuplicates = filterExistingPaths(filtered, pathParts)
+              setSuggestions(filteredWithoutDuplicates)
             }
           })
         } else {
@@ -80,7 +105,9 @@ export const useFileSearchExplorerHandlers = (
           const filtered = currentRootSuggestions.filter((name) =>
             name.startsWith(prefix)
           )
-          setSuggestions(filtered)
+          // Filter out already selected paths
+          const filteredWithoutDuplicates = filterExistingPaths(filtered)
+          setSuggestions(filteredWithoutDuplicates)
         }
       } else if (newQuery.length > 0) {
         // For non-slash queries, show filtered root suggestions
@@ -88,21 +115,26 @@ export const useFileSearchExplorerHandlers = (
         const filtered = currentRootSuggestions.filter((name) =>
           name.startsWith(newQuery)
         )
-        setSuggestions(filtered)
+        // Filter out already selected paths
+        const filteredWithoutDuplicates = filterExistingPaths(filtered)
+        setSuggestions(filteredWithoutDuplicates)
       } else {
         setSuggestions([])
       }
     },
-    [actions, loadRootSuggestionsIfNeeded]
+    [actions, loadRootSuggestionsIfNeeded, filterExistingPaths]
   )
 
   const handlePathConfirm = useCallback(
     async (path: string): Promise<void> => {
-      setPathList([...pathList, path])
+      // Only add if path is not empty and not already in the list
+      if (path.trim() && !existingPaths.has(path)) {
+        setPathList([...pathList, path])
+      }
       setQuery('')
       setSuggestions([])
     },
-    [pathList]
+    [pathList, existingPaths]
   )
 
   const handleInputChange = useCallback(
@@ -131,21 +163,30 @@ export const useFileSearchExplorerHandlers = (
             const filtered = lsResult.entries.map((entry) =>
               entry.is_dir ? `${entry.name}/` : entry.name
             )
-            setSuggestions(filtered)
+            // Filter out already selected paths
+            const filteredWithoutDuplicates = filterExistingPaths(
+              filtered,
+              newPathParts
+            )
+            setSuggestions(filteredWithoutDuplicates)
           }
         })
       } else {
-        // File: add to pathList
+        // File: add to pathList only if not already present
         const parts = query.split('/')
         const pathParts = parts.slice(0, -1).filter((p) => p)
         const newPath = [...pathParts, suggestionName].join('/')
-        setPathList([...pathList, newPath])
+
+        // Check for duplicates before adding
+        if (!existingPaths.has(newPath)) {
+          setPathList([...pathList, newPath])
+        }
         setQuery('')
         setSuggestions([])
       }
       inputReference?.current?.focus()
     },
-    [query, pathList, inputReference, actions]
+    [query, pathList, inputReference, actions, existingPaths, filterExistingPaths]
   )
 
   const handleKeyDown = useCallback(
@@ -183,9 +224,12 @@ export const useFileSearchExplorerHandlers = (
     ]
   )
 
-  const handleInputFocus = useCallback(() => {
-    void loadRootSuggestionsIfNeeded()
-  }, [loadRootSuggestionsIfNeeded])
+  const handleInputFocus = useCallback(async () => {
+    const rootSuggestions = await loadRootSuggestionsIfNeeded()
+    // Filter out already selected paths when showing suggestions on focus
+    const filteredSuggestions = filterExistingPaths(rootSuggestions)
+    setSuggestions(filteredSuggestions)
+  }, [loadRootSuggestionsIfNeeded, filterExistingPaths])
 
   return {
     pathList,
@@ -194,6 +238,8 @@ export const useFileSearchExplorerHandlers = (
     selectedIndex,
     setPathList,
     setQuery,
+    setSuggestions,
+    setSelectedIndex,
     handleTagDelete,
     handleQueryChange: handleInputChange, // Expose InputChange
     handlePathConfirm,

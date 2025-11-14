@@ -30,6 +30,7 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const [showSuggestions, setShowSuggestions] = useState(false)
   const inputReference = useRef<HTMLInputElement>(null)
   const suggestionListReference = useRef<HTMLUListElement>(null)
+  const containerReference = useRef<HTMLDivElement>(null)
 
   const handleInputFocus = useCallback(() => {
     setShowSuggestions(true)
@@ -48,10 +49,6 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
       void loadProcedures()
     }
   }, [setShowSuggestions, isLoaded])
-
-  const handleInputBlur = useCallback(() => {
-    setTimeout(() => setShowSuggestions(false), 200)
-  }, [setShowSuggestions])
 
   const handleProcedureSelect = useCallback(
     (procedureValue: string) => {
@@ -109,6 +106,25 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
     ]
   )
 
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent): void => {
+      const target = event.target as Node
+
+      // Check if click is outside the entire container
+      if (containerReference.current && !containerReference.current.contains(target)) {
+        setShowSuggestions(false)
+        setSelectedIndex(-1)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return (): void => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   // Scroll selected item into view when selectedIndex changes
   useEffect(() => {
     if (selectedIndex >= 0 && suggestionListReference.current) {
@@ -135,12 +151,11 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   )
 
   return (
-    <div className={container}>
+    <div className={container} ref={containerReference}>
       <input
         ref={inputReference}
         type="text"
         onFocus={handleInputFocus}
-        onBlur={handleInputBlur}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={input}

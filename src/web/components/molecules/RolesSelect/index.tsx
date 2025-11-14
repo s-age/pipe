@@ -89,8 +89,10 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
     (event: KeyboardEvent<HTMLInputElement>) => {
       if (!showSuggestions || roleOptions.length === 0) return
 
-      const filtered = roleOptions.filter((role) =>
-        role.label.toLowerCase().includes(query.toLowerCase())
+      const filtered = roleOptions.filter(
+        (role) =>
+          role.label.toLowerCase().includes(query.toLowerCase()) &&
+          !selectedRoles.includes(role.value)
       )
 
       switch (event.key) {
@@ -119,8 +121,36 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
           break
       }
     },
-    [showSuggestions, roleOptions, query, selectedIndex, handleRoleSelect]
+    [
+      showSuggestions,
+      roleOptions,
+      query,
+      selectedIndex,
+      selectedRoles,
+      handleRoleSelect
+    ]
   )
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (
+        inputReference.current &&
+        suggestionListReference.current &&
+        !inputReference.current.contains(event.target as Node) &&
+        !suggestionListReference.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false)
+        setSelectedIndex(-1)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return (): void => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   // Scroll selected item into view when selectedIndex changes
   useEffect(() => {
@@ -158,8 +188,10 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
     [handleRoleRemove]
   )
 
-  const filteredRoles = roleOptions.filter((role) =>
-    role.label.toLowerCase().includes(query.toLowerCase())
+  const filteredRoles = roleOptions.filter(
+    (role) =>
+      role.label.toLowerCase().includes(query.toLowerCase()) &&
+      !selectedRoles.includes(role.value)
   )
 
   return (

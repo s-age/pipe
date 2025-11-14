@@ -10,7 +10,7 @@ export const editMultiStepReasoning = async (
   payload: EditMultiStepReasoningRequest
 ): Promise<{ message: string; session: SessionDetail }> =>
   client.patch<{ message: string; session: SessionDetail }>(
-    `/session/${sessionId}/multi-step-reasoning`,
+    `/session/${sessionId}/multi_step_reasoning`,
     {
       body: payload
     }

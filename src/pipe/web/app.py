@@ -452,9 +452,38 @@ def edit_multi_step_reasoning_api(session_id):
 
 
 @app.route(
+    "/api/v1/session/<path:session_id>/multi_step_reasoning", methods=["PATCH"]
+)
+def edit_multi_step_reasoning_underscore_api(session_id):
+    """Alternative endpoint with underscore naming (matches OpenAPI spec)."""
+    response_data, status_code = dispatch_action(
+        action=f"session/{session_id}/multi-step-reasoning",
+        params={"session_id": session_id},
+        request_data=request,
+    )
+    return jsonify(response_data), status_code
+
+
+@app.route(
     "/api/v1/session/<path:session_id>/multi-step-reasoning", methods=["OPTIONS"]
 )
 def edit_multi_step_reasoning_options(session_id):
+    from flask import make_response
+
+    resp = make_response(("", 200))
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Methods"] = (
+        "GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE"
+    )
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return resp
+
+
+@app.route(
+    "/api/v1/session/<path:session_id>/multi_step_reasoning", methods=["OPTIONS"]
+)
+def edit_multi_step_reasoning_underscore_options(session_id):
+    """Alternative OPTIONS endpoint with underscore naming (matches OpenAPI spec)."""
     from flask import make_response
 
     resp = make_response(("", 200))

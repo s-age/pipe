@@ -36,7 +36,8 @@ export const useSessionMetaHandlers = ({
           disabled: reference.disabled ?? false
         })) ?? [],
       artifacts: sessionDetail?.artifacts ?? null,
-      hyperparameters: sessionDetail?.hyperparameters ?? null
+      hyperparameters: sessionDetail?.hyperparameters ?? null,
+      multi_step_reasoning: sessionDetail?.multi_step_reasoning_enabled ?? false
     }),
     [sessionDetail]
   )

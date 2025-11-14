@@ -18,14 +18,12 @@ import { metaItemLabel } from '../SessionMetaBasic/style.css'
 type StartSessionContentProperties = {
   handleCancel: () => void
   handleCreateClick: () => void
-  noop: () => Promise<void>
   noopOnSessionUpdate: (_data: SessionDetail | null) => void
 }
 
 export const StartSessionContent = ({
   handleCancel,
   handleCreateClick,
-  noop,
   noopOnSessionUpdate
 }: StartSessionContentProperties): JSX.Element => {
   const {
@@ -36,7 +34,7 @@ export const StartSessionContent = ({
     <div className={formContainer}>
       <Heading level={1}>Create New Session</Heading>
 
-      <SessionMetaBasic sessionDetail={null} currentSessionId={null} onRefresh={noop} />
+      <SessionMetaBasic sessionDetail={null} />
 
       <Fieldset legend={<span className={metaItemLabel}>First Instruction:</span>}>
         {(ids) => (

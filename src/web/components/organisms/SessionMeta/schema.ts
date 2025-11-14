@@ -22,7 +22,8 @@ export const sessionMetaSchema = object({
     top_k: coerce.number().int().min(1).max(50).nullable().default(5)
   })
     .nullable()
-    .default(null)
+    .default(null),
+  multi_step_reasoning: boolean().default(false)
 })
 
 export type SessionMetaFormInputs = TypeOf<typeof sessionMetaSchema>

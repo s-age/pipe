@@ -7,11 +7,9 @@ export const metaColumn = style({
   width: '300px',
   height: '100%',
   overflowY: 'auto',
-  background: colors.darkBackground,
   borderRadius: '10px',
   // provide breathing room on the right so the panel isn't flush to the viewport edge
   margin: '0 12px',
-  border: `1px solid ${colors.mediumBackground}`,
   // Keep horizontal overflow hidden but allow vertical scrolling via overflowY above.
   overflowX: 'hidden'
 })
@@ -22,14 +20,23 @@ export const sessionMetaSection = style({
   flexDirection: 'column',
   boxSizing: 'border-box',
   minHeight: '0',
-  padding: '20px',
-  background: colors.mediumBackground
+  overflowY: 'auto'
 })
 
 export const sessionMetaView = style({
   flex: '1',
-  overflowY: 'auto',
-  paddingBottom: '70px' // Adjust based on the height of the sticky button container
+  padding: '20px',
+  background: colors.mediumBackground,
+  borderRadius: '8px',
+
+  selectors: {
+    '&:first-child': {
+      marginBottom: '24px'
+    },
+    '&:last-child': {
+      borderRadius: '8px 8px 0 0'
+    }
+  }
 })
 
 export const stickySaveMetaButtonContainer = style({
@@ -38,7 +45,7 @@ export const stickySaveMetaButtonContainer = style({
   zIndex: 1,
   padding: '12px',
   borderTop: `1px solid ${colors.mediumBackground}`,
-  background: 'inherit'
+  background: colors.darkBackground
 })
 
 export const metaItem = style({

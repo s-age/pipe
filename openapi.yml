@@ -632,6 +632,45 @@ paths:
         '500':
           description: Internal server error
 
+  /api/v1/session/{session_id}/multi_step_reasoning:
+    patch:
+      summary: Edit only multi-step reasoning setting for a session
+      tags:
+        - v1
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditMultiStepReasoningRequest'
+      responses:
+        '200':
+          description: Multi-step reasoning setting updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  session:
+                    $ref: '#/components/schemas/SessionDetail'
+        '400':
+          description: No data provided
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
   /api/v1/session/{session_id}/fork/{fork_index}:
     post:
       summary: Fork a session from a specific turn (singular path used by Flask app)
@@ -1003,6 +1042,13 @@ components:
         topK:
           type: integer
           nullable: true
+    EditMultiStepReasoningRequest:
+      type: object
+      properties:
+        multi_step_reasoning_enabled:
+          type: boolean
+      required:
+        - multi_step_reasoning_enabled
     Reference:
       type: object
       properties:

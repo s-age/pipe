@@ -16,8 +16,6 @@ export const useStartSessionFormHandlers = ({
 }: UseStartSessionFormHandlersProperties): {
   handleCancel: () => void
   handleCreateClick: () => void
-  noop: () => Promise<void>
-
   noopOnSessionUpdate: (_data: SessionDetail | null) => void
 } => {
   const handleCancel = useCallback(() => {
@@ -46,14 +44,11 @@ export const useStartSessionFormHandlers = ({
     void handleSubmit(onFormSubmit)()
   }, [handleSubmit, onFormSubmit])
 
-  const noop = useCallback(async () => {}, [])
-
   const noopOnSessionUpdate = useCallback((_data: SessionDetail | null) => {}, [])
 
   return {
     handleCancel,
     handleCreateClick,
-    noop,
     noopOnSessionUpdate
   }
 }

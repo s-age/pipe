@@ -2,7 +2,6 @@ import React from 'react'
 
 import { ArtifactsSelector } from '@/components/molecules/ArtifactsSelector'
 import { Fieldset } from '@/components/molecules/Fieldset'
-import { InputCheckbox } from '@/components/molecules/InputCheckbox'
 import { InputText } from '@/components/molecules/InputText'
 import { ProcedureSelect } from '@/components/molecules/ProcedureSelect'
 import { RolesSelect } from '@/components/molecules/RolesSelect'
@@ -10,32 +9,19 @@ import { TextArea } from '@/components/molecules/TextArea'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
-import { useMultiStepReasoningHandlers } from './hooks/useMultiStepReasoningHandlers'
-import { metaItem, multiStepLabel, metaItemLabel, inputFullWidth } from './style.css'
+import { metaItem, metaItemLabel, inputFullWidth } from './style.css'
 
 type SessionMetaBasicProperties = {
   sessionDetail: SessionDetail | null
-  currentSessionId: string | null
   _setError?: (error: string | null) => void
-  onRefresh: () => Promise<void>
-  setSessionDetail?: (data: SessionDetail | null) => void
 }
 
 export const SessionMetaBasic = ({
-  sessionDetail,
-  currentSessionId,
-  onRefresh,
-  setSessionDetail
+  sessionDetail
 }: SessionMetaBasicProperties): React.JSX.Element => {
   const formContext = useOptionalFormContext()
   const register = formContext?.register
   const setValue = formContext?.setValue
-  const { handleMultiStepReasoningChange } = useMultiStepReasoningHandlers({
-    currentSessionId,
-    sessionDetail,
-    onRefresh,
-    setSessionDetail
-  })
 
   const handleRolesChange = React.useCallback(
     (roles: string[]) => {
@@ -98,16 +84,6 @@ export const SessionMetaBasic = ({
       </Fieldset>
 
       <ArtifactsSelector />
-
-      <div className={metaItem}>
-        <InputCheckbox
-          name="multi_step_reasoning"
-          checked={sessionDetail?.multi_step_reasoning_enabled ?? false}
-          onChange={handleMultiStepReasoningChange}
-        >
-          <strong className={multiStepLabel}>Multi-step Reasoning</strong>
-        </InputCheckbox>
-      </div>
     </>
   )
 }

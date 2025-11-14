@@ -2,15 +2,21 @@ import type { JSX } from 'react'
 import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
+import { InputCheckbox } from '@/components/molecules/InputCheckbox'
 import { Form, useFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
-import { useSessionMetaHandlers } from '@/components/organisms/SessionMeta/hooks/useSessionMetaHandlers'
-import { sessionMetaSchema } from '@/components/organisms/SessionMeta/schema'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
+import {
+  metaItem,
+  multiStepLabel
+} from '@/components/organisms/SessionMetaBasic/style.css'
 import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
+import { useMultiStepReasoningHandlers } from './hooks/useMultiStepReasoningHandlers'
+import { useSessionMetaHandlers } from './hooks/useSessionMetaHandlers'
+import { sessionMetaSchema } from './schema'
 import {
   metaColumn,
   sessionMetaSection,
@@ -37,6 +43,11 @@ export const SessionMeta = ({
     onRefresh
   })
 
+  const { handleMultiStepReasoningChange } = useMultiStepReasoningHandlers({
+    currentSessionId,
+    sessionDetail
+  })
+
   if (sessionDetail === null) {
     return null
   }
@@ -49,15 +60,22 @@ export const SessionMeta = ({
     }, [handleSubmit])
 
     return (
-      <div className={metaColumn}>
+      <>
         <input type="hidden" id="current-session-id" value={currentSessionId ?? ''} />
         <section className={sessionMetaSection}>
           <div className={sessionMetaView}>
-            <SessionMetaBasic
-              sessionDetail={sessionDetail}
-              currentSessionId={currentSessionId}
-              onRefresh={onRefresh}
-            />
+            <SessionMetaBasic sessionDetail={sessionDetail} />
+          </div>
+
+          <div className={sessionMetaView}>
+            <div className={metaItem}>
+              <InputCheckbox
+                checked={sessionDetail?.multi_step_reasoning_enabled ?? false}
+                onChange={handleMultiStepReasoningChange}
+              >
+                <strong className={multiStepLabel}>Multi-step Reasoning</strong>
+              </InputCheckbox>
+            </div>
 
             <ReferenceList currentSessionId={currentSessionId} />
 
@@ -86,13 +104,15 @@ export const SessionMeta = ({
           </Button>
           {saved ? <span>Saved</span> : null}
         </div>
-      </div>
+      </>
     )
   }
 
   return (
-    <Form defaultValues={defaultValues} schema={sessionMetaSchema}>
-      <MetaContent />
-    </Form>
+    <div className={metaColumn}>
+      <Form defaultValues={defaultValues} schema={sessionMetaSchema}>
+        <MetaContent />
+      </Form>
+    </div>
   )
 }

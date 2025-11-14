@@ -2,11 +2,8 @@ import { useCallback } from 'react'
 
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { FormMethods } from '@/components/organisms/Form'
-import { deleteTodos } from '@/lib/api/session/deleteTodos'
-import { editTodos } from '@/lib/api/session/editTodos'
-import { getSession } from '@/lib/api/session/getSession'
+import { useSessionTodosActions } from '@/components/organisms/TodoList/hooks/useSessionTodosActions'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
 import type { Todo } from '@/types/todo'
 
 type UseSessionTodosProperties = {
@@ -19,7 +16,7 @@ type UseSessionTodosProperties = {
 export const useSessionTodosHandlers = ({
   sessionDetail,
   currentSessionId,
-  setSessionDetail: _setSessionDetail
+  setSessionDetail: _setSessionDetail // 互換性のため受け取るが使わない
 }: UseSessionTodosProperties): {
   handleUpdateTodo: (todos: Todo[]) => Promise<void>
   handleDeleteAllTodos: () => Promise<void>
@@ -31,68 +28,22 @@ export const useSessionTodosHandlers = ({
 } => {
   const register = useOptionalFormContext()?.register
 
-  // Perform the API edit; do NOT automatically refresh the parent sessions here.
-  // Let the caller (handler) decide whether to call `refreshSessions` to avoid
-  // cascading updates that can cause loops.
-  const updateTodos = useCallback(async (sessionId: string, todos: Todo[]) => {
-    try {
-      await editTodos(sessionId, todos)
-      emitToast.success('Todos updated')
-    } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to update todos.')
-      throw error
-    }
-  }, [])
-
-  const deleteAllTodos = useCallback(async (sessionId: string) => {
-    if (!window.confirm('Are you sure you want to delete all todos for this session?'))
-      return
-
-    try {
-      await deleteTodos(sessionId)
-      emitToast.success('All todos deleted')
-    } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to delete all todos.')
-      throw error
-    }
-  }, [])
+  const { updateTodos, deleteAllTodos } = useSessionTodosActions()
 
   // NOTE: getSession is available if callers need to fetch a fresh session.
 
   const handleUpdateTodo = useCallback(
     async (todos: Todo[]) => {
       if (!currentSessionId) return
-
       await updateTodos(currentSessionId, todos)
-      // Update only the session detail to avoid refreshing the entire session tree
-      try {
-        if (_setSessionDetail) {
-          const data = await getSession(currentSessionId)
-          _setSessionDetail(data.session)
-
-          emitToast.success('Session todos updated')
-        }
-      } catch {
-        // ignore: updateTodos already showed a toast on failure
-      }
     },
-    [currentSessionId, updateTodos, _setSessionDetail]
+    [currentSessionId, updateTodos]
   )
 
   const handleDeleteAllTodos = useCallback(async (): Promise<void> => {
     if (!currentSessionId) return
     await deleteAllTodos(currentSessionId)
-    try {
-      if (_setSessionDetail) {
-        const data = await getSession(currentSessionId)
-        _setSessionDetail(data.session)
-
-        emitToast.success('Session todos updated')
-      }
-    } catch {
-      // ignore: deleteAllTodos already showed a toast on failure
-    }
-  }, [currentSessionId, deleteAllTodos, _setSessionDetail])
+  }, [currentSessionId, deleteAllTodos])
 
   const handleTodoCheckboxChange = useCallback(
     (index?: number) => {

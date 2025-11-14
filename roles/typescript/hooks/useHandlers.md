@@ -336,3 +336,12 @@ describe('useMultiStepReasoningHandlers', () => {
 
 - [Actions](./useActions.md) - Handlers consume actions to trigger API calls
 - [Lifecycle](./useLifecycle.md) - May trigger handlers on mount or interval
+
+## Error Handling Responsibility
+
+Handlers hooks are responsible for error handling and user feedback, including toast notifications. Actions hooks must not handle errors or perform UI notifications.
+
+- Always use try-catch and show toast notifications in Handlers hooks, not in Actions.
+- Actions hooks should only wrap API calls and return promises.
+
+---

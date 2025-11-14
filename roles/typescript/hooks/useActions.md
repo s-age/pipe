@@ -135,6 +135,13 @@ export const useMultiStepReasoningHandlers = ({ sessionId, onRefresh }) => {
 5. **Throw errors** - Let handlers decide how to handle failures
 6. **Return API responses** - Don't transform data in actions
 
+## Error Handling Responsibility
+
+Actions hooks must NOT handle errors or perform UI notifications (such as toast messages). Error handling and user feedback must be implemented in Handlers hooks.
+
+- Do not use try-catch or toast notifications directly in Actions hooks.
+- Always implement error handling and user notifications in the Handlers layer.
+
 ## Testing Actions
 
 ```typescript

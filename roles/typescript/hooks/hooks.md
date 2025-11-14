@@ -226,6 +226,18 @@ export const useChatHistoryPageLifecycle = ({ state, actions }) => {
 
 **File Location:** `src/web/hooks/useInitialLoading.ts`
 
+## Error Handling Responsibility
+
+- **Actions** hooks (model-layer API wrappers) must not handle errors or perform UI notifications (such as toast messages).
+- **Handlers** hooks (service-layer, UI event processing) are responsible for error handling and user feedback, including toast notifications.
+
+**Rule:**
+
+- Always implement error handling and user notifications in the Handlers layer, not in Actions.
+- Do not use try-catch or toast notifications directly in Actions hooks.
+
+---
+
 ## Further Reading
 
 - [Actions Pattern](./useActions.md) - API call wrappers

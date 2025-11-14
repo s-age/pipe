@@ -43,61 +43,59 @@ export const HyperParameters = ({
   return (
     <div className={metaItem}>
       <Fieldset legend="Hyperparameters">
-        {() => (
-          <div>
-            <div className={hyperparametersControl}>
-              <div className={labelContainer}>
-                <Label>Temperature:</Label>
-              </div>
-              <div className={sliderContainer}>
-                <Slider
-                  min={0}
-                  max={2}
-                  step={0.1}
-                  value={temperature}
-                  onChange={setTemperature}
-                  onMouseDown={handleTemperatureMouseDown}
-                  onMouseUp={handleTemperatureMouseUp}
-                  tabIndex={-1}
-                />
-              </div>
+        <div>
+          <div className={hyperparametersControl}>
+            <div className={labelContainer}>
+              <Label>Temperature:</Label>
             </div>
-
-            <div className={hyperparametersControl}>
-              <div className={labelContainer}>
-                <Label>Top P:</Label>
-              </div>
-              <div className={sliderContainer}>
-                <Slider
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  defaultValue={topP}
-                  onChange={setTopP}
-                  onMouseDown={handleTopPMouseDown}
-                  onMouseUp={handleTopPMouseUp}
-                />
-              </div>
-            </div>
-
-            <div className={hyperparametersControl}>
-              <div className={labelContainer}>
-                <Label>Top K:</Label>
-              </div>
-              <div className={sliderContainer}>
-                <Slider
-                  min={1}
-                  max={50}
-                  step={1}
-                  defaultValue={topK}
-                  onChange={setTopK}
-                  onMouseDown={handleTopKMouseDown}
-                  onMouseUp={handleTopKMouseUp}
-                />
-              </div>
+            <div className={sliderContainer}>
+              <Slider
+                min={0}
+                max={2}
+                step={0.1}
+                defaultValue={temperature}
+                onChange={setTemperature}
+                onMouseDown={handleTemperatureMouseDown}
+                onMouseUp={handleTemperatureMouseUp}
+                tabIndex={-1}
+              />
             </div>
           </div>
-        )}
+
+          <div className={hyperparametersControl}>
+            <div className={labelContainer}>
+              <Label>Top P:</Label>
+            </div>
+            <div className={sliderContainer}>
+              <Slider
+                min={0}
+                max={1}
+                step={0.1}
+                defaultValue={topP}
+                onChange={setTopP}
+                onMouseDown={handleTopPMouseDown}
+                onMouseUp={handleTopPMouseUp}
+              />
+            </div>
+          </div>
+
+          <div className={hyperparametersControl}>
+            <div className={labelContainer}>
+              <Label>Top K:</Label>
+            </div>
+            <div className={sliderContainer}>
+              <Slider
+                min={1}
+                max={50}
+                step={1}
+                defaultValue={topK}
+                onChange={setTopK}
+                onMouseDown={handleTopKMouseDown}
+                onMouseUp={handleTopKMouseUp}
+              />
+            </div>
+          </div>
+        </div>
       </Fieldset>
     </div>
   )

@@ -20,11 +20,22 @@ export type SliderProperties = Omit<
 }
 
 export const Slider = (properties: SliderProperties): JSX.Element => {
-  const { onChange: _onChange, min, max, step, name, ...restProperties } = properties
-  // intentionally reference the extracted `_onChange` so linters know it's
+  const {
+    onChange: _onChange,
+    min,
+    max,
+    step,
+    name,
+    value,
+    defaultValue,
+    ...restProperties
+  } = properties
+  // intentionally reference the extracted `_onChange`, `value`, and `defaultValue` so linters know they're
   // intentionally excluded from `...restProperties` which is spread into the
-  // native input (the component's onChange has a different signature).
+  // native input (these are handled by useSlider hook instead).
   void _onChange
+  void value
+  void defaultValue
 
   const {
     id,

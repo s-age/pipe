@@ -2,19 +2,14 @@ import type { JSX } from 'react'
 import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
-import { InputCheckbox } from '@/components/molecules/InputCheckbox'
 import { Form, useFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
+import { MultiStepReasoning } from '@/components/organisms/MultiStepReasoning'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
-import {
-  metaItem,
-  multiStepLabel
-} from '@/components/organisms/SessionMetaBasic/style.css'
 import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
-import { useMultiStepReasoningHandlers } from './hooks/useMultiStepReasoningHandlers'
 import { useSessionMetaHandlers } from './hooks/useSessionMetaHandlers'
 import { sessionMetaSchema } from './schema'
 import {
@@ -41,11 +36,6 @@ export const SessionMeta = ({
     onRefresh
   })
 
-  const { handleMultiStepReasoningChange } = useMultiStepReasoningHandlers({
-    currentSessionId,
-    sessionDetail
-  })
-
   if (sessionDetail === null) {
     return null
   }
@@ -66,14 +56,12 @@ export const SessionMeta = ({
           </div>
 
           <div className={sessionMetaView}>
-            <div className={metaItem}>
-              <InputCheckbox
-                checked={sessionDetail?.multi_step_reasoning_enabled ?? false}
-                onChange={handleMultiStepReasoningChange}
-              >
-                <strong className={multiStepLabel}>Multi-step Reasoning</strong>
-              </InputCheckbox>
-            </div>
+            <MultiStepReasoning
+              multiStepReasoningEnabled={
+                sessionDetail?.multi_step_reasoning_enabled ?? false
+              }
+              currentSessionId={currentSessionId}
+            />
 
             <ReferenceList currentSessionId={currentSessionId} />
 

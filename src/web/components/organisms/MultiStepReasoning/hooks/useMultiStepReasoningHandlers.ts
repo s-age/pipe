@@ -1,19 +1,17 @@
 import { useCallback } from 'react'
 
-import type { SessionDetail } from '@/lib/api/session/getSession'
-
 import { useMultiStepReasoningActions } from './useMultiStepReasoningActions'
 
 type UseMultiStepReasoningHandlersProperties = {
   currentSessionId: string | null
-  sessionDetail: SessionDetail | null
-  setLocalMultiStepEnabled: React.Dispatch<React.SetStateAction<boolean>>
+  multiStepReasoningEnabled: boolean
+  setLocalEnabled: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const useMultiStepReasoningHandlers = ({
   currentSessionId,
-  sessionDetail,
-  setLocalMultiStepEnabled
+  multiStepReasoningEnabled,
+  setLocalEnabled
 }: UseMultiStepReasoningHandlersProperties): {
   handleMultiStepReasoningChange: (
     event: React.ChangeEvent<HTMLInputElement>
@@ -23,7 +21,7 @@ export const useMultiStepReasoningHandlers = ({
 
   const handleMultiStepReasoningChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-      if (!currentSessionId || !sessionDetail) return
+      if (!currentSessionId) return
 
       try {
         // Read checked synchronously to avoid relying on the synthetic event
@@ -31,26 +29,22 @@ export const useMultiStepReasoningHandlers = ({
         const checked = event.target.checked
 
         // Update local state for immediate UI feedback
-        setLocalMultiStepEnabled(checked)
+        setLocalEnabled(checked)
 
         await updateMultiStepReasoning(currentSessionId, {
           multi_step_reasoning_enabled: checked
         })
-
-        // No need to update session detail or refresh the session tree.
-        // The checkbox state is managed by the form, and multi_step_reasoning_enabled
-        // does not affect the session tree structure or display.
       } catch {
         // Toasts are displayed by the action hook. Swallow here to keep UI stable.
         // On error, revert local state to the original value
-        setLocalMultiStepEnabled(sessionDetail.multi_step_reasoning_enabled ?? false)
+        setLocalEnabled(multiStepReasoningEnabled)
       }
     },
     [
       currentSessionId,
-      sessionDetail,
+      multiStepReasoningEnabled,
       updateMultiStepReasoning,
-      setLocalMultiStepEnabled
+      setLocalEnabled
     ]
   )
 

@@ -13,8 +13,8 @@ from pipe.web.actions.meta_actions import (
 )
 from pipe.web.actions.reference_actions import (
     ReferencePersistEditAction,
-    ReferenceToggleDisabledAction,
     ReferencesEditAction,
+    ReferenceToggleDisabledAction,
     ReferenceTtlEditAction,
 )
 from pipe.web.actions.session_actions import (

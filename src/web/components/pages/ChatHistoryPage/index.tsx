@@ -22,7 +22,8 @@ export const ChatHistoryPage = (): JSX.Element => {
     expertMode,
     selectSession,
     setSessionDetail,
-    onRefresh
+    onRefresh,
+    refreshSessionsInStore
   } = useChatHistoryPageHandlers()
 
   return (
@@ -43,6 +44,7 @@ export const ChatHistoryPage = (): JSX.Element => {
             currentSessionId={currentSessionId}
             expertMode={expertMode}
             setSessionDetail={setSessionDetail}
+            refreshSessionsInStore={refreshSessionsInStore}
           />
         </div>
 

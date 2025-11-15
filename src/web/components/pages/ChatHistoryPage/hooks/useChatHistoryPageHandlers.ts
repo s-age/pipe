@@ -12,6 +12,7 @@ type UseChatHistoryPageHandlersReturn = {
   selectSession: Actions['selectSession']
   setSessionDetail: Actions['setSessionDetail']
   onRefresh: () => Promise<void>
+  refreshSessionsInStore: Actions['refreshSessions']
 }
 
 export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn => {
@@ -36,6 +37,7 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
     expertMode,
     selectSession,
     setSessionDetail,
-    onRefresh
+    onRefresh,
+    refreshSessionsInStore: refreshSessions
   }
 }

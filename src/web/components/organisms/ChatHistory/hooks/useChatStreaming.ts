@@ -16,7 +16,7 @@ const SESSION_DETAIL_CACHE_TTL = 30000 // 30秒
 
 type ChatStreamingProperties = {
   currentSessionId: string | null
-  setSessionDetail: (data: unknown) => void
+  setSessionDetail: (data: SessionDetail | null) => void
 }
 
 type ChatStreamingReturn = {

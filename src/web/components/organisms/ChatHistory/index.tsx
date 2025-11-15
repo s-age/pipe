@@ -1,7 +1,7 @@
 import type { JSX } from 'react'
-import { useSessionStore } from '@/stores/useChatHistoryStore'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 import { ChatHistoryBody } from './ChatHistoryBody'
 import { ChatHistoryFooter } from './ChatHistoryFooter'
@@ -16,6 +16,7 @@ type ChatHistoryProperties = {
   currentSessionId: string | null
   expertMode: boolean
   setSessionDetail: (data: SessionDetail | null) => void
+  refreshSessionsInStore: (sessionDetail: SessionDetail, sessions: SessionOverview[]) => void
 }
 
 // Keep a default export for backward compatibility (renders the full composed view)
@@ -23,11 +24,9 @@ export const ChatHistory = ({
   sessionDetail,
   currentSessionId,
   expertMode,
-  setSessionDetail
+  setSessionDetail,
+  refreshSessionsInStore
 }: ChatHistoryProperties): JSX.Element => {
-  const { actions } = useSessionStore()
-  const { refreshSessions: refreshSessionsInStore } = actions
-
   const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
     useChatStreaming({
       currentSessionId,
@@ -36,7 +35,8 @@ export const ChatHistory = ({
     })
 
   const { handleDeleteCurrentSession } = useChatHistoryHandlers({
-    currentSessionId
+    currentSessionId,
+    refreshSessionsInStore
   })
 
   const { refreshSession } = useChatHistoryActions({
@@ -58,6 +58,7 @@ export const ChatHistory = ({
         streamedText={streamedText}
         turnsListReference={turnsListReference}
         onRefresh={refreshSession}
+        refreshSessionsInStore={refreshSessionsInStore}
       />
       <ChatHistoryFooter
         currentSessionId={currentSessionId}

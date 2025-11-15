@@ -19,6 +19,7 @@ type UseTurnHandlersProperties = {
     newContent: string,
     turn: Turn
   ) => Promise<void>
+  onFork: (sessionId: string, forkIndex: number) => Promise<void>
 }
 
 export const useTurnHandlers = (
@@ -40,8 +41,8 @@ export const useTurnHandlers = (
     sessionId,
     onRefresh,
     deleteTurnAction,
-    forkSessionAction,
-    editTurnAction
+    editTurnAction,
+    onFork
   } = properties
   const { show, hide } = useModal()
 
@@ -86,11 +87,11 @@ export const useTurnHandlers = (
 
   const handleConfirmFork = useCallback(async (): Promise<void> => {
     if (modalIdReference.current !== null) {
-      await forkSessionAction(sessionId, index)
+      await onFork(sessionId, index)
       hide(modalIdReference.current)
       modalIdReference.current = null
     }
-  }, [forkSessionAction, sessionId, index, hide])
+  }, [onFork, sessionId, index, hide])
 
   const handleCancelFork = useCallback((): void => {
     if (modalIdReference.current !== null) {

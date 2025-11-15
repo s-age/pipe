@@ -7,6 +7,7 @@ import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { ProcedureOption } from '@/lib/api/procedures/getProcedures'
 
 import { useProceduresActions } from './hooks/useProceduresActions'
+import { useProceduresHandlers } from './hooks/useProceduresHandlers'
 import { container } from './style.css'
 
 type ProcedureSelectProperties = {
@@ -22,18 +23,18 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const error = formContext?.formState?.errors?.procedure
 
   const [procedureOptions, setProcedureOptions] = useState<ProcedureOption[]>([])
-  const { fetchProcedures } = useProceduresActions()
+  const actions = useProceduresActions()
+  const { handleFetchProcedures } = useProceduresHandlers(
+    procedureOptions,
+    actions,
+    setProcedureOptions
+  )
 
   const handleFocus = useCallback(async () => {
     if (procedureOptions.length === 0) {
-      try {
-        const procedures = await fetchProcedures()
-        setProcedureOptions(procedures)
-      } catch (error) {
-        console.error('Failed to fetch procedures:', error)
-      }
+      void handleFetchProcedures()
     }
-  }, [procedureOptions.length, fetchProcedures])
+  }, [procedureOptions.length, handleFetchProcedures])
 
   const handleProcedureChange = useCallback(
     (values: string[]): void => {

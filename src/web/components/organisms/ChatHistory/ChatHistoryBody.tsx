@@ -2,7 +2,9 @@ import type { JSX } from 'react'
 
 import { Heading } from '@/components/atoms/Heading'
 import { TurnComponent as Turn } from '@/components/organisms/Turn'
-import type { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
+import type { Turn as TurnType } from '@/lib/api/session/getSession'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 import { ChatHistoryTurn } from './ChatHistoryTurn'
 import {
@@ -21,6 +23,7 @@ type ChatHistoryBodyProperties = {
   streamedText: string | null
   turnsListReference: React.RefObject<HTMLDivElement | null>
   onRefresh: () => Promise<void>
+  refreshSessionsInStore: (sessionDetail: SessionDetail, sessions: SessionOverview[]) => void
 }
 
 export const ChatHistoryBody = ({
@@ -30,7 +33,8 @@ export const ChatHistoryBody = ({
   isStreaming,
   streamedText,
   turnsListReference,
-  onRefresh
+  onRefresh,
+  refreshSessionsInStore
 }: ChatHistoryBodyProperties): JSX.Element => {
   if (!currentSessionId || !sessionDetail) {
     return (
@@ -67,6 +71,7 @@ export const ChatHistoryBody = ({
               currentSessionId={currentSessionId}
               expertMode={expertMode}
               onRefresh={onRefresh}
+              refreshSessionsInStore={refreshSessionsInStore}
             />
           )
         })}

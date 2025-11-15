@@ -3,8 +3,11 @@ import type { JSX } from 'react'
 import { TurnComponent as Turn } from '@/components/organisms/Turn'
 import { useTurnHandlers } from '@/components/organisms/Turn/hooks/useTurnHandlers'
 import type { Turn as TurnType } from '@/lib/api/session/getSession'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 import { useChatHistoryActions } from './hooks/useChatHistoryActions'
+import { useChatHistoryHandlers } from './hooks/useChatHistoryHandlers'
 
 type ChatHistoryTurnProperties = {
   turn: TurnType
@@ -12,6 +15,10 @@ type ChatHistoryTurnProperties = {
   currentSessionId: string
   expertMode: boolean
   onRefresh: () => Promise<void>
+  refreshSessionsInStore: (
+    sessionDetail: SessionDetail,
+    sessions: SessionOverview[]
+  ) => void
 }
 
 export const ChatHistoryTurn = ({
@@ -19,13 +26,18 @@ export const ChatHistoryTurn = ({
   index,
   currentSessionId,
   expertMode,
-  onRefresh
+  onRefresh,
+  refreshSessionsInStore
 }: ChatHistoryTurnProperties): JSX.Element => {
-  const { deleteTurnAction, forkSessionAction, editTurnAction } = useChatHistoryActions(
-    {
-      currentSessionId
-    }
-  )
+  const { deleteTurnAction, editTurnAction } = useChatHistoryActions({
+    currentSessionId,
+    refreshSessionsInStore
+  })
+
+  const { handleForkSession } = useChatHistoryHandlers({
+    currentSessionId,
+    refreshSessionsInStore
+  })
 
   const {
     isEditing,
@@ -42,9 +54,10 @@ export const ChatHistoryTurn = ({
     index,
     sessionId: currentSessionId,
     onRefresh,
+    forkSessionAction: handleForkSession,
     deleteTurnAction,
-    forkSessionAction,
-    editTurnAction
+    editTurnAction,
+    onFork: handleForkSession
   })
 
   return (

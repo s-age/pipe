@@ -5,19 +5,26 @@ import { deleteTurn } from '@/lib/api/session/deleteTurn'
 import { editTurn } from '@/lib/api/session/editTurn'
 import { forkSession } from '@/lib/api/session/forkSession'
 import { getSession } from '@/lib/api/session/getSession'
-import type { SessionDetail, SessionOverview } from '@/lib/api/session/getSession'
+import type { SessionDetail, Turn } from '@/lib/api/session/getSession'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 type UseChatHistoryActionsProperties = {
   currentSessionId: string | null
-  refreshSessionsInStore: (sessionDetail: SessionDetail, sessions: SessionOverview[]) => void
+  refreshSessionsInStore: (
+    sessionDetail: SessionDetail,
+    sessions: SessionOverview[]
+  ) => void
 }
 
 type UseChatHistoryActionsReturn = {
   deleteSessionAction: (sessionId: string) => Promise<void>
   refreshSession: () => Promise<void>
   deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
-  forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
+  forkSessionAction: (
+    sessionId: string,
+    forkIndex: number
+  ) => Promise<{ new_session_id: string }>
   editTurnAction: (
     sessionId: string,
     turnIndex: number,
@@ -57,10 +64,13 @@ export const useChatHistoryActions = ({
   )
 
   const forkSessionAction = useCallback(
-    async (sessionId: string, forkIndex: number): Promise<void> => {
+    async (
+      sessionId: string,
+      forkIndex: number
+    ): Promise<{ new_session_id: string }> => {
       const response = await forkSession(sessionId, forkIndex)
-      // Navigate to the new session
-      window.location.href = `/session/${response.new_session_id}`
+
+      return response
     },
     []
   )

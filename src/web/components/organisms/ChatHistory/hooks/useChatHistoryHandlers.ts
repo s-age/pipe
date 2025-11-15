@@ -5,19 +5,24 @@ import { useModal } from '@/components/molecules/Modal/hooks/useModal'
 import { emitToast } from '@/lib/toastEvents'
 
 import { useChatHistoryActions } from './useChatHistoryActions'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 type UseChatHistoryHandlersProperties = {
   currentSessionId: string | null
+  refreshSessionsInStore: (sessionDetail: SessionDetail, sessions: SessionOverview[]) => void
 }
 
 export const useChatHistoryHandlers = ({
-  currentSessionId
+  currentSessionId,
+  refreshSessionsInStore
 }: UseChatHistoryHandlersProperties): {
   handleDeleteCurrentSession: () => void
   handleDeleteSession: (sessionId: string) => Promise<void>
+  handleForkSession: (sessionId: string, forkIndex: number) => Promise<void>
 } => {
   const { show, hide } = useModal()
-  const { deleteSessionAction } = useChatHistoryActions({ currentSessionId })
+  const { deleteSessionAction, forkSessionAction } = useChatHistoryActions({ currentSessionId, refreshSessionsInStore })
 
   const modalIdReference = useRef<number | null>(null)
 
@@ -34,12 +39,25 @@ export const useChatHistoryHandlers = ({
     [deleteSessionAction]
   )
 
+  const handleForkSession = useCallback(
+    async (sessionId: string, forkIndex: number): Promise<void> => {
+      try {
+        const response = await forkSessionAction(sessionId, forkIndex)
+        emitToast.success('Session forked successfully')
+        window.location.href = `/session/${response.new_session_id}`
+      } catch (error: unknown) {
+        emitToast.failure((error as Error).message || 'Failed to fork session.')
+      }
+    },
+    [forkSessionAction]
+  )
+
   const handleDeleteCurrentSession = useCallback((): void => {
     if (!currentSessionId) return
 
     const sessionIdAtShow = currentSessionId
 
-    const handleConfirm = (): void => {
+    const handleConfirm = useCallback(async (): Promise<void> => {
       try {
         void handleDeleteSession(sessionIdAtShow)
       } catch (error) {
@@ -49,14 +67,14 @@ export const useChatHistoryHandlers = ({
         hide(modalIdReference.current)
         modalIdReference.current = null
       }
-    }
+    }, [handleDeleteSession, hide, sessionIdAtShow])
 
-    const handleCancel = (): void => {
+    const handleCancel = useCallback((): void => {
       if (modalIdReference.current !== null) {
         hide(modalIdReference.current)
         modalIdReference.current = null
       }
-    }
+    }, [hide])
 
     modalIdReference.current = show(
       React.createElement(ConfirmModal, {
@@ -69,12 +87,11 @@ export const useChatHistoryHandlers = ({
         cancelText: 'Cancel'
       })
     ) as unknown as number
-  }, [currentSessionId, handleDeleteSession, hide, show])
+  }, [currentSessionId, handleDeleteSession, show])
 
   return {
     handleDeleteCurrentSession,
-    handleDeleteSession
+    handleDeleteSession,
+    handleForkSession
   }
 }
-
-export type { UseChatHistoryHandlersProperties }

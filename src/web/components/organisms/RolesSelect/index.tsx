@@ -6,6 +6,7 @@ import type { RoleOption } from '@/lib/api/roles/getRoles'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useRolesActions } from './hooks/useRolesActions'
+import { useRolesHandlers } from './hooks/useRolesHandlers'
 import { container } from './style.css'
 
 type RolesSelectProperties = {
@@ -18,18 +19,14 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
   const { placeholder = 'Select roles', sessionDetail, onChange } = properties
 
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
-  const { fetchRoles } = useRolesActions()
+  const actions = useRolesActions()
+  const { handleFetchRoles } = useRolesHandlers(sessionDetail, actions, setRoleOptions)
 
   const handleFocus = useCallback(async () => {
     if (roleOptions.length === 0) {
-      try {
-        const roles = await fetchRoles()
-        setRoleOptions(roles)
-      } catch (error) {
-        console.error('Failed to fetch roles:', error)
-      }
+      void handleFetchRoles()
     }
-  }, [roleOptions.length, fetchRoles])
+  }, [roleOptions.length, handleFetchRoles])
 
   const handleRolesChange = useCallback(
     (values: string[]): void => {

@@ -5,12 +5,12 @@ import { deleteTurn } from '@/lib/api/session/deleteTurn'
 import { editTurn } from '@/lib/api/session/editTurn'
 import { forkSession } from '@/lib/api/session/forkSession'
 import { getSession } from '@/lib/api/session/getSession'
-import type { Turn } from '@/lib/api/session/getSession'
+import type { SessionDetail, SessionOverview } from '@/lib/api/session/getSession'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
-import { useSessionStore } from '@/stores/useChatHistoryStore'
 
 type UseChatHistoryActionsProperties = {
   currentSessionId: string | null
+  refreshSessionsInStore: (sessionDetail: SessionDetail, sessions: SessionOverview[]) => void
 }
 
 type UseChatHistoryActionsReturn = {
@@ -27,11 +27,9 @@ type UseChatHistoryActionsReturn = {
 }
 
 export const useChatHistoryActions = ({
-  currentSessionId
+  currentSessionId,
+  refreshSessionsInStore
 }: UseChatHistoryActionsProperties): UseChatHistoryActionsReturn => {
-  const { actions } = useSessionStore()
-  const { refreshSessions: refreshSessionsInStore } = actions
-
   // Session actions
   const deleteSessionAction = useCallback(async (sessionId: string): Promise<void> => {
     await deleteSession(sessionId)

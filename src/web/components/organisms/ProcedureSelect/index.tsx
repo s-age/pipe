@@ -4,8 +4,9 @@ import type { JSX } from 'react'
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
-import { getProcedures, type ProcedureOption } from '@/lib/api/procedures/getProcedures'
+import type { ProcedureOption } from '@/lib/api/procedures/getProcedures'
 
+import { useProceduresActions } from './hooks/useProceduresActions'
 import { container } from './style.css'
 
 type ProcedureSelectProperties = {
@@ -21,18 +22,19 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const error = formContext?.formState?.errors?.procedure
 
   const [procedureOptions, setProcedureOptions] = useState<ProcedureOption[]>([])
+  const { fetchProcedures } = useProceduresActions()
 
   useEffect(() => {
     const loadProcedures = async (): Promise<void> => {
       try {
-        const procedures = await getProcedures()
+        const procedures = await fetchProcedures()
         setProcedureOptions(procedures)
       } catch (error) {
         console.error('Failed to fetch procedures:', error)
       }
     }
     void loadProcedures()
-  }, [])
+  }, [fetchProcedures])
 
   const handleProcedureChange = useCallback(
     (values: string[]): void => {

@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import type { JSX } from 'react'
 
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
-import { getRoles, type RoleOption } from '@/lib/api/roles/getRoles'
+import type { RoleOption } from '@/lib/api/roles/getRoles'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
+import { useRolesActions } from './hooks/useRolesActions'
 import { container } from './style.css'
 
 type RolesSelectProperties = {
@@ -17,18 +18,19 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
   const { placeholder = 'Select roles', sessionDetail, onChange } = properties
 
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
+  const { fetchRoles } = useRolesActions()
 
   useEffect(() => {
     const loadRoles = async (): Promise<void> => {
       try {
-        const roles = await getRoles()
+        const roles = await fetchRoles()
         setRoleOptions(roles)
       } catch (error) {
         console.error('Failed to fetch roles:', error)
       }
     }
     void loadRoles()
-  }, [])
+  }, [fetchRoles])
 
   const handleRolesChange = useCallback(
     (values: string[]): void => {

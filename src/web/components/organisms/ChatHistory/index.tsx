@@ -1,4 +1,5 @@
 import type { JSX } from 'react'
+import { useSessionStore } from '@/stores/useChatHistoryStore'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
@@ -24,18 +25,24 @@ export const ChatHistory = ({
   expertMode,
   setSessionDetail
 }: ChatHistoryProperties): JSX.Element => {
+  const { actions } = useSessionStore()
+  const { refreshSessions: refreshSessionsInStore } = actions
+
   const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
     useChatStreaming({
       currentSessionId,
       // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
-      setSessionDetail: setSessionDetail as unknown as (data: unknown) => void
+      setSessionDetail: setSessionDetail
     })
 
   const { handleDeleteCurrentSession } = useChatHistoryHandlers({
     currentSessionId
   })
 
-  const { refreshSession } = useChatHistoryActions({ currentSessionId })
+  const { refreshSession } = useChatHistoryActions({
+    currentSessionId,
+    refreshSessionsInStore
+  })
 
   return (
     <div className={chatRoot}>

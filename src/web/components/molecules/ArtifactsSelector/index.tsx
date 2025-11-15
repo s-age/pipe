@@ -15,7 +15,8 @@ export const ArtifactsSelector = ({
 }: ArtifactsSelectorProperties): React.JSX.Element => {
   const formContext = useOptionalFormContext()
   const setValue = formContext?.setValue
-  const currentValue = formContext?.watch?.('artifacts') || []
+  const watch = formContext?.watch
+  const currentValue = watch ? watch('artifacts') || [] : []
 
   const handleArtifactsChange = useCallback(
     (values: string[]) => {

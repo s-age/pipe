@@ -4,6 +4,7 @@ import { useController } from 'react-hook-form'
 
 import { Label } from '@/components/atoms/Label'
 import { Select } from '@/components/molecules/Select'
+import { useOptionalFormContext } from '@/components/organisms/Form'
 
 import { errorMessageStyle } from './style.css'
 
@@ -24,10 +25,11 @@ export const SelectField = <TFieldValues extends FieldValues = FieldValues>({
   options,
   ...properties
 }: SelectFieldProperties<TFieldValues>): JSX.Element => {
+  const formContext = useOptionalFormContext<TFieldValues>()
   const {
     field,
     fieldState: { error }
-  } = useController(properties)
+  } = useController({ control: formContext?.control, ...properties })
 
   return (
     <div>

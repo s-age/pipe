@@ -36,7 +36,7 @@ Clear boundaries for Store (Context) access permissions.
 | :------------ | :------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
 | **Pages**     | **Data flow orchestration**, **business logic integration**, **routing**.              | ✅ **Access allowed** (manages and accesses Stores).                                                    |
 | **Organisms** | **Complex sections** (e.g., forms, lists). Data integration logic.                     | ✅ **Partially allowed**<br>• Direct access to `useAppStore` (global UI)<br>• Page Store via Props only |
-| **Molecules** | **Composite UI components**. Local UI state (open/closed, input values) is acceptable. | ❌ **No direct access** (Props only).                                                                   |
+| Molecules     | **Composite UI components**. Local UI state (open/closed, input values) is acceptable. | ❌ **No direct access to global/page stores** (Props only).<br>✅ **Allowed to access form context** via `react-hook-form` hooks. |
 | **Atoms**     | **Minimal UI elements** (buttons, icons). Pure rendering.                              | ❌ **No access** (Props only). No internal State.                                                       |
 
 ### Store Access Pattern Details

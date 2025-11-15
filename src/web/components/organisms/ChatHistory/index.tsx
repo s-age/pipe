@@ -16,7 +16,10 @@ type ChatHistoryProperties = {
   currentSessionId: string | null
   expertMode: boolean
   setSessionDetail: (data: SessionDetail | null) => void
-  refreshSessionsInStore: (sessionDetail: SessionDetail, sessions: SessionOverview[]) => void
+  refreshSessionsInStore: (
+    sessionDetail: SessionDetail,
+    sessions: SessionOverview[]
+  ) => void
 }
 
 // Keep a default export for backward compatibility (renders the full composed view)

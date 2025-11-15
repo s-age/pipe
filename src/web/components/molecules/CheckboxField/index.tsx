@@ -4,6 +4,7 @@ import { useController } from 'react-hook-form'
 
 import { Label } from '@/components/atoms/Label'
 import { InputCheckbox } from '@/components/molecules/InputCheckbox'
+import { useOptionalFormContext } from '@/components/organisms/Form'
 
 import { checkboxContainer, labelStyle } from './style.css'
 
@@ -17,7 +18,8 @@ export const CheckboxField = <TFieldValues extends FieldValues = FieldValues>({
   id,
   ...properties
 }: CheckboxFieldProperties<TFieldValues>): JSX.Element => {
-  const { field } = useController(properties)
+  const formContext = useOptionalFormContext<TFieldValues>()
+  const { field } = useController({ control: formContext?.control, ...properties })
 
   return (
     <div className={checkboxContainer}>

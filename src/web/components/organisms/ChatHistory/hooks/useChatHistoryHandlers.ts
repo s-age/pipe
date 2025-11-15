@@ -2,15 +2,18 @@ import React, { useCallback, useRef } from 'react'
 
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { useModal } from '@/components/molecules/Modal/hooks/useModal'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 import { emitToast } from '@/lib/toastEvents'
 
 import { useChatHistoryActions } from './useChatHistoryActions'
-import type { SessionDetail } from '@/lib/api/session/getSession'
-import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 type UseChatHistoryHandlersProperties = {
   currentSessionId: string | null
-  refreshSessionsInStore: (sessionDetail: SessionDetail, sessions: SessionOverview[]) => void
+  refreshSessionsInStore: (
+    sessionDetail: SessionDetail,
+    sessions: SessionOverview[]
+  ) => void
 }
 
 export const useChatHistoryHandlers = ({
@@ -22,7 +25,10 @@ export const useChatHistoryHandlers = ({
   handleForkSession: (sessionId: string, forkIndex: number) => Promise<void>
 } => {
   const { show, hide } = useModal()
-  const { deleteSessionAction, forkSessionAction } = useChatHistoryActions({ currentSessionId, refreshSessionsInStore })
+  const { deleteSessionAction, forkSessionAction } = useChatHistoryActions({
+    currentSessionId,
+    refreshSessionsInStore
+  })
 
   const modalIdReference = useRef<number | null>(null)
 
@@ -57,7 +63,7 @@ export const useChatHistoryHandlers = ({
 
     const sessionIdAtShow = currentSessionId
 
-    const handleConfirm = useCallback(async (): Promise<void> => {
+    const handleConfirm = async (): Promise<void> => {
       try {
         void handleDeleteSession(sessionIdAtShow)
       } catch (error) {
@@ -67,14 +73,14 @@ export const useChatHistoryHandlers = ({
         hide(modalIdReference.current)
         modalIdReference.current = null
       }
-    }, [handleDeleteSession, hide, sessionIdAtShow])
+    }
 
-    const handleCancel = useCallback((): void => {
+    const handleCancel = (): void => {
       if (modalIdReference.current !== null) {
         hide(modalIdReference.current)
         modalIdReference.current = null
       }
-    }, [hide])
+    }
 
     modalIdReference.current = show(
       React.createElement(ConfirmModal, {
@@ -87,7 +93,7 @@ export const useChatHistoryHandlers = ({
         cancelText: 'Cancel'
       })
     ) as unknown as number
-  }, [currentSessionId, handleDeleteSession, show])
+  }, [currentSessionId, handleDeleteSession, show, hide])
 
   return {
     handleDeleteCurrentSession,

@@ -4,6 +4,7 @@ import { useController } from 'react-hook-form'
 
 import { Label } from '@/components/atoms/Label'
 import { TextArea } from '@/components/molecules/TextArea'
+import { useOptionalFormContext } from '@/components/organisms/Form'
 
 import { errorMessageStyle } from './style.css'
 
@@ -23,10 +24,11 @@ export const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
   required,
   ...properties
 }: TextareaFieldProperties<TFieldValues>): JSX.Element => {
+  const formContext = useOptionalFormContext<TFieldValues>()
   const {
     field,
     fieldState: { error }
-  } = useController(properties)
+  } = useController({ control: formContext?.control, ...properties })
 
   return (
     <div>
@@ -42,5 +44,7 @@ export const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
     </div>
   )
 }
+
+// Default export removed — use named export `TextareaField`
 
 // Default export removed — use named export `TextareaField`

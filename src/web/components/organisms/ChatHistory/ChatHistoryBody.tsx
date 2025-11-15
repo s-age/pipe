@@ -23,7 +23,10 @@ type ChatHistoryBodyProperties = {
   streamedText: string | null
   turnsListReference: React.RefObject<HTMLDivElement | null>
   onRefresh: () => Promise<void>
-  refreshSessionsInStore: (sessionDetail: SessionDetail, sessions: SessionOverview[]) => void
+  refreshSessionsInStore: (
+    sessionDetail: SessionDetail,
+    sessions: SessionOverview[]
+  ) => void
 }
 
 export const ChatHistoryBody = ({

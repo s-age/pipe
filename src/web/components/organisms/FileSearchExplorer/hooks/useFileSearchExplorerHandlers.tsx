@@ -1,5 +1,5 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
 
@@ -40,7 +40,7 @@ export const useFileSearchExplorerHandlers = (
   const [query, setQuery] = useState<string>('')
   const [suggestions, setSuggestions] = useState<Item[]>([])
   const [selectedIndex, setSelectedIndex] = useState<number>(-1)
-  const [focusTrigger, setFocusTrigger] = useState<number>(0)
+  const focusTriggerReference = useRef<boolean>(false)
 
   const actions = useFileSearchExplorerActions()
 
@@ -176,7 +176,7 @@ export const useFileSearchExplorerHandlers = (
         // Item: add to selectedValues
         void handleValueConfirm(suggestion.value)
       }
-      setFocusTrigger((previous) => previous + 1)
+      focusTriggerReference.current = true
     },
     [query, actions, filterExistingValues, list, handleValueConfirm]
   )
@@ -196,7 +196,7 @@ export const useFileSearchExplorerHandlers = (
           event.preventDefault()
           const selectedSuggestion = suggestions[selectedIndex]
           handleSuggestionClick(selectedSuggestion)
-          setFocusTrigger((previous) => previous + 1)
+          focusTriggerReference.current = true
         } else if (event.key === 'Escape') {
           setSuggestions([])
           setSelectedIndex(-1)
@@ -230,10 +230,11 @@ export const useFileSearchExplorerHandlers = (
 
   // Focus the input when focusTrigger changes
   useEffect(() => {
-    if (focusTrigger > 0) {
+    if (focusTriggerReference.current) {
       inputReference?.current?.focus()
+      focusTriggerReference.current = false
     }
-  }, [focusTrigger, inputReference])
+  }, [inputReference])
 
   return {
     selectedValues,

@@ -1,6 +1,8 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { emitToast } from '@/lib/toastEvents'
+
 import { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
 
 type Item = {
@@ -28,11 +30,11 @@ export const useFileSearchExplorerHandlers = (
   setSuggestions: (suggestions: Item[]) => void
   setSelectedIndex: (index: number) => void
   handleTagDelete: (index: number) => void
-  handleQueryChange: (event: ChangeEvent<HTMLInputElement>) => void
+  handleQueryChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>
   handleValueConfirm: (value: string) => Promise<void>
   handleKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void
-  handleSuggestionClick: (suggestion: Item) => void
-  handleInputFocus: () => void
+  handleSuggestionClick: (suggestion: Item) => Promise<void>
+  handleInputFocus: () => Promise<void>
   actions: ReturnType<typeof useFileSearchExplorerActions>
 } => {
   const { existsValue = [], list, isMultiple = true } = options || {}
@@ -82,7 +84,8 @@ export const useFileSearchExplorerHandlers = (
           const pathParts = parts.slice(0, -1).filter((p) => p)
           const prefix = parts[parts.length - 1] || ''
           if (pathParts.length > 0) {
-            void actions.getLsData({ final_path_list: pathParts }).then((lsResult) => {
+            try {
+              const lsResult = await actions.getLsData({ final_path_list: pathParts })
               if (lsResult) {
                 const filtered = lsResult.entries
                   .filter((entry) => entry.name.startsWith(prefix))
@@ -94,10 +97,13 @@ export const useFileSearchExplorerHandlers = (
                 const filteredWithoutDuplicates = filterExistingValues(filtered)
                 setSuggestions(filteredWithoutDuplicates)
               }
-            })
+            } catch (error: unknown) {
+              emitToast.failure((error as Error).message)
+            }
           } else {
             // Root level
-            void actions.getLsData({ final_path_list: [] }).then((lsResult) => {
+            try {
+              const lsResult = await actions.getLsData({ final_path_list: [] })
               if (lsResult) {
                 const filtered = lsResult.entries
                   .filter((entry) => entry.name.startsWith(prefix))
@@ -109,11 +115,14 @@ export const useFileSearchExplorerHandlers = (
                 const filteredWithoutDuplicates = filterExistingValues(filtered)
                 setSuggestions(filteredWithoutDuplicates)
               }
-            })
+            } catch (error: unknown) {
+              emitToast.failure((error as Error).message)
+            }
           }
         } else if (newQuery.length > 0) {
           // Root level search
-          void actions.getLsData({ final_path_list: [] }).then((lsResult) => {
+          try {
+            const lsResult = await actions.getLsData({ final_path_list: [] })
             if (lsResult) {
               const filtered = lsResult.entries
                 .filter((entry) => entry.name.startsWith(newQuery))
@@ -125,7 +134,9 @@ export const useFileSearchExplorerHandlers = (
               const filteredWithoutDuplicates = filterExistingValues(filtered)
               setSuggestions(filteredWithoutDuplicates)
             }
-          })
+          } catch (error: unknown) {
+            emitToast.failure((error as Error).message)
+          }
         } else {
           setSuggestions([])
         }
@@ -150,7 +161,7 @@ export const useFileSearchExplorerHandlers = (
   )
 
   const handleSuggestionClick = useCallback(
-    (suggestion: Item): void => {
+    async (suggestion: Item): Promise<void> => {
       if (suggestion.label.endsWith('/')) {
         // Directory: navigate into it
         const parts = query.split('/')
@@ -211,15 +222,19 @@ export const useFileSearchExplorerHandlers = (
   const handleInputFocus = useCallback(async () => {
     if (!list) {
       // Load root suggestions for file search
-      const lsResult = await actions.getLsData({ final_path_list: [] })
-      if (lsResult) {
-        const filtered = lsResult.entries.map((entry) => ({
-          label: entry.is_dir ? `${entry.name}/` : entry.name,
-          value: entry.is_dir ? `${entry.name}/` : entry.name,
-          path: entry.name
-        }))
-        const filteredWithoutDuplicates = filterExistingValues(filtered)
-        setSuggestions(filteredWithoutDuplicates)
+      try {
+        const lsResult = await actions.getLsData({ final_path_list: [] })
+        if (lsResult) {
+          const filtered = lsResult.entries.map((entry) => ({
+            label: entry.is_dir ? `${entry.name}/` : entry.name,
+            value: entry.is_dir ? `${entry.name}/` : entry.name,
+            path: entry.name
+          }))
+          const filteredWithoutDuplicates = filterExistingValues(filtered)
+          setSuggestions(filteredWithoutDuplicates)
+        }
+      } catch (error: unknown) {
+        emitToast.failure((error as Error).message)
       }
     } else {
       // Show filtered list

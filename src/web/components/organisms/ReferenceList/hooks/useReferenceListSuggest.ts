@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { emitToast } from '@/lib/toastEvents'
 import type { Reference } from '@/types/reference'
 
 export const useReferenceListSuggest = (
@@ -63,13 +64,19 @@ export const useReferenceListSuggest = (
 
   const handleFocus = useCallback(async (): Promise<void> => {
     if (rootSuggestions.length === 0) {
-      const suggestions = await actions.loadRootSuggestions()
-      // Filter out already selected references when loading for the first time
-      const filteredSuggestions = suggestions.filter(
-        (suggestion) => !existingPaths.has(suggestion.name)
-      )
-      setRootSuggestions(filteredSuggestions)
-      setSuggestions(filteredSuggestions)
+      try {
+        const suggestions = await actions.loadRootSuggestions()
+        // Filter out already selected references when loading for the first time
+        const filteredSuggestions = suggestions.filter(
+          (suggestion) => !existingPaths.has(suggestion.name)
+        )
+        setRootSuggestions(filteredSuggestions)
+        setSuggestions(filteredSuggestions)
+      } catch (error: unknown) {
+        emitToast.failure(
+          (error as Error).message || 'Failed to load root suggestions.'
+        )
+      }
     } else {
       // Filter out already selected references from cached rootSuggestions
       const filteredSuggestions = rootSuggestions.filter(
@@ -113,18 +120,24 @@ export const useReferenceListSuggest = (
       } else {
         // Subdirectory suggestions
         const parentPathParts = pathParts.slice(0, -1)
-        const subSuggestions =
-          await actions.loadSubDirectorySuggestions(parentPathParts)
-        const filteredSuggestions = subSuggestions.filter((suggestion) =>
-          suggestion.name.toLowerCase().startsWith(lastPart.toLowerCase())
-        )
-        // Filter out already selected references (full path)
-        const currentPath = parentPathParts.join('/')
-        const finalSuggestions = filteredSuggestions.filter(
-          (suggestion) => !existingPaths.has(`${currentPath}/${suggestion.name}`)
-        )
-        setSuggestions(finalSuggestions)
-        setSelectedIndex(-1)
+        try {
+          const subSuggestions =
+            await actions.loadSubDirectorySuggestions(parentPathParts)
+          const filteredSuggestions = subSuggestions.filter((suggestion) =>
+            suggestion.name.toLowerCase().startsWith(lastPart.toLowerCase())
+          )
+          // Filter out already selected references (full path)
+          const currentPath = parentPathParts.join('/')
+          const finalSuggestions = filteredSuggestions.filter(
+            (suggestion) => !existingPaths.has(`${currentPath}/${suggestion.name}`)
+          )
+          setSuggestions(finalSuggestions)
+          setSelectedIndex(-1)
+        } catch (error: unknown) {
+          emitToast.failure(
+            (error as Error).message || 'Failed to load subdirectory suggestions.'
+          )
+        }
       }
     },
     [actions, rootSuggestions, existingPaths]
@@ -147,18 +160,30 @@ export const useReferenceListSuggest = (
         if (isDirectory) {
           setInputValue(newPath + '/')
           // Load subdirectory suggestions
-          const subPathParts = newPath.split('/').filter((part) => part !== '')
-          const subSuggestions = await actions.loadSubDirectorySuggestions(subPathParts)
-          // Filter out already selected references
-          const filteredSuggestions = subSuggestions.filter(
-            (subSuggestion) => !existingPaths.has(`${newPath}/${subSuggestion.name}`)
-          )
-          setSuggestions(filteredSuggestions)
-          setSelectedIndex(-1)
+          try {
+            const subSuggestions = await actions.loadSubDirectorySuggestions(
+              newPath.split('/').filter((part) => part !== '')
+            )
+            // Filter out already selected references
+            const filteredSuggestions = subSuggestions.filter(
+              (subSuggestion) => !existingPaths.has(`${newPath}/${subSuggestion.name}`)
+            )
+            setSuggestions(filteredSuggestions)
+            setSelectedIndex(-1)
+          } catch (error: unknown) {
+            emitToast.failure(
+              (error as Error).message || 'Failed to load subdirectory suggestions.'
+            )
+          }
         } else {
           // Only add files, not directories
           setInputValue(newPath)
-          await actions.addReference(newPath)
+          try {
+            await actions.addReference(newPath)
+            emitToast.success('Reference added successfully')
+          } catch (error: unknown) {
+            emitToast.failure((error as Error).message || 'Failed to add reference.')
+          }
           setInputValue('')
           setSuggestions([])
           setSelectedIndex(-1)
@@ -167,20 +192,31 @@ export const useReferenceListSuggest = (
         if (isDirectory) {
           setInputValue(suggestionName + '/')
           // Load subdirectory suggestions
-          const subSuggestions = await actions.loadSubDirectorySuggestions([
-            suggestionName
-          ])
-          // Filter out already selected references
-          const filteredSuggestions = subSuggestions.filter(
-            (subSuggestion) =>
-              !existingPaths.has(`${suggestionName}/${subSuggestion.name}`)
-          )
-          setSuggestions(filteredSuggestions)
-          setSelectedIndex(-1)
+          try {
+            const subSuggestions = await actions.loadSubDirectorySuggestions([
+              suggestionName
+            ])
+            // Filter out already selected references
+            const filteredSuggestions = subSuggestions.filter(
+              (subSuggestion) =>
+                !existingPaths.has(`${suggestionName}/${subSuggestion.name}`)
+            )
+            setSuggestions(filteredSuggestions)
+            setSelectedIndex(-1)
+          } catch (error: unknown) {
+            emitToast.failure(
+              (error as Error).message || 'Failed to load subdirectory suggestions.'
+            )
+          }
         } else {
           // Only add files, not directories
           setInputValue(suggestionName)
-          await actions.addReference(suggestionName)
+          try {
+            await actions.addReference(suggestionName)
+            emitToast.success('Reference added successfully')
+          } catch (error: unknown) {
+            emitToast.failure((error as Error).message || 'Failed to add reference.')
+          }
           setInputValue('')
           setSuggestions([])
           setSelectedIndex(-1)

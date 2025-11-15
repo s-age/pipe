@@ -7,38 +7,23 @@ import type {
   LsResponse
 } from '@/lib/api/fileSearchExplorer'
 import { fileSearchExplorerApi } from '@/lib/api/fileSearchExplorer'
-import { emitToast } from '@/lib/toastEvents'
 
 export const useFileSearchExplorerActions = (): {
-  searchL2: (request: SearchL2Request) => Promise<SearchL2Response | undefined>
-  getLsData: (request: LsRequest) => Promise<LsResponse | undefined>
+  searchL2: (request: SearchL2Request) => Promise<SearchL2Response>
+  getLsData: (request: LsRequest) => Promise<LsResponse>
 } => {
   const actions = useMemo(
     () => ({
-      searchL2: async (
-        request: SearchL2Request
-      ): Promise<SearchL2Response | undefined> => {
-        try {
-          const result = await fileSearchExplorerApi.searchL2(request)
+      searchL2: async (request: SearchL2Request): Promise<SearchL2Response> => {
+        const result = await fileSearchExplorerApi.searchL2(request)
 
-          return result
-        } catch (error: unknown) {
-          emitToast.failure((error as Error).message)
-
-          return undefined
-        }
+        return result
       },
 
-      getLsData: async (request: LsRequest): Promise<LsResponse | undefined> => {
-        try {
-          const result = await fileSearchExplorerApi.getLsData(request)
+      getLsData: async (request: LsRequest): Promise<LsResponse> => {
+        const result = await fileSearchExplorerApi.getLsData(request)
 
-          return result
-        } catch (error: unknown) {
-          emitToast.failure((error as Error).message)
-
-          return undefined
-        }
+        return result
       }
     }),
     []

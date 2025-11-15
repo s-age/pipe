@@ -1,6 +1,7 @@
 import { useState, useCallback, useLayoutEffect } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { emitToast } from '@/lib/toastEvents'
 
 import { useHyperParametersActions } from './useHyperParametersActions'
 
@@ -103,8 +104,10 @@ export const useHyperParametersHandlers = ({
     const payload = { temperature }
 
     try {
-      await updateHyperparameters(currentSessionId, payload)
-      // No need to update session detail as hyperparameters don't affect session tree
+      const result = await updateHyperparameters(currentSessionId, payload)
+      emitToast.success(result?.message || 'Hyperparameters updated')
+    } catch (error: unknown) {
+      emitToast.failure((error as Error).message || 'Failed to update hyperparameters')
     } finally {
       // end interaction on commit (whether success or failure)
       setIsInteracting(false)
@@ -121,8 +124,10 @@ export const useHyperParametersHandlers = ({
     const payload = { top_p: topP }
 
     try {
-      await updateHyperparameters(currentSessionId, payload)
-      // No need to update session detail as hyperparameters don't affect session tree
+      const result = await updateHyperparameters(currentSessionId, payload)
+      emitToast.success(result?.message || 'Hyperparameters updated')
+    } catch (error: unknown) {
+      emitToast.failure((error as Error).message || 'Failed to update hyperparameters')
     } finally {
       setIsInteracting(false)
     }
@@ -138,8 +143,10 @@ export const useHyperParametersHandlers = ({
     const payload = { top_k: topK }
 
     try {
-      await updateHyperparameters(currentSessionId, payload)
-      // No need to update session detail as hyperparameters don't affect session tree
+      const result = await updateHyperparameters(currentSessionId, payload)
+      emitToast.success(result?.message || 'Hyperparameters updated')
+    } catch (error: unknown) {
+      emitToast.failure((error as Error).message || 'Failed to update hyperparameters')
     } finally {
       setIsInteracting(false)
     }

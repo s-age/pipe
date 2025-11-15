@@ -5,7 +5,6 @@ import { editReferences } from '@/lib/api/session/editReferences'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
 import { getSession } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
 
 export const useReferenceActions = (
   sessionDetail: SessionDetail | null,
@@ -30,30 +29,20 @@ export const useReferenceActions = (
 } => {
   const handleUpdateReferencePersist = useCallback(
     async (sessionId: string, index: number, persist: boolean): Promise<void> => {
-      try {
-        await editReferencePersist(sessionId, index, persist)
-        const data = await getSession(sessionId)
-        setSessionDetail(data.session)
-        if (refreshSessions) await refreshSessions()
-      } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'Failed to update reference persist state.'
-        )
-      }
+      await editReferencePersist(sessionId, index, persist)
+      const data = await getSession(sessionId)
+      setSessionDetail(data.session)
+      if (refreshSessions) await refreshSessions()
     },
     [setSessionDetail, refreshSessions]
   )
 
   const handleUpdateReferenceTtl = useCallback(
     async (sessionId: string, index: number, ttl: number): Promise<void> => {
-      try {
-        await editReferenceTtl(sessionId, index, ttl)
-        const data = await getSession(sessionId)
-        setSessionDetail(data.session)
-        if (refreshSessions) await refreshSessions()
-      } catch (error: unknown) {
-        emitToast.failure((error as Error).message || 'Failed to update reference TTL.')
-      }
+      await editReferenceTtl(sessionId, index, ttl)
+      const data = await getSession(sessionId)
+      setSessionDetail(data.session)
+      if (refreshSessions) await refreshSessions()
     },
     [setSessionDetail, refreshSessions]
   )
@@ -61,18 +50,12 @@ export const useReferenceActions = (
   const handleUpdateReferenceDisabled = useCallback(
     async (sessionId: string, index: number, disabled: boolean): Promise<void> => {
       if (!sessionDetail) return
-      try {
-        const newReferences = [...sessionDetail.references]
-        newReferences[index] = { ...newReferences[index], disabled }
-        await editReferences(sessionId, newReferences)
-        const data = await getSession(sessionId)
-        setSessionDetail(data.session)
-        if (refreshSessions) await refreshSessions()
-      } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'Failed to update reference disabled state.'
-        )
-      }
+      const newReferences = [...sessionDetail.references]
+      newReferences[index] = { ...newReferences[index], disabled }
+      await editReferences(sessionId, newReferences)
+      const data = await getSession(sessionId)
+      setSessionDetail(data.session)
+      if (refreshSessions) await refreshSessions()
     },
     [sessionDetail, setSessionDetail, refreshSessions]
   )

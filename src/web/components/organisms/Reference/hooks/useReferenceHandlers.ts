@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
+import { emitToast } from '@/lib/toastEvents'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceActions } from './useReferenceActions'
@@ -34,8 +35,11 @@ export const useReferenceHandlers = (
 
         // Update local state for immediate UI feedback
         setLocalReference?.((previous) => ({ ...previous, persist: newPersist }))
-      } catch (error) {
-        console.error('Failed to update persist:', error)
+        emitToast.success('Reference persist state updated successfully')
+      } catch (error: unknown) {
+        emitToast.failure(
+          (error as Error).message || 'Failed to update reference persist state.'
+        )
       }
     },
     [
@@ -66,8 +70,11 @@ export const useReferenceHandlers = (
 
       // Update local state for immediate UI feedback
       setLocalReference?.((previous) => ({ ...previous, disabled: !previous.disabled }))
-    } catch (error) {
-      console.error('Failed to toggle reference:', error)
+      emitToast.success('Reference disabled state updated successfully')
+    } catch (error: unknown) {
+      emitToast.failure(
+        (error as Error).message || 'Failed to update reference disabled state.'
+      )
     }
   }, [
     referenceIndex,
@@ -87,8 +94,6 @@ export const useReferenceHandlers = (
         newTtl = currentTtl + 1
       } else if (action === 'decrement' && currentTtl > 0) {
         newTtl = currentTtl - 1
-      } else {
-        return
       }
 
       try {
@@ -106,8 +111,9 @@ export const useReferenceHandlers = (
 
         // Update local state for immediate UI feedback
         setLocalReference?.((previous) => ({ ...previous, ttl: newTtl }))
-      } catch (error) {
-        console.error('Failed to update TTL:', error)
+        emitToast.success('Reference TTL updated successfully')
+      } catch (error: unknown) {
+        emitToast.failure((error as Error).message || 'Failed to update reference TTL.')
       }
     },
     [

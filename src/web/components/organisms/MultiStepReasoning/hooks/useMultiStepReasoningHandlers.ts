@@ -1,5 +1,7 @@
 import { useCallback } from 'react'
 
+import { emitToast } from '@/lib/toastEvents'
+
 import { useMultiStepReasoningActions } from './useMultiStepReasoningActions'
 
 type UseMultiStepReasoningHandlersProperties = {
@@ -31,11 +33,14 @@ export const useMultiStepReasoningHandlers = ({
         // Update local state for immediate UI feedback
         setLocalEnabled(checked)
 
-        await updateMultiStepReasoning(currentSessionId, {
+        const result = await updateMultiStepReasoning(currentSessionId, {
           multi_step_reasoning_enabled: checked
         })
-      } catch {
-        // Toasts are displayed by the action hook. Swallow here to keep UI stable.
+        emitToast.success(result?.message || 'Multi-step reasoning updated')
+      } catch (error: unknown) {
+        emitToast.failure(
+          (error as Error).message || 'Failed to update multi-step reasoning'
+        )
         // On error, revert local state to the original value
         setLocalEnabled(multiStepReasoningEnabled)
       }

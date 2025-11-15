@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { emitToast } from '@/lib/toastEvents'
 
 import { useMultiStepReasoningActions } from './useMultiStepReasoningActions'
 
@@ -33,15 +34,18 @@ export const useMultiStepReasoningHandlers = ({
         // Update local state for immediate UI feedback
         setLocalMultiStepEnabled(checked)
 
-        await updateMultiStepReasoning(currentSessionId, {
+        const result = await updateMultiStepReasoning(currentSessionId, {
           multi_step_reasoning_enabled: checked
         })
+        emitToast.success(result?.message || 'Multi-step reasoning updated')
 
         // No need to update session detail or refresh the session tree.
         // The checkbox state is managed by the form, and multi_step_reasoning_enabled
         // does not affect the session tree structure or display.
-      } catch {
-        // Toasts are displayed by the action hook. Swallow here to keep UI stable.
+      } catch (error: unknown) {
+        emitToast.failure(
+          (error as Error).message || 'Failed to update multi-step reasoning'
+        )
         // On error, revert local state to the original value
         setLocalMultiStepEnabled(sessionDetail.multi_step_reasoning_enabled ?? false)
       }

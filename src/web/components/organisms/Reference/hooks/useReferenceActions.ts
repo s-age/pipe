@@ -3,7 +3,6 @@ import { useCallback } from 'react'
 import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
 import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
 import { toggleReferenceDisabled } from '@/lib/api/session/toggleReferenceDisabled'
-import { emitToast } from '@/lib/toastEvents'
 
 export const useReferenceActions = (
   refreshSessions?: () => Promise<void>
@@ -28,17 +27,9 @@ export const useReferenceActions = (
     ): Promise<void> => {
       if (!sessionId) return
 
-      try {
-        await editReferencePersist(sessionId, index, persist)
-        // Prefer refreshSessions to allow parent to re-fetch canonical session state
-        if (refreshSessions) await refreshSessions()
-
-        emitToast.success('Reference persist state updated successfully')
-      } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'Failed to update reference persist state.'
-        )
-      }
+      await editReferencePersist(sessionId, index, persist)
+      // Prefer refreshSessions to allow parent to re-fetch canonical session state
+      if (refreshSessions) await refreshSessions()
     },
     [refreshSessions]
   )
@@ -47,14 +38,8 @@ export const useReferenceActions = (
     async (sessionId: string | null, index: number, ttl: number): Promise<void> => {
       if (!sessionId) return
 
-      try {
-        await editReferenceTtl(sessionId, index, ttl)
-        if (refreshSessions) await refreshSessions()
-
-        emitToast.success('Reference TTL updated successfully')
-      } catch (error: unknown) {
-        emitToast.failure((error as Error).message || 'Failed to update reference TTL.')
-      }
+      await editReferenceTtl(sessionId, index, ttl)
+      if (refreshSessions) await refreshSessions()
     },
     [refreshSessions]
   )
@@ -63,16 +48,8 @@ export const useReferenceActions = (
     async (sessionId: string | null, index: number): Promise<void> => {
       if (!sessionId) return
 
-      try {
-        await toggleReferenceDisabled(sessionId, index)
-        if (refreshSessions) await refreshSessions()
-
-        emitToast.success('Reference disabled state updated successfully')
-      } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'Failed to update reference disabled state.'
-        )
-      }
+      await toggleReferenceDisabled(sessionId, index)
+      if (refreshSessions) await refreshSessions()
     },
     [refreshSessions]
   )

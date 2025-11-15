@@ -3,7 +3,7 @@ import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import { ProcedureSelect } from '../index'
 
 const Meta = {
-  title: 'Molecules/ProcedureSelect',
+  title: 'Organisms/ProcedureSelect',
   component: ProcedureSelect,
   tags: ['autodocs']
 } satisfies StoryMeta<typeof ProcedureSelect>

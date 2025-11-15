@@ -1,7 +1,7 @@
 import type { JSX } from 'react'
 
-import { TurnComponent as Turn } from '@/components/molecules/Turn'
-import { useTurnHandlers } from '@/components/molecules/Turn/hooks/useTurnHandlers'
+import { TurnComponent as Turn } from '@/components/organisms/Turn'
+import { useTurnHandlers } from '@/components/organisms/Turn/hooks/useTurnHandlers'
 import type { Turn as TurnType } from '@/lib/api/session/getSession'
 
 import { useChatHistoryActions } from './hooks/useChatHistoryActions'

@@ -2,9 +2,7 @@ import type { ChangeEvent } from 'react'
 import { useCallback, useState, useRef, useEffect } from 'react'
 
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
-import { useModal } from '@/components/molecules/Modal/hooks/useModal'
 import type { Turn } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
 
 type UseTurnHandlersProperties = {
   turn: Turn
@@ -19,6 +17,10 @@ type UseTurnHandlersProperties = {
     newContent: string,
     turn: Turn
   ) => Promise<void>
+  showModal: (content: React.ReactNode) => number
+  hideModal: (id?: number) => void
+  showToastSuccess: (message: string) => void
+  showToastFailure: (message: string) => void
 }
 
 export const useTurnHandlers = (

@@ -7,7 +7,7 @@ import { Form } from '@/components/organisms/Form'
 import { RolesSelect } from '../index'
 
 const Meta = {
-  title: 'Molecules/RolesSelect',
+  title: 'Organisms/RolesSelect',
   component: RolesSelect,
   tags: ['autodocs']
 } satisfies StoryMeta<typeof RolesSelect>

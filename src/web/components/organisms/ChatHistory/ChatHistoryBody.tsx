@@ -1,7 +1,7 @@
 import type { JSX } from 'react'
 
 import { Heading } from '@/components/atoms/Heading'
-import { TurnComponent as Turn } from '@/components/molecules/Turn'
+import { TurnComponent as Turn } from '@/components/organisms/Turn'
 import type { Turn as TurnType, SessionDetail } from '@/lib/api/session/getSession'
 
 import { ChatHistoryTurn } from './ChatHistoryTurn'

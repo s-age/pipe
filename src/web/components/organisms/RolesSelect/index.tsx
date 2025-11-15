@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { JSX } from 'react'
 
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
@@ -20,8 +20,8 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
   const { fetchRoles } = useRolesActions()
 
-  useEffect(() => {
-    const loadRoles = async (): Promise<void> => {
+  const handleFocus = useCallback(async () => {
+    if (roleOptions.length === 0) {
       try {
         const roles = await fetchRoles()
         setRoleOptions(roles)
@@ -29,8 +29,7 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
         console.error('Failed to fetch roles:', error)
       }
     }
-    void loadRoles()
-  }, [fetchRoles])
+  }, [roleOptions.length, fetchRoles])
 
   const handleRolesChange = useCallback(
     (values: string[]): void => {
@@ -54,6 +53,7 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
         isMultiple={true}
         placeholder={placeholder}
         onChange={handleRolesChange}
+        onFocus={handleFocus}
       />
     </div>
   )

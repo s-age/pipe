@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
@@ -24,8 +24,8 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const [procedureOptions, setProcedureOptions] = useState<ProcedureOption[]>([])
   const { fetchProcedures } = useProceduresActions()
 
-  useEffect(() => {
-    const loadProcedures = async (): Promise<void> => {
+  const handleFocus = useCallback(async () => {
+    if (procedureOptions.length === 0) {
       try {
         const procedures = await fetchProcedures()
         setProcedureOptions(procedures)
@@ -33,8 +33,7 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
         console.error('Failed to fetch procedures:', error)
       }
     }
-    void loadProcedures()
-  }, [fetchProcedures])
+  }, [procedureOptions.length, fetchProcedures])
 
   const handleProcedureChange = useCallback(
     (values: string[]): void => {
@@ -60,6 +59,7 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
         isMultiple={false}
         placeholder={placeholder}
         onChange={handleProcedureChange}
+        onFocus={handleFocus}
       />
       {error && <ErrorMessage error={error as never} />}
     </div>

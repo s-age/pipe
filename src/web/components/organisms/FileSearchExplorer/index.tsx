@@ -23,6 +23,7 @@ type FileSearchExplorerProperties = {
   isMultiple?: boolean
   placeholder?: string
   onChange: (value: string[]) => void
+  onFocus?: () => void
 }
 
 type PathDisplayProperties = {
@@ -71,14 +72,16 @@ export const FileSearchExplorer = ({
   list,
   isMultiple = true,
   placeholder = 'Search...',
-  onChange
+  onChange,
+  onFocus
 }: FileSearchExplorerProperties): JSX.Element => {
   const inputReference = useRef<HTMLInputElement>(null)
   const suggestionListReference = useRef<HTMLUListElement>(null)
   const handlers = useFileSearchExplorerHandlers(inputReference, {
     existsValue,
     list,
-    isMultiple
+    isMultiple,
+    onFocus
   })
   const {
     selectedValues,

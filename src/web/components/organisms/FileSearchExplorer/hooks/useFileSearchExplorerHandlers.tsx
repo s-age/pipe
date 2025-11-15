@@ -15,6 +15,7 @@ type HandlersOptions = {
   existsValue: string[]
   list?: Item[]
   isMultiple: boolean
+  onFocus?: () => void
 }
 
 export const useFileSearchExplorerHandlers = (
@@ -37,7 +38,7 @@ export const useFileSearchExplorerHandlers = (
   handleInputFocus: () => Promise<void>
   actions: ReturnType<typeof useFileSearchExplorerActions>
 } => {
-  const { existsValue = [], list, isMultiple = true } = options || {}
+  const { existsValue = [], list, isMultiple = true, onFocus } = options || {}
   const [selectedValues, setSelectedValues] = useState<string[]>(existsValue)
   const [query, setQuery] = useState<string>('')
   const [suggestions, setSuggestions] = useState<Item[]>([])
@@ -220,6 +221,7 @@ export const useFileSearchExplorerHandlers = (
   )
 
   const handleInputFocus = useCallback(async () => {
+    onFocus?.()
     if (!list) {
       // Load root suggestions for file search
       try {
@@ -241,7 +243,7 @@ export const useFileSearchExplorerHandlers = (
       const filteredWithoutDuplicates = filterExistingValues(list)
       setSuggestions(filteredWithoutDuplicates)
     }
-  }, [list, actions, filterExistingValues])
+  }, [list, actions, filterExistingValues, onFocus])
 
   // Focus the input when focusTrigger changes
   useEffect(() => {

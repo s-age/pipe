@@ -2,13 +2,12 @@
 
 ## Purpose
 
-Actions hooks wrap API calls and provide a consistent interface for data operations. They handle error management, toast notifications, and return promises for async operations.
+Actions hooks orchestrate API calls, providing a consistent interface for data operations. They manage error handling, display toast notifications, and return promises for asynchronous processes, potentially combining multiple API interactions.
 
 ## Characteristics
 
-- **Pure API wrappers** - Minimal logic beyond calling the API
-- **Error handling** - Catches errors and shows toast notifications
-- **Promise-based** - Returns promises for async/await
+- **Integrated Error & UI Feedback** - Handles errors and displays toast notifications for user feedback.
+- **Asynchronous Orchestration** - Returns promises for managing complex asynchronous flows, including multiple API calls.
 - **Stateless** - Does not manage component state
 - **Reusable** - Can be used by multiple components
 
@@ -118,7 +117,7 @@ export const useMultiStepReasoningHandlers = ({ sessionId, onRefresh }) => {
 - Need consistent error handling
 - Want to show toast notifications
 - Multiple components need the same API call
-- Need to compose multiple API calls
+- Need to orchestrate multiple API calls and manage their combined outcome.
 
 ❌ **Don't use Actions for:**
 
@@ -135,12 +134,7 @@ export const useMultiStepReasoningHandlers = ({ sessionId, onRefresh }) => {
 5. **Throw errors** - Let handlers decide how to handle failures
 6. **Return API responses** - Don't transform data in actions
 
-## Error Handling Responsibility
 
-Actions hooks must NOT handle errors or perform UI notifications (such as toast messages). Error handling and user feedback must be implemented in Handlers hooks.
-
-- Do not use try-catch or toast notifications directly in Actions hooks.
-- Always implement error handling and user notifications in the Handlers layer.
 
 ## Testing Actions
 

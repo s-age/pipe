@@ -15,11 +15,12 @@ export const ArtifactsSelector = ({
 }: ArtifactsSelectorProperties): React.JSX.Element => {
   const formContext = useOptionalFormContext()
   const setValue = formContext?.setValue
+  const currentValue = formContext?.watch?.('artifacts') || []
 
-  const handleArtifactsPathChange = useCallback(
-    (paths: string[]) => {
+  const handleArtifactsChange = useCallback(
+    (values: string[]) => {
       if (setValue) {
-        setValue('artifacts', paths)
+        setValue('artifacts', values)
       }
     },
     [setValue]
@@ -30,7 +31,7 @@ export const ArtifactsSelector = ({
       legend={<span className={metaItemLabel}>{legend}</span>}
       className={metaItem}
     >
-      <FileSearchExplorer onPathChange={handleArtifactsPathChange} />
+      <FileSearchExplorer existsValue={currentValue} onChange={handleArtifactsChange} />
     </Fieldset>
   )
 }

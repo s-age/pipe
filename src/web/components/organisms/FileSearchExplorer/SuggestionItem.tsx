@@ -3,8 +3,8 @@ import React, { useCallback, useEffect, useRef } from 'react'
 import { suggestionItem, selectedSuggestionItem } from './style.css'
 
 export type SuggestionItemProperties = {
-  suggestion: string | { name: string; isDirectory: boolean }
-  onClick: (suggestion: string | { name: string; isDirectory: boolean }) => void
+  suggestion: { label: string; value: string; path?: string }
+  onClick: (suggestion: { label: string; value: string; path?: string }) => void
   isSelected?: boolean
 }
 
@@ -34,9 +34,7 @@ export const SuggestionItem = React.memo(
           onClick={handleClick}
           className={isSelected ? selectedSuggestionItem : suggestionItem}
         >
-          {typeof suggestion === 'string'
-            ? suggestion
-            : suggestion.name + (suggestion.isDirectory ? '/' : '')}
+          {suggestion.label}
         </li>
       )
     }

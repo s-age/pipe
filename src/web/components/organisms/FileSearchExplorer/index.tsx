@@ -11,6 +11,20 @@ import {
 } from './style.css'
 import { SuggestionItem } from './SuggestionItem'
 
+type Item = {
+  label: string
+  value: string
+  path?: string
+}
+
+type FileSearchExplorerProperties = {
+  existsValue: string[]
+  list?: Item[]
+  isMultiple?: boolean
+  placeholder?: string
+  onChange: (value: string[]) => void
+}
+
 type PathDisplayProperties = {
   pathList: string[]
   onTagDelete: (index: number) => void
@@ -29,10 +43,12 @@ type SearchInputProperties = {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void
   onFocus?: () => void
+  onClick?: () => void
+  placeholder?: string
 }
 
 const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProperties>(
-  ({ value, onChange, onKeyDown, onFocus }, reference) => (
+  ({ value, onChange, onKeyDown, onFocus, onClick }, reference) => (
     <input
       ref={reference}
       type="text"
@@ -40,6 +56,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProperties>(
       onChange={onChange}
       onKeyDown={onKeyDown}
       onFocus={onFocus}
+      onClick={onClick}
       placeholder="Search files or directories..."
       className={searchInput}
       autoComplete="off"
@@ -50,15 +67,21 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProperties>(
 SearchInput.displayName = 'SearchInput'
 
 export const FileSearchExplorer = ({
-  onPathChange
-}: {
-  onPathChange?: (paths: string[]) => void
-} = {}): JSX.Element => {
+  existsValue,
+  list,
+  isMultiple = true,
+  placeholder = 'Search...',
+  onChange
+}: FileSearchExplorerProperties): JSX.Element => {
   const inputReference = useRef<HTMLInputElement>(null)
   const suggestionListReference = useRef<HTMLUListElement>(null)
-  const handlers = useFileSearchExplorerHandlers(inputReference)
+  const handlers = useFileSearchExplorerHandlers(inputReference, {
+    existsValue,
+    list,
+    isMultiple
+  })
   const {
-    pathList,
+    selectedValues,
     query,
     suggestions,
     selectedIndex,
@@ -72,8 +95,8 @@ export const FileSearchExplorer = ({
   } = handlers
 
   useEffect(() => {
-    onPathChange?.(pathList)
-  }, [pathList, onPathChange])
+    onChange(selectedValues)
+  }, [selectedValues, onChange])
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -98,26 +121,29 @@ export const FileSearchExplorer = ({
 
   return (
     <div className={container}>
-      {suggestions.length > 0 && (
-        <ul className={suggestionList} ref={suggestionListReference}>
-          {suggestions.map((suggestion, index) => (
-            <SuggestionItem
-              key={index}
-              suggestion={suggestion}
-              onClick={handleSuggestionClick}
-              isSelected={index === selectedIndex}
-            />
-          ))}
-        </ul>
-      )}
+      {suggestions.length > 0 &&
+        (query.trim() !== '' || list !== undefined || query.trim() === '') && (
+          <ul className={suggestionList} ref={suggestionListReference}>
+            {suggestions.map((suggestion, index) => (
+              <SuggestionItem
+                key={index}
+                suggestion={suggestion}
+                onClick={handleSuggestionClick}
+                isSelected={index === selectedIndex}
+              />
+            ))}
+          </ul>
+        )}
       <SearchInput
         ref={inputReference}
         value={query}
         onChange={handleQueryChange}
         onKeyDown={handleKeyDown}
         onFocus={handleInputFocus}
+        onClick={handleInputFocus}
+        placeholder={placeholder}
       />
-      <PathDisplay pathList={pathList} onTagDelete={handleTagDelete} />
+      <PathDisplay pathList={selectedValues} onTagDelete={handleTagDelete} />
     </div>
   )
 }

@@ -1,25 +1,15 @@
 import type { JSX } from 'react'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useWatch } from 'react-hook-form'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
-import { SuggestionItem } from '@/components/organisms/FileSearchExplorer/SuggestionItem'
+import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { Reference } from '@/types/reference'
 
 import { ReferenceComponent } from '../Reference'
-import { useReferenceListHandlers } from './hooks/useReferenceListHandlers'
-import { useReferenceListSuggest } from './hooks/useReferenceListSuggest'
-import {
-  metaItem,
-  metaItemLabel,
-  referencesList,
-  noItemsMessage,
-  addReferenceContainer,
-  addReferenceInput,
-  suggestionList
-} from './style.css'
+import { metaItem, metaItemLabel, referencesList, noItemsMessage } from './style.css'
 
 type ReferenceListProperties = {
   placeholder?: string
@@ -31,6 +21,7 @@ export const ReferenceList = ({
   currentSessionId
 }: ReferenceListProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
+  const setValue = formContext?.setValue
   const watchedReferences = useWatch({
     control: formContext?.control,
     name: 'references'
@@ -41,62 +32,42 @@ export const ReferenceList = ({
   )
 
   const errors = formContext?.formState?.errors?.references
-  const { actions } = useReferenceListHandlers(formContext, references)
-  const {
-    inputValue,
-    suggestions,
-    selectedIndex,
-    inputReference,
-    suggestionListReference,
-    handleFocus,
-    handleInputChange,
-    handleKeyDown,
-    handleSuggestionClick
-  } = useReferenceListSuggest(actions, references)
+
+  const handleReferencesChange = useCallback(
+    (values: string[]): void => {
+      if (setValue) {
+        // Convert values to Reference objects
+        const newReferences = values.map((value) => ({ path: value }))
+        setValue('references', newReferences)
+      }
+    },
+    [setValue]
+  )
+
+  const existsValue = references.map((reference) => reference.path)
 
   return (
     <div className={metaItem}>
       <Label className={metaItemLabel}>References:</Label>
-      <div className={addReferenceContainer}>
-        <input
-          ref={inputReference}
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onFocus={handleFocus}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className={addReferenceInput}
-        />
-        {suggestions.length > 0 && (
-          <ul ref={suggestionListReference} className={suggestionList}>
-            {suggestions.map((suggestion, index) => (
-              <SuggestionItem
-                key={index}
-                suggestion={suggestion}
-                onClick={handleSuggestionClick}
-                isSelected={index === selectedIndex}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
-      {errors && <ErrorMessage error={errors as never} />}
-      {references.length === 0 ? (
-        <p className={noItemsMessage}>No references yet. Add one to get started!</p>
-      ) : (
-        <ul className={referencesList}>
-          {references.map((reference: Reference, index: number) => (
-            <ReferenceComponent
-              key={index}
-              reference={reference}
-              index={index}
-              currentSessionId={currentSessionId}
-              formContext={formContext}
-            />
-          ))}
-        </ul>
+      <FileSearchExplorer
+        existsValue={existsValue}
+        placeholder={placeholder}
+        onChange={handleReferencesChange}
+      />
+      <ul className={referencesList}>
+        {references.map((reference, index) => (
+          <ReferenceComponent
+            key={index}
+            reference={reference}
+            currentSessionId={currentSessionId}
+            index={index}
+          />
+        ))}
+      </ul>
+      {references.length === 0 && (
+        <p className={noItemsMessage}>No references added yet.</p>
       )}
+      {errors && <ErrorMessage error={errors as never} />}
     </div>
   )
 }

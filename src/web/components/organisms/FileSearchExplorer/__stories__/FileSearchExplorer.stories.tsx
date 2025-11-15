@@ -27,11 +27,17 @@ export default Meta
 type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {
-  render: (): JSX.Element => <FileSearchExplorer />
+  args: {
+    existsValue: [],
+    onChange: () => {}
+  }
 }
 
 export const WithInitialPath: Story = {
-  render: (): JSX.Element => <FileSearchExplorer />,
+  args: {
+    existsValue: ['/path1', '/path2'],
+    onChange: () => {}
+  },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement)
     const input = canvas.getByPlaceholderText('Search files or directories...')

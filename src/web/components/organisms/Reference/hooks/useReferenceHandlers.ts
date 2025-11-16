@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react'
-import type { UseFormReturn } from 'react-hook-form'
 
+import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceActions } from './useReferenceActions'
@@ -9,13 +9,14 @@ export const useReferenceHandlers = (
   currentSessionId: string | null,
   reference: Reference,
   referenceIndex: number,
-  formContext?: UseFormReturn,
   setLocalReference?: React.Dispatch<React.SetStateAction<Reference>>
 ): {
   handlePersistToggle: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
   handleTtlAction: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
   handleChange: () => void
+  handleToggleDisabled: () => Promise<void>
 } => {
+  const formContext = useOptionalFormContext()
   const {
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
@@ -23,6 +24,18 @@ export const useReferenceHandlers = (
   } = useReferenceActions()
 
   const timeoutReference = useRef<NodeJS.Timeout | null>(null)
+
+  const updateReferences = useCallback(
+    (updater: (reference_: Reference) => Reference) => {
+      const currentReferences = formContext?.getValues?.('references') || []
+      const updatedReferences = [...currentReferences]
+      updatedReferences[referenceIndex] = updater(updatedReferences[referenceIndex])
+      formContext?.setValue?.('references', updatedReferences, {
+        shouldDirty: true
+      })
+    },
+    [formContext, referenceIndex]
+  )
 
   const handlePersistToggle = useCallback(
     async (_event: React.MouseEvent<HTMLButtonElement>) => {
@@ -50,24 +63,15 @@ export const useReferenceHandlers = (
 
     void handleToggleReferenceDisabled(currentSessionId, referenceIndex)
 
-    // Update the form state by getting current references and updating the specific one
-    const currentReferences = formContext?.getValues?.('references') || []
-    const updatedReferences = [...currentReferences]
-    updatedReferences[referenceIndex] = {
-      ...updatedReferences[referenceIndex],
-      disabled: !updatedReferences[referenceIndex].disabled
-    }
-    formContext?.setValue?.('references', updatedReferences, {
-      shouldDirty: true
-    })
+    updateReferences((reference) => ({ ...reference, disabled: !reference.disabled }))
 
     // Update local state for immediate UI feedback
     setLocalReference?.((previous) => ({ ...previous, disabled: !previous.disabled }))
   }, [
     referenceIndex,
     currentSessionId,
-    formContext,
     handleToggleReferenceDisabled,
+    updateReferences,
     setLocalReference
   ])
 
@@ -84,16 +88,8 @@ export const useReferenceHandlers = (
       }
 
       void handleUpdateReferenceTtl(currentSessionId, referenceIndex, newTtl)
-      // Update the form state by getting current references and updating the specific one
-      const currentReferences = formContext?.getValues?.('references') || []
-      const updatedReferences = [...currentReferences]
-      updatedReferences[referenceIndex] = {
-        ...updatedReferences[referenceIndex],
-        ttl: newTtl
-      }
-      formContext?.setValue?.('references', updatedReferences, {
-        shouldDirty: true
-      })
+
+      updateReferences((reference) => ({ ...reference, ttl: newTtl }))
 
       // Update local state for immediate UI feedback
       setLocalReference?.((previous) => ({ ...previous, ttl: newTtl }))
@@ -101,9 +97,9 @@ export const useReferenceHandlers = (
     [
       reference,
       referenceIndex,
-      formContext,
       currentSessionId,
       handleUpdateReferenceTtl,
+      updateReferences,
       setLocalReference
     ]
   )
@@ -125,6 +121,7 @@ export const useReferenceHandlers = (
   return {
     handlePersistToggle,
     handleTtlAction,
-    handleChange
+    handleChange,
+    handleToggleDisabled
   }
 }

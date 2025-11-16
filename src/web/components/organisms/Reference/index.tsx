@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
-import type { UseFormReturn } from 'react-hook-form'
+import { useCallback } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { ToggleSwitch } from '@/components/molecules/ToggleSwitch'
@@ -26,24 +26,21 @@ type ReferenceProperties = {
   reference: Reference
   index: number
   currentSessionId: string | null
-  formContext?: UseFormReturn
 }
 
 export const ReferenceComponent = ({
   reference,
   index,
-  currentSessionId,
-  formContext
+  currentSessionId
 }: ReferenceProperties): JSX.Element => {
   const { localReference, setLocalReference } = useReferenceLifecycle(reference)
 
-  const { handlePersistToggle, handleTtlAction, handleChange } = useReferenceHandlers(
-    currentSessionId,
-    localReference,
-    index,
-    formContext,
-    setLocalReference
-  )
+  const { handlePersistToggle, handleTtlAction, handleToggleDisabled } =
+    useReferenceHandlers(currentSessionId, localReference, index, setLocalReference)
+
+  const handleToggle = useCallback(() => {
+    void handleToggleDisabled()
+  }, [handleToggleDisabled])
 
   return (
     <li className={referenceItem}>
@@ -113,7 +110,7 @@ export const ReferenceComponent = ({
           <Tooltip content="Toggle reference enabled">
             <ToggleSwitch
               checked={!localReference.disabled}
-              onChange={handleChange}
+              onChange={handleToggle}
               ariaLabel={`Toggle reference ${localReference.path} enabled`}
             />
           </Tooltip>

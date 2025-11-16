@@ -36,6 +36,7 @@ export const ToggleSwitch = ({
 
   const handleInputClick = useCallback((event: React.MouseEvent<HTMLInputElement>) => {
     event.preventDefault()
+    event.stopPropagation()
   }, [])
 
   return (

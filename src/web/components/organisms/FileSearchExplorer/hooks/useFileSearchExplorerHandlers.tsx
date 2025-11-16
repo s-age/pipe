@@ -1,8 +1,6 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { emitToast } from '@/lib/toastEvents'
-
 import { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
 
 type Item = {
@@ -85,48 +83,24 @@ export const useFileSearchExplorerHandlers = (
           const pathParts = parts.slice(0, -1).filter((p) => p)
           const prefix = parts[parts.length - 1] || ''
           if (pathParts.length > 0) {
-            try {
-              const lsResult = await actions.getLsData({ final_path_list: pathParts })
-              if (lsResult) {
-                const filtered = lsResult.entries
-                  .filter((entry) => entry.name.startsWith(prefix))
-                  .map((entry) => ({
-                    label: entry.is_dir ? `${entry.name}/` : entry.name,
-                    value: entry.is_dir ? `${entry.name}/` : entry.name,
-                    path: [...pathParts, entry.name].join('/')
-                  }))
-                const filteredWithoutDuplicates = filterExistingValues(filtered)
-                setSuggestions(filteredWithoutDuplicates)
-              }
-            } catch (error: unknown) {
-              emitToast.failure((error as Error).message)
+            const lsResult = await actions.getLsData({ final_path_list: pathParts })
+            if (lsResult) {
+              const filtered = lsResult.entries
+                .filter((entry) => entry.name.startsWith(prefix))
+                .map((entry) => ({
+                  label: entry.is_dir ? `${entry.name}/` : entry.name,
+                  value: entry.is_dir ? `${entry.name}/` : entry.name,
+                  path: [...pathParts, entry.name].join('/')
+                }))
+              const filteredWithoutDuplicates = filterExistingValues(filtered)
+              setSuggestions(filteredWithoutDuplicates)
             }
           } else {
             // Root level
-            try {
-              const lsResult = await actions.getLsData({ final_path_list: [] })
-              if (lsResult) {
-                const filtered = lsResult.entries
-                  .filter((entry) => entry.name.startsWith(prefix))
-                  .map((entry) => ({
-                    label: entry.is_dir ? `${entry.name}/` : entry.name,
-                    value: entry.is_dir ? `${entry.name}/` : entry.name,
-                    path: entry.name
-                  }))
-                const filteredWithoutDuplicates = filterExistingValues(filtered)
-                setSuggestions(filteredWithoutDuplicates)
-              }
-            } catch (error: unknown) {
-              emitToast.failure((error as Error).message)
-            }
-          }
-        } else if (newQuery.length > 0) {
-          // Root level search
-          try {
             const lsResult = await actions.getLsData({ final_path_list: [] })
             if (lsResult) {
               const filtered = lsResult.entries
-                .filter((entry) => entry.name.startsWith(newQuery))
+                .filter((entry) => entry.name.startsWith(prefix))
                 .map((entry) => ({
                   label: entry.is_dir ? `${entry.name}/` : entry.name,
                   value: entry.is_dir ? `${entry.name}/` : entry.name,
@@ -135,8 +109,22 @@ export const useFileSearchExplorerHandlers = (
               const filteredWithoutDuplicates = filterExistingValues(filtered)
               setSuggestions(filteredWithoutDuplicates)
             }
-          } catch (error: unknown) {
-            emitToast.failure((error as Error).message)
+          }
+        } else if (newQuery.length > 0) {
+          // Root level search
+          const lsResult = await actions.getLsData({ final_path_list: [] })
+          if (lsResult) {
+            const filtered = lsResult.entries
+              .filter((entry) => entry.name.startsWith(newQuery))
+              .map((entry) => ({
+                label: entry.is_dir ? `${entry.name}/` : entry.name,
+                value: entry.is_dir ? `${entry.name}/` : entry.name,
+                path: entry.name
+              }))
+            const filteredWithoutDuplicates = filterExistingValues(filtered)
+            setSuggestions(filteredWithoutDuplicates)
+          } else {
+            setSuggestions([])
           }
         } else {
           setSuggestions([])
@@ -224,19 +212,15 @@ export const useFileSearchExplorerHandlers = (
     onFocus?.()
     if (!list) {
       // Load root suggestions for file search
-      try {
-        const lsResult = await actions.getLsData({ final_path_list: [] })
-        if (lsResult) {
-          const filtered = lsResult.entries.map((entry) => ({
-            label: entry.is_dir ? `${entry.name}/` : entry.name,
-            value: entry.is_dir ? `${entry.name}/` : entry.name,
-            path: entry.name
-          }))
-          const filteredWithoutDuplicates = filterExistingValues(filtered)
-          setSuggestions(filteredWithoutDuplicates)
-        }
-      } catch (error: unknown) {
-        emitToast.failure((error as Error).message)
+      const lsResult = await actions.getLsData({ final_path_list: [] })
+      if (lsResult) {
+        const filtered = lsResult.entries.map((entry) => ({
+          label: entry.is_dir ? `${entry.name}/` : entry.name,
+          value: entry.is_dir ? `${entry.name}/` : entry.name,
+          path: entry.name
+        }))
+        const filteredWithoutDuplicates = filterExistingValues(filtered)
+        setSuggestions(filteredWithoutDuplicates)
       }
     } else {
       // Show filtered list

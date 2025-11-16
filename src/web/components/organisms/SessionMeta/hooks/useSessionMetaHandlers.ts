@@ -4,7 +4,6 @@ import { useSessionMetaActions } from '@/components/organisms/SessionMeta/hooks/
 import type { SessionMetaFormInputs } from '@/components/organisms/SessionMeta/schema'
 import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
 
 type UseSessionMetaHandlersProperties = {
   sessionDetail: SessionDetail | null
@@ -59,17 +58,10 @@ export const useSessionMetaHandlers = ({
   const wrappedSubmit = React.useCallback(
     async (data: SessionMetaFormInputs) => {
       setIsSubmitting(true)
-      try {
-        await onSubmit(data)
-        setSaved(true)
-        emitToast.success('Session metadata saved')
-        window.setTimeout(() => setSaved(false), 2000)
-      } catch (error: unknown) {
-        const message = (error as Error).message || 'Failed to save session meta.'
-        emitToast.failure(message)
-      } finally {
-        setIsSubmitting(false)
-      }
+      void onSubmit(data)
+      setSaved(true)
+      window.setTimeout(() => setSaved(false), 2000)
+      setIsSubmitting(false)
     },
     [onSubmit]
   )

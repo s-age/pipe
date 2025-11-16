@@ -3,6 +3,7 @@ import { useCallback } from 'react'
 import { useFileSearchExplorerActions } from '@/components/organisms/FileSearchExplorer/hooks/useFileSearchExplorerActions'
 import { editReferences } from '@/lib/api/session/editReferences'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { emitToast } from '@/lib/toastEvents'
 import type { Reference } from '@/types/reference'
 
 export const useReferenceListActions = (
@@ -29,22 +30,34 @@ export const useReferenceListActions = (
       }
       // const newReferences = [...sessionDetail.references, newReference]
       const newReferences = [newReference] // --- IGNORE ---
-      await editReferences(sessionId, newReferences)
-      if (refreshSessions) await refreshSessions()
+      try {
+        await editReferences(sessionId, newReferences)
+        emitToast.success('Reference added successfully')
+        if (refreshSessions) await refreshSessions()
+      } catch (error: unknown) {
+        emitToast.failure((error as Error).message || 'Failed to add reference.')
+      }
     },
     [refreshSessions]
   )
 
   const loadRootSuggestions = useCallback(async () => {
     if (sessionDetail?.references) {
-      const lsResult = await fileActions.getLsData({ final_path_list: [] })
-      if (lsResult) {
-        const rootEntries = lsResult.entries.map((entry) => ({
-          name: entry.name,
-          isDirectory: entry.is_dir
-        }))
+      try {
+        const lsResult = await fileActions.getLsData({ final_path_list: [] })
+        if (lsResult) {
+          const rootEntries = lsResult.entries.map((entry) => ({
+            name: entry.name,
+            isDirectory: entry.is_dir
+          }))
+          emitToast.success('Root suggestions loaded successfully')
 
-        return rootEntries
+          return rootEntries
+        }
+      } catch (error: unknown) {
+        emitToast.failure(
+          (error as Error).message || 'Failed to load root suggestions.'
+        )
       }
     }
 
@@ -53,14 +66,21 @@ export const useReferenceListActions = (
 
   const loadSubDirectorySuggestions = useCallback(
     async (pathParts: string[]) => {
-      const lsResult = await fileActions.getLsData({ final_path_list: pathParts })
-      if (lsResult) {
-        const entries = lsResult.entries.map((entry) => ({
-          name: entry.name,
-          isDirectory: entry.is_dir
-        }))
+      try {
+        const lsResult = await fileActions.getLsData({ final_path_list: pathParts })
+        if (lsResult) {
+          const entries = lsResult.entries.map((entry) => ({
+            name: entry.name,
+            isDirectory: entry.is_dir
+          }))
+          emitToast.success('Sub-directory suggestions loaded successfully')
 
-        return entries
+          return entries
+        }
+      } catch (error: unknown) {
+        emitToast.failure(
+          (error as Error).message || 'Failed to load sub-directory suggestions.'
+        )
       }
 
       return []

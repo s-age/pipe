@@ -6,7 +6,6 @@ import type { Turn as TurnType } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
-import { ChatHistoryTurn } from './ChatHistoryTurn'
 import {
   turnsColumn,
   turnsListSection,
@@ -67,12 +66,12 @@ export const ChatHistoryBody = ({
           const key = `${turn.timestamp}-${i}-${simpleHash}`
 
           return (
-            <ChatHistoryTurn
+            <Turn
               key={key}
               turn={turn}
               index={i}
-              currentSessionId={currentSessionId}
               expertMode={expertMode}
+              sessionId={currentSessionId}
               onRefresh={onRefresh}
               refreshSessionsInStore={refreshSessionsInStore}
             />

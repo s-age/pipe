@@ -1,13 +1,11 @@
 import { useCallback } from 'react'
 
 import { deleteSession } from '@/lib/api/session/deleteSession'
-import { deleteTurn } from '@/lib/api/session/deleteTurn'
-import { editTurn } from '@/lib/api/session/editTurn'
-import { forkSession } from '@/lib/api/session/forkSession'
 import { getSession } from '@/lib/api/session/getSession'
-import type { SessionDetail, Turn } from '@/lib/api/session/getSession'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import { emitToast } from '@/lib/toastEvents'
 
 type UseChatHistoryActionsProperties = {
   currentSessionId: string | null
@@ -20,17 +18,6 @@ type UseChatHistoryActionsProperties = {
 type UseChatHistoryActionsReturn = {
   deleteSessionAction: (sessionId: string) => Promise<void>
   refreshSession: () => Promise<void>
-  deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
-  forkSessionAction: (
-    sessionId: string,
-    forkIndex: number
-  ) => Promise<{ new_session_id: string }>
-  editTurnAction: (
-    sessionId: string,
-    turnIndex: number,
-    newContent: string,
-    turn: Turn
-  ) => Promise<void>
 }
 
 export const useChatHistoryActions = ({
@@ -39,11 +26,18 @@ export const useChatHistoryActions = ({
 }: UseChatHistoryActionsProperties): UseChatHistoryActionsReturn => {
   // Session actions
   const deleteSessionAction = useCallback(async (sessionId: string): Promise<void> => {
-    await deleteSession(sessionId)
+    try {
+      await deleteSession(sessionId)
+      emitToast.success('Session deleted successfully')
+    } catch (error: unknown) {
+      emitToast.failure((error as Error).message || 'Failed to delete session.')
+    }
   }, [])
 
   const refreshSession = useCallback(async (): Promise<void> => {
-    if (currentSessionId) {
+    if (!currentSessionId) return
+
+    try {
       const fetchedSessionDetailResponse = await getSession(currentSessionId)
       const fetchedSessionTree = await getSessionTree()
       const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
@@ -51,56 +45,14 @@ export const useChatHistoryActions = ({
         session_id: id
       }))
       refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
+    } catch (error: unknown) {
+      emitToast.failure((error as Error).message || 'Failed to refresh session.')
     }
   }, [currentSessionId, refreshSessionsInStore])
-
-  // Turn actions
-  const deleteTurnAction = useCallback(
-    async (sessionId: string, turnIndex: number): Promise<void> => {
-      await deleteTurn(sessionId, turnIndex)
-      await refreshSession()
-    },
-    [refreshSession]
-  )
-
-  const forkSessionAction = useCallback(
-    async (
-      sessionId: string,
-      forkIndex: number
-    ): Promise<{ new_session_id: string }> => {
-      const response = await forkSession(sessionId, forkIndex)
-
-      return response
-    },
-    []
-  )
-
-  const editTurnAction = useCallback(
-    async (
-      sessionId: string,
-      turnIndex: number,
-      newContent: string,
-      turn: Turn
-    ): Promise<void> => {
-      // Send the appropriate field based on turn type
-      const updateData =
-        turn.type === 'user_task'
-          ? { instruction: newContent }
-          : { content: newContent }
-
-      await editTurn(sessionId, turnIndex, updateData)
-      // Note: refreshSession is called by the handler after this succeeds
-    },
-    []
-  )
 
   return {
     // Session actions
     deleteSessionAction,
-    refreshSession,
-    // Turn actions
-    deleteTurnAction,
-    forkSessionAction,
-    editTurnAction
+    refreshSession
   }
 }

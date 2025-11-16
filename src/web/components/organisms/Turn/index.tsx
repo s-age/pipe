@@ -7,7 +7,12 @@ import { IconDelete } from '@/components/atoms/IconDelete'
 import { IconEdit } from '@/components/atoms/IconEdit'
 import { IconFork } from '@/components/atoms/IconFork'
 import { Tooltip } from '@/components/molecules/Tooltip'
+import { useTurnActions } from '@/components/organisms/Turn/hooks/useTurnActions'
+import { useTurnHandlers } from '@/components/organisms/Turn/hooks/useTurnHandlers'
+import { useTurnLifecycle } from '@/components/organisms/Turn/hooks/useTurnLifecycle'
 import type { Turn } from '@/lib/api/session/getSession'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 import {
   turnHeader,
@@ -39,7 +44,14 @@ type TurnProperties = {
   index: number
   expertMode: boolean
   isStreaming?: boolean
-  // Turn handlers passed from parent
+  // For ChatHistory integration
+  sessionId?: string
+  onRefresh?: () => Promise<void>
+  refreshSessionsInStore?: (
+    sessionDetail: SessionDetail,
+    sessions: SessionOverview[]
+  ) => void
+  // Turn handlers passed from parent (for backward compatibility)
   isEditing?: boolean
   editedContent?: string
   onCopy?: () => Promise<void>
@@ -56,16 +68,51 @@ const Component = ({
   index,
   expertMode,
   isStreaming = false,
-  isEditing = false,
-  editedContent = '',
-  onCopy,
-  onEditedChange,
-  onCancelEdit,
-  onStartEdit,
-  onFork,
-  onDelete,
-  onSaveEdit
+  sessionId,
+  onRefresh,
+  refreshSessionsInStore,
+  isEditing: propertyIsEditing = false,
+  editedContent: propertyEditedContent = '',
+  onCopy: propertyOnCopy,
+  onEditedChange: propertyOnEditedChange,
+  onCancelEdit: propertyOnCancelEdit,
+  onStartEdit: propertyOnStartEdit,
+  onFork: propertyOnFork,
+  onDelete: propertyOnDelete,
+  onSaveEdit: propertyOnSaveEdit
 }: TurnProperties): JSX.Element => {
+  const {
+    isEditing: lifecycleIsEditing,
+    editedContent: lifecycleEditedContent,
+    setIsEditing,
+    setEditedContent
+  } = useTurnLifecycle({ turn })
+
+  const { deleteTurnAction, editTurnAction, forkSessionAction } = useTurnActions()
+
+  const handlers = useTurnHandlers({
+    turn,
+    index,
+    sessionId: sessionId || '',
+    editedContent: lifecycleEditedContent,
+    setIsEditing,
+    setEditedContent,
+    onRefresh: onRefresh || (async (): Promise<void> => {}),
+    refreshSessionsInStore: refreshSessionsInStore || ((): void => {}),
+    deleteTurnAction,
+    editTurnAction,
+    forkSessionAction
+  })
+
+  const isEditing = sessionId ? lifecycleIsEditing : propertyIsEditing
+  const editedContent = sessionId ? lifecycleEditedContent : propertyEditedContent
+  const onCopy = handlers?.handleCopy ?? propertyOnCopy
+  const onEditedChange = handlers?.handleEditedChange ?? propertyOnEditedChange
+  const onCancelEdit = handlers?.handleCancelEdit ?? propertyOnCancelEdit
+  const onStartEdit = handlers?.handleStartEdit ?? propertyOnStartEdit
+  const onFork = handlers?.handleFork ?? propertyOnFork
+  const onDelete = handlers?.handleDelete ?? propertyOnDelete
+  const onSaveEdit = handlers?.handleSaveEdit ?? propertyOnSaveEdit
   const getHeaderContent = (type: string): string => {
     switch (type) {
       case 'user_task':

@@ -1,7 +1,7 @@
 import { useState, useCallback, useLayoutEffect } from 'react'
 
+import type { EditHyperparametersRequest } from '@/lib/api/session/editHyperparameters'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
 
 import { useHyperParametersActions } from './useHyperParametersActions'
 
@@ -16,15 +16,15 @@ export const useHyperParametersHandlers = ({
 }: UseSessionHyperparametersProperties): {
   temperature: number
   setTemperature: React.Dispatch<React.SetStateAction<number>>
-  handleTemperatureMouseUp: () => Promise<void>
+  handleTemperatureMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void
   handleTemperatureMouseDown: () => void
   topP: number
   setTopP: React.Dispatch<React.SetStateAction<number>>
-  handleTopPMouseUp: () => Promise<void>
+  handleTopPMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void
   handleTopPMouseDown: () => void
   topK: number
   setTopK: React.Dispatch<React.SetStateAction<number>>
-  handleTopKMouseUp: () => Promise<void>
+  handleTopKMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void
   handleTopKMouseDown: () => void
 } => {
   // Use a single object to hold hyperparameter UI state to avoid multiple
@@ -98,59 +98,46 @@ export const useHyperParametersHandlers = ({
 
   const { updateHyperparameters } = useHyperParametersActions()
 
-  const handleTemperatureMouseUp = useCallback(async (): Promise<void> => {
-    if (!currentSessionId || !sessionDetail) return
-
-    const payload = { temperature }
-
-    try {
-      const result = await updateHyperparameters(currentSessionId, payload)
-      emitToast.success(result?.message || 'Hyperparameters updated')
-    } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to update hyperparameters')
-    } finally {
-      // end interaction on commit (whether success or failure)
+  const handleTemperatureMouseUp = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>): void => {
+      if (!currentSessionId) return
+      const newTemperature = Number(event.currentTarget.dataset.value)
+      const payload: EditHyperparametersRequest = { temperature: newTemperature }
+      void updateHyperparameters(currentSessionId, payload)
       setIsInteracting(false)
-    }
-  }, [currentSessionId, temperature, sessionDetail, updateHyperparameters])
+    },
+    [currentSessionId, updateHyperparameters]
+  )
 
   const handleTemperatureMouseDown = useCallback((): void => {
     setIsInteracting(true)
   }, [])
 
-  const handleTopPMouseUp = useCallback(async (): Promise<void> => {
-    if (!currentSessionId || !sessionDetail) return
-
-    const payload = { top_p: topP }
-
-    try {
-      const result = await updateHyperparameters(currentSessionId, payload)
-      emitToast.success(result?.message || 'Hyperparameters updated')
-    } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to update hyperparameters')
-    } finally {
+  const handleTopPMouseUp = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>): void => {
+      if (!currentSessionId) return
+      const newTopP = Number(event.currentTarget.dataset.value)
+      const payload: EditHyperparametersRequest = { top_p: newTopP }
+      void updateHyperparameters(currentSessionId, payload)
       setIsInteracting(false)
-    }
-  }, [currentSessionId, topP, sessionDetail, updateHyperparameters])
+    },
+    [currentSessionId, updateHyperparameters]
+  )
 
   const handleTopPMouseDown = useCallback((): void => {
     setIsInteracting(true)
   }, [])
 
-  const handleTopKMouseUp = useCallback(async (): Promise<void> => {
-    if (!currentSessionId || !sessionDetail) return
-
-    const payload = { top_k: topK }
-
-    try {
-      const result = await updateHyperparameters(currentSessionId, payload)
-      emitToast.success(result?.message || 'Hyperparameters updated')
-    } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to update hyperparameters')
-    } finally {
+  const handleTopKMouseUp = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>): void => {
+      if (!currentSessionId) return
+      const newTopK = Number(event.currentTarget.dataset.value)
+      const payload: EditHyperparametersRequest = { top_k: newTopK }
+      void updateHyperparameters(currentSessionId, payload)
       setIsInteracting(false)
-    }
-  }, [currentSessionId, topK, sessionDetail, updateHyperparameters])
+    },
+    [currentSessionId, updateHyperparameters]
+  )
 
   const handleTopKMouseDown = useCallback((): void => {
     setIsInteracting(true)

@@ -38,7 +38,6 @@ export const use{ComponentName}Actions = (): {
         return result
       } catch (error: unknown) {
         toast.failure((error as Error).message || 'Operation failed')
-        throw error
       }
     },
     [toast]
@@ -75,7 +74,6 @@ export const useMultiStepReasoningActions = (): {
         toast.failure(
           (error as Error).message || 'Failed to update multi-step reasoning'
         )
-        throw error
       }
     },
     [toast]
@@ -131,7 +129,7 @@ export const useMultiStepReasoningHandlers = ({ sessionId, onRefresh }) => {
 2. **Always use useCallback** - Prevent unnecessary re-renders
 3. **Include toast notifications** - Provide user feedback
 4. **Type everything** - Use proper TypeScript types for requests/responses
-5. **Throw errors** - Let handlers decide how to handle failures
+5. **Handle errors internally** - Actions handle errors and toast notifications, and do not re-throw errors.
 6. **Return API responses** - Don't transform data in actions
 
 

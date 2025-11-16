@@ -48,15 +48,10 @@ export const use{ComponentName}Handlers = ({
       if (!currentId || !value) return
 
       // 3. Call action
-      try {
-        await actionName(currentId, { value })
+      await actionName(currentId, { value })
 
-        // 4. Handle success
-        await onRefresh?.()
-      } catch (error) {
-        // Error already handled by action (toast notification)
-        // Optionally add component-specific error handling
-      }
+      // 4. Handle success
+      await onRefresh?.()
     },
     [currentId, actionName, onRefresh]
   )
@@ -95,26 +90,22 @@ export const useMultiStepReasoningHandlers = ({
     async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
       if (!currentSessionId || !sessionDetail) return
 
-      try {
-        // Read checked synchronously to avoid relying on the synthetic event
-        // after an await (React may pool events).
-        const checked = event.target.checked
+      // Read checked synchronously to avoid relying on the synthetic event
+      // after an await (React may pool events).
+      const checked = event.target.checked
 
-        const result = await updateMultiStepReasoning(currentSessionId, {
-          multi_step_reasoning_enabled: checked
-        })
+      const result = await updateMultiStepReasoning(currentSessionId, {
+        multi_step_reasoning_enabled: checked
+      })
 
-        // Update local session detail immediately from the API response so the UI
-        // reflects the change without waiting for a full sessions refresh.
-        if (setSessionDetail) {
-          setSessionDetail(result.session)
-        }
-
-        // Refresh the full session list in the background
-        await onRefresh()
-      } catch {
-        // Error already shown via toast in the action
+      // Update local session detail immediately from the API response so the UI
+      // reflects the change without waiting for a full sessions refresh.
+      if (setSessionDetail) {
+        setSessionDetail(result.session)
       }
+
+      // Refresh the full session list in the background
+      await onRefresh()
     },
     [
       currentSessionId,
@@ -169,12 +160,8 @@ const handleSubmit = useCallback(
   async (event: React.FormEvent) => {
     event.preventDefault()
 
-    try {
-      await createSession(formData)
-      navigate('/sessions')
-    } catch (error) {
-      // Handle error
-    }
+    await createSession(formData)
+    navigate('/sessions')
   },
   [formData, createSession, navigate]
 )
@@ -285,7 +272,6 @@ export const useFormHandlers = ({ sessionId, onSuccess }) => {
       await updateSession(sessionId, formData.session)
       await createReference(sessionId, formData.reference)
 
-      showSuccess('Updated successfully')
       onSuccess?.()
     },
     [sessionId, updateSession, createReference, showSuccess, onSuccess]
@@ -339,9 +325,9 @@ describe('useMultiStepReasoningHandlers', () => {
 
 ## Error Handling Responsibility
 
-Handlers hooks are responsible for error handling and user feedback, including toast notifications. Actions hooks must not handle errors or perform UI notifications.
+Handlers hooks are **not** responsible for error handling or user feedback, including toast notifications. Actions hooks are solely responsible for handling errors and performing UI notifications.
 
-- Always use try-catch and show toast notifications in Handlers hooks, not in Actions.
-- Actions hooks should only wrap API calls and return promises.
+- Actions hooks handle errors and show toast notifications.
+- Handlers hooks should call Actions without their own `try-catch` blocks for API calls.
 
 ---

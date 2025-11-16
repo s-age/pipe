@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
-import { emitToast } from '@/lib/toastEvents'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceActions } from './useReferenceActions'
@@ -29,18 +28,13 @@ export const useReferenceHandlers = (
     async (_event: React.MouseEvent<HTMLButtonElement>) => {
       if (!currentSessionId) return
 
-      const newPersist = !reference.persist
-      try {
-        await handleUpdateReferencePersist(currentSessionId, referenceIndex, newPersist)
-
-        // Update local state for immediate UI feedback
-        setLocalReference?.((previous) => ({ ...previous, persist: newPersist }))
-        emitToast.success('Reference persist state updated successfully')
-      } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'Failed to update reference persist state.'
-        )
-      }
+      void handleUpdateReferencePersist(
+        currentSessionId,
+        referenceIndex,
+        !reference.persist
+      )
+      // Update local state for immediate UI feedback
+      setLocalReference?.((previous) => ({ ...previous, persist: !previous.persist }))
     },
     [
       reference,
@@ -54,28 +48,21 @@ export const useReferenceHandlers = (
   const handleToggleDisabled = useCallback(async () => {
     if (!currentSessionId) return
 
-    try {
-      await handleToggleReferenceDisabled(currentSessionId, referenceIndex)
+    void handleToggleReferenceDisabled(currentSessionId, referenceIndex)
 
-      // Update the form state by getting current references and updating the specific one
-      const currentReferences = formContext?.getValues?.('references') || []
-      const updatedReferences = [...currentReferences]
-      updatedReferences[referenceIndex] = {
-        ...updatedReferences[referenceIndex],
-        disabled: !updatedReferences[referenceIndex].disabled
-      }
-      formContext?.setValue?.('references', updatedReferences, {
-        shouldDirty: true
-      })
-
-      // Update local state for immediate UI feedback
-      setLocalReference?.((previous) => ({ ...previous, disabled: !previous.disabled }))
-      emitToast.success('Reference disabled state updated successfully')
-    } catch (error: unknown) {
-      emitToast.failure(
-        (error as Error).message || 'Failed to update reference disabled state.'
-      )
+    // Update the form state by getting current references and updating the specific one
+    const currentReferences = formContext?.getValues?.('references') || []
+    const updatedReferences = [...currentReferences]
+    updatedReferences[referenceIndex] = {
+      ...updatedReferences[referenceIndex],
+      disabled: !updatedReferences[referenceIndex].disabled
     }
+    formContext?.setValue?.('references', updatedReferences, {
+      shouldDirty: true
+    })
+
+    // Update local state for immediate UI feedback
+    setLocalReference?.((previous) => ({ ...previous, disabled: !previous.disabled }))
   }, [
     referenceIndex,
     currentSessionId,
@@ -96,25 +83,20 @@ export const useReferenceHandlers = (
         newTtl = currentTtl - 1
       }
 
-      try {
-        await handleUpdateReferenceTtl(currentSessionId, referenceIndex, newTtl)
-        // Update the form state by getting current references and updating the specific one
-        const currentReferences = formContext?.getValues?.('references') || []
-        const updatedReferences = [...currentReferences]
-        updatedReferences[referenceIndex] = {
-          ...updatedReferences[referenceIndex],
-          ttl: newTtl
-        }
-        formContext?.setValue?.('references', updatedReferences, {
-          shouldDirty: true
-        })
-
-        // Update local state for immediate UI feedback
-        setLocalReference?.((previous) => ({ ...previous, ttl: newTtl }))
-        emitToast.success('Reference TTL updated successfully')
-      } catch (error: unknown) {
-        emitToast.failure((error as Error).message || 'Failed to update reference TTL.')
+      void handleUpdateReferenceTtl(currentSessionId, referenceIndex, newTtl)
+      // Update the form state by getting current references and updating the specific one
+      const currentReferences = formContext?.getValues?.('references') || []
+      const updatedReferences = [...currentReferences]
+      updatedReferences[referenceIndex] = {
+        ...updatedReferences[referenceIndex],
+        ttl: newTtl
       }
+      formContext?.setValue?.('references', updatedReferences, {
+        shouldDirty: true
+      })
+
+      // Update local state for immediate UI feedback
+      setLocalReference?.((previous) => ({ ...previous, ttl: newTtl }))
     },
     [
       reference,

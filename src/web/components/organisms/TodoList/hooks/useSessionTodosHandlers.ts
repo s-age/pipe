@@ -4,7 +4,6 @@ import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { FormMethods } from '@/components/organisms/Form'
 import { useSessionTodosActions } from '@/components/organisms/TodoList/hooks/useSessionTodosActions'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
 import type { Todo } from '@/types/todo'
 
 type UseSessionTodosProperties = {
@@ -33,12 +32,7 @@ export const useSessionTodosHandlers = ({
   const handleUpdateTodo = useCallback(
     async (todos: Todo[]) => {
       if (!currentSessionId) return
-      try {
-        await updateTodos(currentSessionId, todos)
-        emitToast.success('Todos updated')
-      } catch (error: unknown) {
-        emitToast.failure((error as Error).message || 'Failed to update todos.')
-      }
+      void updateTodos(currentSessionId, todos)
     },
     [currentSessionId, updateTodos]
   )
@@ -48,12 +42,7 @@ export const useSessionTodosHandlers = ({
     if (!window.confirm('Are you sure you want to delete all todos for this session?'))
       return
 
-    try {
-      await deleteAllTodos(currentSessionId)
-      emitToast.success('All todos deleted')
-    } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to delete all todos.')
-    }
+    void deleteAllTodos(currentSessionId)
   }, [currentSessionId, deleteAllTodos])
 
   const handleTodoCheckboxChange = useCallback(

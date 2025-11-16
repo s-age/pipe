@@ -1,7 +1,6 @@
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
 import { useFormContext } from '@/components/organisms/Form'
-import { emitToast } from '@/lib/toastEvents'
 
 export type UseInstructionFormHandlersProperties = {
   currentSessionId: string | null
@@ -26,15 +25,8 @@ export const useInstructionFormHandlers = ({
     const instruction = (data as { instruction?: string }).instruction ?? ''
     if (!instruction.trim() || !currentSessionId) return
 
-    try {
-      await onSendInstruction(instruction)
-      reset({ instruction: '' })
-    } catch (error) {
-      emitToast.failure(
-        error instanceof Error ? error.message : 'Failed to send instruction'
-      )
-      console.error('Failed to send instruction:', error)
-    }
+    await onSendInstruction(instruction)
+    reset({ instruction: '' })
   })
 
   const onTextAreaKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>): void => {

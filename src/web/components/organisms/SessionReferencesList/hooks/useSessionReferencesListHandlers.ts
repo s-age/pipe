@@ -1,5 +1,4 @@
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
 
 import { useReferenceActions } from './useReferenceActions'
 
@@ -30,38 +29,22 @@ export const useSessionReferencesListHandlers = ({
     if (!currentSessionId || !sessionDetail) return
     const newReferences = [...sessionDetail.references]
     newReferences[index].disabled = !newReferences[index].disabled
-    try {
-      void handleUpdateReferenceDisabled(
-        currentSessionId,
-        index,
-        newReferences[index].disabled
-      )
-      emitToast.success('Reference disabled state updated successfully')
-    } catch (error: unknown) {
-      emitToast.failure(
-        (error as Error).message || 'Failed to update reference disabled state.'
-      )
-    }
+    void handleUpdateReferenceDisabled(
+      currentSessionId,
+      index,
+      newReferences[index].disabled
+    )
   }
-
   const handleReferencePersistToggle = (index: number): void => {
     if (!currentSessionId || !sessionDetail) return
     const newReferences = [...sessionDetail.references]
     newReferences[index].persist = !newReferences[index].persist
-    try {
-      void handleUpdateReferencePersist(
-        currentSessionId,
-        index,
-        newReferences[index].persist
-      )
-      emitToast.success('Reference persist state updated successfully')
-    } catch (error: unknown) {
-      emitToast.failure(
-        (error as Error).message || 'Failed to update reference persist state.'
-      )
-    }
+    void handleUpdateReferencePersist(
+      currentSessionId,
+      index,
+      newReferences[index].persist
+    )
   }
-
   const handleReferenceTtlChange = (
     index: number,
     action: 'increment' | 'decrement'
@@ -74,12 +57,7 @@ export const useSessionReferencesListHandlers = ({
         ? (currentTtl || 0) + 1
         : Math.max(0, (currentTtl || 0) - 1)
     newReferences[index].ttl = newTtl
-    try {
-      void handleUpdateReferenceTtl(currentSessionId, index, newTtl)
-      emitToast.success('Reference TTL updated successfully')
-    } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to update reference TTL.')
-    }
+    void handleUpdateReferenceTtl(currentSessionId, index, newTtl)
   }
 
   return {

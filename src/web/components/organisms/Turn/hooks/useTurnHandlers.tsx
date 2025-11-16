@@ -1,32 +1,49 @@
 import type { ChangeEvent } from 'react'
-import { useCallback, useState, useRef, useEffect } from 'react'
+import { useCallback, useRef } from 'react'
 
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { useModal } from '@/components/molecules/Modal/hooks/useModal'
+import { getSession } from '@/lib/api/session/getSession'
 import type { Turn } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 type UseTurnHandlersProperties = {
   turn: Turn
   index: number
   sessionId: string
+  editedContent: string
+  setIsEditing: (isEditing: boolean) => void
+  setEditedContent: (editedContent: string) => void
   onRefresh: () => Promise<void>
+  refreshSessionsInStore: (
+    sessionDetail: SessionDetail,
+    sessions: SessionOverview[]
+  ) => void
   deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
-  forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
   editTurnAction: (
     sessionId: string,
     turnIndex: number,
     newContent: string,
     turn: Turn
   ) => Promise<void>
-  onFork: (sessionId: string, forkIndex: number) => Promise<void>
+  forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
 }
 
-export const useTurnHandlers = (
-  properties: UseTurnHandlersProperties
-): {
-  isEditing: boolean
-  editedContent: string
+export const useTurnHandlers = ({
+  turn,
+  index,
+  sessionId,
+  editedContent,
+  setIsEditing,
+  setEditedContent,
+  onRefresh,
+  refreshSessionsInStore,
+  deleteTurnAction,
+  editTurnAction,
+  forkSessionAction
+}: UseTurnHandlersProperties): {
   handleCopy: () => Promise<void>
   handleEditedChange: (event: ChangeEvent<HTMLTextAreaElement>) => void
   handleCancelEdit: () => void
@@ -35,63 +52,35 @@ export const useTurnHandlers = (
   handleDelete: () => void
   handleSaveEdit: () => void
 } => {
-  const {
-    turn,
-    index,
-    sessionId,
-    onRefresh,
-    deleteTurnAction,
-    editTurnAction,
-    onFork
-  } = properties
   const { show, hide } = useModal()
 
   const modalIdReference = useRef<number | null>(null)
 
-  const [isEditing, setIsEditing] = useState<boolean>(false)
-  const [editedContent, setEditedContent] = useState<string>(
-    turn.content ?? turn.instruction ?? ''
-  )
-
-  // Reset editedContent when turn content changes (after refresh) and not in edit mode
-  useEffect(() => {
-    if (!isEditing) {
-      const newContent = turn.content ?? turn.instruction ?? ''
-
-      setEditedContent(newContent)
-    }
-  }, [turn.content, turn.instruction, isEditing])
-
   const handleCopy = useCallback(async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(editedContent)
-      emitToast.success('Copied to clipboard')
-    } catch {
-      emitToast.failure('Failed to copy to clipboard')
-    }
+    await navigator.clipboard.writeText(editedContent)
   }, [editedContent])
 
   const handleEditedChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>): void => {
       setEditedContent(event.target.value)
     },
-    []
+    [setEditedContent]
   )
 
   const handleCancelEdit = useCallback((): void => {
     setIsEditing(false)
     setEditedContent(turn.content ?? turn.instruction ?? '')
-  }, [turn.content, turn.instruction])
+  }, [turn.content, turn.instruction, setIsEditing, setEditedContent])
 
-  const handleStartEdit = useCallback((): void => setIsEditing(true), [])
+  const handleStartEdit = useCallback((): void => setIsEditing(true), [setIsEditing])
 
   const handleConfirmFork = useCallback(async (): Promise<void> => {
     if (modalIdReference.current !== null) {
-      await onFork(sessionId, index)
+      await forkSessionAction(sessionId, index)
       hide(modalIdReference.current)
       modalIdReference.current = null
     }
-  }, [onFork, sessionId, index, hide])
+  }, [forkSessionAction, sessionId, index, hide])
 
   const handleCancelFork = useCallback((): void => {
     if (modalIdReference.current !== null) {
@@ -104,29 +93,28 @@ export const useTurnHandlers = (
     modalIdReference.current = show(
       <ConfirmModal
         title="Fork Session"
-        message="Do you want to fork a new session from this turn?"
+        message="Are you sure you want to fork this session?"
         onConfirm={handleConfirmFork}
         onCancel={handleCancelFork}
-        confirmText="Fork"
-        cancelText="Cancel"
       />
-    ) as unknown as number
+    )
   }, [show, handleConfirmFork, handleCancelFork])
 
   const handleConfirmDelete = useCallback(async (): Promise<void> => {
     if (modalIdReference.current !== null) {
-      try {
-        await deleteTurnAction(sessionId, index)
-        await onRefresh()
-        emitToast.success('Turn deleted successfully')
-      } catch {
-        emitToast.failure('Failed to delete turn.')
-      } finally {
-        hide(modalIdReference.current)
-        modalIdReference.current = null
-      }
+      await deleteTurnAction(sessionId, index)
+      await onRefresh()
+      const fetchedSessionDetailResponse = await getSession(sessionId)
+      const fetchedSessionTree = await getSessionTree()
+      const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
+        ...session,
+        session_id: id
+      }))
+      refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
+      hide(modalIdReference.current)
+      modalIdReference.current = null
     }
-  }, [deleteTurnAction, sessionId, index, onRefresh, hide])
+  }, [deleteTurnAction, sessionId, index, onRefresh, refreshSessionsInStore, hide])
 
   const handleCancelDelete = useCallback((): void => {
     if (modalIdReference.current !== null) {
@@ -139,40 +127,36 @@ export const useTurnHandlers = (
     modalIdReference.current = show(
       <ConfirmModal
         title="Delete Turn"
-        message="Are you sure you want to delete this turn? This action cannot be undone."
+        message="Are you sure you want to delete this turn?"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
-        confirmText="Delete"
-        cancelText="Cancel"
       />
-    ) as unknown as number
+    )
   }, [show, handleConfirmDelete, handleCancelDelete])
 
   const handleSaveEdit = useCallback(async (): Promise<void> => {
-    // Client-side validation
-    if (editedContent.trim().length <= 0) {
-      emitToast.failure('Content cannot be empty')
-
-      return
-    }
-
-    try {
-      await editTurnAction(sessionId, index, editedContent, turn)
-      await onRefresh()
-
-      setIsEditing(false)
-      setEditedContent(turn.content ?? turn.instruction ?? '')
-      emitToast.success('Turn updated successfully')
-    } catch (error) {
-      emitToast.failure(
-        `Failed to save changes: ${error instanceof Error ? error.message : String(error)}`
-      )
-    }
-  }, [editTurnAction, sessionId, index, editedContent, turn, onRefresh])
+    await editTurnAction(sessionId, index, editedContent, turn)
+    await onRefresh()
+    const fetchedSessionDetailResponse = await getSession(sessionId)
+    const fetchedSessionTree = await getSessionTree()
+    const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
+      ...session,
+      session_id: id
+    }))
+    refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
+    setIsEditing(false)
+  }, [
+    editTurnAction,
+    sessionId,
+    index,
+    editedContent,
+    turn,
+    onRefresh,
+    refreshSessionsInStore,
+    setIsEditing
+  ])
 
   return {
-    isEditing,
-    editedContent,
     handleCopy,
     handleEditedChange,
     handleCancelEdit,

@@ -9,24 +9,49 @@ export const tooltipContainer = style({
 
 export const tooltipText = style({
   visibility: 'hidden',
-  width: '120px',
-  backgroundColor: colors.darkBackground,
-  color: colors.offWhite,
+  display: 'inline-block',
+  width: 'fit-content',
+  height: 'fit-content',
+  backgroundColor: colors.cyan,
+  color: colors.uiBackground,
   textAlign: 'center',
   borderRadius: '6px',
-  padding: '5px 0',
+  padding: '6px 10px',
+  whiteSpace: 'nowrap',
   position: 'absolute',
   zIndex: 1,
   bottom: '125%',
   left: '50%',
-  marginLeft: '-60px',
   opacity: 0,
-  transition: 'opacity 0.3s',
+  transition: 'opacity 0.18s, transform 0.18s'
+  // placement classes
+})
 
-  selectors: {
-    [`${tooltipContainer}:hover &`]: {
-      visibility: 'visible',
-      opacity: 1
-    }
-  }
+export const placementTop = style({
+  bottom: '125%',
+  left: '50%',
+  transform: 'translateX(-50%)'
+})
+
+export const placementBottom = style({
+  top: '125%',
+  left: '50%',
+  transform: 'translateX(-50%)'
+})
+
+export const placementLeft = style({
+  right: '125%',
+  top: '50%',
+  transform: 'translateY(-50%)'
+})
+
+export const placementRight = style({
+  left: '125%',
+  top: '50%',
+  transform: 'translateY(-50%)'
+})
+
+export const visible = style({
+  visibility: 'visible',
+  opacity: 1
 })

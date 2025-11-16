@@ -1,8 +1,8 @@
 import type { JSX } from 'react'
-import React from 'react'
+import { useCallback } from 'react'
 
 import { useTooltip } from './hooks/useTooltipHandlers'
-import { tooltipContainer, tooltipText } from './style.css'
+import { tooltipContainer } from './style.css'
 
 type TooltipProperties = {
   content: string
@@ -13,16 +13,20 @@ export const Tooltip: ({ content, children }: TooltipProperties) => JSX.Element 
   content,
   children
 }) => {
-  const { isVisible, handleMouseEnter, handleMouseLeave } = useTooltip()
+  const { handleMouseEnter, handleMouseLeave } = useTooltip()
+
+  const onEnter = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => handleMouseEnter(event, { content }),
+    [handleMouseEnter, content]
+  )
 
   return (
     <div
       className={tooltipContainer}
-      onMouseEnter={handleMouseEnter}
+      onMouseEnter={onEnter}
       onMouseLeave={handleMouseLeave}
     >
       {children}
-      {isVisible && <div className={tooltipText}>{content}</div>}
     </div>
   )
 }

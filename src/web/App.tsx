@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import { ModalManager } from './components/organisms/ModalManager'
 import { Toasts } from './components/organisms/Toast'
+import { TooltipManager } from './components/organisms/TooltipManager'
 import { ChatHistoryPage } from './components/pages/ChatHistoryPage'
 import { AppStoreProvider } from './stores/useAppStore'
 
@@ -38,5 +39,6 @@ export const App = (): JSX.Element => (
     <RouterProvider router={router} />
     <Toasts />
     <ModalManager />
+    <TooltipManager />
   </AppStoreProvider>
 )

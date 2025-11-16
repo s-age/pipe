@@ -81,7 +81,8 @@ export const FileSearchExplorer = ({
     existsValue,
     list,
     isMultiple,
-    onFocus
+    onFocus,
+    onChange
   })
   const {
     selectedValues,
@@ -96,10 +97,6 @@ export const FileSearchExplorer = ({
     setSuggestions,
     setSelectedIndex
   } = handlers
-
-  useEffect(() => {
-    onChange(selectedValues)
-  }, [selectedValues, onChange])
 
   // Close suggestions when clicking outside
   useEffect(() => {

@@ -7,12 +7,10 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseSessionMetaHandlersProperties = {
   sessionDetail: SessionDetail | null
-  currentSessionId: string | null
   onRefresh: () => Promise<void>
 }
 export const useSessionMetaHandlers = ({
   sessionDetail,
-  currentSessionId,
   onRefresh
 }: UseSessionMetaHandlersProperties): {
   defaultValues: SessionMetaFormInputs
@@ -44,12 +42,12 @@ export const useSessionMetaHandlers = ({
 
   const onSubmit = React.useCallback(
     (data: SessionMetaFormInputs) => {
-      if (!currentSessionId) return
+      if (!sessionDetail?.session_id) return
 
       // roles, artifacts, references, procedure はすべて既に正しい形式なので変換不要
-      void handleMetaSave(currentSessionId, data as EditSessionMetaRequest)
+      void handleMetaSave(sessionDetail?.session_id, data as EditSessionMetaRequest)
     },
-    [currentSessionId, handleMetaSave]
+    [sessionDetail?.session_id, handleMetaSave]
   )
 
   const [isSubmitting, setIsSubmitting] = React.useState(false)

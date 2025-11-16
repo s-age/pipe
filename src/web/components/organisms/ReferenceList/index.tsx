@@ -1,41 +1,35 @@
-import type { JSX } from 'react'
-import { useMemo } from 'react'
-import { useWatch } from 'react-hook-form'
+import { useMemo, type JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
-import type { Reference } from '@/types/reference'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { ReferenceComponent } from '../Reference'
 import { useReferenceListHandlers } from './hooks/useReferenceListHandlers'
 import { metaItem, metaItemLabel, referencesList, noItemsMessage } from './style.css'
 
 type ReferenceListProperties = {
+  sessionDetail: SessionDetail
   placeholder?: string
-  currentSessionId: string | null
 }
 
 export const ReferenceList = ({
-  placeholder = 'Type to search files... (select from suggestions)',
-  currentSessionId
+  sessionDetail,
+  placeholder = 'Type to search files... (select from suggestions)'
 }: ReferenceListProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
-  const watchedReferences = useWatch({
-    control: formContext?.control,
-    name: 'references'
-  })
-  const references = useMemo(
-    () => (watchedReferences || []) as Reference[],
-    [watchedReferences]
-  )
-
-  const { handleReferencesChange } = useReferenceListHandlers(formContext, references)
-
   const errors = formContext?.formState?.errors?.references
 
-  const existsValue = references.map((reference) => reference.path)
+  const { handleReferencesChange, references } = useReferenceListHandlers(
+    sessionDetail,
+    formContext
+  )
+  const existsValue = useMemo(
+    () => references.map((reference) => reference.path),
+    [references]
+  )
 
   return (
     <div className={metaItem}>
@@ -50,7 +44,7 @@ export const ReferenceList = ({
           <ReferenceComponent
             key={index}
             reference={reference}
-            currentSessionId={currentSessionId}
+            currentSessionId={sessionDetail.session_id || null}
             index={index}
           />
         ))}

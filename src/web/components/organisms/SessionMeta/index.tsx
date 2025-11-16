@@ -21,18 +21,15 @@ import {
 
 type SessionMetaProperties = {
   sessionDetail: SessionDetail | null
-  currentSessionId: string | null
   onRefresh: () => Promise<void>
 }
 
 export const SessionMeta = ({
   sessionDetail,
-  currentSessionId,
   onRefresh
 }: SessionMetaProperties): JSX.Element | null => {
   const { defaultValues, onSubmit, isSubmitting, saved } = useSessionMetaHandlers({
     sessionDetail,
-    currentSessionId,
     onRefresh
   })
 
@@ -46,10 +43,15 @@ export const SessionMeta = ({
     const handleSaveClick = React.useCallback((): void => {
       void handleSubmit(onSubmit as never)()
     }, [handleSubmit])
+    console.log(sessionDetail)
 
     return (
       <>
-        <input type="hidden" id="current-session-id" value={currentSessionId ?? ''} />
+        <input
+          type="hidden"
+          id="current-session-id"
+          value={sessionDetail?.session_id ?? ''}
+        />
         <section className={sessionMetaSection}>
           <div className={sessionMetaView}>
             <SessionMetaBasic sessionDetail={sessionDetail} />
@@ -60,19 +62,19 @@ export const SessionMeta = ({
               multiStepReasoningEnabled={
                 sessionDetail?.multi_step_reasoning_enabled ?? false
               }
-              currentSessionId={currentSessionId}
+              currentSessionId={sessionDetail.session_id ?? null}
             />
 
-            <ReferenceList currentSessionId={currentSessionId} />
+            <ReferenceList sessionDetail={sessionDetail} />
 
             <HyperParameters
               sessionDetail={sessionDetail}
-              currentSessionId={currentSessionId}
+              currentSessionId={sessionDetail.session_id ?? null}
             />
 
             <TodoList
               sessionDetail={sessionDetail}
-              currentSessionId={currentSessionId}
+              currentSessionId={sessionDetail.session_id ?? null}
             />
           </div>
         </section>

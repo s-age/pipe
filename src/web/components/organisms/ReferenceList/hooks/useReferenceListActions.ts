@@ -2,47 +2,43 @@ import { useCallback } from 'react'
 
 import { useFileSearchExplorerActions } from '@/components/organisms/FileSearchExplorer/hooks/useFileSearchExplorerActions'
 import { editReferences } from '@/lib/api/session/editReferences'
-import type { SessionDetail } from '@/lib/api/session/getSession'
+import { getSession } from '@/lib/api/session/getSession'
 import { emitToast } from '@/lib/toastEvents'
 import type { Reference } from '@/types/reference'
 
 export const useReferenceListActions = (
-  sessionDetail: SessionDetail | null,
-  currentSessionId: string | null,
-  refreshSessions?: () => Promise<void>
+  currentSessionId: string | null
 ): {
   loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
   loadSubDirectorySuggestions: (
     pathParts: string[]
   ) => Promise<{ name: string; isDirectory: boolean }[]>
-  addReference: (path: string) => Promise<void>
+  handleUpdateReference: (newReferences: Reference[]) => Promise<Reference[] | void>
 } => {
   const fileActions = useFileSearchExplorerActions()
 
-  const handleAddReference = useCallback(
-    async (sessionId: string, path: string): Promise<void> => {
-      if (!sessionId) return
-      const newReference: Reference = {
-        path,
-        disabled: false,
-        persist: false,
-        ttl: 3
-      }
-      // const newReferences = [...sessionDetail.references, newReference]
-      const newReferences = [newReference] // --- IGNORE ---
+  const handleUpdateReference = useCallback(
+    async (newReferences: Reference[]): Promise<Reference[] | void> => {
+      console.log(currentSessionId, newReferences)
+      if (!currentSessionId) return
+
       try {
-        await editReferences(sessionId, newReferences)
+        await editReferences(currentSessionId, newReferences)
+        const { session } = await getSession(currentSessionId)
+        console.log(session.references)
         emitToast.success('Reference added successfully')
-        if (refreshSessions) await refreshSessions()
+
+        return session.references
       } catch (error: unknown) {
         emitToast.failure((error as Error).message || 'Failed to add reference.')
+        throw error
       }
     },
-    [refreshSessions]
+    [currentSessionId]
   )
 
   const loadRootSuggestions = useCallback(async () => {
-    if (sessionDetail?.references) {
+    if (currentSessionId) {
       try {
         const lsResult = await fileActions.getLsData({ final_path_list: [] })
         if (lsResult) {
@@ -62,7 +58,7 @@ export const useReferenceListActions = (
     }
 
     return []
-  }, [fileActions, sessionDetail?.references])
+  }, [fileActions, currentSessionId])
 
   const loadSubDirectorySuggestions = useCallback(
     async (pathParts: string[]) => {
@@ -88,18 +84,9 @@ export const useReferenceListActions = (
     [fileActions]
   )
 
-  const addReference = useCallback(
-    async (path: string) => {
-      if (currentSessionId) {
-        await handleAddReference(currentSessionId, path)
-      }
-    },
-    [handleAddReference, currentSessionId]
-  )
-
   return {
     loadRootSuggestions,
     loadSubDirectorySuggestions,
-    addReference
+    handleUpdateReference
   }
 }

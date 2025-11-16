@@ -27,7 +27,7 @@ const STUB_SESSION_DETAIL = {
     top_p: 0.9,
     top_k: 5
   },
-  id: undefined,
+  session_id: undefined,
   multi_step_reasoning_enabled: false,
   todos: [],
   turns: []

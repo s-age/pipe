@@ -25,7 +25,7 @@ export type Turn = {
 }
 
 export type SessionDetail = {
-  id: string | undefined
+  session_id: string | undefined
   purpose: string
   background: string
   roles: string[]

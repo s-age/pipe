@@ -6,7 +6,6 @@ import { useSessionLoader } from './useChatHistoryPageLifecycle'
 
 type UseChatHistoryPageHandlersReturn = {
   sessions: State['sessionTree']['sessions']
-  currentSessionId: State['sessionTree']['currentSessionId']
   sessionDetail: State['sessionDetail']
   expertMode: boolean
   selectSession: Actions['selectSession']
@@ -32,7 +31,6 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
 
   return {
     sessions,
-    currentSessionId,
     sessionDetail,
     expertMode,
     selectSession,

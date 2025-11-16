@@ -13,7 +13,6 @@ import { chatRoot } from './style.css'
 
 type ChatHistoryProperties = {
   sessionDetail: SessionDetail | null
-  currentSessionId: string | null
   expertMode: boolean
   setSessionDetail: (data: SessionDetail | null) => void
   refreshSessionsInStore: (
@@ -25,25 +24,24 @@ type ChatHistoryProperties = {
 // Keep a default export for backward compatibility (renders the full composed view)
 export const ChatHistory = ({
   sessionDetail,
-  currentSessionId,
   expertMode,
   setSessionDetail,
   refreshSessionsInStore
 }: ChatHistoryProperties): JSX.Element => {
   const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
     useChatStreaming({
-      currentSessionId,
+      currentSessionId: sessionDetail?.session_id ?? null,
       // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
       setSessionDetail: setSessionDetail
     })
 
   const { handleDeleteCurrentSession } = useChatHistoryHandlers({
-    currentSessionId,
+    currentSessionId: sessionDetail?.session_id ?? null,
     refreshSessionsInStore
   })
 
   const { refreshSession } = useChatHistoryActions({
-    currentSessionId,
+    currentSessionId: sessionDetail?.session_id ?? null,
     refreshSessionsInStore
   })
 
@@ -55,7 +53,7 @@ export const ChatHistory = ({
       />
       <ChatHistoryBody
         sessionDetail={sessionDetail}
-        currentSessionId={currentSessionId}
+        currentSessionId={sessionDetail?.session_id ?? null}
         expertMode={expertMode}
         isStreaming={isStreaming}
         streamedText={streamedText}
@@ -64,7 +62,7 @@ export const ChatHistory = ({
         refreshSessionsInStore={refreshSessionsInStore}
       />
       <ChatHistoryFooter
-        currentSessionId={currentSessionId}
+        currentSessionId={sessionDetail?.session_id ?? null}
         onSendInstruction={onSendInstruction}
         isStreaming={isStreaming}
       />

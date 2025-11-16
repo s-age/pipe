@@ -14,6 +14,7 @@ type HandlersOptions = {
   list?: Item[]
   isMultiple: boolean
   onFocus?: () => void
+  onChange?: (values: string[]) => void
 }
 
 export const useFileSearchExplorerHandlers = (
@@ -36,7 +37,7 @@ export const useFileSearchExplorerHandlers = (
   handleInputFocus: () => Promise<void>
   actions: ReturnType<typeof useFileSearchExplorerActions>
 } => {
-  const { existsValue = [], list, isMultiple = true, onFocus } = options || {}
+  const { existsValue = [], list, isMultiple = true, onFocus, onChange } = options || {}
   const [selectedValues, setSelectedValues] = useState<string[]>(existsValue)
   const [query, setQuery] = useState<string>('')
   const [suggestions, setSuggestions] = useState<Item[]>([])
@@ -59,8 +60,9 @@ export const useFileSearchExplorerHandlers = (
     (index: number): void => {
       const newSelectedValues = selectedValues.filter((_, i) => i !== index)
       setSelectedValues(newSelectedValues)
+      onChange?.(newSelectedValues)
     },
-    [selectedValues]
+    [selectedValues, onChange]
   )
 
   const handleQueryChange = useCallback(
@@ -137,16 +139,20 @@ export const useFileSearchExplorerHandlers = (
   const handleValueConfirm = useCallback(
     async (value: string): Promise<void> => {
       if (value.trim() && !existingValues.has(value)) {
+        let newSelectedValues: string[]
         if (isMultiple) {
-          setSelectedValues([...selectedValues, value])
+          newSelectedValues = [...selectedValues, value]
+          setSelectedValues(newSelectedValues)
         } else {
-          setSelectedValues([value])
+          newSelectedValues = [value]
+          setSelectedValues(newSelectedValues)
         }
+        onChange?.(newSelectedValues)
       }
       setQuery('')
       setSuggestions([])
     },
-    [selectedValues, existingValues, isMultiple]
+    [selectedValues, existingValues, isMultiple, onChange]
   )
 
   const handleSuggestionClick = useCallback(

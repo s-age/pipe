@@ -37,7 +37,6 @@ export const useReferenceListHandlers = (
           const updatedReferences = await handleUpdateReference(newReferences)
           formContext.setValue('references', updatedReferences)
           setReferences(updatedReferences || [])
-          console.log({ updatedReferences })
         } catch {
           emitToast.failure('Failed to retrieve updated references.')
         }

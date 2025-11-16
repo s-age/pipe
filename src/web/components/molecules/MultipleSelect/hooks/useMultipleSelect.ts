@@ -32,7 +32,7 @@ export type UseMultipleSelectReturn = {
   isOpen: boolean
   setIsOpen: (v: boolean) => void
   selectedValues: string[]
-  setSelectedValues: (v: string[]) => void
+  setSelectedValues: React.Dispatch<React.SetStateAction<string[]>>
   highlightedIndex: number
   setHighlightedIndex: (i: number) => void
   listReference: React.RefObject<HTMLUListElement | null>
@@ -147,27 +147,6 @@ export const useMultipleSelect = ({
   }, [normalizedOptions, query, searchable])
 
   const listReference = useRef<HTMLUListElement | null>(null)
-
-  // Debugging: log option counts to help diagnose missing options
-  useEffect(() => {
-    console.log(
-      '[useMultipleSelect] normalizedOptions',
-      normalizedOptions.length,
-      normalizedOptions
-    )
-  }, [normalizedOptions])
-
-  useEffect(() => {
-    console.log(
-      '[useMultipleSelect] filteredOptions',
-      filteredOptions?.length ?? 0,
-      filteredOptions
-    )
-  }, [filteredOptions])
-
-  useEffect(() => {
-    console.log('[useMultipleSelect] selectedValues', selectedValues)
-  }, [selectedValues])
 
   return {
     registerProperties,

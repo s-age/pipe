@@ -195,7 +195,6 @@ export const useChatStreaming = ({
   const onSendInstruction = useCallback(
     async (instruction: string): Promise<void> => {
       if (!currentSessionId) return
-      console.log('Instruction to send:', instruction)
       setStreamingTrigger({ instruction, sessionId: currentSessionId })
     },
     [currentSessionId]

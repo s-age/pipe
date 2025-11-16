@@ -37,7 +37,8 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     registerProperties,
     normalizedOptions,
     filteredOptions,
-    selectedValue,
+    selectedLabel,
+    selectedNativeValue,
     isOpen,
     setIsOpen,
     query,
@@ -51,16 +52,17 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     name,
     options: options ?? [],
     defaultValue: rest.defaultValue as string | undefined,
-    searchable
+    searchable,
+    placeholder
   })
 
   const {
     toggleOpen,
-    handleKeyDownReact,
+    handleKeyDown,
     handleSearchChange,
-    handleOptionClickReact,
-    handleMouseEnterReact,
-    handleMouseLeaveReact
+    handleOptionClick,
+    handleMouseEnter,
+    handleMouseLeave
   } = useSelectHandlers({
     isOpen,
     setIsOpen,
@@ -82,13 +84,8 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     return <select className={selectStyle} {...rest} />
   }
 
-  // Use normalizedOptions to resolve the label for the currently selected option id
-  // and treat empty-string ('') as a valid original value.
-  const selectedOption =
-    typeof selectedValue !== 'undefined'
-      ? normalizedOptions.find((o) => o.id === selectedValue)
-      : undefined
-  const selectedLabel = selectedOption?.label ?? placeholder ?? ''
+  // Presentational: use label/native value computed by the hook
+  const displayLabel = selectedLabel ?? placeholder ?? ''
 
   return (
     <div ref={rootReference} className={`${className ?? selectStyle}`}>
@@ -98,7 +95,7 @@ export const Select = (properties: SelectProperties): JSX.Element => {
         {...registerProperties}
         name={name}
         // expose the ORIGINAL value to the native/registered select
-        value={selectedOption?.value ?? rest.value}
+        value={selectedNativeValue ?? rest.value}
         hidden={true}
       >
         {(normalizedOptions ?? []).map((opt) => (
@@ -114,10 +111,10 @@ export const Select = (properties: SelectProperties): JSX.Element => {
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={toggleOpen}
-        onKeyDown={handleKeyDownReact}
+        onKeyDown={handleKeyDown}
         className={trigger}
       >
-        <span>{selectedLabel}</span>
+        <span>{displayLabel}</span>
       </div>
       {isOpen && (
         <div>
@@ -141,9 +138,9 @@ export const Select = (properties: SelectProperties): JSX.Element => {
               <li
                 key={opt.id ?? opt.value}
                 role="option"
-                onClick={handleOptionClickReact}
-                onMouseEnter={handleMouseEnterReact}
-                onMouseLeave={handleMouseLeaveReact}
+                onClick={handleOptionClick}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 className={
                   highlightedIndex === index ? `${option} ${optionHighlighted}` : option
                 }

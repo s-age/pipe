@@ -16,6 +16,7 @@ type UseSelectProperties = {
   options?: Array<string | SelectOption>
   defaultValue?: string
   searchable?: boolean
+  placeholder?: string
 }
 
 export type UseSelectReturn = {
@@ -28,6 +29,11 @@ export type UseSelectReturn = {
   setIsOpen: (v: boolean) => void
   selectedValue?: string
   setSelectedValue: (v: string) => void
+  // The resolved option and label to display in the UI (computed by the hook so the component stays presentational)
+  selectedOption?: SelectOption
+  selectedLabel: React.ReactNode
+  // The original value corresponding to the selected option (for native/select integrations)
+  selectedNativeValue?: string
   highlightedIndex: number
   setHighlightedIndex: (i: number) => void
   listReference: React.RefObject<HTMLUListElement | null>
@@ -38,7 +44,8 @@ export const useSelect = ({
   name,
   options = [],
   defaultValue,
-  searchable = false
+  searchable = false,
+  placeholder
 }: UseSelectProperties): UseSelectReturn => {
   // Resolve register from prop or optional provider
   const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined
@@ -64,9 +71,10 @@ export const useSelect = ({
         if (typeof o === 'string')
           return { value: String(o), label: o, id: `${String(o)}__${index}` }
 
-        const value = String((o as any).value ?? '')
+        const opt = o as SelectOption
+        const value = String(opt.value ?? '')
 
-        return { value: value, label: (o as any).label, id: `${value}__${index}` }
+        return { value, label: opt.label, id: `${value}__${index}` }
       }),
     [options]
   )
@@ -92,8 +100,17 @@ export const useSelect = ({
 
   const listReference = useRef<HTMLUListElement | null>(null)
 
+  // Resolve selected option (by internal id) and provide a display label and native value
+  const selectedOption =
+    typeof selectedValue === 'undefined'
+      ? undefined
+      : normalizedOptions.find((o) => o.id === selectedValue)
+
+  const selectedLabel = selectedOption?.label ?? placeholder ?? ''
+  const selectedNativeValue = selectedOption?.value
+
   // When integrated with react-hook-form, update the form value when selection changes.
-  const setSelectedValue = (v: string) => {
+  const setSelectedValue = (v: string): void => {
     // Accept either an internal `id` or an original `value`.
     // Resolve to the canonical option so we can store the unique `id` for UI
     // while writing the original `value` to the form provider.
@@ -114,14 +131,16 @@ export const useSelect = ({
         } catch {
           // ignore form setValue errors
         }
-      } else if (
-        registerProperties &&
-        typeof (registerProperties as any).onChange === 'function'
-      ) {
+      } else if (registerProperties) {
         try {
-          const onChange = (registerProperties as Partial<UseFormRegisterReturn>)
-            .onChange!
-          onChange({ target: { name, value: valueToWrite } } as unknown as Event)
+          const onChangeCandidate = (
+            registerProperties as Partial<UseFormRegisterReturn>
+          ).onChange
+          if (typeof onChangeCandidate === 'function') {
+            onChangeCandidate({
+              target: { name, value: valueToWrite }
+            } as unknown as Event)
+          }
         } catch {
           // ignore
         }
@@ -139,6 +158,9 @@ export const useSelect = ({
     setIsOpen,
     selectedValue,
     setSelectedValue,
+    selectedOption,
+    selectedLabel,
+    selectedNativeValue,
     highlightedIndex,
     setHighlightedIndex,
     listReference

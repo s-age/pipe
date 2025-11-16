@@ -1,8 +1,10 @@
 import { useCallback } from 'react'
 import type {
   ChangeEvent,
+  Dispatch,
   KeyboardEvent as ReactKeyboardEvent,
-  MouseEvent as ReactMouseEvent
+  MouseEvent as ReactMouseEvent,
+  SetStateAction
 } from 'react'
 
 import type { SelectOption } from './useMultipleSelect'
@@ -14,7 +16,7 @@ type UseMultipleSelectHandlersProperties = {
   highlightedIndex: number
   setHighlightedIndex: (i: number) => void
   selectedValues: string[]
-  setSelectedValues: (v: string[]) => void
+  setSelectedValues: Dispatch<SetStateAction<string[]>>
   setQuery: (q: string) => void
 }
 
@@ -22,12 +24,12 @@ export type UseMultipleSelectHandlersReturn = {
   toggleOpen: () => void
   handleToggleSelect: (value: string) => void
   handleRemoveTag: (event: React.MouseEvent) => void
-  handleKeyDown: (event: KeyboardEvent) => void
-  handleKeyDownReact: (event: ReactKeyboardEvent) => void
+  handleKeyDown: (event: ReactKeyboardEvent) => void
   handleSearchChange: (event: ChangeEvent<HTMLInputElement>) => void
-  handleOptionClickReact: (event: ReactMouseEvent<HTMLLIElement>) => void
-  handleMouseEnterReact: (event: ReactMouseEvent<HTMLLIElement>) => void
-  handleMouseLeaveReact: () => void
+  handleOptionClick: (event: ReactMouseEvent<HTMLLIElement>) => void
+  handleMouseEnter: (event: ReactMouseEvent<HTMLLIElement>) => void
+  handleMouseLeave: () => void
+  handleCheckboxClick: (event: ReactMouseEvent<HTMLInputElement>) => void
 }
 
 export const useMultipleSelectHandlers = ({
@@ -51,7 +53,6 @@ export const useMultipleSelectHandlers = ({
         } else {
           next = [...previous, value]
         }
-        console.log('[MultipleSelect] toggleSelect', { value, prev: previous, next })
 
         return next
       })
@@ -62,7 +63,7 @@ export const useMultipleSelectHandlers = ({
     [setSelectedValues]
   )
 
-  const handleKeyDown = useCallback(
+  const handleKeyDownNative = useCallback(
     (event: KeyboardEvent) => {
       if (!isOpen) return
 
@@ -91,9 +92,10 @@ export const useMultipleSelectHandlers = ({
     ]
   )
 
-  const handleKeyDownReact = useCallback(
-    (event: ReactKeyboardEvent) => handleKeyDown(event.nativeEvent as KeyboardEvent),
-    [handleKeyDown]
+  const handleKeyDown = useCallback(
+    (event: ReactKeyboardEvent) =>
+      handleKeyDownNative(event.nativeEvent as KeyboardEvent),
+    [handleKeyDownNative]
   )
 
   const handleSearchChange = useCallback(
@@ -101,20 +103,19 @@ export const useMultipleSelectHandlers = ({
     [setQuery]
   )
 
-  const handleOptionClickReact = useCallback(
+  const handleOptionClick = useCallback(
     (event: ReactMouseEvent<HTMLLIElement>) => {
       // Prevent outer click handlers from reacting to this selection click
       event.stopPropagation()
       const v = (event.currentTarget as HTMLElement).dataset.value
-      // Debug: log interactions when selection fails in the wild
-      console.log('[MultipleSelect] option click', { value: v, selectedValues })
+      // debug logs removed
       // Allow empty-string values (dataset returns '' for empty), reject only undefined
       if (v !== undefined) handleToggleSelect(v)
     },
-    [handleToggleSelect, selectedValues]
+    [handleToggleSelect]
   )
 
-  const handleMouseEnterReact = useCallback(
+  const handleMouseEnter = useCallback(
     (event: ReactMouseEvent<HTMLLIElement>) => {
       const index_ = (event.currentTarget as HTMLElement).dataset.index
       if (index_) setHighlightedIndex(Number(index_))
@@ -122,7 +123,7 @@ export const useMultipleSelectHandlers = ({
     [setHighlightedIndex]
   )
 
-  const handleMouseLeaveReact = useCallback(
+  const handleMouseLeave = useCallback(
     () => setHighlightedIndex(-1),
     [setHighlightedIndex]
   )
@@ -138,15 +139,24 @@ export const useMultipleSelectHandlers = ({
     [handleToggleSelect, selectedValues]
   )
 
+  const handleCheckboxClick = useCallback(
+    (event: ReactMouseEvent<HTMLInputElement>) => {
+      event.stopPropagation()
+      const value = (event.currentTarget as HTMLInputElement).value
+      handleToggleSelect(value)
+    },
+    [handleToggleSelect]
+  )
+
   return {
     toggleOpen,
     handleToggleSelect,
     handleRemoveTag,
     handleKeyDown,
-    handleKeyDownReact,
     handleSearchChange,
-    handleOptionClickReact,
-    handleMouseEnterReact,
-    handleMouseLeaveReact
+    handleOptionClick,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleCheckboxClick
   }
 }

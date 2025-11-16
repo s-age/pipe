@@ -20,12 +20,11 @@ type UseSelectHandlersProperties = {
 export type UseSelectHandlersReturn = {
   toggleOpen: () => void
   handleSelect: (value: string) => void
-  handleKeyDown: (event: KeyboardEvent) => void
-  handleKeyDownReact: (event: ReactKeyboardEvent) => void
+  handleKeyDown: (event: ReactKeyboardEvent) => void
   handleSearchChange: (event: ChangeEvent<HTMLInputElement>) => void
-  handleOptionClickReact: (event: ReactMouseEvent<HTMLLIElement>) => void
-  handleMouseEnterReact: (event: ReactMouseEvent<HTMLLIElement>) => void
-  handleMouseLeaveReact: () => void
+  handleOptionClick: (event: ReactMouseEvent<HTMLLIElement>) => void
+  handleMouseEnter: (event: ReactMouseEvent<HTMLLIElement>) => void
+  handleMouseLeave: () => void
 }
 
 export const useSelectHandlers = ({
@@ -48,7 +47,7 @@ export const useSelectHandlers = ({
     [setSelectedValue, setIsOpen, setQuery]
   )
 
-  const handleKeyDown = useCallback(
+  const handleKeyDownNative = useCallback(
     (event: KeyboardEvent) => {
       if (!isOpen) return
 
@@ -80,9 +79,10 @@ export const useSelectHandlers = ({
     ]
   )
 
-  const handleKeyDownReact = useCallback(
-    (event: ReactKeyboardEvent) => handleKeyDown(event.nativeEvent as KeyboardEvent),
-    [handleKeyDown]
+  const handleKeyDown = useCallback(
+    (event: ReactKeyboardEvent) =>
+      handleKeyDownNative(event.nativeEvent as KeyboardEvent),
+    [handleKeyDownNative]
   )
 
   const handleSearchChange = useCallback(
@@ -90,7 +90,7 @@ export const useSelectHandlers = ({
     [setQuery]
   )
 
-  const handleOptionClickReact = useCallback(
+  const handleOptionClick = useCallback(
     (event: ReactMouseEvent<HTMLLIElement>) => {
       // Prefer using the dataset index (reliable mapping to filteredOptions)
       const indexString = (event.currentTarget as HTMLElement).dataset.index
@@ -119,7 +119,7 @@ export const useSelectHandlers = ({
     [handleSelect, filteredOptions]
   )
 
-  const handleMouseEnterReact = useCallback(
+  const handleMouseEnter = useCallback(
     (event: ReactMouseEvent<HTMLLIElement>) => {
       const index_ = (event.currentTarget as HTMLElement).dataset.index
       if (index_) setHighlightedIndex(Number(index_))
@@ -127,7 +127,7 @@ export const useSelectHandlers = ({
     [setHighlightedIndex]
   )
 
-  const handleMouseLeaveReact = useCallback(
+  const handleMouseLeave = useCallback(
     () => setHighlightedIndex(-1),
     [setHighlightedIndex]
   )
@@ -136,10 +136,9 @@ export const useSelectHandlers = ({
     toggleOpen,
     handleSelect,
     handleKeyDown,
-    handleKeyDownReact,
     handleSearchChange,
-    handleOptionClickReact,
-    handleMouseEnterReact,
-    handleMouseLeaveReact
+    handleOptionClick,
+    handleMouseEnter,
+    handleMouseLeave
   }
 }

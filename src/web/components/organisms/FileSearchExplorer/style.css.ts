@@ -43,7 +43,7 @@ export const pathTagDeleteButton = style({
 
 export const searchInput = style({
   width: '100%',
-  border: `1px solid ${colors.cyanAlt}`,
+  border: `1px solid ${colors.grayText}`,
   borderRadius: '4px',
   color: colors.offWhite
 })

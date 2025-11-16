@@ -19,13 +19,11 @@ export const useReferenceListActions = (
 
   const handleUpdateReference = useCallback(
     async (newReferences: Reference[]): Promise<Reference[] | void> => {
-      console.log(currentSessionId, newReferences)
       if (!currentSessionId) return
 
       try {
         await editReferences(currentSessionId, newReferences)
         const { session } = await getSession(currentSessionId)
-        console.log(session.references)
         emitToast.success('Reference added successfully')
 
         return session.references

@@ -1,4 +1,4 @@
-import type { SelectHTMLAttributes, JSX } from 'react'
+import { type SelectHTMLAttributes, type JSX, useCallback } from 'react'
 
 import { useMultipleSelect } from './hooks/useMultipleSelect'
 import type { SelectOption } from './hooks/useMultipleSelect'
@@ -56,25 +56,17 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     searchable
   })
 
-  // Debug: log state to help diagnose missing panel/options
-  console.log(
-    '[MultipleSelect] isOpen',
-    isOpen,
-    'normalized',
-    normalizedOptions.length,
-    'filtered',
-    filteredOptions.length
-  )
+  // No debug logs in production code
 
   const {
     toggleOpen,
     handleRemoveTag,
-    handleKeyDownReact,
+    handleKeyDown,
     handleSearchChange,
-    handleOptionClickReact,
+    handleOptionClick,
     handleToggleSelect,
-    handleMouseEnterReact,
-    handleMouseLeaveReact
+    handleMouseEnter,
+    handleMouseLeave
   } = useMultipleSelectHandlers({
     isOpen,
     setIsOpen,
@@ -85,6 +77,15 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     setSelectedValues,
     setQuery
   })
+
+  const handleCheckboxClick = useCallback(
+    (event: React.MouseEvent<HTMLInputElement>): void => {
+      event.stopPropagation()
+      const value = (event.currentTarget as HTMLInputElement).value
+      handleToggleSelect(value)
+    },
+    [handleToggleSelect]
+  )
 
   const { rootReference } = useSelectUI({
     isOpen,
@@ -131,7 +132,7 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={toggleOpen}
-        onKeyDown={handleKeyDownReact}
+        onKeyDown={handleKeyDown}
         className={trigger}
       >
         <span>
@@ -166,9 +167,9 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
               <li
                 key={`${opt.value ?? ''}-${index}`}
                 role="option"
-                onClick={handleOptionClickReact}
-                onMouseEnter={handleMouseEnterReact}
-                onMouseLeave={handleMouseLeaveReact}
+                onClick={handleOptionClick}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 className={
                   highlightedIndex === index ? `${option} ${optionHighlighted}` : option
                 }
@@ -180,10 +181,8 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
                   checked={selectedValues.includes(opt.value)}
                   readOnly={true}
                   className={checkbox}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleToggleSelect(opt.value)
-                  }}
+                  value={opt.value}
+                  onClick={handleCheckboxClick}
                 />
                 {opt.label}
               </li>

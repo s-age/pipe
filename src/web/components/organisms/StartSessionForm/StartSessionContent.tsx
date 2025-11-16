@@ -43,20 +43,20 @@ export const StartSessionContent = ({
         Create New Session
       </Heading>
 
-      <SessionMetaBasic sessionDetail={sessionDetail} />
-
-      <Fieldset
-        legend={<span className={metaItemLabel}>First Instruction:</span>}
-        className={fieldsetContainer}
-      >
-        {(ids) => (
-          <TextArea
-            id="instruction"
-            name="instruction"
-            aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
-          />
-        )}
-      </Fieldset>
+      <SessionMetaBasic sessionDetail={sessionDetail}>
+        <Fieldset
+          legend={<span className={metaItemLabel}>First Instruction:</span>}
+          className={fieldsetContainer}
+        >
+          {(ids) => (
+            <TextArea
+              id="instruction"
+              name="instruction"
+              aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+            />
+          )}
+        </Fieldset>
+      </SessionMetaBasic>
 
       <Fieldset
         legend={<span className={metaItemLabel}>Parent Session:</span>}

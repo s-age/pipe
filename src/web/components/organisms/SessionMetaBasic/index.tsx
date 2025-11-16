@@ -1,4 +1,4 @@
-import type { JSX } from 'react'
+import type { JSX, ReactNode } from 'react'
 import React from 'react'
 
 import { ArtifactsSelector } from '@/components/molecules/ArtifactsSelector'
@@ -14,10 +14,12 @@ import { metaItem, metaItemLabel, inputFullWidth } from './style.css'
 
 type SessionMetaBasicProperties = {
   sessionDetail: SessionDetail
+  children?: ReactNode
 }
 
 export const SessionMetaBasic = ({
-  sessionDetail
+  sessionDetail,
+  children
 }: SessionMetaBasicProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
   const register = formContext?.register
@@ -61,6 +63,8 @@ export const SessionMetaBasic = ({
           />
         )}
       </Fieldset>
+
+      {children}
 
       <Fieldset
         legend={<span className={metaItemLabel}>Roles:</span>}

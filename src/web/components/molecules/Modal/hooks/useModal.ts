@@ -1,19 +1,23 @@
 import React from 'react'
 
-import { useModalContext } from '@/stores/useModalStore'
+import { emitModal } from '@/lib/modalEvents'
+
+let modalIdCounter = 1
 
 export const useModal = (): {
-  show: (content: React.ReactNode) => number
+  show: (content: React.ReactNode, id?: number) => number
   hide: (id?: number) => void
 } => {
-  const context = useModalContext()
+  const show = React.useCallback((content: React.ReactNode, id?: number): number => {
+    const assignedId = typeof id === 'number' ? id : modalIdCounter++
+    emitModal.show({ id: assignedId, content })
 
-  const show = React.useCallback(
-    (content: React.ReactNode): number => context.show(content),
-    [context]
-  )
+    return assignedId
+  }, [])
 
-  const hide = React.useCallback((id?: number): void => context.hide(id), [context])
+  const hide = React.useCallback((id?: number): void => {
+    emitModal.hide(id)
+  }, [])
 
   return { show, hide }
 }

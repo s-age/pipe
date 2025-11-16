@@ -2,7 +2,7 @@ import type { JSX } from 'react'
 import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
-import { Form, useFormContext } from '@/components/organisms/Form'
+import { Form, useOptionalFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { MultiStepReasoning } from '@/components/organisms/MultiStepReasoning'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
@@ -11,7 +11,26 @@ import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useSessionMetaHandlers } from './hooks/useSessionMetaHandlers'
-import type { SessionMetaFormInputs } from './schema'
+
+type SessionMetaFormInputs = {
+  purpose: string | null
+  background: string | null
+  roles: string[] | null
+  procedure: string | null
+  references: {
+    path: string
+    ttl: number | null
+    persist: boolean
+    disabled: boolean
+  }[]
+  artifacts: string[] | null
+  hyperparameters: {
+    temperature: number | null
+    top_p: number | null
+    top_k: number | null
+  } | null
+  multi_step_reasoning: boolean
+}
 import { sessionMetaSchema } from './schema'
 import {
   metaColumn,
@@ -39,11 +58,11 @@ export const SessionMeta = ({
   }
 
   const MetaContent = (): JSX.Element => {
-    const { handleSubmit } = useFormContext()
+    const formContext = useOptionalFormContext()
 
     const handleSaveClick = React.useCallback((): void => {
-      void handleSubmit(onSubmit as never)()
-    }, [handleSubmit])
+      void formContext?.handleSubmit(onSubmit as never)()
+    }, [formContext])
 
     return (
       <>
@@ -77,7 +96,7 @@ export const SessionMeta = ({
           <Button
             kind="primary"
             size="default"
-            type="button"
+            type="submit"
             disabled={isSubmitting}
             onClick={handleSaveClick}
           >

@@ -48,11 +48,7 @@ export const ChatHistoryPage = (): JSX.Element => {
 
         {sessionDetail && (
           <div className={rightColumn}>
-            <SessionMeta
-              key={sessionDetail?.session_id ?? 'new-session'}
-              sessionDetail={sessionDetail}
-              onRefresh={onRefresh}
-            />
+            <SessionMeta sessionDetail={sessionDetail} onRefresh={onRefresh} />
           </div>
         )}
       </div>

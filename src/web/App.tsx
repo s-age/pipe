@@ -1,12 +1,18 @@
 import type { JSX } from 'react'
+import { Suspense, lazy } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import { ModalProvider } from '@/stores/useModalStore'
 
 import { Toasts } from './components/organisms/Toast'
 import { ChatHistoryPage } from './components/pages/ChatHistoryPage'
-import { StartSessionPage } from './components/pages/StartSessionPage'
 import { AppStoreProvider } from './stores/useAppStore'
+
+const StartSessionPage = lazy(() =>
+  import('./components/pages/StartSessionPage').then((module) => ({
+    default: module.StartSessionPage
+  }))
+)
 
 const router = createBrowserRouter([
   {
@@ -19,7 +25,11 @@ const router = createBrowserRouter([
   },
   {
     path: '/start_session',
-    element: <StartSessionPage />
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <StartSessionPage />
+      </Suspense>
+    )
   }
 ])
 

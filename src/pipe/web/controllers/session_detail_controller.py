@@ -38,3 +38,17 @@ class SessionDetailController:
             "settings": self.settings.model_dump(),
             "role_options": roles_response,
         }, 200
+
+    def get_settings_with_tree(
+        self, request_data: Request | None = None
+    ) -> tuple[dict[str, Any], int]:
+        session_tree_action = SessionTreeAction(params={}, request_data=request_data)
+        tree_response, tree_status = session_tree_action.execute()
+
+        if tree_status != 200:
+            return tree_response, tree_status
+
+        return {
+            "settings": self.settings.model_dump(),
+            "session_tree": tree_response.get("sessions", []),
+        }, 200

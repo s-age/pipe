@@ -1,6 +1,6 @@
 import type { RoleOption } from '@/lib/api/roles/getRoles'
-import type { Hyperparameters } from '@/types/hyperparameters'
 import type { Reference } from '@/types/reference'
+import type { Settings } from '@/types/settings'
 import type { Todo } from '@/types/todo'
 
 import { client } from '../client'
@@ -35,7 +35,7 @@ export type SessionDetail = {
   procedure: string | null
   instruction: string
   multi_step_reasoning_enabled: boolean
-  hyperparameters: Hyperparameters | null
+  hyperparameters: Settings['hyperparameters'] | null
   todos: Todo[]
   turns: Turn[]
   roleOptions?: RoleOption[]

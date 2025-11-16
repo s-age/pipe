@@ -6,7 +6,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import { useHyperParametersActions } from './useHyperParametersActions'
 
 type UseSessionHyperparametersProperties = {
-  sessionDetail: SessionDetail | null
+  sessionDetail: SessionDetail
 }
 
 export const useHyperParametersHandlers = ({
@@ -28,9 +28,9 @@ export const useHyperParametersHandlers = ({
   // Use a single object to hold hyperparameter UI state to avoid multiple
   // sequential setState calls inside an effect which the linter warns about.
   const [hpState, setHpState] = useState(() => ({
-    temperature: sessionDetail?.hyperparameters?.temperature ?? 0.7,
-    top_p: sessionDetail?.hyperparameters?.top_p ?? 0.9,
-    top_k: sessionDetail?.hyperparameters?.top_k ?? 5
+    temperature: sessionDetail.hyperparameters?.temperature ?? 0.7,
+    top_p: sessionDetail.hyperparameters?.top_p ?? 0.9,
+    top_k: sessionDetail.hyperparameters?.top_k ?? 5
   }))
 
   const { temperature, top_p: topP, top_k: topK } = hpState
@@ -39,30 +39,21 @@ export const useHyperParametersHandlers = ({
   const setTemperature: React.Dispatch<React.SetStateAction<number>> = (value) => {
     setHpState((previous) => ({
       ...previous,
-      temperature:
-        typeof value === 'function'
-          ? (value as (p: number) => number)(previous.temperature)
-          : value
+      temperature: typeof value === 'function' ? value(previous.temperature) : value
     }))
   }
 
   const setTopP: React.Dispatch<React.SetStateAction<number>> = (value) => {
     setHpState((previous) => ({
       ...previous,
-      top_p:
-        typeof value === 'function'
-          ? (value as (p: number) => number)(previous.top_p)
-          : value
+      top_p: typeof value === 'function' ? value(previous.top_p) : value
     }))
   }
 
   const setTopK: React.Dispatch<React.SetStateAction<number>> = (value) => {
     setHpState((previous) => ({
       ...previous,
-      top_k:
-        typeof value === 'function'
-          ? (value as (p: number) => number)(previous.top_k)
-          : value
+      top_k: typeof value === 'function' ? value(previous.top_k) : value
     }))
   }
 
@@ -98,7 +89,7 @@ export const useHyperParametersHandlers = ({
 
   const handleTemperatureMouseUp = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
-      if (!sessionDetail?.session_id) return
+      if (!sessionDetail.session_id) return
       const newTemperature = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { temperature: newTemperature }
       void updateHyperparameters(sessionDetail.session_id, payload)
@@ -113,7 +104,7 @@ export const useHyperParametersHandlers = ({
 
   const handleTopPMouseUp = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
-      if (!sessionDetail?.session_id) return
+      if (!sessionDetail.session_id) return
       const newTopP = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { top_p: newTopP }
       void updateHyperparameters(sessionDetail.session_id, payload)
@@ -128,7 +119,7 @@ export const useHyperParametersHandlers = ({
 
   const handleTopKMouseUp = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
-      if (!sessionDetail?.session_id) return
+      if (!sessionDetail.session_id) return
       const newTopK = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { top_k: newTopK }
       void updateHyperparameters(sessionDetail.session_id, payload)

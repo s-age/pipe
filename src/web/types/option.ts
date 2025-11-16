@@ -1,4 +1,4 @@
-export type SessionOption = {
+export type Option = {
   value: string
   label: string
 }

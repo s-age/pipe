@@ -14,7 +14,7 @@ import {
 } from './style.css'
 
 type HyperParametersProperties = {
-  sessionDetail: SessionDetail | null
+  sessionDetail: SessionDetail
 }
 
 export const HyperParameters = ({
@@ -33,9 +33,7 @@ export const HyperParameters = ({
     setTopK,
     handleTopKMouseUp,
     handleTopKMouseDown
-  } = useHyperParametersHandlers({
-    sessionDetail
-  })
+  } = useHyperParametersHandlers({ sessionDetail })
 
   return (
     <div className={metaItem}>

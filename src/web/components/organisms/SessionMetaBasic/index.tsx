@@ -1,3 +1,4 @@
+import type { JSX } from 'react'
 import React from 'react'
 
 import { ArtifactsSelector } from '@/components/molecules/ArtifactsSelector'
@@ -13,12 +14,11 @@ import { metaItem, metaItemLabel, inputFullWidth } from './style.css'
 
 type SessionMetaBasicProperties = {
   sessionDetail: SessionDetail
-  _setError?: (error: string | null) => void
 }
 
 export const SessionMetaBasic = ({
   sessionDetail
-}: SessionMetaBasicProperties): React.JSX.Element => {
+}: SessionMetaBasicProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
   const register = formContext?.register
   const setValue = formContext?.setValue

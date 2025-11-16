@@ -1,8 +1,9 @@
+import type { Settings } from '@/types/settings'
+
 import { client } from '../client'
 import type { RoleOption } from '../roles/getRoles'
 import type { SessionDetail } from '../session/getSession'
 import type { SessionOverview } from '../sessionTree/getSessionTree'
-import type { Settings } from '../settings/getSettings'
 
 export type SessionDashboardResponse = {
   session_tree: [string, SessionOverview][]

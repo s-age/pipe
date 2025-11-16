@@ -1,5 +1,4 @@
 import type { SelectHTMLAttributes, JSX } from 'react'
-import type { UseFormRegister } from 'react-hook-form'
 
 import { useMultipleSelect } from './hooks/useMultipleSelect'
 import type { SelectOption } from './hooks/useMultipleSelect'
@@ -21,8 +20,7 @@ import { IconSearch } from '../../atoms/IconSearch'
 import { useSelectUI } from '../Select/hooks/useSelectLifecycle'
 
 type MultipleSelectProperties = {
-  register?: UseFormRegister<Record<string, unknown>>
-  name?: string
+  name: string
   options?: Array<string | SelectOption>
   searchable?: boolean
   placeholder?: string
@@ -30,7 +28,6 @@ type MultipleSelectProperties = {
 
 export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Element => {
   const {
-    register,
     name,
     options,
     searchable = false,
@@ -53,7 +50,6 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     setHighlightedIndex,
     setSelectedValues
   } = useMultipleSelect({
-    register,
     name,
     options: options ?? [],
     defaultValue: rest.defaultValue as string[] | undefined,

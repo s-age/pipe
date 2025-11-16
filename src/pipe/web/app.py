@@ -621,6 +621,21 @@ def get_session_dashboard(session_id):
         return jsonify({"message": str(e)}), 500
 
 
+@app.route("/api/v1/bff/start-session-settings", methods=["GET"])
+def get_start_session_settings():
+    """
+    BFF endpoint for start session settings.
+    Aggregates settings and session tree in a single request.
+    """
+    try:
+        response_data, status_code = session_detail_controller.get_settings_with_tree(
+            request_data=request
+        )
+        return jsonify(response_data), status_code
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
 @app.route(
     "/api/v1/<path:action>", methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"]
 )

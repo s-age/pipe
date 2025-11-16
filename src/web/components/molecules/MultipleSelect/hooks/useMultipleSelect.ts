@@ -35,7 +35,6 @@ export type UseMultipleSelectReturn = {
 }
 
 export const useMultipleSelect = ({
-  register,
   name,
   options = [],
   defaultValue = [],
@@ -43,8 +42,7 @@ export const useMultipleSelect = ({
 }: UseMultipleSelectProperties): UseMultipleSelectReturn => {
   // Resolve register from prop or optional provider
   const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined
-  const registerFunction: UseFormRegister<FieldValues> | undefined =
-    register ?? provider?.register
+  const registerFunction: UseFormRegister<FieldValues> | undefined = provider?.register
   const setValueFunction: UseFormSetValue<FieldValues> | undefined = provider?.setValue
 
   const registerProperties = useMemo<Partial<UseFormRegisterReturn>>(() => {

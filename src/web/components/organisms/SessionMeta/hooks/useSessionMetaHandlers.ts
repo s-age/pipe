@@ -6,7 +6,7 @@ import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseSessionMetaHandlersProperties = {
-  sessionDetail: SessionDetail | null
+  sessionDetail: SessionDetail
   onRefresh: () => Promise<void>
 }
 export const useSessionMetaHandlers = ({
@@ -22,32 +22,32 @@ export const useSessionMetaHandlers = ({
 
   const defaultValues = React.useMemo<SessionMetaFormInputs>(
     () => ({
-      purpose: sessionDetail?.purpose ?? null,
-      background: sessionDetail?.background ?? null,
-      roles: sessionDetail?.roles ?? null,
-      procedure: sessionDetail?.procedure ?? null,
+      purpose: sessionDetail.purpose ?? null,
+      background: sessionDetail.background ?? null,
+      roles: sessionDetail.roles ?? null,
+      procedure: sessionDetail.procedure ?? null,
       references:
-        sessionDetail?.references?.map((reference) => ({
+        sessionDetail.references?.map((reference) => ({
           path: reference.path,
           ttl: reference.ttl ?? 3,
           persist: reference.persist ?? false,
           disabled: reference.disabled ?? false
         })) ?? [],
-      artifacts: sessionDetail?.artifacts ?? null,
-      hyperparameters: sessionDetail?.hyperparameters ?? null,
-      multi_step_reasoning: sessionDetail?.multi_step_reasoning_enabled ?? false
+      artifacts: sessionDetail.artifacts ?? null,
+      hyperparameters: sessionDetail.hyperparameters ?? null,
+      multi_step_reasoning: sessionDetail.multi_step_reasoning_enabled ?? false
     }),
     [sessionDetail]
   )
 
   const onSubmit = React.useCallback(
     (data: SessionMetaFormInputs) => {
-      if (!sessionDetail?.session_id) return
+      if (!sessionDetail.session_id) return
 
       // roles, artifacts, references, procedure はすべて既に正しい形式なので変換不要
-      void handleMetaSave(sessionDetail?.session_id, data as EditSessionMetaRequest)
+      void handleMetaSave(sessionDetail.session_id, data as EditSessionMetaRequest)
     },
-    [sessionDetail?.session_id, handleMetaSave]
+    [sessionDetail.session_id, handleMetaSave]
   )
 
   const [isSubmitting, setIsSubmitting] = React.useState(false)

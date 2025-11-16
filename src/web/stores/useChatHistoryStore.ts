@@ -21,7 +21,9 @@ export type State = {
 export const initialState: State = {
   sessionTree: { sessions: [], currentSessionId: null },
   sessionDetail: null,
-  settings: { parameters: { temperature: null, top_p: null, top_k: null } },
+  settings: {
+    hyperparameters: { temperature: null, top_p: null, top_k: null }
+  } as Settings,
   roleOptions: []
 }
 

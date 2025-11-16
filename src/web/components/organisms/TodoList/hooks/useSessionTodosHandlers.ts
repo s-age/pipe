@@ -7,7 +7,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Todo } from '@/types/todo'
 
 type UseSessionTodosProperties = {
-  sessionDetail: SessionDetail | null
+  sessionDetail: SessionDetail
 }
 
 export const useSessionTodosHandlers = ({
@@ -29,14 +29,14 @@ export const useSessionTodosHandlers = ({
 
   const handleUpdateTodo = useCallback(
     async (todos: Todo[]) => {
-      if (!sessionDetail?.session_id) return
+      if (!sessionDetail.session_id) return
       void updateTodos(sessionDetail.session_id, todos)
     },
     [sessionDetail, updateTodos]
   )
 
   const handleDeleteAllTodos = useCallback(async (): Promise<void> => {
-    if (!sessionDetail?.session_id) return
+    if (!sessionDetail.session_id) return
     if (!window.confirm('Are you sure you want to delete all todos for this session?'))
       return
 
@@ -45,7 +45,7 @@ export const useSessionTodosHandlers = ({
 
   const handleTodoCheckboxChange = useCallback(
     (index?: number) => {
-      if (typeof index !== 'undefined' && sessionDetail?.todos) {
+      if (typeof index !== 'undefined' && sessionDetail.todos) {
         const todos = [...sessionDetail.todos]
         const todo = todos[index]
         if (todo) {

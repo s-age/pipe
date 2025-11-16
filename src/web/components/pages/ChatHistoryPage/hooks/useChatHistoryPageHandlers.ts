@@ -27,7 +27,7 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
 
   useSessionLoader({ state, actions })
 
-  const expertMode = (state.settings.expertMode as boolean) ?? true
+  const expertMode = (state.settings.expert_mode as boolean) ?? true
 
   return {
     sessions,

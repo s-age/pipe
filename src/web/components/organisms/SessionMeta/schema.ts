@@ -1,6 +1,12 @@
-import { array, boolean, coerce, object, string, type TypeOf } from 'zod'
+import { array, boolean, coerce, number, object, string, type TypeOf } from 'zod'
 
-import { optionalNumber, optionalString } from '@/lib/validation'
+import { optionalString } from '@/lib/validation'
+
+const hyperparametersSchema = object({
+  temperature: number().nullable(),
+  top_p: number().nullable(),
+  top_k: number().nullable()
+}).nullable()
 
 const referenceSchema = object({
   path: string(),
@@ -16,13 +22,7 @@ export const sessionMetaSchema = object({
   procedure: optionalString(),
   references: array(referenceSchema).default([]),
   artifacts: array(string()).nullable().default(null),
-  hyperparameters: object({
-    temperature: optionalNumber(0, 2).default(0.7),
-    top_p: optionalNumber(0, 1).default(0.9),
-    top_k: coerce.number().int().min(1).max(50).nullable().default(5)
-  })
-    .nullable()
-    .default(null),
+  hyperparameters: hyperparametersSchema.nullable().default(null),
   multi_step_reasoning: boolean().default(false)
 })
 

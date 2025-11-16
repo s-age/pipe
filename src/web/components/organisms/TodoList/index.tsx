@@ -19,7 +19,7 @@ import {
 } from './style.css'
 
 type TodoListProperties = {
-  sessionDetail: SessionDetail | null
+  sessionDetail: SessionDetail
 }
 
 export const TodoList = ({ sessionDetail }: TodoListProperties): React.JSX.Element => {

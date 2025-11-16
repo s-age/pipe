@@ -11,6 +11,7 @@ import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useSessionMetaHandlers } from './hooks/useSessionMetaHandlers'
+import type { SessionMetaFormInputs } from './schema'
 import { sessionMetaSchema } from './schema'
 import {
   metaColumn,
@@ -20,7 +21,7 @@ import {
 } from './style.css'
 
 type SessionMetaProperties = {
-  sessionDetail: SessionDetail | null
+  sessionDetail: SessionDetail
   onRefresh: () => Promise<void>
 }
 
@@ -43,7 +44,6 @@ export const SessionMeta = ({
     const handleSaveClick = React.useCallback((): void => {
       void handleSubmit(onSubmit as never)()
     }, [handleSubmit])
-    console.log(sessionDetail)
 
     return (
       <>
@@ -91,7 +91,10 @@ export const SessionMeta = ({
 
   return (
     <div className={metaColumn}>
-      <Form defaultValues={defaultValues} schema={sessionMetaSchema}>
+      <Form<SessionMetaFormInputs>
+        defaultValues={defaultValues}
+        schema={sessionMetaSchema}
+      >
         <MetaContent />
       </Form>
     </div>

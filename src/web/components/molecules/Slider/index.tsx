@@ -60,6 +60,7 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
       <div
         className={styles.trackWrap}
         ref={containerRef as unknown as React.Ref<HTMLDivElement>}
+        data-value={visibleValue}
       >
         <svg className={styles.svg} viewBox={`0 0 ${svgWidth} 24`} aria-hidden={true}>
           {/* track sits inside [thumbR, svgWidth - thumbR] so thumb never overflows */}
@@ -97,6 +98,7 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
           step={step}
           name={name}
           value={visibleValue}
+          data-value={visibleValue}
           onChange={handleChange}
           {...restProperties}
         />

@@ -1,9 +1,11 @@
-import type { Hyperparameters } from '@/types/hyperparameters'
-
 import type { SessionDetail } from './getSession'
 import { client } from '../client'
 
-export type EditHyperparametersRequest = Partial<Hyperparameters>
+export type EditHyperparametersRequest = Partial<{
+  temperature: number
+  top_p: number
+  top_k: number
+}>
 
 export const editHyperparameters = async (
   sessionId: string,

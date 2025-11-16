@@ -33,17 +33,18 @@ export const Searchable: Story = {
 }
 
 export const WithRHF: Story = {
-  render: (): JSX.Element => {
+  args: {
+    name: 'favorites',
+    options: [
+      { value: 'a', label: 'Option A' },
+      { value: 'b', label: 'Option B' },
+      { value: 'c', label: 'Option C' }
+    ]
+  },
+  render: (arguments_): JSX.Element => {
     const FormExample = (): JSX.Element => (
       <Form>
-        <MultipleSelect
-          name="favorites"
-          options={[
-            { value: 'a', label: 'Option A' },
-            { value: 'b', label: 'Option B' },
-            { value: 'c', label: 'Option C' }
-          ]}
-        />
+        <MultipleSelect {...arguments_} />
         <Button type="submit" onClick={(data) => console.log('submit', data)}>
           Submit
         </Button>
@@ -55,7 +56,11 @@ export const WithRHF: Story = {
 }
 
 export const WithoutForm: Story = {
-  render: (): JSX.Element => {
+  args: {
+    name: 'plainFruits',
+    options: ['One', 'Two', 'Three']
+  },
+  render: (arguments_): JSX.Element => {
     const PlainExample = (): JSX.Element => {
       const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
         event.preventDefault()
@@ -67,7 +72,7 @@ export const WithoutForm: Story = {
 
       return (
         <form onSubmit={handleSubmit}>
-          <MultipleSelect name="plainFruits" options={['One', 'Two', 'Three']} />
+          <MultipleSelect {...arguments_} />
           <button type="submit">Submit</button>
         </form>
       )

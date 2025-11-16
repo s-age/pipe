@@ -8,7 +8,12 @@ import { useStartSessionPageLifecycle } from './hooks/useStartSessionPageLifecyc
 import { pageContainer } from './style.css'
 
 export const StartSessionPage: () => JSX.Element = () => {
-  const { loading, error: sessionDataError } = useStartSessionPageLifecycle()
+  const {
+    settings,
+    parentOptions,
+    loading,
+    error: sessionDataError
+  } = useStartSessionPageLifecycle()
 
   const error = sessionDataError
 
@@ -26,7 +31,7 @@ export const StartSessionPage: () => JSX.Element = () => {
 
   return (
     <div className={pageContainer}>
-      <StartSessionForm />
+      <StartSessionForm settings={settings} parentOptions={parentOptions} />
       {error && <ErrorMessage message={error} />}
     </div>
   )

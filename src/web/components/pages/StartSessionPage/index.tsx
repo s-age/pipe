@@ -12,7 +12,8 @@ export const StartSessionPage: () => JSX.Element = () => {
     settings,
     parentOptions,
     loading,
-    error: sessionDataError
+    error: sessionDataError,
+    startDefaults
   } = useStartSessionPageLifecycle()
 
   const error = sessionDataError
@@ -32,7 +33,11 @@ export const StartSessionPage: () => JSX.Element = () => {
   return (
     <div className={pageContainer}>
       <div className={pageContent}>
-        <StartSessionForm settings={settings} parentOptions={parentOptions} />
+        <StartSessionForm
+          settings={settings}
+          parentOptions={parentOptions}
+          defaultValues={startDefaults ?? undefined}
+        />
       </div>
       {error && <ErrorMessage message={error} />}
     </div>

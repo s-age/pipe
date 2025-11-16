@@ -11,6 +11,7 @@ type UseStartSessionPageLifecycleResult = {
   sessionTree: [string, SessionOverview][]
   loading: boolean
   error: string | null
+  startDefaults?: Record<string, unknown> | null
 }
 
 export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResult => {
@@ -21,6 +22,9 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
   const [sessionTree, setSessionTree] = useState<[string, SessionOverview][]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
+  const [startDefaults, setStartDefaults] = useState<Record<string, unknown> | null>(
+    null
+  )
 
   useEffect(() => {
     const loadData = async (): Promise<void> => {
@@ -33,6 +37,20 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
           }))
         )
         setSettings(response.settings)
+        setStartDefaults({
+          session_id: '',
+          purpose: '',
+          background: '',
+          roles: [],
+          parent: null,
+          references: [],
+          artifacts: [],
+          procedure: null,
+          instruction: '',
+          multi_step_reasoning_enabled: false,
+          hyperparameters: response.settings.hyperparameters,
+          todos: []
+        })
         setSessionTree(response.session_tree)
       } catch (error_: unknown) {
         setError((error_ as Error).message || 'Failed to load initial data.')
@@ -43,5 +61,12 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
     loadData()
   }, [])
 
-  return { parentOptions, settings: settings!, sessionTree, loading, error }
+  return {
+    parentOptions,
+    settings: settings!,
+    sessionTree,
+    loading,
+    error,
+    startDefaults
+  }
 }

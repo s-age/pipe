@@ -10,6 +10,7 @@ import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
+// eslint-disable-next-line import/order
 import { useSessionMetaHandlers } from './hooks/useSessionMetaHandlers'
 
 type SessionMetaFormInputs = {

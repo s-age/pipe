@@ -5,7 +5,7 @@ import { LoadingSpinner } from '@/components/atoms/LoadingSpinner'
 import { StartSessionForm } from '@/components/organisms/StartSessionForm'
 
 import { useStartSessionPageLifecycle } from './hooks/useStartSessionPageLifecycle'
-import { pageContainer } from './style.css'
+import { pageContainer, pageContent } from './style.css'
 
 export const StartSessionPage: () => JSX.Element = () => {
   const {
@@ -31,7 +31,9 @@ export const StartSessionPage: () => JSX.Element = () => {
 
   return (
     <div className={pageContainer}>
-      <StartSessionForm settings={settings} parentOptions={parentOptions} />
+      <div className={pageContent}>
+        <StartSessionForm settings={settings} parentOptions={parentOptions} />
+      </div>
       {error && <ErrorMessage message={error} />}
     </div>
   )

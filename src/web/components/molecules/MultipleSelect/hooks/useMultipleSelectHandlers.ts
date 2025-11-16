@@ -44,16 +44,22 @@ export const useMultipleSelectHandlers = ({
 
   const handleToggleSelect = useCallback(
     (value: string) => {
-      if (selectedValues.includes(value)) {
-        setSelectedValues(selectedValues.filter((v) => v !== value))
-      } else {
-        setSelectedValues([...selectedValues, value])
-      }
+      setSelectedValues((previous) => {
+        let next: string[]
+        if (previous.includes(value)) {
+          next = previous.filter((v) => v !== value)
+        } else {
+          next = [...previous, value]
+        }
+        console.log('[MultipleSelect] toggleSelect', { value, prev: previous, next })
+
+        return next
+      })
       // Don't close on select for multiple selection
       // setIsOpen(false)
       // setQuery('')
     },
-    [selectedValues, setSelectedValues]
+    [setSelectedValues]
   )
 
   const handleKeyDown = useCallback(
@@ -97,10 +103,15 @@ export const useMultipleSelectHandlers = ({
 
   const handleOptionClickReact = useCallback(
     (event: ReactMouseEvent<HTMLLIElement>) => {
+      // Prevent outer click handlers from reacting to this selection click
+      event.stopPropagation()
       const v = (event.currentTarget as HTMLElement).dataset.value
-      if (v) handleToggleSelect(v)
+      // Debug: log interactions when selection fails in the wild
+      console.log('[MultipleSelect] option click', { value: v, selectedValues })
+      // Allow empty-string values (dataset returns '' for empty), reject only undefined
+      if (v !== undefined) handleToggleSelect(v)
     },
-    [handleToggleSelect]
+    [handleToggleSelect, selectedValues]
   )
 
   const handleMouseEnterReact = useCallback(

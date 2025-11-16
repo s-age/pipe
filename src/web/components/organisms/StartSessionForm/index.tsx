@@ -6,6 +6,7 @@ import type { Settings } from '@/types/settings'
 
 import { formSchema, type StartSessionFormInputs } from './schema'
 import { StartSessionFormInner } from './StartSessionFormInner'
+import { wrapper } from './style.css'
 
 type StartSessionFormProperties = {
   settings: Settings
@@ -32,11 +33,13 @@ export const StartSessionForm = ({
   }
 
   return (
-    <Form<StartSessionFormInputs> schema={formSchema} defaultValues={defaultValues}>
-      <StartSessionFormInner
-        sessionDetail={{ ...defaultValues, turns: [] }}
-        parentOptions={parentOptions}
-      />
-    </Form>
+    <div className={wrapper}>
+      <Form<StartSessionFormInputs> schema={formSchema} defaultValues={defaultValues}>
+        <StartSessionFormInner
+          sessionDetail={{ ...defaultValues, turns: [] }}
+          parentOptions={parentOptions}
+        />
+      </Form>
+    </div>
   )
 }

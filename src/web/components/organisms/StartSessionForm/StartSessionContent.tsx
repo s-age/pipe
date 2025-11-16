@@ -8,11 +8,18 @@ import { TextArea } from '@/components/molecules/TextArea'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
-import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Option } from '@/types/option'
 
-import { formContainer } from './style.css'
+import {
+  formContainer,
+  scrollable,
+  headingSticky,
+  fieldsetContainer,
+  buttonBar,
+  primaryButton,
+  secondaryButton
+} from './style.css'
 import { metaItemLabel } from '../SessionMetaBasic/style.css'
 
 type StartSessionContentProperties = {
@@ -31,39 +38,59 @@ export const StartSessionContent = ({
   isSubmitting
 }: StartSessionContentProperties): JSX.Element => (
   <div className={formContainer}>
-    <Heading level={1}>Create New Session</Heading>
+    <div className={scrollable}>
+      <Heading level={1} className={headingSticky}>
+        Create New Session
+      </Heading>
 
-    <SessionMetaBasic sessionDetail={sessionDetail} />
+      <SessionMetaBasic sessionDetail={sessionDetail} />
 
-    <MultipleSelect name="parent" options={parentOptions} searchable={true} />
+      <Fieldset
+        legend={<span className={metaItemLabel}>First Instruction:</span>}
+        className={fieldsetContainer}
+      >
+        {(ids) => (
+          <TextArea
+            id="instruction"
+            name="instruction"
+            aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+          />
+        )}
+      </Fieldset>
 
-    <Fieldset legend={<span className={metaItemLabel}>First Instruction:</span>}>
-      {(ids) => (
-        <TextArea
-          id="instruction"
-          name="instruction"
-          aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
-        />
-      )}
-    </Fieldset>
+      <Fieldset
+        legend={<span className={metaItemLabel}>Parent Session:</span>}
+        className={fieldsetContainer}
+      >
+        <MultipleSelect name="parent" options={parentOptions} searchable={true} />
+      </Fieldset>
 
-    <ReferenceList sessionDetail={sessionDetail} />
+      <ReferenceList sessionDetail={sessionDetail} />
 
-    <HyperParameters sessionDetail={sessionDetail} />
+      <HyperParameters sessionDetail={sessionDetail} />
 
-    <TodoList sessionDetail={sessionDetail} />
+      <div className={buttonBar}>
+        <Button
+          type="button"
+          kind="primary"
+          size="large"
+          disabled={isSubmitting}
+          onClick={handleCreateClick}
+          className={primaryButton}
+        >
+          {isSubmitting ? 'Creating...' : 'Create Session'}
+        </Button>
 
-    <Button
-      type="button"
-      kind="primary"
-      size="default"
-      disabled={isSubmitting}
-      onClick={handleCreateClick}
-    >
-      {isSubmitting ? 'Creating...' : 'Create Session'}
-    </Button>
-    <Button type="button" kind="secondary" size="default" onClick={handleCancel}>
-      Cancel
-    </Button>
+        <Button
+          type="button"
+          kind="secondary"
+          size="default"
+          onClick={handleCancel}
+          className={secondaryButton}
+        >
+          Cancel
+        </Button>
+      </div>
+    </div>
   </div>
 )

@@ -56,12 +56,23 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     searchable
   })
 
+  // Debug: log state to help diagnose missing panel/options
+  console.log(
+    '[MultipleSelect] isOpen',
+    isOpen,
+    'normalized',
+    normalizedOptions.length,
+    'filtered',
+    filteredOptions.length
+  )
+
   const {
     toggleOpen,
     handleRemoveTag,
     handleKeyDownReact,
     handleSearchChange,
     handleOptionClickReact,
+    handleToggleSelect,
     handleMouseEnterReact,
     handleMouseLeaveReact
   } = useMultipleSelectHandlers({
@@ -95,12 +106,8 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
         multiple={true}
         hidden={true}
       >
-        {(normalizedOptions ?? []).map((opt) => (
-          <option
-            key={opt.value}
-            value={opt.value}
-            selected={selectedValues.includes(opt.value)}
-          >
+        {(normalizedOptions ?? []).map((opt, index) => (
+          <option key={`${opt.value ?? ''}-${index}`} value={opt.value}>
             {typeof opt.label === 'string' ? opt.label : String(opt.value)}
           </option>
         ))}
@@ -157,7 +164,7 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
           >
             {filteredOptions.map((opt, index) => (
               <li
-                key={opt.value}
+                key={`${opt.value ?? ''}-${index}`}
                 role="option"
                 onClick={handleOptionClickReact}
                 onMouseEnter={handleMouseEnterReact}
@@ -173,6 +180,10 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
                   checked={selectedValues.includes(opt.value)}
                   readOnly={true}
                   className={checkbox}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleToggleSelect(opt.value)
+                  }}
                 />
                 {opt.label}
               </li>
@@ -183,5 +194,3 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     </div>
   )
 }
-
-// (Removed temporary default export) Use named export `MultipleSelect`.

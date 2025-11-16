@@ -1,20 +1,16 @@
 import { useCallback } from 'react'
-import type { SubmitHandler } from 'react-hook-form'
+
+import { useOptionalFormContext } from '@/components/organisms/Form'
 
 import { useStartSessionFormActions } from './useStartSessionFormActions'
 import type { StartSessionFormInputs } from '../schema'
 
-type UseStartSessionFormHandlersProperties = {
-  handleSubmit: (handler: SubmitHandler<StartSessionFormInputs>) => () => Promise<void>
-}
-
-export const useStartSessionFormHandlers = ({
-  handleSubmit
-}: UseStartSessionFormHandlersProperties): {
+export const useStartSessionFormHandlers = (): {
   handleCancel: () => void
   handleCreateClick: () => void
 } => {
   const { startSessionAction } = useStartSessionFormActions()
+  const formContext = useOptionalFormContext<StartSessionFormInputs>()
 
   const handleCancel = useCallback(() => {
     window.location.href = '/'
@@ -29,8 +25,8 @@ export const useStartSessionFormHandlers = ({
   )
 
   const handleCreateClick = useCallback((): void => {
-    void handleSubmit(onFormSubmit)()
-  }, [handleSubmit, onFormSubmit])
+    void formContext?.handleSubmit(onFormSubmit)()
+  }, [formContext, onFormSubmit])
 
   return {
     handleCancel,

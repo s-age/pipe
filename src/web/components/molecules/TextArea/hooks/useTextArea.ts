@@ -40,6 +40,8 @@ export const useTextArea = ({
   const providerRegister: UseFormRegister<FieldValues> | undefined =
     useOptionalFormContext()?.register
 
+  // providerRegister and props are available here
+
   const registerProperties = useMemo<UseFormRegisterReturn | undefined>(() => {
     if (!name) return undefined
     if (register) return register(name)
@@ -48,17 +50,31 @@ export const useTextArea = ({
     return undefined
   }, [register, providerRegister, name])
 
+  // registerProperties computed
+
+  const provider = useOptionalFormContext()
+
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       const v = event.target.value
+      // change handler: call register onChange if present, fallback to provider.setValue
       try {
         registerProperties?.onChange?.(event as unknown as Event)
       } catch {
         // ignore
       }
+
+      try {
+        if (provider && typeof provider.setValue === 'function' && name) {
+          provider.setValue(name, v)
+        }
+      } catch {
+        // ignore
+      }
+
       onChange?.(v)
     },
-    [onChange, registerProperties]
+    [onChange, registerProperties, provider, name]
   )
 
   const visibleValue = controlledValue

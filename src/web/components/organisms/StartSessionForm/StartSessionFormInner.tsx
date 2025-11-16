@@ -5,7 +5,7 @@ import { Heading } from '@/components/atoms/Heading'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { Select } from '@/components/molecules/Select'
 import { TextArea } from '@/components/molecules/TextArea'
-import { useFormContext } from '@/components/organisms/Form'
+import { useOptionalFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
@@ -34,14 +34,12 @@ export const StartSessionFormInner = ({
   sessionDetail,
   parentOptions
 }: StartSessionFormInnerProperties): JSX.Element => {
-  const {
-    handleSubmit,
-    formState: { isSubmitting }
-  } = useFormContext<StartSessionFormInputs>()
+  const formContext = useOptionalFormContext<StartSessionFormInputs>()
+  const isSubmitting = formContext?.formState?.isSubmitting ?? false
 
-  const { handleCancel, handleCreateClick } = useStartSessionFormHandlers({
-    handleSubmit
-  })
+  // formContext is available if this component is rendered inside a Form provider
+
+  const { handleCancel, handleCreateClick } = useStartSessionFormHandlers()
 
   return (
     <div className={formContainer}>

@@ -3,7 +3,7 @@ import type { JSX } from 'react'
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
 import { Fieldset } from '@/components/molecules/Fieldset'
-import { MultipleSelect } from '@/components/molecules/MultipleSelect'
+import { Select } from '@/components/molecules/Select'
 import { TextArea } from '@/components/molecules/TextArea'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
@@ -62,7 +62,7 @@ export const StartSessionContent = ({
         legend={<span className={metaItemLabel}>Parent Session:</span>}
         className={fieldsetContainer}
       >
-        <MultipleSelect name="parent" options={parentOptions} searchable={true} />
+        <Select name="parent" options={parentOptions} searchable={true} />
       </Fieldset>
 
       <ReferenceList sessionDetail={sessionDetail} />

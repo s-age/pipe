@@ -12,11 +12,13 @@ export const hyperparametersControl = style({
 })
 
 export const labelContainer = style({
-  flex: 1,
-  textAlign: 'center'
+  // Keep label column fixed so labels align vertically.
+  flex: '0 0 180px',
+  textAlign: 'left'
 })
 
 export const sliderContainer = style({
-  width: '120px',
-  flexShrink: 0
+  // Allow slider to expand to fill remaining space.
+  flex: 1,
+  minWidth: '220px'
 })

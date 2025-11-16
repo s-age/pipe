@@ -82,10 +82,13 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     return <select className={selectStyle} {...rest} />
   }
 
-  const selectedLabel =
-    (selectedValue && filteredOptions.find((o) => o.value === selectedValue)?.label) ??
-    placeholder ??
-    ''
+  // Use normalizedOptions to resolve the label for the currently selected option id
+  // and treat empty-string ('') as a valid original value.
+  const selectedOption =
+    typeof selectedValue !== 'undefined'
+      ? normalizedOptions.find((o) => o.id === selectedValue)
+      : undefined
+  const selectedLabel = selectedOption?.label ?? placeholder ?? ''
 
   return (
     <div ref={rootReference} className={`${className ?? selectStyle}`}>
@@ -94,11 +97,12 @@ export const Select = (properties: SelectProperties): JSX.Element => {
         {...rest}
         {...registerProperties}
         name={name}
-        value={selectedValue ?? rest.value}
+        // expose the ORIGINAL value to the native/registered select
+        value={selectedOption?.value ?? rest.value}
         hidden={true}
       >
         {(normalizedOptions ?? []).map((opt) => (
-          <option key={opt.value} value={opt.value}>
+          <option key={opt.id ?? opt.value} value={opt.value}>
             {typeof opt.label === 'string' ? opt.label : String(opt.value)}
           </option>
         ))}
@@ -135,7 +139,7 @@ export const Select = (properties: SelectProperties): JSX.Element => {
           >
             {filteredOptions.map((opt, index) => (
               <li
-                key={opt.value}
+                key={opt.id ?? opt.value}
                 role="option"
                 onClick={handleOptionClickReact}
                 onMouseEnter={handleMouseEnterReact}
@@ -143,7 +147,7 @@ export const Select = (properties: SelectProperties): JSX.Element => {
                 className={
                   highlightedIndex === index ? `${option} ${optionHighlighted}` : option
                 }
-                data-value={opt.value}
+                data-value={opt.id ?? opt.value}
                 data-index={String(index)}
               >
                 {opt.label}

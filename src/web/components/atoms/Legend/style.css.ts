@@ -3,7 +3,8 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '@/styles/colors.css'
 
 export const legendStyle = style({
-  fontSize: 14,
+  // Make section legend a bit larger than form labels for clearer hierarchy
+  fontSize: 16,
   fontWeight: 600,
   margin: 0,
   padding: 0,

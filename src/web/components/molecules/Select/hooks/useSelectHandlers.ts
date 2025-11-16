@@ -61,7 +61,10 @@ export const useSelectHandlers = ({
       } else if (event.key === 'Enter') {
         event.preventDefault()
         if (highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
-          handleSelect(filteredOptions[highlightedIndex].value)
+          handleSelect(
+            filteredOptions[highlightedIndex].id ??
+              filteredOptions[highlightedIndex].value
+          )
         }
       } else if (event.key === 'Escape') {
         setIsOpen(false)
@@ -89,10 +92,31 @@ export const useSelectHandlers = ({
 
   const handleOptionClickReact = useCallback(
     (event: ReactMouseEvent<HTMLLIElement>) => {
+      // Prefer using the dataset index (reliable mapping to filteredOptions)
+      const indexString = (event.currentTarget as HTMLElement).dataset.index
+      if (indexString) {
+        const i = Number(indexString)
+        const opt = filteredOptions[i]
+        if (opt) {
+          // Diagnostic: log click mapping info so developer console shows actions
+          // click mapping (diagnostics removed)
+          handleSelect(opt.id ?? opt.value)
+
+          return
+        }
+      }
+
+      // Fallback: map by internal id or value
       const v = (event.currentTarget as HTMLElement).dataset.value
-      if (v) handleSelect(v)
+
+      // fallback mapping (diagnostics removed)
+      if (v === undefined) return
+      const opt2 = filteredOptions.find((o) => o.id === v || o.value === v)
+
+      // fallback resolvedOpt (diagnostics removed)
+      if (opt2) handleSelect(opt2.id ?? opt2.value)
     },
-    [handleSelect]
+    [handleSelect, filteredOptions]
   )
 
   const handleMouseEnterReact = useCallback(

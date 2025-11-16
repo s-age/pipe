@@ -67,15 +67,9 @@ export const SessionMeta = ({
 
             <ReferenceList sessionDetail={sessionDetail} />
 
-            <HyperParameters
-              sessionDetail={sessionDetail}
-              currentSessionId={sessionDetail.session_id ?? null}
-            />
+            <HyperParameters sessionDetail={sessionDetail} />
 
-            <TodoList
-              sessionDetail={sessionDetail}
-              currentSessionId={sessionDetail.session_id ?? null}
-            />
+            <TodoList sessionDetail={sessionDetail} />
           </div>
         </section>
 

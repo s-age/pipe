@@ -7,6 +7,7 @@ import type { ZodTypeAny } from 'zod'
 
 import { FormContext } from './FormContext'
 import type { FormMethods } from './FormContext'
+import { useFormHandlers } from './hooks/useFormHandlers'
 import { formStyle } from './style.css'
 
 export { useFormContext, useOptionalFormContext } from './FormContext'
@@ -43,6 +44,8 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
     resolver: finalResolver
   } as UseFormProps<TFieldValues>)
 
+  const { handleFormSubmit } = useFormHandlers()
+
   // If the caller provides `defaultValues` and they change over time (for example
   // when `sessionDetail` is loaded asynchronously), ensure the form is reset so
   // inputs reflect the latest authoritative values. react-hook-form only uses
@@ -65,13 +68,6 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
       console.error('Form validation errors:', errors)
     }
   }, [methods.formState.errors])
-
-  const handleFormSubmit = React.useCallback(
-    (event: React.FormEvent<HTMLFormElement>): void => {
-      event.preventDefault()
-    },
-    []
-  )
 
   return (
     <FormContext.Provider value={methods as FormMethods<FieldValues>}>

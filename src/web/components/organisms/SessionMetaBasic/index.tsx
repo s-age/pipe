@@ -12,7 +12,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import { metaItem, metaItemLabel, inputFullWidth } from './style.css'
 
 type SessionMetaBasicProperties = {
-  sessionDetail: SessionDetail | null
+  sessionDetail: SessionDetail
   _setError?: (error: string | null) => void
 }
 

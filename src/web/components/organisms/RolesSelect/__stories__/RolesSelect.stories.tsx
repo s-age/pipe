@@ -18,16 +18,18 @@ type Story = StoryObj<typeof Meta>
 const STUB_SESSION_DETAIL = {
   purpose: 'Example session',
   background: 'This is an example session for demonstration purposes.',
+  instruction: 'Please follow the instructions carefully.',
+  parent: null,
   roles: ['admin', 'editor'],
   artifacts: [],
-  procedure: 'standard',
+  procedure: null,
   references: [],
   hyperparameters: {
     temperature: 0.7,
     top_p: 0.9,
     top_k: 5
   },
-  session_id: undefined,
+  session_id: null,
   multi_step_reasoning_enabled: false,
   todos: [],
   turns: []

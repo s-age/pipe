@@ -2,6 +2,7 @@ import type { ChangeEvent, KeyboardEvent, RefObject } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
+import { useFileSearchExplorerLifecycle } from './useFileSearchExplorerLifecycle'
 
 type Item = {
   label: string
@@ -19,6 +20,7 @@ type HandlersOptions = {
 
 export const useFileSearchExplorerHandlers = (
   inputReference?: RefObject<HTMLInputElement | null>,
+  suggestionListReference?: RefObject<HTMLUListElement | null>,
   options?: HandlersOptions
 ): {
   selectedValues: string[]
@@ -36,6 +38,7 @@ export const useFileSearchExplorerHandlers = (
   handleSuggestionClick: (suggestion: Item) => Promise<void>
   handleInputFocus: () => Promise<void>
   actions: ReturnType<typeof useFileSearchExplorerActions>
+  debouncedQuery: string
 } => {
   const { existsValue = [], list, isMultiple = true, onFocus, onChange } = options || {}
   const [selectedValues, setSelectedValues] = useState<string[]>(existsValue)
@@ -45,6 +48,15 @@ export const useFileSearchExplorerHandlers = (
   const focusTriggerReference = useRef<boolean>(false)
 
   const actions = useFileSearchExplorerActions()
+
+  const lifecycle = useFileSearchExplorerLifecycle({
+    query,
+    actions,
+    inputReference: inputReference || { current: null },
+    suggestionListReference: suggestionListReference || { current: null },
+    setSuggestions,
+    setSelectedIndex
+  })
 
   // Create a Set of existing values for efficient lookup
   const existingValues = useMemo(() => new Set(selectedValues), [selectedValues])
@@ -258,6 +270,7 @@ export const useFileSearchExplorerHandlers = (
     handleKeyDown,
     handleSuggestionClick,
     handleInputFocus,
-    actions
+    actions,
+    debouncedQuery: lifecycle.debouncedQuery
   }
 }

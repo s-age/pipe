@@ -7,12 +7,10 @@ import { useHyperParametersActions } from './useHyperParametersActions'
 
 type UseSessionHyperparametersProperties = {
   sessionDetail: SessionDetail | null
-  currentSessionId: string | null
 }
 
 export const useHyperParametersHandlers = ({
-  sessionDetail,
-  currentSessionId
+  sessionDetail
 }: UseSessionHyperparametersProperties): {
   temperature: number
   setTemperature: React.Dispatch<React.SetStateAction<number>>
@@ -100,13 +98,13 @@ export const useHyperParametersHandlers = ({
 
   const handleTemperatureMouseUp = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
-      if (!currentSessionId) return
+      if (!sessionDetail?.session_id) return
       const newTemperature = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { temperature: newTemperature }
-      void updateHyperparameters(currentSessionId, payload)
+      void updateHyperparameters(sessionDetail.session_id, payload)
       setIsInteracting(false)
     },
-    [currentSessionId, updateHyperparameters]
+    [sessionDetail, updateHyperparameters]
   )
 
   const handleTemperatureMouseDown = useCallback((): void => {
@@ -115,13 +113,13 @@ export const useHyperParametersHandlers = ({
 
   const handleTopPMouseUp = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
-      if (!currentSessionId) return
+      if (!sessionDetail?.session_id) return
       const newTopP = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { top_p: newTopP }
-      void updateHyperparameters(currentSessionId, payload)
+      void updateHyperparameters(sessionDetail.session_id, payload)
       setIsInteracting(false)
     },
-    [currentSessionId, updateHyperparameters]
+    [sessionDetail, updateHyperparameters]
   )
 
   const handleTopPMouseDown = useCallback((): void => {
@@ -130,13 +128,13 @@ export const useHyperParametersHandlers = ({
 
   const handleTopKMouseUp = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
-      if (!currentSessionId) return
+      if (!sessionDetail?.session_id) return
       const newTopK = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { top_k: newTopK }
-      void updateHyperparameters(currentSessionId, payload)
+      void updateHyperparameters(sessionDetail.session_id, payload)
       setIsInteracting(false)
     },
-    [currentSessionId, updateHyperparameters]
+    [sessionDetail, updateHyperparameters]
   )
 
   const handleTopKMouseDown = useCallback((): void => {

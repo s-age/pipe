@@ -25,16 +25,18 @@ export type Turn = {
 }
 
 export type SessionDetail = {
-  session_id: string | undefined
+  session_id: string | null
   purpose: string
   background: string
   roles: string[]
-  procedure: string
-  artifacts: string[]
-  multi_step_reasoning_enabled: boolean
-  hyperparameters: Hyperparameters
-  todos: Todo[]
+  parent: string | null
   references: Reference[]
+  artifacts: string[]
+  procedure: string | null
+  instruction: string
+  multi_step_reasoning_enabled: boolean
+  hyperparameters: Hyperparameters | null
+  todos: Todo[]
   turns: Turn[]
   roleOptions?: RoleOption[]
 }

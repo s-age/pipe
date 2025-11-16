@@ -1,6 +1,5 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
-import { useCallback } from 'react'
 
 import { Label } from '@/components/atoms/Label'
 
@@ -28,16 +27,15 @@ export const ToggleSwitch = ({
   label,
   ariaLabel
 }: ToggleSwitchProperties): JSX.Element => {
-  const { checked: isChecked, handleToggle } = useToggleSwitchHandlers({
+  const {
+    checked: isChecked,
+    handleToggle,
+    handleInputClick
+  } = useToggleSwitchHandlers({
     checked,
     onChange,
     disabled
   })
-
-  const handleInputClick = useCallback((event: React.MouseEvent<HTMLInputElement>) => {
-    event.preventDefault()
-    event.stopPropagation()
-  }, [])
 
   return (
     <label className={toggleSwitch} onClick={handleToggle}>

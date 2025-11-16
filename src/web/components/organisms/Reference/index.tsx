@@ -1,6 +1,5 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
-import { useCallback } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { ToggleSwitch } from '@/components/molecules/ToggleSwitch'
@@ -35,12 +34,12 @@ export const ReferenceComponent = ({
 }: ReferenceProperties): JSX.Element => {
   const { localReference, setLocalReference } = useReferenceLifecycle(reference)
 
-  const { handlePersistToggle, handleTtlAction, handleToggleDisabled } =
-    useReferenceHandlers(currentSessionId, localReference, index, setLocalReference)
-
-  const handleToggle = useCallback(() => {
-    void handleToggleDisabled()
-  }, [handleToggleDisabled])
+  const { handlePersistToggle, handleTtlAction, handleToggle } = useReferenceHandlers(
+    currentSessionId,
+    localReference,
+    index,
+    setLocalReference
+  )
 
   return (
     <li className={referenceItem}>

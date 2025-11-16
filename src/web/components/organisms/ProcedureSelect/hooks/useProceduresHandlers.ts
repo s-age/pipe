@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react'
+import type { UseFormReturn } from 'react-hook-form'
 
 import type { ProcedureOption } from '@/lib/api/procedures/getProcedures'
 
@@ -7,10 +8,13 @@ import type { UseProceduresActionsReturn } from './useProceduresActions'
 export const useProceduresHandlers = (
   procedureOptions: ProcedureOption[],
   actions: UseProceduresActionsReturn,
-  setProcedureOptions: React.Dispatch<React.SetStateAction<ProcedureOption[]>>
+  setProcedureOptions: React.Dispatch<React.SetStateAction<ProcedureOption[]>>,
+  formContext: UseFormReturn | undefined
 ): {
   filteredProcedureOptions: ProcedureOption[]
   handleFetchProcedures: () => Promise<void>
+  handleFocus: () => Promise<void>
+  handleProcedureChange: (values: string[]) => void
 } => {
   const filteredProcedureOptions = useMemo(() => procedureOptions, [procedureOptions])
 
@@ -21,8 +25,25 @@ export const useProceduresHandlers = (
     }
   }, [actions, setProcedureOptions])
 
+  const handleFocus = useCallback(async () => {
+    if (procedureOptions.length === 0) {
+      void handleFetchProcedures()
+    }
+  }, [procedureOptions.length, handleFetchProcedures])
+
+  const handleProcedureChange = useCallback(
+    (values: string[]): void => {
+      if (formContext?.setValue) {
+        formContext.setValue('procedure', values[0] || '')
+      }
+    },
+    [formContext]
+  )
+
   return {
     filteredProcedureOptions,
-    handleFetchProcedures
+    handleFetchProcedures,
+    handleFocus,
+    handleProcedureChange
   }
 }

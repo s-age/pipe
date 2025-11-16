@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import type { JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
@@ -18,31 +18,16 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const { placeholder = 'Select procedure' } = properties
 
   const formContext = useOptionalFormContext()
-  const setValue = formContext?.setValue
   const currentValue = formContext?.watch?.('procedure') || ''
   const error = formContext?.formState?.errors?.procedure
 
   const [procedureOptions, setProcedureOptions] = useState<ProcedureOption[]>([])
   const actions = useProceduresActions()
-  const { handleFetchProcedures } = useProceduresHandlers(
+  const { handleFocus, handleProcedureChange } = useProceduresHandlers(
     procedureOptions,
     actions,
-    setProcedureOptions
-  )
-
-  const handleFocus = useCallback(async () => {
-    if (procedureOptions.length === 0) {
-      void handleFetchProcedures()
-    }
-  }, [procedureOptions.length, handleFetchProcedures])
-
-  const handleProcedureChange = useCallback(
-    (values: string[]): void => {
-      if (setValue) {
-        setValue('procedure', values[0] || '')
-      }
-    },
-    [setValue]
+    setProcedureOptions,
+    formContext
   )
 
   const list = procedureOptions.map((proc) => ({

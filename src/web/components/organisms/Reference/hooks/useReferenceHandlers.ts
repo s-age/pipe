@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback } from 'react'
 
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { Reference } from '@/types/reference'
@@ -13,8 +13,8 @@ export const useReferenceHandlers = (
 ): {
   handlePersistToggle: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
   handleTtlAction: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
-  handleChange: () => void
   handleToggleDisabled: () => Promise<void>
+  handleToggle: () => void
 } => {
   const formContext = useOptionalFormContext()
   const {
@@ -22,8 +22,6 @@ export const useReferenceHandlers = (
     handleUpdateReferenceTtl,
     handleToggleReferenceDisabled
   } = useReferenceActions()
-
-  const timeoutReference = useRef<NodeJS.Timeout | null>(null)
 
   const updateReferences = useCallback(
     (updater: (reference_: Reference) => Reference) => {
@@ -104,24 +102,14 @@ export const useReferenceHandlers = (
     ]
   )
 
-  const debouncedOnToggle = useMemo(
-    (): (() => void) => () => {
-      if (timeoutReference.current) {
-        clearTimeout(timeoutReference.current)
-      }
-      timeoutReference.current = setTimeout(() => handleToggleDisabled(), 100)
-    },
-    [handleToggleDisabled]
-  )
-
-  const handleChange = useCallback(() => {
-    debouncedOnToggle()
-  }, [debouncedOnToggle])
+  const handleToggle = useCallback(() => {
+    void handleToggleDisabled()
+  }, [handleToggleDisabled])
 
   return {
     handlePersistToggle,
     handleTtlAction,
-    handleChange,
-    handleToggleDisabled
+    handleToggleDisabled,
+    handleToggle
   }
 }

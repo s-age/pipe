@@ -20,17 +20,12 @@ import {
 
 type TodoListProperties = {
   sessionDetail: SessionDetail | null
-  currentSessionId: string | null
 }
 
-export const TodoList = ({
-  sessionDetail,
-  currentSessionId
-}: TodoListProperties): React.JSX.Element => {
+export const TodoList = ({ sessionDetail }: TodoListProperties): React.JSX.Element => {
   const { register, handleDeleteAllTodos, handleCheckboxChange } =
     useSessionTodosHandlers({
-      sessionDetail,
-      currentSessionId
+      sessionDetail
     })
 
   return (

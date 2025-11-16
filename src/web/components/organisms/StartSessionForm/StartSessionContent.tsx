@@ -9,29 +9,31 @@ import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import { TodoList } from '@/components/organisms/TodoList'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 
-import type { StartSessionFormInputs } from './schema'
 import { formContainer } from './style.css'
 import { metaItemLabel } from '../SessionMetaBasic/style.css'
 
 type StartSessionContentProperties = {
+  sessionDetail: SessionDetail
   handleCancel: () => void
   handleCreateClick: () => void
 }
 
 export const StartSessionContent = ({
+  sessionDetail,
   handleCancel,
   handleCreateClick
 }: StartSessionContentProperties): JSX.Element => {
   const {
     formState: { isSubmitting }
-  } = useFormContext<StartSessionFormInputs>()
+  } = useFormContext<SessionDetail>()
 
   return (
     <div className={formContainer}>
       <Heading level={1}>Create New Session</Heading>
 
-      <SessionMetaBasic sessionDetail={null} />
+      <SessionMetaBasic sessionDetail={sessionDetail} />
 
       <Fieldset legend={<span className={metaItemLabel}>First Instruction:</span>}>
         {(ids) => (
@@ -43,11 +45,11 @@ export const StartSessionContent = ({
         )}
       </Fieldset>
 
-      <ReferenceList currentSessionId={null} />
+      <ReferenceList sessionDetail={sessionDetail} />
 
-      <HyperParameters sessionDetail={null} currentSessionId={null} />
+      <HyperParameters sessionDetail={sessionDetail} />
 
-      <TodoList sessionDetail={null} currentSessionId={null} />
+      <TodoList sessionDetail={sessionDetail} />
 
       <Button
         type="button"

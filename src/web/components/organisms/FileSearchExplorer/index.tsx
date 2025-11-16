@@ -1,5 +1,5 @@
 import type { JSX } from 'react'
-import React, { useEffect, useRef } from 'react'
+import React, { useRef } from 'react'
 
 import { useFileSearchExplorerHandlers } from './hooks/useFileSearchExplorerHandlers'
 import { PathTag } from './PathTag'
@@ -77,13 +77,17 @@ export const FileSearchExplorer = ({
 }: FileSearchExplorerProperties): JSX.Element => {
   const inputReference = useRef<HTMLInputElement>(null)
   const suggestionListReference = useRef<HTMLUListElement>(null)
-  const handlers = useFileSearchExplorerHandlers(inputReference, {
-    existsValue,
-    list,
-    isMultiple,
-    onFocus,
-    onChange
-  })
+  const handlers = useFileSearchExplorerHandlers(
+    inputReference,
+    suggestionListReference,
+    {
+      existsValue,
+      list,
+      isMultiple,
+      onFocus,
+      onChange
+    }
+  )
   const {
     selectedValues,
     query,
@@ -93,31 +97,8 @@ export const FileSearchExplorer = ({
     handleQueryChange,
     handleKeyDown,
     handleSuggestionClick,
-    handleInputFocus,
-    setSuggestions,
-    setSelectedIndex
+    handleInputFocus
   } = handlers
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent): void => {
-      if (
-        inputReference.current &&
-        suggestionListReference.current &&
-        !inputReference.current.contains(event.target as Node) &&
-        !suggestionListReference.current.contains(event.target as Node)
-      ) {
-        setSuggestions([])
-        setSelectedIndex(-1)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-
-    return (): void => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [setSuggestions, setSelectedIndex])
 
   return (
     <div className={container}>

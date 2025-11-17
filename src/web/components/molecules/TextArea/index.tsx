@@ -1,6 +1,9 @@
-import React from 'react'
 import type { TextareaHTMLAttributes, JSX } from 'react'
-import type { FieldValues, UseFormRegister } from 'react-hook-form'
+import type {
+  FieldValues,
+  UseFormRegister,
+  UseFormRegisterReturn
+} from 'react-hook-form'
 
 import { useTextArea } from './hooks/useTextArea'
 import { textareaStyle } from './style.css'
@@ -34,18 +37,17 @@ export const TextArea: (properties: TextAreaProperties) => JSX.Element = (
     properties as unknown as Parameters<typeof useTextArea>[0]
   )
 
+  const rp = registerProperties as UseFormRegisterReturn | undefined
+
   return (
     <textarea
       id={id}
-      ref={
-        (registerProperties as unknown as React.RefAttributes<HTMLTextAreaElement>)
-          ?.ref ?? undefined
-      }
       className={textareaStyle}
-      value={visibleValue}
-      onChange={handleChange}
       {...restProperties}
+      {...(visibleValue !== undefined ? { value: visibleValue } : {})}
       name={name}
+      {...(rp ? (rp as unknown as Record<string, unknown>) : {})}
+      onChange={handleChange}
     />
   )
 }

@@ -51,10 +51,41 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
   // inputs reflect the latest authoritative values. react-hook-form only uses
   // defaultValues on initialization, so we must call `reset` when they change.
   React.useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dv = (properties as any)?.defaultValues
+    const dv = (properties as UseFormProps<TFieldValues>)?.defaultValues as
+      | TFieldValues
+      | undefined
     if (dv && typeof methods.reset === 'function') {
-      methods.reset(dv)
+      // guard: consider reset
+
+      try {
+        // Guard: avoid resetting if the current form values already match the
+        // provided defaultValues. This prevents accidental clears when a
+        // defaultValues object reference changes during user input.
+        // Use a JSON stringify comparison for a lightweight deep-equality
+        // check; this is acceptable for debugging/guarding here.
+
+        const currentValues: unknown = methods.getValues
+          ? methods.getValues()
+          : undefined
+        const shouldReset = ((): boolean => {
+          try {
+            return JSON.stringify(currentValues) !== JSON.stringify(dv)
+          } catch {
+            return true
+          }
+        })()
+
+        if (shouldReset) {
+          methods.reset(dv)
+        }
+      } catch {
+        // Fallback: if any error occurs, call reset to preserve previous behavior
+        try {
+          methods.reset(dv)
+        } catch {
+          // ignore
+        }
+      }
     }
     // We intentionally only depend on the defaultValues reference. The caller
     // should pass a stable memoized object (useMemo) when possible.

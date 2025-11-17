@@ -1,5 +1,9 @@
 import type { InputHTMLAttributes, JSX } from 'react'
-import type { FieldValues, UseFormRegister } from 'react-hook-form'
+import type {
+  FieldValues,
+  UseFormRegister,
+  UseFormRegisterReturn
+} from 'react-hook-form'
 
 import { useInputText } from './hooks/useInputText'
 import { inputStyle } from './style.css'
@@ -16,13 +20,15 @@ export const InputText = ({
 }: InputTextProperties): JSX.Element => {
   const { registerProperties } = useInputText({ register, name })
 
+  const rp = registerProperties as UseFormRegisterReturn | undefined
+
   return (
     <input
       type="text"
       className={inputStyle}
-      {...registerProperties}
       {...rest}
       name={name}
+      {...(rp ? (rp as unknown as Record<string, unknown>) : {})}
     />
   )
 }

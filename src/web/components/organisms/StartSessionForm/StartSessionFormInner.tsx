@@ -1,4 +1,5 @@
 import type { JSX } from 'react'
+import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
@@ -36,6 +37,24 @@ export const StartSessionFormInner = ({
 }: StartSessionFormInnerProperties): JSX.Element => {
   const formContext = useOptionalFormContext<StartSessionFormInputs>()
   const isSubmitting = formContext?.formState?.isSubmitting ?? false
+
+  // Expose formContext for interactive debugging in browser console.
+  // (temporary) — remove after investigation.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const win = window as Window & { __START_SESSION_FORM__?: unknown }
+    win.__START_SESSION_FORM__ = formContext
+    console.log('Exposed __START_SESSION_FORM__ on window for debugging')
+
+    return (): void => {
+      try {
+        delete win.__START_SESSION_FORM__
+      } catch {
+        // ignore
+      }
+    }
+  }, [formContext])
 
   // formContext is available if this component is rendered inside a Form provider
 

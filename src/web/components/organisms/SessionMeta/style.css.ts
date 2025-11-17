@@ -45,7 +45,9 @@ export const stickySaveMetaButtonContainer = style({
   zIndex: 1,
   padding: '12px',
   borderTop: `1px solid ${colors.mediumBackground}`,
-  background: colors.darkBackground
+  background: colors.darkBackground,
+  // Slight separation shadow so the sticky area reads as a control bar
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)'
 })
 
 export const metaItem = style({
@@ -173,5 +175,9 @@ export const deleteTodosButton = style({
 })
 
 export const saveMetaButton = style({
-  width: '100%'
+  width: '100%',
+  height: '56px',
+  padding: '12px 16px',
+  borderRadius: '8px',
+  boxSizing: 'border-box'
 })

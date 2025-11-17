@@ -15,7 +15,9 @@ export const sessionListColumn = style({
 
 export const sessionListContainer = style({
   listStyle: 'none',
-  padding: '6px 8px',
+  // Match the footer horizontal padding so list items align with the
+  // full-width New Chat button and right meta gutters.
+  padding: '12px 12px',
   margin: '0',
   flexGrow: '1',
   overflowY: 'auto',
@@ -31,7 +33,8 @@ export const sessionListItem = style({
 
 export const sessionLink = style({
   display: 'block',
-  padding: '6px 8px',
+  // Increase horizontal padding so text aligns with the sidebar gutters.
+  padding: '8px 12px',
   borderRadius: '6px',
   textDecoration: 'none',
   color: colors.offWhite,
@@ -52,29 +55,33 @@ export const sessionLinkActive = style({
 export const sessionIdStyle = style({
   fontSize: '0.75em',
   color: colors.offWhite,
-  marginLeft: '6px'
+  // Small offset from the title so the id doesn't hug the text.
+  marginLeft: '8px'
 })
 
 export const stickyNewChatButtonContainer = style({
   // Fixed overlay footer: always visible at the bottom of the viewport.
-  position: 'fixed',
+  position: 'sticky',
   left: 0,
   bottom: 0,
-  width: '250px',
+  width: '100%',
   zIndex: 1000,
-  padding: '8px',
+  // Use the same horizontal padding as the right meta column to keep
+  // left/right gutters visually consistent.
+  padding: '12px',
   borderTop: `1px solid rgba(0,0,0,0.06)`,
   background: colors.cyanDark
 })
 
 export const newChatButton = style({
-  width: '56px',
+  // Expand to full width of the sidebar footer so the text fits cleanly.
+  width: '100%',
   height: '56px',
-  borderRadius: '50%',
+  borderRadius: '8px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  margin: '6px auto',
+  margin: '8px 0',
   border: `2px solid rgba(255,255,255,0.12)`,
   background: 'rgba(0,0,0,0.32)',
   color: colors.offWhite,

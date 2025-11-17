@@ -37,7 +37,8 @@ import {
   metaColumn,
   sessionMetaSection,
   sessionMetaView,
-  stickySaveMetaButtonContainer
+  stickySaveMetaButtonContainer,
+  saveMetaButton
 } from './style.css'
 
 type SessionMetaProperties = {
@@ -100,6 +101,7 @@ export const SessionMeta = ({
             type="submit"
             disabled={isSubmitting}
             onClick={handleSaveClick}
+            className={saveMetaButton}
           >
             {isSubmitting ? 'Saving...' : 'Save Meta'}
           </Button>

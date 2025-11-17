@@ -1,79 +1,86 @@
-import type { JSX } from 'react'
 import React from 'react'
+import { useSyncExternalStore } from 'react'
+import type { JSX } from 'react'
 
-import { Modal } from '@/components/molecules/Modal'
+import { ModalManager } from '@/components/organisms/Modal'
 
-type ModalEntry = {
-  id: number
-  content: React.ReactNode
+export type ModalEventData = {
+  id?: number | string
+  content?: React.ReactNode
+  options?: Record<string, unknown>
 }
 
-type ModalContextValue = {
-  show: (content: React.ReactNode) => number
-  hide: (id?: number) => void
+export type ModalEntry = {
+  id: number | string
+  content: React.ReactNode | null
 }
 
-const ModalContext = React.createContext<ModalContextValue | null>(null)
+let stack: ModalEntry[] = []
+const listeners: Set<() => void> = new Set()
+
+const getStack = (): ModalEntry[] => stack
+
+const subscribe = (callback: () => void): (() => void) => {
+  listeners.add(callback)
+
+  return () => listeners.delete(callback)
+}
+
+const notify = (): void => listeners.forEach((l) => l())
+
+let idSeed = 1
+const genId = (): number => idSeed++
+
+export const showModal = (data: ModalEventData): number | string => {
+  const id = data.id !== undefined ? data.id : genId()
+  const entry: ModalEntry = { id, content: data.content ?? null }
+  stack = [...stack, entry]
+  notify()
+
+  return id
+}
+
+export const hideModal = (id?: number | string): void => {
+  if (id == null) {
+    stack = stack.slice(0, -1)
+    notify()
+
+    return
+  }
+
+  const sid = id
+  stack = stack.filter((event) => event.id !== sid)
+  notify()
+}
+
+export const clearModals = (): void => {
+  stack = []
+  notify()
+}
+
+export const useModalStore = (): {
+  stack: ModalEntry[]
+  showModal: (data: ModalEventData) => number | string
+  hideModal: (id?: number | string) => void
+  clearModals: () => void
+} => {
+  const snapshot = useSyncExternalStore(subscribe, getStack, getStack)
+
+  return {
+    stack: snapshot,
+    showModal,
+    hideModal,
+    clearModals
+  }
+}
 
 export const ModalProvider = ({
   children
 }: {
   children: React.ReactNode
-}): JSX.Element => {
-  const [stack, setStack] = React.useState<ModalEntry[]>([])
-
-  const idSeedReference = React.useRef(1)
-  const handlersReference = React.useRef<Record<number, () => void>>({})
-
-  const show = React.useCallback((content: React.ReactNode): number => {
-    const id = idSeedReference.current++
-    setStack((s) => [...s, { id, content }])
-
-    // create a stable close handler for this id stored in a ref
-    handlersReference.current[id] = (): void => {
-      setStack((s) => s.filter((entryItem) => entryItem.id !== id))
-    }
-
-    return id
-  }, [])
-
-  const hide = React.useCallback((id?: number): void => {
-    if (id == null) {
-      setStack((s) => s.slice(0, -1))
-
-      return
-    }
-
-    setStack((s) => s.filter((entryItem) => entryItem.id !== id))
-  }, [])
-
-  const value = React.useMemo(() => ({ show, hide }), [show, hide])
-
-  const ModalItem = ({ entry }: { entry: ModalEntry }): JSX.Element => {
-    const handler = handlersReference.current[entry.id]
-
-    return (
-      <Modal key={entry.id} open={true} onClose={handler}>
-        {entry.content}
-      </Modal>
-    )
-  }
-
-  return (
-    <ModalContext.Provider value={value}>
-      {children}
-
-      {/* render modal stack */}
-      {stack.map((entry) => (
-        <ModalItem key={entry.id} entry={entry} />
-      ))}
-    </ModalContext.Provider>
-  )
-}
-
-export const useModalContext = (): ModalContextValue => {
-  const context = React.useContext(ModalContext)
-  if (!context) throw new Error('useModalContext must be used within ModalProvider')
-
-  return context
-}
+}): JSX.Element => (
+  <>
+    {children}
+    <ModalManager />
+  </>
+)

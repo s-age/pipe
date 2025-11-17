@@ -4,8 +4,11 @@ import { useCallback, useEffect } from 'react'
 // once when the module is imported (avoids reading refs during render).
 const MODAL_ROOT_ID = 'modal-root'
 
-let modalRoot = document.getElementById(MODAL_ROOT_ID) as HTMLElement | null
-if (!modalRoot) {
+let modalRoot =
+  typeof document !== 'undefined'
+    ? (document.getElementById(MODAL_ROOT_ID) as HTMLElement | null)
+    : null
+if (typeof document !== 'undefined' && !modalRoot) {
   modalRoot = document.createElement('div')
   modalRoot.id = MODAL_ROOT_ID
   document.body.appendChild(modalRoot)

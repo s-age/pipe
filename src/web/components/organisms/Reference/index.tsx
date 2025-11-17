@@ -3,7 +3,7 @@ import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { ToggleSwitch } from '@/components/molecules/ToggleSwitch'
-import { Tooltip } from '@/components/molecules/Tooltip'
+import { Tooltip } from '@/components/organisms/Tooltip'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceHandlers } from './hooks/useReferenceHandlers'

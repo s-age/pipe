@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import {
-  emitTooltip,
-  onTooltipClear,
-  onTooltipHide,
-  onTooltipShow
-} from '../../../../lib/tooltipEvents'
+import { useTooltipStore, showTooltip, hideTooltip } from '@/stores/useTooltipStore'
 
 export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right'
 
@@ -27,40 +22,26 @@ export const useTooltip = (): {
 
   // Unique id for this tooltip instance
   const idReference = useRef<number | null>(null)
+  const store = useTooltipStore()
 
   useEffect(() => {
-    const offShow = onTooltipShow((data) => {
-      if (!data || typeof data.id === 'undefined') return
-      if (data.id === idReference.current) {
-        // our tooltip was requested to show
-        setPlacement((data.placement as TooltipPlacement) ?? 'top')
-        setTargetRect((data.rect as DOMRect) ?? null)
-        setIsVisible(true)
-      } else {
-        // some other tooltip shown -> hide ours
-        setIsVisible(false)
-      }
-    })
+    const data = store.active
 
-    const offHide = onTooltipHide((data) => {
-      if (!data || typeof data.id === 'undefined') return
-      if (data.id === idReference.current) {
-        setIsVisible(false)
-        setTargetRect(null)
-      }
-    })
-
-    const offClear = onTooltipClear(() => {
+    if (!data) {
       setIsVisible(false)
       setTargetRect(null)
-    })
 
-    return (): void => {
-      offShow()
-      offHide()
-      offClear()
+      return
     }
-  }, [])
+
+    if (data.id === idReference.current) {
+      setPlacement((data.placement as TooltipPlacement) ?? 'top')
+      setTargetRect((data.rect as DOMRect) ?? null)
+      setIsVisible(true)
+    } else {
+      setIsVisible(false)
+    }
+  }, [store.active])
 
   const handleMouseEnter = useCallback(
     (
@@ -93,8 +74,8 @@ export const useTooltip = (): {
             ? 'bottom'
             : 'top'
 
-      // Emit show for this tooltip; include optional offsets/content
-      emitTooltip.show({
+      // Emit show to the tooltip store; include optional offsets/content
+      showTooltip({
         id: idReference.current,
         rect,
         placement: chosenPlacement,
@@ -107,7 +88,7 @@ export const useTooltip = (): {
   )
 
   const handleMouseLeave = useCallback((): void => {
-    if (idReference.current !== null) emitTooltip.hide(idReference.current)
+    if (idReference.current !== null) hideTooltip(idReference.current)
   }, [])
 
   return { isVisible, placement, targetRect, handleMouseEnter, handleMouseLeave }

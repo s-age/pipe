@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import { ModalManager } from './components/organisms/ModalManager'
 import { Toasts } from './components/organisms/Toast'
-import { TooltipManager } from './components/organisms/TooltipManager'
+import { TooltipManager } from './components/organisms/Tooltip'
 import { ChatHistoryPage } from './components/pages/ChatHistoryPage'
 import { AppStoreProvider } from './stores/useAppStore'
 

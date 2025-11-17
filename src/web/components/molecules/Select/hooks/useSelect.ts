@@ -122,10 +122,17 @@ export const useSelect = ({
     const idToSet = resolvedOpt?.id ?? incoming
     const valueToWrite = resolvedOpt?.value ?? incoming
 
+    // Instrumentation: log incoming value and resolved option details
+    // to help debug why empty strings may be written into the form.
+
+    // instrumentation removed
     setSelectedValueState(idToSet)
 
     if (typeof name === 'string') {
-      if (provider?.setValue) {
+      if (valueToWrite === '') {
+        // Avoid writing empty string values into the form provider which
+        // can clear existing selections. Log and skip the write.
+      } else if (provider?.setValue) {
         try {
           provider.setValue(name, valueToWrite)
         } catch {

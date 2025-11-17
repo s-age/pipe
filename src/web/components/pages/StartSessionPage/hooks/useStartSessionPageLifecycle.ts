@@ -31,8 +31,8 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
       try {
         const response = await getStartSessionSettings()
         setParentOptions(
-          response.session_tree.map(([, session]: [string, SessionOverview]) => ({
-            value: session.session_id,
+          response.session_tree.map(([id, session]: [string, SessionOverview]) => ({
+            value: id,
             label: session.purpose
           }))
         )

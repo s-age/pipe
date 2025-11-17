@@ -21,28 +21,39 @@ export const useReferenceListHandlers = (
 
   const handleReferencesChange = useCallback(
     async (values: string[]): Promise<void> => {
-      if (formContext?.setValue) {
-        // Convert values to Reference objects, keeping existing references
-        const newReferences = values.map(
-          (value) =>
-            references.find((reference) => reference.path === value) || {
-              path: value,
-              disabled: false,
-              ttl: 3,
-              persist: false
-            }
-        )
+      if (!formContext?.setValue) return
 
-        try {
-          const updatedReferences = await handleUpdateReference(newReferences)
-          formContext.setValue('references', updatedReferences)
-          setReferences(updatedReferences || [])
-        } catch {
-          emitToast.failure('Failed to retrieve updated references.')
-        }
+      // Convert values to Reference objects, keeping existing references
+      const newReferences = values.map(
+        (value) =>
+          references.find((reference) => reference.path === value) || {
+            path: value,
+            disabled: false,
+            ttl: 3,
+            persist: false
+          }
+      )
+
+      // If there's no session yet, write references locally into the form
+      // and component state so they are included in the final submit payload.
+      if (!sessionDetail.session_id) {
+        formContext.setValue('references', newReferences)
+        // wrote references locally
+        setReferences(newReferences)
+
+        return
+      }
+
+      try {
+        const updatedReferences = await handleUpdateReference(newReferences)
+        formContext.setValue('references', updatedReferences)
+        // wrote references returned from server into the form context
+        setReferences(updatedReferences || [])
+      } catch {
+        emitToast.failure('Failed to retrieve updated references.')
       }
     },
-    [formContext, references, handleUpdateReference]
+    [formContext, references, handleUpdateReference, sessionDetail]
   )
 
   return {

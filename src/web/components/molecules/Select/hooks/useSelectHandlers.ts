@@ -98,8 +98,6 @@ export const useSelectHandlers = ({
         const i = Number(indexString)
         const opt = filteredOptions[i]
         if (opt) {
-          // Diagnostic: log click mapping info so developer console shows actions
-          // click mapping (diagnostics removed)
           handleSelect(opt.id ?? opt.value)
 
           return

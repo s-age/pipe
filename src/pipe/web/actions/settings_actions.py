@@ -8,6 +8,21 @@ class SettingsGetAction(BaseAction):
         from pipe.web.app import settings
 
         try:
-            return {"settings": settings.model_dump()}, 200
+            settings_dict: dict[str, Any] = settings.model_dump()
+
+            # Convert internal `parameters` structure to the public `hyperparameters` mapping
+            params = settings_dict.pop("parameters", None)
+            if params and isinstance(params, dict):
+                hp: dict[str, Any] = {}
+                for key in ("temperature", "top_p", "top_k"):
+                    val = params.get(key)
+                    if isinstance(val, dict) and "value" in val:
+                        hp[key] = val["value"]
+                    else:
+                        hp[key] = None
+
+                settings_dict["hyperparameters"] = hp
+
+            return {"settings": settings_dict}, 200
         except Exception as e:
             return {"message": str(e)}, 500

@@ -1,7 +1,12 @@
 from typing import Any
 
 from flask import Request
-from pipe.web.actions import GetRolesAction, SessionGetAction, SessionTreeAction
+from pipe.web.actions import (
+    GetRolesAction,
+    SessionGetAction,
+    SessionTreeAction,
+    SettingsGetAction,
+)
 
 
 class SessionDetailController:
@@ -32,10 +37,16 @@ class SessionDetailController:
         if roles_status != 200:
             return roles_response, roles_status
 
+        # Use the Settings action so the public API shape is consistent
+        settings_action = SettingsGetAction(params={}, request_data=request_data)
+        settings_response, settings_status = settings_action.execute()
+        if settings_status != 200:
+            return settings_response, settings_status
+
         return {
             "session_tree": tree_response.get("sessions", []),
             "current_session": session_response.get("session", {}),
-            "settings": self.settings.model_dump(),
+            "settings": settings_response.get("settings", {}),
             "role_options": roles_response,
         }, 200
 
@@ -48,7 +59,12 @@ class SessionDetailController:
         if tree_status != 200:
             return tree_response, tree_status
 
+        settings_action = SettingsGetAction(params={}, request_data=request_data)
+        settings_response, settings_status = settings_action.execute()
+        if settings_status != 200:
+            return settings_response, settings_status
+
         return {
-            "settings": self.settings.model_dump(),
+            "settings": settings_response.get("settings", {}),
             "session_tree": tree_response.get("sessions", []),
         }, 200

@@ -41,8 +41,7 @@ paths:
                     type: object
                     description: Details of the current session
                   settings:
-                    type: object
-                    description: System settings
+                    $ref: '#/components/schemas/Settings'
                   role_options:
                     type: array
                     description: List of available role options
@@ -789,7 +788,7 @@ paths:
                 type: object
                 properties:
                   settings:
-                    type: object
+                    $ref: '#/components/schemas/Settings'
         '500':
           description: Internal server error
 
@@ -1021,6 +1020,35 @@ components:
         top_k:
           type: number
           nullable: true
+    Settings:
+      type: object
+      properties:
+        model:
+          type: string
+        search_model:
+          type: string
+        context_limit:
+          type: integer
+        api_mode:
+          type: string
+        language:
+          type: string
+        yolo:
+          type: boolean
+        max_tool_calls:
+          type: integer
+        hyperparameters:
+          $ref: '#/components/schemas/Hyperparameters'
+        expert_mode:
+          type: boolean
+        sessions_path:
+          type: string
+        reference_ttl:
+          type: integer
+        tool_response_expiration:
+          type: integer
+        timezone:
+          type: string
     EditHyperparametersRequest:
       type: object
       description: |

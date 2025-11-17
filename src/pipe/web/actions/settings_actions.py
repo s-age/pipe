@@ -10,7 +10,7 @@ class SettingsGetAction(BaseAction):
         try:
             settings_dict: dict[str, Any] = settings.model_dump()
 
-            # Convert internal `parameters` structure to the public `hyperparameters` mapping
+            # Convert internal `parameters` to public `hyperparameters` mapping
             params = settings_dict.pop("parameters", None)
             if params and isinstance(params, dict):
                 hp: dict[str, Any] = {}

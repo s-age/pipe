@@ -57,6 +57,19 @@ class SessionStartAction(BaseAction):
             return {"session_id": session_id}, 200
 
         except ValidationError as e:
+            # Log the invalid payload so we can inspect submitted hyperparameters
+            try:
+                payload = (
+                    self.request_data.get_json()
+                    if self.request_data is not None
+                    else None
+                )
+                print(
+                    f"DEBUG: StartSession validation failed. Payload: {payload}",
+                    file=sys.stderr,
+                )
+            except Exception:
+                pass
             return {"message": str(e)}, 422
         except subprocess.CalledProcessError as e:
             return {

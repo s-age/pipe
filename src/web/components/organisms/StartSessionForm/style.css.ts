@@ -104,6 +104,15 @@ export const primaryButton = style({
   justifyContent: 'center',
   // make the primary button visually prominent
   borderRadius: '6px',
+  selectors: {
+    // Ensure disabled visuals are applied when this layout class is used
+    '&:disabled, &[data-disabled="true"]': {
+      background: colors.grayText,
+      color: colors.offWhite,
+      cursor: 'not-allowed',
+      opacity: 0.8
+    }
+  },
   // Desktop: ensure Create sits on the right (after Cancel)
   '@media': {
     'screen and (min-width: 721px)': {

@@ -5,7 +5,7 @@ import { Heading } from '@/components/atoms/Heading'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { Select } from '@/components/molecules/Select'
 import { TextArea } from '@/components/molecules/TextArea'
-import { useOptionalFormContext } from '@/components/organisms/Form'
+// form context is accessed inside handlers when needed
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
@@ -13,7 +13,6 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Option } from '@/types/option'
 
 import { useStartSessionFormHandlers } from './hooks/useStartSessionFormHandlers'
-import type { StartSessionFormInputs } from './schema'
 import {
   formContainer,
   scrollable,
@@ -34,15 +33,14 @@ export const StartSessionFormInner = ({
   sessionDetail,
   parentOptions
 }: StartSessionFormInnerProperties): JSX.Element => {
-  const formContext = useOptionalFormContext<StartSessionFormInputs>()
-  const isSubmitting = formContext?.formState?.isSubmitting ?? false
+  // Prefer the handler-provided submitting state to avoid relying on the
+  // react-hook-form internal `formState.isSubmitting` which may not update
+  // when native form submission is prevented or when navigation happens
+  // quickly after submit. The hook will manage a local `isSubmitting` flag.
+  const { handleCancel, handleCreateClick, isSubmitting } =
+    useStartSessionFormHandlers()
 
-  // Expose formContext for interactive debugging in browser console.
   // Debug exposure removed.
-
-  // formContext is available if this component is rendered inside a Form provider
-
-  const { handleCancel, handleCreateClick } = useStartSessionFormHandlers()
 
   return (
     <div className={formContainer}>

@@ -17,6 +17,14 @@ export const button = recipe({
         color: colors.darkBackground,
         ':hover': {
           backgroundColor: colors.accentHover
+        },
+        selectors: {
+          '&:disabled': {
+            backgroundColor: colors.grayText,
+            color: colors.offWhite,
+            cursor: 'not-allowed',
+            opacity: 0.8
+          }
         }
       },
       secondary: {
@@ -24,6 +32,14 @@ export const button = recipe({
         color: colors.lightText,
         ':hover': {
           backgroundColor: colors.accent
+        },
+        selectors: {
+          '&:disabled': {
+            backgroundColor: colors.mediumBackground,
+            color: colors.grayText,
+            cursor: 'not-allowed',
+            opacity: 0.7
+          }
         }
       },
       ghost: {

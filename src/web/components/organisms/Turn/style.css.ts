@@ -32,7 +32,9 @@ export const turnContentBase = style({
     transform: 'translateY(-2px)',
     boxShadow: '0 12px 30px rgba(2,6,23,0.18)'
   },
-  width: '75%' // 各ターンのコンテンツ幅
+  width: '75%', // 各ターンのコンテンツ幅
+  // Allow flex children to shrink and allow internal text to wrap
+  minWidth: 0
 })
 
 export const turnHeader = style({
@@ -62,7 +64,10 @@ export const turnHeaderControls = style({
 })
 
 export const turnContent = style({
+  // Ensure long words / URLs wrap and pre-formatted text keeps newlines
   wordWrap: 'break-word',
+  overflowWrap: 'anywhere',
+  wordBreak: 'break-word',
   whiteSpace: 'pre-wrap',
   color: colors.offWhite,
   padding: '0 12px'
@@ -104,7 +109,15 @@ export const editablePre = style({
   padding: '0 12px',
   borderRadius: '4px',
   color: colors.offWhite,
-  boxSizing: 'border-box'
+  boxSizing: 'border-box',
+  // Allow preformatted text to wrap within the container instead of overflowing.
+  // Keep newlines but allow long words/URLs and CJK text to break.
+  whiteSpace: 'pre-wrap',
+  overflowWrap: 'anywhere',
+  wordWrap: 'break-word',
+  wordBreak: 'break-word',
+  // Helpful for East Asian text line breaking
+  lineBreak: 'anywhere'
 })
 
 export const editTextArea = style({

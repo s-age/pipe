@@ -36,6 +36,11 @@ export type SessionDetail = {
   instruction: string
   multi_step_reasoning_enabled: boolean
   hyperparameters: Settings['hyperparameters'] | null
+  // token_count and settings are returned by the server in some endpoints
+  // (e.g. session dashboard). Make them optional so callers can use them
+  // when available without causing type errors.
+  token_count?: number
+  settings?: Settings
   todos: Todo[]
   turns: Turn[]
   roleOptions?: RoleOption[]

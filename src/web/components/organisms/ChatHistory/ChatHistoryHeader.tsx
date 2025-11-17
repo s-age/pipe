@@ -4,6 +4,7 @@ import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
 import { IconDelete } from '@/components/atoms/IconDelete'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { useSessionStore } from '@/stores/useChatHistoryStore'
 import { colors } from '@/styles/colors.css'
 
 import { turnsHeader } from './style.css'
@@ -11,14 +12,26 @@ import { turnsHeader } from './style.css'
 type ChatHistoryHeaderProperties = {
   sessionDetail: SessionDetail | null
   handleDeleteCurrentSession: () => void
+  tokenCount?: number
+  contextLimit?: number
 }
 
 export const ChatHistoryHeader = ({
   sessionDetail,
-  handleDeleteCurrentSession
+  handleDeleteCurrentSession,
+  tokenCount: tokenCountProperty,
+  contextLimit: contextLimitProperty
 }: ChatHistoryHeaderProperties): JSX.Element => {
-  const contextLimit = 4000
-  const tokenCount = 1000
+  const { state } = useSessionStore()
+  // Prefer explicitly passed props (useful for Storybook/tests), then
+  // session-specific values, then global store, then a safe default.
+  const tokenCount = tokenCountProperty ?? sessionDetail?.token_count ?? 0
+  const contextLimit =
+    contextLimitProperty ??
+    sessionDetail?.settings?.context_limit ??
+    state.settings?.context_limit ??
+    4000
+
   const contextLeft = (((contextLimit - tokenCount) / contextLimit) * 100).toFixed(0)
 
   if (!sessionDetail) return <div />

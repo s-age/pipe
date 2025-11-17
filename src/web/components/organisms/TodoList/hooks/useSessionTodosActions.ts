@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 
 import { deleteTodos } from '@/lib/api/session/deleteTodos'
 import { editTodos } from '@/lib/api/session/editTodos'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 import type { Todo } from '@/types/todo'
 
 export const useSessionTodosActions = (): {
@@ -12,18 +12,24 @@ export const useSessionTodosActions = (): {
   const updateTodos = useCallback(async (sessionId: string, todos: Todo[]) => {
     try {
       await editTodos(sessionId, todos)
-      emitToast.success('Todos updated')
+      addToast({ status: 'success', title: 'Todos updated' })
     } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to update todos.')
+      addToast({
+        status: 'failure',
+        title: (error as Error).message || 'Failed to update todos.'
+      })
     }
   }, [])
 
   const deleteAllTodos = useCallback(async (sessionId: string) => {
     try {
       await deleteTodos(sessionId)
-      emitToast.success('All todos deleted')
+      addToast({ status: 'success', title: 'All todos deleted' })
     } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to delete all todos.')
+      addToast({
+        status: 'failure',
+        title: (error as Error).message || 'Failed to delete all todos.'
+      })
     }
   }, [])
 

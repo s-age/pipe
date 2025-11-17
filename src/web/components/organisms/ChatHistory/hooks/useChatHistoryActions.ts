@@ -5,7 +5,7 @@ import { getSession } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 type UseChatHistoryActionsProperties = {
   currentSessionId: string | null
@@ -28,9 +28,12 @@ export const useChatHistoryActions = ({
   const deleteSessionAction = useCallback(async (sessionId: string): Promise<void> => {
     try {
       await deleteSession(sessionId)
-      emitToast.success('Session deleted successfully')
+      addToast({ status: 'success', title: 'Session deleted successfully' })
     } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to delete session.')
+      addToast({
+        status: 'failure',
+        title: (error as Error).message || 'Failed to delete session.'
+      })
     }
   }, [])
 
@@ -46,7 +49,10 @@ export const useChatHistoryActions = ({
       }))
       refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
     } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to refresh session.')
+      addToast({
+        status: 'failure',
+        title: (error as Error).message || 'Failed to refresh session.'
+      })
     }
   }, [currentSessionId, refreshSessionsInStore])
 

@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 
 import { getProcedures, type ProcedureOption } from '@/lib/api/procedures/getProcedures'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 export type UseProceduresActionsReturn = {
   fetchProcedures: () => Promise<ProcedureOption[] | void>
@@ -14,7 +14,10 @@ export const useProceduresActions = (): UseProceduresActionsReturn => {
 
       return procedures
     } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to fetch procedures.')
+      addToast({
+        status: 'failure',
+        title: (error as Error).message || 'Failed to fetch procedures.'
+      })
     }
   }, [])
 

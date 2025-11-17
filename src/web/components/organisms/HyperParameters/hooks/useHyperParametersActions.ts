@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import { editHyperparameters } from '@/lib/api/session/editHyperparameters'
 import type { EditHyperparametersRequest } from '@/lib/api/session/editHyperparameters'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 export const useHyperParametersActions = (): {
   updateHyperparameters: (
@@ -18,13 +18,17 @@ export const useHyperParametersActions = (): {
     ): Promise<{ message: string; session: SessionDetail } | void> => {
       try {
         const result = await editHyperparameters(sessionId, payload)
-        emitToast.success(result?.message || 'Hyperparameters updated')
+        addToast({
+          status: 'success',
+          title: result?.message || 'Hyperparameters updated'
+        })
 
         return result
       } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'Failed to update hyperparameters'
-        )
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to update hyperparameters'
+        })
       }
     },
     []

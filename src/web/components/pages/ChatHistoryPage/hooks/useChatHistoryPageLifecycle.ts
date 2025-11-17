@@ -3,8 +3,8 @@ import { useCallback } from 'react'
 import { useInitialLoading } from '@/hooks/useInitialLoading'
 import { getSessionDashboard } from '@/lib/api/bff/getSessionDashboard'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
-import { emitToast } from '@/lib/toastEvents'
 import type { Actions, State } from '@/stores/useChatHistoryStore'
+import { addToast } from '@/stores/useToastStore'
 
 type UseSessionLoaderProperties = {
   state: State
@@ -59,7 +59,10 @@ export const useSessionLoader = ({
         setSessionDetail(null)
       }
     } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to load sessions.')
+      addToast({
+        status: 'failure',
+        title: (error as Error).message || 'Failed to load sessions.'
+      })
     }
   }, [
     currentSessionId,

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import type { ToastItem } from './useToastEventListener'
+import type { ToastItem } from '@/stores/useToastStore'
 
 const allPositions = [
   'top-left',

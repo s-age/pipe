@@ -7,7 +7,7 @@ import type {
   LsResponse
 } from '@/lib/api/fileSearchExplorer'
 import { fileSearchExplorerApi } from '@/lib/api/fileSearchExplorer'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 export const useFileSearchExplorerActions = (): {
   searchL2: (request: SearchL2Request) => Promise<SearchL2Response | void>
@@ -18,11 +18,14 @@ export const useFileSearchExplorerActions = (): {
       searchL2: async (request: SearchL2Request): Promise<SearchL2Response | void> => {
         try {
           const result = await fileSearchExplorerApi.searchL2(request)
-          emitToast.success('Search completed successfully')
+          addToast({ status: 'success', title: 'Search completed successfully' })
 
           return result
         } catch (error: unknown) {
-          emitToast.failure((error as Error).message || 'Search failed.')
+          addToast({
+            status: 'failure',
+            title: (error as Error).message || 'Search failed.'
+          })
         }
       },
 
@@ -32,7 +35,10 @@ export const useFileSearchExplorerActions = (): {
 
           return result
         } catch (error: unknown) {
-          emitToast.failure((error as Error).message || 'Failed to list directory.')
+          addToast({
+            status: 'failure',
+            title: (error as Error).message || 'Failed to list directory.'
+          })
         }
       }
     }),

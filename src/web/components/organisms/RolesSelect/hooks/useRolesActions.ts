@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 
 import { getRoles, type RoleOption } from '@/lib/api/roles/getRoles'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 export type UseRolesActionsReturn = {
   fetchRoles: () => Promise<RoleOption[] | void>
@@ -14,7 +14,10 @@ export const useRolesActions = (): UseRolesActionsReturn => {
 
       return roles
     } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to fetch roles.')
+      addToast({
+        status: 'failure',
+        title: (error as Error).message || 'Failed to fetch roles.'
+      })
     }
   }, [])
 

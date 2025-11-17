@@ -2,8 +2,8 @@ import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import React from 'react'
 import type { JSX } from 'react'
 
-import { emitToast } from '@/lib/toastEvents'
 import { AppStoreProvider } from '@/stores/useAppStore'
+import { addToast } from '@/stores/useToastStore'
 
 import { Toasts } from '../index'
 
@@ -30,7 +30,8 @@ const Controls = (): JSX.Element => (
   <div style={{ display: 'flex', gap: 8 }}>
     <button
       onClick={() => {
-        emitToast.success({
+        addToast({
+          status: 'success',
           title: 'Saved',
           description: 'Your changes were saved.'
         })
@@ -40,7 +41,8 @@ const Controls = (): JSX.Element => (
     </button>
     <button
       onClick={() => {
-        emitToast.failure({
+        addToast({
+          status: 'failure',
           title: 'Failed',
           description: 'Something went wrong.'
         })
@@ -50,7 +52,8 @@ const Controls = (): JSX.Element => (
     </button>
     <button
       onClick={() => {
-        emitToast.warning({
+        addToast({
+          status: 'warning',
           title: 'Warning',
           description: 'Check this out.'
         })
@@ -60,11 +63,7 @@ const Controls = (): JSX.Element => (
     </button>
     <button
       onClick={() => {
-        emitToast.show({
-          status: 'success',
-          description: 'No title example',
-          duration: 3000
-        })
+        addToast({ status: 'success', description: 'No title example', duration: 3000 })
       }}
     >
       No title

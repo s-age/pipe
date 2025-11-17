@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 
 import { startSession } from '@/lib/api/session/startSession'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 import type { StartSessionFormInputs } from '../schema'
 
@@ -15,17 +15,22 @@ export const useStartSessionFormActions = (): UseStartSessionFormActionsReturn =
       try {
         const result = await startSession(data)
         if (result.session_id) {
-          emitToast.success('Session created successfully')
+          addToast({ status: 'success', title: 'Session created successfully' })
 
           return result
         } else {
-          emitToast.failure('Failed to create session: No session ID returned.')
+          addToast({
+            status: 'failure',
+            title: 'Failed to create session: No session ID returned.'
+          })
           throw new Error('Failed to create session: No session ID returned.')
         }
       } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'An error occurred during session creation.'
-        )
+        addToast({
+          status: 'failure',
+          title:
+            (error as Error).message || 'An error occurred during session creation.'
+        })
         throw error
       }
     },

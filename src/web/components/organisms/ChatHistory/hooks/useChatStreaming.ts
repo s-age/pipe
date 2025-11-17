@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback, type RefObject } from 'react'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { getSession } from '@/lib/api/session/getSession'
 import { streamInstruction } from '@/lib/api/session/streamInstruction'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 type SessionDetailCache = {
   [sessionId: string]: {
@@ -174,7 +174,8 @@ export const useChatStreaming = ({
   // Propagate streaming errors
   useEffect(() => {
     if (error) {
-      emitToast.failure(error)
+      const message = typeof error === 'string' ? error : (error as Error).message
+      addToast({ status: 'failure', title: message })
       setStreamingTrigger(null)
     }
   }, [error])

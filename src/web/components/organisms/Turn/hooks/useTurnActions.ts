@@ -4,7 +4,7 @@ import { deleteTurn } from '@/lib/api/session/deleteTurn'
 import { editTurn } from '@/lib/api/session/editTurn'
 import { forkSession } from '@/lib/api/session/forkSession'
 import type { Turn } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 export type UseTurnActionsReturn = {
   deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
@@ -22,9 +22,12 @@ export const useTurnActions = (): UseTurnActionsReturn => {
     async (sessionId: string, turnIndex: number): Promise<void> => {
       try {
         await deleteTurn(sessionId, turnIndex)
-        emitToast.success('Turn deleted successfully')
+        addToast({ status: 'success', title: 'Turn deleted successfully' })
       } catch (error: unknown) {
-        emitToast.failure((error as Error).message || 'Failed to delete turn.')
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to delete turn.'
+        })
         throw error
       }
     },
@@ -35,10 +38,13 @@ export const useTurnActions = (): UseTurnActionsReturn => {
     async (sessionId: string, forkIndex: number): Promise<void> => {
       try {
         const response = await forkSession(sessionId, forkIndex)
-        emitToast.success('Session forked successfully')
+        addToast({ status: 'success', title: 'Session forked successfully' })
         window.location.href = `/session/${response.new_session_id}`
       } catch (error: unknown) {
-        emitToast.failure((error as Error).message || 'Failed to fork session.')
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to fork session.'
+        })
         throw error
       }
     },
@@ -60,9 +66,12 @@ export const useTurnActions = (): UseTurnActionsReturn => {
             : { content: newContent }
 
         await editTurn(sessionId, turnIndex, updateData)
-        emitToast.success('Turn updated successfully')
+        addToast({ status: 'success', title: 'Turn updated successfully' })
       } catch (error: unknown) {
-        emitToast.failure((error as Error).message || 'Failed to update turn.')
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to update turn.'
+        })
         throw error
       }
     },

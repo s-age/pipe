@@ -1,8 +1,9 @@
 import type { JSX } from 'react'
 import { createPortal } from 'react-dom'
 
-import { useToastEventListener } from './hooks/useToastEventListener'
-import type { ToastItem } from './hooks/useToastEventListener'
+import type { ToastItem } from '@/stores/useToastStore'
+
+import { useToast } from './hooks/useToast'
 import { useToastHandlers } from './hooks/useToastHandlers'
 import { useToastItemLifecycle } from './hooks/useToastItemLifecycle'
 import * as styles from './style.css'
@@ -75,7 +76,7 @@ const ToastItem = ({
 }
 
 const ToastsComponent = (): JSX.Element => {
-  const { toasts, removeToast } = useToastEventListener()
+  const { toasts, removeToast } = useToast()
   const { grouped } = useToastHandlers(toasts)
 
   const positionElements: JSX.Element[] = []

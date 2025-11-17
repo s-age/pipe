@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceListActions } from './useReferenceListActions'
@@ -50,7 +50,7 @@ export const useReferenceListHandlers = (
         // wrote references returned from server into the form context
         setReferences(updatedReferences || [])
       } catch {
-        emitToast.failure('Failed to retrieve updated references.')
+        addToast({ status: 'failure', title: 'Failed to retrieve updated references.' })
       }
     },
     [formContext, references, handleUpdateReference, sessionDetail]

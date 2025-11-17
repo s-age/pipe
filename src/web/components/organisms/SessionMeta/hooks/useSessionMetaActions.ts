@@ -1,6 +1,6 @@
 import { editSessionMeta } from '@/lib/api/session/editSessionMeta'
 import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 type UseSessionMetaActionsProperties = {
   onRefresh: () => Promise<void>
@@ -17,10 +17,13 @@ export const useSessionMetaActions = ({
   ): Promise<void> => {
     try {
       await editSessionMeta(id, meta)
-      emitToast.success('Session metadata saved')
+      addToast({ status: 'success', title: 'Session metadata saved' })
       await onRefresh()
     } catch (error: unknown) {
-      emitToast.failure((error as Error).message || 'Failed to save session meta.')
+      addToast({
+        status: 'failure',
+        title: (error as Error).message || 'Failed to save session meta.'
+      })
     }
   }
 

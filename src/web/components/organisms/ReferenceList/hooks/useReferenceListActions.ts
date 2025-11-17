@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import { useFileSearchExplorerActions } from '@/components/organisms/FileSearchExplorer/hooks/useFileSearchExplorerActions'
 import { editReferences } from '@/lib/api/session/editReferences'
 import { getSession } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 import type { Reference } from '@/types/reference'
 
 export const useReferenceListActions = (
@@ -24,11 +24,14 @@ export const useReferenceListActions = (
       try {
         await editReferences(currentSessionId, newReferences)
         const { session } = await getSession(currentSessionId)
-        emitToast.success('Reference added successfully')
+        addToast({ status: 'success', title: 'Reference added successfully' })
 
         return session.references
       } catch (error: unknown) {
-        emitToast.failure((error as Error).message || 'Failed to add reference.')
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to add reference.'
+        })
         throw error
       }
     },
@@ -44,14 +47,15 @@ export const useReferenceListActions = (
             name: entry.name,
             isDirectory: entry.is_dir
           }))
-          emitToast.success('Root suggestions loaded successfully')
+          addToast({ status: 'success', title: 'Root suggestions loaded successfully' })
 
           return rootEntries
         }
       } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'Failed to load root suggestions.'
-        )
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to load root suggestions.'
+        })
       }
     }
 
@@ -67,14 +71,18 @@ export const useReferenceListActions = (
             name: entry.name,
             isDirectory: entry.is_dir
           }))
-          emitToast.success('Sub-directory suggestions loaded successfully')
+          addToast({
+            status: 'success',
+            title: 'Sub-directory suggestions loaded successfully'
+          })
 
           return entries
         }
       } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'Failed to load sub-directory suggestions.'
-        )
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to load sub-directory suggestions.'
+        })
       }
 
       return []

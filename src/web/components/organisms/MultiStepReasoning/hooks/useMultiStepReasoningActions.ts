@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import { editMultiStepReasoning } from '@/lib/api/session/editMultiStepReasoning'
 import type { EditMultiStepReasoningRequest } from '@/lib/api/session/editMultiStepReasoning'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { emitToast } from '@/lib/toastEvents'
+import { addToast } from '@/stores/useToastStore'
 
 export const useMultiStepReasoningActions = (): {
   updateMultiStepReasoning: (
@@ -18,13 +18,17 @@ export const useMultiStepReasoningActions = (): {
     ): Promise<{ message: string; session: SessionDetail } | void> => {
       try {
         const result = await editMultiStepReasoning(sessionId, payload)
-        emitToast.success(result?.message || 'Multi-step reasoning updated')
+        addToast({
+          status: 'success',
+          title: result?.message || 'Multi-step reasoning updated'
+        })
 
         return result
       } catch (error: unknown) {
-        emitToast.failure(
-          (error as Error).message || 'Failed to update multi-step reasoning'
-        )
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to update multi-step reasoning'
+        })
       }
     },
     []

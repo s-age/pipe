@@ -10,7 +10,7 @@ import { ProcedureSelect } from '@/components/organisms/ProcedureSelect'
 import { RolesSelect } from '@/components/organisms/RolesSelect'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
-import { metaItem, metaItemLabel, inputFullWidth } from './style.css'
+import { metaItem, metaItemLabel, inputFullWidth, requiredMark } from './style.css'
 
 type SessionMetaBasicProperties = {
   sessionDetail: SessionDetail
@@ -24,6 +24,7 @@ export const SessionMetaBasic = ({
   const formContext = useOptionalFormContext()
   const register = formContext?.register
   const setValue = formContext?.setValue
+  const errors = formContext?.formState?.errors
 
   const handleRolesChange = React.useCallback(
     (roles: string[]) => {
@@ -35,8 +36,14 @@ export const SessionMetaBasic = ({
   return (
     <>
       <Fieldset
-        legend={<span className={metaItemLabel}>Purpose:</span>}
+        legend={
+          <span className={metaItemLabel}>
+            Purpose:
+            <span className={requiredMark}>*</span>
+          </span>
+        }
         className={metaItem}
+        error={errors?.purpose as unknown as React.ReactNode}
       >
         {(ids) => (
           <InputText
@@ -50,8 +57,14 @@ export const SessionMetaBasic = ({
       </Fieldset>
 
       <Fieldset
-        legend={<span className={metaItemLabel}>Background:</span>}
+        legend={
+          <span className={metaItemLabel}>
+            Background:
+            <span className={requiredMark}>*</span>
+          </span>
+        }
         className={metaItem}
+        error={errors?.background as unknown as React.ReactNode}
       >
         {(ids) => (
           <TextArea

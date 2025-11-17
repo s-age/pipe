@@ -3,6 +3,7 @@ import React from 'react'
 import { Label } from '@/components/atoms/Label'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { Slider } from '@/components/molecules/Slider'
+import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useHyperParametersHandlers } from './hooks/useHyperParametersHandlers'
@@ -20,6 +21,8 @@ type HyperParametersProperties = {
 export const HyperParameters = ({
   sessionDetail
 }: HyperParametersProperties): React.JSX.Element => {
+  const formContext = useOptionalFormContext()
+  const errors = formContext?.formState?.errors
   const {
     temperature,
     setTemperature,
@@ -37,7 +40,10 @@ export const HyperParameters = ({
 
   return (
     <div className={metaItem}>
-      <Fieldset legend="Hyperparameters">
+      <Fieldset
+        legend="Hyperparameters"
+        error={errors?.hyperparameters as unknown as React.ReactNode}
+      >
         <div>
           <div className={hyperparametersControl}>
             <div className={labelContainer}>

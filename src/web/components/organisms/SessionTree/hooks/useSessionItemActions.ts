@@ -12,7 +12,6 @@ export const useSessionItemActions = (): UseSessionItemActionsReturn => {
   const loadSession = useCallback(async (sessionId: string): Promise<SessionDetail> => {
     try {
       const sessionDetail = await getSession(sessionId)
-      addToast({ status: 'success', title: 'Session loaded successfully' })
 
       return sessionDetail.session
     } catch (error: unknown) {

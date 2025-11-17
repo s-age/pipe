@@ -18,6 +18,12 @@ export const metaItemLabel = style({
   color: colors.offWhite
 })
 
+export const requiredMark = style({
+  color: colors.error,
+  marginLeft: '6px',
+  fontWeight: 'bold'
+})
+
 export const inputFullWidth = style({
   width: '100%'
 })

@@ -1,3 +1,4 @@
+import React from 'react'
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
@@ -6,6 +7,7 @@ import { Fieldset } from '@/components/molecules/Fieldset'
 import { Select } from '@/components/molecules/Select'
 import { TextArea } from '@/components/molecules/TextArea'
 // form context is accessed inside handlers when needed
+import { useOptionalFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
@@ -22,7 +24,7 @@ import {
   primaryButton,
   secondaryButton
 } from './style.css'
-import { metaItemLabel } from '../SessionMetaBasic/style.css'
+import { metaItemLabel, requiredMark } from '../SessionMetaBasic/style.css'
 
 type StartSessionFormInnerProperties = {
   sessionDetail: SessionDetail
@@ -40,6 +42,9 @@ export const StartSessionFormInner = ({
   const { handleCancel, handleCreateClick, isSubmitting } =
     useStartSessionFormHandlers()
 
+  const formContext = useOptionalFormContext()
+  const errors = formContext?.formState?.errors
+
   // Debug exposure removed.
 
   return (
@@ -51,8 +56,14 @@ export const StartSessionFormInner = ({
 
         <SessionMetaBasic sessionDetail={sessionDetail}>
           <Fieldset
-            legend={<span className={metaItemLabel}>First Instruction:</span>}
+            legend={
+              <span className={metaItemLabel}>
+                First Instruction:
+                <span className={requiredMark}>*</span>
+              </span>
+            }
             className={fieldsetContainer}
+            error={errors?.instruction as unknown as React.ReactNode}
           >
             {(ids) => (
               <TextArea
@@ -67,6 +78,7 @@ export const StartSessionFormInner = ({
         <Fieldset
           legend={<span className={metaItemLabel}>Parent Session:</span>}
           className={fieldsetContainer}
+          error={errors?.parent as unknown as React.ReactNode}
         >
           <Select name="parent" options={parentOptions} searchable={true} />
         </Fieldset>

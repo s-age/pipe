@@ -389,6 +389,30 @@ paths:
         '500':
           description: Internal server error
 
+  /api/v1/search:
+    post:
+      summary: Search sessions by query
+      description: "Search session files (filename, purpose, background, and turns) for a given query string. Returns matching session IDs and titles."
+      tags:
+        - v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchSessionsRequest'
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchSessionsResponse'
+        '400':
+          description: Validation error (bad request)
+        '500':
+          description: Internal server error
+
   /api/v1/session/{session_id}/todos:
     patch:
       summary: Edit session todos (singular path)
@@ -1185,3 +1209,32 @@ components:
         - name
         - is_dir
         - path
+    SearchSessionsRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          description: Query string to search for in session metadata and turns
+      required:
+        - query
+    SearchResult:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: The ID of the matched session
+        title:
+          type: string
+          description: Human-friendly title (from purpose or filename)
+      required:
+        - session_id
+        - title
+    SearchSessionsResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+      required:
+        - results

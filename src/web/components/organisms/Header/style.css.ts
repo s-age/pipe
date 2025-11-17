@@ -82,3 +82,79 @@ export const searchIconButton = style({
   cursor: 'pointer',
   padding: 0
 })
+
+export const searchResults = style({
+  position: 'absolute',
+  top: 'calc(100% + 8px)',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  width: '36%',
+  minWidth: '320px',
+  maxWidth: '480px',
+  background: colors.darkBackground,
+  color: colors.offWhite,
+  borderRadius: '8px',
+  boxShadow: '0 6px 18px rgba(0,0,0,0.24)',
+  overflow: 'hidden',
+  zIndex: 50,
+  padding: '6px 0'
+})
+
+export const searchResultItem = style({
+  padding: '10px 14px',
+  cursor: 'pointer',
+  color: colors.lightText,
+  background: 'transparent',
+  borderBottom: '1px solid rgba(255,255,255,0.03)',
+  selectors: {
+    '&:hover': {
+      background: 'rgba(255,255,255,0.06)',
+      color: colors.offWhite
+    },
+    '&:last-child': {
+      borderBottom: 'none'
+    }
+  }
+})
+
+export const searchNoResults = style({
+  padding: '8px 12px',
+  color: 'rgba(255,255,255,0.7)'
+})
+
+export const searchModalOverlay = style({
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0,0,0,0.5)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 60
+})
+
+export const searchModalContent = style({
+  width: '80%',
+  maxWidth: '720px',
+  background: colors.mediumBackground,
+  color: colors.offWhite,
+  borderRadius: '10px',
+  boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+  padding: '12px',
+  maxHeight: '70vh',
+  overflow: 'auto'
+})
+
+export const searchModalHeader = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: '8px'
+})
+
+export const searchModalClose = style({
+  background: 'transparent',
+  border: 'none',
+  color: colors.offWhite,
+  fontSize: '1rem',
+  cursor: 'pointer'
+})

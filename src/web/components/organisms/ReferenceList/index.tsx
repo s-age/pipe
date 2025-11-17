@@ -2,6 +2,7 @@ import { useMemo, type JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
+import { Accordion } from '@/components/molecules/Accordion'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -9,6 +10,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import { ReferenceComponent } from '../Reference'
 import { useReferenceListHandlers } from './hooks/useReferenceListHandlers'
 import { metaItem, metaItemLabel, referencesList, noItemsMessage } from './style.css'
+import { referenceSummary } from '../Reference/style.css'
 
 type ReferenceListProperties = {
   sessionDetail: SessionDetail
@@ -34,25 +36,39 @@ export const ReferenceList = ({
   return (
     <div className={metaItem}>
       <Label className={metaItemLabel}>References:</Label>
+
+      {/* Always-visible search / chips area */}
       <FileSearchExplorer
         existsValue={existsValue}
         placeholder={placeholder}
         onChange={handleReferencesChange}
       />
-      <ul className={referencesList}>
-        {references.map((reference, index) => (
-          <ReferenceComponent
-            key={index}
-            reference={reference}
-            currentSessionId={sessionDetail.session_id || null}
-            index={index}
-          />
-        ))}
-      </ul>
-      {references.length === 0 && (
-        <p className={noItemsMessage}>No references added yet.</p>
-      )}
-      {errors && <ErrorMessage error={errors as never} />}
+
+      {/* Collapsible list of reference items only */}
+      <Accordion
+        title={<span />}
+        summary={
+          <span
+            className={referenceSummary}
+          >{`${references.length} ${references.length === 1 ? 'reference' : 'references'} · Advanced settings`}</span>
+        }
+        defaultOpen={false}
+      >
+        <ul className={referencesList}>
+          {references.map((reference, index) => (
+            <ReferenceComponent
+              key={index}
+              reference={reference}
+              currentSessionId={sessionDetail.session_id || null}
+              index={index}
+            />
+          ))}
+        </ul>
+        {references.length === 0 && (
+          <p className={noItemsMessage}>No references added yet.</p>
+        )}
+        {errors && <ErrorMessage error={errors as never} />}
+      </Accordion>
     </div>
   )
 }

@@ -3,7 +3,7 @@ import type React from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
-import { useSessionOverviewActions } from '../SessionOverview/hooks/useSessionOverviewActions'
+import { useSessionItemActions } from './useSessionItemActions'
 
 type UseSessionTreeHandlersReturn = {
   handleNewChatClick: () => void
@@ -16,7 +16,7 @@ export const useSessionTreeHandlers = (
   selectSession: (id: string | null, detail: SessionDetail | null) => void,
   sessionReferences: React.RefObject<Map<string, HTMLLIElement>>
 ): UseSessionTreeHandlersReturn => {
-  const { loadSession } = useSessionOverviewActions()
+  const { loadSession } = useSessionItemActions()
 
   const handleNewChatClick = useCallback(() => {
     window.location.href = '/start_session'

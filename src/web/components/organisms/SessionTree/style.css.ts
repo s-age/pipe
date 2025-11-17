@@ -31,6 +31,25 @@ export const sessionListItem = style({
   marginBottom: '6px'
 })
 
+// Depth-based indentation classes (16px per level). Create up to 10 levels.
+export const depth0 = style({ marginLeft: '0px' })
+export const depth1 = style({ marginLeft: '16px' })
+export const depth2 = style({ marginLeft: '32px' })
+export const depth3 = style({ marginLeft: '48px' })
+export const depth4 = style({ marginLeft: '64px' })
+export const depth5 = style({ marginLeft: '80px' })
+export const depth6 = style({ marginLeft: '96px' })
+export const depth7 = style({ marginLeft: '112px' })
+export const depth8 = style({ marginLeft: '128px' })
+export const depth9 = style({ marginLeft: '144px' })
+export const depth10 = style({ marginLeft: '160px' })
+
+export const nestedList = style({
+  listStyle: 'none',
+  paddingLeft: 0,
+  margin: 0
+})
+
 export const sessionLink = style({
   display: 'block',
   // Increase horizontal padding so text aligns with the sidebar gutters.

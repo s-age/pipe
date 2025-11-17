@@ -12,6 +12,17 @@ export type SessionOverview = {
   last_update: string
 }
 
+export type SessionTreeNode = {
+  session_id: string
+  overview: Record<string, unknown>
+  children: SessionTreeNode[]
+}
+
 export const getSessionTree = async (): Promise<{
   sessions: [string, SessionOverview][]
-}> => client.get<{ sessions: [string, SessionOverview][] }>(`/session_tree`)
+  session_tree?: SessionTreeNode[]
+}> =>
+  client.get<{
+    sessions: [string, SessionOverview][]
+    session_tree?: SessionTreeNode[]
+  }>(`/session_tree`)

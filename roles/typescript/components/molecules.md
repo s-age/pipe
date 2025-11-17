@@ -220,6 +220,31 @@ export const Select = (properties: SelectProperties): JSX.Element => {
 
 ## Custom Hooks Pattern for Molecules
 
+## New Molecule: Accordion
+
+Use `Accordion` for compact/expandable panels. The molecule is accessibility-minded (keyboard toggling, `aria-expanded` / `aria-controls`) and accepts a `title`, optional `summary` shown when collapsed, and children shown when expanded.
+
+API (summary):
+
+```tsx
+type AccordionProps = {
+  title: React.ReactNode
+  summary?: React.ReactNode
+  defaultOpen?: boolean
+  children?: React.ReactNode
+}
+
+;<Accordion
+  title={<Header />}
+  summary={<small>TTL: 3 · 有効</small>}
+  defaultOpen={false}
+>
+  {/* details shown when expanded */}
+</Accordion>
+```
+
+Pattern: use `Accordion` at the molecules layer for UI-only expand/collapse behavior. Keep `defaultOpen` false for lists where density matters and surface detail editing inside the panel.
+
 ### State Management Hook
 
 Manages component state and form integration:

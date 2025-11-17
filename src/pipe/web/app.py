@@ -38,6 +38,7 @@ from pipe.web.actions.file_search_actions import (
     LsAction,
     SearchL2Action,
 )
+from pipe.web.actions.search_sessions_action import SearchSessionsAction
 from pipe.web.controllers import SessionDetailController
 
 
@@ -205,6 +206,7 @@ def dispatch_action(
         ("roles", "GET", GetRolesAction),
         ("procedures", "GET", GetProceduresAction),
         ("search_l2", "POST", search_l2_action),
+        ("search", "POST", SearchSessionsAction),
         ("ls", "POST", ls_action),
         ("index_files", "POST", index_files_action),
     ]
@@ -216,17 +218,67 @@ def dispatch_action(
         pattern_parts = route_pattern.split("/")
         action_parts = action.split("/")
 
-        if len(pattern_parts) != len(action_parts):
-            continue
-
+        # Flexible matching to allow path-like parameters (e.g. session IDs containing '/').
+        # We walk the pattern parts and action parts; when a pattern part is a placeholder
+        # we capture one or more action parts into that parameter. If a placeholder is
+        # followed by a literal in the pattern, we capture until that literal appears in
+        # the action parts. If it's the last pattern part, capture the rest of action_parts.
         match = True
-        for pp, ap in zip(pattern_parts, action_parts):
+        pi = 0
+        ai = 0
+        while pi < len(pattern_parts) and ai < len(action_parts):
+            pp = pattern_parts[pi]
             if pp.startswith("{") and pp.endswith("}"):
                 param_name = pp[1:-1]
-                params[param_name] = ap
-            elif pp != ap:
+                # If this is the last pattern part, capture the rest
+                if pi == len(pattern_parts) - 1:
+                    params[param_name] = "/".join(action_parts[ai:])
+                    ai = len(action_parts)
+                    pi += 1
+                    break
+
+                # Otherwise, find the next literal pattern part to know where to stop
+                next_literal = None
+                for nxt in pattern_parts[pi + 1 :]:
+                    if not (nxt.startswith("{") and nxt.endswith("}")):
+                        next_literal = nxt
+                        break
+
+                if next_literal is None:
+                    # No following literal, capture the rest
+                    params[param_name] = "/".join(action_parts[ai:])
+                    ai = len(action_parts)
+                    pi = len(pattern_parts)
+                    break
+
+                # Find the index in action_parts where next_literal appears
+                found_index = None
+                for look in range(ai, len(action_parts)):
+                    if action_parts[look] == next_literal:
+                        found_index = look
+                        break
+
+                if found_index is None:
+                    match = False
+                    break
+
+                # Capture action parts from ai up to found_index as the param
+                params[param_name] = "/".join(action_parts[ai:found_index])
+                ai = found_index
+                pi += 1
+                continue
+
+            # literal must match exactly
+            if action_parts[ai] != pp:
                 match = False
                 break
+
+            pi += 1
+            ai += 1
+
+        # If we've consumed pattern parts, ai should have consumed all action parts
+        if pi != len(pattern_parts) or ai != len(action_parts):
+            match = False
 
         if match:
             try:
@@ -375,6 +427,19 @@ def session_api(session_id):
     )
     if isinstance(response_data, Response):
         return response_data
+    return jsonify(response_data), status_code
+
+
+@app.route("/api/v1/search", methods=["POST"])
+def search_sessions_api():
+    """Explicit v1 search endpoint forwarding to the search action.
+
+    This keeps the `/api/v1` prefix explicit and avoids ambiguity with
+    dev-server proxies or clients that expect the v1 path to be present.
+    """
+    response_data, status_code = dispatch_action(
+        action="search", params={}, request_data=request
+    )
     return jsonify(response_data), status_code
 
 

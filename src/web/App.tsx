@@ -20,7 +20,7 @@ const router = createBrowserRouter([
     element: <ChatHistoryPage />
   },
   {
-    path: '/session/:sessionId',
+    path: '/session/*',
     element: <ChatHistoryPage />
   },
   {

@@ -79,16 +79,16 @@ export const SessionMeta = ({
           </div>
 
           <div className={sessionMetaView}>
+            <ReferenceList sessionDetail={sessionDetail} />
+
+            <HyperParameters sessionDetail={sessionDetail} />
+
             <MultiStepReasoning
               multiStepReasoningEnabled={
                 sessionDetail?.multi_step_reasoning_enabled ?? false
               }
               currentSessionId={sessionDetail.session_id ?? null}
             />
-
-            <ReferenceList sessionDetail={sessionDetail} />
-
-            <HyperParameters sessionDetail={sessionDetail} />
 
             <TodoList sessionDetail={sessionDetail} />
           </div>

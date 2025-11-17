@@ -3,7 +3,7 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '../../../styles/colors.css.ts'
 
 export const metaItem = style({
-  marginBottom: '16px'
+  margin: '32px 0'
 })
 
 export const todosList = style({

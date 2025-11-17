@@ -1,3 +1,29 @@
+## Special Purpose: `useInitialLoading`
+
+`useInitialLoading` is a small utility for initial data fetching that executes only once, even in React StrictMode. It's useful for one-time setup calls on mount where duplicate invocations in development are undesirable.
+
+```typescript
+// Implementation
+import { useEffect, useRef } from 'react'
+
+export const useInitialLoading = (loadFunction: () => Promise<void>): void => {
+  const initializedReference = useRef(false)
+
+  useEffect(() => {
+    if (initializedReference.current) {
+      return
+    }
+    initializedReference.current = true
+    void loadFunction()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+}
+```
+
+**When to use:** initial page data fetching on mount, one-time setup operations with side effects, API calls that should only happen once per component lifecycle.
+
+**When NOT to use:** effects that should re-run on dependency changes or user-triggered actions.
+
 # Lifecycle Pattern
 
 ## Purpose

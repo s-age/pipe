@@ -145,7 +145,7 @@ export const materialIcons = style({
 })
 
 export const forkButtonIcon = style({
-  background: colors.purpleAccent,
+  background: colors.cyanAlt,
   borderRadius: '4px',
   padding: '4px'
 })

@@ -28,6 +28,7 @@ export const sessionMetaView = style({
   padding: '20px',
   background: colors.mediumBackground,
   borderRadius: '8px',
+  marginBottom: '16px',
 
   selectors: {
     '&:first-child': {

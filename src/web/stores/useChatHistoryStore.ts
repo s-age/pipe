@@ -2,10 +2,15 @@ import { useCallback, useReducer } from 'react'
 
 import type { RoleOption } from '@/lib/api/roles/getRoles'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import type {
+  SessionOverview,
+  SessionTreeNode
+} from '@/lib/api/sessionTree/getSessionTree'
 
 export type SessionTree = {
-  sessions: SessionOverview[]
+  // sessions may be either a flat list of SessionOverview or a hierarchical
+  // tree of SessionTreeNode objects produced by the backend.
+  sessions: SessionOverview[] | SessionTreeNode[]
   currentSessionId: string | null
 }
 
@@ -28,7 +33,7 @@ export const initialState: State = {
 }
 
 export type Action =
-  | { type: 'SET_SESSIONS'; payload: SessionOverview[] }
+  | { type: 'SET_SESSIONS'; payload: SessionOverview[] | SessionTreeNode[] }
   | { type: 'SET_CURRENT_SESSION_ID'; payload: string | null }
   | { type: 'SET_SESSION_DETAIL'; payload: SessionDetail | null }
   | {
@@ -80,7 +85,7 @@ export const reducer = (state: State, action: Action): State => {
 }
 
 export type Actions = {
-  setSessions: (sessions: SessionOverview[]) => void
+  setSessions: (sessions: SessionOverview[] | SessionTreeNode[]) => void
   setCurrentSessionId: (id: string | null) => void
   setSessionDetail: (detail: SessionDetail | null) => void
   selectSession: (id: string | null, detail: SessionDetail | null) => void
@@ -102,7 +107,7 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
   const mergedInitial: State = { ...initialState, ...(initial || {}) }
   const [state, dispatch] = useReducer(reducer, mergedInitial)
 
-  const setSessions = useCallback((sessions: SessionOverview[]) => {
+  const setSessions = useCallback((sessions: SessionOverview[] | SessionTreeNode[]) => {
     dispatch({ type: 'SET_SESSIONS', payload: sessions })
   }, [])
 

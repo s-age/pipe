@@ -132,8 +132,6 @@ export const useMultiStepReasoningHandlers = ({ sessionId, onRefresh }) => {
 5. **Handle errors internally** - Actions handle errors and toast notifications, and do not re-throw errors.
 6. **Return API responses** - Don't transform data in actions
 
-
-
 ## Testing Actions
 
 ```typescript
@@ -163,3 +161,13 @@ describe('useMultiStepReasoningActions', () => {
 
 - [Handlers](./useHandlers.md) - Consume actions in event handlers
 - [Lifecycle](./useLifecycle.md) - May trigger actions on mount/unmount
+
+## Error Handling Responsibility
+
+Actions hooks are responsible for error handling and user feedback (toasts, alerts). Handlers hooks should not perform user-facing error handling; instead they should call Actions and let Actions surface errors. This separation keeps UI event logic and error handling concerns cleanly separated.
+
+**Rule:**
+
+- Implement try/catch and toast notifications inside Actions.
+- Return meaningful values or undefined from Actions so Handlers can react appropriately.
+- Avoid user-facing error UI in Handlers; log or rethrow only when necessary for higher-level handling.

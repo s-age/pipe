@@ -4,7 +4,10 @@ import { deleteSession } from '@/lib/api/session/deleteSession'
 import { getSession } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
-import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import type {
+  SessionOverview,
+  SessionTreeNode
+} from '@/lib/api/sessionTree/getSessionTree'
 import { addToast } from '@/stores/useToastStore'
 
 type UseChatHistoryActionsProperties = {
@@ -43,10 +46,35 @@ export const useChatHistoryActions = ({
     try {
       const fetchedSessionDetailResponse = await getSession(currentSessionId)
       const fetchedSessionTree = await getSessionTree()
-      const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
-        ...session,
-        session_id: id
-      }))
+      let newSessions: SessionOverview[]
+      if (fetchedSessionTree.session_tree) {
+        // hierarchical nodes — flatten for refreshSessionsInStore
+        const flatten: SessionOverview[] = []
+        const walk = (nodes: SessionTreeNode[]): void => {
+          for (const n of nodes) {
+            const overview = (n.overview || {}) as Partial<SessionOverview>
+            flatten.push({
+              session_id: n.session_id,
+              purpose: (overview.purpose as string) || '',
+              background: (overview.background as string) || '',
+              roles: (overview.roles as string[]) || [],
+              procedure: (overview.procedure as string) || '',
+              artifacts: (overview.artifacts as string[]) || [],
+              multi_step_reasoning_enabled: !!overview.multi_step_reasoning_enabled,
+              token_count: (overview.token_count as number) || 0,
+              last_update: (overview.last_update as string) || ''
+            })
+            if (n.children && n.children.length) walk(n.children)
+          }
+        }
+        walk(fetchedSessionTree.session_tree)
+        newSessions = flatten
+      } else {
+        newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
+          ...session,
+          session_id: id
+        }))
+      }
       refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
     } catch (error: unknown) {
       addToast({

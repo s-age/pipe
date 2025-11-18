@@ -1,6 +1,7 @@
 import { style } from '@vanilla-extract/css'
 
 import { colors } from '@/styles/colors.css'
+import { zIndex } from '@/styles/zIndex.css'
 
 export const container = style({
   position: 'relative',
@@ -9,19 +10,19 @@ export const container = style({
 
 export const pathDisplayContainer = style({
   display: 'flex',
+  margin: '8px 0',
   flexWrap: 'wrap',
-  gap: '5px',
-  margin: '8px 0'
+  gap: '5px'
 })
 
 export const pathTag = style({
-  backgroundColor: colors.cyan,
-  color: colors.black,
+  display: 'inline-flex',
   padding: '2px 6px',
   borderRadius: '3px',
   fontSize: '12px',
+  color: colors.black,
+  backgroundColor: colors.cyan,
   cursor: 'pointer',
-  display: 'inline-flex',
   alignItems: 'center',
   gap: '8px',
   wordBreak: 'break-all',
@@ -31,14 +32,14 @@ export const pathTag = style({
 })
 
 export const pathTagDeleteButton = style({
-  background: 'none',
-  border: 'none',
-  color: 'inherit',
-  cursor: 'pointer',
   padding: '0',
+  border: 'none',
   fontSize: '14px',
+  fontWeight: 'bold',
   lineHeight: '1',
-  fontWeight: 'bold'
+  color: 'inherit',
+  background: 'none',
+  cursor: 'pointer'
 })
 
 export const searchInput = style({
@@ -51,24 +52,24 @@ export const searchInput = style({
 export const suggestionList = style({
   position: 'absolute',
   top: '45px',
-  left: '0',
   right: '0',
-  marginTop: '5px',
-  padding: '0',
+  left: '0',
   height: '150px',
   overflowY: 'auto',
-  backgroundColor: colors.gray,
+  marginTop: '5px',
+  padding: '0',
   border: `1px solid ${colors.cyanAlt}`,
   borderRadius: '4px',
-  zIndex: 10
+  backgroundColor: colors.gray,
+  zIndex: zIndex.dropdown
 })
 
 export const suggestionItem = style({
   padding: '4px 8px',
-  cursor: 'pointer',
-  listStyle: 'none',
   color: colors.white,
   backgroundColor: colors.gray,
+  cursor: 'pointer',
+  listStyle: 'none',
   ':hover': {
     backgroundColor: colors.cyan,
     color: colors.black

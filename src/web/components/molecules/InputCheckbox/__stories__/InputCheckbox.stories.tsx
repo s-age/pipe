@@ -5,12 +5,13 @@ import { Form } from '@/components/organisms/Form'
 
 import { InputCheckbox } from '../index'
 
-export default {}
-export const Meta = {
-  title: 'Atoms/InputCheckbox',
+const Meta = {
+  title: 'Molecules/InputCheckbox',
   component: InputCheckbox,
   tags: ['autodocs']
 } satisfies StoryMeta<typeof InputCheckbox>
+
+export default Meta
 
 // Storybook meta is exported as a named export to comply with import/no-default-export
 type Story = StoryObj<typeof Meta>

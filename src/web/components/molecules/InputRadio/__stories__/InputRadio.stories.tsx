@@ -5,12 +5,13 @@ import { Form } from '@/components/organisms/Form'
 
 import { InputRadio } from '../index'
 
-export default {}
-export const Meta = {
-  title: 'Atoms/InputRadio',
+const Meta = {
+  title: 'Molecules/InputRadio',
   component: InputRadio,
   tags: ['autodocs']
 } satisfies StoryMeta<typeof InputRadio>
+
+export default Meta
 
 type Story = StoryObj<typeof Meta>
 

@@ -2,14 +2,14 @@ import { forwardRef } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview as SessionOverviewType } from '@/lib/api/sessionTree/getSessionTree'
-
-import { useSessionOverviewHandlers } from './hooks/useSessionOverviewHandlers'
 import {
   sessionListItem,
   sessionLink,
   sessionLinkActive,
   sessionIdStyle
-} from '../SessionTree/style.css'
+} from '@/styles/sessionTree.css'
+
+import { useSessionOverviewHandlers } from './hooks/useSessionOverviewHandlers'
 
 type SessionOverviewProperties = {
   session: SessionOverviewType

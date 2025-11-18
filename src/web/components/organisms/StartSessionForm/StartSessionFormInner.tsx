@@ -12,6 +12,7 @@ import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { metaItemLabel, requiredMark } from '@/styles/sessionMeta.css'
 import type { Option } from '@/types/option'
 
 import { useStartSessionFormHandlers } from './hooks/useStartSessionFormHandlers'
@@ -24,7 +25,6 @@ import {
   primaryButton,
   secondaryButton
 } from './style.css'
-import { metaItemLabel, requiredMark } from '../SessionMetaBasic/style.css'
 
 type StartSessionFormInnerProperties = {
   sessionDetail: SessionDetail

@@ -7,9 +7,9 @@ export const selectStyle = style({
   padding: '8px',
   border: `1px solid ${colors.white}`,
   borderRadius: '4px',
-  backgroundColor: colors.black,
-  color: colors.white,
   fontSize: '1em',
+  color: colors.white,
+  backgroundColor: colors.black,
   cursor: 'pointer',
   ':focus': {
     borderColor: colors.cyan,
@@ -26,28 +26,28 @@ export const trigger = style({
 
 export const searchIconInTrigger = style({
   position: 'absolute',
-  left: '8px',
   top: '50%',
-  transform: 'translateY(-50%)',
+  left: '8px',
   color: colors.white,
-  pointerEvents: 'none'
+  pointerEvents: 'none',
+  transform: 'translateY(-50%)'
 })
 
 export const panel = style({
-  listStyle: 'none',
-  padding: 8,
   margin: 0,
-  background: colors.gray,
+  padding: 8,
   borderRadius: 6,
-  boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+  background: colors.gray,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+  listStyle: 'none'
 })
 
 export const option = style({
+  display: 'flex',
   padding: '8px 12px',
   borderRadius: 4,
-  cursor: 'pointer',
   background: 'transparent',
-  display: 'flex',
+  cursor: 'pointer',
   alignItems: 'center',
   selectors: {
     '&:not(:last-child)': {
@@ -57,27 +57,27 @@ export const option = style({
 })
 
 export const optionHighlighted = style({
-  background: colors.lightBlue,
-  color: colors.black
+  color: colors.black,
+  background: colors.lightBlue
 })
 
 export const searchInput = style({
   display: 'flex',
-  alignItems: 'center',
   width: '100%',
-  padding: '8px 10px',
   marginBottom: 8,
-  borderRadius: 6,
+  padding: '8px 10px',
   border: `1px solid ${colors.white}`,
+  borderRadius: 6,
+  color: colors.white,
   background: colors.black,
-  color: colors.white
+  alignItems: 'center'
 })
 
 export const searchInputField = style({
   flex: 1,
   border: 'none',
-  background: 'transparent',
   color: 'inherit',
+  background: 'transparent',
   outline: 'none',
   '::placeholder': {
     color: colors.white
@@ -86,40 +86,40 @@ export const searchInputField = style({
 
 export const selectedTags = style({
   display: 'flex',
+  marginBottom: '8px',
   flexWrap: 'wrap',
-  gap: '4px',
-  marginBottom: '8px'
+  gap: '4px'
 })
 
 export const tag = style({
   display: 'inline-flex',
-  alignItems: 'center',
   padding: '4px 8px',
-  background: colors.cyan,
-  color: colors.black,
   borderRadius: '12px',
-  fontSize: '0.875em'
+  fontSize: '0.875em',
+  color: colors.black,
+  background: colors.cyan,
+  alignItems: 'center'
 })
 
 export const tagRemove = style({
   marginLeft: '4px',
-  cursor: 'pointer',
-  fontWeight: 'bold'
+  fontWeight: 'bold',
+  cursor: 'pointer'
 })
 
 export const searchIcon = style({
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
   width: '20px',
   height: '20px',
   border: `1px solid ${colors.cyan}`,
   borderRadius: '2px',
-  color: colors.cyan
+  color: colors.cyan,
+  alignItems: 'center',
+  justifyContent: 'center'
 })
 
 export const checkbox = style({
-  marginRight: '8px',
   width: '16px',
-  height: '16px'
+  height: '16px',
+  marginRight: '8px'
 })

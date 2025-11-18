@@ -1,6 +1,7 @@
 import { style } from '@vanilla-extract/css'
 
 import { colors } from '@/styles/colors.css'
+import { zIndex } from '@/styles/zIndex.css'
 
 export const container = style({
   position: 'relative',
@@ -12,11 +13,11 @@ export const label = style({
   position: 'absolute',
   top: '0',
   left: '50%',
-  transform: 'translate(-50%, -50%)',
   fontSize: '12px',
   color: colors.white,
   pointerEvents: 'none',
-  zIndex: 1
+  transform: 'translate(-50%, -50%)',
+  zIndex: zIndex.base
 })
 
 export const valueLabel = style({
@@ -30,9 +31,9 @@ export const trackWrap = style({
 })
 
 export const svg = style({
+  display: 'block',
   width: '100%',
-  height: 48,
-  display: 'block'
+  height: 48
 })
 
 export const track = style({
@@ -51,12 +52,11 @@ export const thumbCircle = style({
 
 export const hiddenRange = style({
   position: 'absolute',
-  inset: 0,
   width: '100%',
   height: '100%',
-  opacity: 0,
   margin: 0,
-  // keep it focusable
+  opacity: 0,
+  inset: 0,
   ':focus': {
     outline: 'none'
   }

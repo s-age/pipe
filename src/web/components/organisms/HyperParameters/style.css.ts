@@ -6,8 +6,8 @@ export const metaItem = style({
 
 export const hyperparametersControl = style({
   display: 'flex',
-  alignItems: 'center',
   marginBottom: '10px',
+  alignItems: 'center',
   gap: '16px'
 })
 

@@ -7,9 +7,9 @@ export const selectStyle = style({
   padding: '8px',
   border: `1px solid ${colors.white}`,
   borderRadius: '4px',
-  backgroundColor: colors.black,
-  color: colors.white,
   fontSize: '1em',
+  color: colors.white,
+  backgroundColor: colors.black,
   cursor: 'pointer',
   ':focus': {
     borderColor: colors.cyan,
@@ -25,19 +25,19 @@ export const trigger = style({
 })
 
 export const panel = style({
-  listStyle: 'none',
-  padding: 8,
   margin: 0,
-  background: colors.gray,
+  padding: 8,
   borderRadius: 6,
-  boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+  background: colors.gray,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+  listStyle: 'none'
 })
 
 export const option = style({
   padding: '8px 12px',
   borderRadius: 4,
-  cursor: 'pointer',
   background: 'transparent',
+  cursor: 'pointer',
   selectors: {
     '&:not(:last-child)': {
       marginBottom: '4px'
@@ -46,16 +46,16 @@ export const option = style({
 })
 
 export const optionHighlighted = style({
-  background: colors.lightBlue,
-  color: colors.black
+  color: colors.black,
+  background: colors.lightBlue
 })
 
 export const searchInput = style({
   width: '100%',
-  padding: '8px 10px',
   marginBottom: 8,
-  borderRadius: 6,
+  padding: '8px 10px',
   border: `1px solid ${colors.white}`,
-  background: colors.black,
-  color: colors.white
+  borderRadius: 6,
+  color: colors.white,
+  background: colors.black
 })

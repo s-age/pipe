@@ -5,9 +5,8 @@ import { Heading } from '@/components/atoms/Heading'
 import { IconDelete } from '@/components/atoms/IconDelete'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { useSessionStore } from '@/stores/useChatHistoryStore'
-import { colors } from '@/styles/colors.css'
 
-import { turnsHeader } from './style.css'
+import { turnsHeader, deleteButton } from './style.css'
 
 type ChatHistoryHeaderProperties = {
   sessionDetail: SessionDetail | null
@@ -46,7 +45,7 @@ export const ChatHistoryHeader = ({
         kind="secondary"
         size="default"
         onClick={handleDeleteCurrentSession}
-        style={{ backgroundColor: colors.red, color: colors.white }}
+        className={deleteButton}
       >
         <IconDelete size={16} />
       </Button>

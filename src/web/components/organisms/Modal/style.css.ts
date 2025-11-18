@@ -1,25 +1,27 @@
 import { style } from '@vanilla-extract/css'
 
+import { zIndex } from '@/styles/zIndex.css'
+
 import { colors } from '../../../styles/colors.css'
 
 export const overlay = style({
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0,0,0,0.6)',
   display: 'flex',
+  position: 'fixed',
+  padding: '24px',
+  background: 'rgba(0,0,0,0.6)',
+  inset: 0,
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 1000,
-  padding: '24px'
+  zIndex: zIndex.modal
 })
 
 export const content = style({
-  background: colors.black,
-  color: colors.white,
-  borderRadius: 8,
   minWidth: 320,
   maxWidth: '90%',
-  boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+  padding: '20px',
   border: `1px solid ${colors.muted}`,
-  padding: '20px'
+  borderRadius: 8,
+  color: colors.white,
+  background: colors.black,
+  boxShadow: '0 10px 30px rgba(0,0,0,0.6)'
 })

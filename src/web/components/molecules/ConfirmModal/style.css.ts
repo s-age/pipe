@@ -4,10 +4,10 @@ import { colors } from '../../../styles/colors.css'
 
 export const container = style({
   display: 'flex',
-  flexDirection: 'column',
-  gap: '16px',
+  minWidth: '300px',
   padding: '16px',
-  minWidth: '300px'
+  flexDirection: 'column',
+  gap: '16px'
 })
 
 export const header = style({
@@ -28,14 +28,14 @@ export const title = style({
 })
 
 export const message = style({
-  color: colors.muted,
   fontSize: '0.9em',
-  lineHeight: '1.5'
+  lineHeight: '1.5',
+  color: colors.muted
 })
 
 export const actions = style({
   display: 'flex',
+  marginTop: '16px',
   justifyContent: 'flex-end',
-  gap: '8px',
-  marginTop: '16px'
+  gap: '8px'
 })

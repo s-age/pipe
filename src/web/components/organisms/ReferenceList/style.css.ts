@@ -1,6 +1,7 @@
 import { style } from '@vanilla-extract/css'
 
 import { colors } from '@/styles/colors.css'
+import { zIndex } from '@/styles/zIndex.css'
 
 export const metaItem = style({
   marginBottom: '32px'
@@ -14,9 +15,9 @@ export const metaItemLabel = style({
 })
 
 export const referencesList = style({
-  listStyle: 'none',
+  margin: 0,
   padding: 0,
-  margin: 0
+  listStyle: 'none'
 })
 
 export const referenceControls = style({
@@ -30,30 +31,30 @@ export const referenceCheckboxMargin = style({
 })
 
 export const noItemsMessage = style({
+  marginTop: '10px',
   color: colors.muted,
-  fontStyle: 'italic',
-  marginTop: '10px'
+  fontStyle: 'italic'
 })
 
 export const addReferenceContainer = style({
   display: 'flex',
-  gap: '10px',
+  position: 'relative',
   marginBottom: '15px',
-  alignItems: 'center',
-  position: 'relative'
+  gap: '10px',
+  alignItems: 'center'
 })
 
 export const addReferenceInput = style({
-  flexGrow: 1,
-  padding: '8px'
+  padding: '8px',
+  flexGrow: 1
 })
 
 export const addReferenceButton = style({
   padding: '8px 12px',
   border: `1px solid ${colors.cyanAlt}`,
   borderRadius: '4px',
-  backgroundColor: colors.cyan,
   color: colors.white,
+  backgroundColor: colors.cyan,
   cursor: 'pointer',
   transition: 'background-color 0.2s ease'
 })
@@ -61,23 +62,23 @@ export const addReferenceButton = style({
 export const suggestionList = style({
   position: 'absolute',
   top: '100%',
-  left: '0',
   right: '0',
-  marginTop: '5px',
-  padding: '0',
+  left: '0',
   height: '150px',
   overflowY: 'auto',
-  backgroundColor: colors.gray,
+  marginTop: '5px',
+  padding: '0',
   border: `1px solid ${colors.cyanAlt}`,
   borderRadius: '4px',
-  zIndex: 10
+  backgroundColor: colors.gray,
+  zIndex: zIndex.dropdown
 })
 
 export const suggestionItem = style({
   padding: '4px 8px',
+  color: 'white',
   cursor: 'pointer',
-  listStyle: 'none',
-  color: 'white'
+  listStyle: 'none'
 })
 
 export const selectedSuggestionItem = style([

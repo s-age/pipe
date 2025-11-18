@@ -1,27 +1,30 @@
 // For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import { FlatCompat } from '@eslint/eslintrc' // Use Compat to expand Prettier configuration
+import pluginJs from '@eslint/js'
+import pluginImport from 'eslint-plugin-import'
+import pluginPrettier from 'eslint-plugin-prettier'
+import pluginReact from 'eslint-plugin-react'
+import pluginReactHooks from 'eslint-plugin-react-hooks'
+// eslint-disable-next-line import/order
 import storybook from 'eslint-plugin-storybook'
 
 // eslint.config.js (Proposed Revision)
 
+import pluginUnicorn from 'eslint-plugin-unicorn'
+import pluginUnusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
-import pluginJs from '@eslint/js'
 // Import from typescript-eslint instead of tseslintPlugin, tseslintParser
 import tseslint from 'typescript-eslint'
-import pluginReact from 'eslint-plugin-react'
-import pluginReactHooks from 'eslint-plugin-react-hooks'
-import pluginUnicorn from 'eslint-plugin-unicorn'
+import pluginVanillaExtract from './eslint-rules/vanilla-extract-recess-order.js'
 // To avoid Prettier conflicts, do not use eslint-config-prettier (use plugin-prettier instead)
-import pluginPrettier from 'eslint-plugin-prettier'
-import pluginImport from 'eslint-plugin-import'
-import pluginUnusedImports from 'eslint-plugin-unused-imports'
-import { FlatCompat } from '@eslint/eslintrc' // Use Compat to expand Prettier configuration
 
 // Configuration to expand Prettier in compatibility mode
 const compat = new FlatCompat({
-  baseDirectory: import.meta.url,
+  baseDirectory: import.meta.url
   // baseDirectory: __dirname, // For Node.js environment
 })
 
+// eslint-disable-next-line import/no-default-export
 export default [
   // 1. Base Configuration (JavaScript + TypeScript)
   // ESLint recommended configuration
@@ -46,8 +49,9 @@ export default [
       unicorn: pluginUnicorn,
       import: pluginImport,
       'unused-imports': pluginUnusedImports,
+      'vanilla-extract': pluginVanillaExtract,
       // Prettier is configured in rules, so it's often unnecessary here
-      prettier: pluginPrettier,
+      prettier: pluginPrettier
     },
 
     rules: {
@@ -71,8 +75,8 @@ export default [
         {
           allowArrowFunctions: false,
           allowBind: false,
-          ignoreRefs: true,
-        },
+          ignoreRefs: true
+        }
       ],
       'react/jsx-boolean-value': ['error', 'always'],
       'react/forbid-dom-props': ['error', { forbid: ['style'] }],
@@ -85,7 +89,7 @@ export default [
       // accidental runtime imports. Start as 'warn' so we can safely roll out.
       '@typescript-eslint/consistent-type-imports': [
         'error',
-        { prefer: 'type-imports' },
+        { prefer: 'type-imports' }
       ],
       '@typescript-eslint/explicit-function-return-type': 'error',
 
@@ -96,8 +100,8 @@ export default [
           groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
           pathGroups: [{ pattern: '@/**', group: 'internal' }],
           alphabetize: { order: 'asc', caseInsensitive: true },
-          'newlines-between': 'always',
-        },
+          'newlines-between': 'always'
+        }
       ],
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
@@ -106,36 +110,29 @@ export default [
           vars: 'all',
           varsIgnorePattern: '^_',
           args: 'after-used',
-          argsIgnorePattern: '^_',
-        },
+          argsIgnorePattern: '^_'
+        }
       ],
       'import/no-default-export': 'error',
 
-      // ✅ Style encapsulation: Restrict style.css.ts imports
+      // ✅ Style encapsulation: Restrict cross-directory style imports while allowing
+      // same-directory `./style.css` and shared `@/styles/**` imports.
+      // Note: `no-restricted-imports` does not support an allow-list object inside
+      // `patterns`. Therefore we only ban the forms that represent cross-directory
+      // imports: parent-relative imports (`../.../style.css`) and cross-component
+      // alias imports under `@/components/.../style.css`.
       'no-restricted-imports': [
         'error',
         {
           patterns: [
-            {
-              group: ['**/style.css.ts'],
-              message:
-                'Importing styles from style.css.ts files is only allowed from the current directory or from src/styles/.',
-              // allowプロパティはpatternsの直下ではなく、groupなどと同じレベルで指定
-              // ここでは、特定のパターンを許可するためにallowを直接使用するのではなく、
-              // 複数のパターンを定義して、許可するパターンと禁止するパターンを分ける
-            },
-            {
-              // 同一ディレクトリからのインポートを許可
-              group: ['./style.css.ts'],
-              // このパターンは許可されるため、messageは不要
-            },
-            {
-              // src/styles/からのインポートを許可
-              group: ['@/styles/**/*.css.ts'],
-              // このパターンは許可されるため、messageは不要
-            },
-          ],
-        },
+            // parent-relative style imports (cross-directory)
+            '../**/style.css',
+            '../**/style.css.ts',
+            // cross-component alias imports (avoid importing another component's styles)
+            '@/components/**/style.css',
+            '@/components/**/style.css.ts'
+          ]
+        }
       ],
 
       // ✅ Others
@@ -143,7 +140,7 @@ export default [
       'prefer-arrow-callback': ['error', { allowNamedFunctions: true }],
       'padding-line-between-statements': [
         'error',
-        { blankLine: 'always', prev: '*', next: 'return' },
+        { blankLine: 'always', prev: '*', next: 'return' }
       ],
       // NOTE: function declarations/expressions are restricted, but we apply the
       // concrete enforcement via a dedicated override block below so we can
@@ -156,30 +153,30 @@ export default [
             i: true,
             j: true,
             d: true,
-            _: true,
+            _: true
           },
           checkFilenames: false,
-          checkProperties: false,
-        },
-      ],
+          checkProperties: false
+        }
+      ]
     },
 
     settings: {
-      react: { version: 'detect' },
-    },
+      react: { version: 'detect' }
+    }
   }, // 3. Apply Prettier last to disable all conflicting rules
   ...compat.extends('prettier'), // Node.js specific configuration for ts_analyzer.js
   {
     files: ['src/pipe/cli/ts_analyzer.js'],
     languageOptions: {
       globals: {
-        ...globals.node,
-      },
+        ...globals.node
+      }
     },
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
-      'no-undef': 'off', // Disable no-undef as globals.node should handle it
-    },
+      'no-undef': 'off' // Disable no-undef as globals.node should handle it
+    }
   },
   // Zodスキーマ定義をschema.ts以外のファイルで禁止するルール
   {
@@ -189,28 +186,32 @@ export default [
         'error',
         {
           selector: 'CallExpression[callee.object.name="z"]',
-          message: 'Zod schema definitions are only allowed in schema.ts files.',
-        },
-      ],
-    },
+          message: 'Zod schema definitions are only allowed in schema.ts files.'
+        }
+      ]
+    }
   },
-  // React標準フックをuse*.ts[x]ファイル以外で禁止するルール (修正版)
+  // React hooks usage restriction: disallow calling hooks in non-hook files
+  // This rule forbids calls whose callee name looks like `useXxx` in files
+  // that are not hook modules (use*.ts[x]). It covers both standard React
+  // hooks and custom hooks named `useSomething` to avoid components
+  // embedding hook logic directly.
   {
     files: ['**/*.{ts,tsx}'],
-    // 🚨 use*.ts[x] ファイルを除外
+    // Exclude actual hook implementation files
     ignores: ['**/use*.{ts,tsx}'],
 
     rules: {
       'no-restricted-syntax': [
         'error',
         {
-          selector:
-            'CallExpression[callee.name=/^(use(State|Ref|Effect|Callback|Memo))$/]',
+          // match any identifier starting with `use` followed by a capital letter
+          selector: 'CallExpression[callee.name=/^use[A-Z][A-Za-z0-9]*$/]',
           message:
-            'React standard hooks (useState, useRef, useEffect, useCallback, useMemo) are only allowed in use*.ts[x] files.',
-        },
-      ],
-    },
+            'Hook calls (functions named useXxx) are only allowed in files named use*.ts or use*.tsx. Move hook usage into a hook module.'
+        }
+      ]
+    }
   },
   // Enforce banning `function` keyword for all non-use* files.
   {
@@ -221,35 +222,45 @@ export default [
         {
           selector: 'FunctionDeclaration',
           message:
-            'Function declarations are disallowed. Use arrow functions or exported named `function` only inside use* hooks.',
+            'Function declarations are disallowed. Use arrow functions or exported named `function` only inside use* hooks.'
         },
         {
           selector: 'FunctionExpression',
-          message: 'Function expressions are disallowed. Use arrow functions instead.',
-        },
-      ],
-    },
+          message: 'Function expressions are disallowed. Use arrow functions instead.'
+        }
+      ]
+    }
   },
   {
     files: ['**/use*.{ts,tsx}'], // use*.ts[x]ファイルにのみ適用
     rules: {
       // use*.ts[x] ファイルではフックの使用を許可するため、
       // 関数キーワード禁止ルールを無効化します。
-      'no-restricted-syntax': 'off',
-    },
+      'no-restricted-syntax': 'off'
+    }
   },
   // atoms/{*ts,tsx} でuseStateを使うのを禁止するルール
   {
     files: ['src/web/components/atoms/**/*.{ts,tsx}'],
     ignores: ['**/*.stories.tsx'],
     rules: {
+      // Forbid any hook call inside atoms; atoms should be pure presentational
+      // and not hold local hook-based state. This matches any `useXxx` call.
       'no-restricted-syntax': [
         'error',
-        { selector: 'CallExpression[callee.name=/useState/]' /* ... */ },
-      ],
-    },
+        { selector: 'CallExpression[callee.name=/^use[A-Z][A-Za-z0-9]*$/]' }
+      ]
+    }
   },
   ...storybook.configs['flat/recommended'],
+
+  // Enforce property ordering inside vanilla-extract style objects
+  {
+    files: ['src/web/**/*.css.ts'],
+    rules: {
+      'vanilla-extract/recess-order': ['error']
+    }
+  },
   // Relax rules for story / demo files where inline handlers and style props
   // are common and acceptable for examples.
   {
@@ -258,8 +269,8 @@ export default [
       'react/jsx-no-bind': 'off',
       'react/forbid-dom-props': 'off',
       'no-restricted-syntax': 'off',
-      'import/no-default-export': 'off',
-    },
+      'import/no-default-export': 'off'
+    }
   },
   // ✅ Max lines per file (WARN) - 最初に適用される
   {
@@ -271,10 +282,10 @@ export default [
         {
           max: 100,
           skipComments: true,
-          skipBlankLines: true,
-        },
-      ],
-    },
+          skipBlankLines: true
+        }
+      ]
+    }
   },
   // ✅ Max lines per file (ERROR) - 後から適用され、WARNを上書きする
   {
@@ -286,9 +297,9 @@ export default [
         {
           max: 300,
           skipComments: true,
-          skipBlankLines: true,
-        },
-      ],
-    },
-  },
+          skipBlankLines: true
+        }
+      ]
+    }
+  }
 ]

@@ -1,25 +1,49 @@
 export const colors = {
-  // Canonical color-name tokens (non-semantic). Use these going
-  // forward. Semantic aliases are provided below for compatibility
-  // and can be removed once all usages are migrated.
+  // Neutral / Black scale
+  // Base app background / core text colors.
   black: '#121212',
+  pureBlack: '#000000',
   white: '#FFFFFF',
-  gray: '#2C2C2C',
-  muted: '#8c97a4',
 
-  // Cyan / accent
+  // Greys and muted tones
+  gray: '#2C2C2C',
+  darkGray: '#333333',
+  lightGray: '#eeeeee',
+  offWhiteAlt: '#f0f0f0',
+  muted: '#8c97a4',
+  mutedFallback: '#555555',
+
+  // Cyan / Teal (primary accent palette)
+  // Use these for interactive accents and branding color usage.
   cyan: '#39C4C4',
   cyanAlt: '#86cecb',
   cyanDark: '#004444',
   cyanBorderRGBA: 'rgba(57,196,196,0.5)',
   cyanHover: '#2e9b9b',
 
+  // Blues (helper / secondary accents)
+  lightBlue: '#c3e5e7',
+  mediumBlue: '#86cecb',
+
+  // Greens
+  green: '#0b4d37',
+
   // Action colors
   red: '#bf1e33',
   orange: '#f59e0b',
 
-  // Legacy helpers
-  lightBlue: '#c3e5e7',
-  mediumBlue: '#86cecb',
-  green: '#0b4d37'
+  // Header gradient token
+  // NOTE: This is a CSS gradient string used for the header background.
+  // Keep as a string so it can be assigned directly to `background`.
+  headerGradation: `linear-gradient(90deg,
+    #0A0A0A 0%,
+    #1A1A1A 10%,
+    #004444 25%,
+    #006666 40%,
+    #39C4C4 50%,
+    #006666 60%,
+    #004444 75%,
+    #1A1A1A 90%,
+    #0A0A0A 100%
+  )`
 }

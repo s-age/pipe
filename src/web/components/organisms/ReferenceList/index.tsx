@@ -6,11 +6,11 @@ import { Accordion } from '@/components/molecules/Accordion'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { referenceSummary } from '@/styles/reference.css'
 
 import { ReferenceComponent } from '../Reference'
 import { useReferenceListHandlers } from './hooks/useReferenceListHandlers'
 import { metaItem, metaItemLabel, referencesList, noItemsMessage } from './style.css'
-import { referenceSummary } from '../Reference/style.css'
 
 type ReferenceListProperties = {
   sessionDetail: SessionDetail

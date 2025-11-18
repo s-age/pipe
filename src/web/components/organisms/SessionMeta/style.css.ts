@@ -1,35 +1,33 @@
 import { style, globalStyle } from '@vanilla-extract/css'
 
+import { zIndex } from '@/styles/zIndex.css'
+
 import { colors } from '../../../styles/colors.css.ts'
 
 export const metaColumn = style({
-  // Use a fixed width and let height be governed by the parent panel.
   width: '300px',
   height: '100%',
+  overflowX: 'hidden',
   overflowY: 'auto',
-  borderRadius: '10px',
-  // provide breathing room on the right so the panel isn't flush to the viewport edge
   margin: '0 12px',
-  // Keep horizontal overflow hidden but allow vertical scrolling via overflowY above.
-  overflowX: 'hidden'
+  borderRadius: '10px'
 })
 
 export const sessionMetaSection = style({
-  flex: '1',
   display: 'flex',
-  flexDirection: 'column',
-  boxSizing: 'border-box',
+  flex: '1',
   minHeight: '0',
-  overflowY: 'auto'
+  boxSizing: 'border-box',
+  overflowY: 'auto',
+  flexDirection: 'column'
 })
 
 export const sessionMetaView = style({
   flex: '1',
-  padding: '20px',
-  background: colors.gray,
-  borderRadius: '8px',
   marginBottom: '16px',
-
+  padding: '20px',
+  borderRadius: '8px',
+  background: colors.gray,
   selectors: {
     '&:first-child': {
       marginBottom: '24px'
@@ -43,12 +41,11 @@ export const sessionMetaView = style({
 export const stickySaveMetaButtonContainer = style({
   position: 'sticky',
   bottom: 0,
-  zIndex: 1,
   padding: '12px',
-  borderTop: `1px solid ${colors.gray}`,
   background: colors.black,
-  // Slight separation shadow so the sticky area reads as a control bar
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)'
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)',
+  zIndex: zIndex.base,
+  borderTop: `1px solid ${colors.gray}`
 })
 
 export const metaItem = style({
@@ -56,28 +53,25 @@ export const metaItem = style({
 })
 
 export const metaItemLabel = style({
-  fontWeight: 'bold',
-  marginBottom: '4px',
   display: 'block',
+  marginBottom: '4px',
+  fontWeight: 'bold',
   color: colors.white
 })
 
 export const multiStepLabel = style({
-  color: colors.white,
-  fontWeight: 'bold'
+  fontWeight: 'bold',
+  color: colors.white
 })
 
 export const inputFullWidth = style({
   width: '100%',
   boxSizing: 'border-box',
-  // Make inputs visually match the panel: black background, gray border.
-  background: '#000',
-  color: colors.white,
-  borderRadius: '4px',
   padding: '8px',
-
   border: `1px solid ${colors.muted}`,
-
+  borderRadius: '4px',
+  color: colors.white,
+  background: colors.pureBlack,
   ':focus': {
     outline: 'none',
     border: `1px solid ${colors.cyan}`,
@@ -87,16 +81,14 @@ export const inputFullWidth = style({
 
 export const textareaFullWidth = style({
   width: '100%',
-  boxSizing: 'border-box',
-  background: '#000',
-  color: colors.white,
   minHeight: '100px',
+  boxSizing: 'border-box',
   marginTop: '10px',
-  borderRadius: '4px',
   padding: '8px',
-
   border: `1px solid ${colors.muted}`,
-
+  borderRadius: '4px',
+  color: colors.white,
+  background: colors.pureBlack,
   ':focus': {
     outline: 'none',
     border: `1px solid ${colors.cyan}`,
@@ -106,9 +98,9 @@ export const textareaFullWidth = style({
 
 export const checkboxLabel = style({
   display: 'flex',
-  alignItems: 'center',
+  color: colors.white,
   cursor: 'pointer',
-  color: colors.white
+  alignItems: 'center'
 })
 
 globalStyle(`${checkboxLabel} input[type="checkbox"]`, {
@@ -117,9 +109,9 @@ globalStyle(`${checkboxLabel} input[type="checkbox"]`, {
 
 export const hyperparametersControl = style({
   display: 'flex',
+  marginBottom: '10px',
   justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: '10px'
+  alignItems: 'center'
 })
 
 export const sliderValue = style({
@@ -134,19 +126,19 @@ export const sliderContainer = style({
 })
 
 export const todosList = style({
-  listStyle: 'none',
-  paddingLeft: '0'
+  paddingLeft: '0',
+  listStyle: 'none'
 })
 
 export const todoItem = style({
-  marginBottom: '10px',
   display: 'flex',
+  marginBottom: '10px',
   alignItems: 'center'
 })
 
 export const todoCheckboxLabel = style({
-  cursor: 'pointer',
   display: 'flex',
+  cursor: 'pointer',
   alignItems: 'center',
   flexGrow: '1'
 })
@@ -178,7 +170,7 @@ export const deleteTodosButton = style({
 export const saveMetaButton = style({
   width: '100%',
   height: '56px',
+  boxSizing: 'border-box',
   padding: '12px 16px',
-  borderRadius: '8px',
-  boxSizing: 'border-box'
+  borderRadius: '8px'
 })

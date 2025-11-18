@@ -13,6 +13,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:e2e": "playwright test",
     "lint": "eslint \"{src,tests}/**/*.{js,jsx,ts,tsx}\" --fix",
+    "check:hooks": "node scripts/check-hooks.js",
     "format": "prettier \"{src,tests}/**/*.{js,jsx,ts,tsx,json,css,md}\" --write",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"

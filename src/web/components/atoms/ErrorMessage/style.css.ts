@@ -1,15 +1,14 @@
 import { style } from '@vanilla-extract/css'
 
 export const errorMessageStyle = style({
-  color: 'red',
+  display: 'flex',
+  width: '100%',
+  marginTop: '8px',
   fontWeight: 'bold',
   textAlign: 'left',
-  marginTop: '8px',
-  display: 'flex',
+  color: 'red',
   alignItems: 'center',
   gap: '8px',
-  // make it visually compact so it doesn't span too widely
-  width: '100%',
   selectors: {
     '&::before': {
       content: '"❗️"',

@@ -1,16 +1,18 @@
 import { style, globalStyle, keyframes } from '@vanilla-extract/css'
 
+import { zIndex } from '@/styles/zIndex.css'
+
 import { colors } from '../../../styles/colors.css'
 
 export const container = style({
-  position: 'fixed',
-  zIndex: 1000,
   display: 'flex',
+  position: 'fixed',
+  padding: 12,
+  pointerEvents: 'none',
+  zIndex: zIndex.toast,
   flexDirection: 'column',
   gap: 8,
-  pointerEvents: 'none',
-  alignItems: 'flex-end',
-  padding: 12
+  alignItems: 'flex-end'
 })
 
 // Positioning helpers via data-pos attribute
@@ -67,15 +69,15 @@ globalStyle('[data-pos="bottom-right"]', {
 })
 
 export const toast = style({
-  pointerEvents: 'auto',
-  background: colors.white,
-  boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
-  borderRadius: 8,
-  padding: '10px 12px',
   minWidth: 240,
   maxWidth: 360,
-  borderLeft: '4px solid transparent',
-  transition: 'transform 200ms ease, opacity 200ms ease'
+  padding: '10px 12px',
+  borderRadius: 8,
+  background: colors.white,
+  boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+  pointerEvents: 'auto',
+  transition: 'transform 200ms ease, opacity 200ms ease',
+  borderLeft: '4px solid transparent'
 })
 
 const fadeIn = keyframes({
@@ -109,14 +111,14 @@ export const row = style({
 })
 
 export const icon = style({
+  display: 'inline-grid',
   width: 28,
   height: 28,
   borderRadius: 14,
-  display: 'inline-grid',
-  placeItems: 'center',
-  background: `${colors.cyan}33`,
+  fontSize: 14,
   color: colors.cyan,
-  fontSize: 14
+  background: `${colors.cyan}33`,
+  placeItems: 'center'
 })
 
 export const content = style({
@@ -124,38 +126,38 @@ export const content = style({
 })
 
 export const title = style({
-  fontWeight: 600,
-  fontSize: 13
+  fontSize: 13,
+  fontWeight: 600
 })
 
 export const description = style({
+  marginTop: 2,
   fontSize: 13,
-  color: 'var(--muted, #555)',
-  marginTop: 2
+  color: colors.muted
 })
 
 export const close = style({
-  background: 'transparent',
-  border: 0,
-  padding: 6,
   marginLeft: 8,
+  padding: 6,
+  border: 0,
+  background: 'transparent',
   cursor: 'pointer'
 })
 
 export const statusSuccess = style({
-  borderLeftColor: colors.cyan,
+  color: colors.black,
   backgroundColor: colors.white,
-  color: colors.black
+  borderLeftColor: colors.cyan
 })
 
 export const statusFailure = style({
-  borderLeftColor: colors.red,
+  color: colors.black,
   backgroundColor: colors.white,
-  color: colors.black
+  borderLeftColor: colors.red
 })
 
 export const statusWarning = style({
-  borderLeftColor: colors.orange,
+  color: colors.black,
   backgroundColor: colors.white,
-  color: colors.black
+  borderLeftColor: colors.orange
 })

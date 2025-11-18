@@ -4,13 +4,11 @@ import { colors } from '../../../styles/colors.css'
 
 export const appContainer = style({
   display: 'flex',
-  flexDirection: 'column',
   height: '100vh',
   overflow: 'hidden',
-  // page background: use app dark background so edges aren't white
-  // make the outermost background pure black so panels sit on black
-  background: '#000000',
-  padding: '0'
+  padding: '0',
+  background: colors.pureBlack,
+  flexDirection: 'column'
 })
 
 export const mainContent = style({
@@ -22,44 +20,41 @@ export const mainContent = style({
 
 export const leftColumn = style({
   flex: '0 0 320px',
-  padding: '0',
-  overflowY: 'auto'
+  overflowY: 'auto',
+  padding: '0'
 })
 
 export const centerColumn = style({
-  flex: '1 1 0',
-  padding: '0 12px',
-  overflowY: 'auto',
   display: 'flex',
-  flexDirection: 'column',
-  background: colors.gray
+  flex: '1 1 0',
+  overflowY: 'auto',
+  padding: '0 12px',
+  background: colors.gray,
+  flexDirection: 'column'
 })
 
 export const rightColumn = style({
+  display: 'flex',
   flex: '0 0 300px',
-  padding: '18px',
+  boxSizing: 'content-box',
   overflowY: 'auto',
   marginRight: '16px',
-  display: 'flex',
+  padding: '18px',
   flexDirection: 'column',
-  boxSizing: 'content-box',
-  // ensure right panel fills available height
   alignItems: 'stretch'
 })
 
 export const panel = style({
-  // panels should be slightly lighter than the page background
-  background: colors.black,
-  borderRadius: '10px',
-  padding: '12px',
-  // slightly softer shadow so the page edge doesn't read as white
-  boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
-  color: colors.white,
+  display: 'flex',
+  flex: '1 1 auto',
   height: '100%',
   overflow: 'hidden',
-  display: 'flex',
-  flexDirection: 'column',
-  flex: '1 1 auto'
+  padding: '12px',
+  borderRadius: '10px',
+  color: colors.white,
+  background: colors.black,
+  boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
+  flexDirection: 'column'
 })
 
 export const panelBottomSpacing = style({

@@ -233,10 +233,9 @@ type AccordionProps = {
   defaultOpen?: boolean
   children?: React.ReactNode
 }
-
 ;<Accordion
   title={<Header />}
-  summary={<small>TTL: 3 · 有効</small>}
+  summary={<small>TTL: 3 · enabled</small>}
   defaultOpen={false}
 >
   {/* details shown when expanded */}

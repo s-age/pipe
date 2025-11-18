@@ -1,0 +1,6 @@
+{
+  "namingRegex": "^use[A-Z][A-Za-z0-9]+(Actions|Handlers|Lifecycle)?$",
+  "allowedContextSuffixes": ["Context.tsx", "Provider.tsx"],
+  "forbiddenInHandlers": ["toast(", "toast.", "useToast"],
+  "description": "Minimal machine-checkable rules for hooks in roles/typescript.\n- Files under hooks/ should export hooks with names matching `namingRegex`.\n- Context/provider files may end with Context.tsx or Provider.tsx.\n- Handler hooks should not perform UI notifications (no toast usage)."
+}

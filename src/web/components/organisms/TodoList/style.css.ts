@@ -7,20 +7,20 @@ export const metaItem = style({
 })
 
 export const todosList = style({
-  listStyle: 'none',
-  paddingLeft: '0'
+  paddingLeft: '0',
+  listStyle: 'none'
 })
 
 export const todoItem = style({
-  marginBottom: '10px',
   display: 'flex',
+  marginBottom: '10px',
   alignItems: 'center'
 })
 
 export const todoCheckboxLabel = style({
-  cursor: 'pointer',
   display: 'flex',
   color: colors.white,
+  cursor: 'pointer',
   alignItems: 'center',
   flexGrow: '1'
 })

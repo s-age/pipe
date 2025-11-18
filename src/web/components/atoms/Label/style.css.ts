@@ -5,8 +5,7 @@ import { colors } from '../../../styles/colors.css'
 export const labelStyle = style({
   display: 'block',
   marginBottom: '5px',
+  fontSize: '14px',
   fontWeight: 'bold',
-  color: colors.white,
-  // slightly smaller than section legends to keep hierarchy
-  fontSize: '14px'
+  color: colors.white
 })

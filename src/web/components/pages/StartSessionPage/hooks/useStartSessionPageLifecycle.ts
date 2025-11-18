@@ -30,12 +30,77 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
     const loadData = async (): Promise<void> => {
       try {
         const response = await getStartSessionSettings()
-        setParentOptions(
-          response.session_tree.map(([id, session]: [string, SessionOverview]) => ({
-            value: id,
-            label: session.purpose
-          }))
-        )
+        // Normalize `session_tree` into a flat `Option[]` for selects.
+        // The backend may return either an array of tuples `[id, overview]`
+        // or a nested tree of nodes. Flatten both shapes defensively and
+        // prefix child labels with indentation according to depth.
+        const indentForDepth = (d: number): string => ' '.repeat(Math.max(0, d) * 2)
+
+        const out: Option[] = []
+
+        const push = (id: unknown, overview: unknown, depth = 0): void => {
+          const overviewRec = overview as Record<string, unknown> | undefined
+          const label = String(overviewRec?.purpose ?? overview ?? '')
+          out.push({
+            value: String(id ?? ''),
+            label: `${indentForDepth(depth)}${label}`
+          })
+        }
+
+        const flatten = (nodes: unknown[], depth = 0): void => {
+          if (!Array.isArray(nodes)) return
+          for (const n of nodes) {
+            // Tuple form: [id, overview, maybeChildren]
+            if (Array.isArray(n) && n.length >= 2) {
+              const tuple = n as unknown[]
+              push(tuple[0], tuple[1], depth)
+              if (Array.isArray(tuple[2])) {
+                flatten(tuple[2] as unknown[], depth + 1)
+              }
+              continue
+            }
+
+            // Node form: { session_id, overview, children }
+            if (
+              n &&
+              typeof n === 'object' &&
+              'session_id' in (n as Record<string, unknown>)
+            ) {
+              const node = n as Record<string, unknown>
+              push(node.session_id, node.overview ?? node, depth)
+              if (
+                Array.isArray(node.children) &&
+                (node.children as unknown[]).length > 0
+              ) {
+                flatten(node.children as unknown[], depth + 1)
+              }
+              continue
+            }
+
+            // Option-like: { value, label }
+            if (
+              n &&
+              typeof n === 'object' &&
+              'value' in (n as Record<string, unknown>) &&
+              'label' in (n as Record<string, unknown>)
+            ) {
+              const opt = n as Record<string, unknown>
+              out.push({
+                value: String(opt.value ?? ''),
+                label: `${indentForDepth(0)}${String(opt.label ?? '')}`
+              })
+              continue
+            }
+
+            // Primitive fallback
+            if (n !== null && n !== undefined) {
+              out.push({ value: String(n), label: String(n) })
+            }
+          }
+        }
+
+        flatten(response.session_tree as unknown[])
+        setParentOptions(out)
         setSettings(response.settings)
         setStartDefaults({
           session_id: '',

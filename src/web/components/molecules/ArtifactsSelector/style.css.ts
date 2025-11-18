@@ -8,27 +8,27 @@ export const metaItem = style({
 })
 
 export const metaItemLabel = style({
-  fontWeight: 'bold',
-  marginBottom: '4px',
   display: 'block',
+  marginBottom: '4px',
+  fontWeight: 'bold',
   color: colors.white
 })
 
 export const artifactsList = style({
-  marginTop: '8px',
   display: 'flex',
+  marginTop: '8px',
   flexWrap: 'wrap',
   gap: '4px'
 })
 
 export const artifactItem = style({
-  backgroundColor: colors.cyan,
-  color: colors.black,
+  display: 'inline-flex',
   padding: '2px 6px',
   borderRadius: '3px',
   fontSize: '12px',
+  color: colors.black,
+  backgroundColor: colors.cyan,
   cursor: 'pointer',
-  display: 'inline-flex',
   alignItems: 'center',
   gap: '4px',
   ':hover': {
@@ -42,23 +42,23 @@ export const artifactPath = style({
 })
 
 export const removeArtifactButton = style({
-  background: 'none',
-  border: 'none',
-  color: 'inherit',
-  cursor: 'pointer',
   padding: '0',
+  border: 'none',
   fontSize: '14px',
+  fontWeight: 'bold',
   lineHeight: '1',
-  fontWeight: 'bold'
+  color: 'inherit',
+  background: 'none',
+  cursor: 'pointer'
 })
 
 export const debugInfo = style({
-  backgroundColor: '#f0f0f0',
-  border: '1px solid #ccc',
-  padding: '4px',
   marginBottom: '8px',
-  fontSize: '12px',
-  color: '#333',
+  padding: '4px',
+  border: '1px solid #ccc',
+  borderRadius: '4px',
   fontFamily: 'monospace',
-  borderRadius: '4px'
+  fontSize: '12px',
+  color: colors.darkGray,
+  backgroundColor: colors.offWhiteAlt
 })

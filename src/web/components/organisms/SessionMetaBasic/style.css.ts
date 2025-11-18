@@ -7,21 +7,21 @@ export const metaItem = style({
 })
 
 export const multiStepLabel = style({
-  color: colors.white,
-  fontWeight: 'bold'
+  fontWeight: 'bold',
+  color: colors.white
 })
 
 export const metaItemLabel = style({
-  fontWeight: 'bold',
-  marginBottom: '4px',
   display: 'block',
+  marginBottom: '4px',
+  fontWeight: 'bold',
   color: colors.white
 })
 
 export const requiredMark = style({
-  color: colors.red,
   marginLeft: '6px',
-  fontWeight: 'bold'
+  fontWeight: 'bold',
+  color: colors.red
 })
 
 export const inputFullWidth = style({
@@ -34,12 +34,12 @@ export const artifactsList = style({
 
 export const artifactItem = style({
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '4px 8px',
   marginBottom: '4px',
-  backgroundColor: '#f0f0f0',
-  borderRadius: '4px'
+  padding: '4px 8px',
+  borderRadius: '4px',
+  backgroundColor: colors.offWhiteAlt,
+  alignItems: 'center',
+  justifyContent: 'space-between'
 })
 
 export const artifactPath = style({
@@ -48,7 +48,7 @@ export const artifactPath = style({
 })
 
 export const removeArtifactButton = style({
-  marginLeft: '8px',
   minWidth: '24px',
-  height: '24px'
+  height: '24px',
+  marginLeft: '8px'
 })

@@ -1,59 +1,58 @@
 import { style } from '@vanilla-extract/css'
 
+import { zIndex } from '@/styles/zIndex.css'
+
 import { colors } from '../../../styles/colors.css.ts'
 
 // ChatHistory styles — use shared color tokens from `colors`.
 export const turnsColumn = style({
-  overflowY: 'auto',
-  // Make center column smaller than left by setting flex ratio 1 (left is 2)
-  flex: '1 1 0',
   display: 'flex',
-  flexDirection: 'column',
-  borderRight: `1px solid ${colors.gray}`,
-  borderRadius: '10px',
+  flex: '1 1 0',
   minWidth: 0,
-  minHeight: 0
+  minHeight: 0,
+  overflowY: 'auto',
+  borderRadius: '10px',
+  flexDirection: 'column',
+  borderRight: `1px solid ${colors.gray}`
 })
 
 export const chatRoot = style({
   display: 'flex',
-  flexDirection: 'column',
   flex: '1 1 0',
-  minHeight: 0
+  minHeight: 0,
+  flexDirection: 'column'
 })
 
 export const turnsHeader = style({
-  padding: '8px',
   display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  color: colors.cyan,
   position: 'sticky',
   top: 0,
-  zIndex: 2
+  padding: '8px',
+  color: colors.cyan,
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  zIndex: zIndex.low
 })
 
 export const turnsListSection = style({
   flex: '1 1 0',
+  minHeight: 0,
   overflowY: 'auto',
   padding: '16px',
-  color: colors.white,
-  minHeight: 0
+  color: colors.white
 })
 
 export const panel = style({
-  // panels should be slightly lighter than the page background
-  background: colors.black,
-  borderRadius: '10px',
-  padding: '12px',
-  // slightly softer shadow so the page edge doesn't read as white
-  boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
-  color: colors.white,
+  display: 'flex',
+  flex: '1 1 auto',
   height: '100%',
   overflow: 'hidden',
-  display: 'flex',
-  flexDirection: 'column',
-  flex: '1 1 auto'
+  padding: '12px',
+  borderRadius: '10px',
+  color: colors.white,
+  background: colors.black,
+  boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
+  flexDirection: 'column'
 })
 
 export const panelBottomSpacing = style({
@@ -61,12 +60,12 @@ export const panelBottomSpacing = style({
 })
 
 export const newInstructionControl = style({
+  position: 'sticky',
+  bottom: 0,
   padding: '12px',
   gap: '12px',
   alignItems: 'stretch',
-  position: 'sticky',
-  bottom: 0,
-  zIndex: 2
+  zIndex: zIndex.low
 })
 
 // Ensure the form inside the sticky footer stretches and lays out its children
@@ -74,9 +73,9 @@ export const newInstructionControl = style({
 export const footerForm = style({
   display: 'flex',
   flex: '1 1 auto',
+  width: '100%',
   gap: '12px',
-  alignItems: 'stretch',
-  width: '100%'
+  alignItems: 'stretch'
 })
 
 export const welcomeMessage = style({
@@ -92,3 +91,13 @@ export const chatAccents = {
   redAccent: colors.red,
   redStrong: colors.red
 }
+
+// Button used to delete the current session in the header
+export const deleteButton = style({
+  padding: '6px 8px',
+  border: 'none',
+  borderRadius: '4px',
+  color: `${colors.white} !important`,
+  backgroundColor: `${colors.red} !important`,
+  cursor: 'pointer'
+})

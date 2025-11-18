@@ -4,37 +4,38 @@ import { colors } from '../../../styles/colors.css'
 
 export const container = style({
   display: 'inline-flex',
+  color: colors.white,
+  cursor: 'pointer',
   alignItems: 'center',
-  gap: '8px',
-  cursor: 'pointer'
+  gap: '8px'
 })
 export const control = style({
   display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
   width: '18px',
   height: '18px',
   border: `1px solid ${colors.white}`,
   borderRadius: '4px',
   background: 'transparent',
-  transition: 'all 0.12s ease'
+  transition: 'all 0.12s ease',
+  alignItems: 'center',
+  justifyContent: 'center'
 })
 
 export const svg = style({
+  display: 'block',
   width: '12px',
-  height: '12px',
-  display: 'block'
+  height: '12px'
 })
 
 export const check = style({
+  opacity: 0,
+  transition: 'opacity 0.12s ease, transform 0.12s ease',
+  transform: 'scale(0.8)',
   fill: 'none',
   stroke: 'white',
   strokeWidth: 2,
   strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-  opacity: 0,
-  transform: 'scale(0.8)',
-  transition: 'opacity 0.12s ease, transform 0.12s ease'
+  strokeLinejoin: 'round'
 })
 
 export const labelText = style({
@@ -42,16 +43,15 @@ export const labelText = style({
 })
 
 export const hiddenInput = style({
-  // visually hidden but accessible
   position: 'absolute',
   width: '1px',
   height: '1px',
-  padding: 0,
-  margin: '-1px',
   overflow: 'hidden',
+  margin: '-1px',
+  padding: 0,
+  border: 0,
   clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-  border: 0
+  whiteSpace: 'nowrap'
 })
 
 // Target the sibling `.control` when the input (hiddenInput) is checked/focused.

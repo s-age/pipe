@@ -8,9 +8,9 @@ export const accordionRoot = style({
 
 export const header = style({
   display: 'flex',
+  cursor: 'pointer',
   alignItems: 'center',
-  justifyContent: 'space-between',
-  cursor: 'pointer'
+  justifyContent: 'space-between'
 })
 
 export const headerLeft = style({
@@ -30,10 +30,10 @@ export const summary = style({
 })
 
 export const chevron = style({
-  transition: 'transform 160ms ease, color 160ms ease',
   fontSize: '28px',
   lineHeight: 1,
-  color: colors.muted
+  color: colors.muted,
+  transition: 'transform 160ms ease, color 160ms ease'
 })
 
 export const chevronOpen = style({

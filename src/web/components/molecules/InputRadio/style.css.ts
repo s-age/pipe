@@ -4,26 +4,27 @@ import { colors } from '../../../styles/colors.css'
 
 export const container = style({
   display: 'inline-flex',
+  color: colors.white,
+  cursor: 'pointer',
   alignItems: 'center',
-  gap: '8px',
-  cursor: 'pointer'
+  gap: '8px'
 })
 export const control = style({
   display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
   width: '18px',
   height: '18px',
   border: `1px solid ${colors.white}`,
   borderRadius: '50%',
   background: 'transparent',
-  transition: 'all 0.12s ease'
+  transition: 'all 0.12s ease',
+  alignItems: 'center',
+  justifyContent: 'center'
 })
 
 export const svg = style({
+  display: 'block',
   width: '12px',
-  height: '12px',
-  display: 'block'
+  height: '12px'
 })
 
 export const labelText = style({
@@ -34,12 +35,12 @@ export const hiddenInput = style({
   position: 'absolute',
   width: '1px',
   height: '1px',
-  padding: 0,
-  margin: '-1px',
   overflow: 'hidden',
+  margin: '-1px',
+  padding: 0,
+  border: 0,
   clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-  border: 0
+  whiteSpace: 'nowrap'
 })
 
 globalStyle(`.${container} input:checked + .${control}`, {

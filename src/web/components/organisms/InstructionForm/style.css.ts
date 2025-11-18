@@ -11,13 +11,13 @@ export const instructionTextarea = style({
   width: '100%',
   minHeight: '80px',
   padding: '12px 48px 12px 12px',
-  fontSize: '14px',
-  color: colors.white,
-  lineHeight: '1.5',
   borderRadius: '8px',
+  fontFamily: 'inherit',
+  fontSize: '14px',
+  lineHeight: '1.5',
+  color: colors.white,
   background: colors.black,
   resize: 'vertical',
-  fontFamily: 'inherit',
   ':focus': {
     outline: 'none',
     borderColor: colors.cyan,
@@ -30,12 +30,12 @@ export const instructionTextarea = style({
 
 export const overlaySendButton = style({
   position: 'absolute',
-  right: '8px',
   top: '50%',
-  transform: 'translateY(-50%)',
-  padding: '12px 12px 8px',
-  marginRight: '8px',
+  right: '8px',
   minWidth: 'auto',
+  marginRight: '8px',
+  padding: '12px 12px 8px',
+  transform: 'translateY(-50%)',
   ':disabled': {
     cursor: 'not-allowed',
     backgroundColor: colors.muted

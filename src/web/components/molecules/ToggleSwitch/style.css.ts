@@ -3,27 +3,27 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '@/styles/colors.css'
 
 export const toggleSwitch = style({
-  position: 'relative',
   display: 'inline-block',
+  position: 'relative',
   width: '50px',
   height: '24px',
   cursor: 'pointer'
 })
 
 export const toggleInput = style({
-  opacity: 0,
   width: 0,
-  height: 0
+  height: 0,
+  opacity: 0
 })
 
 export const toggleSlider = style({
   position: 'absolute',
   top: 0,
-  left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: colors.muted,
+  left: 0,
   borderRadius: '24px',
+  backgroundColor: colors.muted,
   transition: '0.4s',
   selectors: {
     '&:before': {
@@ -51,6 +51,6 @@ export const toggleSliderChecked = style({
 
 export const toggleLabel = style({
   marginLeft: '10px',
-  color: colors.white,
-  fontSize: '14px'
+  fontSize: '14px',
+  color: colors.white
 })

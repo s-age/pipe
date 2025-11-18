@@ -46,6 +46,10 @@ export const StartSessionForm = ({
     [computedDefaultValues]
   )
 
+  // `parentOptions` are normalized at the page lifecycle to avoid
+  // re-computing flattening on every render of this form. Pass through
+  // the already-normalized options directly to the inner form.
+
   return (
     <div className={wrapper}>
       <Form<StartSessionFormInputs>

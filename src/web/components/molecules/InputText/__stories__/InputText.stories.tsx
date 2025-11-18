@@ -7,12 +7,13 @@ import { Form } from '@/components/organisms/Form'
 import { InputText } from '../index'
 
 const Meta = {
-  title: 'Atoms/InputText',
+  title: 'Molecules/InputText',
   component: InputText,
   tags: ['autodocs']
 } satisfies StoryMeta<typeof InputText>
 
 export default Meta
+
 type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {

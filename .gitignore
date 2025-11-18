@@ -55,3 +55,6 @@ test-results/
 
 *storybook.log
 storybook-static
+
+# Whoosh Index
+whoosh_index/

@@ -68,7 +68,7 @@ globalStyle('[data-pos="bottom-right"]', {
 
 export const toast = style({
   pointerEvents: 'auto',
-  background: colors.offWhite,
+  background: colors.white,
   boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
   borderRadius: 8,
   padding: '10px 12px',
@@ -114,8 +114,8 @@ export const icon = style({
   borderRadius: 14,
   display: 'inline-grid',
   placeItems: 'center',
-  background: `${colors.accent}33`,
-  color: colors.accent,
+  background: `${colors.cyan}33`,
+  color: colors.cyan,
   fontSize: 14
 })
 
@@ -143,19 +143,19 @@ export const close = style({
 })
 
 export const statusSuccess = style({
-  borderLeftColor: colors.accent,
-  backgroundColor: colors.offWhite,
-  color: colors.darkBackground
+  borderLeftColor: colors.cyan,
+  backgroundColor: colors.white,
+  color: colors.black
 })
 
 export const statusFailure = style({
-  borderLeftColor: colors.error,
-  backgroundColor: colors.offWhite,
-  color: colors.darkBackground
+  borderLeftColor: colors.red,
+  backgroundColor: colors.white,
+  color: colors.black
 })
 
 export const statusWarning = style({
-  borderLeftColor: colors.warning,
-  backgroundColor: colors.offWhite,
-  color: colors.darkBackground
+  borderLeftColor: colors.orange,
+  backgroundColor: colors.white,
+  color: colors.black
 })

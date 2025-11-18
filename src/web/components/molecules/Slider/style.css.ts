@@ -14,7 +14,7 @@ export const label = style({
   left: '50%',
   transform: 'translate(-50%, -50%)',
   fontSize: '12px',
-  color: colors.offWhite,
+  color: colors.white,
   pointerEvents: 'none',
   zIndex: 1
 })

@@ -14,7 +14,7 @@ export const control = style({
   justifyContent: 'center',
   width: '18px',
   height: '18px',
-  border: `1px solid ${colors.lightText}`,
+  border: `1px solid ${colors.white}`,
   borderRadius: '50%',
   background: 'transparent',
   transition: 'all 0.12s ease'
@@ -43,14 +43,14 @@ export const hiddenInput = style({
 })
 
 globalStyle(`.${container} input:checked + .${control}`, {
-  borderColor: colors.accent,
-  backgroundColor: colors.accent
+  borderColor: colors.cyan,
+  backgroundColor: colors.cyan
 })
 
 globalStyle(`.${container} input:checked + .${control} svg circle`, {
-  fill: colors.accent
+  fill: colors.cyan
 })
 
 globalStyle(`.${container} input:focus + .${control}`, {
-  boxShadow: `0 0 0 3px ${colors.accent}33`
+  boxShadow: `0 0 0 3px ${colors.cyan}33`
 })

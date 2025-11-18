@@ -14,7 +14,7 @@ export const control = style({
   justifyContent: 'center',
   width: '18px',
   height: '18px',
-  border: `1px solid ${colors.lightText}`,
+  border: `1px solid ${colors.white}`,
   borderRadius: '4px',
   background: 'transparent',
   transition: 'all 0.12s ease'
@@ -56,8 +56,8 @@ export const hiddenInput = style({
 
 // Target the sibling `.control` when the input (hiddenInput) is checked/focused.
 globalStyle(`.${container} input:checked + .${control}`, {
-  backgroundColor: colors.accent,
-  borderColor: colors.accent
+  backgroundColor: colors.cyan,
+  borderColor: colors.cyan
 })
 
 globalStyle(`.${container} input:checked + .${control} svg path`, {
@@ -66,5 +66,5 @@ globalStyle(`.${container} input:checked + .${control} svg path`, {
 })
 
 globalStyle(`.${container} input:focus + .${control}`, {
-  boxShadow: `0 0 0 3px ${colors.accent}33`
+  boxShadow: `0 0 0 3px ${colors.cyan}33`
 })

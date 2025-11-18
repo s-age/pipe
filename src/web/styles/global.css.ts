@@ -21,11 +21,11 @@ globalStyle('html, body, #root', {
 
 globalStyle('input, textarea', {
   boxSizing: 'border-box',
-  background: colors.uiBackground,
-  color: colors.grayText,
+  background: colors.black,
+  color: colors.muted,
   borderRadius: '4px',
   padding: '8px',
-  border: `1px solid ${colors.grayText}`
+  border: `1px solid ${colors.muted}`
 })
 
 globalStyle('input:focus, textarea:focus', {

@@ -4,11 +4,11 @@ import { colors } from '../../../styles/colors.css'
 
 export const inputFieldStyle = style({
   boxSizing: 'border-box',
-  background: colors.uiBackground,
-  color: colors.grayText,
+  background: colors.black,
+  color: colors.muted,
   borderRadius: '4px',
   padding: '8px',
-  border: `1px solid ${colors.grayText}`,
+  border: `1px solid ${colors.muted}`,
 
   selectors: {
     '&:focus': {
@@ -20,7 +20,7 @@ export const inputFieldStyle = style({
 })
 
 export const errorMessageStyle = style({
-  color: colors.error,
+  color: colors.red,
   fontSize: '0.875em',
   marginTop: '-10px',
   marginBottom: '15px'

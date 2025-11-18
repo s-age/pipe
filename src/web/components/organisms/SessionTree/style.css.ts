@@ -56,7 +56,8 @@ export const sessionLink = style({
   padding: '8px 12px',
   borderRadius: '6px',
   textDecoration: 'none',
-  color: colors.offWhite,
+  color: colors.white,
+
   fontWeight: 500,
   fontSize: '0.95rem',
   ':hover': {
@@ -66,14 +67,14 @@ export const sessionLink = style({
 
 export const sessionLinkActive = style({
   backgroundColor: colors.cyan,
-  color: colors.offWhite,
+  color: colors.white,
   fontWeight: 700,
   boxShadow: 'inset 4px 0 0 rgba(255,255,255,0.06)'
 })
 
 export const sessionIdStyle = style({
   fontSize: '0.75em',
-  color: colors.offWhite,
+  color: colors.white,
   // Small offset from the title so the id doesn't hug the text.
   marginLeft: '8px'
 })
@@ -103,7 +104,7 @@ export const newChatButton = style({
   margin: '8px 0',
   border: `2px solid rgba(255,255,255,0.12)`,
   background: 'rgba(0,0,0,0.32)',
-  color: colors.offWhite,
+  color: colors.white,
   boxShadow: `0 8px 20px rgba(0,0,0,0.22)`,
   cursor: 'pointer',
   ':hover': {

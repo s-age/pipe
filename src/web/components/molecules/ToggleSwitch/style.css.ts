@@ -22,7 +22,7 @@ export const toggleSlider = style({
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: colors.grayText,
+  backgroundColor: colors.muted,
   borderRadius: '24px',
   transition: '0.4s',
   selectors: {
@@ -33,7 +33,7 @@ export const toggleSlider = style({
       width: '18px',
       left: '3px',
       bottom: '3px',
-      backgroundColor: colors.offWhite,
+      backgroundColor: colors.white,
       borderRadius: '50%',
       transition: '0.4s'
     }
@@ -51,6 +51,6 @@ export const toggleSliderChecked = style({
 
 export const toggleLabel = style({
   marginLeft: '10px',
-  color: colors.offWhite,
+  color: colors.white,
   fontSize: '14px'
 })

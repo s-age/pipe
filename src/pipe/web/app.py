@@ -218,11 +218,13 @@ def dispatch_action(
         pattern_parts = route_pattern.split("/")
         action_parts = action.split("/")
 
-        # Flexible matching to allow path-like parameters (e.g. session IDs containing '/').
-        # We walk the pattern parts and action parts; when a pattern part is a placeholder
-        # we capture one or more action parts into that parameter. If a placeholder is
-        # followed by a literal in the pattern, we capture until that literal appears in
-        # the action parts. If it's the last pattern part, capture the rest of action_parts.
+        # Flexible matching to allow path-like parameters
+        # (e.g. session IDs containing '/').
+        # We walk the pattern parts and action parts; when a pattern part is a
+        # placeholder we capture one or more action parts into that parameter.
+        # If a placeholder is followed by a literal in the pattern, we capture
+        # until that literal appears in the action parts. If it's the last
+        # pattern part, capture the rest of action_parts.
         match = True
         pi = 0
         ai = 0

@@ -5,14 +5,14 @@ import { colors } from '../../../styles/colors.css.ts'
 export const selectStyle = style({
   width: '100%',
   padding: '8px',
-  border: `1px solid ${colors.lightText}`,
+  border: `1px solid ${colors.white}`,
   borderRadius: '4px',
-  backgroundColor: colors.darkBackground,
-  color: colors.lightText,
+  backgroundColor: colors.black,
+  color: colors.white,
   fontSize: '1em',
   cursor: 'pointer',
   ':focus': {
-    borderColor: colors.accent,
+    borderColor: colors.cyan,
     outline: 'none'
   }
 })
@@ -21,7 +21,7 @@ export const trigger = style({
   display: 'inline-block',
   width: '100%',
   padding: '8px 12px',
-  color: colors.lightText
+  color: colors.white
 })
 
 export const searchIconInTrigger = style({
@@ -29,7 +29,7 @@ export const searchIconInTrigger = style({
   left: '8px',
   top: '50%',
   transform: 'translateY(-50%)',
-  color: colors.lightText,
+  color: colors.white,
   pointerEvents: 'none'
 })
 
@@ -37,7 +37,7 @@ export const panel = style({
   listStyle: 'none',
   padding: 8,
   margin: 0,
-  background: colors.mediumBackground,
+  background: colors.gray,
   borderRadius: 6,
   boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
 })
@@ -58,7 +58,7 @@ export const option = style({
 
 export const optionHighlighted = style({
   background: colors.lightBlue,
-  color: colors.darkBackground
+  color: colors.black
 })
 
 export const searchInput = style({
@@ -68,9 +68,9 @@ export const searchInput = style({
   padding: '8px 10px',
   marginBottom: 8,
   borderRadius: 6,
-  border: `1px solid ${colors.lightText}`,
-  background: colors.darkBackground,
-  color: colors.lightText
+  border: `1px solid ${colors.white}`,
+  background: colors.black,
+  color: colors.white
 })
 
 export const searchInputField = style({
@@ -80,7 +80,7 @@ export const searchInputField = style({
   color: 'inherit',
   outline: 'none',
   '::placeholder': {
-    color: colors.lightText
+    color: colors.white
   }
 })
 
@@ -95,8 +95,8 @@ export const tag = style({
   display: 'inline-flex',
   alignItems: 'center',
   padding: '4px 8px',
-  background: colors.accent,
-  color: colors.darkBackground,
+  background: colors.cyan,
+  color: colors.black,
   borderRadius: '12px',
   fontSize: '0.875em'
 })
@@ -113,9 +113,9 @@ export const searchIcon = style({
   justifyContent: 'center',
   width: '20px',
   height: '20px',
-  border: `1px solid ${colors.accent}`,
+  border: `1px solid ${colors.cyan}`,
   borderRadius: '2px',
-  color: colors.accent
+  color: colors.cyan
 })
 
 export const checkbox = style({

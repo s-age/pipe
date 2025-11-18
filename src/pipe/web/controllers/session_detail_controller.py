@@ -45,7 +45,9 @@ class SessionDetailController:
 
         return {
             # Prefer hierarchical session_tree if provided by the action
-            "session_tree": tree_response.get("session_tree", tree_response.get("sessions", [])),
+            "session_tree": tree_response.get(
+                "session_tree", tree_response.get("sessions", [])
+            ),
             "current_session": session_response.get("session", {}),
             "settings": settings_response.get("settings", {}),
             "role_options": roles_response,
@@ -68,5 +70,7 @@ class SessionDetailController:
         return {
             "settings": settings_response.get("settings", {}),
             # Prefer hierarchical session_tree when available
-            "session_tree": tree_response.get("session_tree", tree_response.get("sessions", [])),
+            "session_tree": tree_response.get(
+                "session_tree", tree_response.get("sessions", [])
+            ),
         }, 200

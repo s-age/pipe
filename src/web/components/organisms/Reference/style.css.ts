@@ -5,10 +5,10 @@ import { colors } from '@/styles/colors.css'
 export const referenceItem = style({
   marginBottom: '20px',
   padding: '4px',
-  color: colors.offWhite,
+  color: colors.white,
   border: `1px solid ${colors.cyanAlt}`,
   borderRadius: '8px',
-  backgroundColor: colors.mediumBackground,
+  backgroundColor: colors.gray,
   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
   transition: 'box-shadow 0.2s ease'
 })
@@ -35,7 +35,7 @@ export const referencePath = style({
   selectors: {
     '&[data-disabled="true"]': {
       textDecoration: 'line-through',
-      color: colors.grayText
+      color: colors.muted
     }
   }
 })
@@ -80,7 +80,7 @@ export const persistButton = style({
 })
 
 export const lockIconStyle = style({
-  color: colors.grayText,
+  color: colors.muted,
   transition: 'color 0.2s ease',
   selectors: {
     '&[data-locked="true"]': {

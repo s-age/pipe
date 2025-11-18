@@ -12,7 +12,7 @@ export const input = style({
   padding: '8px',
   border: `1px solid ${colors.cyan}`,
   borderRadius: '4px',
-  backgroundColor: colors.uiBackground,
+  backgroundColor: colors.black,
   color: 'white',
   fontSize: '14px',
   ':focus': {
@@ -31,7 +31,7 @@ export const suggestionList = style({
   padding: '0',
   height: '150px',
   overflowY: 'auto',
-  backgroundColor: colors.uiBackground,
+  backgroundColor: colors.black,
   border: `1px solid ${colors.cyan}`,
   borderRadius: '4px',
   zIndex: 10,
@@ -43,7 +43,7 @@ export const suggestionItem = style({
   cursor: 'pointer',
   listStyle: 'none',
   color: 'white',
-  backgroundColor: colors.uiBackground,
+  backgroundColor: colors.black,
   borderBottom: '1px solid #333',
   ':hover': {
     backgroundColor: '#333'
@@ -57,7 +57,7 @@ export const selectedSuggestionItem = style([
   suggestionItem,
   {
     backgroundColor: colors.cyan,
-    color: colors.uiBackground
+    color: colors.black
   }
 ])
 
@@ -70,7 +70,7 @@ export const selectedProcedureContainer = style({
 
 export const selectedProcedureTag = style({
   backgroundColor: colors.cyan,
-  color: colors.uiBackground,
+  color: colors.black,
   padding: '2px 6px',
   borderRadius: '3px',
   fontSize: '12px',

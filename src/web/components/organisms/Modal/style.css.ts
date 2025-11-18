@@ -14,12 +14,12 @@ export const overlay = style({
 })
 
 export const content = style({
-  background: colors.uiBackground,
-  color: colors.lightText,
+  background: colors.black,
+  color: colors.white,
   borderRadius: 8,
   minWidth: 320,
   maxWidth: '90%',
   boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
-  border: `1px solid ${colors.grayText}`,
+  border: `1px solid ${colors.muted}`,
   padding: '20px'
 })

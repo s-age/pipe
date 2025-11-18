@@ -10,7 +10,7 @@ export const metaItemLabel = style({
   display: 'block',
   marginBottom: '4px',
   fontWeight: 'bold',
-  color: colors.offWhite
+  color: colors.white
 })
 
 export const referencesList = style({
@@ -30,7 +30,7 @@ export const referenceCheckboxMargin = style({
 })
 
 export const noItemsMessage = style({
-  color: colors.grayText,
+  color: colors.muted,
   fontStyle: 'italic',
   marginTop: '10px'
 })
@@ -53,7 +53,7 @@ export const addReferenceButton = style({
   border: `1px solid ${colors.cyanAlt}`,
   borderRadius: '4px',
   backgroundColor: colors.cyan,
-  color: colors.offWhite,
+  color: colors.white,
   cursor: 'pointer',
   transition: 'background-color 0.2s ease'
 })
@@ -67,7 +67,7 @@ export const suggestionList = style({
   padding: '0',
   height: '150px',
   overflowY: 'auto',
-  backgroundColor: colors.mediumBackground,
+  backgroundColor: colors.gray,
   border: `1px solid ${colors.cyanAlt}`,
   borderRadius: '4px',
   zIndex: 10
@@ -84,6 +84,6 @@ export const selectedSuggestionItem = style([
   suggestionItem,
   {
     backgroundColor: colors.cyan,
-    color: colors.uiBackground
+    color: colors.black
   }
 ])

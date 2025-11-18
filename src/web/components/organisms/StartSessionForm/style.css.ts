@@ -29,7 +29,7 @@ export const fieldsetContainer = style({
 
 export const legendStyle = style({
   padding: '0 4px',
-  color: colors.accent
+  color: colors.cyan
 })
 
 export const hyperparametersGrid = style({
@@ -57,10 +57,10 @@ export const headingSticky = style({
   position: 'sticky',
   top: 0,
   zIndex: 2,
-  background: colors.mediumBackground,
+  background: colors.gray,
   paddingBottom: '8px',
   marginBottom: 0,
-  borderBottom: `1px solid ${colors.mediumBackground}`
+  borderBottom: `1px solid ${colors.gray}`
 })
 
 export const buttonBar = style({
@@ -77,7 +77,7 @@ export const buttonBar = style({
   width: '60%',
   maxWidth: '1200px',
   boxSizing: 'border-box',
-  background: colors.mediumBackground,
+  background: colors.gray,
   '@media': {
     'screen and (max-width: 720px)': {
       width: 'calc(100% - 32px)',
@@ -107,8 +107,8 @@ export const primaryButton = style({
   selectors: {
     // Ensure disabled visuals are applied when this layout class is used
     '&:disabled, &[data-disabled="true"]': {
-      background: colors.grayText,
-      color: colors.offWhite,
+      background: colors.muted,
+      color: colors.white,
       cursor: 'not-allowed',
       opacity: 0.8
     }
@@ -148,13 +148,13 @@ export const secondaryButton = style({
   },
   selectors: {
     '&:hover': {
-      background: colors.error,
-      color: colors.offWhite
+      background: colors.red,
+      color: colors.white
     }
   }
 })
 
 export const errorMessageStyle = style({
-  color: colors.error,
+  color: colors.red,
   marginTop: '12px'
 })

@@ -21,7 +21,7 @@ export const otherTurnAligned = style({
 
 // 各ターンのコンテンツ部分の共通スタイル
 export const turnContentBase = style({
-  border: `1px solid ${colors.accent}`,
+  border: `1px solid ${colors.cyan}`,
   borderRadius: '8px',
   padding: '8px',
   // Slightly stronger, soft shadow for better elevation. Added transition and
@@ -69,7 +69,7 @@ export const turnContent = style({
   overflowWrap: 'anywhere',
   wordBreak: 'break-word',
   whiteSpace: 'pre-wrap',
-  color: colors.offWhite,
+  color: colors.white,
   padding: '0 12px'
 })
 
@@ -92,23 +92,23 @@ globalStyle(`${renderedMarkdown}.markdown-body`, {
 export const toolResponseContent = style({
   padding: '12px',
   borderRadius: '4px',
-  color: colors.offWhite
+  color: colors.white
 })
 
 export const statusSuccess = style({
-  color: colors.accent,
+  color: colors.cyan,
   fontWeight: 'bold'
 })
 
 export const statusError = style({
-  color: colors.error,
+  color: colors.red,
   fontWeight: 'bold'
 })
 
 export const editablePre = style({
   padding: '0 12px',
   borderRadius: '4px',
-  color: colors.offWhite,
+  color: colors.white,
   boxSizing: 'border-box',
   // Allow preformatted text to wrap within the container instead of overflowing.
   // Keep newlines but allow long words/URLs and CJK text to break.
@@ -126,11 +126,11 @@ export const editTextArea = style({
   boxSizing: 'border-box',
   padding: '12px',
   borderRadius: '4px',
-  border: `1px solid ${colors.accent}`,
+  border: `1px solid ${colors.cyan}`,
   whiteSpace: 'pre-wrap',
   wordWrap: 'break-word',
-  backgroundColor: colors.darkBackground,
-  color: colors.offWhite
+  backgroundColor: colors.black,
+  color: colors.white
 })
 
 export const editButtonContainer = style({
@@ -151,7 +151,7 @@ export const forkButtonIcon = style({
 })
 
 export const deleteButtonIcon = style({
-  background: colors.error,
+  background: colors.red,
   borderRadius: '4px',
   padding: '4px'
 })
@@ -160,12 +160,12 @@ export const copyButtonIcon = style({
   background: colors.lightBlue,
   borderRadius: '4px',
   padding: '4px',
-  color: colors.darkBackground
+  color: colors.black
 })
 
 export const editButtonIcon = style({
   background: colors.mediumBlue,
   borderRadius: '4px',
   padding: '4px',
-  color: colors.mediumBackground
+  color: colors.gray
 })

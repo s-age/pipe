@@ -8,7 +8,7 @@ export const legendStyle = style({
   fontWeight: 600,
   margin: 0,
   padding: 0,
-  color: colors.offWhite
+  color: colors.white
 })
 
 export const visuallyHidden = style({

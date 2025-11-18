@@ -20,8 +20,8 @@ export const headerContainer = style({
     #1A1A1A 90%,
     #0A0A0A 100%
   )`,
-  boxShadow: `inset 0 -1px 0 0 ${colors.mediumBackground}`,
-  color: colors.offWhite
+  boxShadow: `inset 0 -1px 0 0 ${colors.gray}`,
+  color: colors.white
 })
 
 export const headerTitle = style({
@@ -37,7 +37,7 @@ export const searchSquare = style({
   alignItems: 'center',
   justifyContent: 'center',
   background: 'rgba(0,0,0,0.35)',
-  color: colors.offWhite,
+  color: colors.white,
   marginRight: '12px',
   cursor: 'pointer'
 })
@@ -58,7 +58,7 @@ export const searchInput = style({
   border: 'none',
   padding: '8px 44px 8px 44px', // room for magnifier
   background: `${colors.cyan}`,
-  color: colors.offWhite,
+  color: colors.white,
   fontSize: '1rem',
   outline: 'none',
   boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
@@ -77,7 +77,7 @@ export const searchIconButton = style({
   justifyContent: 'center',
   border: 'none',
   background: 'transparent',
-  color: colors.offWhite,
+  color: colors.white,
   zIndex: 2,
   cursor: 'pointer',
   padding: 0
@@ -91,8 +91,8 @@ export const searchResults = style({
   width: '36%',
   minWidth: '320px',
   maxWidth: '480px',
-  background: colors.darkBackground,
-  color: colors.offWhite,
+  background: colors.black,
+  color: colors.white,
   borderRadius: '8px',
   boxShadow: '0 6px 18px rgba(0,0,0,0.24)',
   overflow: 'hidden',
@@ -103,13 +103,13 @@ export const searchResults = style({
 export const searchResultItem = style({
   padding: '10px 14px',
   cursor: 'pointer',
-  color: colors.lightText,
+  color: colors.white,
   background: 'transparent',
   borderBottom: '1px solid rgba(255,255,255,0.03)',
   selectors: {
     '&:hover': {
       background: 'rgba(255,255,255,0.06)',
-      color: colors.offWhite
+      color: colors.white
     },
     '&:last-child': {
       borderBottom: 'none'
@@ -135,8 +135,8 @@ export const searchModalOverlay = style({
 export const searchModalContent = style({
   width: '80%',
   maxWidth: '720px',
-  background: colors.mediumBackground,
-  color: colors.offWhite,
+  background: colors.gray,
+  color: colors.white,
   borderRadius: '10px',
   boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
   padding: '12px',
@@ -154,7 +154,7 @@ export const searchModalHeader = style({
 export const searchModalClose = style({
   background: 'transparent',
   border: 'none',
-  color: colors.offWhite,
+  color: colors.white,
   fontSize: '1rem',
   cursor: 'pointer'
 })

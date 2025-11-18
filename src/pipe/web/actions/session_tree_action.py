@@ -26,11 +26,7 @@ class SessionTreeAction(BaseAction):
             # (parent_id/child_hash). We create nodes and attach children to parents.
             nodes: dict[str, dict] = {}
             for sid, meta in sorted_sessions:
-                nodes[sid] = {
-                    "session_id": sid,
-                    "overview": meta,
-                    "children": []
-                }
+                nodes[sid] = {"session_id": sid, "overview": meta, "children": []}
 
             roots: list[dict] = []
             for sid in nodes:
@@ -40,7 +36,8 @@ class SessionTreeAction(BaseAction):
                     if parent_node is not None:
                         # Attach as child and ensure it's not also listed as a root
                         parent_node["children"].append(nodes[sid])
-                        # Remove any previous root instance of this node (if added earlier)
+                        # Remove any previous root instance of this node
+                        # (if added earlier)
                         roots = [r for r in roots if r.get("session_id") != sid]
                     else:
                         # parent not present in index — treat as root

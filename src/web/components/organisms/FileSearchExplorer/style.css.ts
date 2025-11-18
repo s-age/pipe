@@ -16,7 +16,7 @@ export const pathDisplayContainer = style({
 
 export const pathTag = style({
   backgroundColor: colors.cyan,
-  color: colors.uiBackground,
+  color: colors.black,
   padding: '2px 6px',
   borderRadius: '3px',
   fontSize: '12px',
@@ -43,9 +43,9 @@ export const pathTagDeleteButton = style({
 
 export const searchInput = style({
   width: '100%',
-  border: `1px solid ${colors.grayText}`,
+  border: `1px solid ${colors.muted}`,
   borderRadius: '4px',
-  color: colors.offWhite
+  color: colors.white
 })
 
 export const suggestionList = style({
@@ -57,7 +57,7 @@ export const suggestionList = style({
   padding: '0',
   height: '150px',
   overflowY: 'auto',
-  backgroundColor: colors.mediumBackground,
+  backgroundColor: colors.gray,
   border: `1px solid ${colors.cyanAlt}`,
   borderRadius: '4px',
   zIndex: 10
@@ -67,11 +67,11 @@ export const suggestionItem = style({
   padding: '4px 8px',
   cursor: 'pointer',
   listStyle: 'none',
-  color: colors.offWhite,
-  backgroundColor: colors.mediumBackground,
+  color: colors.white,
+  backgroundColor: colors.gray,
   ':hover': {
     backgroundColor: colors.cyan,
-    color: colors.uiBackground
+    color: colors.black
   }
 })
 
@@ -79,6 +79,6 @@ export const selectedSuggestionItem = style([
   suggestionItem,
   {
     backgroundColor: colors.cyan,
-    color: colors.uiBackground
+    color: colors.black
   }
 ])

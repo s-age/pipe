@@ -3,6 +3,7 @@
 This keeps filesystem traversal and matching logic in a testable place
 separate from the web action layer.
 """
+
 from __future__ import annotations
 
 import json
@@ -54,6 +55,7 @@ class SearchSessionsService:
         for fpath in self._iter_session_files():
             fname = os.path.basename(fpath)
             if qlow in fname.lower():
+                title = os.path.splitext(fname)[0]  # Default title from filename
                 matches.append(
                     {"session_id": self._compute_session_id(fpath), "title": title}
                 )
@@ -65,9 +67,10 @@ class SearchSessionsService:
             except Exception:
                 continue
 
-            purpose = (data.get("purpose") or "")
-            background = (data.get("background") or "")
+            purpose = data.get("purpose") or ""
+            # background = (data.get("background") or "") # Unused variable, removed
             found = False
+            title = purpose or os.path.splitext(fname)[0]  # Define title before use
             matches.append(
                 {"session_id": self._compute_session_id(fpath), "title": title}
             )
@@ -81,12 +84,22 @@ class SearchSessionsService:
                     content = t.get("content") if isinstance(t, dict) else None
                     if instr and qlow in str(instr).lower():
                         title = purpose or os.path.splitext(fname)[0]
-                        matches.append({"session_id": self._compute_session_id(fpath), "title": title})
+                        matches.append(
+                            {
+                                "session_id": self._compute_session_id(fpath),
+                                "title": title,
+                            }
+                        )
                         found = True
                         break
                     if content and qlow in str(content).lower():
                         title = purpose or os.path.splitext(fname)[0]
-                        matches.append({"session_id": self._compute_session_id(fpath), "title": title})
+                        matches.append(
+                            {
+                                "session_id": self._compute_session_id(fpath),
+                                "title": title,
+                            }
+                        )
                         found = True
                         break
 

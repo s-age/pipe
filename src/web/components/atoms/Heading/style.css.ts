@@ -4,12 +4,12 @@ import { colors } from '../../../styles/colors.css'
 
 export const heading = recipe({
   base: {
-    color: colors.accent
+    color: colors.cyan
   },
   variants: {
     level: {
       1: {
-        borderBottom: `1px solid ${colors.mediumBackground}`,
+        borderBottom: `1px solid ${colors.gray}`,
         paddingBottom: '12px',
         marginBottom: '20px'
       },

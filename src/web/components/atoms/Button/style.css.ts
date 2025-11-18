@@ -13,30 +13,30 @@ export const button = recipe({
   variants: {
     kind: {
       primary: {
-        backgroundColor: colors.accent,
-        color: colors.darkBackground,
+        backgroundColor: colors.cyan,
+        color: colors.black,
         ':hover': {
-          backgroundColor: colors.accentHover
+          backgroundColor: colors.cyanHover
         },
         selectors: {
           '&:disabled': {
-            backgroundColor: colors.grayText,
-            color: colors.offWhite,
+            backgroundColor: colors.muted,
+            color: colors.white,
             cursor: 'not-allowed',
             opacity: 0.8
           }
         }
       },
       secondary: {
-        backgroundColor: colors.mediumBackground,
-        color: colors.lightText,
+        backgroundColor: colors.gray,
+        color: colors.white,
         ':hover': {
-          backgroundColor: colors.accent
+          backgroundColor: colors.cyan
         },
         selectors: {
           '&:disabled': {
-            backgroundColor: colors.mediumBackground,
-            color: colors.grayText,
+            backgroundColor: colors.gray,
+            color: colors.muted,
             cursor: 'not-allowed',
             opacity: 0.7
           }
@@ -45,7 +45,7 @@ export const button = recipe({
       ghost: {
         backgroundColor: 'transparent',
         opacity: 0.85,
-        color: colors.lightText,
+        color: colors.white,
         ':hover': {
           backgroundColor: 'transparent',
           opacity: 1

@@ -19,7 +19,7 @@ export const input = style({
   padding: '8px 12px',
   fontSize: '1rem',
   background: colors.cyanDark,
-  color: colors.offWhite,
+  color: colors.white,
   outline: 'none',
   '::placeholder': { color: 'rgba(255,255,255,0.8)' }
 })
@@ -30,7 +30,7 @@ export const button = style({
   alignItems: 'center',
   justifyContent: 'center',
   background: 'rgba(0,0,0,0.35)',
-  color: colors.offWhite,
+  color: colors.white,
   border: 'none',
   cursor: 'pointer',
   padding: 0

@@ -7,7 +7,7 @@ export const metaItem = style({
 })
 
 export const multiStepLabel = style({
-  color: colors.offWhite,
+  color: colors.white,
   fontWeight: 'bold'
 })
 
@@ -15,11 +15,11 @@ export const metaItemLabel = style({
   fontWeight: 'bold',
   marginBottom: '4px',
   display: 'block',
-  color: colors.offWhite
+  color: colors.white
 })
 
 export const requiredMark = style({
-  color: colors.error,
+  color: colors.red,
   marginLeft: '6px',
   fontWeight: 'bold'
 })

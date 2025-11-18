@@ -1,4 +1,5 @@
 """Search sessions by grepping session files under the sessions directory."""
+
 from typing import Any
 
 from pipe.web.actions.base_action import BaseAction

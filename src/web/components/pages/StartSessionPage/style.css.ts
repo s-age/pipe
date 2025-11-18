@@ -5,8 +5,8 @@ import { colors } from '../../../styles/colors.css'
 export const pageContainer = style({
   fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
   margin: '0',
-  backgroundColor: colors.mediumBackground,
-  color: colors.darkBackground,
+  backgroundColor: colors.gray,
+  color: colors.black,
   padding: '16px',
   minHeight: '100vh',
   display: 'flex',

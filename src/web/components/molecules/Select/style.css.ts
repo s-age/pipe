@@ -5,14 +5,14 @@ import { colors } from '../../../styles/colors.css.ts'
 export const selectStyle = style({
   width: '100%',
   padding: '8px',
-  border: `1px solid ${colors.lightText}`,
+  border: `1px solid ${colors.white}`,
   borderRadius: '4px',
-  backgroundColor: colors.darkBackground,
-  color: colors.lightText,
+  backgroundColor: colors.black,
+  color: colors.white,
   fontSize: '1em',
   cursor: 'pointer',
   ':focus': {
-    borderColor: colors.accent,
+    borderColor: colors.cyan,
     outline: 'none'
   }
 })
@@ -21,14 +21,14 @@ export const trigger = style({
   display: 'inline-block',
   width: '100%',
   padding: '8px 12px',
-  color: colors.lightText
+  color: colors.white
 })
 
 export const panel = style({
   listStyle: 'none',
   padding: 8,
   margin: 0,
-  background: colors.mediumBackground,
+  background: colors.gray,
   borderRadius: 6,
   boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
 })
@@ -47,7 +47,7 @@ export const option = style({
 
 export const optionHighlighted = style({
   background: colors.lightBlue,
-  color: colors.darkBackground
+  color: colors.black
 })
 
 export const searchInput = style({
@@ -55,7 +55,7 @@ export const searchInput = style({
   padding: '8px 10px',
   marginBottom: 8,
   borderRadius: 6,
-  border: `1px solid ${colors.lightText}`,
-  background: colors.darkBackground,
-  color: colors.lightText
+  border: `1px solid ${colors.white}`,
+  background: colors.black,
+  color: colors.white
 })

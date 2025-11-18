@@ -32,7 +32,7 @@ export const centerColumn = style({
   overflowY: 'auto',
   display: 'flex',
   flexDirection: 'column',
-  background: colors.panelBackground
+  background: colors.gray
 })
 
 export const rightColumn = style({
@@ -49,12 +49,12 @@ export const rightColumn = style({
 
 export const panel = style({
   // panels should be slightly lighter than the page background
-  background: colors.darkBackground,
+  background: colors.black,
   borderRadius: '10px',
   padding: '12px',
   // slightly softer shadow so the page edge doesn't read as white
   boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
-  color: colors.offWhite,
+  color: colors.white,
   height: '100%',
   overflow: 'hidden',
   display: 'flex',

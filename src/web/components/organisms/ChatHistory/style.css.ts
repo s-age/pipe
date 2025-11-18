@@ -9,7 +9,7 @@ export const turnsColumn = style({
   flex: '1 1 0',
   display: 'flex',
   flexDirection: 'column',
-  borderRight: `1px solid ${colors.mediumBackground}`,
+  borderRight: `1px solid ${colors.gray}`,
   borderRadius: '10px',
   minWidth: 0,
   minHeight: 0
@@ -27,7 +27,7 @@ export const turnsHeader = style({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  color: colors.accent,
+  color: colors.cyan,
   position: 'sticky',
   top: 0,
   zIndex: 2
@@ -37,18 +37,18 @@ export const turnsListSection = style({
   flex: '1 1 0',
   overflowY: 'auto',
   padding: '16px',
-  color: colors.offWhite,
+  color: colors.white,
   minHeight: 0
 })
 
 export const panel = style({
   // panels should be slightly lighter than the page background
-  background: colors.darkBackground,
+  background: colors.black,
   borderRadius: '10px',
   padding: '12px',
   // slightly softer shadow so the page edge doesn't read as white
   boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
-  color: colors.offWhite,
+  color: colors.white,
   height: '100%',
   overflow: 'hidden',
   display: 'flex',
@@ -82,13 +82,13 @@ export const footerForm = style({
 export const welcomeMessage = style({
   padding: '12px',
   textAlign: 'center',
-  color: colors.grayText
+  color: colors.muted
 })
 
 // Provide named accents for components that want to use the palette
 export const chatAccents = {
   cyan: colors.cyan,
   cyanAlt: colors.cyanAlt,
-  redAccent: colors.error,
-  redStrong: colors.error
+  redAccent: colors.red,
+  redStrong: colors.red
 }

@@ -26,7 +26,7 @@ export const sessionMetaSection = style({
 export const sessionMetaView = style({
   flex: '1',
   padding: '20px',
-  background: colors.mediumBackground,
+  background: colors.gray,
   borderRadius: '8px',
   marginBottom: '16px',
 
@@ -45,8 +45,8 @@ export const stickySaveMetaButtonContainer = style({
   bottom: 0,
   zIndex: 1,
   padding: '12px',
-  borderTop: `1px solid ${colors.mediumBackground}`,
-  background: colors.darkBackground,
+  borderTop: `1px solid ${colors.gray}`,
+  background: colors.black,
   // Slight separation shadow so the sticky area reads as a control bar
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)'
 })
@@ -59,11 +59,11 @@ export const metaItemLabel = style({
   fontWeight: 'bold',
   marginBottom: '4px',
   display: 'block',
-  color: colors.offWhite
+  color: colors.white
 })
 
 export const multiStepLabel = style({
-  color: colors.offWhite,
+  color: colors.white,
   fontWeight: 'bold'
 })
 
@@ -72,11 +72,11 @@ export const inputFullWidth = style({
   boxSizing: 'border-box',
   // Make inputs visually match the panel: black background, gray border.
   background: '#000',
-  color: colors.offWhite,
+  color: colors.white,
   borderRadius: '4px',
   padding: '8px',
 
-  border: `1px solid ${colors.grayText}`,
+  border: `1px solid ${colors.muted}`,
 
   ':focus': {
     outline: 'none',
@@ -89,13 +89,13 @@ export const textareaFullWidth = style({
   width: '100%',
   boxSizing: 'border-box',
   background: '#000',
-  color: colors.offWhite,
+  color: colors.white,
   minHeight: '100px',
   marginTop: '10px',
   borderRadius: '4px',
   padding: '8px',
 
-  border: `1px solid ${colors.grayText}`,
+  border: `1px solid ${colors.muted}`,
 
   ':focus': {
     outline: 'none',
@@ -108,7 +108,7 @@ export const checkboxLabel = style({
   display: 'flex',
   alignItems: 'center',
   cursor: 'pointer',
-  color: colors.offWhite
+  color: colors.white
 })
 
 globalStyle(`${checkboxLabel} input[type="checkbox"]`, {
@@ -126,7 +126,7 @@ export const sliderValue = style({
   display: 'inline-block',
   width: '30px',
   textAlign: 'right',
-  color: colors.offWhite
+  color: colors.white
 })
 
 export const sliderContainer = style({
@@ -161,7 +161,7 @@ export const todoTitle = style({
 })
 
 export const noItemsMessage = style({
-  color: colors.grayText,
+  color: colors.muted,
   fontStyle: 'italic'
 })
 
@@ -172,7 +172,7 @@ export const todoCheckboxMargin = style({
 export const deleteTodosButton = style({
   float: 'right',
   marginBottom: '4px',
-  backgroundColor: colors.error
+  backgroundColor: colors.red
 })
 
 export const saveMetaButton = style({

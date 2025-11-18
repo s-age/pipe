@@ -18,17 +18,17 @@ export const header = style({
 
 export const icon = style({
   fontSize: '24px',
-  color: colors.accent
+  color: colors.cyan
 })
 
 export const title = style({
   margin: 0,
   fontSize: '1.2em',
-  color: colors.lightText
+  color: colors.white
 })
 
 export const message = style({
-  color: colors.grayText,
+  color: colors.muted,
   fontSize: '0.9em',
   lineHeight: '1.5'
 })

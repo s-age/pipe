@@ -13,7 +13,7 @@ export const tooltipText = style({
   width: 'fit-content',
   height: 'fit-content',
   backgroundColor: colors.cyan,
-  color: colors.uiBackground,
+  color: colors.black,
   textAlign: 'center',
   borderRadius: '6px',
   padding: '6px 10px',

@@ -20,7 +20,7 @@ export const todoItem = style({
 export const todoCheckboxLabel = style({
   cursor: 'pointer',
   display: 'flex',
-  color: colors.offWhite,
+  color: colors.white,
   alignItems: 'center',
   flexGrow: '1'
 })
@@ -31,7 +31,7 @@ export const todoTitle = style({
 })
 
 export const noItemsMessage = style({
-  color: colors.grayText,
+  color: colors.muted,
   fontStyle: 'italic'
 })
 
@@ -42,5 +42,5 @@ export const todoCheckboxMargin = style({
 export const deleteTodosButton = style({
   float: 'right',
   marginBottom: '4px',
-  backgroundColor: colors.error
+  backgroundColor: colors.red
 })

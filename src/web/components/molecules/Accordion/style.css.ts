@@ -21,7 +21,7 @@ export const headerLeft = style({
 
 export const title = style({
   fontWeight: 600,
-  color: colors.offWhite
+  color: colors.white
 })
 
 export const summary = style({
@@ -33,7 +33,7 @@ export const chevron = style({
   transition: 'transform 160ms ease, color 160ms ease',
   fontSize: '28px',
   lineHeight: 1,
-  color: colors.grayText
+  color: colors.muted
 })
 
 export const chevronOpen = style({

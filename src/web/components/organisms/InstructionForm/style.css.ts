@@ -12,16 +12,16 @@ export const instructionTextarea = style({
   minHeight: '80px',
   padding: '12px 48px 12px 12px',
   fontSize: '14px',
-  color: colors.offWhite,
+  color: colors.white,
   lineHeight: '1.5',
   borderRadius: '8px',
-  background: colors.darkBackground,
+  background: colors.black,
   resize: 'vertical',
   fontFamily: 'inherit',
   ':focus': {
     outline: 'none',
-    borderColor: colors.accent,
-    boxShadow: `0 0 0 2px ${colors.accent}33`
+    borderColor: colors.cyan,
+    boxShadow: `0 0 0 2px ${colors.cyan}33`
   },
   ':disabled': {
     cursor: 'not-allowed'
@@ -38,6 +38,6 @@ export const overlaySendButton = style({
   minWidth: 'auto',
   ':disabled': {
     cursor: 'not-allowed',
-    backgroundColor: colors.grayText
+    backgroundColor: colors.muted
   }
 })

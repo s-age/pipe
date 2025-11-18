@@ -46,7 +46,7 @@ export const ChatHistoryHeader = ({
         kind="secondary"
         size="default"
         onClick={handleDeleteCurrentSession}
-        style={{ backgroundColor: colors.error, color: colors.lightText }}
+        style={{ backgroundColor: colors.red, color: colors.white }}
       >
         <IconDelete size={16} />
       </Button>

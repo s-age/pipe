@@ -11,7 +11,7 @@ export const metaItemLabel = style({
   fontWeight: 'bold',
   marginBottom: '4px',
   display: 'block',
-  color: colors.offWhite
+  color: colors.white
 })
 
 export const artifactsList = style({
@@ -23,7 +23,7 @@ export const artifactsList = style({
 
 export const artifactItem = style({
   backgroundColor: colors.cyan,
-  color: colors.uiBackground,
+  color: colors.black,
   padding: '2px 6px',
   borderRadius: '3px',
   fontSize: '12px',

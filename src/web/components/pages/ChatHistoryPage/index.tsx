@@ -2,7 +2,7 @@ import type { JSX } from 'react'
 
 import { ChatHistory } from '@/components/organisms/ChatHistory'
 import { Header } from '@/components/organisms/Header'
-import { SessionMeta } from '@/components/organisms/SessionMeta'
+import { SessionControl } from '@/components/organisms/SessionControl'
 import { SessionTree } from '@/components/organisms/SessionTree'
 
 import { useChatHistoryPageHandlers } from './hooks/useChatHistoryPageHandlers'
@@ -48,7 +48,7 @@ export const ChatHistoryPage = (): JSX.Element => {
 
         {sessionDetail && (
           <div className={rightColumn}>
-            <SessionMeta sessionDetail={sessionDetail} onRefresh={onRefresh} />
+            <SessionControl sessionDetail={sessionDetail} onRefresh={onRefresh} />
           </div>
         )}
       </div>

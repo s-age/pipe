@@ -2,10 +2,6 @@ import { style } from '@vanilla-extract/css'
 
 import { colors } from '../../../styles/colors.css.ts'
 
-export const metaItem = style({
-  margin: '32px 0'
-})
-
 export const todosList = style({
   paddingLeft: '0',
   listStyle: 'none'

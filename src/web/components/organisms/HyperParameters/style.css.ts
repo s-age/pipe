@@ -1,9 +1,5 @@
 import { style } from '@vanilla-extract/css'
 
-export const metaItem = style({
-  marginBottom: '16px'
-})
-
 export const hyperparametersControl = style({
   display: 'flex',
   marginBottom: '10px',

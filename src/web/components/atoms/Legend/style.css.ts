@@ -4,6 +4,7 @@ import { colors } from '@/styles/colors.css'
 
 export const legendStyle = style({
   margin: 0,
+  marginBottom: '4px',
   padding: 0,
   fontSize: 16,
   fontWeight: 600,

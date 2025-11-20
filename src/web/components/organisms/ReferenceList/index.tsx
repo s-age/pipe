@@ -3,14 +3,15 @@ import { useMemo, type JSX } from 'react'
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
 import { Accordion } from '@/components/molecules/Accordion'
+import { MetaLabel, MetaItem } from '@/components/molecules/MetaItem'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { referenceSummary } from '@/styles/reference.css'
 
 import { ReferenceComponent } from '../Reference'
 import { useReferenceListHandlers } from './hooks/useReferenceListHandlers'
-import { metaItem, metaItemLabel, referencesList, noItemsMessage } from './style.css'
+import { referenceSummary } from './style.css'
+import { referencesList, noItemsMessage } from './style.css'
 
 type ReferenceListProperties = {
   sessionDetail: SessionDetail
@@ -34,8 +35,10 @@ export const ReferenceList = ({
   )
 
   return (
-    <div className={metaItem}>
-      <Label className={metaItemLabel}>References:</Label>
+    <MetaItem>
+      <Label>
+        <MetaLabel>References:</MetaLabel>
+      </Label>
 
       {/* Always-visible search / chips area */}
       <FileSearchExplorer
@@ -69,6 +72,6 @@ export const ReferenceList = ({
         )}
         {errors && <ErrorMessage error={errors as never} />}
       </Accordion>
-    </div>
+    </MetaItem>
   )
 }

@@ -1,10 +1,11 @@
 import type { JSX } from 'react'
 
 import { InputCheckbox } from '@/components/molecules/InputCheckbox'
-import { metaItem, multiStepLabel } from '@/styles/sessionMeta.css'
+import { MetaItem } from '@/components/molecules/MetaItem'
 
 import { useMultiStepReasoningHandlers } from './hooks/useMultiStepReasoningHandlers'
 import { useMultiStepReasoningLifecycle } from './hooks/useMultiStepReasoningLifecycle'
+import { multiStepLabel } from './style.css'
 
 type MultiStepReasoningProperties = {
   multiStepReasoningEnabled: boolean
@@ -26,10 +27,10 @@ export const MultiStepReasoning = ({
   })
 
   return (
-    <div className={metaItem}>
+    <MetaItem>
       <InputCheckbox checked={localEnabled} onChange={handleMultiStepReasoningChange}>
         <strong className={multiStepLabel}>Multi-step Reasoning</strong>
       </InputCheckbox>
-    </div>
+    </MetaItem>
   )
 }

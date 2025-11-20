@@ -3,12 +3,12 @@ import React from 'react'
 import { Button } from '@/components/atoms/Button'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { InputCheckbox } from '@/components/molecules/InputCheckbox'
+import { MetaItem } from '@/components/molecules/MetaItem'
 import { useSessionTodosHandlers } from '@/components/organisms/TodoList/hooks/useSessionTodosHandlers'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Todo } from '@/types/todo'
 
 import {
-  metaItem,
   todosList,
   todoItem,
   todoCheckboxLabel,
@@ -29,7 +29,7 @@ export const TodoList = ({ sessionDetail }: TodoListProperties): React.JSX.Eleme
     })
 
   return (
-    <div className={metaItem}>
+    <MetaItem>
       <Fieldset legend="Todos">
         {() => (
           <div>
@@ -67,6 +67,6 @@ export const TodoList = ({ sessionDetail }: TodoListProperties): React.JSX.Eleme
           </div>
         )}
       </Fieldset>
-    </div>
+    </MetaItem>
   )
 }

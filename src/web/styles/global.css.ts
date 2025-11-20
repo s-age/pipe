@@ -20,7 +20,7 @@ globalStyle('html, body, #root', {
   contain: 'paint'
 })
 
-globalStyle('input, textarea', {
+globalStyle('input, textarea, select', {
   boxSizing: 'border-box',
   background: colors.black,
   color: colors.muted,
@@ -29,7 +29,7 @@ globalStyle('input, textarea', {
   border: `1px solid ${colors.muted}`
 })
 
-globalStyle('input:focus, textarea:focus', {
+globalStyle('input:focus, textarea:focus, select:focus', {
   border: `1px solid ${colors.cyan}`,
   boxShadow: `0 0 0 1px ${colors.cyanBorderRGBA}`,
   outline: 'none'

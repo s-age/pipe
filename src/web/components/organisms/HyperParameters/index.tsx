@@ -2,17 +2,13 @@ import React from 'react'
 
 import { Label } from '@/components/atoms/Label'
 import { Fieldset } from '@/components/molecules/Fieldset'
+import { MetaItem } from '@/components/molecules/MetaItem'
 import { Slider } from '@/components/molecules/Slider'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useHyperParametersHandlers } from './hooks/useHyperParametersHandlers'
-import {
-  metaItem,
-  hyperparametersControl,
-  sliderContainer,
-  labelContainer
-} from './style.css'
+import { hyperparametersControl, sliderContainer, labelContainer } from './style.css'
 
 type HyperParametersProperties = {
   sessionDetail: SessionDetail
@@ -39,7 +35,7 @@ export const HyperParameters = ({
   } = useHyperParametersHandlers({ sessionDetail })
 
   return (
-    <div className={metaItem}>
+    <MetaItem>
       <Fieldset
         legend="Hyperparameters"
         error={errors?.hyperparameters as unknown as React.ReactNode}
@@ -101,6 +97,6 @@ export const HyperParameters = ({
           </div>
         </div>
       </Fieldset>
-    </div>
+    </MetaItem>
   )
 }

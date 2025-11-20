@@ -27,11 +27,18 @@ export const input = style({
 export const button = style({
   display: 'flex',
   flex: '0 0 44px',
+  marginLeft: '-24px',
   padding: 0,
   border: 'none',
   color: colors.white,
-  background: 'rgba(0,0,0,0.35)',
+  background: colors.darkGray,
   cursor: 'pointer',
   alignItems: 'center',
-  justifyContent: 'center'
+  justifyContent: 'center',
+
+  selectors: {
+    '&:hover': {
+      background: colors.gray
+    }
+  }
 })

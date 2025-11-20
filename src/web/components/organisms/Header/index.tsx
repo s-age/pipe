@@ -1,11 +1,13 @@
 import type { JSX } from 'react'
 
 import { InputSearch } from '@/components/molecules/InputSearch'
+import logoSource from '@/static/images/logo.png'
 
 import { useSearchSessionsHandlers } from './hooks/useSearchSessionsHandlers'
 import {
   headerContainer,
-  headerTitle,
+  brand,
+  brandLogo,
   searchWrapper,
   searchModalOverlay,
   searchModalContent,
@@ -30,7 +32,9 @@ export const Header = (): JSX.Element => {
 
   return (
     <header className={headerContainer}>
-      <div className={headerTitle}>Pipe</div>
+      <div className={brand}>
+        <img src={logoSource} alt="pipe logo" className={brandLogo} />
+      </div>
       <div className={searchWrapper}>
         <InputSearch
           placeholder="Search sessions..."

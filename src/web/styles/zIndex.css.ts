@@ -12,7 +12,8 @@ export const zIndex = {
   // sessionTree is a sidebar/normal panel — keep low unless it becomes a drawer
   sessionTree: 10,
 
-  // Header/search related
+  // tabs/Header/search related
+  tabs: 40,
   headerSearch: 50,
   header: 60,
 

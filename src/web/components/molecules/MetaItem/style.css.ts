@@ -1,17 +1,12 @@
 import { style } from '@vanilla-extract/css'
 
-import { colors } from './colors.css'
+import { colors } from '../../../styles/colors.css'
 
-export const metaItem = style({
+export const wrapper = style({
   marginBottom: '16px'
 })
 
-export const multiStepLabel = style({
-  fontWeight: 'bold',
-  color: colors.white
-})
-
-export const metaItemLabel = style({
+export const label = style({
   display: 'block',
   marginBottom: '4px',
   fontWeight: 'bold',
@@ -22,8 +17,4 @@ export const requiredMark = style({
   marginLeft: '6px',
   fontWeight: 'bold',
   color: colors.red
-})
-
-export const inputFullWidth = style({
-  width: '100%'
 })

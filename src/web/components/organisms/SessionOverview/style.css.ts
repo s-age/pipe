@@ -1,6 +1,6 @@
 import { style } from '@vanilla-extract/css'
 
-import { colors } from './colors.css'
+import { colors } from '../../../styles/colors.css'
 
 export const sessionListItem = style({
   marginBottom: '6px'

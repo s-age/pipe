@@ -1,11 +1,11 @@
 import React from 'react'
 
 import { Fieldset } from '@/components/molecules/Fieldset'
+import { MetaItem, MetaLabel } from '@/components/molecules/MetaItem'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
 import { useArtifactsSelectorHandlers } from './hooks/useArtifactsSelectorHandlers'
-import { metaItem, metaItemLabel } from './style.css'
 
 type ArtifactsSelectorProperties = {
   legend?: string
@@ -21,11 +21,13 @@ export const ArtifactsSelector = ({
   const { handleArtifactsChange } = useArtifactsSelectorHandlers(formContext)
 
   return (
-    <Fieldset
-      legend={<span className={metaItemLabel}>{legend}</span>}
-      className={metaItem}
-    >
-      <FileSearchExplorer existsValue={currentValue} onChange={handleArtifactsChange} />
-    </Fieldset>
+    <MetaItem>
+      <Fieldset legend={<MetaLabel>{legend}</MetaLabel>}>
+        <FileSearchExplorer
+          existsValue={currentValue}
+          onChange={handleArtifactsChange}
+        />
+      </Fieldset>
+    </MetaItem>
   )
 }

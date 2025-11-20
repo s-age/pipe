@@ -34,14 +34,24 @@ export const centerColumn = style({
 })
 
 export const rightColumn = style({
-  display: 'flex',
-  flex: '0 0 300px',
   boxSizing: 'content-box',
   overflowY: 'auto',
-  marginRight: '16px',
-  padding: '18px',
   flexDirection: 'column',
-  alignItems: 'stretch'
+  alignItems: 'stretch',
+  scrollbarWidth: 'none',
+  scrollbarColor: `${colors.darkGray} transparent`,
+  selectors: {
+    '&::-webkit-scrollbar': {
+      width: '0'
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'transparent'
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: colors.darkGray,
+      borderRadius: '4px'
+    }
+  }
 })
 
 export const panel = style({

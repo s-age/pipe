@@ -327,6 +327,58 @@ const data = sessionDetailSchema.parse(JSON.parse(response))
 
 ## Recommended Patterns
 
+### ❌ 9. Component Logic Placement
+
+**Rule:** Components (especially atoms/molecules) must not contain business logic, data fetching, or significant side effects. Extract such logic into hooks and place them under a `hooks/` subdirectory next to the component (for example `src/web/components/organisms/SomeThing/hooks/*`).
+
+Naming convention: prefer explicit hook names that indicate responsibility, for example:
+
+- `useFooActions` — API calls or action wrappers
+- `useFooHandlers` — event handlers that call actions and interact with stores
+- `useFooLifecycle` — lifecycle-related effects (initial loading, subscriptions)
+
+Avoid generic names like `useWidgetData` that do not indicate the hook's role.
+
+See `roles/typescript/hooks/hooks.md` for concrete patterns, examples, and templates to follow.
+
+**Reason:** Keeps components presentational and testable; centralizes side effects and API usage in hooks where errors and retries can be handled consistently.
+
+### ❌ 10. Avoid `any` Except Narrow, Justified Cases
+
+**Rule:** Using `any` is disallowed except in narrowly justified, documented cases (for example, extremely generic form value bags that are impossible to type without large effort). Prefer proper typing, `unknown` + runtime validation, or well-scoped union types.
+
+```typescript
+// ❌ BAD
+const process = (payload: any) => {
+  /* ... */
+}
+
+// ✅ GOOD
+const process = (payload: Record<string, unknown>) => {
+  /* ... */
+}
+
+// Exception: a generic form helper used across many different forms
+// may use `any` with an explicit comment and a ticket linking to a future typed refactor.
+```
+
+**Reason:** `any` defeats the type system and hides bugs; allowing it only in exceptional, documented scenarios keeps the codebase safer.
+
+### ❌ 11. No Inline Styles
+
+**Rule:** Do not use inline style objects (e.g., `<div style={{ marginTop: 8 }}>`) in components. Use the project's styling system (vanilla-extract CSS-in-TS files under `*.style.css.ts`), design tokens, or component-level classNames.
+
+```tsx
+// ❌ BAD
+return <div style={{ padding: 8 }}>Hello</div>
+
+// ✅ GOOD
+import * as styles from './style.css'
+return <div className={styles.container}>Hello</div>
+```
+
+**Reason:** Inline styles break theming, make it harder to maintain consistent tokens, and bypass project linting/ordering rules for CSS.
+
 ### ✅ 1. Use Validation Rules from `@/lib/validation`
 
 Always prefer reusable validation rules over inline Zod schemas.
@@ -395,6 +447,44 @@ export type SessionDetail = Session & {
 ```
 
 ## Automated Validation Tools
+
+## Handling `undefined` Values (Guidance)
+
+Avoid passing `undefined` across module or component boundaries as a general convention. `undefined` is a global-like value and can be error-prone to detect or compare in some JavaScript environments. Prefer one of the following clearer, explicit conventions instead:
+
+- Use explicit nullable types in your APIs/props (for example, `string | null`) when a value may be intentionally absent.
+- Use a sentinel empty value (for example, an empty string `''`) when the domain meaning fits.
+
+If you must detect `undefined`, prefer the robust check `typeof value === 'undefined'` (or a guarded `value === undefined` when you control the environment and know `undefined` cannot be shadowed). Document which convention the module follows and be consistent across the codebase.
+
+Consider adding a lint or CI grep rule to flag ad-hoc uses of `undefined` in prop passing (for example `foo ?? undefined`) so the team can review and converge on a single project convention (`null` vs empty string vs optional omitted property).
+
+## Arrow Functions in JSX (Guidance)
+
+Inline arrow functions in JSX props (for example `onClick={() => doSomething()}`) create a new function on every render. This can lead to unnecessary re-renders of child components, subtle bugs with referential equality, and violates common project lint rules that enforce handler stability.
+
+Recommended patterns:
+
+- Prefer stable handlers defined outside JSX and memoized when necessary, for example:
+  - `const handleClick = useCallback(() => { ... }, [deps])`
+  - `<button onClick={handleClick}>`
+
+- For lists/maps, avoid creating per-item closures inside the render. Use a single handler with `data-*` attributes or prebound handlers:
+  - `<button data-key={id} onClick={handleClick}>` and inside the handler read `event.currentTarget.dataset.key`.
+
+- Use `useCallback` only when referential stability matters (child memoization, dependencies), and avoid applying it everywhere by default — prefer clear intent over micro-optimizations.
+
+Enforcement and linting:
+
+- Enable an ESLint rule to prevent inline arrow functions in JSX props. Popular options include `react/jsx-no-bind` (eslint-plugin-react) or a custom project rule that disallows arrow functions and non-stable handlers in JSX. Example config snippet:
+
+```json
+{
+  "rules": {
+    "react/jsx-no-bind": ["error", { "allowArrowFunctions": false, "allowBind": false }]
+  }
+}
+```
 
 ### 1. ESLint
 

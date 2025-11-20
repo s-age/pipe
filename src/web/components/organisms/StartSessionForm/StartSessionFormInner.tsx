@@ -4,6 +4,7 @@ import type { JSX } from 'react'
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
 import { Fieldset } from '@/components/molecules/Fieldset'
+import { MetaLabel } from '@/components/molecules/MetaItem'
 import { Select } from '@/components/molecules/Select'
 import { TextArea } from '@/components/molecules/TextArea'
 // form context is accessed inside handlers when needed
@@ -12,7 +13,6 @@ import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { ReferenceList } from '@/components/organisms/ReferenceList'
 import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-import { metaItemLabel, requiredMark } from '@/styles/sessionMeta.css'
 import type { Option } from '@/types/option'
 
 import { useStartSessionFormHandlers } from './hooks/useStartSessionFormHandlers'
@@ -56,12 +56,7 @@ export const StartSessionFormInner = ({
 
         <SessionMetaBasic sessionDetail={sessionDetail}>
           <Fieldset
-            legend={
-              <span className={metaItemLabel}>
-                First Instruction:
-                <span className={requiredMark}>*</span>
-              </span>
-            }
+            legend={<MetaLabel required={true}>First Instruction:</MetaLabel>}
             className={fieldsetContainer}
             error={errors?.instruction as unknown as React.ReactNode}
           >
@@ -76,7 +71,7 @@ export const StartSessionFormInner = ({
         </SessionMetaBasic>
 
         <Fieldset
-          legend={<span className={metaItemLabel}>Parent Session:</span>}
+          legend={<MetaLabel>Parent Session:</MetaLabel>}
           className={fieldsetContainer}
           error={errors?.parent as unknown as React.ReactNode}
         >

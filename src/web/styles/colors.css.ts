@@ -2,7 +2,7 @@ export const colors = {
   // Neutral / Black scale
   // Base app background / core text colors.
   black: '#121212',
-  pureBlack: '#000000',
+  pureBlack: '#0a0a1a',
   white: '#FFFFFF',
 
   // Greys and muted tones
@@ -17,7 +17,7 @@ export const colors = {
   // Use these for interactive accents and branding color usage.
   cyan: '#39C4C4',
   cyanAlt: '#86cecb',
-  cyanDark: '#004444',
+  cyanDark: '#0D474E',
   cyanBorderRGBA: 'rgba(57,196,196,0.5)',
   cyanHover: '#2e9b9b',
 

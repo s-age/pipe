@@ -2,11 +2,6 @@ import { style } from '@vanilla-extract/css'
 
 import { colors } from '../../../styles/colors.css.ts'
 
-export const metaItem = style({
-  maxWidth: '100%',
-  marginBottom: '16px'
-})
-
 export const metaItemLabel = style({
   display: 'block',
   marginBottom: '4px',

@@ -34,6 +34,19 @@ export const legendStyle = style({
   color: colors.cyan
 })
 
+export const metaItemLabel = style({
+  display: 'block',
+  marginBottom: '4px',
+  fontWeight: 'bold',
+  color: colors.white
+})
+
+export const requiredMark = style({
+  marginLeft: '6px',
+  fontWeight: 'bold',
+  color: colors.red
+})
+
 export const hyperparametersGrid = style({
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',

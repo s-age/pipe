@@ -1,0 +1,49 @@
+import type { JSX } from 'react'
+
+import { SessionMeta } from '@/components/organisms/SessionMeta'
+import type { SessionDetail } from '@/lib/api/session/getSession'
+
+import * as styles from './style.css'
+import { Tabs } from '../../atoms/Tabs'
+import { Compressor } from '../../Compressor'
+import { Therapist } from '../Therapist'
+import { useSessionControlHandlers } from './hooks/useSessionControlHandlers'
+import type { SessionControlTab } from './hooks/useSessionControlHandlers'
+
+export type SessionControlProperties = {
+  sessionDetail: SessionDetail
+  onRefresh: () => Promise<void>
+}
+
+export const SessionControl = ({
+  sessionDetail,
+  onRefresh
+}: SessionControlProperties): JSX.Element => {
+  const { active, handleTabChange } = useSessionControlHandlers()
+
+  const tabs: { key: SessionControlTab; label: string }[] = [
+    { key: 'meta', label: 'Meta' },
+    { key: 'compress', label: 'Compress' },
+    { key: 'therapist', label: 'Therapist' }
+  ]
+
+  const sessionId = sessionDetail.session_id ?? ''
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.right}>
+        <Tabs tabs={tabs} activeKey={active} onChange={handleTabChange} />
+
+        {active === 'meta' && (
+          <SessionMeta sessionDetail={sessionDetail} onRefresh={onRefresh} />
+        )}
+
+        {active === 'compress' && (
+          <Compressor sessionId={sessionId} mockMaxTurn={8} showTabs={false} />
+        )}
+
+        {active === 'therapist' && <Therapist />}
+      </div>
+    </div>
+  )
+}

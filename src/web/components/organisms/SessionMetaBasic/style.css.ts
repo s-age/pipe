@@ -2,10 +2,6 @@ import { style } from '@vanilla-extract/css'
 
 import { colors } from '../../../styles/colors.css.ts'
 
-export const metaItem = style({
-  marginBottom: '16px'
-})
-
 export const multiStepLabel = style({
   fontWeight: 'bold',
   color: colors.white

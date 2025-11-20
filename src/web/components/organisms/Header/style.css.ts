@@ -7,7 +7,7 @@ import { colors } from '../../../styles/colors.css.ts'
 export const headerContainer = style({
   display: 'flex',
   height: '64px',
-  padding: '0 20px',
+  padding: '0',
   color: colors.white,
   background: colors.headerGradation,
   boxShadow: `inset 0 -1px 0 0 ${colors.gray}`,
@@ -19,14 +19,34 @@ export const headerTitle = style({
   fontWeight: 'bold'
 })
 
+export const brand = style({
+  display: 'flex',
+  marginRight: '12px',
+  alignItems: 'center',
+  gap: '10px'
+})
+
+export const brandLogo = style({
+  height: '32px',
+  margin: '0 20px',
+  borderRadius: '6px',
+  objectFit: 'cover'
+})
+
+export const brandText = style({
+  fontSize: '1.1rem',
+  fontWeight: '700',
+  textTransform: 'lowercase'
+})
+
 export const searchSquare = style({
   display: 'flex',
   width: '40px',
   height: '40px',
-  marginRight: '12px',
+  marginLeft: '-12px',
   borderRadius: '8px',
   color: colors.white,
-  background: 'rgba(0,0,0,0.35)',
+  background: colors.cyanDark,
   cursor: 'pointer',
   alignItems: 'center',
   justifyContent: 'center'

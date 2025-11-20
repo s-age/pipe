@@ -3,10 +3,6 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '@/styles/colors.css'
 import { zIndex } from '@/styles/zIndex.css'
 
-export const metaItem = style({
-  marginBottom: '32px'
-})
-
 export const metaItemLabel = style({
   display: 'block',
   marginBottom: '4px',
@@ -88,3 +84,9 @@ export const selectedSuggestionItem = style([
     color: colors.black
   }
 ])
+
+export const referenceSummary = style({
+  marginLeft: '8px',
+  fontSize: '0.85rem',
+  color: 'rgba(255,255,255,0.74)'
+})

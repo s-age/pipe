@@ -4,9 +4,12 @@ import { zIndex } from '@/styles/zIndex.css'
 
 import { colors } from '../../../styles/colors.css.ts'
 
+const WIDTH = '300px' as const
+
 export const metaColumn = style({
-  width: '300px',
+  width: WIDTH,
   height: '100%',
+  boxSizing: 'content-box',
   overflowX: 'hidden',
   overflowY: 'auto',
   margin: '0 12px',
@@ -19,6 +22,7 @@ export const sessionMetaSection = style({
   minHeight: '0',
   boxSizing: 'border-box',
   overflowY: 'auto',
+  marginBottom: '42px',
   flexDirection: 'column'
 })
 
@@ -39,17 +43,14 @@ export const sessionMetaView = style({
 })
 
 export const stickySaveMetaButtonContainer = style({
-  position: 'sticky',
+  position: 'absolute',
   bottom: 0,
+  width: WIDTH,
   padding: '12px',
-  background: colors.black,
+  background: colors.darkGray,
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)',
   zIndex: zIndex.base,
-  borderTop: `1px solid ${colors.gray}`
-})
-
-export const metaItem = style({
-  marginBottom: '16px'
+  borderTop: `2px solid ${colors.black}`
 })
 
 export const metaItemLabel = style({
@@ -172,5 +173,12 @@ export const saveMetaButton = style({
   height: '56px',
   boxSizing: 'border-box',
   padding: '12px 16px',
-  borderRadius: '8px'
+  borderRadius: '8px',
+  color: colors.white,
+  background: 'rgba(0,0,0,0.32)',
+  boxShadow: `0 0 8px #00ffff`,
+  ':hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: `0 0 6px #00ffff, 0 0 12px #00ffff, 0 0 18px #00ffff, 0 0 24px #00ffff77, 0 12px 30px rgba(0,0,0,0.26)`
+  }
 })

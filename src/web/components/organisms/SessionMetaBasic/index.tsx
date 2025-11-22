@@ -12,6 +12,7 @@ import { ProcedureSelect } from '@/components/organisms/ProcedureSelect'
 import { RolesSelect } from '@/components/organisms/RolesSelect'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
+import { useSessionMetaBasicHandlers } from './hooks/useSessionMetaBasicHandlers'
 import { useSessionMetaBasicSync } from './hooks/useSessionMetaBasicSync'
 import { inputFullWidth } from './style.css'
 
@@ -30,12 +31,7 @@ export const SessionMetaBasic = ({
   const errors = formContext?.formState?.errors
   const isSubmitting = formContext?.formState?.isSubmitting
 
-  const handleRolesChange = React.useCallback(
-    (roles: string[]) => {
-      setValue?.('roles', roles)
-    },
-    [setValue]
-  )
+  const { handleRolesChange } = useSessionMetaBasicHandlers({ setValue })
 
   useSessionMetaBasicSync(sessionDetail, formContext, isSubmitting)
 

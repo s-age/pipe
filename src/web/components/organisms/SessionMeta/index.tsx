@@ -1,5 +1,4 @@
 import type { JSX } from 'react'
-import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { Form, useOptionalFormContext } from '@/components/organisms/Form'
@@ -10,8 +9,9 @@ import { SessionMetaBasic } from '@/components/organisms/SessionMetaBasic'
 import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
-// eslint-disable-next-line import/order
 import { useSessionMetaHandlers } from './hooks/useSessionMetaHandlers'
+// eslint-disable-next-line import/order
+import { useSessionMetaLifecycle } from './hooks/useSessionMetaLifecycle'
 
 type SessionMetaFormInputs = {
   purpose: string | null
@@ -50,9 +50,8 @@ export const SessionMeta = ({
   sessionDetail,
   onRefresh
 }: SessionMetaProperties): JSX.Element | null => {
-  const { defaultValues, onSubmit, isSubmitting } = useSessionMetaHandlers({
-    sessionDetail,
-    onRefresh
+  const { computedDefaultValues } = useSessionMetaLifecycle({
+    sessionDetail
   })
 
   if (sessionDetail === null) {
@@ -62,9 +61,11 @@ export const SessionMeta = ({
   const MetaContent = (): JSX.Element => {
     const formContext = useOptionalFormContext()
 
-    const handleSaveClick = React.useCallback((): void => {
-      void formContext?.handleSubmit(onSubmit as never)()
-    }, [formContext])
+    const { isSubmitting, handleSaveClick } = useSessionMetaHandlers({
+      sessionDetail,
+      onRefresh,
+      formContext
+    })
 
     return (
       <>
@@ -113,7 +114,7 @@ export const SessionMeta = ({
   return (
     <div className={metaColumn}>
       <Form<SessionMetaFormInputs>
-        defaultValues={defaultValues}
+        defaultValues={computedDefaultValues}
         schema={sessionMetaSchema}
       >
         <MetaContent />

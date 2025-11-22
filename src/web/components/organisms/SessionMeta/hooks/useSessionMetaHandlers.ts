@@ -1,5 +1,6 @@
-import React from 'react'
+import { useCallback, useState } from 'react'
 
+import type { FormMethods } from '@/components/organisms/Form'
 import { useSessionMetaActions } from '@/components/organisms/SessionMeta/hooks/useSessionMetaActions'
 import type { SessionMetaFormInputs } from '@/components/organisms/SessionMeta/schema'
 import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
@@ -8,38 +9,20 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 type UseSessionMetaHandlersProperties = {
   sessionDetail: SessionDetail
   onRefresh: () => Promise<void>
+  formContext?: FormMethods
 }
 export const useSessionMetaHandlers = ({
   sessionDetail,
-  onRefresh
+  onRefresh,
+  formContext
 }: UseSessionMetaHandlersProperties): {
-  defaultValues: SessionMetaFormInputs
   onSubmit: (data: SessionMetaFormInputs) => void
   isSubmitting: boolean
+  handleSaveClick: () => void
 } => {
   const { handleMetaSave } = useSessionMetaActions({ onRefresh })
 
-  const defaultValues = React.useMemo<SessionMetaFormInputs>(
-    () => ({
-      purpose: sessionDetail.purpose ?? null,
-      background: sessionDetail.background ?? null,
-      roles: sessionDetail.roles ?? null,
-      procedure: sessionDetail.procedure ?? null,
-      references:
-        sessionDetail.references?.map((reference) => ({
-          path: reference.path,
-          ttl: reference.ttl ?? 3,
-          persist: reference.persist ?? false,
-          disabled: reference.disabled ?? false
-        })) ?? [],
-      artifacts: sessionDetail.artifacts ?? null,
-      hyperparameters: sessionDetail.hyperparameters ?? null,
-      multi_step_reasoning: sessionDetail.multi_step_reasoning_enabled ?? false
-    }),
-    [sessionDetail]
-  )
-
-  const onSubmit = React.useCallback(
+  const onSubmit = useCallback(
     (data: SessionMetaFormInputs) => {
       if (!sessionDetail.session_id) return
 
@@ -49,9 +32,9 @@ export const useSessionMetaHandlers = ({
     [sessionDetail.session_id, handleMetaSave]
   )
 
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const wrappedSubmit = React.useCallback(
+  const wrappedSubmit = useCallback(
     async (data: SessionMetaFormInputs) => {
       setIsSubmitting(true)
       void onSubmit(data)
@@ -60,5 +43,9 @@ export const useSessionMetaHandlers = ({
     [onSubmit]
   )
 
-  return { defaultValues, onSubmit: wrappedSubmit, isSubmitting }
+  const handleSaveClick = useCallback(() => {
+    void formContext?.handleSubmit(onSubmit as never)()
+  }, [formContext, onSubmit])
+
+  return { onSubmit: wrappedSubmit, isSubmitting, handleSaveClick }
 }

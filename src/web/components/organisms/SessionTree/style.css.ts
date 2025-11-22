@@ -10,7 +10,7 @@ export const sessionListColumn = style({
   height: '100vh',
   background: colors.cyanDark,
   flexDirection: 'column',
-  borderRight: `1px solid rgba(0,0,0,0.08)`
+  borderRight: '1px solid rgba(0,0,0,0.08)'
 })
 
 export const sessionListContainer = style({
@@ -56,7 +56,7 @@ export const sessionLink = style({
   textDecoration: 'none',
   ':hover': {
     backgroundColor: colors.cyanAlt,
-    boxShadow: `0 0 8px #00ffff`
+    boxShadow: '0 0 8px #00ffff'
   }
 })
 
@@ -64,7 +64,7 @@ export const sessionLinkActive = style({
   fontWeight: 700,
   color: colors.white,
   backgroundColor: colors.cyan,
-  boxShadow: `0 0 8px #00ffff`
+  boxShadow: '0 0 8px #00ffff'
 })
 
 export const sessionIdStyle = style({
@@ -79,26 +79,27 @@ export const stickyNewChatButtonContainer = style({
   left: 0,
   width: '100%',
   padding: '12px',
-  background: colors.cyanDark,
+  background: 'transparent',
   zIndex: zIndex.sessionTree,
-  borderTop: `1px solid rgba(0,0,0,0.06)`
+  borderTop: '1px solid rgba(0,0,0,0.06)'
 })
 
 export const newChatButton = style({
   display: 'flex',
   width: '100%',
   height: '56px',
-  margin: '8px 0',
-  border: `2px solid rgba(255,255,255,0.12)`,
+  marginBottom: '16px',
+  border: '2px solid rgba(255,255,255,0.12)',
   borderRadius: '8px',
   color: colors.white,
-  background: 'rgba(0,0,0,0.32)',
-  boxShadow: `0 0 12px #00ffff`,
+  background: colors.cyanDark,
+  boxShadow: '0 0 12px #00ffff, inset 0 0 10px #00ffff33',
   cursor: 'pointer',
   alignItems: 'center',
   justifyContent: 'center',
   ':hover': {
     transform: 'translateY(-1px)',
-    boxShadow: `0 0 6px #00ffff, 0 0 12px #00ffff, 0 0 18px #00ffff, 0 0 24px #00ffff77, 0 12px 30px rgba(0,0,0,0.26)`
+    boxShadow:
+      '0 0 6px #00ffff, 0 0 12px #00ffff, 0 0 18px #00ffff, 0 0 24px #00ffff77, 0 12px 30px rgba(0,0,0,0.26), inset 0 0 10px #00ffff33'
   }
 })

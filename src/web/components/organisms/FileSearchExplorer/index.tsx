@@ -1,5 +1,5 @@
 import type { JSX } from 'react'
-import React, { useRef } from 'react'
+import React from 'react'
 
 import { useFileSearchExplorerHandlers } from './hooks/useFileSearchExplorerHandlers'
 import { PathTag } from './PathTag'
@@ -75,20 +75,9 @@ export const FileSearchExplorer = ({
   onChange,
   onFocus
 }: FileSearchExplorerProperties): JSX.Element => {
-  const inputReference = useRef<HTMLInputElement>(null)
-  const suggestionListReference = useRef<HTMLUListElement>(null)
-  const handlers = useFileSearchExplorerHandlers(
+  const {
     inputReference,
     suggestionListReference,
-    {
-      existsValue,
-      list,
-      isMultiple,
-      onFocus,
-      onChange
-    }
-  )
-  const {
     selectedValues,
     query,
     suggestions,
@@ -98,7 +87,13 @@ export const FileSearchExplorer = ({
     handleKeyDown,
     handleSuggestionClick,
     handleInputFocus
-  } = handlers
+  } = useFileSearchExplorerHandlers({
+    existsValue,
+    list,
+    isMultiple,
+    onFocus,
+    onChange
+  })
 
   return (
     <div className={container}>

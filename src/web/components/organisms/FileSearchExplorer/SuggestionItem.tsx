@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef } from 'react'
+import React from 'react'
 
+import { useSuggestionItem } from './hooks/useSuggestionItem'
 import { suggestionItem, selectedSuggestionItem } from './style.css'
 
 export type SuggestionItemProperties = {
@@ -11,22 +12,12 @@ export type SuggestionItemProperties = {
 export const SuggestionItem = React.memo(
   React.forwardRef<HTMLLIElement, SuggestionItemProperties>(
     ({ suggestion, onClick, isSelected = false }, reference) => {
-      const internalReference = useRef<HTMLLIElement>(null)
-      const elementReference =
-        (reference as React.RefObject<HTMLLIElement>) || internalReference
-
-      useEffect(() => {
-        if (isSelected && elementReference.current) {
-          elementReference.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest'
-          })
-        }
-      }, [isSelected, elementReference])
-
-      const handleClick = useCallback((): void => {
-        onClick(suggestion)
-      }, [onClick, suggestion])
+      const { elementReference, handleClick } = useSuggestionItem(
+        suggestion,
+        onClick,
+        isSelected,
+        reference as React.RefObject<HTMLLIElement>
+      )
 
       return (
         <li

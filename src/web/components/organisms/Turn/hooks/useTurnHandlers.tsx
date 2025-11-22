@@ -9,6 +9,8 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
+import { useToast } from '../../Toast/hooks/useToast'
+
 type UseTurnHandlersProperties = {
   turn: Turn
   index: number
@@ -55,10 +57,12 @@ export const useTurnHandlers = ({
   const { show, hide } = useModal()
 
   const modalIdReference = useRef<number | null>(null)
+  const toast = useToast()
 
   const handleCopy = useCallback(async (): Promise<void> => {
     await navigator.clipboard.writeText(editedContent)
-  }, [editedContent])
+    toast.addToast({ status: 'success', title: 'Copied to clipboard.' })
+  }, [editedContent, toast])
 
   const handleEditedChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>): void => {

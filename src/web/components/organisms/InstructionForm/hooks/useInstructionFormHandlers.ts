@@ -21,7 +21,7 @@ export const useInstructionFormHandlers = ({
   const methods = useFormContext()
   const { register, handleSubmit, reset } = methods
 
-  const submit = handleSubmit(async (data) => {
+  const submit = handleSubmit(async (data: { instruction?: string }) => {
     const instruction = (data as { instruction?: string }).instruction ?? ''
     if (!instruction.trim() || !currentSessionId) return
 

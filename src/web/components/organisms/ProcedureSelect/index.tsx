@@ -1,10 +1,8 @@
-import { useState } from 'react'
 import type { JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
-import type { ProcedureOption } from '@/lib/api/procedures/getProcedures'
 
 import { useProceduresActions } from './hooks/useProceduresActions'
 import { useProceduresHandlers } from './hooks/useProceduresHandlers'
@@ -21,14 +19,9 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const currentValue = formContext?.watch?.('procedure') || ''
   const error = formContext?.formState?.errors?.procedure
 
-  const [procedureOptions, setProcedureOptions] = useState<ProcedureOption[]>([])
   const actions = useProceduresActions()
-  const { handleFocus, handleProcedureChange } = useProceduresHandlers(
-    procedureOptions,
-    actions,
-    setProcedureOptions,
-    formContext
-  )
+  const { procedureOptions, handleFocus, handleProcedureChange } =
+    useProceduresHandlers(actions, formContext)
 
   const list = procedureOptions.map((proc) => ({
     label: proc.label,

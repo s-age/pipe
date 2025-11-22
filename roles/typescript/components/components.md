@@ -32,12 +32,12 @@ src/web/components/
 
 Clear boundaries for Store (Context) access permissions.
 
-| Layer         | Scope of Responsibility                                                                | Store/State Access                                                                                      |
-| :------------ | :------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
-| **Pages**     | **Data flow orchestration**, **business logic integration**, **routing**.              | ✅ **Access allowed** (manages and accesses Stores).                                                    |
-| **Organisms** | **Complex sections** (e.g., forms, lists). Data integration logic.                     | ✅ **Partially allowed**<br>• Direct access to `useAppStore` (global UI)<br>• Page Store via Props only |
+| Layer         | Scope of Responsibility                                                                | Store/State Access                                                                                                                |
+| :------------ | :------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- |
+| **Pages**     | **Data flow orchestration**, **business logic integration**, **routing**.              | ✅ **Access allowed** (manages and accesses Stores).                                                                              |
+| **Organisms** | **Complex sections** (e.g., forms, lists). Data integration logic.                     | ✅ **Partially allowed**<br>• Direct access to `useAppStore` (global UI)<br>• Page Store via Props only                           |
 | Molecules     | **Composite UI components**. Local UI state (open/closed, input values) is acceptable. | ❌ **No direct access to global/page stores** (Props only).<br>✅ **Allowed to access form context** via `react-hook-form` hooks. |
-| **Atoms**     | **Minimal UI elements** (buttons, icons). Pure rendering.                              | ❌ **No access** (Props only). No internal State.                                                       |
+| **Atoms**     | **Minimal UI elements** (buttons, icons). Pure rendering.                              | ❌ **No access** (Props only). No internal State.                                                                                 |
 
 ### Store Access Pattern Details
 
@@ -80,12 +80,12 @@ const InputGroup = ({ value, onChange }) => {
 
 ### 1. Custom Hook Rules (Strict SRP)
 
-| Item                     | Rules and Policy                                                                                                                                    | Evaluation                                                                                                |
-| :----------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------- |
-| **Naming Convention**    | Custom hooks must use **`use*`** naming convention (e.g., `useSessionHandlers.ts`) in the same directory.                                           | ✅ **Excellent**: Adheres to React rules and makes it immediately obvious that the file is a custom hook. |
-| **Responsibility (SRP)** | Strictly follow **Single Responsibility Principle (SRP)**. One hook handles one logic concern (e.g., data fetching, auth state, toast operations).  | ✅ **Very Important**: Reduces coupling and makes testing and reuse easier.                               |
+| Item                     | Rules and Policy                                                                                                                                                                                                                | Evaluation                                                                                                |
+| :----------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------------- |
+| **Naming Convention**    | Custom hooks must use **`use*`** naming convention (e.g., `useSessionHandlers.ts`) in the same directory.                                                                                                                       | ✅ **Excellent**: Adheres to React rules and makes it immediately obvious that the file is a custom hook. |
+| **Responsibility (SRP)** | Strictly follow **Single Responsibility Principle (SRP)**. One hook handles one logic concern (e.g., data fetching, auth state, toast operations).                                                                              | ✅ **Very Important**: Reduces coupling and makes testing and reuse easier.                               |
 | **Placement**            | If a hook is only used by a specific component, place it in the same directory. For general-purpose hooks, place in `src/web/hooks`. If a hook is truly generic and could be used in non-web contexts, place it in `src/hooks`. | Improves organization and discoverability.                                                                |
-| **Hook Categories**      | Follow [Actions/Handlers/Lifecycle](../hooks/hooks.md) pattern for component-specific hooks.                                                        | Consistent separation of concerns.                                                                        |
+| **Hook Categories**      | Follow [Actions/Handlers/Lifecycle](../hooks/hooks.md) pattern for component-specific hooks.                                                                                                                                    | Consistent separation of concerns.                                                                        |
 
 ### 2. Props Drilling vs Store
 
@@ -234,6 +234,9 @@ Keep together when:
 5. **Compose, don't inherit** - Build complex UIs from simple components
 6. **Type everything** - Use TypeScript strictly
 7. **Test at the right level** - Unit test atoms, integration test pages
+8. **Separate logic into custom hooks** - Move all business logic, state management, and side effects to custom hooks (Actions/Handlers/Lifecycle pattern)
+9. **Use JSX.Element return type** - Avoid `React.FC` and `React.FunctionComponent`; use `JSX.Element` for component return types
+10. **Use named exports** - Avoid default exports; use named exports for components and hooks
 
 ## Anti-patterns to Avoid
 
@@ -278,6 +281,43 @@ const GiantOrganism = () => {
   // 500+ lines
 }
 // Split into: multiple smaller Organisms + hooks
+```
+
+❌ **Logic in component bodies**
+
+```typescript
+// ❌ Bad - Logic mixed with JSX
+const MyComponent = () => {
+  const [state, setState] = useState() // Logic in component
+  useEffect(() => { /* side effects */ }, []) // Logic in component
+
+  return <div>...</div>
+}
+// ✅ Good - Logic in custom hooks
+const MyComponent = () => {
+  const { state, handlers } = useMyComponentHandlers()
+  return <div>...</div>
+}
+```
+
+❌ **Using React.FC**
+
+```typescript
+// ❌ Bad
+const MyComponent: React.FC<Props> = (props) => { ... }
+
+// ✅ Good
+const MyComponent = (props: Props): JSX.Element => { ... }
+```
+
+❌ **Default exports**
+
+```typescript
+// ❌ Bad
+export default MyComponent
+
+// ✅ Good
+export const MyComponent = (props: Props): JSX.Element => { ... }
 ```
 
 ## Related Documentation

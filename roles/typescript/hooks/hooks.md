@@ -9,10 +9,22 @@ This project does **not impose strict limitations** on custom hook types or patt
 While there are no restrictions, we've identified **three common patterns** that handle most use cases:
 
 1. **[Actions](./useActions.md)** - Pure API call wrappers
-2. **[Handlers](./useHandlers.md)** - UI event processing logic
-3. **[Lifecycle](./useLifecycle.md)** - Side effects and lifecycle management
+2. **[Handlers](./useHandlers.md)** - UI event processing logic, including local state management with `useState` for user-triggered state changes
+3. **[Lifecycle](./useLifecycle.md)** - Side effects and lifecycle management, including computed values with `useMemo` for initialization and derived state
 
 These patterns provide clear separation of concerns and make code easier to reason about.
+
+### Hook Placement Guidelines for `useState` and `useMemo`
+
+- **`useState`**:
+  - Place in **Handlers** when the state is updated by user actions (e.g., `isSubmitting`, `startLocal`, `endLocal`)
+  - Place in **Lifecycle** when the state is for initialization or side effects (rare, prefer props or computed values)
+
+- **`useMemo`**:
+  - Place in **Lifecycle** for computed default values, merged configurations, or values derived from props (e.g., `defaultValues`, `mergedDefaultValues`)
+  - Place in **Handlers** when the memo depends on user state or local state changes
+
+This placement ensures that state management aligns with whether it's driven by user interactions (Handlers) or component setup/lifecycle (Lifecycle).
 
 ## Naming Convention
 

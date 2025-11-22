@@ -1,5 +1,4 @@
 import type { JSX } from 'react'
-import { useCallback } from 'react'
 
 import { useTooltip } from './hooks/useTooltipHandlers'
 import { tooltipContainer } from './style.css'
@@ -13,12 +12,7 @@ export const Tooltip: ({ content, children }: TooltipProperties) => JSX.Element 
   content,
   children
 }) => {
-  const { handleMouseEnter, handleMouseLeave } = useTooltip()
-
-  const onEnter = useCallback(
-    (event: React.MouseEvent<HTMLElement>) => handleMouseEnter(event, { content }),
-    [handleMouseEnter, content]
-  )
+  const { onEnter, handleMouseLeave } = useTooltip(content)
 
   return (
     <div

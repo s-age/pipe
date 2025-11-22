@@ -1,5 +1,5 @@
 // For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
-import { FlatCompat } from '@eslint/eslintrc' // Use Compat to expand Prettier configuration
+// Use Compat to expand Prettier configuration
 import pluginJs from '@eslint/js'
 import pluginImport from 'eslint-plugin-import'
 import pluginPrettier from 'eslint-plugin-prettier'
@@ -15,14 +15,10 @@ import pluginUnusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 // Import from typescript-eslint instead of tseslintPlugin, tseslintParser
 import tseslint from 'typescript-eslint'
+
+import pluginNoUselessBackticks from './eslint-rules/no-useless-backticks.js'
 import pluginVanillaExtract from './eslint-rules/vanilla-extract-recess-order.js'
 // To avoid Prettier conflicts, do not use eslint-config-prettier (use plugin-prettier instead)
-
-// Configuration to expand Prettier in compatibility mode
-const compat = new FlatCompat({
-  baseDirectory: import.meta.url
-  // baseDirectory: __dirname, // For Node.js environment
-})
 
 // eslint-disable-next-line import/no-default-export
 export default [
@@ -32,7 +28,7 @@ export default [
   // Expand recommended configuration instead of tseslintPlugin.configs.recommended
   ...tseslint.configs.recommended, // 2. Custom Configuration (React, Import, Unused Imports, etc.)
   {
-    files: ['**/*.{ts,tsx}', '!src/pipe/cli/**'],
+    files: ['**/*.{ts,tsx}', '!src/pipe/cli/**', '!eslint-rules/**'],
 
     // 🚨 tseslint.configs.recommended has already configured the parser, so it's often unnecessary here
     // languageOptions: {
@@ -50,6 +46,7 @@ export default [
       import: pluginImport,
       'unused-imports': pluginUnusedImports,
       'vanilla-extract': pluginVanillaExtract,
+      'no-useless-backticks': pluginNoUselessBackticks,
       // Prettier is configured in rules, so it's often unnecessary here
       prettier: pluginPrettier
     },
@@ -60,7 +57,6 @@ export default [
       // ❌ Removed: ...prettierConfig.rules, // Disable all ESLint formatting rules
       // ❌ Removed: semi: ["error", "never"], // Potential conflict with Prettier
       // ❌ Removed: quotes: ["error", "single"], // Potential conflict with Prettier
-
       // ✅ Run Prettier as an ESLint rule (most reliable)
       'prettier/prettier': 'error',
       'comma-dangle': ['error', 'never'],
@@ -92,6 +88,20 @@ export default [
         { prefer: 'type-imports' }
       ],
       '@typescript-eslint/explicit-function-return-type': 'error',
+
+      // ✅ Ban React.FC and React.FunctionComponent
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSTypeReference[typeName.name="FC"]',
+          message: 'Avoid React.FC. Use JSX.Element for component return types.'
+        },
+        {
+          selector: 'TSTypeReference[typeName.name="FunctionComponent"]',
+          message:
+            'Avoid React.FunctionComponent. Use JSX.Element for component return types.'
+        }
+      ],
 
       // ✅ Imports / Unused
       'import/order': [
@@ -158,64 +168,99 @@ export default [
           checkFilenames: false,
           checkProperties: false
         }
-      ]
+      ],
+      'no-useless-backticks/no-useless-backticks': 'error'
     },
 
     settings: {
       react: { version: 'detect' }
     }
   }, // 3. Apply Prettier last to disable all conflicting rules
-  ...compat.extends('prettier'), // Node.js specific configuration for ts_analyzer.js
+  // Node.js specific configuration for ts_analyzer.ts
   {
-    files: ['src/pipe/cli/ts_analyzer.js'],
+    files: ['src/pipe/cli/ts_analyzer.ts'],
     languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        allowJs: true
+      },
       globals: {
         ...globals.node
       }
     },
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
-      'no-undef': 'off' // Disable no-undef as globals.node should handle it
+      'no-undef': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-unexpected-multiline': 'off' // Disable no-undef as globals.node should handle it
     }
   },
   // Zodスキーマ定義をschema.ts以外のファイルで禁止するルール
   {
-    files: ['**/*.{ts,tsx}', '!**/schema.ts'],
+    files: ['**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
           selector: 'CallExpression[callee.object.name="z"]',
           message: 'Zod schema definitions are only allowed in schema.ts files.'
+        },
+        {
+          // Forbid standard React hooks in non-hook files; custom hooks (useXxx) are allowed
+          selector:
+            'CallExpression[callee.name=/^use(State|Effect|Callback|Memo|Ref|Context|Reducer|ImperativeHandle|LayoutEffect|DebugValue|DeferredValue|Transition|Id|InsertionEffect)$/]',
+          message:
+            'Standard React hooks are only allowed in hook files (use*.ts or use*.tsx). Use custom hooks for logic.'
+        },
+        {
+          // Forbid React.use* calls; prefer direct imports for token efficiency
+          selector:
+            'CallExpression[callee.object.name="React"][callee.property.name=/^(useState|useEffect|useCallback|useMemo|useRef|useContext|useReducer|useImperativeHandle|useLayoutEffect|useDebugValue|useDeferredValue|useTransition|useId|useInsertionEffect)$/]',
+          message:
+            "Use direct import for React hooks (e.g., import { useMemo } from 'react') instead of React.useMemo for better token efficiency."
         }
       ]
     }
   },
-  // React hooks usage restriction: disallow calling hooks in non-hook files
-  // This rule forbids calls whose callee name looks like `useXxx` in files
-  // that are not hook modules (use*.ts[x]). It covers both standard React
-  // hooks and custom hooks named `useSomething` to avoid components
-  // embedding hook logic directly.
+  // schema.tsではZodを使用許可
   {
-    files: ['**/*.{ts,tsx}'],
-    // Exclude actual hook implementation files
-    ignores: ['**/use*.{ts,tsx}'],
-
+    files: ['**/schema.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
-          // match any identifier starting with `use` followed by a capital letter
-          selector: 'CallExpression[callee.name=/^use[A-Z][A-Za-z0-9]*$/]',
+          selector: 'TSTypeReference[typeName.name="FC"]',
+          message: 'Avoid React.FC. Use JSX.Element for component return types.'
+        },
+        {
+          selector: 'TSTypeReference[typeName.name="FunctionComponent"]',
           message:
-            'Hook calls (functions named useXxx) are only allowed in files named use*.ts or use*.tsx. Move hook usage into a hook module.'
+            'Avoid React.FunctionComponent. Use JSX.Element for component return types.'
         }
       ]
     }
   },
-  // Enforce banning `function` keyword for all non-use* files.
+  // src/web/lib/validation ではZodを使用許可
   {
-    files: ['**/*.{ts,tsx}', '!**/use*.{ts,tsx}', '!src/pipe/cli/**'],
+    files: ['src/web/lib/validation/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSTypeReference[typeName.name="FC"]',
+          message: 'Avoid React.FC. Use JSX.Element for component return types.'
+        },
+        {
+          selector: 'TSTypeReference[typeName.name="FunctionComponent"]',
+          message:
+            'Avoid React.FunctionComponent. Use JSX.Element for component return types.'
+        }
+      ]
+    }
+  },
+  // Enforce banning `function` keyword and standard React hooks in atom files.
+  {
+    files: ['src/web/components/atoms/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': [
         'error',
@@ -227,6 +272,20 @@ export default [
         {
           selector: 'FunctionExpression',
           message: 'Function expressions are disallowed. Use arrow functions instead.'
+        },
+        {
+          // Forbid standard React hooks in atom files; atoms should be pure presentational
+          selector:
+            'CallExpression[callee.name=/^use(State|Effect|Callback|Memo|Ref|Context|Reducer|ImperativeHandle|LayoutEffect|DebugValue|DeferredValue|Transition|Id|InsertionEffect)$/]',
+          message:
+            'Standard React hooks are only allowed in hook files (use*.ts or use*.tsx) or component files. Atoms should be pure presentational.'
+        },
+        {
+          // Forbid React.use* calls in atom files
+          selector:
+            'CallExpression[callee.object.name="React"][callee.property.name=/^(useState|useEffect|useCallback|useMemo|useRef|useContext|useReducer|useImperativeHandle|useLayoutEffect|useDebugValue|useDeferredValue|useTransition|useId|useInsertionEffect)$/]',
+          message:
+            "Use direct import for React hooks (e.g., import { useMemo } from 'react') instead of React.useMemo for better token efficiency."
         }
       ]
     }

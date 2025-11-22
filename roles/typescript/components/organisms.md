@@ -42,6 +42,7 @@ import type { JSX } from 'react'
 import { SomeMolecule } from '@/components/molecules/SomeMolecule'
 import { SomeAtom } from '@/components/atoms/SomeAtom'
 import { use{Name}Handlers } from './hooks/use{Name}Handlers'
+import { use{Name}Lifecycle } from './hooks/use{Name}Lifecycle'
 import { container, section } from './style.css'
 
 type {Name}Properties = {
@@ -53,21 +54,26 @@ export const {Name} = ({
   data,
   onAction
 }: {Name}Properties): JSX.Element => {
-  // Use custom hooks for logic
-  const { localState, handleEvent } = use{Name}Handlers({ data, onAction })
+  // Use lifecycle hook for initialization and computed values
+  const { defaultValues, mergedDefaultValues } = use{Name}Lifecycle({ data })
+
+  // Use handlers hook for UI events and local state
+  const { localState, handleEvent, isSubmitting } = use{Name}Handlers({ data, onAction })
 
   return (
-    <div className={container}>
-      {/* Compose molecules and atoms */}
-      <SomeMolecule
-        value={localState.value}
-        onChange={handleEvent}
-      />
+    <Form defaultValues={mergedDefaultValues} schema={schema}>
+      <div className={container}>
+        {/* Compose molecules and atoms */}
+        <SomeMolecule
+          value={localState.value}
+          onChange={handleEvent}
+        />
 
-      <SomeAtom onClick={handleEvent}>
-        Submit
-      </SomeAtom>
-    </div>
+        <SomeAtom onClick={handleEvent} disabled={isSubmitting}>
+          Submit
+        </SomeAtom>
+      </div>
+    </Form>
   )
 }
 ```

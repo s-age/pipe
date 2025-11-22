@@ -1,10 +1,10 @@
-import { useId } from 'react'
 import type { JSX, ReactNode } from 'react'
 import type { FieldError } from 'react-hook-form'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Legend } from '@/components/atoms/Legend'
 
+import { useFieldset } from './hooks/useFieldset'
 import * as styles from './style.css'
 
 type FieldsetIds = {
@@ -27,11 +27,8 @@ export const Fieldset = ({
   children,
   className
 }: FieldsetProperties): JSX.Element => {
-  const baseId = useId()
-  const hintId = hint ? `${baseId}-hint` : undefined
-  const errorId = error ? `${baseId}-error` : undefined
-
-  const ids: FieldsetIds = { hintId, errorId }
+  const ids = useFieldset(hint, error)
+  const { hintId, errorId } = ids
 
   return (
     <fieldset className={styles.fieldset + (className ? ` ${className}` : '')}>

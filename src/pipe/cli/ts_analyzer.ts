@@ -5,13 +5,37 @@ import { fileURLToPath } from 'url'
 
 import { Project, SyntaxKind } from 'ts-morph'
 
+type ReferenceEntry = {
+  filePath: string
+  line?: number
+  lineNumber?: number
+  column: number
+  snippet: string
+}
+
+type TypeDefinition = {
+  type?: string
+  properties?: any[]
+  methods?: any[]
+  parameters?: any[]
+  returnType?: string
+  propsType?: string
+  props?: any[]
+  variableType?: string
+  definition?: string
+}
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const projectRoot = path.join(__dirname, '..', '..', '..')
 
-const getTypeDefinitions = (filePath, symbolName, project) => {
+const getTypeDefinitions = (
+  filePath: string,
+  symbolName: string,
+  project: Project
+): TypeDefinition | null => {
   const sourceFile = project.addSourceFileAtPath(filePath)
-  const definitions = {}
+  const definitions: TypeDefinition = {}
 
   // Find class declarations
   const classDeclaration = sourceFile.getClass(symbolName)
@@ -57,39 +81,50 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
     // Check if it's an arrow function component
     if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
       const arrowFunction = initializer
+      // @ts-expect-error ts-morph API
       const parameters = arrowFunction.getParameters()
+      // @ts-expect-error ts-morph API
       const returnType = arrowFunction.getReturnType().getText()
 
       if (parameters.length > 0) {
-        const firstParam = parameters[0]
-        const firstParamType = firstParam.getTypeNode()
+        const firstParameter = parameters[0]
+        const firstParameterType = firstParameter.getTypeNode()
 
-        if (firstParamType && firstParamType.getKind() === SyntaxKind.TypeReference) {
-          const propsTypeName = firstParamType.getText()
-          const propsInterface = sourceFile.getInterface(propsTypeName)
-          const propsTypeAlias = sourceFile.getTypeAlias(propsTypeName)
+        if (
+          firstParameterType &&
+          firstParameterType.getKind() === SyntaxKind.TypeReference
+        ) {
+          const propertiesTypeName = firstParameterType.getText()
+          const propertiesInterface = sourceFile.getInterface(propertiesTypeName)
+          const propertiesTypeAlias = sourceFile.getTypeAlias(propertiesTypeName)
 
-          if (propsInterface) {
+          if (propertiesInterface) {
             definitions.type = 'React.ArrowFunctionComponent'
-            definitions.propsType = propsTypeName
+            definitions.propsType = propertiesTypeName
             definitions.returnType = returnType
-            definitions.props = propsInterface.getProperties().map((p) => ({
+            definitions.props = propertiesInterface.getProperties().map((p) => ({
               name: p.getName(),
               type: p.getType().getText(),
               isOptional: p.hasQuestionToken()
             }))
 
             return definitions
-          } else if (propsTypeAlias) {
+          } else if (propertiesTypeAlias) {
             definitions.type = 'React.ArrowFunctionComponent'
-            definitions.propsType = propsTypeName
+            definitions.propsType = propertiesTypeName
             definitions.returnType = returnType
-            const aliasedType = propsTypeAlias.getType()
-            definitions.props = aliasedType.getProperties().map((p) => ({
-              name: p.getName(),
-              type: p.getTypeAtLocation(propsTypeAlias).getText(),
-              isOptional: p.compilerObject.flags & 16777216
-            }))
+            const aliasedType = propertiesTypeAlias.getType()
+            const properties = aliasedType.getProperties()
+            if (properties) {
+              definitions.props = properties.map((p) => ({
+                name: p.getName(),
+                type: p.getTypeAtLocation(propertiesTypeAlias).getText(),
+                // @ts-expect-error ts-morph internal
+                isOptional: p.compilerObject ? p.compilerObject.flags & 16777216 : false
+              }))
+            } else {
+              definitions.props = []
+            }
 
             return definitions
           }
@@ -97,7 +132,7 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
       }
       // If no specific Props type is found but it's an arrow function
       definitions.type = 'React.ArrowFunctionComponent'
-      definitions.parameters = parameters.map((p) => ({
+      definitions.parameters = parameters.map((p: any) => ({
         name: p.getName(),
         type: p.getType().getText()
       }))
@@ -128,7 +163,7 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
   const typeAliasDeclaration = sourceFile.getTypeAlias(symbolName)
   if (typeAliasDeclaration) {
     definitions.type = 'typeAlias'
-    definitions.definition = typeAliasDeclaration.getTypeNode().getText()
+    definitions.definition = typeAliasDeclaration.getTypeNode()!.getText()
 
     return definitions
   }
@@ -136,8 +171,12 @@ const getTypeDefinitions = (filePath, symbolName, project) => {
   return null
 }
 
-const getReferences = (filePath, symbolName, project) => {
-  const references = []
+const getReferences = (
+  filePath: string,
+  symbolName: string,
+  project: Project
+): ReferenceEntry[] => {
+  const references: ReferenceEntry[] = []
 
   const symbol = project
     .getSourceFiles()
@@ -146,15 +185,15 @@ const getReferences = (filePath, symbolName, project) => {
 
   if (symbol) {
     const symbolReferences = symbol.findReferencesAsNodes()
-    symbolReferences.forEach((ref) => {
+    symbolReferences.forEach((reference) => {
+      const start = reference.getStart()
+      const sourceFile = reference.getSourceFile()
+      const lineAndColumn = sourceFile.getLineAndColumnAtPos(start)
       references.push({
-        filePath: ref.getSourceFile().getFilePath(),
-        lineNumber: ref.getStartLineNumber(),
-        lineContent: ref
-          .getSourceFile()
-          .getFullText()
-          .split('\n')
-          [ref.getStartLineNumber() - 1].trim()
+        filePath: sourceFile.getFilePath(),
+        lineNumber: lineAndColumn.line,
+        column: lineAndColumn.column,
+        snippet: sourceFile.getFullText().split('\n')[lineAndColumn.line - 1].trim()
       })
     })
   }
@@ -162,7 +201,11 @@ const getReferences = (filePath, symbolName, project) => {
   return references
 }
 
-const getCodeSnippet = (filePath, symbolName, project) => {
+const getCodeSnippet = (
+  filePath: string,
+  symbolName: string,
+  project: Project
+): string | null => {
   const sourceFile = project.addSourceFileAtPath(filePath)
 
   // Try to find a class, function, variable, interface, or type alias
@@ -178,15 +221,15 @@ const getCodeSnippet = (filePath, symbolName, project) => {
 
   // Try to find a variable declaration, including default exports
   const variableDeclarations = sourceFile.getVariableDeclarations()
-  for (const varDecl of variableDeclarations) {
-    if (varDecl.getName() === symbolName) {
-      const initializer = varDecl.getInitializer()
+  for (const variableDecl of variableDeclarations) {
+    if (variableDecl.getName() === symbolName) {
+      const initializer = variableDecl.getInitializer()
       if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
         // For arrow function components, return the entire variable statement
-        return varDecl.getParent().getText()
+        return variableDecl.getParent().getText()
       }
 
-      return varDecl.getText()
+      return variableDecl.getText()
     }
   }
 
@@ -210,7 +253,7 @@ const getCodeSnippet = (filePath, symbolName, project) => {
   return null
 }
 
-const getFileContentSnippet = (filePath) => {
+const getFileContentSnippet = (filePath: string): string | null => {
   try {
     return fs.readFileSync(filePath, 'utf8')
   } catch {
@@ -218,23 +261,27 @@ const getFileContentSnippet = (filePath) => {
   }
 }
 
-const getSnippetAndTypeDefinitions = (filePath, symbolName, project) => {
+const getSnippetAndTypeDefinitions = (
+  filePath: string,
+  symbolName: string,
+  project: Project
+): { snippet: string | null; typeDefinitions: TypeDefinition | null } => {
   const snippet = getCodeSnippet(filePath, symbolName, project)
   const typeDefinitions = getTypeDefinitions(filePath, symbolName, project)
 
   return { snippet, typeDefinitions }
 }
 
-const calculateSimilarity = (str1, str2) => {
-  const m = str1.length
-  const n = str2.length
+const calculateSimilarity = (string1: string, string2: string): number => {
+  const m = string1.length
+  const n = string2.length
   const dp = Array(m + 1)
     .fill(0)
     .map(() => Array(n + 1).fill(0))
 
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
-      if (str1[i - 1] === str2[j - 1]) {
+      if (string1[i - 1] === string2[j - 1]) {
         dp[i][j] = dp[i - 1][j - 1] + 1
       } else {
         dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1])
@@ -246,32 +293,41 @@ const calculateSimilarity = (str1, str2) => {
   return (2 * lcs) / (m + n)
 }
 
+const getExportedSymbols = (filePath: string, project: Project): string[] => {
+  const sourceFile = project.addSourceFileAtPath(filePath)
+  const exportedDeclarations = sourceFile.getExportedDeclarations()
+  const symbols: string[] = []
+
+  for (const [name] of exportedDeclarations) {
+    symbols.push(name)
+  }
+
+  return symbols
+}
+
 const findSimilarCode = (
-  baseFilePath,
-  symbolName,
-  searchDirectory,
-  maxResults = 3,
-  project
-) => {
+  baseFilePath: string,
+  symbolName: string,
+  searchDirectory: string,
+  maxResults: number = 3,
+  project: Project
+): ReferenceEntry[] => {
   const baseInfo = getSnippetAndTypeDefinitions(baseFilePath, symbolName, project)
   if (!baseInfo.snippet) {
     console.error(
       `DEBUG: No base snippet found for symbol '${symbolName}' in ${baseFilePath}`
     )
 
-    return {
-      error: `No code snippet found for symbol '${symbolName}' in ${baseFilePath}`
-    }
+    return []
   }
 
   const baseSnippet = baseInfo.snippet
-  const baseTypeDefinitions = baseInfo.typeDefinitions
 
-  const tsFiles = []
-  const walkSync = (currentDir) => {
-    const files = fs.readdirSync(currentDir)
+  const tsFiles: string[] = []
+  const walkSync = (currentDirectory: string): void => {
+    const files = fs.readdirSync(currentDirectory)
     for (const file of files) {
-      const fullPath = path.join(currentDir, file)
+      const fullPath = path.join(currentDirectory, file)
       const stat = fs.statSync(fullPath)
       if (stat.isDirectory()) {
         if (file !== 'node_modules') {
@@ -293,7 +349,7 @@ const findSimilarCode = (
   walkSync(searchDirectory)
   process.stderr.write(`DEBUG: Total TS/TSX files found: ${tsFiles.length}\n`)
 
-  const similarCodes = []
+  const similarCodes: any[] = []
 
   for (const filePath of tsFiles) {
     if (path.resolve(filePath) === path.resolve(baseFilePath)) {
@@ -301,66 +357,58 @@ const findSimilarCode = (
       continue
     }
 
-    let targetSymbol = path.parse(filePath).name
-    if (targetSymbol === 'index') {
-      targetSymbol = path.basename(path.dirname(filePath))
-      process.stderr.write(
-        `DEBUG: Inferred symbol for index.tsx: ${targetSymbol} from ${filePath}\n`
-      )
-    } else {
-      process.stderr.write(
-        `DEBUG: Using file name as symbol: ${targetSymbol} for ${filePath}\n`
-      )
-    }
+    const exportedSymbols = getExportedSymbols(filePath, project)
+    process.stderr.write(
+      `DEBUG: Exported symbols in ${filePath}: ${exportedSymbols.join(', ')}\n`
+    )
 
-    const otherSnippet = getCodeSnippet(filePath, targetSymbol, project)
-    if (otherSnippet) {
-      const similarity = calculateSimilarity(baseSnippet, otherSnippet)
-      process.stderr.write(
-        `DEBUG: Comparing ${symbolName} (base) with ${targetSymbol} (${filePath}). Similarity: ${similarity}\n`
-      )
-      if (similarity > 0.5) {
-        // 類似度の閾値
+    for (const targetSymbol of exportedSymbols) {
+      const otherSnippet = getCodeSnippet(filePath, targetSymbol, project)
+      if (otherSnippet) {
+        const similarity = calculateSimilarity(baseSnippet, otherSnippet)
         process.stderr.write(
-          `DEBUG: Found similar code (similarity > 0.5): ${targetSymbol} in ${filePath}\n`
+          `DEBUG: Comparing ${symbolName} (base) with ${targetSymbol} (${filePath}). Similarity: ${similarity}\n`
         )
-        similarCodes.push({
-          file_path: filePath,
-          symbol_name: targetSymbol,
-          similarity: similarity,
-          snippet: otherSnippet
-        })
+        if (similarity > 0.5) {
+          // 類似度の閾値
+          process.stderr.write(
+            `DEBUG: Found similar code (similarity > 0.5): ${targetSymbol} in ${filePath}\n`
+          )
+          similarCodes.push({
+            file_path: filePath,
+            symbol_name: targetSymbol,
+            similarity: similarity,
+            snippet: otherSnippet
+          })
+        } else {
+          process.stderr.write(
+            `DEBUG: Similarity below threshold (0.5): ${targetSymbol} in ${filePath}\n`
+          )
+        }
       } else {
         process.stderr.write(
-          `DEBUG: Similarity below threshold (0.5): ${targetSymbol} in ${filePath}\n`
+          `DEBUG: No snippet found for symbol '${targetSymbol}' in ${filePath}\n`
         )
       }
-    } else {
-      process.stderr.write(
-        `DEBUG: No snippet found for symbol '${targetSymbol}' in ${filePath}\n`
-      )
     }
   }
 
   similarCodes.sort((a, b) => b.similarity - a.similarity)
 
-  return {
-    base_symbol_type_definitions: baseTypeDefinitions,
-    similar_codes: similarCodes.slice(0, maxResults)
-  }
+  return similarCodes.slice(0, maxResults)
 }
 
-const main = async () => {
+const main = async (): Promise<void> => {
   const project = new Project({
     tsConfigFilePath: path.join(projectRoot, 'src', 'web', 'tsconfig.json')
   })
 
-  const args = process.argv.slice(2)
-  const filePath = args[0]
-  const symbolName = args[1]
-  const action = args[2]
-  const searchDirectory = args[3]
-  const maxResults = args[4] ? parseInt(args[4], 10) : 3
+  const arguments_ = process.argv.slice(2)
+  const filePath = arguments_[0]
+  const symbolName = arguments_[1]
+  const action = arguments_[2]
+  const searchDirectory = arguments_[3]
+  const maxResults = arguments_[4] ? parseInt(arguments_[4], 10) : 3
 
   if (!filePath || !symbolName || !action) {
     console.log(
@@ -437,8 +485,10 @@ const main = async () => {
         process.exit(1)
     }
   } catch (_error) {
-    process.stderr.write(`ERROR: ${_error.message || String(_error)}\n`)
-    console.log(JSON.stringify({ error: _error.message || String(_error) }, null, 2))
+    process.stderr.write(`ERROR: ${(_error as Error).message || String(_error)}\n`)
+    console.log(
+      JSON.stringify({ error: (_error as Error).message || String(_error) }, null, 2)
+    )
     process.exit(1)
   }
 

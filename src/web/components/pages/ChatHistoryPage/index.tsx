@@ -6,13 +6,7 @@ import { SessionControl } from '@/components/organisms/SessionControl'
 import { SessionTree } from '@/components/organisms/SessionTree'
 
 import { useChatHistoryPageHandlers } from './hooks/useChatHistoryPageHandlers'
-import {
-  appContainer,
-  mainContent,
-  leftColumn,
-  centerColumn,
-  rightColumn
-} from './style.css'
+import { appContainer, mainContent, leftColumn, centerColumn } from './style.css'
 
 export const ChatHistoryPage = (): JSX.Element => {
   const {
@@ -47,9 +41,7 @@ export const ChatHistoryPage = (): JSX.Element => {
         </div>
 
         {sessionDetail && (
-          <div className={rightColumn}>
-            <SessionControl sessionDetail={sessionDetail} onRefresh={onRefresh} />
-          </div>
+          <SessionControl sessionDetail={sessionDetail} onRefresh={onRefresh} />
         )}
       </div>
     </div>

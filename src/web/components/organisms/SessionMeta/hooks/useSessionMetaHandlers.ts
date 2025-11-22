@@ -16,7 +16,6 @@ export const useSessionMetaHandlers = ({
   defaultValues: SessionMetaFormInputs
   onSubmit: (data: SessionMetaFormInputs) => void
   isSubmitting: boolean
-  saved: boolean
 } => {
   const { handleMetaSave } = useSessionMetaActions({ onRefresh })
 
@@ -51,18 +50,15 @@ export const useSessionMetaHandlers = ({
   )
 
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [saved, setSaved] = React.useState(false)
 
   const wrappedSubmit = React.useCallback(
     async (data: SessionMetaFormInputs) => {
       setIsSubmitting(true)
       void onSubmit(data)
-      setSaved(true)
-      window.setTimeout(() => setSaved(false), 2000)
       setIsSubmitting(false)
     },
     [onSubmit]
   )
 
-  return { defaultValues, onSubmit: wrappedSubmit, isSubmitting, saved }
+  return { defaultValues, onSubmit: wrappedSubmit, isSubmitting }
 }

@@ -1,4 +1,4 @@
-import { useState, useCallback, useLayoutEffect } from 'react'
+import { useState, useCallback, useLayoutEffect, useRef } from 'react'
 
 import type { EditHyperparametersRequest } from '@/lib/api/session/editHyperparameters'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -60,13 +60,13 @@ export const useHyperParametersHandlers = ({
   // Sync authoritative sessionDetail into local UI state before paint to
   // avoid visual flicker. We use useLayoutEffect and a single state update
   // so the linter's concern about cascading renders is mitigated.
-  const [isInteracting, setIsInteracting] = useState<boolean>(false)
+  const isInteractingReference = useRef<boolean>(false)
 
   useLayoutEffect(() => {
     if (!sessionDetail) return
     // If the user is actively interacting with the slider, don't overwrite
     // their in-progress UI changes with the authoritative sessionDetail.
-    if (isInteracting) return
+    if (isInteractingReference.current) return
 
     const incoming = {
       temperature: sessionDetail.hyperparameters?.temperature ?? hpState.temperature,
@@ -83,53 +83,62 @@ export const useHyperParametersHandlers = ({
       setHpState(incoming)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionDetail, isInteracting])
+  }, [sessionDetail])
 
   const { updateHyperparameters } = useHyperParametersActions()
 
   const handleTemperatureMouseUp = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>): void => {
+    async (event: React.MouseEvent<HTMLDivElement>): Promise<void> => {
       if (!sessionDetail.session_id) return
       const newTemperature = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { temperature: newTemperature }
-      void updateHyperparameters(sessionDetail.session_id, payload)
-      setIsInteracting(false)
+      try {
+        await updateHyperparameters(sessionDetail.session_id, payload)
+      } finally {
+        isInteractingReference.current = false
+      }
     },
     [sessionDetail, updateHyperparameters]
   )
 
   const handleTemperatureMouseDown = useCallback((): void => {
-    setIsInteracting(true)
+    isInteractingReference.current = true
   }, [])
 
   const handleTopPMouseUp = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>): void => {
+    async (event: React.MouseEvent<HTMLDivElement>): Promise<void> => {
       if (!sessionDetail.session_id) return
       const newTopP = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { top_p: newTopP }
-      void updateHyperparameters(sessionDetail.session_id, payload)
-      setIsInteracting(false)
+      try {
+        await updateHyperparameters(sessionDetail.session_id, payload)
+      } finally {
+        isInteractingReference.current = false
+      }
     },
     [sessionDetail, updateHyperparameters]
   )
 
   const handleTopPMouseDown = useCallback((): void => {
-    setIsInteracting(true)
+    isInteractingReference.current = true
   }, [])
 
   const handleTopKMouseUp = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>): void => {
+    async (event: React.MouseEvent<HTMLDivElement>): Promise<void> => {
       if (!sessionDetail.session_id) return
       const newTopK = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { top_k: newTopK }
-      void updateHyperparameters(sessionDetail.session_id, payload)
-      setIsInteracting(false)
+      try {
+        await updateHyperparameters(sessionDetail.session_id, payload)
+      } finally {
+        isInteractingReference.current = false
+      }
     },
     [sessionDetail, updateHyperparameters]
   )
 
   const handleTopKMouseDown = useCallback((): void => {
-    setIsInteracting(true)
+    isInteractingReference.current = true
   }, [])
 
   return {

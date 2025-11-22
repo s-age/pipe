@@ -16,4 +16,4 @@ export type SearchSessionsResponse = {
 export const searchSessions = async (
   payload: SearchSessionsRequest
 ): Promise<SearchSessionsResponse> =>
-  apiClient.post<SearchSessionsResponse>(`/search`, { body: payload })
+  apiClient.post<SearchSessionsResponse>('/search', { body: payload })

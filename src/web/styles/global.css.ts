@@ -31,6 +31,6 @@ globalStyle('input, textarea, select', {
 
 globalStyle('input:focus, textarea:focus, select:focus', {
   border: `1px solid ${colors.cyan}`,
-  boxShadow: `0 0 0 1px ${colors.cyanBorderRGBA}`,
+  boxShadow: '0 0 6px #00ffff, inset 0 0 6px #00ffff33',
   outline: 'none'
 })

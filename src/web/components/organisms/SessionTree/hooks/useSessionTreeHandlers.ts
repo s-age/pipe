@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import type React from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -6,6 +6,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import { useSessionItemActions } from './useSessionItemActions'
 
 type UseSessionTreeHandlersReturn = {
+  sessionReferences: React.RefObject<Map<string, HTMLLIElement>>
   handleNewChatClick: () => void
   setSessionReference: (sessionId: string) => (element: HTMLLIElement | null) => void
   handleAnchorClick: (event: React.MouseEvent<HTMLAnchorElement>) => Promise<void>
@@ -13,9 +14,9 @@ type UseSessionTreeHandlersReturn = {
 
 // `selectSession` is provided by the page to update selected session in the store.
 export const useSessionTreeHandlers = (
-  selectSession: (id: string | null, detail: SessionDetail | null) => void,
-  sessionReferences: React.RefObject<Map<string, HTMLLIElement>>
+  selectSession: (id: string | null, detail: SessionDetail | null) => void
 ): UseSessionTreeHandlersReturn => {
+  const sessionReferences = useRef<Map<string, HTMLLIElement>>(new Map())
   const { loadSession } = useSessionItemActions()
 
   const handleNewChatClick = useCallback(() => {
@@ -49,5 +50,10 @@ export const useSessionTreeHandlers = (
     [loadSession, selectSession]
   )
 
-  return { handleNewChatClick, setSessionReference, handleAnchorClick }
+  return {
+    sessionReferences,
+    handleNewChatClick,
+    setSessionReference,
+    handleAnchorClick
+  }
 }

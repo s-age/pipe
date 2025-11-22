@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -12,11 +12,17 @@ export const useReferenceListHandlers = (
   formContext: UseFormReturn | undefined
 ): {
   references: Reference[]
+  existsValue: string[]
   handleReferencesChange: (values: string[]) => void
 } => {
   const [references, setReferences] = useState(sessionDetail.references || [])
   const { handleUpdateReference } = useReferenceListActions(
     sessionDetail.session_id || null
+  )
+
+  const existsValue = useMemo(
+    () => references.map((reference) => reference.path),
+    [references]
   )
 
   const handleReferencesChange = useCallback(
@@ -58,6 +64,7 @@ export const useReferenceListHandlers = (
 
   return {
     references,
+    existsValue,
     handleReferencesChange
   }
 }

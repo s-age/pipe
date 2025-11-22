@@ -1,4 +1,4 @@
-import { useMemo, type JSX } from 'react'
+import type { JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
@@ -25,13 +25,9 @@ export const ReferenceList = ({
   const formContext = useOptionalFormContext()
   const errors = formContext?.formState?.errors?.references
 
-  const { handleReferencesChange, references } = useReferenceListHandlers(
+  const { handleReferencesChange, references, existsValue } = useReferenceListHandlers(
     sessionDetail,
     formContext
-  )
-  const existsValue = useMemo(
-    () => references.map((reference) => reference.path),
-    [references]
   )
 
   return (

@@ -1,70 +1,108 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import type { ChangeEvent } from 'react'
 
+import { useOptionalFormContext } from '@/components/organisms/Form'
+import { useAppStore } from '@/stores/useAppStore'
+
+import { useCompressorActions } from './useCompressorActions'
 import type { CompressorFormInputs } from '../schema'
 
 type UseCompressorHandlersProperties = {
   sessionId: string
+  effectiveMax: number
 }
 
-type UseCompressorHandlersReturn = {
-  defaultValues: CompressorFormInputs
-  onSubmit: (data: CompressorFormInputs) => Promise<void>
+export type UseCompressorHandlersReturn = {
+  startLocal: number
+  endLocal: number
+  handleStartChange: (event: ChangeEvent<HTMLSelectElement>) => void
+  handleEndChange: (event: ChangeEvent<HTMLSelectElement>) => void
+  endOptions: number[]
+  handleExecuteClick: () => Promise<void>
   isSubmitting: boolean
   execResult: string | null
 }
 
 export const useCompressorHandlers = ({
-  sessionId
+  sessionId,
+  effectiveMax
 }: UseCompressorHandlersProperties): UseCompressorHandlersReturn => {
+  const [startLocal, setStartLocal] = useState<number>(1)
+  const [endLocal, setEndLocal] = useState<number>(effectiveMax)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [execResult, setExecResult] = useState<string | null>(null)
 
-  const defaultValues: CompressorFormInputs = {
-    policy: 'Keep key findings and preserve meaning. Use concise, objective language.',
-    targetLength: 1000,
-    startTurn: undefined,
-    endTurn: undefined
-  }
+  const { pushToast } = useAppStore()
+  const { submitCompression } = useCompressorActions({ sessionId })
+  const formContext = useOptionalFormContext()
+
+  const handleStartChange = useCallback(
+    (startEvent: ChangeEvent<HTMLSelectElement>): void => {
+      const parsedValue = Number(startEvent.target.value)
+      const newStart = Number.isNaN(parsedValue) ? 1 : parsedValue
+      setStartLocal(newStart)
+      // Adjust end if necessary
+      const minEnd = newStart + 1
+      if (endLocal < minEnd) {
+        setEndLocal(minEnd)
+      }
+    },
+    [endLocal]
+  )
+
+  const handleEndChange = useCallback(
+    (endEvent: ChangeEvent<HTMLSelectElement>): void => {
+      const parsedValue = Number(endEvent.target.value)
+      const newEnd = Number.isNaN(parsedValue) ? effectiveMax : parsedValue
+      setEndLocal(newEnd)
+      // Adjust start if necessary
+      if (startLocal >= newEnd) {
+        setStartLocal(newEnd - 1)
+      }
+    },
+    [startLocal, effectiveMax]
+  )
+
+  const endOptions = useMemo(() => {
+    const minEnd = startLocal + 1
+    const maxEnd = effectiveMax
+
+    return Array.from(
+      { length: Math.max(0, maxEnd - minEnd + 1) },
+      (_, i) => minEnd + i
+    )
+  }, [startLocal, effectiveMax])
 
   const onSubmit = useCallback(
     async (data: CompressorFormInputs): Promise<void> => {
       setIsSubmitting(true)
       try {
-        const payload = {
-          session: sessionId || undefined,
-          instruction: `Compress to approximately ${data.targetLength || '[unspecified]'} characters. Policy: ${data.policy}`,
-          target_length: data.targetLength || undefined,
-          start_turn: data.startTurn || undefined,
-          end_turn: data.endTurn || undefined
-        }
-
-        const response = await fetch('/api/compress', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
-
-        if (!response.ok) {
-          const text = await response.text()
-          setExecResult(`Error ${response.status}: ${text}`)
-
-          return
-        }
-
-        const result: unknown = await response.json()
+        const result = await submitCompression(data)
         setExecResult(JSON.stringify(result, null, 2))
       } catch (error: unknown) {
-        setExecResult(`Error: ${String(error)}`)
+        pushToast({
+          status: 'failure',
+          title: 'Compression Error',
+          description: String(error)
+        })
       } finally {
         setIsSubmitting(false)
       }
     },
-    [sessionId]
+    [submitCompression, pushToast]
   )
 
+  const handleExecuteClick = useCallback(async (): Promise<void> => {
+    await formContext?.handleSubmit(onSubmit as never)()
+  }, [formContext, onSubmit])
+
   return {
-    defaultValues,
-    onSubmit,
+    startLocal,
+    endLocal,
+    handleStartChange,
+    handleEndChange,
+    endOptions,
+    handleExecuteClick,
     isSubmitting,
     execResult
   }

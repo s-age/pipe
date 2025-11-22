@@ -19,10 +19,10 @@ type HandlersOptions = {
 }
 
 export const useFileSearchExplorerHandlers = (
-  inputReference?: RefObject<HTMLInputElement | null>,
-  suggestionListReference?: RefObject<HTMLUListElement | null>,
   options?: HandlersOptions
 ): {
+  inputReference: RefObject<HTMLInputElement | null>
+  suggestionListReference: RefObject<HTMLUListElement | null>
   selectedValues: string[]
   query: string
   suggestions: Item[]
@@ -40,6 +40,8 @@ export const useFileSearchExplorerHandlers = (
   actions: ReturnType<typeof useFileSearchExplorerActions>
   debouncedQuery: string
 } => {
+  const inputReference = useRef<HTMLInputElement>(null)
+  const suggestionListReference = useRef<HTMLUListElement>(null)
   const { existsValue = [], list, isMultiple = true, onFocus, onChange } = options || {}
   const [selectedValues, setSelectedValues] = useState<string[]>(existsValue)
   const [query, setQuery] = useState<string>('')
@@ -256,6 +258,8 @@ export const useFileSearchExplorerHandlers = (
   }, [inputReference])
 
   return {
+    inputReference,
+    suggestionListReference,
     selectedValues,
     query,
     suggestions,

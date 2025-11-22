@@ -25,4 +25,4 @@ export const getSessionTree = async (): Promise<{
   client.get<{
     sessions: [string, SessionOverview][]
     session_tree?: SessionTreeNode[]
-  }>(`/session_tree`)
+  }>('/session_tree')

@@ -1,6 +1,7 @@
 import type { JSX } from 'react'
-import React, { useCallback } from 'react'
+import React from 'react'
 
+import { usePathTag } from './hooks/usePathTag'
 import { pathTag, pathTagDeleteButton } from './style.css'
 
 type PathTagProperties = {
@@ -11,19 +12,7 @@ type PathTagProperties = {
 
 export const PathTag = React.memo(
   ({ path, index, onDelete }: PathTagProperties): JSX.Element => {
-    const handleClick = useCallback((): void => {
-      onDelete(index)
-    }, [onDelete, index])
-
-    const handleKeyDown = useCallback(
-      (event: React.KeyboardEvent<HTMLSpanElement>): void => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          onDelete(index)
-        }
-      },
-      [onDelete, index]
-    )
+    const { handleClick, handleKeyDown } = usePathTag({ index, onDelete })
 
     return (
       <span

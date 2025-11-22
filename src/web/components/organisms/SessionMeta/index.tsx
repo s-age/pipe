@@ -50,7 +50,7 @@ export const SessionMeta = ({
   sessionDetail,
   onRefresh
 }: SessionMetaProperties): JSX.Element | null => {
-  const { defaultValues, onSubmit, isSubmitting, saved } = useSessionMetaHandlers({
+  const { defaultValues, onSubmit, isSubmitting } = useSessionMetaHandlers({
     sessionDetail,
     onRefresh
   })
@@ -105,7 +105,6 @@ export const SessionMeta = ({
           >
             {isSubmitting ? 'Saving...' : 'Save Meta'}
           </Button>
-          {saved ? <span>Saved</span> : null}
         </div>
       </>
     )

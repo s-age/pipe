@@ -39,7 +39,8 @@ export const turnsListSection = style({
   minHeight: 0,
   overflowY: 'auto',
   padding: '16px',
-  color: colors.white
+  color: colors.white,
+  scrollbarWidth: 'thin'
 })
 
 export const panel = style({

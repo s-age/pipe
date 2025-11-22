@@ -6,7 +6,9 @@ export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right'
 
 let nextTooltipId = 1
 
-export const useTooltip = (): {
+export const useTooltip = (
+  content: string
+): {
   isVisible: boolean
   placement: TooltipPlacement
   targetRect: DOMRect | null
@@ -15,6 +17,7 @@ export const useTooltip = (): {
     options?: { content?: string; offsetMain?: number; offsetCross?: number }
   ) => void
   handleMouseLeave: () => void
+  onEnter: (event: React.MouseEvent<HTMLElement>) => void
 } => {
   const [isVisible, setIsVisible] = useState(false)
   const [placement, setPlacement] = useState<TooltipPlacement>('top')
@@ -91,5 +94,17 @@ export const useTooltip = (): {
     if (idReference.current !== null) hideTooltip(idReference.current)
   }, [])
 
-  return { isVisible, placement, targetRect, handleMouseEnter, handleMouseLeave }
+  const onEnter = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => handleMouseEnter(event, { content }),
+    [handleMouseEnter, content]
+  )
+
+  return {
+    isVisible,
+    placement,
+    targetRect,
+    handleMouseEnter,
+    handleMouseLeave,
+    onEnter
+  }
 }

@@ -20,10 +20,12 @@ def ts_get_references(file_path: str, symbol_name: str) -> dict[str, Any]:
     if not os.path.exists(file_path):
         return {"error": f"File not found: {file_path}"}
 
+    file_path = os.path.abspath(file_path)
+
     try:
-        # Construct the absolute path to the ts_analyzer.js script
+        # Construct the absolute path to the ts_analyzer.ts script
         script_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "cli", "ts_analyzer.js"
+            os.path.dirname(__file__), "..", "..", "cli", "ts_analyzer.ts"
         )
         script_path = os.path.abspath(script_path)
 
@@ -32,14 +34,16 @@ def ts_get_references(file_path: str, symbol_name: str) -> dict[str, Any]:
             os.path.join(os.path.dirname(__file__), "..", "..", "..")
         )
 
-        command = ["node", script_path, file_path, symbol_name, "get_references"]
+        command = [
+            "npx", "ts-node", script_path, file_path, symbol_name, "get_references"
+        ]
         process = subprocess.run(
             command, capture_output=True, text=True, check=True, cwd=project_root
         )
 
         if process.stderr.strip():
             # stderrはデバッグ情報なので、エラーとして返さずにログに出力
-            print(f"DEBUG (ts_analyzer.js stderr): {process.stderr.strip()}")
+            print(f"DEBUG (ts_analyzer.ts stderr): {process.stderr.strip()}")
 
         output = json.loads(process.stdout)
         if "error" in output:
@@ -52,11 +56,11 @@ def ts_get_references(file_path: str, symbol_name: str) -> dict[str, Any]:
             }
 
     except subprocess.CalledProcessError as e:
-        return {"error": f"ts_analyzer.js failed: {e.stderr.strip()}"}
+        return {"error": f"ts_analyzer.ts failed: {e.stderr.strip()}"}
     except json.JSONDecodeError:
         return {
             "error": (
-                f"Failed to parse JSON output from ts_analyzer.js: "
+                f"Failed to parse JSON output from ts_analyzer.ts: "
                 f"{process.stdout.strip()}"
             )
         }

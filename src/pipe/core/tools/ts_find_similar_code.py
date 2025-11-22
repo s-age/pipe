@@ -12,7 +12,7 @@ def ts_find_similar_code(
 ) -> dict[str, Any]:
     """
     Finds similar TypeScript code snippets based on a given symbol in a base file.
-    It uses ts-morph via ts_analyzer.js to extract code snippets and then compares them.
+    It uses ts-morph via ts_analyzer.ts to extract code snippets and then compares them.
     Also includes the type definitions of the base symbol.
     """
     if "node_modules" in os.path.normpath(
@@ -29,22 +29,26 @@ def ts_find_similar_code(
     if not os.path.isdir(search_directory):
         return {"error": f"Search directory not found: {search_directory}"}
 
+    base_file_path = os.path.abspath(base_file_path)
+    search_directory = os.path.abspath(search_directory)
+
     # Calculate project_root internally
     project_root = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "..", "..")
     )
 
     try:
-        # Call ts_analyzer.js with the new find_similar_code action
+        # Call ts_analyzer.ts with the new find_similar_code action
         command = [
-            "node",
+            "npx",
+            "ts-node",
             os.path.abspath(
                 os.path.join(
                     os.path.dirname(__file__),
                     "..",
                     "..",
                     "cli",
-                    "ts_analyzer.js",
+                    "ts_analyzer.ts",
                 )
             ),
             base_file_path,
@@ -60,12 +64,12 @@ def ts_find_similar_code(
         if process.returncode != 0:
             return {
                 "error": process.stderr.strip()
-                or f"ts_analyzer.js exited with code {process.returncode}"
+                or f"ts_analyzer.ts exited with code {process.returncode}"
             }
 
-        # ts_analyzer.jsからのstderr出力はデバッグ情報として扱う
+        # ts_analyzer.tsからのstderr出力はデバッグ情報として扱う
         if process.stderr.strip():
-            print(f"DEBUG (ts_analyzer.js stderr): {process.stderr.strip()}")
+            print(f"DEBUG (ts_analyzer.ts stderr): {process.stderr.strip()}")
 
         try:
             output = json.loads(process.stdout)
@@ -76,7 +80,7 @@ def ts_find_similar_code(
         except json.JSONDecodeError:
             return {
                 "error": (
-                    f"Failed to parse JSON output from ts_analyzer.js: "
+                    f"Failed to parse JSON output from ts_analyzer.ts: "
                     f"{process.stdout.strip()}"
                 )
             }

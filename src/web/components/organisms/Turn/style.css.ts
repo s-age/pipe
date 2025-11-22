@@ -26,12 +26,8 @@ export const turnContentBase = style({
   padding: '8px',
   border: `1px solid ${colors.cyan}`,
   borderRadius: '8px',
-  boxShadow: '0 6px 18px rgba(2,6,23,0.12)',
-  transition: 'transform 120ms ease, box-shadow 120ms ease',
-  ':hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 12px 30px rgba(2,6,23,0.18)'
-  }
+  boxShadow: '0 0 6px #00ffff, inset 0 0 6px #00ffff33',
+  transition: 'transform 120ms ease, box-shadow 120ms ease'
 })
 
 export const turnHeader = style({

@@ -1,4 +1,4 @@
-import { type SelectHTMLAttributes, type JSX, useCallback } from 'react'
+import { type SelectHTMLAttributes, type JSX } from 'react'
 
 import { useMultipleSelect } from './hooks/useMultipleSelect'
 import type { SelectOption } from './hooks/useMultipleSelect'
@@ -64,9 +64,9 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     handleKeyDown,
     handleSearchChange,
     handleOptionClick,
-    handleToggleSelect,
     handleMouseEnter,
-    handleMouseLeave
+    handleMouseLeave,
+    handleCheckboxClick
   } = useMultipleSelectHandlers({
     isOpen,
     setIsOpen,
@@ -77,15 +77,6 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     setSelectedValues,
     setQuery
   })
-
-  const handleCheckboxClick = useCallback(
-    (event: React.MouseEvent<HTMLInputElement>): void => {
-      event.stopPropagation()
-      const value = (event.currentTarget as HTMLInputElement).value
-      handleToggleSelect(value)
-    },
-    [handleToggleSelect]
-  )
 
   const { rootReference } = useSelectUI({
     isOpen,

@@ -38,5 +38,10 @@ export const todoCheckboxMargin = style({
 export const deleteTodosButton = style({
   float: 'right',
   marginBottom: '4px',
-  backgroundColor: colors.red
+  backgroundColor: colors.red,
+  opacity: 0.9,
+  ':hover': {
+    backgroundColor: colors.red,
+    opacity: 1.0
+  }
 })

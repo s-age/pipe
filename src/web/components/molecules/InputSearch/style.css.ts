@@ -21,7 +21,14 @@ export const input = style({
   color: colors.white,
   background: colors.cyanDark,
   outline: 'none',
-  '::placeholder': { color: 'rgba(255,255,255,0.8)' }
+  '::placeholder': { color: 'rgba(255,255,255,0.8)' },
+
+  selectors: {
+    '&:focus': {
+      border: 'none',
+      boxShadow: `0 0 6px ${colors.darkGray}, 0 0 12px ${colors.darkGray}, 0 0 18px ${colors.darkGray}, 0 0 24px ${colors.darkGray}77, 0 12px 30px rgba(0,0,0,0.26), inset 0 0 10px ${colors.darkGray}33`
+    }
+  }
 })
 
 export const button = style({

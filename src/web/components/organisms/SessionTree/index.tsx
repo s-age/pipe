@@ -1,5 +1,4 @@
 import type { JSX } from 'react'
-import { useRef } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type {
@@ -44,9 +43,12 @@ export const SessionTree = ({
   currentSessionId,
   selectSession
 }: SessionTreeProperties): JSX.Element => {
-  const sessionReferences = useRef<Map<string, HTMLLIElement>>(new Map())
-  const { handleNewChatClick, handleAnchorClick, setSessionReference } =
-    useSessionTreeHandlers(selectSession, sessionReferences)
+  const {
+    sessionReferences,
+    handleNewChatClick,
+    handleAnchorClick,
+    setSessionReference
+  } = useSessionTreeHandlers(selectSession)
 
   // Handle scroll to selected session on mount and selection change
   useSessionTreeLifecycle({

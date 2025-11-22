@@ -34,6 +34,7 @@ export const centerColumn = style({
 })
 
 export const rightColumn = style({
+  width: '320px',
   boxSizing: 'content-box',
   overflowY: 'auto',
   flexDirection: 'column',

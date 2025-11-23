@@ -99,6 +99,7 @@ export const editablePre = style({
   boxSizing: 'border-box',
   padding: '0 12px',
   borderRadius: '4px',
+  lineHeight: '1.8em',
   color: colors.white,
   whiteSpace: 'pre-wrap',
   overflowWrap: 'anywhere',

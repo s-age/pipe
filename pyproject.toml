@@ -20,6 +20,7 @@ dependencies = [
 
 [project.scripts]
 takt = "pipe.cli.takt:main"
+mcp_server = "pipe.cli.mcp_server:main"
 
 [tool.setuptools.packages.find]
 include = ["pipe*", "tests*"]

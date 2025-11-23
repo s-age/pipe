@@ -76,5 +76,5 @@ These tools fetch information from outside the local project environment.
 
 These tools are designed to orchestrate other agents or complex, multi-step processes.
 
-- **`create_verified_summary`**: Initiates the two-step history compression workflow. It first generates a summary and then calls `verify_summary`. This tool can only be used by an agent with the `compresser` role.
+- **`create_verified_summary`**: Initiates the two-step history compression workflow. It first generates a summary and then calls `verify_summary`. This tool can only be used by an agent with the `compressor` role.
 - **`verify_summary`**: Invokes a `reviewer` sub-agent in a temporary session to validate a generated summary before it's applied to the original session's history.

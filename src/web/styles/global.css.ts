@@ -34,3 +34,57 @@ globalStyle('input:focus, textarea:focus, select:focus', {
   boxShadow: '0 0 6px #00ffff, inset 0 0 6px #00ffff33',
   outline: 'none'
 })
+
+globalStyle('.markdown-body', {
+  marginTop: '0',
+  padding: '0'
+})
+
+globalStyle('.markdown-body h3', {
+  marginTop: '0',
+  marginBottom: '0',
+  marginBlockStart: '0',
+  marginBlockEnd: '0',
+  padding: '0',
+  lineHeight: '0.8em'
+})
+
+globalStyle('.markdown-body h3, .markdown-body p', {
+  marginTop: '0',
+  marginBottom: '0',
+  marginBlockStart: '0',
+  marginBlockEnd: '0',
+  padding: '0',
+  lineHeight: '1.5em'
+})
+
+globalStyle('.markdown-body ol, .markdown-body ol ol, .markdown-body ol ul', {
+  marginTop: '0',
+  marginBottom: '0',
+  marginLeft: '24px',
+  marginBlockStart: '0',
+  marginBlockEnd: '0',
+  padding: '0',
+  lineHeight: '0',
+  listStyleType: 'decimal'
+})
+
+globalStyle('.markdown-body ul, .markdown-body ul ul, .markdown-body ul ol', {
+  marginTop: '0',
+  marginBottom: '0',
+  marginLeft: '24px',
+  marginBlockStart: '0',
+  marginBlockEnd: '0',
+  padding: '0',
+  lineHeight: '0',
+  listStyleType: 'disc'
+})
+
+globalStyle('.markdown-body li, .markdown-body li + li', {
+  marginTop: '0',
+  marginBottom: '0',
+  marginBlockStart: '0',
+  marginBlockEnd: '0',
+  padding: '0',
+  lineHeight: '1.8em'
+})

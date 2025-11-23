@@ -184,47 +184,6 @@ class Session(BaseModel):
             turns=forked_turns,
         )
 
-    def edit_meta(self, new_meta_data: dict):
-        """Updates metadata and saves the session."""
-        if "purpose" in new_meta_data:
-            self.purpose = new_meta_data["purpose"]
-        if "background" in new_meta_data:
-            self.background = new_meta_data["background"]
-        if "roles" in new_meta_data:
-            self.roles = new_meta_data["roles"]
-        if "multi_step_reasoning_enabled" in new_meta_data:
-            self.multi_step_reasoning_enabled = new_meta_data[
-                "multi_step_reasoning_enabled"
-            ]
-        if "artifacts" in new_meta_data:
-            self.artifacts = new_meta_data["artifacts"]
-        if "procedure" in new_meta_data:
-            self.procedure = new_meta_data["procedure"]
-        if "token_count" in new_meta_data:
-            self.token_count = new_meta_data["token_count"]
-        if "hyperparameters" in new_meta_data:
-            # Merge provided hyperparameter fields into existing hyperparameters
-            # so clients can send partial updates (e.g., only temperature).
-            from pipe.core.models.hyperparameters import Hyperparameters
-
-            provided = new_meta_data["hyperparameters"] or {}
-
-            # Start from current hyperparameters, otherwise from class default
-            if self.hyperparameters is not None:
-                base_dict = self.hyperparameters.model_dump()
-            elif (
-                default_hp := getattr(self.__class__, "default_hyperparameters", None)
-            ) is not None:
-                base_dict = default_hp.model_dump()
-            else:
-                base_dict = {}
-
-            # Merge provided values over base
-            merged = {**base_dict, **provided}
-
-            # Create a new Hyperparameters instance from the merged dict
-            self.hyperparameters = Hyperparameters(**merged)
-
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the session suitable for templates."""
         return {
@@ -284,3 +243,9 @@ class Session(BaseModel):
         if self.pools:
             self.turns.extend(self.pools)
             self.pools = TurnCollection()
+
+    def edit_meta(self, new_meta_data: dict):
+        """Edits the session's metadata."""
+        for key, value in new_meta_data.items():
+            if hasattr(self, key):
+                setattr(self, key, value)

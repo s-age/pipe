@@ -61,6 +61,54 @@ BFF (Backend for Frontend) layer role definitions:
 └─────────────────────────────────────────────┘
 ```
 
+## MCP Server and Tools
+
+### Starting the MCP Server
+
+The MCP (Model Context Protocol) server allows AI assistants to interact with the pipe tools via standardized JSON-RPC communication.
+
+To start the MCP server:
+
+```bash
+# If mcp_server is in your PATH
+mcp_server
+
+# Or using Python module
+python -m pipe.cli.mcp_server
+```
+
+The server listens on stdin/stdout and can be connected to MCP-compatible clients like Claude Desktop.
+
+### Available Tools
+
+The following Python-specific tools are available in the `tools/` directory:
+
+- **py_analyze_code**: Analyzes the AST of a Python file to extract symbol information (classes, functions, variables).
+  - Usage: `py_analyze_code(file_path: str) -> dict`
+
+- **py_auto_format_code**: Automatically formats Python code according to project standards.
+  - Usage: `py_auto_format_code(file_path: str) -> str`
+
+- **py_generate_code**: Generates Python code based on specified requirements.
+  - Usage: `py_generate_code(requirements: str) -> str`
+
+- **py_get_code_snippet**: Extracts code snippets for specific symbols (classes, functions) from a Python file.
+  - Usage: `py_get_code_snippet(file_path: str, symbol_name: str) -> dict`
+
+- **py_get_symbol_references**: Finds all references to a specific symbol in the codebase.
+  - Usage: `py_get_symbol_references(symbol_name: str) -> list`
+
+- **py_get_type_hints**: Extracts type hints for functions or classes in a Python file.
+  - Usage: `py_get_type_hints(file_path: str, symbol_name: str) -> dict`
+
+- **py_refactor_code**: Performs automatic refactoring operations like renaming variables or extracting functions.
+  - Usage: `py_refactor_code(args: PyRefactorCodeArgs) -> dict`
+
+- **py_run_and_test_code**: Executes Python code and runs associated tests.
+  - Usage: `py_run_and_test_code(code: str, test_code: str) -> dict`
+
+These tools enable AI assistants to perform code analysis, generation, and modification tasks within the pipe project.
+
 ## 🎯 Key Principles
 
 ### 1. Inter-Layer Dependency Rules

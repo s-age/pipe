@@ -191,12 +191,15 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
 
     # 2. Override with session-specific hyperparameters
     if session_params := session_data.hyperparameters:
-        if temp := session_params.temperature:
-            gen_config_params["temperature"] = temp.value
-        if top_p := session_params.top_p:
-            gen_config_params["top_p"] = top_p.value
-        if top_k := session_params.top_k:
-            gen_config_params["top_k"] = top_k.value
+        if temp_obj := session_params.temperature:
+            if temp_obj.value is not None:
+                gen_config_params["temperature"] = temp_obj.value
+        if top_p_obj := session_params.top_p:
+            if top_p_obj.value is not None:
+                gen_config_params["top_p"] = top_p_obj.value
+        if top_k_obj := session_params.top_k:
+            if top_k_obj.value is not None:
+                gen_config_params["top_k"] = top_k_obj.value
 
     # tools.jsonからツールをロード
     loaded_tools_data = load_tools(project_root)

@@ -39,11 +39,11 @@ class SearchSessionsService:
     def search(self, query: str) -> list[dict[str, str]]:
         """Return matching sessions for `query`.
 
-        Matching rules (kept intentionally simple and compatible with the
-        previous action implementation):
+        Matching rules:
         - If query is found in filename (case-insensitive) -> match.
-        - Otherwise, try to load JSON and match against `purpose` or
-          `background` fields.
+        - Otherwise, try to load JSON and match against `purpose`,
+          `background`, or turns' `instruction`/`content` fields.
+        Only sessions that actually match are returned (no duplicates).
         """
         q = (query or "").strip()
         if not q:
@@ -54,53 +54,52 @@ class SearchSessionsService:
 
         for fpath in self._iter_session_files():
             fname = os.path.basename(fpath)
+            title = None
+            matched = False
+
+            # 1. Filename match
             if qlow in fname.lower():
-                title = os.path.splitext(fname)[0]  # Default title from filename
+                title = os.path.splitext(fname)[0]
+                matched = True
+            else:
+                # 2. JSON fields match
+                try:
+                    with open(fpath, encoding="utf-8") as fh:
+                        data = json.load(fh)
+                except Exception:
+                    continue
+
+                purpose = data.get("purpose") or ""
+                background = data.get("background") or ""
+                if qlow in purpose.lower():
+                    title = purpose
+                    matched = True
+                elif qlow in background.lower():
+                    title = purpose or background
+                    matched = True
+                else:
+                    # 3. turns (instruction/content) match
+                    turns = data.get("turns") or []
+                    for t in turns:
+                        if not isinstance(t, dict):
+                            continue
+                        instr = t.get("instruction")
+                        content = t.get("content")
+                        if instr and qlow in str(instr).lower():
+                            title = purpose or background or os.path.splitext(fname)[0]
+                            matched = True
+                            break
+                        if content and qlow in str(content).lower():
+                            title = purpose or background or os.path.splitext(fname)[0]
+                            matched = True
+                            break
+
+            if matched:
                 matches.append(
-                    {"session_id": self._compute_session_id(fpath), "title": title}
+                    {
+                        "session_id": self._compute_session_id(fpath),
+                        "title": title or os.path.splitext(fname)[0],
+                    }
                 )
-                continue
-
-            try:
-                with open(fpath, encoding="utf-8") as fh:
-                    data = json.load(fh)
-            except Exception:
-                continue
-
-            purpose = data.get("purpose") or ""
-            # background = (data.get("background") or "") # Unused variable, removed
-            found = False
-            title = purpose or os.path.splitext(fname)[0]  # Define title before use
-            matches.append(
-                {"session_id": self._compute_session_id(fpath), "title": title}
-            )
-
-            # Also search within turns (instruction/content) to support matching
-            # cases where the query appears in conversation text rather than meta.
-            if not found:
-                turns = data.get("turns") or []
-                for t in turns:
-                    instr = t.get("instruction") if isinstance(t, dict) else None
-                    content = t.get("content") if isinstance(t, dict) else None
-                    if instr and qlow in str(instr).lower():
-                        title = purpose or os.path.splitext(fname)[0]
-                        matches.append(
-                            {
-                                "session_id": self._compute_session_id(fpath),
-                                "title": title,
-                            }
-                        )
-                        found = True
-                        break
-                    if content and qlow in str(content).lower():
-                        title = purpose or os.path.splitext(fname)[0]
-                        matches.append(
-                            {
-                                "session_id": self._compute_session_id(fpath),
-                                "title": title,
-                            }
-                        )
-                        found = True
-                        break
 
         return matches

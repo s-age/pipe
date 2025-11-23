@@ -440,7 +440,7 @@ class SessionService:
 
     def expire_old_tool_responses(self, session_id: str):
         """
-        Expires the message content of old tool_response turns to save tokens.
+        Expires the message content of old tool_responses to save tokens.
         """
         session = self._fetch_session(session_id)
         if session:
@@ -450,3 +450,143 @@ class SessionService:
                 session.turns, self.settings.tool_response_expiration
             ):
                 self._save_session(session)
+
+    def create_compressor_session(self) -> Session:
+        """Create a new session for compression with role-based purpose
+        and background."""
+        role_path = "roles/compressor.md"
+        purpose, background = self._get_compressor_role_info(role_path)
+
+        return self.create_new_session(
+            purpose=purpose,
+            background=background,
+            roles=[role_path],
+            multi_step_reasoning_enabled=False,
+        )
+
+    def _get_compressor_role_info(self, role_path: str) -> tuple[str, str]:
+        """Get purpose and background from compressor role file."""
+        from pipe.core.utils.file import read_text_file
+
+        full_path = f"{self.project_root}/{role_path}"
+        content = read_text_file(full_path)
+        if not content:
+            raise ValueError(f"Role file {role_path} not found or empty")
+
+        lines = content.split("\n")
+        purpose = ""
+        background = ""
+
+        # Extract purpose
+        for line in lines[:10]:
+            line = line.strip()
+            if line.startswith("# Role:"):
+                purpose = line.replace("# Role:", "").strip()
+                break
+            elif line.startswith("Your task is to"):
+                purpose = line.replace("Your task is to", "").strip()
+                break
+
+        # Extract background from ## Workflow
+        in_workflow = False
+        workflow_lines = []
+        for line in lines:
+            if line.startswith("## Workflow"):
+                in_workflow = True
+                continue
+            elif in_workflow and line.startswith("##"):
+                break
+            elif in_workflow:
+                workflow_lines.append(line.strip())
+        background = "\n".join(workflow_lines).strip()
+
+        if not purpose:
+            purpose = "Compress conversation history"
+        if not background:
+            background = (
+                "Follow the compression workflow to reduce conversation length."
+            )
+
+        return purpose, background
+
+    def build_compressor_instruction(
+        self,
+        session_id: str,
+        policy: str,
+        target_length: int,
+        start_turn: int,
+        end_turn: int,
+    ) -> str:
+        """Build the instruction for compressor session."""
+        return (
+            f"Compress session {session_id} from turn {start_turn} to {end_turn} "
+            f"with policy '{policy}' and target length {target_length}"
+        )
+
+    def run_takt_for_compression(
+        self,
+        session_id: str,
+        policy: str,
+        target_length: int,
+        start_turn: int,
+        end_turn: int,
+    ) -> str:
+        """Create compressor session and run initial takt command."""
+        import subprocess
+        import sys
+
+        # Create new session with compressor role
+        session = self.create_compressor_session()
+        compressor_session_id = session.session_id
+
+        # Build instruction
+        instruction = self.build_compressor_instruction(
+            session_id, policy, target_length, start_turn, end_turn
+        )
+
+        # Execute takt command
+        command = [
+            sys.executable,
+            "-m",
+            "pipe.cli.takt",
+            "--session",
+            compressor_session_id,
+            "--instruction",
+            instruction,
+        ]
+
+        subprocess.run(
+            command, capture_output=True, text=True, check=True, encoding="utf-8"
+        )
+
+        return compressor_session_id
+
+    def approve_compression(self, compressor_session_id: str) -> None:
+        """Approve the compression by running takt with approval instruction."""
+        import subprocess
+        import sys
+
+        # Execute takt command on the compressor session with approval instruction
+        approval_instruction = (
+            "The user has approved the compression. "
+            "Proceed with replacing the session turns using the "
+            "replace_session_turns tool."
+        )
+        command = [
+            sys.executable,
+            "-m",
+            "pipe.cli.takt",
+            "--session",
+            compressor_session_id,
+            "--instruction",
+            approval_instruction,
+        ]
+
+        subprocess.run(
+            command, capture_output=True, text=True, check=True, encoding="utf-8"
+        )
+
+    def deny_compression(self, compressor_session_id: str) -> None:
+        """Deny the compression and clean up the compressor session."""
+        # Simply delete the compressor session
+        self.delete_session(compressor_session_id)

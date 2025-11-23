@@ -49,7 +49,7 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
 - **YOLO Mode:** Automatically accept all actions (aka YOLO mode, see [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0) for more details).
 - **In-Session Todos:** Manage a simple todo list directly within the session's metadata.
 - **Advanced Agent-driven Compression**:
-  - A specialized `Compresser` agent can perform **partial compression** on any session's history.
+  - A specialized `Compressor` agent can perform **partial compression** on any session's history.
   - Precisely control the compression by specifying a **turn range**, a **summarization policy** (what to keep), and a **target character count**.
   - Before applying the compression, a `Reviewer` agent automatically **verifies** that the summarized history maintains a natural conversational flow, preventing context loss.
   - **Note on `gemini-cli`:** To use advanced features like Compression and Forking in `gemini-cli` mode, you must first register the `pipe` tool server. See the "Integration with `gemini-cli`" section below for the required one-time setup command.
@@ -172,14 +172,14 @@ Act as @roles/conductor.md takt --session <SESSION_ID> --instruction "Now, add a
 
 ### 4. Route 4: Agent-driven Workflows (Compression & Verification)
 
-The `pipe` framework supports agent-driven meta-tasks like history management. The `Compresser` and `Reviewer` agents work in tandem to ensure both efficiency and quality.
+The `pipe` framework supports agent-driven meta-tasks like history management. The `Compressor` and `Reviewer` agents work in tandem to ensure both efficiency and quality.
 
 | Step            | Agent        | Use Case                 | Description                                                                                                                                              |
 | :-------------- | :----------- | :----------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1. Initiate** | `Compresser` | Surgical Compression     | Start a new session and assign the `roles/compresser.md` role. Instruct this agent to compress parts of _any other session_.                             |
-| **2. Specify**  | `Compresser` | Controlled Summarization | Guide the agent by providing the target `SESSION_ID`, a `START` and `END` turn, a `policy` (what to keep), and a `target length`.                        |
+| **1. Initiate** | `Compressor` | Surgical Compression     | Start a new session and assign the `roles/compressor.md` role. Instruct this agent to compress parts of _any other session_.                             |
+| **2. Specify**  | `Compressor` | Controlled Summarization | Guide the agent by providing the target `SESSION_ID`, a `START` and `END` turn, a `policy` (what to keep), and a `target length`.                        |
 | **3. Verify**   | `Reviewer`   | Quality Assurance        | Before applying the summary, the `Reviewer` agent is automatically invoked to check if the compressed history flows naturally and preserves key context. |
-| **4. Apply**    | `Compresser` | Finalize Compression     | Once the verification is passed, the agent replaces the specified turn range with the generated summary.                                                 |
+| **4. Apply**    | `Compressor` | Finalize Compression     | Once the verification is passed, the agent replaces the specified turn range with the generated summary.                                                 |
 
 > **[NOTE]** The compression workflow is available only when `api_mode` is set to `gemini-api`. It is not supported in `gemini-cli` mode as it requires an MCP server.
 
@@ -187,7 +187,7 @@ The `pipe` framework supports agent-driven meta-tasks like history management. T
 
 ```bash
 # Start a new session to manage other sessions
-takt --purpose "Compress a long-running session" --role "roles/compresser.md" --instruction "I want to compress session <TARGET_SESSION_ID>."
+takt --purpose "Compress a long-running session" --role "roles/compressor.md" --instruction "I want to compress session <TARGET_SESSION_ID>."
 ```
 
 The agent will then interactively guide you through the specification and verification process to perform the compression safely.
@@ -202,15 +202,15 @@ graph TD
     end
 
     subgraph "Compression Gate"
-        C --> D("1. Compresser Agent starts");
+        C --> D("1. Compressor Agent starts");
         D --> E{"Tool: read_session_turns(1-50) to load history"};
         E --> F("2. Generate summary draft");
         F --> G{"Tool: call create_verified_summary(Summary Draft)"};
         G --> H("3. Verifier Agent starts");
         H --> I{"Verifier Agent: Quality check and verification of 'Summary Draft'"};
         I -- "NO: Critical information missing" --> F;
-        I -- "YES: Quality verified" --> J("4. Return Verified Summary to Compresser");
-        J --> K{"5. Compresser: Present Verified Summary to user for approval"};
+        I -- "YES: Quality verified" --> J("4. Return Verified Summary to Compressor");
+        J --> K{"5. Compressor: Present Verified Summary to user for approval"};
         K -- "User approves" --> L{"Tool: replace_session_turns(1-50, Verified Summary) to replace history"};
         K -- "User rejects" --> M["Compression process terminated (history preserved)"];
         L --> N("6. Compression complete: Clean context for implementation");

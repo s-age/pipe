@@ -187,7 +187,12 @@ const Component = ({
         )
       case 'tool_response':
         if (!turn.response) return null
-        statusClass = turn.response.status === 'success' ? statusSuccess : statusError
+        // Treat any status starting with 'succe' (e.g., 'success', 'succeeded') as success
+        statusClass =
+          typeof turn.response.status === 'string' &&
+          turn.response.status.toLowerCase().startsWith('succe')
+            ? statusSuccess
+            : statusError
 
         return (
           <div className={toolResponseContent}>

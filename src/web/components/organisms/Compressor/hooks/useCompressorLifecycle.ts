@@ -19,10 +19,10 @@ export const useCompressorLifecycle = ({
       policy:
         'Keep key findings and preserve meaning. Use concise, objective language.',
       targetLength: 1000,
-      startTurn: undefined,
-      endTurn: undefined
+      startTurn: 1,
+      endTurn: effectiveMax
     }),
-    []
+    [effectiveMax]
   )
 
   // Ensure the form's defaultValues set `endTurn` to the current maximum when
@@ -30,6 +30,9 @@ export const useCompressorLifecycle = ({
   const mergedDefaultValues = useMemo(() => {
     try {
       const dv = { ...(defaultValues as Record<string, unknown>) }
+      if ((dv.startTurn === undefined || dv.startTurn === null) && effectiveMax > 0) {
+        ;(dv as Record<string, number>).startTurn = 1
+      }
       if ((dv.endTurn === undefined || dv.endTurn === null) && effectiveMax > 0) {
         ;(dv as Record<string, number>).endTurn = effectiveMax
       }

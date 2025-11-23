@@ -1,40 +1,36 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 
-import { useOptionalFormContext } from '@/components/organisms/Form'
-import { useAppStore } from '@/stores/useAppStore'
-
-import { useCompressorActions } from './useCompressorActions'
-import type { CompressorFormInputs } from '../schema'
-
-type UseCompressorHandlersProperties = {
-  sessionId: string
+type UseCompressorStateHandlersProperties = {
   effectiveMax: number
 }
 
-export type UseCompressorHandlersReturn = {
+export type UseCompressorStateHandlersReturn = {
+  stage: 'form' | 'approval'
+  summary: string
+  error: string | null
+  isSubmitting: boolean
   startLocal: number
   endLocal: number
   handleStartChange: (event: ChangeEvent<HTMLSelectElement>) => void
   handleEndChange: (event: ChangeEvent<HTMLSelectElement>) => void
   endOptions: number[]
-  handleExecuteClick: () => Promise<void>
-  isSubmitting: boolean
-  execResult: string | null
+  handleDeny: () => void
+  setSummary: (summary: string) => void
+  setStage: (stage: 'form' | 'approval') => void
+  setError: (error: string | null) => void
+  setIsSubmitting: (isSubmitting: boolean) => void
 }
 
-export const useCompressorHandlers = ({
-  sessionId,
+export const useCompressorStateHandlers = ({
   effectiveMax
-}: UseCompressorHandlersProperties): UseCompressorHandlersReturn => {
+}: UseCompressorStateHandlersProperties): UseCompressorStateHandlersReturn => {
+  const [stage, setStage] = useState<'form' | 'approval'>('form')
+  const [summary, setSummary] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [startLocal, setStartLocal] = useState<number>(1)
   const [endLocal, setEndLocal] = useState<number>(effectiveMax)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [execResult, setExecResult] = useState<string | null>(null)
-
-  const { pushToast } = useAppStore()
-  const { submitCompression } = useCompressorActions({ sessionId })
-  const formContext = useOptionalFormContext()
 
   const handleStartChange = useCallback(
     (startEvent: ChangeEvent<HTMLSelectElement>): void => {
@@ -73,37 +69,26 @@ export const useCompressorHandlers = ({
     )
   }, [startLocal, effectiveMax])
 
-  const onSubmit = useCallback(
-    async (data: CompressorFormInputs): Promise<void> => {
-      setIsSubmitting(true)
-      try {
-        const result = await submitCompression(data)
-        setExecResult(JSON.stringify(result, null, 2))
-      } catch (error: unknown) {
-        pushToast({
-          status: 'failure',
-          title: 'Compression Error',
-          description: String(error)
-        })
-      } finally {
-        setIsSubmitting(false)
-      }
-    },
-    [submitCompression, pushToast]
-  )
-
-  const handleExecuteClick = useCallback(async (): Promise<void> => {
-    await formContext?.handleSubmit(onSubmit as never)()
-  }, [formContext, onSubmit])
+  const handleDeny = useCallback((): void => {
+    setStage('form')
+    setSummary('')
+    setError(null)
+  }, [])
 
   return {
+    stage,
+    summary,
+    error,
+    isSubmitting,
     startLocal,
     endLocal,
     handleStartChange,
     handleEndChange,
     endOptions,
-    handleExecuteClick,
-    isSubmitting,
-    execResult
+    handleDeny,
+    setSummary,
+    setStage,
+    setError,
+    setIsSubmitting
   }
 }

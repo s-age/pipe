@@ -1,7 +1,7 @@
 import { style } from '@vanilla-extract/css'
 
-import { colors } from '../../styles/colors.css.ts'
-import { zIndex } from '../../styles/zIndex.css.ts'
+import { colors } from '../../../styles/colors.css.ts'
+import { zIndex } from '../../../styles/zIndex.css.ts'
 
 export const container = style({
   width: '300px',
@@ -60,6 +60,7 @@ export const muted = style({
 export const form = style({
   display: 'flex',
   flex: '1',
+  margin: '0 12px',
   marginBottom: '0',
   padding: '20px',
   borderRadius: '8px',
@@ -154,6 +155,22 @@ export const previewTitle = style({
   color: colors.white
 })
 
+export const errorBox = style({
+  marginTop: '12px',
+  padding: '10px',
+  border: `1px solid ${colors.red}`,
+  borderRadius: '6px',
+  color: colors.white,
+  background: colors.pureBlack
+})
+
+export const errorTitle = style({
+  marginBottom: '6px',
+  fontSize: 13,
+  fontWeight: 600,
+  color: colors.red
+})
+
 export const pre = style({
   fontFamily:
     'ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace',
@@ -163,10 +180,11 @@ export const pre = style({
 })
 
 export const buttonContainer = style({
-  bottom: 0,
-  marginTop: '-12px',
+  position: 'sticky',
+  bottom: '16px',
+  margin: '0 12px',
   padding: '12px',
-  borderRadius: '0 0 10px 10px',
+  borderRadius: '0 0 8px 8px',
   background: colors.darkGray,
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)',
   zIndex: zIndex.base,
@@ -178,5 +196,13 @@ export const executeButton = style({
   height: '56px',
   boxSizing: 'border-box',
   padding: '12px 16px',
-  borderRadius: '0 0 8px 8px'
+  borderRadius: '8px',
+  color: colors.white,
+  background: 'rgba(0,0,0,0.32)',
+  boxShadow: '0 0 8px #00ffff, inset 0 0 10px #00ffff33',
+  ':hover': {
+    transform: 'translateY(-1px)',
+    boxShadow:
+      '0 0 6px #00ffff, 0 0 12px #00ffff, 0 0 18px #00ffff, 0 0 24px #00ffff77, 0 12px 30px rgba(0,0,0,0.26), inset 0 0 10px #00ffff33'
+  }
 })

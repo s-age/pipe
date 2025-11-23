@@ -5,7 +5,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import * as styles from './style.css'
 import { Tabs } from '../../atoms/Tabs'
-import { Compressor } from '../../Compressor'
+import { Compressor } from '../Compressor'
 import { Therapist } from '../Therapist'
 import { useSessionControlHandlers } from './hooks/useSessionControlHandlers'
 import type { SessionControlTab } from './hooks/useSessionControlHandlers'
@@ -27,8 +27,6 @@ export const SessionControl = ({
     { key: 'therapist', label: 'Therapist' }
   ]
 
-  const sessionId = sessionDetail.session_id ?? ''
-
   return (
     <div className={styles.container}>
       <div className={styles.right}>
@@ -38,7 +36,7 @@ export const SessionControl = ({
           <SessionMeta sessionDetail={sessionDetail} onRefresh={onRefresh} />
         )}
 
-        {active === 'compress' && <Compressor sessionId={sessionId} mockMaxTurn={8} />}
+        {active === 'compress' && <Compressor sessionDetail={sessionDetail} />}
 
         {active === 'therapist' && <Therapist />}
       </div>

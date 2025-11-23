@@ -4,41 +4,54 @@ import { Button } from '@/components/atoms/Button'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { InputText } from '@/components/molecules/InputText'
 import { TextArea } from '@/components/molecules/TextArea'
-import { Form, useOptionalFormContext } from '@/components/organisms/Form'
-import { useSessionStore } from '@/stores/useChatHistoryStore'
+import { useOptionalFormContext } from '@/components/organisms/Form'
 
-import {
-  useCompressorHandlers,
-  type UseCompressorHandlersReturn
-} from './hooks/useCompressorHandlers'
-import { useCompressorLifecycle } from './hooks/useCompressorLifecycle'
-import { compressorSchema } from './schema'
+import { useCompressorActions } from './hooks/useCompressorActions'
 import * as styles from './style.css'
 import { renderTurnOptions } from './TurnOptions'
 
-export type CompressorProperties = {
-  sessionId: string
-  mockMaxTurn?: number
-}
-
-const CompressContent = ({
-  handlers,
-  isSubmitting,
-  execResult,
-  handleExecuteClick,
-  sessionId,
-  effectiveMax
-}: {
-  handlers: UseCompressorHandlersReturn
-  isSubmitting: boolean
-  execResult: string | null
-  handleExecuteClick: () => Promise<void>
+export type CompressorFormProperties = {
   sessionId: string
   effectiveMax: number
-}): JSX.Element => {
-  const { startLocal, endLocal, handleStartChange, handleEndChange, endOptions } =
-    handlers
+  isSubmitting: boolean
+  execResult: string | null
+  error?: string | null
+  startLocal: number
+  endLocal: number
+  handleStartChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+  handleEndChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+  endOptions: number[]
+  setSummary: (summary: string) => void
+  setStage: (stage: 'form' | 'approval') => void
+  setError: (error: string | null) => void
+  setIsSubmitting: (isSubmitting: boolean) => void
+}
+
+export const CompressorForm = ({
+  sessionId,
+  effectiveMax,
+  isSubmitting,
+  execResult,
+  error,
+  startLocal,
+  endLocal,
+  handleStartChange,
+  handleEndChange,
+  endOptions,
+  setSummary,
+  setStage,
+  setError,
+  setIsSubmitting
+}: CompressorFormProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
+
+  const { handleExecute } = useCompressorActions({
+    sessionId,
+    setSummary,
+    setStage,
+    setError,
+    setIsSubmitting
+  })
 
   return (
     <>
@@ -52,10 +65,7 @@ const CompressContent = ({
             register={formContext?.register}
           />
         </Fieldset>
-        <Fieldset
-          legend="Target length (characters)"
-          className={styles.fieldsetContainer}
-        >
+        <Fieldset legend="Target length (tokens)" className={styles.fieldsetContainer}>
           <InputText
             name="targetLength"
             type="number"
@@ -68,7 +78,7 @@ const CompressContent = ({
             <div className={styles.label}>Start Turn</div>
             <select
               className={styles.input}
-              name="startTurn"
+              {...(formContext?.register ? formContext.register('startTurn') : {})}
               value={String(startLocal)}
               onChange={handleStartChange}
             >
@@ -80,7 +90,7 @@ const CompressContent = ({
             <div className={styles.label}>End Turn</div>
             <select
               className={styles.input}
-              name="endTurn"
+              {...(formContext?.register ? formContext.register('endTurn') : {})}
               value={String(endLocal)}
               onChange={handleEndChange}
             >
@@ -92,6 +102,13 @@ const CompressContent = ({
             </select>
           </div>
         </Fieldset>
+
+        {error && (
+          <div className={styles.errorBox}>
+            <div className={styles.errorTitle}>Error</div>
+            <pre className={styles.pre}>{error}</pre>
+          </div>
+        )}
 
         {execResult && (
           <div className={styles.previewBox}>
@@ -107,47 +124,12 @@ const CompressContent = ({
           size="default"
           type="button"
           disabled={isSubmitting}
-          onClick={handleExecuteClick}
+          onClick={handleExecute}
           className={styles.executeButton}
         >
           {isSubmitting ? 'Executing...' : 'Execute'}
         </Button>
       </div>
     </>
-  )
-}
-
-export const Compressor = ({
-  sessionId,
-  mockMaxTurn
-}: CompressorProperties): JSX.Element => {
-  const { state } = useSessionStore()
-  const { sessionDetail } = state
-
-  const maxTurn = sessionDetail?.turns?.length ?? 0
-  const effectiveMax = maxTurn > 0 ? maxTurn : (mockMaxTurn ?? 0)
-
-  const { mergedDefaultValues } = useCompressorLifecycle({
-    effectiveMax
-  })
-
-  const handlers = useCompressorHandlers({
-    sessionId,
-    effectiveMax
-  })
-
-  const { handleExecuteClick, isSubmitting, execResult } = handlers
-
-  return (
-    <Form defaultValues={mergedDefaultValues} schema={compressorSchema}>
-      <CompressContent
-        handlers={handlers}
-        isSubmitting={isSubmitting}
-        execResult={execResult}
-        handleExecuteClick={handleExecuteClick}
-        sessionId={sessionId}
-        effectiveMax={effectiveMax}
-      />
-    </Form>
   )
 }

@@ -138,6 +138,33 @@ paths:
         '500':
           description: Internal server error
 
+  # Compress Session (v1)
+  /api/v1/compress:
+    post:
+      summary: Create a compressor session (v1)
+      tags:
+        - v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompressorRequest'
+      responses:
+        '200':
+          description: Compressor session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+        '422':
+          description: Validation error
+        '500':
+          description: Internal server error
+
   # Generic v1 dispatcher
   /api/v1/{action}:
     get:
@@ -952,6 +979,27 @@ components:
         - purpose
         - background
         - instruction
+    CreateCompressorRequest:
+      type: object
+      properties:
+        session_id:
+          type: string
+        policy:
+          type: string
+        target_length:
+          type: integer
+        start_turn:
+          type: integer
+          minimum: 0
+        end_turn:
+          type: integer
+          minimum: 0
+      required:
+        - session_id
+        - policy
+        - target_length
+        - start_turn
+        - end_turn
     EditSessionMetaRequest:
       type: object
       properties:

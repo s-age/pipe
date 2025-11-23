@@ -10,6 +10,9 @@ from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
 from pipe.web.actions import (
+    ApproveCompressorAction,
+    CreateCompressorSessionAction,
+    DenyCompressorAction,
     GetProceduresAction,
     GetRolesAction,
     HyperparametersEditAction,
@@ -164,6 +167,9 @@ def dispatch_action(
         ("session_tree", "GET", SessionTreeAction),
         ("settings", "GET", SettingsGetAction),
         ("session/start", "POST", SessionStartAction),
+        ("compress", "POST", CreateCompressorSessionAction),
+        ("compress/{session_id}/approve", "POST", ApproveCompressorAction),
+        ("compress/{session_id}/deny", "POST", DenyCompressorAction),
         ("session/{session_id}/raw", "GET", SessionRawAction),
         ("session/{session_id}/instruction", "POST", SessionInstructionAction),
         ("session/{session_id}/meta", "PATCH", SessionMetaEditAction),
@@ -441,6 +447,14 @@ def search_sessions_api():
     """
     response_data, status_code = dispatch_action(
         action="search", params={}, request_data=request
+    )
+    return jsonify(response_data), status_code
+
+
+@app.route("/api/v1/compress", methods=["POST"])
+def create_compressor_session():
+    response_data, status_code = dispatch_action(
+        action="compress", params={}, request_data=request
     )
     return jsonify(response_data), status_code
 

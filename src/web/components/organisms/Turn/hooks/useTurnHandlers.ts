@@ -60,6 +60,7 @@ export const useTurnHandlers = ({
 
   const handleCopy = useCallback(async (): Promise<void> => {
     await navigator.clipboard.writeText(editedContent)
+
     toast.addToast({ status: 'success', title: 'Copied to clipboard.' })
   }, [editedContent, toast])
 

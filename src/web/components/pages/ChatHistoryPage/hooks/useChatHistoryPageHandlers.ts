@@ -30,7 +30,6 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
 
   const expertMode = (settings.expert_mode as boolean) ?? true
 
-
   return {
     sessions,
     sessionDetail,

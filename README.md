@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://github.com/s-age/pipe/tree/main/src/web/static/images/logo.png" alt="pipe logo" width="200">
+</p>
+
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0--1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/)
 
 # pipe: A Clean Jailbreak from LLM Obfuscation
@@ -59,52 +63,147 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
 
 ## Setup & Installation
 
-1. **Prerequisites:** Python 3.12 or higher and `gemini-cli` installed in your PATH.
-2. **Install Dependencies:** `pip install -e .`
-3. **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
-   - For consistency with `.env.default`, add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
-   - For CLI usage, ensure `GOOGLE_API_KEY` is set in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`) as `takt` expects this variable.
+### Prerequisites
 
-## Integration with `gemini-cli` (One-Time Setup)
+- **Python 3.12 or higher**
+- **Node.js 18 or higher** (for the web UI)
+- **gemini-cli** installed in your PATH (optional, for CLI mode)
 
-To use advanced features like agent-driven **Compression** and session **Forking** in `gemini-cli` mode, you must first register `pipe`'s tool server. This command tells `gemini-cli` how to communicate with this project's tools.
+### Python Backend Setup
 
-Execute the following command once:
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/s-age/pipe.git
+   cd pipe
+   ```
+
+2. **Install Python dependencies:**
+
+   ```bash
+   pip install -e .
+   ```
+
+   This installs the package in editable mode along with all dependencies listed in `pyproject.toml`.
+
+3. **Set up environment variables:**
+   Create a `.env` file in the project root (copy from `.env.default`):
+
+   ```bash
+   cp .env.default .env
+   ```
+
+   Edit `.env` to add your API keys:
+   - For API mode: `GEMINI_API_KEY='YOUR_API_KEY_HERE'`
+   - For CLI mode: Ensure `GOOGLE_API_KEY` is set in your environment
+
+4. **Run the Flask web server:**
+
+   ```bash
+   flask --app pipe.web.app run --host=0.0.0.0 --port=5001
+   ```
+
+   The web UI will be available at `http://127.0.0.1:5001`.
+
+5. **Run the MCP server (for advanced features):**
+
+   ```bash
+   python -m pipe.cli.mcp_server
+   ```
+
+   This starts the Model Context Protocol server for agent-driven compression and forking.
+
+6. **Run the LSP server (optional, for IDE integration):**
+   ```bash
+   python -m src.pipe.cli.pygls_server > /dev/null 2>&1 &
+   ```
+   This starts the Language Server Protocol server in the background.
+
+### TypeScript/React Frontend Setup
+
+1. **Install Node.js dependencies:**
+
+   ```bash
+   npm install
+   ```
+
+   This installs all dependencies listed in `package.json`.
+
+2. **Start the development server:**
+
+   ```bash
+   npm start
+   ```
+
+   The React application will start on `http://localhost:5173` (default Vite port).
+
+3. **Build for production:**
+
+   ```bash
+   npm run build
+   ```
+
+   This compiles TypeScript and builds the production bundle.
+
+4. **Run tests:**
+
+   ```bash
+   npm test
+   ```
+
+5. **Run linting:**
+   ```bash
+   npm run lint
+   ```
+
+### Using the `takt` Command
+
+The `takt` command is the primary CLI interface for interacting with pipe sessions.
+
+**Basic usage examples:**
+
+- **Start a new session:**
+
+  ```bash
+  takt --purpose "Create a React component" --background "Build a user profile component" --roles "roles/engineer.md" --instruction "Create a UserProfile component with name and email fields."
+  ```
+
+- **Continue an existing session:**
+
+  ```bash
+  takt --session <SESSION_ID> --instruction "Add validation to the form."
+  ```
+
+- **Compress a session:**
+
+  ```bash
+  takt --session <SESSION_ID> --compress
+  ```
+
+- **Dry run (preview the JSON prompt):**
+  ```bash
+  takt --purpose "Test" --instruction "Hello" --dry-run
+  ```
+
+**Available options:**
+
+- `--purpose`: Define the session's overall purpose
+- `--background`: Provide background context
+- `--roles`: Specify role files (comma-separated)
+- `--instruction`: The instruction for the agent
+- `--session`: Continue an existing session by ID
+- `--compress`: Compress the session history
+- `--dry-run`: Preview the generated prompt without executing
+
+### Integration with `gemini-cli` (One-Time Setup)
+
+To use advanced features like agent-driven **Compression** and session **Forking** in `gemini-cli` mode, register pipe's tool server:
 
 ```bash
 gemini mcp add pipe_tools "python -m pipe.cli.mcp_server" --working-dir /path/to/pipe
 ```
 
-_(Replace `/path/to/pipe` with the actual absolute path to this project's directory.)_
-
-**Benefit:** After this integration, all tool calls made during a session (such as `create_verified_summary` or `read_file`) will become visible in the session history file (`.json`), providing complete transparency and auditability of the agent's actions.
-
-### Language Server Protocol (LSP) Server
-
-`pipe` also provides a Language Server Protocol (LSP) server based on `pygls`. This server integrates with IDEs (like VS Code) to enable advanced understanding and manipulation of Python code. Its purpose is to provide context for LLMs to better understand the codebase.
-
-**Provided LSP Features:**
-
-- **Code Analysis**: Provides definition locations and docstrings for classes, functions, and variables.
-- **Code Snippets**: Extracts code snippets for specific symbols.
-- **Type Hints**: Displays type hints for functions and classes.
-- **Symbol References**: Searches for symbol references within files.
-
-**How to Run:**
-
-The LSP server can be started in the background using the following command. This allows IDEs to connect to the server.
-
-```bash
-python -m src.pipe.cli.pygls_server > /dev/null 2>&1 &
-```
-
-- This command starts the server in the background and redirects standard output and standard error to `/dev/null`.
-- To stop the server, use the `kill` command with the Process Group ID (PGID) displayed upon startup. For example, if the PGID is `83272`:
-  ```bash
-  kill -s TERM -- -83272
-  ```
-
-**Note:** This server is designed to be connected to by an LSP client (e.g., an IDE like VS Code). Running it standalone will produce minimal visible output.
+Replace `/path/to/pipe` with the actual absolute path to this project's directory.
 
 ---
 

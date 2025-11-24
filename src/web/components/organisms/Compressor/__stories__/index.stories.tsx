@@ -61,32 +61,41 @@ export default {
 
 export const Default = (): React.ReactElement => (
   <div style={{ padding: 16 }}>
-    <Compressor sessionDetail={createMockSessionDetail('session_abc123', 8)} />
+    <Compressor
+      sessionDetail={createMockSessionDetail('session_abc123', 8)}
+      onRefresh={async () => {}}
+    />
   </div>
 )
 
 export const WithManyTurns = (): React.ReactElement => (
   <div style={{ padding: 16 }}>
-    <Compressor sessionDetail={createMockSessionDetail('session_xyz789', 50)} />
+    <Compressor
+      sessionDetail={createMockSessionDetail('session_xyz789', 50)}
+      onRefresh={async () => {}}
+    />
   </div>
 )
 
 export const WithFewTurns = (): React.ReactElement => (
   <div style={{ padding: 16 }}>
-    <Compressor sessionDetail={createMockSessionDetail('session_minimal', 3)} />
+    <Compressor
+      sessionDetail={createMockSessionDetail('session_minimal', 3)}
+      onRefresh={async () => {}}
+    />
   </div>
 )
 
 export const ApprovalStage = (): React.ReactElement => {
   const [summary, setSummary] = React.useState(mockSummary)
-  const [, setStage] = React.useState<'form' | 'approval'>('approval')
   const [, setError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [, setCompressorSessionId] = React.useState<string | null>('mock-compressor-id')
 
   const handleDeny = (): void => {
-    setStage('form')
     setSummary('')
     setError(null)
+    setCompressorSessionId(null)
   }
 
   return (
@@ -95,11 +104,13 @@ export const ApprovalStage = (): React.ReactElement => {
         summary={summary}
         sessionId="mock-session-id"
         setSummary={setSummary}
-        setStage={setStage}
         setError={setError}
         setIsSubmitting={setIsSubmitting}
         handleDeny={handleDeny}
         isSubmitting={isSubmitting}
+        compressorSessionId="mock-compressor-id"
+        setCompressorSessionId={() => {}}
+        onRefresh={async () => {}}
       />
     </div>
   )

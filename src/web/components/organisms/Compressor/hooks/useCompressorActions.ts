@@ -10,9 +10,11 @@ import {
 type UseCompressorActionsProperties = {
   sessionId: string
   setSummary: (summary: string) => void
-  setStage: (stage: 'form' | 'approval') => void
   setError: (error: string | null) => void
   setIsSubmitting: (isSubmitting: boolean) => void
+  compressorSessionId: string | null
+  setCompressorSessionId: (id: string | null) => void
+  onRefresh: () => Promise<void>
 }
 
 export type UseCompressorActionsReturn = {
@@ -24,9 +26,11 @@ export type UseCompressorActionsReturn = {
 export const useCompressorActions = ({
   sessionId,
   setSummary,
-  setStage,
   setError,
-  setIsSubmitting
+  setIsSubmitting,
+  compressorSessionId,
+  setCompressorSessionId,
+  onRefresh
 }: UseCompressorActionsProperties): UseCompressorActionsReturn => {
   const form = useOptionalFormContext()
 
@@ -42,45 +46,87 @@ export const useCompressorActions = ({
         session_id: sessionId,
         policy: formValues.policy,
         target_length: formValues.targetLength ?? 500,
-        start_turn: formValues.startTurn - 1,
-        end_turn: formValues.endTurn - 1
+        start_turn: formValues.startTurn,
+        end_turn: formValues.endTurn
       }
       const response = await createCompressor(requestData)
-      // TODO: Get summary from response or another API
-      setSummary(`Compression session created: ${response.session_id}`)
-      setStage('approval')
+      // Log full response for debugging (helps diagnose missing summary)
+      console.log('createCompressor response:', response)
+
+      // Store the compressor session ID for approval
+      if (response?.session_id) {
+        setCompressorSessionId(response.session_id)
+      }
+
+      // If the server returned a verified summary, use it.
+      if (response?.summary) {
+        setSummary(response.summary)
+      } else if (response?.message) {
+        setSummary(response.message)
+      } else if (response?.session_id) {
+        // Provide a clearer user-facing message instead of raw session id
+        setSummary(
+          `Compression started. Verifier session created (id: ${response.session_id}). The verified summary will appear here when ready.`
+        )
+      } else {
+        setSummary(
+          'Compression started. The verified summary will appear here when ready.'
+        )
+      }
     } catch (error_: unknown) {
       setError(String(error_))
     } finally {
       setIsSubmitting(false)
     }
-  }, [form, sessionId, setSummary, setStage, setError, setIsSubmitting])
+  }, [form, sessionId, setSummary, setError, setIsSubmitting, setCompressorSessionId])
 
   const handleApprove = useCallback(async (): Promise<void> => {
     setIsSubmitting(true)
     try {
-      await approveCompressor(sessionId)
-      setStage('form')
+      if (!compressorSessionId) {
+        throw new Error('Compressor session ID not available')
+      }
+      await approveCompressor(compressorSessionId)
       setSummary('')
+      setCompressorSessionId(null)
+      if (onRefresh) {
+        await onRefresh()
+      }
     } catch (error_: unknown) {
       setError(String(error_))
     } finally {
       setIsSubmitting(false)
     }
-  }, [sessionId, setIsSubmitting, setStage, setSummary, setError])
+  }, [
+    compressorSessionId,
+    setIsSubmitting,
+    setSummary,
+    setError,
+    setCompressorSessionId,
+    onRefresh
+  ])
 
   const handleDeny = useCallback(async (): Promise<void> => {
     setIsSubmitting(true)
     try {
-      await denyCompressor(sessionId)
-      setStage('form')
+      if (!compressorSessionId) {
+        throw new Error('Compressor session ID not available')
+      }
+      await denyCompressor(compressorSessionId)
       setSummary('')
+      setCompressorSessionId(null)
     } catch (error_: unknown) {
       setError(String(error_))
     } finally {
       setIsSubmitting(false)
     }
-  }, [sessionId, setIsSubmitting, setStage, setSummary, setError])
+  }, [
+    compressorSessionId,
+    setIsSubmitting,
+    setSummary,
+    setError,
+    setCompressorSessionId
+  ])
 
   return {
     handleExecute,

@@ -9,7 +9,13 @@ export type CreateCompressorRequest = {
 }
 
 export type CreateCompressorResponse = {
-  session_id: string
+  session_id?: string
+  status?: 'approved' | 'rejected' | 'pending'
+  summary?: string
+  start_turn?: number
+  end_turn?: number
+  verifier_session_id?: string
+  message?: string
 }
 
 export const createCompressor = async (

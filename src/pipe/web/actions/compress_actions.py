@@ -12,7 +12,7 @@ class CreateCompressorSessionAction(BaseAction):
         try:
             request_data = CreateCompressorRequest(**self.request_data.get_json())
 
-            compressor_session_id = session_service.run_takt_for_compression(
+            result = session_service.run_takt_for_compression(
                 request_data.session_id,
                 request_data.policy,
                 request_data.target_length,
@@ -20,7 +20,7 @@ class CreateCompressorSessionAction(BaseAction):
                 request_data.end_turn,
             )
 
-            return {"session_id": compressor_session_id}, 200
+            return result, 200
 
         except ValidationError as e:
             return {"message": str(e)}, 422
@@ -40,7 +40,7 @@ class ApproveCompressorAction(BaseAction):
             # session_serviceの承認メソッドを呼び出す
             session_service.approve_compression(session_id)
 
-            return {}, 204
+            return {"message": "Compression approved"}, 200
 
         except Exception as e:
             return {"message": str(e)}, 500

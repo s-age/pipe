@@ -35,6 +35,8 @@ class SessionService:
         self.current_session_id: str | None = None
         self.current_instruction: str | None = None
 
+        self.history_manager = self  # For compatibility with tools
+
         tz_name = settings.timezone
         try:
             self.timezone_obj = zoneinfo.ZoneInfo(tz_name)
@@ -451,64 +453,6 @@ class SessionService:
             ):
                 self._save_session(session)
 
-    def create_compressor_session(self) -> Session:
-        """Create a new session for compression with role-based purpose
-        and background."""
-        role_path = "roles/compressor.md"
-        purpose, background = self._get_compressor_role_info(role_path)
-
-        return self.create_new_session(
-            purpose=purpose,
-            background=background,
-            roles=[role_path],
-            multi_step_reasoning_enabled=False,
-        )
-
-    def _get_compressor_role_info(self, role_path: str) -> tuple[str, str]:
-        """Get purpose and background from compressor role file."""
-        from pipe.core.utils.file import read_text_file
-
-        full_path = f"{self.project_root}/{role_path}"
-        content = read_text_file(full_path)
-        if not content:
-            raise ValueError(f"Role file {role_path} not found or empty")
-
-        lines = content.split("\n")
-        purpose = ""
-        background = ""
-
-        # Extract purpose
-        for line in lines[:10]:
-            line = line.strip()
-            if line.startswith("# Role:"):
-                purpose = line.replace("# Role:", "").strip()
-                break
-            elif line.startswith("Your task is to"):
-                purpose = line.replace("Your task is to", "").strip()
-                break
-
-        # Extract background from ## Workflow
-        in_workflow = False
-        workflow_lines = []
-        for line in lines:
-            if line.startswith("## Workflow"):
-                in_workflow = True
-                continue
-            elif in_workflow and line.startswith("##"):
-                break
-            elif in_workflow:
-                workflow_lines.append(line.strip())
-        background = "\n".join(workflow_lines).strip()
-
-        if not purpose:
-            purpose = "Compress conversation history"
-        if not background:
-            background = (
-                "Follow the compression workflow to reduce conversation length."
-            )
-
-        return purpose, background
-
     def build_compressor_instruction(
         self,
         session_id: str,
@@ -530,14 +474,11 @@ class SessionService:
         target_length: int,
         start_turn: int,
         end_turn: int,
-    ) -> str:
+    ) -> dict[str, str]:
         """Create compressor session and run initial takt command."""
+        import re
         import subprocess
         import sys
-
-        # Create new session with compressor role
-        session = self.create_compressor_session()
-        compressor_session_id = session.session_id
 
         # Build instruction
         instruction = self.build_compressor_instruction(
@@ -549,17 +490,81 @@ class SessionService:
             sys.executable,
             "-m",
             "pipe.cli.takt",
-            "--session",
-            compressor_session_id,
+            "--purpose",
+            "Act as a compression agent to summarize the target session "
+            "according to the specified request",
+            "--background",
+            "Responsible for compressing conversation history and creating "
+            "summaries based on the specified policy and target length",
+            "--roles",
+            "roles/compressor.md",
             "--instruction",
             instruction,
         ]
 
-        subprocess.run(
-            command, capture_output=True, text=True, check=True, encoding="utf-8"
+        env = os.environ.copy()
+        env["PYTHONPATH"] = os.path.join(self.project_root, "src")
+
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=True,
+            encoding="utf-8",
+            env=env,
         )
 
-        return compressor_session_id
+        # Extract session ID from stderr
+        match = re.search(r"New session created: (.+)", result.stderr)
+        if match:
+            compressor_session_id = match.group(1)
+        else:
+            raise RuntimeError("Failed to extract session ID from takt output")
+
+        # Reload the session to get the summary
+        session = self.get_session(compressor_session_id)
+        if not session or not session.turns:
+            raise ValueError("Session or turns not found after creation")
+
+        # Find the last model_response
+        last_model_response = None
+        for turn in reversed(session.turns):
+            if turn.type == "model_response":
+                last_model_response = turn
+                break
+
+        summary = ""
+        verifier_session_id = None
+        if last_model_response:
+            content = last_model_response.content
+            # Extract summary after ## SUMMARY CONTENTS
+            summary_start = content.find("## SUMMARY CONTENTS")
+            if summary_start != -1:
+                summary = content[summary_start + len("## SUMMARY CONTENTS") :].strip()
+
+                # Extract Verifier Session ID
+                verifier_id_start = summary.find("Verifier Session ID: ")
+                if verifier_id_start == -1:
+                    verifier_id_start = summary.find("検証セッションID: ")
+                if verifier_id_start != -1:
+                    verifier_line = summary[verifier_id_start:]
+                    if "`" in verifier_line:
+                        start = verifier_line.find("`") + 1
+                        end = verifier_line.find("`", start)
+                        verifier_session_id = verifier_line[start:end]
+                    else:
+                        parts = verifier_line.split()
+                        if len(parts) > 3:
+                            verifier_session_id = parts[3]
+
+                    # Remove the Verifier Session ID line from summary
+                    summary = summary[:verifier_id_start].strip()
+
+        return {
+            "session_id": compressor_session_id,
+            "summary": summary,
+            "verifier_session_id": verifier_session_id or "",
+        }
 
     def approve_compression(self, compressor_session_id: str) -> None:
         """Approve the compression by running takt with approval instruction."""
@@ -586,7 +591,47 @@ class SessionService:
             command, capture_output=True, text=True, check=True, encoding="utf-8"
         )
 
+        # The compressor agent will handle the replacement and cleanup
+        # Also delete the compressor session after approval
+        self.delete_session(compressor_session_id)
+
     def deny_compression(self, compressor_session_id: str) -> None:
         """Deny the compression and clean up the compressor session."""
         # Simply delete the compressor session
         self.delete_session(compressor_session_id)
+
+    def replace_turn_range_with_summary(
+        self, session_id: str, summary: str, start_index: int, end_index: int
+    ) -> None:
+        """Replace a range of turns with a summary."""
+        session = self.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
+
+        if (
+            start_index < 0
+            or end_index >= len(session.turns)
+            or start_index > end_index
+        ):
+            raise ValueError("Invalid turn range")
+
+        # Create a compressed history turn
+        from pipe.core.models.turn import CompressedHistoryTurn
+        from pipe.core.utils.datetime import get_current_timestamp
+
+        compressed_turn = CompressedHistoryTurn(
+            type="compressed_history",
+            content=summary,
+            original_turns_range=[start_index + 1, end_index + 1],  # 1-based
+            timestamp=get_current_timestamp(),
+        )
+
+        # Replace the range with the compressed turn
+        session.turns = (
+            session.turns[:start_index]
+            + [compressed_turn]
+            + session.turns[end_index + 1 :]
+        )
+
+        # Save the session
+        self.repository.save(session)

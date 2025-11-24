@@ -11,8 +11,9 @@ class CreateCompressorRequest(BaseModel):
     @field_validator("start_turn", "end_turn")
     @classmethod
     def validate_turns(cls, v, info):
-        if v < 0:
-            raise ValueError("Turn index must be non-negative")
+        # In the API we accept 1-based turn numbers. Validate they are >= 1.
+        if v < 1:
+            raise ValueError("Turn number must be >= 1")
         return v
 
     @field_validator("end_turn")
@@ -39,6 +40,7 @@ class CreateCompressorRequest(BaseModel):
     def validate_turn_exists(cls, v, info):
         session = info.data.get("session")
         if session:
-            if v >= len(session.turns):
+            # `v` is 1-based here; valid range is 1..len(session.turns)
+            if v > len(session.turns):
                 raise ValueError(f"Turn {v} does not exist in session")
         return v

@@ -37,10 +37,6 @@ export const overlaySendButton = style({
   padding: '12px 12px 8px',
   boxShadow: '0 0 8px #00ffff',
   transform: 'translateY(-50%)',
-  ':disabled': {
-    cursor: 'not-allowed',
-    background: colors.muted
-  },
   ':hover': {
     background: colors.cyan,
     boxShadow:
@@ -50,5 +46,10 @@ export const overlaySendButton = style({
     background: colors.cyan,
     boxShadow:
       '0 0 6px #00ffff, 0 0 12px #00ffff, 0 0 18px #00ffff, 0 0 24px #00ffff77, 0 12px 30px rgba(0,0,0,0.26), inset 0 0 10px #00ffff33'
+  },
+  ':disabled': {
+    cursor: 'not-allowed',
+    background: colors.muted,
+    boxShadow: 'none'
   }
 })

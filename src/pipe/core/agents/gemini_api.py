@@ -129,7 +129,7 @@ def load_tools(project_root: str) -> list:
                 "name": tool_name,
                 "description": description,
                 "parameters": {
-                    "type": "OBJECT",
+                    "type": "object",
                     "properties": properties,
                     "required": required,
                 },

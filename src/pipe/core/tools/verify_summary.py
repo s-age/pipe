@@ -141,8 +141,11 @@ def verify_summary(
                 from pipe.core.services.prompt_service import PromptService
 
                 prompt_service = PromptService(project_root, settings)
-                response = call_gemini_api(session_service, prompt_service)
-                response_text = response.text.strip()
+                response_stream = call_gemini_api(session_service, prompt_service)
+                response_text = ""
+                for chunk in response_stream:
+                    response_text += chunk.text
+                response_text = response_text.strip()
             finally:
                 session_service.current_session = original_current_session
         elif api_mode == "gemini-cli":

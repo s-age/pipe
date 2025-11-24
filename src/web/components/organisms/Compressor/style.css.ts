@@ -58,14 +58,12 @@ export const muted = style({
 })
 
 export const form = style({
-  display: 'flex',
   flex: '1',
+  height: '100%',
   margin: '0 12px',
-  marginBottom: '0',
-  padding: '20px',
+  marginBottom: '16px',
   borderRadius: '8px',
   background: colors.gray,
-  flexDirection: 'column',
   gap: '10px'
 })
 
@@ -140,12 +138,13 @@ export const secondary = style({
 })
 
 export const previewBox = style({
-  marginTop: '12px',
-  padding: '10px',
+  height: '100%',
+  overflowY: 'auto',
+  padding: '20px',
   border: `1px solid ${colors.gray}`,
   borderRadius: '6px',
   color: colors.white,
-  background: colors.pureBlack
+  wordBreak: 'break-all'
 })
 
 export const previewTitle = style({
@@ -182,7 +181,6 @@ export const pre = style({
 export const buttonContainer = style({
   position: 'sticky',
   bottom: '16px',
-  margin: '0 12px',
   padding: '12px',
   borderRadius: '0 0 8px 8px',
   background: colors.darkGray,
@@ -204,5 +202,8 @@ export const executeButton = style({
     transform: 'translateY(-1px)',
     boxShadow:
       '0 0 6px #00ffff, 0 0 12px #00ffff, 0 0 18px #00ffff, 0 0 24px #00ffff77, 0 12px 30px rgba(0,0,0,0.26), inset 0 0 10px #00ffff33'
+  },
+  ':disabled': {
+    boxShadow: 'none'
   }
 })

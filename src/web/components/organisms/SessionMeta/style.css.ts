@@ -177,5 +177,8 @@ export const saveMetaButton = style({
     transform: 'translateY(-1px)',
     boxShadow:
       '0 0 6px #00ffff, 0 0 12px #00ffff, 0 0 18px #00ffff, 0 0 24px #00ffff77, 0 12px 30px rgba(0,0,0,0.26), inset 0 0 10px #00ffff33'
+  },
+  ':disabled': {
+    boxShadow: 'none'
   }
 })

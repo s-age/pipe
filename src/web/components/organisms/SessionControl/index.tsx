@@ -36,7 +36,9 @@ export const SessionControl = ({
           <SessionMeta sessionDetail={sessionDetail} onRefresh={onRefresh} />
         )}
 
-        {active === 'compress' && <Compressor sessionDetail={sessionDetail} />}
+        {active === 'compress' && (
+          <Compressor sessionDetail={sessionDetail} onRefresh={onRefresh} />
+        )}
 
         {active === 'therapist' && <Therapist />}
       </div>

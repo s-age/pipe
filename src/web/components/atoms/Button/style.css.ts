@@ -23,7 +23,9 @@ export const button = recipe({
             backgroundColor: colors.muted,
             color: colors.white,
             cursor: 'not-allowed',
-            opacity: 0.8
+            opacity: 0.8,
+            border: 'none',
+            boxShadow: 'none'
           }
         }
       },

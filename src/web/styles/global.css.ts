@@ -23,7 +23,7 @@ globalStyle('html, body, #root', {
 globalStyle('input, textarea, select', {
   boxSizing: 'border-box',
   background: colors.black,
-  color: colors.muted,
+  color: colors.white,
   borderRadius: '4px',
   padding: '8px',
   border: `1px solid ${colors.muted}`

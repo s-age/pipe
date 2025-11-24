@@ -4,15 +4,25 @@ import type { JSX } from 'react'
 
 import { ModalManager } from '@/components/organisms/Modal'
 
+export type ConfirmDescriptor = {
+  type: 'confirm'
+  props: {
+    title?: string
+    message?: string
+    onConfirm?: () => Promise<void> | void
+    onCancel?: () => void
+  }
+}
+
 export type ModalEventData = {
   id?: number | string
-  content?: React.ReactNode
+  content?: React.ReactNode | ConfirmDescriptor
   options?: Record<string, unknown>
 }
 
 export type ModalEntry = {
   id: number | string
-  content: React.ReactNode | null
+  content: React.ReactNode | ConfirmDescriptor | null
 }
 
 let stack: ModalEntry[] = []

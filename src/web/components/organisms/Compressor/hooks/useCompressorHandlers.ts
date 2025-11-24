@@ -1,36 +1,36 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 
-type UseCompressorStateHandlersProperties = {
+type useCompressorHandlersProperties = {
   effectiveMax: number
 }
 
-export type UseCompressorStateHandlersReturn = {
-  stage: 'form' | 'approval'
+export type useCompressorHandlersReturn = {
   summary: string
   error: string | null
   isSubmitting: boolean
   startLocal: number
   endLocal: number
+  compressorSessionId: string | null
   handleStartChange: (event: ChangeEvent<HTMLSelectElement>) => void
   handleEndChange: (event: ChangeEvent<HTMLSelectElement>) => void
   endOptions: number[]
   handleDeny: () => void
   setSummary: (summary: string) => void
-  setStage: (stage: 'form' | 'approval') => void
   setError: (error: string | null) => void
   setIsSubmitting: (isSubmitting: boolean) => void
+  setCompressorSessionId: (id: string | null) => void
 }
 
-export const useCompressorStateHandlers = ({
+export const useCompressorHandlers = ({
   effectiveMax
-}: UseCompressorStateHandlersProperties): UseCompressorStateHandlersReturn => {
-  const [stage, setStage] = useState<'form' | 'approval'>('form')
+}: useCompressorHandlersProperties): useCompressorHandlersReturn => {
   const [summary, setSummary] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [startLocal, setStartLocal] = useState<number>(1)
   const [endLocal, setEndLocal] = useState<number>(effectiveMax)
+  const [compressorSessionId, setCompressorSessionId] = useState<string | null>(null)
 
   const handleStartChange = useCallback(
     (startEvent: ChangeEvent<HTMLSelectElement>): void => {
@@ -70,25 +70,25 @@ export const useCompressorStateHandlers = ({
   }, [startLocal, effectiveMax])
 
   const handleDeny = useCallback((): void => {
-    setStage('form')
     setSummary('')
     setError(null)
+    setCompressorSessionId(null)
   }, [])
 
   return {
-    stage,
     summary,
     error,
     isSubmitting,
     startLocal,
     endLocal,
+    compressorSessionId,
     handleStartChange,
     handleEndChange,
     endOptions,
     handleDeny,
     setSummary,
-    setStage,
     setError,
-    setIsSubmitting
+    setIsSubmitting,
+    setCompressorSessionId
   }
 }

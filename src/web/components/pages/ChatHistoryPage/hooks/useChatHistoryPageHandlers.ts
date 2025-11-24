@@ -18,7 +18,8 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
   const { state, actions } = useSessionStore()
   const {
     sessionTree: { sessions, currentSessionId },
-    sessionDetail
+    sessionDetail,
+    settings
   } = state
 
   const { selectSession, setSessionDetail, refreshSessions } = actions
@@ -27,7 +28,8 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
 
   useSessionLoader({ state, actions })
 
-  const expertMode = (state.settings.expert_mode as boolean) ?? true
+  const expertMode = (settings.expert_mode as boolean) ?? true
+
 
   return {
     sessions,

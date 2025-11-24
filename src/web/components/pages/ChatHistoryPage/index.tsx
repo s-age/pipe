@@ -47,5 +47,3 @@ export const ChatHistoryPage = (): JSX.Element => {
     </div>
   )
 }
-
-// Default export removed — use named export `ChatHistoryPage`

@@ -21,7 +21,13 @@ export const useSessionLoader = ({
   const {
     sessionTree: { currentSessionId }
   } = state
-  const { setSessions, setCurrentSessionId, setSessionDetail, setRoleOptions } = actions
+  const {
+    setSessions,
+    setCurrentSessionId,
+    setSessionDetail,
+    setRoleOptions,
+    updateSettings
+  } = actions
 
   const loadSessions = useCallback(async (): Promise<void> => {
     try {
@@ -49,6 +55,8 @@ export const useSessionLoader = ({
 
       if (sessionIdToLoad) {
         const data = await getSessionDashboard(sessionIdToLoad)
+
+        updateSettings(data.settings)
 
         // `session_tree` from server may be hierarchical (SessionTreeNode[]) or flat pairs.
         if (Array.isArray(data.session_tree) && data.session_tree.length > 0) {
@@ -95,7 +103,8 @@ export const useSessionLoader = ({
     setCurrentSessionId,
     setSessions,
     setSessionDetail,
-    setRoleOptions
+    setRoleOptions,
+    updateSettings
   ])
 
   useInitialLoading(loadSessions)

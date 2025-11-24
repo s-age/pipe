@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/s-age/pipe/tree/main/src/web/static/images/logo.png" alt="pipe logo" width="200">
+  <img src="https://raw.githubusercontent.com/s-age/pipe/main/src/web/static/images/logo.png" alt="pipe logo" width="200">
 </p>
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0--1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/)

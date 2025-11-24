@@ -5,10 +5,9 @@ virtualenv/
 env/
 venv/
 ENV/
-/sessions/
-setting.yml
 .gemini/
 .coverage
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -24,7 +23,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -52,3 +50,22 @@ node_modules/
 # Playwright
 playwright-report/
 test-results/
+
+/sessions/
+
+*storybook.log
+storybook-static
+
+# Whoosh Index
+whoosh_index/
+
+# Build outputs and temporary files
+build_output.txt
+eslint_output.txt
+eslint_report.json
+eslint_report.txt
+eslint_strict.txt
+commit_message.txt
+
+# Test session files
+tests/sessions/

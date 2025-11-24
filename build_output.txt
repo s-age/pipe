@@ -1,0 +1,17 @@
+
+> pipe@1.0.0 build
+> tsc -p src/web && vite build
+
+vite v7.2.2 building client environment for production...
+
+/assets/css/style.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+transforming...
+✓ 281 modules transformed.
+rendering chunks...
+computing gzip size...
+../../dist/web/index.html                   0.90 kB │ gzip:   0.47 kB
+../../dist/web/assets/index-CZEZdX0C.css    2.62 kB │ gzip:   0.91 kB
+../../dist/web/assets/index-DPTf7azs.css   21.75 kB │ gzip:   4.86 kB
+../../dist/web/assets/index-D8lILX6M.js     8.87 kB │ gzip:   3.40 kB
+../../dist/web/assets/index-DS8xd4AJ.js   453.96 kB │ gzip: 140.57 kB
+✓ built in 1.81s

@@ -35,6 +35,8 @@ class SessionService:
         self.current_session_id: str | None = None
         self.current_instruction: str | None = None
 
+        self.history_manager = self  # For compatibility with tools
+
         tz_name = settings.timezone
         try:
             self.timezone_obj = zoneinfo.ZoneInfo(tz_name)
@@ -222,6 +224,16 @@ class SessionService:
         update_reference_persist(session.references, file_path, new_persist_state)
         self._save_session(session)
 
+    def toggle_reference_disabled_in_session(self, session_id: str, file_path: str):
+        session = self._fetch_session(session_id)
+        if not session:
+            return
+
+        from pipe.core.domains.references import toggle_reference_disabled
+
+        toggle_reference_disabled(session.references, file_path)
+        self._save_session(session)
+
     def decrement_all_references_ttl_in_session(self, session_id: str):
         session = self._fetch_session(session_id)
         if not session:
@@ -387,10 +399,20 @@ class SessionService:
         session_id = f"{parent_id}/{session_hash}" if parent_id else session_hash
 
         # TODO: Default hyperparameters should be handled more cleanly
+        print(
+            f"DEBUG: type of self.settings.parameters.temperature: "
+            f"{type(self.settings.parameters.temperature)}",
+            file=sys.stderr,
+        )
+        print(
+            f"DEBUG: self.settings.parameters.temperature: "
+            f"{self.settings.parameters.temperature}",
+            file=sys.stderr,
+        )
         default_hyperparameters = Hyperparameters(
-            temperature=self.settings.parameters.temperature.model_dump(),
-            top_p=self.settings.parameters.top_p.model_dump(),
-            top_k=self.settings.parameters.top_k.model_dump(),
+            temperature=self.settings.parameters.temperature.value,
+            top_p=self.settings.parameters.top_p.value,
+            top_k=self.settings.parameters.top_k.value,
         )
 
         session = Session(
@@ -401,9 +423,11 @@ class SessionService:
             roles=roles,
             multi_step_reasoning_enabled=multi_step_reasoning_enabled,
             token_count=token_count,
-            hyperparameters=hyperparameters
-            if hyperparameters is not None
-            else default_hyperparameters,
+            hyperparameters=(
+                hyperparameters
+                if hyperparameters is not None
+                else default_hyperparameters
+            ),
             artifacts=artifacts or [],
             procedure=procedure,
         )
@@ -418,7 +442,7 @@ class SessionService:
 
     def expire_old_tool_responses(self, session_id: str):
         """
-        Expires the message content of old tool_response turns to save tokens.
+        Expires the message content of old tool_responses to save tokens.
         """
         session = self._fetch_session(session_id)
         if session:
@@ -428,3 +452,186 @@ class SessionService:
                 session.turns, self.settings.tool_response_expiration
             ):
                 self._save_session(session)
+
+    def build_compressor_instruction(
+        self,
+        session_id: str,
+        policy: str,
+        target_length: int,
+        start_turn: int,
+        end_turn: int,
+    ) -> str:
+        """Build the instruction for compressor session."""
+        return (
+            f"Compress session {session_id} from turn {start_turn} to {end_turn} "
+            f"with policy '{policy}' and target length {target_length}"
+        )
+
+    def run_takt_for_compression(
+        self,
+        session_id: str,
+        policy: str,
+        target_length: int,
+        start_turn: int,
+        end_turn: int,
+    ) -> dict[str, str]:
+        """Create compressor session and run initial takt command."""
+        import re
+        import subprocess
+        import sys
+
+        # Build instruction
+        instruction = self.build_compressor_instruction(
+            session_id, policy, target_length, start_turn, end_turn
+        )
+
+        # Execute takt command
+        command = [
+            sys.executable,
+            "-m",
+            "pipe.cli.takt",
+            "--purpose",
+            "Act as a compression agent to summarize the target session "
+            "according to the specified request",
+            "--background",
+            "Responsible for compressing conversation history and creating "
+            "summaries based on the specified policy and target length",
+            "--roles",
+            "roles/compressor.md",
+            "--instruction",
+            instruction,
+        ]
+
+        env = os.environ.copy()
+        env["PYTHONPATH"] = os.path.join(self.project_root, "src")
+
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=True,
+            encoding="utf-8",
+            env=env,
+        )
+
+        # Extract session ID from stderr
+        match = re.search(r"New session created: (.+)", result.stderr)
+        if match:
+            compressor_session_id = match.group(1)
+        else:
+            raise RuntimeError("Failed to extract session ID from takt output")
+
+        # Reload the session to get the summary
+        session = self.get_session(compressor_session_id)
+        if not session or not session.turns:
+            raise ValueError("Session or turns not found after creation")
+
+        # Find the last model_response
+        last_model_response = None
+        for turn in reversed(session.turns):
+            if turn.type == "model_response":
+                last_model_response = turn
+                break
+
+        summary = ""
+        verifier_session_id = None
+        if last_model_response:
+            content = last_model_response.content
+            # Extract summary after ## SUMMARY CONTENTS
+            summary_start = content.find("## SUMMARY CONTENTS")
+            if summary_start != -1:
+                summary = content[summary_start + len("## SUMMARY CONTENTS") :].strip()
+
+                # Extract Verifier Session ID
+                verifier_id_start = summary.find("Verifier Session ID: ")
+                if verifier_id_start == -1:
+                    verifier_id_start = summary.find("検証セッションID: ")
+                if verifier_id_start != -1:
+                    verifier_line = summary[verifier_id_start:]
+                    if "`" in verifier_line:
+                        start = verifier_line.find("`") + 1
+                        end = verifier_line.find("`", start)
+                        verifier_session_id = verifier_line[start:end]
+                    else:
+                        parts = verifier_line.split()
+                        if len(parts) > 3:
+                            verifier_session_id = parts[3]
+
+                    # Remove the Verifier Session ID line from summary
+                    summary = summary[:verifier_id_start].strip()
+
+        return {
+            "session_id": compressor_session_id,
+            "summary": summary,
+            "verifier_session_id": verifier_session_id or "",
+        }
+
+    def approve_compression(self, compressor_session_id: str) -> None:
+        """Approve the compression by running takt with approval instruction."""
+        import subprocess
+        import sys
+
+        # Execute takt command on the compressor session with approval instruction
+        approval_instruction = (
+            "The user has approved the compression. "
+            "Proceed with replacing the session turns using the "
+            "replace_session_turns tool."
+        )
+        command = [
+            sys.executable,
+            "-m",
+            "pipe.cli.takt",
+            "--session",
+            compressor_session_id,
+            "--instruction",
+            approval_instruction,
+        ]
+
+        subprocess.run(
+            command, capture_output=True, text=True, check=True, encoding="utf-8"
+        )
+
+        # The compressor agent will handle the replacement and cleanup
+        # Also delete the compressor session after approval
+        self.delete_session(compressor_session_id)
+
+    def deny_compression(self, compressor_session_id: str) -> None:
+        """Deny the compression and clean up the compressor session."""
+        # Simply delete the compressor session
+        self.delete_session(compressor_session_id)
+
+    def replace_turn_range_with_summary(
+        self, session_id: str, summary: str, start_index: int, end_index: int
+    ) -> None:
+        """Replace a range of turns with a summary."""
+        session = self.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
+
+        if (
+            start_index < 0
+            or end_index >= len(session.turns)
+            or start_index > end_index
+        ):
+            raise ValueError("Invalid turn range")
+
+        # Create a compressed history turn
+        from pipe.core.models.turn import CompressedHistoryTurn
+        from pipe.core.utils.datetime import get_current_timestamp
+
+        compressed_turn = CompressedHistoryTurn(
+            type="compressed_history",
+            content=summary,
+            original_turns_range=[start_index + 1, end_index + 1],  # 1-based
+            timestamp=get_current_timestamp(),
+        )
+
+        # Replace the range with the compressed turn
+        session.turns = (
+            session.turns[:start_index]
+            + [compressed_turn]
+            + session.turns[end_index + 1 :]
+        )
+
+        # Save the session
+        self.repository.save(session)

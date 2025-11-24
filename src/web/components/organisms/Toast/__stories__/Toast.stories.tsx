@@ -1,0 +1,76 @@
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
+import React from 'react'
+import type { JSX } from 'react'
+
+import { AppStoreProvider } from '@/stores/useAppStore'
+import { addToast } from '@/stores/useToastStore'
+
+import { Toasts } from '../index'
+
+const Wrapper = ({ children }: React.PropsWithChildren<unknown>): JSX.Element => (
+  <AppStoreProvider>
+    {children}
+    <Toasts />
+  </AppStoreProvider>
+)
+
+const Meta = {
+  title: 'Organisms/Toast',
+  component: Toasts,
+  tags: ['autodocs'],
+  decorators: [
+    (Story: () => JSX.Element): JSX.Element => <Wrapper>{<Story />}</Wrapper>
+  ]
+} satisfies StoryMeta<typeof Toasts>
+
+export default Meta
+type Story = StoryObj<typeof Meta>
+
+const Controls = (): JSX.Element => (
+  <div style={{ display: 'flex', gap: 8 }}>
+    <button
+      onClick={() => {
+        addToast({
+          status: 'success',
+          title: 'Saved',
+          description: 'Your changes were saved.'
+        })
+      }}
+    >
+      Success
+    </button>
+    <button
+      onClick={() => {
+        addToast({
+          status: 'failure',
+          title: 'Failed',
+          description: 'Something went wrong.'
+        })
+      }}
+    >
+      Failure
+    </button>
+    <button
+      onClick={() => {
+        addToast({
+          status: 'warning',
+          title: 'Warning',
+          description: 'Check this out.'
+        })
+      }}
+    >
+      Warning
+    </button>
+    <button
+      onClick={() => {
+        addToast({ status: 'success', description: 'No title example', duration: 3000 })
+      }}
+    >
+      No title
+    </button>
+  </div>
+)
+
+export const Basic: Story = {
+  render: (): JSX.Element => <Controls />
+}

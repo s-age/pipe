@@ -7,6 +7,7 @@ import os
 from jinja2 import Environment, FileSystemLoader
 from pipe.core.models.settings import Settings
 from pipe.core.repositories.session_repository import SessionRepository
+from pipe.core.services.file_indexer_service import FileIndexerService
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 
@@ -35,3 +36,7 @@ class ServiceFactory:
     def create_prompt_service(self) -> PromptService:
         """Creates a PromptService with its dependencies."""
         return PromptService(self.project_root, self.jinja_env)
+
+    def create_file_indexer_service(self) -> FileIndexerService:
+        """Creates a FileIndexerService with its dependencies."""
+        return FileIndexerService(self.project_root)

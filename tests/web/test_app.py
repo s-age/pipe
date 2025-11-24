@@ -2,7 +2,9 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
+from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.reference import Reference
+from pipe.core.models.role import RoleOption
 from pipe.core.models.session import Session
 
 # The Flask app object needs to be imported for testing
@@ -13,7 +15,8 @@ class TestAppApi(unittest.TestCase):
     def setUp(self):
         # Configure the app for testing
         app.config["TESTING"] = True
-        self.client = app.test_client()
+        with app.app_context():
+            self.client = app.test_client()
 
         # We patch the session_service used by the app to isolate the web layer
         # and avoid actual file system operations.
@@ -38,10 +41,10 @@ class TestAppApi(unittest.TestCase):
         mock_session.references = [Reference(path=file_path, disabled=False, ttl=3)]
         self.mock_session_service.get_session.return_value = mock_session
 
-        response = self.client.post(
-            f"/api/session/{session_id}/references/ttl/{reference_index}",
-            data=json.dumps({"ttl": new_ttl}),
-            content_type="application/json",
+        response = self.client.open(
+            f"/api/v1/session/{session_id}/references/{reference_index}/ttl",
+            method="PATCH",
+            json={"ttl": new_ttl},
         )
 
         self.assertEqual(response.status_code, 200)
@@ -54,10 +57,10 @@ class TestAppApi(unittest.TestCase):
         """Tests the API response when the session ID does not exist."""
         self.mock_session_service.get_session.return_value = None
 
-        response = self.client.post(
-            "/api/session/nonexistent/references/ttl/0",
-            data=json.dumps({"ttl": 5}),
-            content_type="application/json",
+        response = self.client.open(
+            "/api/session/nonexistent/references/0/ttl",
+            method="PATCH",
+            json={"ttl": 5},
         )
 
         self.assertEqual(response.status_code, 404)
@@ -69,10 +72,11 @@ class TestAppApi(unittest.TestCase):
         mock_session.references = [Reference(path="test.py")]
         self.mock_session_service.get_session.return_value = mock_session
 
-        response = self.client.post(
-            f"/api/session/{session_id}/references/ttl/99",  # Index 99 is out of range
-            data=json.dumps({"ttl": 5}),
-            content_type="application/json",
+        response = self.client.open(
+            f"/api/v1/session/{session_id}/references/99/ttl",
+            # Index 99 is out of range
+            method="PATCH",
+            json={"ttl": 5},
         )
 
         self.assertEqual(response.status_code, 400)
@@ -93,10 +97,10 @@ class TestAppApi(unittest.TestCase):
 
         for payload in invalid_payloads:
             with self.subTest(payload=payload):
-                response = self.client.post(
-                    f"/api/session/{session_id}/references/ttl/0",
-                    data=json.dumps(payload),
-                    content_type="application/json",
+                response = self.client.open(
+                    f"/api/v1/session/{session_id}/references/0/ttl",
+                    method="PATCH",
+                    json=payload,
                 )
                 self.assertEqual(response.status_code, 422)
 
@@ -106,10 +110,22 @@ class TestAppApi(unittest.TestCase):
         (
             self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
         ) = mock_sessions
-        response = self.client.get("/api/sessions")
+        response = self.client.get("/api/v1/session_tree")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertTrue(data["success"])
+        self.assertIn("sessions", data)
+        self.assertEqual(data["sessions"], mock_sessions)
+
+    def test_get_session_tree_api_v1(self):
+        """Tests the v1 API endpoint for getting session tree."""
+        mock_sessions = [["session1", {"purpose": "Test 1"}]]
+        (
+            self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
+        ) = mock_sessions
+        response = self.client.get("/api/v1/session_tree")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertIn("sessions", data)
         self.assertEqual(data["sessions"], mock_sessions)
 
     def test_get_session_api_success(self):
@@ -119,22 +135,22 @@ class TestAppApi(unittest.TestCase):
         mock_session.to_dict.return_value = {"id": session_id, "purpose": "Details"}
         self.mock_session_service.get_session.return_value = mock_session
 
-        response = self.client.get(f"/api/session/{session_id}")
+        response = self.client.get(f"/api/v1/session/{session_id}")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertTrue(data["success"])
+        self.assertIn("session", data)
         self.assertEqual(data["session"]["purpose"], "Details")
 
     def test_get_session_api_not_found(self):
         """Tests the 404 response when getting a non-existent session."""
         self.mock_session_service.get_session.return_value = None
-        response = self.client.get("/api/session/non_existent")
+        response = self.client.get("/api/v1/session/non_existent")
         self.assertEqual(response.status_code, 404)
 
     def test_delete_session_api(self):
         """Tests successfully deleting a session via API."""
         session_id = "test_id_to_delete"
-        response = self.client.delete(f"/api/session/{session_id}")
+        response = self.client.delete(f"/api/v1/session/{session_id}")
         self.assertEqual(response.status_code, 200)
         self.mock_session_service.delete_session.assert_called_once_with(session_id)
 
@@ -150,27 +166,27 @@ class TestAppApi(unittest.TestCase):
             "purpose": "Test",
             "background": "BG",
             "instruction": "Do thing",
-            "roles": "",
+            "roles": [],
             "parent": None,
-            "references": "",
+            "references": [],
             "multi_step_reasoning_enabled": False,
+            "hyperparameters": Hyperparameters().model_dump(),
         }
         response = self.client.post(
-            "/api/session/new",
+            "/api/v1/session/start",
             data=json.dumps(payload),
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertTrue(data["success"])
         self.assertEqual(data["session_id"], "new_session_123")
         mock_subprocess_run.assert_called_once()
 
     def test_create_new_session_api_validation_error(self):
         """Tests the validation error for the new session API."""
         response = self.client.post(
-            "/api/session/new",
+            "/api/v1/session/start",
             data=json.dumps({}),  # Empty payload
             content_type="application/json",
         )
@@ -182,8 +198,8 @@ class TestAppApi(unittest.TestCase):
         turn_index = 0
         payload = {"instruction": "new instruction"}
 
-        response = self.client.post(
-            f"/api/session/{session_id}/turn/{turn_index}/edit",
+        response = self.client.patch(
+            f"/api/v1/session/{session_id}/turn/{turn_index}",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -193,13 +209,61 @@ class TestAppApi(unittest.TestCase):
             session_id, turn_index, payload
         )
 
+    def test_edit_turn_api_empty_content(self):
+        """Tests that empty content is rejected."""
+        session_id = "sid"
+        turn_index = 0
+
+        # Test empty content
+        payload = {"content": ""}
+        response = self.client.patch(
+            f"/api/v1/session/{session_id}/turn/{turn_index}",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("cannot be empty", response.get_json()["message"].lower())
+
+        # Test whitespace-only content
+        payload = {"content": "   "}
+        response = self.client.patch(
+            f"/api/v1/session/{session_id}/turn/{turn_index}",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("cannot be empty", response.get_json()["message"].lower())
+
+    def test_edit_turn_api_empty_instruction(self):
+        """Tests that empty instruction is rejected."""
+        session_id = "sid"
+        turn_index = 0
+
+        # Test empty instruction
+        payload = {"instruction": ""}
+        response = self.client.patch(
+            f"/api/v1/session/{session_id}/turn/{turn_index}",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("cannot be empty", response.get_json()["message"].lower())
+
+        # Test whitespace-only instruction
+        payload = {"instruction": "   \n\t  "}
+        response = self.client.patch(
+            f"/api/v1/session/{session_id}/turn/{turn_index}",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
     def test_edit_session_meta_api_success(self):
         """Tests successfully editing session metadata via API."""
         session_id = "sid"
         payload = {"purpose": "New Purpose"}
 
-        response = self.client.post(
-            f"/api/session/{session_id}/meta/edit",
+        response = self.client.patch(
+            f"/api/v1/session/{session_id}/meta",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -210,28 +274,27 @@ class TestAppApi(unittest.TestCase):
         )
 
     def test_delete_turn_api_success(self):
-        """Tests successfully deleting a turn."""
-        response = self.client.delete("/api/session/sid/turn/0")
+        response = self.client.delete("/api/v1/session/sid/turn/0")
         self.assertEqual(response.status_code, 200)
         self.mock_session_service.delete_turn.assert_called_once_with("sid", 0)
 
     def test_delete_turn_api_not_found(self):
         """Tests 404 error when deleting a turn from a non-existent session."""
         self.mock_session_service.delete_turn.side_effect = FileNotFoundError
-        response = self.client.delete("/api/session/sid/turn/0")
+        response = self.client.delete("/api/v1/session/sid/turn/0")
         self.assertEqual(response.status_code, 404)
 
     def test_delete_turn_api_index_error(self):
         """Tests 400 error when deleting a turn with an invalid index."""
         self.mock_session_service.delete_turn.side_effect = IndexError
-        response = self.client.delete("/api/session/sid/turn/99")
+        response = self.client.delete("/api/v1/session/sid/turn/99")
         self.assertEqual(response.status_code, 400)
 
     def test_edit_todos_api_success(self):
         """Tests successfully editing todos."""
         payload = {"todos": [{"title": "Test Todo", "checked": False}]}
-        response = self.client.post(
-            "/api/session/sid/todos/edit",
+        response = self.client.patch(
+            "/api/v1/session/sid/todos",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -245,15 +308,15 @@ class TestAppApi(unittest.TestCase):
 
     def test_delete_todos_api_success(self):
         """Tests successfully deleting all todos from a session."""
-        response = self.client.delete("/api/session/sid/todos")
+        response = self.client.delete("/api/v1/session/sid/todos")
         self.assertEqual(response.status_code, 200)
         self.mock_session_service.delete_todos.assert_called_once_with("sid")
 
     def test_edit_references_api_success(self):
         """Tests successfully editing references."""
         payload = {"references": [{"path": "/test.py", "disabled": False, "ttl": -1}]}
-        response = self.client.post(
-            "/api/session/sid/references/edit",
+        response = self.client.patch(
+            "/api/v1/session/sid/references",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -265,7 +328,7 @@ class TestAppApi(unittest.TestCase):
         self.mock_session_service.fork_session.return_value = "new_forked_id"
         payload = {"session_id": "original_id"}
         response = self.client.post(
-            "/api/session/fork/1",
+            "/api/v1/session/original_id/fork/1",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -279,7 +342,7 @@ class TestAppApi(unittest.TestCase):
         self.mock_session_service.fork_session.side_effect = FileNotFoundError
         payload = {"session_id": "original_id"}
         response = self.client.post(
-            "/api/session/fork/1",
+            "/api/v1/session/original_id/fork/1",
             data=json.dumps(payload),
             content_type="application/json",
         )
@@ -293,10 +356,10 @@ class TestAppApi(unittest.TestCase):
         mock_session.turns = [mock_turn]
         self.mock_session_service.get_session.return_value = mock_session
 
-        response = self.client.get("/api/session/sid/turns?since=0")
+        response = self.client.get("/api/v1/session/sid/turns?since=0")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertTrue(data["success"])
+        self.assertIn("turns", data)
         self.assertEqual(len(data["turns"]), 1)
         self.assertEqual(data["turns"][0]["instruction"], "test")
 
@@ -308,14 +371,13 @@ class TestAppApi(unittest.TestCase):
         self.mock_session_service.get_session.return_value = mock_session
 
         mock_process = MagicMock()
+        mock_process.stdout = MagicMock()
         mock_process.stdout.readline.side_effect = ["line 1\n", "line 2\n", ""]
         mock_process.wait.return_value = 0
         mock_popen.return_value = mock_process
-
-        payload = {"instruction": "stream test"}
         response = self.client.post(
-            "/api/session/sid/instruction",
-            data=json.dumps(payload),
+            "/api/v1/session/sid/instruction",
+            data=json.dumps({"instruction": "stream test"}),
             content_type="application/json",
         )
 
@@ -333,14 +395,55 @@ class TestAppApi(unittest.TestCase):
         mock_session.pools = [1, 2, 3, 4, 5, 6, 7]  # Pool is full
         self.mock_session_service.get_session.return_value = mock_session
 
-        payload = {"instruction": "stream test"}
         response = self.client.post(
-            "/api/session/sid/instruction",
-            data=json.dumps(payload),
+            "/api/v1/session/sid/instruction",
+            data=json.dumps({"instruction": "stream test"}),
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 400)
+
+    @patch("pipe.web.actions.get_roles_action.RoleService")
+    def test_get_session_dashboard_api_success(self, MockRoleServiceForGetRolesAction):
+        """Tests the /api/v1/bff/session-dashboard/{session_id} endpoint."""
+        session_id = "test_session_id"
+
+        # Mock SessionTreeAction dependencies (uses self.mock_session_service)
+        mock_list_sessions = self.mock_session_service.list_sessions
+        mock_list_sessions.return_value.get_sorted_by_last_updated.return_value = [
+            ["session1", {"purpose": "Test 1"}],
+            ["session2", {"purpose": "Test 2"}],
+        ]
+
+        # Mock SessionGetAction dependencies (uses self.mock_session_service)
+        mock_session = MagicMock(spec=Session)
+        mock_session.to_dict.return_value = {"id": session_id, "purpose": "Details"}
+        self.mock_session_service.get_session.return_value = mock_session
+
+        # Mock GetRolesAction dependencies
+        mock_role_service = MockRoleServiceForGetRolesAction.return_value
+        mock_role_service.get_all_role_options.return_value = [
+            RoleOption(label="python/developer", value="roles/python/developer.md"),
+            RoleOption(label="engineer", value="roles/engineer.md"),
+        ]
+
+        response = self.client.get(f"/api/v1/bff/session-dashboard/{session_id}")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+
+        self.assertIn("session_tree", data)
+        self.assertIn("current_session", data)
+        self.assertIn("settings", data)
+        self.assertIn("role_options", data)
+
+        self.assertEqual(len(data["session_tree"]), 2)
+        self.assertEqual(data["current_session"]["purpose"], "Details")
+        self.assertIsInstance(data["settings"], dict)
+        self.assertEqual(len(data["role_options"]), 2)
+        self.assertEqual(data["role_options"][0]["label"], "python/developer")
+        self.assertEqual(data["role_options"][0]["value"], "roles/python/developer.md")
+        self.assertEqual(data["role_options"][1]["label"], "engineer")
+        self.assertEqual(data["role_options"][1]["value"], "roles/engineer.md")
 
 
 class TestAppViews(unittest.TestCase):
@@ -368,7 +471,7 @@ class TestAppViews(unittest.TestCase):
         (
             self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
         ) = []
-        response = self.client.get("/new_session")
+        response = self.client.get("/start_session")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Create New Session", response.data)
 

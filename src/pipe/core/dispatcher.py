@@ -44,6 +44,10 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         )
     elif api_mode == "gemini-cli":
         from pipe.core.models.turn import ModelResponseTurn
+
+        # Token counting for gemini-cli: use the TokenService to count tokens
+        # for the model response text so we don't leave token_count at 0.
+        from pipe.core.services.token_service import TokenService
         from pipe.core.utils.datetime import get_current_timestamp
 
         from .delegates import gemini_cli_delegate
@@ -53,6 +57,14 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         session_service.merge_pool_into_turns(session_id)
 
         model_response_text = gemini_cli_delegate.run(args, session_service)
+        try:
+            token_service = TokenService(session_service.settings)
+            token_count = token_service.count_tokens(model_response_text)
+        except Exception:
+            # Defensive fallback: if token counting fails for any reason,
+            # leave token_count as 0 (consistent with prior behavior) but
+            # do not crash the dispatcher.
+            token_count = 0
         print(model_response_text)
         final_turn = ModelResponseTurn(
             type="model_response",

@@ -2,13 +2,88 @@
   "name": "pipe",
   "version": "1.0.0",
   "description": "[![License: CC0-1.0](https://img.shields.io/badge/License-CC0--1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/) # pipe: A Clean Jailbreak from LLM Obfuscation",
+  "type": "module",
   "main": "index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
+    "start": "vite",
+    "build": "tsc -p src/web && vite build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "lint": "eslint \"{src,tests}/**/*.{js,jsx,ts,tsx}\" --fix",
+    "check:hooks": "node scripts/check-hooks.js",
+    "format": "prettier \"{src,tests}/**/*.{js,jsx,ts,tsx,json,css,md}\" --write",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "@vanilla-extract/recipes": "^0.5.7",
+    "clsx": "^2.1.1",
+    "marked": "^12.0.1",
+    "minimatch": "^10.1.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.51.3",
+    "react-router-dom": "^7.9.5",
+    "ts-morph": "^27.0.2",
+    "zod": "^3.23.4"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.2",
+    "@playwright/test": "^1.56.1",
+    "@storybook/addon-a11y": "^10.0.6",
+    "@storybook/addon-docs": "^10.0.6",
+    "@storybook/addon-vitest": "^10.0.6",
+    "@storybook/react-vite": "^10.0.6",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/react-router-dom": "^5.3.3",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "@vanilla-extract/css": "^1.14.1",
+    "@vanilla-extract/vite-plugin": "^5.1.1",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/browser-playwright": "^4.0.8",
+    "@vitest/coverage-v8": "^4.0.8",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-storybook": "^10.0.6",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "jest": "^30.2.0",
+    "playwright": "^1.56.1",
+    "prettier": "^3.6.2",
+    "storybook": "^10.0.6",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.47.0",
+    "vite": "^7.2.2",
+    "vitest": "^4.0.8"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "repository": {
     "type": "git",
@@ -17,12 +92,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/s-age/pipe/issues"
   },
-  "homepage": "https://github.com/s-age/pipe#readme",
-  "devDependencies": {
-    "@playwright/test": "^1.56.1"
-  }
+  "homepage": "https://github.com/s-age/pipe#readme"
 }

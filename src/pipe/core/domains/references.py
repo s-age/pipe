@@ -43,6 +43,14 @@ def update_reference_persist(
     sort_references_by_ttl(references_collection)
 
 
+def toggle_reference_disabled(references_collection: "ReferenceCollection", path: str):
+    for ref in references_collection.data:
+        if ref.path == path:
+            ref.disabled = not ref.disabled
+            break
+    sort_references_by_ttl(references_collection)
+
+
 def decrement_all_references_ttl(references_collection: "ReferenceCollection"):
     for ref in references_collection:
         if not ref.disabled and not ref.persist:

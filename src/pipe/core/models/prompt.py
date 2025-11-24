@@ -57,14 +57,14 @@ class Prompt(BaseModel):
         # 1. Build Hyperparameters
         merged_params = settings.parameters.model_dump()
         if session.hyperparameters:
-            session_params = session.hyperparameters.model_dump()
-            for key, value_desc_pair in session_params.items():
-                if (
-                    key in merged_params
-                    and value_desc_pair
-                    and "value" in value_desc_pair
-                ):
-                    merged_params[key]["value"] = value_desc_pair["value"]
+            if session.hyperparameters.temperature is not None:
+                merged_params["temperature"]["value"] = (
+                    session.hyperparameters.temperature
+                )
+            if session.hyperparameters.top_p is not None:
+                merged_params["top_p"]["value"] = session.hyperparameters.top_p
+            if session.hyperparameters.top_k is not None:
+                merged_params["top_k"]["value"] = session.hyperparameters.top_k
 
         hyperparameters = PromptHyperparameters.from_merged_params(merged_params)
 
@@ -140,11 +140,11 @@ class Prompt(BaseModel):
             "artifacts": artifacts if artifacts else None,
             "procedure": session.procedure if session.procedure else None,
             "procedure_content": procedure_content if procedure_content else None,
-            "reasoning_process": {
-                "description": "Think step-by-step to achieve the goal."
-            }
-            if session.multi_step_reasoning_enabled
-            else None,
+            "reasoning_process": (
+                {"description": "Think step-by-step to achieve the goal."}
+                if session.multi_step_reasoning_enabled
+                else None
+            ),
         }
 
         return cls(**prompt_data)

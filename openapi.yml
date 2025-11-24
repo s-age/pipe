@@ -1,0 +1,1288 @@
+openapi: 3.0.0
+info:
+  title: Pipe CLI Web API
+  version: 1.0.0
+paths:
+  # V1 API Endpoints
+
+  # BFF (Backend for Frontend) Endpoints
+  /api/v1/bff/session-dashboard/{session_id}:
+    get:
+      summary: Get session dashboard with tree (BFF)
+      description: Returns session tree, current session details, and settings in a single request
+      tags:
+        - v1
+        - bff
+      x-aggregated-actions:
+        - session_tree
+        - session/{session_id}
+        - settings
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session to retrieve
+      responses:
+        '200':
+          description: Session dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_tree:
+                    type: array
+                    description: List of all sessions
+                    items:
+                      type: object
+                  current_session:
+                    type: object
+                    description: Details of the current session
+                  settings:
+                    $ref: '#/components/schemas/Settings'
+                  role_options:
+                    type: array
+                    description: List of available role options
+                    items:
+                      $ref: '#/components/schemas/RoleOption'
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  # Roles (v1)
+  /api/v1/roles:
+    get:
+      summary: Get available roles (v1)
+      description: Returns a list of available roles for selection, including their labels and values.
+      tags:
+        - v1
+      responses:
+        '200':
+          description: List of role options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleOption'
+        '500':
+          description: Internal server error
+
+  # Procedures (v1)
+  /api/v1/procedures:
+    get:
+      summary: Get available procedures (v1)
+      description: Returns a list of available procedures for selection, including their labels and values.
+      tags:
+        - v1
+      responses:
+        '200':
+          description: List of procedure options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcedureOption'
+        '500':
+          description: Internal server error
+
+  # Session Tree (v1)
+  /api/v1/session_tree:
+    get:
+      summary: Get session tree (v1)
+      tags:
+        - v1
+      responses:
+        '200':
+          description: List of sessions in tree structure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      type: object
+        '500':
+          description: Internal server error
+
+  # Session Start (v1)
+  /api/v1/session/start:
+    post:
+      summary: Start a new session (v1)
+      tags:
+        - v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSessionRequest'
+      responses:
+        '200':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+        '422':
+          description: Validation error
+        '500':
+          description: Internal server error
+
+  # Compress Session (v1)
+  /api/v1/compress:
+    post:
+      summary: Create a compressor session (v1)
+      tags:
+        - v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompressorRequest'
+      responses:
+        '200':
+          description: Compressor session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+        '422':
+          description: Validation error
+        '500':
+          description: Internal server error
+
+  # Generic v1 dispatcher
+  /api/v1/{action}:
+    get:
+      summary: Generic v1 API dispatcher (GET)
+      tags:
+        - v1
+      parameters:
+        - in: path
+          name: action
+          schema:
+            type: string
+          required: true
+          description: Action path (e.g., 'session_tree')
+      responses:
+        '200':
+          description: Success
+        '404':
+          description: Unknown action
+        '500':
+          description: Internal server error
+    post:
+      summary: Generic v1 API dispatcher (POST)
+      tags:
+        - v1
+      parameters:
+        - in: path
+          name: action
+          schema:
+            type: string
+          required: true
+          description: Action path
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Success
+        '404':
+          description: Unknown action
+        '500':
+          description: Internal server error
+
+  # Legacy Endpoints (Deprecated - use v1 instead)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  # --- Singular form routes to match implementation in src/pipe/web/app.py ---
+  /api/v1/session/start:
+    post:
+      summary: Start a new session (singular path used by the Flask app)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSessionRequest'
+      responses:
+        '200':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+        '422':
+          description: Validation error
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}:
+    get:
+      summary: Get a specific session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session to retrieve
+      responses:
+        '200':
+          description: Session data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    type: object
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session to delete
+      responses:
+        '200':
+          description: Session deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/turn/{turn_index}:
+    delete:
+      summary: Delete a specific turn from a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: turn_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the turn to delete
+      responses:
+        '200':
+          description: Turn deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Turn index out of range
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/turns/{turn_index}:
+    patch:
+      summary: Edit a specific turn in a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: turn_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the turn to edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Turn updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: No data provided or turn index out of range
+        '403':
+          description: Value error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/meta:
+    patch:
+      summary: Edit session metadata (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditSessionMetaRequest'
+      responses:
+        '200':
+          description: Session metadata updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/search:
+    post:
+      summary: Search sessions by query
+      description: "Search session files (filename, purpose, background, and turns) for a given query string. Returns matching session IDs and titles."
+      tags:
+        - v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchSessionsRequest'
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchSessionsResponse'
+        '400':
+          description: Validation error (bad request)
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/todos:
+    patch:
+      summary: Edit session todos (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTodosRequest'
+      responses:
+        '200':
+          description: Session todos updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete all todos from a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      responses:
+        '200':
+          description: Todos deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/references:
+    patch:
+      summary: Edit session references (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReferencesRequest'
+      responses:
+        '200':
+          description: Session references updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/references/{reference_index}/persist:
+    patch:
+      summary: Edit reference persist state (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: reference_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the reference to edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReferencePersistRequest'
+      responses:
+        '200':
+          description: Reference persist state updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '400':
+          description: Reference index out of range
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/references/{reference_index}/ttl:
+    patch:
+      summary: Edit reference TTL (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: reference_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the reference to edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReferenceTtlRequest'
+      responses:
+        '200':
+          description: Reference TTL updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '400':
+          description: Reference index out of range
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/references/{reference_index}/toggle:
+    patch:
+      summary: Toggle reference disabled state (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: path
+          name: reference_index
+          schema:
+            type: integer
+          required: true
+          description: The index of the reference to toggle
+      responses:
+        '200':
+          description: Reference disabled state toggled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  disabled:
+                    type: boolean
+                    description: The new disabled state after toggle
+        '404':
+          description: Session not found
+        '400':
+          description: Reference index out of range
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/hyperparameters:
+    patch:
+      summary: Edit only hyperparameters for a session (temperature, top_p/topP, top_k/topK)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditHyperparametersRequest'
+      responses:
+        '200':
+          description: Session hyperparameters updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: No data provided or no hyperparameter fields
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/multi_step_reasoning:
+    patch:
+      summary: Edit only multi-step reasoning setting for a session
+      tags:
+        - v1
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditMultiStepReasoningRequest'
+      responses:
+        '200':
+          description: Multi-step reasoning setting updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  session:
+                    $ref: '#/components/schemas/SessionDetail'
+        '400':
+          description: No data provided
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/fork/{fork_index}:
+    post:
+      summary: Fork a session from a specific turn (singular path used by Flask app)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session to fork
+        - in: path
+          name: fork_index
+          schema:
+            type: integer
+          required: true
+          description: The turn index to fork from
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Session forked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  new_session_id:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '400':
+          description: Fork turn index out of range
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/instruction:
+    post:
+      summary: Send an instruction to a session (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendInstructionRequest'
+      responses:
+        '200':
+          description: Instruction sent successfully (streaming response)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          description: Too many tasks in processing pool
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/session/{session_id}/turns:
+    get:
+      summary: Get session turns (singular path)
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+        - in: query
+          name: since
+          schema:
+            type: integer
+            default: 0
+          description: The index from which to retrieve turns
+      responses:
+        '200':
+          description: List of turns
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  turns:
+                    type: array
+                    items:
+                      type: object
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/settings:
+    get:
+      summary: Get system settings (singular path)
+      responses:
+        '200':
+          description: System settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  settings:
+                    $ref: '#/components/schemas/Settings'
+        '500':
+          description: Internal server error
+
+  # File Search Endpoints
+  /api/v1/search_l2:
+    post:
+      summary: Search for level 1 candidates and prefetch level 2 data
+      tags:
+        - file-search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchL2Request'
+      responses:
+        '200':
+          description: Level 1 candidates and prefetched level 2 data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchL2Response'
+        '400':
+          description: Invalid request payload
+        '500':
+          description: Internal server error
+
+  /api/v1/ls:
+    post:
+      summary: Get ls-like data for a final path
+      tags:
+        - file-search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LsRequest'
+      responses:
+        '200':
+          description: List of file/directory entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LsEntry'
+        '400':
+          description: Invalid request payload
+        '500':
+          description: Internal server error
+
+  /api/v1/index_files:
+    post:
+      summary: Create or update the Whoosh file index
+      tags:
+        - file-search
+      responses:
+        '200':
+          description: File index created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    RoleOption:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Display label for the role (e.g., 'python/developer')
+        value:
+          type: string
+          description: Unique identifier for the role (e.g., 'roles/python/developer.md')
+      required:
+        - label
+        - value
+    ProcedureOption:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Display label for the procedure (e.g., 'reversi_game')
+        value:
+          type: string
+          description: Unique identifier for the procedure (e.g., 'procedures/reversi_game.md')
+      required:
+        - label
+        - value
+    StartSessionRequest:
+      type: object
+      properties:
+        purpose:
+          type: string
+        background:
+          type: string
+        instruction:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+          nullable: true
+        parent:
+          type: string
+          nullable: true
+        references:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reference'
+          nullable: true
+        artifacts:
+          type: array
+          items:
+            type: string
+          nullable: true
+        procedure:
+          type: string
+          nullable: true
+        multi_step_reasoning_enabled:
+          type: boolean
+          default: false
+        hyperparameters:
+          $ref: '#/components/schemas/Hyperparameters'
+          nullable: true
+      required:
+        - purpose
+        - background
+        - instruction
+    CreateCompressorRequest:
+      type: object
+      properties:
+        session_id:
+          type: string
+        policy:
+          type: string
+        target_length:
+          type: integer
+        start_turn:
+          type: integer
+          minimum: 0
+        end_turn:
+          type: integer
+          minimum: 0
+      required:
+        - session_id
+        - policy
+        - target_length
+        - start_turn
+        - end_turn
+    EditSessionMetaRequest:
+      type: object
+      properties:
+        purpose:
+          type: string
+          nullable: true
+        background:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: string
+          nullable: true
+        artifacts:
+          type: array
+          items:
+            type: string
+          nullable: true
+        procedure:
+          type: string
+          nullable: true
+        multi_step_reasoning_enabled:
+          type: boolean
+          nullable: true
+        token_count:
+          type: integer
+          nullable: true
+        hyperparameters:
+          $ref: '#/components/schemas/Hyperparameters'
+          nullable: true
+    EditTodosRequest:
+      type: object
+      properties:
+        todos:
+          type: array
+          items:
+            $ref: '#/components/schemas/TodoItem'
+      required:
+        - todos
+    EditReferencesRequest:
+      type: object
+      properties:
+        references:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reference'
+      required:
+        - references
+    EditReferencePersistRequest:
+      type: object
+      properties:
+        persist:
+          type: boolean
+      required:
+        - persist
+    EditReferenceTtlRequest:
+      type: object
+      properties:
+        ttl:
+          type: integer
+          minimum: 0
+          description: The new time-to-live value, must be a non-negative integer.
+      required:
+        - ttl
+    ForkSessionRequest:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: The ID of the session to fork
+      required:
+        - session_id
+    SendInstructionRequest:
+      type: object
+      properties:
+        instruction:
+          type: string
+      required:
+        - instruction
+    Hyperparameters:
+      type: object
+      properties:
+        temperature:
+          type: number
+          nullable: true
+        top_p:
+          type: number
+          nullable: true
+        top_k:
+          type: number
+          nullable: true
+    Settings:
+      type: object
+      properties:
+        model:
+          type: string
+        search_model:
+          type: string
+        context_limit:
+          type: integer
+        api_mode:
+          type: string
+        language:
+          type: string
+        yolo:
+          type: boolean
+        max_tool_calls:
+          type: integer
+        hyperparameters:
+          $ref: '#/components/schemas/Hyperparameters'
+        expert_mode:
+          type: boolean
+        sessions_path:
+          type: string
+        reference_ttl:
+          type: integer
+        tool_response_expiration:
+          type: integer
+        timezone:
+          type: string
+    EditHyperparametersRequest:
+      type: object
+      description: |
+        Accepts hyperparameter fields to update. Supports snake_case keys (`top_p`, `top_k`)
+        and camelCase variants (`topP`, `topK`). Only provided fields will be updated.
+      properties:
+        temperature:
+          type: number
+          nullable: true
+        top_p:
+          type: number
+          nullable: true
+        topP:
+          type: number
+          nullable: true
+        top_k:
+          type: integer
+          nullable: true
+        topK:
+          type: integer
+          nullable: true
+    EditMultiStepReasoningRequest:
+      type: object
+      properties:
+        multi_step_reasoning_enabled:
+          type: boolean
+      required:
+        - multi_step_reasoning_enabled
+    Reference:
+      type: object
+      properties:
+        path:
+          type: string
+        disabled:
+          type: boolean
+          default: false
+        ttl:
+          type: integer
+          nullable: true
+        persist:
+          type: boolean
+          default: false
+      required:
+        - path
+    TodoItem:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          default: ''
+        checked:
+          type: boolean
+          default: false
+      required:
+        - title
+    SearchL2Request:
+      type: object
+      properties:
+        current_path_list:
+          type: array
+          items:
+            type: string
+          description: Current confirmed path list (e.g., ['src', 'components'])
+      required:
+        - current_path_list
+        - query
+    SearchL2Response:
+      type: object
+      properties:
+        level_1_candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Level1Candidate'
+          description: List of 1st level search candidates
+        level_2_prefetched:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/Level1Candidate'
+          description: 2nd level prefetched data (directory name -> candidate list)
+      required:
+        - level_1_candidates
+        - level_2_prefetched
+    Level1Candidate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: File or directory name
+        is_dir:
+          type: boolean
+          description: Flag indicating if it's a directory
+        path_segment:
+          type: string
+          description: Path segment
+      required:
+        - name
+        - is_dir
+        - path_segment
+    LsRequest:
+      type: object
+      properties:
+        final_path_list:
+          type: array
+          items:
+            type: string
+          description: Final confirmed path list (e.g., ['src', 'components', 'Header'])
+      required:
+        - final_path_list
+    LsEntry:
+      type: object
+      properties:
+        name:
+          type: string
+          description: File or directory name
+        is_dir:
+          type: boolean
+          description: Flag indicating if it's a directory
+        size:
+          type: integer
+          nullable: true
+          description: File size in bytes
+        last_modified:
+          type: number
+          nullable: true
+          description: Last modified timestamp (UNIX timestamp)
+        path:
+          type: string
+          description: Full path of the file
+      required:
+        - name
+        - is_dir
+        - path
+    SearchSessionsRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          description: Query string to search for in session metadata and turns
+      required:
+        - query
+    SearchResult:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: The ID of the matched session
+        title:
+          type: string
+          description: Human-friendly title (from purpose or filename)
+      required:
+        - session_id
+        - title
+    SearchSessionsResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+      required:
+        - results

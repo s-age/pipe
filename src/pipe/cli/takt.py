@@ -9,7 +9,7 @@ from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
-from pipe.core.validators.sessions import new_session as new_session_validator
+from pipe.core.validators.sessions import start_session as start_session_validator
 
 # Ignore specific warnings from the genai library
 warnings.filterwarnings(
@@ -121,10 +121,32 @@ def _parse_arguments():
     return args, parser
 
 
+def find_project_root_from_cwd():
+    """
+    Attempts to find the project root by searching upwards from the current
+    working directory for a marker file/directory (e.g., .git or pyproject.toml).
+    If not found, falls back to a path relative to the script's location.
+    """
+    current_dir = os.path.abspath(os.getcwd())
+
+    while True:
+        if os.path.exists(os.path.join(current_dir, ".git")) or os.path.exists(
+            os.path.join(current_dir, "pyproject.toml")
+        ):
+            return current_dir
+        parent_dir = os.path.dirname(current_dir)
+        if parent_dir == current_dir:  # Reached filesystem root
+            break
+        current_dir = parent_dir
+
+    # Fallback: if no marker found, assume project root is 3 levels up
+    # from script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
+
+
 def main():
-    project_root = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..")
-    )
+    project_root = find_project_root_from_cwd()
     if not check_and_show_warning(project_root):
         sys.exit(1)
 
@@ -147,7 +169,7 @@ def main():
     try:
         # Validate arguments for a new session at the endpoint
         if not args.session and args.instruction:
-            new_session_validator.validate(args.purpose, args.background)
+            start_session_validator.validate(args.purpose, args.background)
 
         dispatch(args, session_service, parser)
     except (ValueError, FileNotFoundError, IndexError) as e:

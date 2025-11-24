@@ -1,0 +1,15 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "mcp": {
+    "servers": {
+      "pipe_tools": {
+        "command": "python3",
+        "args": ["-m", "pipe.cli.mcp_server"]
+      }
+    }
+  }
+}

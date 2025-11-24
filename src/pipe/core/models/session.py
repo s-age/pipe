@@ -184,27 +184,6 @@ class Session(BaseModel):
             turns=forked_turns,
         )
 
-    def edit_meta(self, new_meta_data: dict):
-        """Updates metadata and saves the session."""
-        if "purpose" in new_meta_data:
-            self.purpose = new_meta_data["purpose"]
-        if "background" in new_meta_data:
-            self.background = new_meta_data["background"]
-        if "roles" in new_meta_data:
-            self.roles = new_meta_data["roles"]
-        if "multi_step_reasoning_enabled" in new_meta_data:
-            self.multi_step_reasoning_enabled = new_meta_data[
-                "multi_step_reasoning_enabled"
-            ]
-        if "artifacts" in new_meta_data:
-            self.artifacts = new_meta_data["artifacts"]
-        if "procedure" in new_meta_data:
-            self.procedure = new_meta_data["procedure"]
-        if "token_count" in new_meta_data:
-            self.token_count = new_meta_data["token_count"]
-        if "hyperparameters" in new_meta_data:
-            self.hyperparameters = Hyperparameters(**new_meta_data["hyperparameters"])
-
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the session suitable for templates."""
         return {
@@ -215,9 +194,9 @@ class Session(BaseModel):
             "roles": self.roles,
             "multi_step_reasoning_enabled": self.multi_step_reasoning_enabled,
             "token_count": self.token_count,
-            "hyperparameters": self.hyperparameters.model_dump()
-            if self.hyperparameters
-            else None,
+            "hyperparameters": (
+                self.hyperparameters.model_dump() if self.hyperparameters else None
+            ),
             "references": [r.model_dump() for r in self.references],
             "artifacts": self.artifacts,
             "procedure": self.procedure,
@@ -264,3 +243,9 @@ class Session(BaseModel):
         if self.pools:
             self.turns.extend(self.pools)
             self.pools = TurnCollection()
+
+    def edit_meta(self, new_meta_data: dict):
+        """Edits the session's metadata."""
+        for key, value in new_meta_data.items():
+            if hasattr(self, key):
+                setattr(self, key, value)

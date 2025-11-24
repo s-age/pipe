@@ -22,6 +22,7 @@ def py_get_code_snippet(file_path: str, symbol_name: str) -> dict[str, Any]:
             isinstance(node, ast.ClassDef | ast.FunctionDef)
             and node.name == symbol_name
         ):
+            start_lineno = node.lineno
             end_lineno = (
                 node.end_lineno
                 if hasattr(node, "end_lineno") and node.end_lineno is not None

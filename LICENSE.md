@@ -14,15 +14,16 @@ For these and/or other purposes and motivations, and without any expectation of 
 1. Copyright and Related Rights.
 
 A Work made available under CC0 may be protected by copyright and related or neighboring rights ("Copyright and Related Rights"). Copyright and Related Rights include, but are not limited to, the following:
-* the right to reproduce the Work;
-* the right to prepare derivative works from the Work;
-* the right to distribute copies of, or display publicly, the Work;
-* the right to perform the Work publicly;
-* the right to communicate the Work to the public by telecommunication;
-* moral rights of authors and artists;
-* rights of publicity and privacy;
-* rights of unfair competition; and
-* any other proprietary rights that may be asserted against the Work.
+
+- the right to reproduce the Work;
+- the right to prepare derivative works from the Work;
+- the right to distribute copies of, or display publicly, the Work;
+- the right to perform the Work publicly;
+- the right to communicate the Work to the public by telecommunication;
+- moral rights of authors and artists;
+- rights of publicity and privacy;
+- rights of unfair competition; and
+- any other proprietary rights that may be asserted against the Work.
 
 2. Waiver.
 

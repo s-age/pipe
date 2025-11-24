@@ -3,6 +3,7 @@ from typing import Any
 from pipe.core.agents.gemini_api import call_gemini_api
 from pipe.core.agents.gemini_cli import call_gemini_cli
 from pipe.core.models.settings import Settings
+from pipe.core.models.turn import CompressedHistoryTurn
 
 
 def verify_summary(
@@ -31,11 +32,14 @@ def verify_summary(
 
         original_turns = original_session_data.turns
         temp_turns = list(original_turns)
-        summary_turn = {
-            "type": "compressed_history",
-            "content": summary_text,
-            "original_turns_range": [start_turn, end_turn],
-        }
+        from pipe.core.utils.datetime import get_current_timestamp
+
+        summary_turn = CompressedHistoryTurn(
+            type="compressed_history",
+            content=summary_text,
+            original_turns_range=[start_turn, end_turn],
+            timestamp=get_current_timestamp(),
+        )
 
         start_index = start_turn - 1
         end_index = end_turn - 1
@@ -58,18 +62,42 @@ def verify_summary(
         verifier_background = (
             "A sub-agent will review a conversation history where a summary has "
             "been inserted. The agent must judge if the summary is a good "
-            "replacement and respond with 'Approved:' or 'Rejected:'."
+            "replacement and respond with 'Approved:' or 'Rejected:'. "
+            "The agent MUST strictly follow the rules in roles/verifier.md: "
+            "Always return 'Approved:' or 'Rejected:' as the first line. "
+            "If 'Rejected:', you MUST include the checklist and explicit "
+            "reasons for each failed item as required by roles/verifier.md."
         )
 
         verifier_session = session_service.create_new_session(
             purpose=verifier_purpose,
             background=verifier_background,
-            roles=["roles/reviewer.md"],  # Using a dedicated reviewer role
+            roles=["roles/verifier.md"],  # Using a dedicated verifier role
+            multi_step_reasoning_enabled=True,
         )
         verifier_session_id = verifier_session.session_id
 
         # Add the prepared history to the new verifier session
-        session_service.history_manager.update_turns(verifier_session_id, temp_turns)
+        # Insert a user_task turn instructing the agent to evaluate the summary
+        # and context per roles/verifier.md
+        from pipe.core.models.turn import UserTaskTurn
+
+        evaluation_instruction = (
+            "Evaluate the summary and the surrounding flow according to the rules "
+            "written in roles/verifier.md. "
+            "Follow the output format (start with Approved: or Rejected:. If "
+            "Rejected, include the checklist and reasons). "
+            "Output the result."
+        )
+        temp_turns.append(
+            UserTaskTurn(
+                type="user_task",
+                instruction=evaluation_instruction,
+                timestamp=get_current_timestamp(),
+            )
+        )
+        verifier_session.turns = temp_turns
+        session_service.repository.save(verifier_session)
 
         # === Step 3: Call the verifier agent ===
         approved_text = "Please approve the summary."
@@ -106,45 +134,47 @@ def verify_summary(
         )
 
         if api_mode == "gemini-api":
-            response = call_gemini_api(
-                settings=settings,
-                session_data=verifier_session_data,
-                project_root=project_root,
-                instruction=verifier_instruction,
-                api_mode=api_mode,
-                multi_step_reasoning_enabled=True,
-            )
-            response_text = response.text.strip()
+            # Set the current session to the verifier session
+            original_current_session = session_service.current_session
+            session_service.current_session = verifier_session
+            try:
+                from pipe.core.services.prompt_service import PromptService
+
+                prompt_service = PromptService(project_root, settings)
+                response_stream = call_gemini_api(session_service, prompt_service)
+                response_text = ""
+                for chunk in response_stream:
+                    response_text += chunk.text
+                response_text = response_text.strip()
+            finally:
+                session_service.current_session = original_current_session
         elif api_mode == "gemini-cli":
-            response_text = call_gemini_cli(
-                settings=settings,
-                session_data=verifier_session_data,
-                project_root=project_root,
-                instruction=verifier_instruction,
-                api_mode=api_mode,
-                multi_step_reasoning_enabled=True,
-                session_id=verifier_session_id,
-            ).strip()
+            # Set the current session to the verifier session
+            original_current_session = session_service.current_session
+            session_service.current_session = verifier_session
+            try:
+                response_text = call_gemini_cli(session_service).strip()
+            finally:
+                session_service.current_session = original_current_session
         else:
             raise ValueError(f"Unsupported api_mode: {api_mode}")
 
         # === Step 4: Process result and construct the final turn content ===
         status = "rejected"
         final_turn_content = ""
-        if response_text.startswith(f"Approved: {approved_text}"):
+        if response_text.strip().startswith("Approved:"):
             status = "approved"
             final_turn_content = (
-                f"Approved: {approved_text}\n\n## SUMMARY CONTENTS\n\n{summary_text}"
+                f"{response_text.strip()}\n\n## SUMMARY CONTENTS\n\n{summary_text}"
             )
-        elif response_text.startswith(f"Rejected: {rejected_text}"):
-            reason_parts = response_text.split("## REJECTED REASON\n\n", 1)
-            reason = reason_parts[1] if len(reason_parts) > 1 else "No reason provided."
-            final_turn_content = (
-                f"Rejected: {rejected_text}\n\n## REJECTED REASON\n\n{reason}"
-            )
+        elif response_text.strip().startswith("Rejected:"):
+            # Extract reason if present
+
+            final_turn_content = f"{response_text.strip()}"
         else:
             final_turn_content = (
-                f"Rejected: {rejected_text}\n\n## REJECTED REASON\n\n"
+                "Rejected: Verification failed. Please modify the summary policy.\n\n"
+                "## REJECTED REASON\n\n"
                 "Verification response was not in the expected format:\n"
                 f"{response_text}"
             )

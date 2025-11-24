@@ -1,5 +1,6 @@
 import unittest
 
+from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.web.requests.sessions.edit_session_meta import EditSessionMetaRequest
 from pydantic import ValidationError
 
@@ -11,6 +12,7 @@ class TestEditSessionMetaRequest(unittest.TestCase):
         """
         try:
             EditSessionMetaRequest(purpose="New purpose")
+            EditSessionMetaRequest(hyperparameters=Hyperparameters(temperature=0.5))
         except ValidationError as e:
             self.fail(f"Validation failed unexpectedly: {e}")
 

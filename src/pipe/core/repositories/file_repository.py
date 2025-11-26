@@ -62,7 +62,7 @@ class FileRepository:
         """Encodes and writes data to a JSON file."""
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "w") as f:
-            json.dump(data, f, indent=4)
+            json.dump(data, f, indent=2, ensure_ascii=False)
 
     def _locked_read_json(
         self, lock_path: str, file_path: str, default_data: Any = None

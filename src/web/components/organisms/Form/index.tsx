@@ -8,6 +8,7 @@ import type { ZodTypeAny } from 'zod'
 import { FormContext } from './FormContext'
 import type { FormMethods } from './FormContext'
 import { useFormHandlers } from './hooks/useFormHandlers'
+import { useFormLifecycle } from './hooks/useFormLifecycle'
 import { formStyle } from './style.css'
 
 export { useFormContext, useOptionalFormContext } from './FormContext'
@@ -43,6 +44,12 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
     ...(properties as UseFormProps<TFieldValues>),
     resolver: finalResolver
   } as UseFormProps<TFieldValues>)
+
+  // Reset form when defaultValues change
+  useFormLifecycle(
+    methods,
+    typeof properties.defaultValues === 'object' ? properties.defaultValues : undefined
+  )
 
   const { handleFormSubmit } = useFormHandlers()
 

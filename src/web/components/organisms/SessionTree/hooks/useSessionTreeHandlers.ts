@@ -14,7 +14,8 @@ type UseSessionTreeHandlersReturn = {
 
 // `selectSession` is provided by the page to update selected session in the store.
 export const useSessionTreeHandlers = (
-  selectSession: (id: string | null, detail: SessionDetail | null) => void
+  selectSession: (id: string | null, detail: SessionDetail | null) => void,
+  onRefresh: () => Promise<void>
 ): UseSessionTreeHandlersReturn => {
   const sessionReferences = useRef<Map<string, HTMLLIElement>>(new Map())
   const { loadSession } = useSessionItemActions()
@@ -46,8 +47,9 @@ export const useSessionTreeHandlers = (
       const sessionDetail = await loadSession(sessionId)
       selectSession(sessionId, sessionDetail)
       window.history.replaceState({}, '', `/session/${sessionId}`)
+      await onRefresh()
     },
-    [loadSession, selectSession]
+    [loadSession, selectSession, onRefresh]
   )
 
   return {

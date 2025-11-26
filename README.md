@@ -1,10 +1,81 @@
-<p align="center">
-  <img src="https://github.com/s-age/pipe/tree/main/src/web/static/images/logo.png" alt="pipe logo" width="200">
-</p>
-
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0--1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/)
 
-# pipe: A Clean Jailbreak from LLM Obfuscation
+# pipe
+
+> **Make AI Agents Deterministic.**
+
+`pipe` is an AI agent framework built with deep respect for the **Unix Philosophy**. It shifts the paradigm from "Conversational AI" to **AasF (Agent as Function)**.
+
+Unlike traditional frameworks that treat agents as stateful, conversational partners, `pipe` treats an agent as a **stateless, pure function** that accepts structured context via standard input (stdin) and returns execution results via standard output (stdout).
+
+## The Philosophy
+
+- **Do One Thing Well:** Each agent role is specialized and acts as a single, deterministic function call.
+- **Composable Intelligence:** Chain agents through natural language instructions via `takt`. A parent agent (e.g., Conductor) delegates tasks to sub-agents, where the output of one agent informs the next through structured session management.
+- **Universal Interface:** Built on text streams (JSON/Markdown), ensuring seamless integration with any CLI tool, script, or CI/CD pipeline.
+
+s-age: 以下を src/pipe/core/README.md のUSAGEをベースに再考してみてくれ
+
+## The Mechanism
+
+In `pipe`, an agent is defined simply as:
+
+$$f(\text{context}) \rightarrow \text{result}$$
+
+It abstracts the complexity of LLMs into a simple command-line interface via `takt`.
+
+```bash
+# Example: The "Unix" way of AI orchestration
+cat context.json | takt --role "architect" | takt --role "engineer" > result.json
+```
+
+GitHub Copilot: Read [](file:///Users/s-age/gitrepos/pipe/src/pipe/core/README.md#1-1), lines 1 to 100
+
+Read [](file:///Users/s-age/gitrepos/pipe/src/pipe/core/README.md#101-101), lines 101 to 104
+
+## The Mechanism
+
+In `pipe`, an agent is defined simply as:
+
+$$f(\text{context}) \rightarrow \text{result}$$
+
+It abstracts the complexity of LLMs into a simple command-line interface via `takt`, where each invocation processes structured input and produces deterministic output.
+
+```bash
+# Example: The "Unix" way of AI orchestration
+echo '{"purpose": "Design system", "background": "Web app"}' | takt --roles roles/architect.md --instruction "Architect the solution" | jq '.session_id' | xargs -I {} takt --session {} --roles roles/engineer.md --instruction "Implement the design" > result.json
+```
+
+This approach leverages `takt`'s options like `--roles` for persona definition, `--instruction` for task specification, and `--session` for state continuity, ensuring modular and composable AI workflows. The output JSON can be piped through tools like `jq` for extraction and chaining, maintaining the deterministic context management central to `pipe`'s philosophy.
+
+s-age: 実体とは乖離してるから消す方向にしよう。
+jqとか使う必要もないからね。
+この辺りはアージェントなり、スクリプトなりで繋ぎ込めばいい。
+
+どちらかというとこういう思想を伝える良い表現はあるか？
+cli | agent
+agent | agent
+any script | agent
+WebUI | agent
+
+## The Mechanism
+
+In `pipe`, an agent is defined simply as:
+
+$$f(\text{context}) \rightarrow \text{result}$$
+
+This abstraction enables seamless composition, where any source of structured data can feed into an agent, and agents can chain together or output to any consumer. The philosophy emphasizes composability over monolithic interfaces:
+
+- `cli | agent`: Pipe command-line outputs directly into AI processing.
+- `agent | agent`: Chain agents for multi-step reasoning or specialized workflows.
+- `any script | agent`: Integrate arbitrary scripts or tools as context providers.
+- `WebUI | agent`: Connect web interfaces or APIs to AI orchestration.
+
+Through `takt`, this becomes a reality—LLM complexity distilled into a Unix-like pipeline of deterministic transformations. Agents consume JSON contexts and produce JSON results, allowing infinite recombination without loss of control.
+
+Stop managing complex conversation states. Start composing intelligent functions.
+
+## A Clean Jailbreak from LLM Obfuscation
 
 `pipe` is not another chat agent. It is a tool designed to give you, the developer, complete control over the conversational context. Unlike traditional clients that hide their history management in a black box, `pipe` empowers you to freely manipulate the history, extract what is essential, and achieve **true context engineering**.
 
@@ -63,147 +134,53 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
 
 ## Setup & Installation
 
-### Prerequisites
+1. **Prerequisites:** Python 3.12 or higher and Poetry installed (`pip install poetry` or use the official installer). `gemini-cli` is optional; the system can use Gemini API directly for most features.
+2. **Install Dependencies:** `poetry install`
+3. **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
+   - For Gemini API mode: Add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
+   - For `gemini-cli` mode: Set `GOOGLE_API_KEY` in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`).
+   - The system supports extensible backends; configure other agents (e.g., Claude, OpenAI) via `setting.yml` and their respective API keys.
 
-- **Python 3.12 or higher**
-- **Node.js 18 or higher** (for the web UI)
-- **gemini-cli** installed in your PATH (optional, for CLI mode)
+## Integration with `gemini-cli` (One-Time Setup)
 
-### Python Backend Setup
+To use advanced features like agent-driven **Compression** and session **Forking** in `gemini-cli` mode, you must first register `pipe`'s tool server. This command tells `gemini-cli` how to communicate with this project's tools.
 
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/s-age/pipe.git
-   cd pipe
-   ```
-
-2. **Install Python dependencies:**
-
-   ```bash
-   pip install -e .
-   ```
-
-   This installs the package in editable mode along with all dependencies listed in `pyproject.toml`.
-
-3. **Set up environment variables:**
-   Create a `.env` file in the project root (copy from `.env.default`):
-
-   ```bash
-   cp .env.default .env
-   ```
-
-   Edit `.env` to add your API keys:
-   - For API mode: `GEMINI_API_KEY='YOUR_API_KEY_HERE'`
-   - For CLI mode: Ensure `GOOGLE_API_KEY` is set in your environment
-
-4. **Run the Flask web server:**
-
-   ```bash
-   flask --app pipe.web.app run --host=0.0.0.0 --port=5001
-   ```
-
-   The web UI will be available at `http://127.0.0.1:5001`.
-
-5. **Run the MCP server (for advanced features):**
-
-   ```bash
-   python -m pipe.cli.mcp_server
-   ```
-
-   This starts the Model Context Protocol server for agent-driven compression and forking.
-
-6. **Run the LSP server (optional, for IDE integration):**
-   ```bash
-   python -m src.pipe.cli.pygls_server > /dev/null 2>&1 &
-   ```
-   This starts the Language Server Protocol server in the background.
-
-### TypeScript/React Frontend Setup
-
-1. **Install Node.js dependencies:**
-
-   ```bash
-   npm install
-   ```
-
-   This installs all dependencies listed in `package.json`.
-
-2. **Start the development server:**
-
-   ```bash
-   npm start
-   ```
-
-   The React application will start on `http://localhost:5173` (default Vite port).
-
-3. **Build for production:**
-
-   ```bash
-   npm run build
-   ```
-
-   This compiles TypeScript and builds the production bundle.
-
-4. **Run tests:**
-
-   ```bash
-   npm test
-   ```
-
-5. **Run linting:**
-   ```bash
-   npm run lint
-   ```
-
-### Using the `takt` Command
-
-The `takt` command is the primary CLI interface for interacting with pipe sessions.
-
-**Basic usage examples:**
-
-- **Start a new session:**
-
-  ```bash
-  takt --purpose "Create a React component" --background "Build a user profile component" --roles "roles/engineer.md" --instruction "Create a UserProfile component with name and email fields."
-  ```
-
-- **Continue an existing session:**
-
-  ```bash
-  takt --session <SESSION_ID> --instruction "Add validation to the form."
-  ```
-
-- **Compress a session:**
-
-  ```bash
-  takt --session <SESSION_ID> --compress
-  ```
-
-- **Dry run (preview the JSON prompt):**
-  ```bash
-  takt --purpose "Test" --instruction "Hello" --dry-run
-  ```
-
-**Available options:**
-
-- `--purpose`: Define the session's overall purpose
-- `--background`: Provide background context
-- `--roles`: Specify role files (comma-separated)
-- `--instruction`: The instruction for the agent
-- `--session`: Continue an existing session by ID
-- `--compress`: Compress the session history
-- `--dry-run`: Preview the generated prompt without executing
-
-### Integration with `gemini-cli` (One-Time Setup)
-
-To use advanced features like agent-driven **Compression** and session **Forking** in `gemini-cli` mode, register pipe's tool server:
+Execute the following command once:
 
 ```bash
 gemini mcp add pipe_tools "python -m pipe.cli.mcp_server" --working-dir /path/to/pipe
 ```
 
-Replace `/path/to/pipe` with the actual absolute path to this project's directory.
+_(Replace `/path/to/pipe` with the actual absolute path to this project's directory.)_
+
+**Benefit:** After this integration, all tool calls made during a session (such as `create_verified_summary` or `read_file`) will become visible in the session history file (`.json`), providing complete transparency and auditability of the agent's actions.
+
+### Language Server Protocol (LSP) Server
+
+`pipe` also provides a Language Server Protocol (LSP) server based on `pygls`. This server integrates with IDEs (like VS Code) to enable advanced understanding and manipulation of Python code. Its purpose is to provide context for LLMs to better understand the codebase.
+
+**Provided LSP Features:**
+
+- **Code Analysis**: Provides definition locations and docstrings for classes, functions, and variables.
+- **Code Snippets**: Extracts code snippets for specific symbols.
+- **Type Hints**: Displays type hints for functions and classes.
+- **Symbol References**: Searches for symbol references within files.
+
+**How to Run:**
+
+The LSP server can be started in the background using the following command. This allows IDEs to connect to the server.
+
+```bash
+python -m src.pipe.cli.pygls_server > /dev/null 2>&1 &
+```
+
+- This command starts the server in the background and redirects standard output and standard error to `/dev/null`.
+- To stop the server, use the `kill` command with the Process Group ID (PGID) displayed upon startup. For example, if the PGID is `83272`:
+  ```bash
+  kill -s TERM -- -83272
+  ```
+
+**Note:** This server is designed to be connected to by an LSP client (e.g., an IDE like VS Code). Running it standalone will produce minimal visible output.
 
 ---
 
@@ -211,9 +188,9 @@ Replace `/path/to/pipe` with the actual absolute path to this project's director
 
 The **pipe** framework offers three primary routes, optimized for different user environments and goals, all built on the same structured core.
 
-### 1. Route 1: Python Script (Automation & CLI)
+### 1. Route 1: CLI Script (Automation & CLI)
 
-This route is ideal for **automation, scripting, and CLI-focused developers** who need reliable, repeatable execution.
+This route is ideal for **automation, scripting, and CLI-focused developers** who need reliable, repeatable execution, regardless of the programming language used—as long as you can invoke the `takt` command.
 
 | Use Case               | Description                                                                                                                   |
 | :--------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
@@ -271,6 +248,8 @@ Act as @roles/conductor.md takt --session <SESSION_ID> --instruction "Now, add a
 
 ### 4. Route 4: Agent-driven Workflows (Compression & Verification)
 
+The easiest way to perform compression is through the Web UI, which provides a dedicated compression interface in the right pane for the currently open session.
+
 The `pipe` framework supports agent-driven meta-tasks like history management. The `Compressor` and `Reviewer` agents work in tandem to ensure both efficiency and quality.
 
 | Step            | Agent        | Use Case                 | Description                                                                                                                                              |
@@ -279,8 +258,6 @@ The `pipe` framework supports agent-driven meta-tasks like history management. T
 | **2. Specify**  | `Compressor` | Controlled Summarization | Guide the agent by providing the target `SESSION_ID`, a `START` and `END` turn, a `policy` (what to keep), and a `target length`.                        |
 | **3. Verify**   | `Reviewer`   | Quality Assurance        | Before applying the summary, the `Reviewer` agent is automatically invoked to check if the compressed history flows naturally and preserves key context. |
 | **4. Apply**    | `Compressor` | Finalize Compression     | Once the verification is passed, the agent replaces the specified turn range with the generated summary.                                                 |
-
-> **[NOTE]** The compression workflow is available only when `api_mode` is set to `gemini-api`. It is not supported in `gemini-cli` mode as it requires an MCP server.
 
 **Example (Starting a Compression Session):**
 
@@ -349,7 +326,7 @@ When running `takt` with the `--dry-run` flag, the generated JSON prompt is disp
 
 Here's an example of a generated prompt:
 
-Note that the JSON presented here is pretty-printed for readability; the actual output from `takt --dry-run` is a single-line JSON string.
+Note that the JSON presented here is pretty-printed for readability; the actual output from `takt --dry-run` is also pretty-printed with indentation for human readability.
 
 ````json
 {

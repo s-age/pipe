@@ -1,4 +1,4 @@
-import { useState, useCallback, useLayoutEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 
 import type { EditHyperparametersRequest } from '@/lib/api/session/editHyperparameters'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -58,11 +58,11 @@ export const useHyperParametersHandlers = ({
   }
 
   // Sync authoritative sessionDetail into local UI state before paint to
-  // avoid visual flicker. We use useLayoutEffect and a single state update
+  // avoid visual flicker. We use useEffect and a single state update
   // so the linter's concern about cascading renders is mitigated.
   const isInteractingReference = useRef<boolean>(false)
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!sessionDetail) return
     // If the user is actively interacting with the slider, don't overwrite
     // their in-progress UI changes with the authoritative sessionDetail.

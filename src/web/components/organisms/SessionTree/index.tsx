@@ -36,19 +36,21 @@ type SessionTreeProperties = {
   sessions: SessionOverview[] | SessionTreeNode[]
   currentSessionId: string | null
   selectSession: (id: string | null, detail: SessionDetail | null) => void
+  onRefresh: () => Promise<void>
 }
 
 export const SessionTree = ({
   sessions,
   currentSessionId,
-  selectSession
+  selectSession,
+  onRefresh
 }: SessionTreeProperties): JSX.Element => {
   const {
     sessionReferences,
     handleNewChatClick,
     handleAnchorClick,
     setSessionReference
-  } = useSessionTreeHandlers(selectSession)
+  } = useSessionTreeHandlers(selectSession, onRefresh)
 
   // Handle scroll to selected session on mount and selection change
   useSessionTreeLifecycle({

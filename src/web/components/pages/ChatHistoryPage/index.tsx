@@ -28,6 +28,7 @@ export const ChatHistoryPage = (): JSX.Element => {
             currentSessionId={sessionDetail?.session_id ?? null}
             sessions={sessions}
             selectSession={selectSession}
+            onRefresh={onRefresh}
           />
         </div>
 

@@ -46,7 +46,9 @@ class SessionDetailController:
             "session_tree": tree_response.get(
                 "session_tree", tree_response.get("sessions", [])
             ),
-            "current_session": session_response.get("session", {}) if session_status == 200 else None,
+            "current_session": (
+                session_response.get("session", {}) if session_status == 200 else None
+            ),
             "settings": settings_response.get("settings", {}),
             "role_options": roles_response,
         }, 200

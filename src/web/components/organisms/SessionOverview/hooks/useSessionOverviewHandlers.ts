@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
@@ -15,6 +16,7 @@ export const useSessionOverviewHandlers = ({
   onClick: (event: React.MouseEvent<HTMLAnchorElement>) => Promise<void>
 } => {
   const { loadSession } = useSessionOverviewActions()
+  const navigate = useNavigate()
 
   const onClick = useCallback(
     async (event: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
@@ -25,11 +27,14 @@ export const useSessionOverviewHandlers = ({
         return
       }
 
+      console.debug('[SessionOverview] onClick sessionId:', session.session_id)
       const sessionDetail = await loadSession(session.session_id)
+      console.debug('[SessionOverview] selectSession ->', session.session_id)
       selectSession(session.session_id, sessionDetail)
-      window.history.replaceState({}, '', `/session/${session.session_id}`)
+      // Use react-router navigation so router params update reliably.
+      navigate(`/session/${session.session_id}`, { replace: true })
     },
-    [selectSession, session.session_id, loadSession]
+    [selectSession, session.session_id, loadSession, navigate]
   )
 
   return { onClick }

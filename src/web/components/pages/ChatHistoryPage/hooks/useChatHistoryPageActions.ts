@@ -18,60 +18,40 @@ export const useChatHistoryPageActions = ({
   currentSessionId,
   refreshSessions
 }: UseChatHistoryPageActionsProperties): {
-  onRefresh: () => Promise<void>
+  onRefresh: (sessionId?: string) => Promise<void>
 } => {
-  const onRefresh = useCallback(async (): Promise<void> => {
-    if (currentSessionId) {
-      const dashBoard = await getSessionDashboard(currentSessionId)
-      // `session_tree` may be either legacy flat pairs ([id, overview])
-      // or hierarchical nodes. Normalize to a flat SessionOverview[]
-      const sessionTree = dashBoard.session_tree as SessionNode[]
+  const onRefresh = useCallback(
+    async (sessionId?: string): Promise<void> => {
+      const idToUse = sessionId ?? currentSessionId
+      if (idToUse) {
+        const dashBoard = await getSessionDashboard(idToUse)
+        // `session_tree` may be either legacy flat pairs ([id, overview])
+        // or hierarchical nodes. Normalize to a flat SessionOverview[]
+        const sessionTree = dashBoard.session_tree as SessionNode[]
 
-      const flattenPairs = (pairs: SessionPair[]): SessionOverview[] =>
-        pairs.map(([id, session]) => ({ ...session, session_id: id }))
+        const flattenPairs = (pairs: SessionPair[]): SessionOverview[] =>
+          pairs.map(([id, session]) => ({ ...session, session_id: id }))
 
-      const flattenNodes = (nodes: SessionTreeNode[]): SessionOverview[] => {
-        const out: SessionOverview[] = []
+        // Preserve hierarchical nodes when backend returns a tree; otherwise
+        // normalize legacy pair format to flat `SessionOverview[]`.
+        if (Array.isArray(sessionTree) && sessionTree.length > 0) {
+          const first = sessionTree[0]
 
-        const walk = (n: SessionTreeNode): void => {
-          const overview = n.overview || {}
-          out.push({
-            session_id: n.session_id,
-            purpose: (overview.purpose as string) || '',
-            background: (overview.background as string) || '',
-            roles: (overview.roles as string[]) || [],
-            procedure: (overview.procedure as string) || '',
-            artifacts: (overview.artifacts as string[]) || [],
-            multi_step_reasoning_enabled: !!overview.multi_step_reasoning_enabled,
-            token_count: (overview.token_count as number) || 0,
-            last_update: (overview.last_update as string) || ''
-          })
-
-          if (Array.isArray(n.children)) {
-            n.children.forEach(walk)
+          if (isSessionPair(first)) {
+            const normalized = flattenPairs(sessionTree as SessionPair[])
+            refreshSessions(dashBoard.current_session, normalized)
+          } else {
+            // Keep hierarchical nodes intact so the UI can render a tree.
+            refreshSessions(dashBoard.current_session, sessionTree as SessionTreeNode[])
           }
-        }
-
-        nodes.forEach(walk)
-
-        return out
-      }
-
-      let normalized: SessionOverview[] = []
-
-      if (Array.isArray(sessionTree) && sessionTree.length > 0) {
-        const first = sessionTree[0]
-
-        if (isSessionPair(first)) {
-          normalized = flattenPairs(sessionTree as SessionPair[])
         } else {
-          normalized = flattenNodes(sessionTree as SessionTreeNode[])
+          // No sessions returned: ensure session detail is updated but don't touch sessions
+          refreshSessions(dashBoard.current_session)
         }
       }
-
-      refreshSessions(dashBoard.current_session, normalized)
-    }
-  }, [currentSessionId, refreshSessions])
+    },
+    [currentSessionId, refreshSessions]
+  )
 
   return { onRefresh }
 }

@@ -2,7 +2,15 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { ReactNode } from 'react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import type { UseFormProps, FieldValues, Resolver } from 'react-hook-form'
+import type {
+  UseFormProps,
+  FieldValues,
+  Resolver,
+  RegisterOptions,
+  UseFormRegisterReturn,
+  Path,
+  UseFormReturn
+} from 'react-hook-form'
 import type { ZodTypeAny } from 'zod'
 
 import { FormContext } from './FormContext'
@@ -56,17 +64,20 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
   // Patch the methods to allow central interception of field changes.
   // This wraps `register` so callers don't need to change how they use the
   // hook, but `onChange` can be observed/augmented here.
-  const patchedMethods = (() => {
+  const patchedMethods = ((): FormMethods<TFieldValues> => {
     // Keep original methods reference
-    const original = methods as unknown as Record<string, unknown>
+    const originalMethods = methods as UseFormReturn<TFieldValues>
 
-    const register = (name: any, options?: any) => {
-      const wrappedOnChange = (e: any) => {
+    const register = (
+      name: Path<TFieldValues>,
+      options?: RegisterOptions<TFieldValues>
+    ): UseFormRegisterReturn => {
+      const wrappedOnChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
         // Central trap point for all field onChange events.
         // Place logging, analytics, or additional handling here.
-        // Example: console.debug('Form field changed', name, e)
+        // Example: console.debug('Form field changed', name, event)
         try {
-          options?.onChange?.(e)
+          options?.onChange?.(event)
         } catch (error) {
           // swallow errors from user-provided handlers to avoid breaking flow
           // but surface debug info in development
@@ -74,10 +85,13 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
         }
       }
 
-      return (original.register as any)(name, { ...options, onChange: wrappedOnChange })
+      return originalMethods.register(name, {
+        ...options,
+        onChange: wrappedOnChange
+      })
     }
 
-    return { ...(methods as object), register } as FormMethods<FieldValues>
+    return { ...(methods as object), register } as FormMethods<TFieldValues>
   })()
 
   return (

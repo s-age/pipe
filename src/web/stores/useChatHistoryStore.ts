@@ -93,7 +93,7 @@ export type Actions = {
   setRoleOptions: (roleOptions: RoleOption[]) => void
   refreshSessions: (
     sessionDetail: SessionDetail | null,
-    sessions?: SessionOverview[]
+    sessions?: SessionOverview[] | SessionTreeNode[]
   ) => void
   reset: () => void
 }
@@ -121,6 +121,7 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
 
   const selectSession = useCallback(
     (id: string | null, detail: SessionDetail | null) => {
+      console.debug('[SessionStore] selectSession id:', id)
       dispatch({ type: 'SET_SESSION_AND_CURRENT', payload: { id, detail } })
     },
     []
@@ -135,7 +136,10 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
   }, [])
 
   const refreshSessions = useCallback(
-    (sessionDetail: SessionDetail | null, sessions?: SessionOverview[]): void => {
+    (
+      sessionDetail: SessionDetail | null,
+      sessions?: SessionOverview[] | SessionTreeNode[]
+    ): void => {
       dispatch({ type: 'SET_SESSION_DETAIL', payload: sessionDetail })
       if (sessions) {
         dispatch({ type: 'SET_SESSIONS', payload: sessions })

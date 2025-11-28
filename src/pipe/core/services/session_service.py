@@ -27,10 +27,12 @@ class SessionService:
         project_root: str,
         settings: Settings,
         repository: SessionRepository,
+        file_indexer_service=None,
     ):
         self.project_root = project_root
         self.settings = settings
         self.repository = repository
+        self.file_indexer_service = file_indexer_service
         self.current_session: Session | None = None
         self.current_session_id: str | None = None
         self.current_instruction: str | None = None
@@ -169,6 +171,13 @@ class SessionService:
         )
 
         self.repository.save(session)
+
+        # Rebuild Whoosh index when creating new session
+        if self.file_indexer_service:
+            try:
+                self.file_indexer_service.index_files()
+            except Exception as e:
+                print(f"Warning: Failed to rebuild Whoosh index: {e}", file=sys.stderr)
 
         return session
 

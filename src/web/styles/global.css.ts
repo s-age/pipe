@@ -35,6 +35,13 @@ globalStyle('input:focus, textarea:focus, select:focus', {
   outline: 'none'
 })
 
+globalStyle('input:-webkit-autofill', {
+  boxShadow: `0 0 0px 1000px ${colors.black} inset`,
+  '-webkit-box-shadow': `0 0 0px 1000px ${colors.black} inset`,
+  '-webkit-text-fill-color': colors.white,
+  color: colors.white
+})
+
 globalStyle('.markdown-body', {
   marginTop: '0',
   padding: '0'

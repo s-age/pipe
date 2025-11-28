@@ -1,4 +1,5 @@
 import type { JSX } from 'react'
+import { useParams } from 'react-router-dom'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
@@ -28,20 +29,24 @@ export const ChatHistory = ({
   setSessionDetail,
   refreshSessionsInStore
 }: ChatHistoryProperties): JSX.Element => {
+  const parameters = useParams()
+  const sessionId = parameters['*'] || null
+  console.log(useParams<{ sessionId: string }>())
+
   const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
     useChatStreaming({
-      currentSessionId: sessionDetail?.session_id ?? null,
+      currentSessionId: sessionId,
       // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
       setSessionDetail: setSessionDetail
     })
 
   const { handleDeleteCurrentSession } = useChatHistoryHandlers({
-    currentSessionId: sessionDetail?.session_id ?? null,
+    currentSessionId: sessionId,
     refreshSessionsInStore
   })
 
   const { refreshSession } = useChatHistoryActions({
-    currentSessionId: sessionDetail?.session_id ?? null,
+    currentSessionId: sessionId,
     refreshSessionsInStore
   })
 
@@ -53,7 +58,7 @@ export const ChatHistory = ({
       />
       <ChatHistoryBody
         sessionDetail={sessionDetail}
-        currentSessionId={sessionDetail?.session_id ?? null}
+        currentSessionId={sessionId ?? null}
         expertMode={expertMode}
         isStreaming={isStreaming}
         streamedText={streamedText}
@@ -62,7 +67,7 @@ export const ChatHistory = ({
         refreshSessionsInStore={refreshSessionsInStore}
       />
       <ChatHistoryFooter
-        currentSessionId={sessionDetail?.session_id ?? null}
+        currentSessionId={sessionId}
         onSendInstruction={onSendInstruction}
         isStreaming={isStreaming}
       />

@@ -14,7 +14,8 @@ import {
   searchModalHeader,
   searchModalClose,
   searchResultItem,
-  searchNoResults
+  searchNoResults,
+  searchModalHeaderText
 } from './style.css'
 
 export const Header = (): JSX.Element => {
@@ -53,7 +54,7 @@ export const Header = (): JSX.Element => {
           >
             <div className={searchModalContent}>
               <div className={searchModalHeader}>
-                <div>Search results</div>
+                <div className={searchModalHeaderText}>Search results</div>
                 <button
                   className={searchModalClose}
                   onClick={closeModal}

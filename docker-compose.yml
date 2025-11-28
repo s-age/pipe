@@ -1,0 +1,70 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - '5001:5001'
+    environment:
+      - FLASK_APP=pipe.web.app
+      - FLASK_ENV=development
+      - PYTHONPATH=/app/src
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/__pycache__
+    command: flask run --host=0.0.0.0 --port=5001
+
+  react:
+    build:
+      context: .
+      dockerfile: Dockerfile.react
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm start
+
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    ports:
+      - '3001:3001' # MCP default port, adjust if needed
+    environment:
+      - PYTHONPATH=/app/src
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/__pycache__
+    command: python -m pipe.cli.mcp_server
+
+  lsp:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    ports:
+      - '2087:2087' # pygls default port, adjust if needed
+    environment:
+      - PYTHONPATH=/app/src
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/__pycache__
+    command: python -m src.pipe.cli.pygls_server --tcp --host 0.0.0.0 --port 2087
+
+  storybook:
+    build:
+      context: .
+      dockerfile: Dockerfile.storybook
+    ports:
+      - '6006:6006'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    profiles:
+      - storybook

@@ -18,7 +18,9 @@ Unlike traditional frameworks that treat agents as stateful, conversational part
 - **Composable Intelligence:** Chain agents through natural language instructions via `takt`. A parent agent (e.g., Conductor) delegates tasks to sub-agents, where the output of one agent informs the next through structured session management.
 - **Universal Interface:** Built on text streams (JSON/Markdown), ensuring seamless integration with any CLI tool, script, or CI/CD pipeline.
 
-s-age: 以下を src/pipe/core/README.md のUSAGEをベースに再考してみてくれ
+`pipe` provides a strong foundation for the Agent as Function (AasF) paradigm, enabling smaller contexts by structuring information effectively. It realizes bottom-heavy architecture—where the complexity lies in the well-designed tools and frameworks rather than overburdening the LLM at the top. This is achieved through easy multi-agent orchestration, allowing agents to handle small, specialized tasks and build complex workflows without requiring the LLM to manage everything at once.
+
+For a deeper dive into the principles of Context Engineering that underpin this philosophy, see our [Wiki article](https://github.com/s-age/pipe/wiki/Context-Engineering:-The-Art-of-Communicating-Intent-to-LLMs).
 
 ## The Mechanism
 
@@ -26,24 +28,7 @@ In `pipe`, an agent is defined simply as:
 
 $$f(\text{context}) \rightarrow \text{result}$$
 
-It abstracts the complexity of LLMs into a simple command-line interface via `takt`.
-
-```bash
-# Example: The "Unix" way of AI orchestration
-cat context.json | takt --role "architect" | takt --role "engineer" > result.json
-```
-
-GitHub Copilot: Read [](file:///Users/s-age/gitrepos/pipe/src/pipe/core/README.md#1-1), lines 1 to 100
-
-Read [](file:///Users/s-age/gitrepos/pipe/src/pipe/core/README.md#101-101), lines 101 to 104
-
-## The Mechanism
-
-In `pipe`, an agent is defined simply as:
-
-$$f(\text{context}) \rightarrow \text{result}$$
-
-It abstracts the complexity of LLMs into a simple command-line interface via `takt`, where each invocation processes structured input and produces deterministic output.
+`takt` acts as a context injector, not just a CLI wrapper. It structures and injects precisely crafted context into the LLM for each invocation, enabling deterministic, composable AI interactions that maintain control over conversational state.
 
 ```bash
 # Example: The "Unix" way of AI orchestration
@@ -51,16 +36,6 @@ echo '{"purpose": "Design system", "background": "Web app"}' | takt --roles role
 ```
 
 This approach leverages `takt`'s options like `--roles` for persona definition, `--instruction` for task specification, and `--session` for state continuity, ensuring modular and composable AI workflows. The output JSON can be piped through tools like `jq` for extraction and chaining, maintaining the deterministic context management central to `pipe`'s philosophy.
-
-s-age: 実体とは乖離してるから消す方向にしよう。
-jqとか使う必要もないからね。
-この辺りはアージェントなり、スクリプトなりで繋ぎ込めばいい。
-
-どちらかというとこういう思想を伝える良い表現はあるか？
-cli | agent
-agent | agent
-any script | agent
-WebUI | agent
 
 ## The Mechanism
 
@@ -134,59 +109,15 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
   - **Note on `gemini-cli`:** To use advanced features like Compression and Forking in `gemini-cli` mode, you must first register the `pipe` tool server. See the "Integration with `gemini-cli`" section below for the required one-time setup command.
 - **Turn-based Forking:** Easily fork a conversation from any specific turn. This allows you to explore alternative responses from the LLM or test different instructions without altering the original history, enabling robust validation and experimentation.
 
+See [docs/tools.md](docs/tools.md) for information on available tools and integrations.
+
+See [docs/extending.md](docs/extending.md) for information on extending the framework with new agents.
+
 ---
 
 ## Setup & Installation
 
-1. **Prerequisites:** Python 3.12 or higher and Poetry installed (`pip install poetry` or use the official installer). `gemini-cli` is optional; the system can use Gemini API directly for most features.
-2. **Install Dependencies:** `poetry install`
-3. **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
-   - For Gemini API mode: Add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
-   - For `gemini-cli` mode: Set `GOOGLE_API_KEY` in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`).
-   - The system supports extensible backends; configure other agents (e.g., Claude, OpenAI) via `setting.yml` and their respective API keys.
-
-## Integration with `gemini-cli` (One-Time Setup)
-
-To use advanced features like agent-driven **Compression** and session **Forking** in `gemini-cli` mode, you must first register `pipe`'s tool server. This command tells `gemini-cli` how to communicate with this project's tools.
-
-Execute the following command once:
-
-```bash
-gemini mcp add pipe_tools "python -m pipe.cli.mcp_server" --working-dir /path/to/pipe
-```
-
-_(Replace `/path/to/pipe` with the actual absolute path to this project's directory.)_
-
-**Benefit:** After this integration, all tool calls made during a session (such as `create_verified_summary` or `read_file`) will become visible in the session history file (`.json`), providing complete transparency and auditability of the agent's actions.
-
-### Language Server Protocol (LSP) Server
-
-`pipe` also provides a Language Server Protocol (LSP) server based on `pygls`. This server integrates with IDEs (like VS Code) to enable advanced understanding and manipulation of Python code. Its purpose is to provide context for LLMs to better understand the codebase.
-
-**Provided LSP Features:**
-
-- **Code Analysis**: Provides definition locations and docstrings for classes, functions, and variables.
-- **Code Snippets**: Extracts code snippets for specific symbols.
-- **Type Hints**: Displays type hints for functions and classes.
-- **Symbol References**: Searches for symbol references within files.
-
-**How to Run:**
-
-The LSP server can be started in the background using the following command. This allows IDEs to connect to the server.
-
-```bash
-python -m src.pipe.cli.pygls_server > /dev/null 2>&1 &
-```
-
-- This command starts the server in the background and redirects standard output and standard error to `/dev/null`.
-- To stop the server, use the `kill` command with the Process Group ID (PGID) displayed upon startup. For example, if the PGID is `83272`:
-  ```bash
-  kill -s TERM -- -83272
-  ```
-
-**Note:** This server is designed to be connected to by an LSP client (e.g., an IDE like VS Code). Running it standalone will produce minimal visible output.
-
----
+See [docs/setup.md](docs/setup.md) for setup instructions.
 
 ## Usage: 3 Routes to Context Engineering
 
@@ -214,23 +145,7 @@ takt --session <SESSION_ID> --instruction "Now, add a state for loading."
 
 ### 2. Route 2: Web UI (Management & Human-in-the-Loop)
 
-This is best for users seeking **intuitive visual management** and **direct manipulation of history** without file editing.
-
-| Use Case              | Description                                                                                                                                                    |
-| :-------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **View/Edit History** | Browse detailed session histories; surgically edit specific turns or session metadata (purpose/background).                                                    |
-| **Fork from Turn**    | Easily **fork** a conversation from any specific turn to test alternative instructions or validate different LLM responses without altering the original flow. |
-| **Enable Editing**    | Activate `expert_mode` in `setting.yml` to enable editing and deleting session turns directly from the Web UI.                                                 |
-| **Continue Sessions** | Use form inputs to send new instructions to existing sessions.                                                                                                 |
-| **Management**        | Intuitively start new sessions, compress history, or delete unnecessary sessions via a graphical interface.                                                    |
-
-**Example (Start Server):**
-
-```bash
-flask --app pipe.web.app run --host=0.0.0.0 --port=5001
-```
-
-_(Navigate to `http://127.0.0.1:5001` in your browser)_
+See [docs/development.md](docs/development.md) for details on running and using the Web UI.
 
 ### 3. Route 3: Execution from Agent (Orchestration)
 

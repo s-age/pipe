@@ -1,0 +1,28 @@
+# Dockerfile for Python services like LSP server
+FROM python:3.12-slim
+
+# Install Poetry using the official installer (latest version)
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
+
+# Set working directory
+WORKDIR /app
+
+# Copy pyproject.toml and poetry.lock (if exists)
+COPY pyproject.toml ./
+
+# Configure poetry: do not create virtual environment
+RUN poetry config virtualenvs.create false
+
+# Install dependencies
+RUN poetry install --without dev --no-interaction --no-ansi
+
+# Copy the rest of the application
+COPY . .
+
+# Expose port for LSP
+EXPOSE 2087
+
+# Default command (can be overridden)
+CMD ["python", "-m", "src.pipe.cli.pygls_server", "--tcp", "--host", "0.0.0.0", "--port", "2087"]

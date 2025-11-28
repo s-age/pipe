@@ -19,7 +19,7 @@ export const input = style({
   border: 'none',
   fontSize: '1rem',
   color: colors.white,
-  background: colors.cyanDark,
+  background: `${colors.cyanDark} !important`,
   outline: 'none',
   '::placeholder': { color: 'rgba(255,255,255,0.8)' },
 
@@ -27,6 +27,12 @@ export const input = style({
     '&:focus': {
       border: 'none',
       boxShadow: `0 0 6px ${colors.darkGray}, 0 0 12px ${colors.darkGray}, 0 0 18px ${colors.darkGray}, 0 0 24px ${colors.darkGray}77, 0 12px 30px rgba(0,0,0,0.26), inset 0 0 10px ${colors.darkGray}33`
+    },
+    '&:-webkit-autofill': {
+      boxShadow: `0 0 0px 1000px ${colors.cyanDark} inset`,
+      '-webkit-box-shadow': `0 0 0px 1000px ${colors.cyanDark} inset`,
+      '-webkit-text-fill-color': colors.white,
+      color: colors.white
     }
   }
 })

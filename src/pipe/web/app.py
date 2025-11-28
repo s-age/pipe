@@ -780,6 +780,14 @@ def dispatch_action_endpoint(action: str):
 
 
 if __name__ == "__main__":
+    # Rebuild Whoosh index on startup
+    try:
+        print("Rebuilding Whoosh index...")
+        file_indexer_service.index_files()
+        print("Whoosh index rebuilt successfully")
+    except Exception as e:
+        print(f"Failed to rebuild Whoosh index: {e}")
+
     project_root_for_check = os.path.dirname(os.path.abspath(__file__))
     if check_and_show_warning(project_root_for_check):
         # Debug: print URL map so we can inspect which methods are registered

@@ -30,7 +30,8 @@ class ServiceFactory:
     def create_session_service(self) -> SessionService:
         """Creates a SessionService with its dependencies."""
         repository = SessionRepository(self.project_root, self.settings)
-        service = SessionService(self.project_root, self.settings, repository)
+        file_indexer = self.create_file_indexer_service()
+        service = SessionService(self.project_root, self.settings, repository, file_indexer)
         return service
 
     def create_prompt_service(self) -> PromptService:

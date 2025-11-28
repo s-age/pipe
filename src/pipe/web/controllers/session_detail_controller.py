@@ -28,9 +28,7 @@ class SessionDetailController:
         )
         session_response, session_status = session_action.execute()
 
-        if session_status != 200:
-            return session_response, session_status
-
+        # Even if session is not found, continue to get roles and settings
         roles_action = GetRolesAction(params={}, request_data=request_data)
         roles_response, roles_status = roles_action.execute()
 
@@ -48,7 +46,7 @@ class SessionDetailController:
             "session_tree": tree_response.get(
                 "session_tree", tree_response.get("sessions", [])
             ),
-            "current_session": session_response.get("session", {}),
+            "current_session": session_response.get("session", {}) if session_status == 200 else None,
             "settings": settings_response.get("settings", {}),
             "role_options": roles_response,
         }, 200

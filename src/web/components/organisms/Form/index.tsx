@@ -53,8 +53,35 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
 
   const { handleFormSubmit } = useFormHandlers()
 
+  // Patch the methods to allow central interception of field changes.
+  // This wraps `register` so callers don't need to change how they use the
+  // hook, but `onChange` can be observed/augmented here.
+  const patchedMethods = (() => {
+    // Keep original methods reference
+    const original = methods as unknown as Record<string, unknown>
+
+    const register = (name: any, options?: any) => {
+      const wrappedOnChange = (e: any) => {
+        // Central trap point for all field onChange events.
+        // Place logging, analytics, or additional handling here.
+        // Example: console.debug('Form field changed', name, e)
+        try {
+          options?.onChange?.(e)
+        } catch (error) {
+          // swallow errors from user-provided handlers to avoid breaking flow
+          // but surface debug info in development
+          if (process.env.NODE_ENV !== 'production') console.error(error)
+        }
+      }
+
+      return (original.register as any)(name, { ...options, onChange: wrappedOnChange })
+    }
+
+    return { ...(methods as object), register } as FormMethods<FieldValues>
+  })()
+
   return (
-    <FormContext.Provider value={methods as FormMethods<FieldValues>}>
+    <FormContext.Provider value={patchedMethods as FormMethods<FieldValues>}>
       <form className={formStyle} onSubmit={handleFormSubmit}>
         {children}
       </form>

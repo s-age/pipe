@@ -30,8 +30,8 @@ export const input = style({
     },
     '&:-webkit-autofill': {
       boxShadow: `0 0 0px 1000px ${colors.cyanDark} inset`,
-      '-webkit-box-shadow': `0 0 0px 1000px ${colors.cyanDark} inset`,
-      '-webkit-text-fill-color': colors.white,
+      WebkitBoxShadow: `0 0 0px 1000px ${colors.cyanDark} inset`,
+      WebkitTextFillColor: colors.white,
       color: colors.white
     }
   }

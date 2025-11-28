@@ -21,6 +21,15 @@ RUN poetry install --without dev --no-interaction --no-ansi
 # Copy the rest of the application
 COPY . .
 
+# Install Node.js 24 (NodeSource) and the official Gemini CLI so `gemini` is available
+# for modes that delegate to the gemini-cli tool.
+RUN apt-get update && \
+	apt-get install -y curl ca-certificates gnupg && \
+	curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+	apt-get install -y nodejs && \
+	rm -rf /var/lib/apt/lists/* && \
+	npm install -g @google/gemini-cli
+
 # Expose port for LSP
 EXPOSE 2087
 

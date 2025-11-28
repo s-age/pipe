@@ -37,8 +37,8 @@ globalStyle('input:focus, textarea:focus, select:focus', {
 
 globalStyle('input:-webkit-autofill', {
   boxShadow: `0 0 0px 1000px ${colors.black} inset`,
-  '-webkit-box-shadow': `0 0 0px 1000px ${colors.black} inset`,
-  '-webkit-text-fill-color': colors.white,
+  WebkitBoxShadow: `0 0 0px 1000px ${colors.black} inset`,
+  WebkitTextFillColor: colors.white,
   color: colors.white
 })
 

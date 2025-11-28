@@ -41,14 +41,12 @@ def call_gemini_cli(session_service: SessionService) -> str:
     # Ensure the rendered prompt is valid JSON and pretty-print it
     pretty_printed_prompt = json.dumps(json.loads(rendered_prompt), indent=2)
 
-    command = [
-        "gemini",
-        "-y",
-        "-m",
-        model_name,
-        "-p",
-        pretty_printed_prompt,
-    ]
+    # Avoid passing a very large prompt as a single argv element (can hit
+    # the system ARG_MAX / Argument list too long). Try streaming the prompt
+    # via stdin first (many CLIs accept '-' to mean read from stdin). If
+    # that fails, fall back to writing the prompt to a temporary file and
+    # passing the filename.
+    command = ["gemini", "-y", "-m", model_name, "-p", "-"]
 
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"  # Force unbuffered output for streaming
@@ -60,31 +58,81 @@ def call_gemini_cli(session_service: SessionService) -> str:
         env["PIPE_SESSION_ID"] = session_service.current_session_id
 
     try:
-        process = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            env=env,
-            bufsize=1,
-        )
+        # First attempt: stream prompt via stdin (using '-' with -p)
+        try:
+            # Debug: show we're attempting to launch gemini with stdin
+            process = subprocess.Popen(
+                command,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                env=env,
+                bufsize=1,
+            )
 
-        full_response = ""
-        if process.stdout:
-            for line in iter(process.stdout.readline, ""):
-                full_response += line
+            try:
+                # Use a timeout to avoid hanging indefinitely
+                stdout, stderr = process.communicate(pretty_printed_prompt, timeout=60)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                stdout, stderr = process.communicate()
+                raise RuntimeError("gemini-cli timed out when streaming prompt via stdin")
 
-        stderr_output = ""
-        if process.stderr:
-            stderr_output = process.stderr.read()
+            return_code = process.returncode
 
-        return_code = process.wait()
+            if return_code == 0:
+                print("DEBUG: gemini(stdin) completed successfully")
+                return stdout
+            # If non-zero, fall through to fallback below and include stderr
+            last_error = stderr
+        except OSError as e:
+            # Could be "Argument list too long" or other exec issues.
+            last_error = str(e)
 
-        if return_code != 0:
-            raise RuntimeError(f"Error during gemini-cli execution: {stderr_output}")
+        # Fallback: write prompt to a temporary file and pass filename
+        import tempfile
 
-        return full_response
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as tf:
+                tf.write(pretty_printed_prompt)
+                tmp_path = tf.name
+
+            command_file = ["gemini", "-y", "-m", model_name, "-p", tmp_path]
+            process = subprocess.Popen(
+                command_file,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                env=env,
+                bufsize=1,
+            )
+
+            full_response = ""
+            if process.stdout:
+                for line in iter(process.stdout.readline, ""):
+                    full_response += line
+
+            stderr_output = ""
+            if process.stderr:
+                stderr_output = process.stderr.read()
+
+            return_code = process.wait()
+            if return_code != 0:
+                raise RuntimeError(
+                    f"Error during gemini-cli execution: {last_error or stderr_output}"
+                )
+
+            return full_response
+        finally:
+            try:
+                if tmp_path and os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            except Exception:
+                pass
     except FileNotFoundError:
         raise RuntimeError(
             "Error: 'gemini' command not found. "

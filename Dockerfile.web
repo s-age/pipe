@@ -32,6 +32,14 @@ RUN poetry install --without dev --no-interaction --no-ansi
 # Copy the rest of the application
 COPY . .
 
+# Ensure gemini CLI is available in the runtime image as well (install Node.js 24)
+RUN apt-get update && \
+	apt-get install -y curl ca-certificates gnupg && \
+	curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+	apt-get install -y nodejs && \
+	rm -rf /var/lib/apt/lists/* && \
+	npm install -g @google/gemini-cli
+
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/dist/web /app/assets
 

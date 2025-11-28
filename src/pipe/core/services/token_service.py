@@ -42,7 +42,8 @@ class TokenService:
         except Exception:
             # The google-genai package isn't available; proceed without it.
             print(
-                "TokenService: google.genai not available; skipping client initialization."
+                "TokenService: google.genai not available; "
+                "skipping client initialization."
             )
             self.client = None
 

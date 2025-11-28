@@ -78,7 +78,9 @@ def call_gemini_cli(session_service: SessionService) -> str:
             except subprocess.TimeoutExpired:
                 process.kill()
                 stdout, stderr = process.communicate()
-                raise RuntimeError("gemini-cli timed out when streaming prompt via stdin")
+                raise RuntimeError(
+                    "gemini-cli timed out when streaming prompt via stdin"
+                )
 
             return_code = process.returncode
 
@@ -96,7 +98,9 @@ def call_gemini_cli(session_service: SessionService) -> str:
 
         tmp_path = None
         try:
-            with tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as tf:
+            with tempfile.NamedTemporaryFile(
+                mode="w", delete=False, encoding="utf-8"
+            ) as tf:
                 tf.write(pretty_printed_prompt)
                 tmp_path = tf.name
 

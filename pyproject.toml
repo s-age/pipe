@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pipe"
-version = "0.1.0"
+version = "0.6.0"
 description = "A task-oriented chat agent for context engineering."
 authors = ["s-age <s-age@example.com>"]
 package-mode = false

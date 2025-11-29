@@ -156,9 +156,8 @@ def call_gemini_cli(
                 return_code = process.returncode
 
                 if return_code == 0:
-                    print(
-                        "DEBUG: gemini(stdin) completed successfully", file=sys.stderr
-                    )
+                    if output_format == "text":
+                        print("DEBUG: gemini(stdin) completed", file=sys.stderr)
                     try:
                         result = json.loads(stdout)
                         return result

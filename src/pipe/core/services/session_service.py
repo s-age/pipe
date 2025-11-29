@@ -77,7 +77,7 @@ class SessionService:
             if not session:
                 raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
 
-            if not is_dry_run and args.instruction:
+            if args.instruction and not is_dry_run:
                 new_turn = UserTaskTurn(
                     type="user_task",
                     instruction=args.instruction,
@@ -102,7 +102,7 @@ class SessionService:
                 parent_id=args.parent,
             )
 
-            if not is_dry_run and args.instruction:
+            if args.instruction and not is_dry_run:
                 first_turn = UserTaskTurn(
                     type="user_task",
                     instruction=args.instruction,
@@ -125,7 +125,8 @@ class SessionService:
                         persist=is_persistent,
                     )
 
-        self.repository.save(session)
+        if not is_dry_run:
+            self.repository.save(session)
 
         self.current_session = session
         self.current_session_id = session.session_id

@@ -314,8 +314,7 @@ class TestSessionService(unittest.TestCase):
 
         # Call with is_dry_run = True
         self.session_service.prepare(args, is_dry_run=True)
-        session_id = self.session_service.current_session_id
-        session = self.session_service.get_session(session_id)
+        session = self.session_service.current_session
 
         # The session is created, but the initial turn is NOT added
         self.assertEqual(len(session.turns), 0)

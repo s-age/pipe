@@ -63,7 +63,7 @@ export const panelBottomSpacing = style({
 export const newInstructionControl = style({
   position: 'sticky',
   bottom: 0,
-  padding: '12px',
+  padding: '12px 12px 4px',
   gap: '12px',
   alignItems: 'stretch',
   zIndex: zIndex.low

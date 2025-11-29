@@ -145,9 +145,9 @@ export const searchModalOverlay = style({
 export const searchModalContent = style({
   width: '80%',
   maxWidth: '720px',
-  maxHeight: '70vh',
+  height: '70vh',
   overflow: 'auto',
-  padding: '12px',
+  padding: '0',
   borderRadius: '10px',
   color: colors.white,
   background: colors.gray,
@@ -157,8 +157,17 @@ export const searchModalContent = style({
 export const searchModalHeader = style({
   display: 'flex',
   marginBottom: '8px',
-  alignItems: 'center',
-  justifyContent: 'space-between'
+  padding: '12px',
+  borderBottom: `1px solid ${colors.white}`
+})
+
+export const searchModalHeaderText = style({
+  flex: 1,
+  fontSize: '1.2rem',
+  fontWeight: 'bold',
+  textAlign: 'center',
+  color: colors.cyan,
+  alignItems: 'center'
 })
 
 export const searchModalClose = style({

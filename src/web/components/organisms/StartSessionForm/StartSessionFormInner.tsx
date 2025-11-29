@@ -43,6 +43,7 @@ export const StartSessionFormInner = ({
     useStartSessionFormHandlers()
 
   const formContext = useOptionalFormContext()
+  const register = formContext?.register
   const errors = formContext?.formState?.errors
 
   // Debug exposure removed.
@@ -64,6 +65,7 @@ export const StartSessionFormInner = ({
               <TextArea
                 id="instruction"
                 name="instruction"
+                register={register}
                 aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
               />
             )}
@@ -75,7 +77,12 @@ export const StartSessionFormInner = ({
           className={fieldsetContainer}
           error={errors?.parent as unknown as React.ReactNode}
         >
-          <Select name="parent" options={parentOptions} searchable={true} />
+          <Select
+            name="parent"
+            options={parentOptions}
+            register={register}
+            searchable={true}
+          />
         </Fieldset>
 
         <ReferenceList sessionDetail={sessionDetail} />

@@ -8,7 +8,6 @@ import importlib.util
 import inspect
 import logging
 import os
-import sys
 from typing import Any, Union, get_args, get_type_hints
 
 import google.genai as genai
@@ -23,7 +22,7 @@ log_file_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "debug.log")
 )
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format="%(asctime)s - %(levelname)s - %(message)s",
     filename=log_file_path,
     filemode="w",  # Overwrite the log file on each run
@@ -178,7 +177,6 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
     token_count = token_service.count_tokens(api_contents_string, tools=tools)
 
     is_within_limit, message = token_service.check_limit(token_count)
-    print(f"Token Count: {message}", file=sys.stderr)
     if not is_within_limit:
         raise ValueError("Prompt exceeds context window limit. Aborting.")
 
@@ -191,15 +189,12 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
 
     # 2. Override with session-specific hyperparameters
     if session_params := session_data.hyperparameters:
-        if temp_obj := session_params.temperature:
-            if temp_obj.value is not None:
-                gen_config_params["temperature"] = temp_obj.value
-        if top_p_obj := session_params.top_p:
-            if top_p_obj.value is not None:
-                gen_config_params["top_p"] = top_p_obj.value
-        if top_k_obj := session_params.top_k:
-            if top_k_obj.value is not None:
-                gen_config_params["top_k"] = top_k_obj.value
+        if temp_val := session_params.temperature:
+            gen_config_params["temperature"] = temp_val
+        if top_p_val := session_params.top_p:
+            gen_config_params["top_p"] = top_p_val
+        if top_k_val := session_params.top_k:
+            gen_config_params["top_k"] = top_k_val
 
     # tools.jsonからツールをロード
     loaded_tools_data = load_tools(project_root)

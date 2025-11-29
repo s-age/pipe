@@ -220,9 +220,9 @@ class TestCallGeminiApi(unittest.TestCase):
 
         # Mock session hyperparameters
         mock_hyperparams = MagicMock()
-        mock_hyperparams.temperature.value = 0.99
+        mock_hyperparams.temperature = 0.99
         mock_hyperparams.top_p = None  # Test that None values are skipped
-        mock_hyperparams.top_k.value = 50
+        mock_hyperparams.top_k = 50.0
         self.mock_session_service.current_session.hyperparameters = mock_hyperparams
 
         # Mock load_tools to return a tool definition

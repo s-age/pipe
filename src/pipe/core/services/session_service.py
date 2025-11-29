@@ -27,10 +27,12 @@ class SessionService:
         project_root: str,
         settings: Settings,
         repository: SessionRepository,
+        file_indexer_service=None,
     ):
         self.project_root = project_root
         self.settings = settings
         self.repository = repository
+        self.file_indexer_service = file_indexer_service
         self.current_session: Session | None = None
         self.current_session_id: str | None = None
         self.current_instruction: str | None = None
@@ -75,7 +77,7 @@ class SessionService:
             if not session:
                 raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
 
-            if not is_dry_run and args.instruction:
+            if args.instruction and not is_dry_run:
                 new_turn = UserTaskTurn(
                     type="user_task",
                     instruction=args.instruction,
@@ -100,14 +102,13 @@ class SessionService:
                 parent_id=args.parent,
             )
 
-            if not is_dry_run and args.instruction:
+            if args.instruction and not is_dry_run:
                 first_turn = UserTaskTurn(
                     type="user_task",
                     instruction=args.instruction,
                     timestamp=get_current_timestamp(self.timezone_obj),
                 )
                 session.add_turn(first_turn)
-            print(f"New session created: {session.session_id}", file=sys.stderr)
 
         if args.references:
             from pipe.core.domains.references import add_reference
@@ -124,7 +125,8 @@ class SessionService:
                         persist=is_persistent,
                     )
 
-        self.repository.save(session)
+        if not is_dry_run:
+            self.repository.save(session)
 
         self.current_session = session
         self.current_session_id = session.session_id
@@ -169,6 +171,13 @@ class SessionService:
         )
 
         self.repository.save(session)
+
+        # Rebuild Whoosh index when creating new session
+        if self.file_indexer_service:
+            try:
+                self.file_indexer_service.index_files()
+            except Exception as e:
+                print(f"Warning: Failed to rebuild Whoosh index: {e}", file=sys.stderr)
 
         return session
 
@@ -399,16 +408,6 @@ class SessionService:
         session_id = f"{parent_id}/{session_hash}" if parent_id else session_hash
 
         # TODO: Default hyperparameters should be handled more cleanly
-        print(
-            f"DEBUG: type of self.settings.parameters.temperature: "
-            f"{type(self.settings.parameters.temperature)}",
-            file=sys.stderr,
-        )
-        print(
-            f"DEBUG: self.settings.parameters.temperature: "
-            f"{self.settings.parameters.temperature}",
-            file=sys.stderr,
-        )
         default_hyperparameters = Hyperparameters(
             temperature=self.settings.parameters.temperature.value,
             top_p=self.settings.parameters.top_p.value,

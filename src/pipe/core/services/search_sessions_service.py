@@ -23,6 +23,9 @@ class SearchSessionsService:
 
     def _iter_session_files(self) -> Iterable[str]:
         for root, _, files in os.walk(self.sessions_dir):
+            # Skip backups directory
+            if "backups" in root.split(os.path.sep):
+                continue
             for fname in files:
                 if not fname.lower().endswith(".json"):
                     continue
@@ -43,19 +46,24 @@ class SearchSessionsService:
         - If query is found in filename (case-insensitive) -> match.
         - Otherwise, try to load JSON and match against `purpose`,
           `background`, or turns' `instruction`/`content` fields.
-        Only sessions that actually match are returned (no duplicates).
+        Sessions are returned only once even if multiple turns match.
         """
         q = (query or "").strip()
         if not q:
             return []
 
         qlow = q.lower()
-        matches: list[dict[str, str]] = []
+        matches: dict[str, dict[str, str]] = {}
 
         for fpath in self._iter_session_files():
             fname = os.path.basename(fpath)
+            session_id = self._compute_session_id(fpath)
             title = None
             matched = False
+
+            # Skip if already matched
+            if session_id in matches:
+                continue
 
             # 1. Filename match
             if qlow in fname.lower():
@@ -95,11 +103,9 @@ class SearchSessionsService:
                             break
 
             if matched:
-                matches.append(
-                    {
-                        "session_id": self._compute_session_id(fpath),
-                        "title": title or os.path.splitext(fname)[0],
-                    }
-                )
+                matches[session_id] = {
+                    "session_id": session_id,
+                    "title": title or os.path.splitext(fname)[0],
+                }
 
-        return matches
+        return list(matches.values())

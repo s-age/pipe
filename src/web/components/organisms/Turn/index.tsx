@@ -256,7 +256,7 @@ const Component = ({
                   </Button>
                 </Tooltip>
               )}
-            {onDelete && (
+            {expertMode && onDelete && (
               <Tooltip content="Delete Turn">
                 <Button kind="ghost" size="xsmall" onClick={onDelete}>
                   <IconDelete size={24} className={deleteButtonIcon} />

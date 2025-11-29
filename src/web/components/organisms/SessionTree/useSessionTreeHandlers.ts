@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import type React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
@@ -17,6 +18,7 @@ export const useSessionTreeHandlers = (
   sessionReferences: React.RefObject<Map<string, HTMLLIElement>>
 ): UseSessionTreeHandlersReturn => {
   const { loadSession } = useSessionOverviewActions()
+  const navigate = useNavigate()
 
   const handleNewChatClick = useCallback(() => {
     window.location.href = '/start_session'
@@ -44,9 +46,9 @@ export const useSessionTreeHandlers = (
 
       const sessionDetail = await loadSession(sessionId)
       selectSession(sessionId, sessionDetail)
-      window.history.replaceState({}, '', `/session/${sessionId}`)
+      navigate(`/session/${sessionId}`, { replace: true })
     },
-    [loadSession, selectSession]
+    [loadSession, selectSession, navigate]
   )
 
   return { handleNewChatClick, setSessionReference, handleAnchorClick }

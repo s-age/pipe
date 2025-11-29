@@ -116,6 +116,16 @@ def _parse_arguments():
         type=str,
         help="Specify the API mode (e.g., gemini-api, gemini-cli).",
     )
+    parser.add_argument(
+        "--output-format",
+        type=str,
+        choices=["json", "text", "stream-json"],
+        default="json",
+        help=(
+            "Output format for the response. Default is 'json'. "
+            "Use 'json' for final JSON output, 'text' for plain text."
+        ),
+    )
 
     args = parser.parse_args()
     return args, parser

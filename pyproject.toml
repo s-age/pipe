@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "pipe"
-version = "0.1.0"
+version = "0.6.0"
 description = "A task-oriented chat agent for context engineering."
 authors = ["s-age <s-age@example.com>"]
-python = "^3.12"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -12,7 +12,7 @@ python-dotenv = "1.1.1"
 Flask = "3.1.2"
 cryptography = "46.0.2"
 json5 = "0.9.25"
-pydantic = "2.6.4"
+pydantic = "^2.12.5"
 beautifulsoup4 = "4.12.3"
 httpx = "^0.28.1"
 pygls = "1.3.0"
@@ -20,6 +20,7 @@ Flask-CORS = "4.0.1"
 watchdog = "4.0.1"
 Whoosh = "2.7.4"
 pathspec = "0.12.1"
+google-genai = "^1.52.0"
 
 [tool.poetry.scripts]
 takt = "pipe.cli.takt:main"
@@ -30,7 +31,7 @@ pytest = "8.4.2"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "0.5.5"
-mypy = "1.11.0"
+mypy = "1.13.0"
 types-PyYAML = "*"
 pytest-cov = "*"
 
@@ -62,5 +63,4 @@ python_version = "3.12"
 check_untyped_defs = true
 ignore_missing_imports = true
 explicit_package_bases = true
-plugins = ["pydantic.mypy"]
 

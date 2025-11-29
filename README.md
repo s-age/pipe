@@ -1,10 +1,12 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/s-age/pipe/main/src/web/static/images/logo.png" alt="pipe logo" width="200">
-</p>
-
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0--1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/)
 
 # pipe
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/s-age/pipe/main/src/web/static/images/logo.png" alt="pipe logo" width="320">
+</p>
+
+## Overview
 
 > **Make AI Agents Deterministic.**
 
@@ -12,61 +14,43 @@
 
 Unlike traditional frameworks that treat agents as stateful, conversational partners, `pipe` treats an agent as a **stateless, pure function** that accepts structured context via standard input (stdin) and returns execution results via standard output (stdout).
 
-## The Philosophy
+### Philosophy
 
 - **Do One Thing Well:** Each agent role is specialized and acts as a single, deterministic function call.
 - **Composable Intelligence:** Chain agents through natural language instructions via `takt`. A parent agent (e.g., Conductor) delegates tasks to sub-agents, where the output of one agent informs the next through structured session management.
 - **Universal Interface:** Built on text streams (JSON/Markdown), ensuring seamless integration with any CLI tool, script, or CI/CD pipeline.
 
-s-age: 以下を src/pipe/core/README.md のUSAGEをベースに再考してみてくれ
+`pipe` provides a strong foundation for the Agent as Function (AasF) paradigm, enabling smaller contexts by structuring information effectively. It realizes bottom-heavy architecture—where the complexity lies in the well-designed tools and frameworks rather than overburdening the LLM at the top. This is achieved through easy multi-agent orchestration, allowing agents to handle small, specialized tasks and build complex workflows without requiring the LLM to manage everything at once.
 
-## The Mechanism
+In this paradigm, the smaller the function, the smaller the deviation—ensuring that each agent remains highly predictable and composable.
+
+Ultimately, pipe aims to automate not just individual agent functions, but entire session lifecycles—from creation and execution to management and archival—enabling fully autonomous AI workflows.
+
+For a deeper dive into the principles of Context Engineering that underpin this philosophy, see our [Wiki article](https://github.com/s-age/pipe/wiki/Context-Engineering:-The-Art-of-Communicating-Intent-to-LLMs).
+
+## Key Concepts
+
+### Mechanism
 
 In `pipe`, an agent is defined simply as:
 
 $$f(\text{context}) \rightarrow \text{result}$$
 
-It abstracts the complexity of LLMs into a simple command-line interface via `takt`.
+`takt` structures and injects precisely crafted context into the LLM. You must explicitly define the `--purpose` and `--background` to ground the agent, ensuring it never hallucinates the goal.
 
 ```bash
-# Example: The "Unix" way of AI orchestration
-cat context.json | takt --role "architect" | takt --role "engineer" > result.json
+# Example: Create a parent session and use its session ID to create a child session
+takt --purpose "Simple greeting" \
+     --background "Basic conversation example." \
+     --instruction "Say hello." \
+| jq -r '.session_id' \
+| xargs -I {} takt --parent {} \
+                   --purpose "Follow-up response" \
+                   --background "A new session that builds on the parent session." \
+                   --instruction "Respond to the greeting."
 ```
 
-GitHub Copilot: Read [](file:///Users/s-age/gitrepos/pipe/src/pipe/core/README.md#1-1), lines 1 to 100
-
-Read [](file:///Users/s-age/gitrepos/pipe/src/pipe/core/README.md#101-101), lines 101 to 104
-
-## The Mechanism
-
-In `pipe`, an agent is defined simply as:
-
-$$f(\text{context}) \rightarrow \text{result}$$
-
-It abstracts the complexity of LLMs into a simple command-line interface via `takt`, where each invocation processes structured input and produces deterministic output.
-
-```bash
-# Example: The "Unix" way of AI orchestration
-echo '{"purpose": "Design system", "background": "Web app"}' | takt --roles roles/architect.md --instruction "Architect the solution" | jq '.session_id' | xargs -I {} takt --session {} --roles roles/engineer.md --instruction "Implement the design" > result.json
-```
-
-This approach leverages `takt`'s options like `--roles` for persona definition, `--instruction` for task specification, and `--session` for state continuity, ensuring modular and composable AI workflows. The output JSON can be piped through tools like `jq` for extraction and chaining, maintaining the deterministic context management central to `pipe`'s philosophy.
-
-s-age: 実体とは乖離してるから消す方向にしよう。
-jqとか使う必要もないからね。
-この辺りはアージェントなり、スクリプトなりで繋ぎ込めばいい。
-
-どちらかというとこういう思想を伝える良い表現はあるか？
-cli | agent
-agent | agent
-any script | agent
-WebUI | agent
-
-## The Mechanism
-
-In `pipe`, an agent is defined simply as:
-
-$$f(\text{context}) \rightarrow \text{result}$$
+This approach leverages `takt`'s options like `--roles` for persona definition, `--instruction` for task specification, and `--parent` for hierarchical session relationships, ensuring modular and composable AI workflows. The output JSON can be piped through tools like `jq` for extraction and chaining, maintaining the deterministic context management central to `pipe`'s philosophy.
 
 This abstraction enables seamless composition, where any source of structured data can feed into an agent, and agents can chain together or output to any consumer. The philosophy emphasizes composability over monolithic interfaces:
 
@@ -79,7 +63,7 @@ Through `takt`, this becomes a reality—LLM complexity distilled into a Unix-li
 
 Stop managing complex conversation states. Start composing intelligent functions.
 
-## A Clean Jailbreak from LLM Obfuscation
+### A Clean Jailbreak from LLM Obfuscation
 
 `pipe` is not another chat agent. It is a tool designed to give you, the developer, complete control over the conversational context. Unlike traditional clients that hide their history management in a black box, `pipe` empowers you to freely manipulate the history, extract what is essential, and achieve **true context engineering**.
 
@@ -87,29 +71,28 @@ This is a clean jailbreak tool from vendor obfuscation.
 
 We employ a **minimal yet powerful** CLI-driven approach, focusing on the one thing that truly matters: ensuring the agent understands its purpose, history, and current task without ambiguity.
 
-## Core Philosophy
+### Core Philosophy
 
-### 1. Total Context Control
+#### 1. Total Context Control
 
 The prompt is reconstructed with a structured, self-describing **JSON Schema** for every call. This is inherently more token-efficient and understandable for an LLM. The entire history is transparent, saved in readable JSON session files. This ensures full **auditability** and gives the stateless LLM a persistent, and more importantly, **malleable** memory. You can retry, refine, edit, delete, and compress with surgical precision.
 
-### 2. Uncompromising Extensibility
+#### 2. Uncompromising Extensibility
 
 By default, `pipe` is based on `gemini-cli`, but this is merely an implementation detail. The core logic is decoupled. If you want to use the direct API, do it. If you want to use `claude-code`, do it. The framework is designed to be torn apart and rebuilt to your specifications.
 
-### License: The Spirit of the Jailbreak
+#### 3. Git-Inspired Session Management
 
-This project's _original code_ is released under the [CC0 1.0 Universal (CC0 1.0) Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/).
+`pipe`'s session operations are designed with Git's powerful version control concepts in mind, providing developers with familiar and intuitive tools for managing conversational history:
 
-Customize it as you wish. Jailbreak as you desire.
+| Operation    | Git Equivalent                             | Description                                                                                                                           |
+| :----------- | :----------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ |
+| **Edit**     | `git commit --amend` or `git rebase -i`    | Modify the content of a specific turn or instruction in the session history, allowing for precise refinements without losing context. |
+| **Delete**   | `git reset --hard` or `git rm`             | Remove unwanted turns or entire sections from the session, cleaning up the history for better focus.                                  |
+| **Fork**     | `git branch` or `git fork`                 | Create a new session branch from any point in the conversation, enabling parallel exploration of alternative responses or strategies. |
+| **Compress** | `git rebase --interactive` or `git squash` | Condense long conversation histories into concise summaries, reducing token usage while preserving essential context.                 |
 
-**Important Note on Dependencies:**
-This project utilizes various third-party libraries, each governed by its own license. While the original code of `pipe` is dedicated to the public domain under CC0, the licenses of these dependencies (e.g., MIT, Apache 2.0, BSD) still apply to their respective components.
-
-- **Commercial Use**: Please review the licenses of all included third-party libraries to ensure compliance with your intended use, especially for commercial applications.
-- **Attribution**: Some third-party licenses may require attribution. It is your responsibility to comply with all applicable license terms.
-
-The purpose of this project is to be a **pipe to the agent**, and a **pipe to our followers** (the community).
+This Git-inspired approach ensures that session management feels natural to developers, combining the flexibility of version control with the determinism of structured AI interactions.
 
 ---
 
@@ -131,64 +114,34 @@ The purpose of this project is to be a **pipe to the agent**, and a **pipe to ou
   - A specialized `Compressor` agent can perform **partial compression** on any session's history.
   - Precisely control the compression by specifying a **turn range**, a **summarization policy** (what to keep), and a **target character count**.
   - Before applying the compression, a `Reviewer` agent automatically **verifies** that the summarized history maintains a natural conversational flow, preventing context loss.
-  - **Note on `gemini-cli`:** To use advanced features like Compression and Forking in `gemini-cli` mode, you must first register the `pipe` tool server. See the "Integration with `gemini-cli`" section below for the required one-time setup command.
+  - **Note on MCP Server Setup:** To use advanced features like Compression and Forking, the `pipe` MCP server is configured in Docker environments. For local setups (if not using Docker), add the following to your `.gemini/setting.json` (adjust the `workingDir` path to your `pipe` installation):
+    ```json
+    {
+      "mcpServers": {
+        "pipe_tools": {
+          "command": "python3",
+          "args": ["-m", "pipe.cli.mcp_server"],
+          "workingDir": "/path/to/pipe"
+        }
+      }
+    }
+    ```
+  - **Customizing Verification:** If the verification process is too strict and frequently rejects summaries, you can edit `roles/verifier.md` to adjust the approval checklist for more lenient verification. This allows you to balance between context preservation and compression efficiency based on your needs.
 - **Turn-based Forking:** Easily fork a conversation from any specific turn. This allows you to explore alternative responses from the LLM or test different instructions without altering the original history, enabling robust validation and experimentation.
 
----
+See [docs/tools.md](docs/tools.md) for information on available tools and integrations.
 
-## Setup & Installation
-
-1. **Prerequisites:** Python 3.12 or higher and Poetry installed (`pip install poetry` or use the official installer). `gemini-cli` is optional; the system can use Gemini API directly for most features.
-2. **Install Dependencies:** `poetry install`
-3. **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
-   - For Gemini API mode: Add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
-   - For `gemini-cli` mode: Set `GOOGLE_API_KEY` in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`).
-   - The system supports extensible backends; configure other agents (e.g., Claude, OpenAI) via `setting.yml` and their respective API keys.
-
-## Integration with `gemini-cli` (One-Time Setup)
-
-To use advanced features like agent-driven **Compression** and session **Forking** in `gemini-cli` mode, you must first register `pipe`'s tool server. This command tells `gemini-cli` how to communicate with this project's tools.
-
-Execute the following command once:
-
-```bash
-gemini mcp add pipe_tools "python -m pipe.cli.mcp_server" --working-dir /path/to/pipe
-```
-
-_(Replace `/path/to/pipe` with the actual absolute path to this project's directory.)_
-
-**Benefit:** After this integration, all tool calls made during a session (such as `create_verified_summary` or `read_file`) will become visible in the session history file (`.json`), providing complete transparency and auditability of the agent's actions.
-
-### Language Server Protocol (LSP) Server
-
-`pipe` also provides a Language Server Protocol (LSP) server based on `pygls`. This server integrates with IDEs (like VS Code) to enable advanced understanding and manipulation of Python code. Its purpose is to provide context for LLMs to better understand the codebase.
-
-**Provided LSP Features:**
-
-- **Code Analysis**: Provides definition locations and docstrings for classes, functions, and variables.
-- **Code Snippets**: Extracts code snippets for specific symbols.
-- **Type Hints**: Displays type hints for functions and classes.
-- **Symbol References**: Searches for symbol references within files.
-
-**How to Run:**
-
-The LSP server can be started in the background using the following command. This allows IDEs to connect to the server.
-
-```bash
-python -m src.pipe.cli.pygls_server > /dev/null 2>&1 &
-```
-
-- This command starts the server in the background and redirects standard output and standard error to `/dev/null`.
-- To stop the server, use the `kill` command with the Process Group ID (PGID) displayed upon startup. For example, if the PGID is `83272`:
-  ```bash
-  kill -s TERM -- -83272
-  ```
-
-**Note:** This server is designed to be connected to by an LSP client (e.g., an IDE like VS Code). Running it standalone will produce minimal visible output.
+See [docs/extending.md](docs/extending.md) for information on extending the framework with new agents.
 
 ---
 
-## Usage: 3 Routes to Context Engineering
+## Installation
+
+See [docs/setup.md](docs/setup.md) for setup instructions.
+
+## Usage
+
+### Routes to Context Engineering
 
 The **pipe** framework offers three primary routes, optimized for different user environments and goals, all built on the same structured core.
 
@@ -214,23 +167,7 @@ takt --session <SESSION_ID> --instruction "Now, add a state for loading."
 
 ### 2. Route 2: Web UI (Management & Human-in-the-Loop)
 
-This is best for users seeking **intuitive visual management** and **direct manipulation of history** without file editing.
-
-| Use Case              | Description                                                                                                                                                    |
-| :-------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **View/Edit History** | Browse detailed session histories; surgically edit specific turns or session metadata (purpose/background).                                                    |
-| **Fork from Turn**    | Easily **fork** a conversation from any specific turn to test alternative instructions or validate different LLM responses without altering the original flow. |
-| **Enable Editing**    | Activate `expert_mode` in `setting.yml` to enable editing and deleting session turns directly from the Web UI.                                                 |
-| **Continue Sessions** | Use form inputs to send new instructions to existing sessions.                                                                                                 |
-| **Management**        | Intuitively start new sessions, compress history, or delete unnecessary sessions via a graphical interface.                                                    |
-
-**Example (Start Server):**
-
-```bash
-flask --app pipe.web.app run --host=0.0.0.0 --port=5001
-```
-
-_(Navigate to `http://127.0.0.1:5001` in your browser)_
+See [docs/development.md](docs/development.md) for details on running and using the Web UI.
 
 ### 3. Route 3: Execution from Agent (Orchestration)
 
@@ -272,35 +209,6 @@ takt --purpose "Compress a long-running session" --role "roles/compressor.md" --
 
 The agent will then interactively guide you through the specification and verification process to perform the compression safely.
 
-### Compression & Verification Workflow
-
-```mermaid
-graph TD
-    subgraph "Design Phase (Turns 1-50)"
-        A["User starts conversation about design (Turns 1-50)"] --> B["Design context accumulates (including potential noise)"];
-        B --> C["User requests to compress the design phase and move to implementation"];
-    end
-
-    subgraph "Compression Gate"
-        C --> D("1. Compressor Agent starts");
-        D --> E{"Tool: read_session_turns(1-50) to load history"};
-        E --> F("2. Generate summary draft");
-        F --> G{"Tool: call create_verified_summary(Summary Draft)"};
-        G --> H("3. Verifier Agent starts");
-        H --> I{"Verifier Agent: Quality check and verification of 'Summary Draft'"};
-        I -- "NO: Critical information missing" --> F;
-        I -- "YES: Quality verified" --> J("4. Return Verified Summary to Compressor");
-        J --> K{"5. Compressor: Present Verified Summary to user for approval"};
-        K -- "User approves" --> L{"Tool: replace_session_turns(1-50, Verified Summary) to replace history"};
-        K -- "User rejects" --> M["Compression process terminated (history preserved)"];
-        L --> N("6. Compression complete: Clean context for implementation");
-    end
-
-    subgraph "Implementation Phase"
-        N --> O["User starts implementation process"];
-    end
-```
-
 ### 5. Route 5: Multi-Agent Simulation (e.g., Self-Play)
 
 The true power of `pipe` is revealed in its ability to facilitate complex multi-agent simulations using nothing more than natural language. By defining roles and procedures in simple Markdown files, you can orchestrate sophisticated interactions between agents.
@@ -322,9 +230,9 @@ Act as @roles/games/reversi_player.md and execute @procedures/reversi_game.md
 
 This single line of instruction causes the agent to initiate a game of Reversi, playing against itself by following the rules and persona defined in the Markdown files. This showcases the framework's capability for complex task delegation and agent-based automation, all orchestrated through simple, human-readable text.
 
----
+## Examples
 
-## Dry Run Output Example
+### Dry Run Output Example
 
 When running `takt` with the `--dry-run` flag, the generated JSON prompt is displayed. This JSON object represents the structured input that would be sent to the AI sub-agent. It can be useful for understanding how `pipe` constructs its prompts or for direct experimentation with AI models.
 
@@ -332,87 +240,20 @@ Here's an example of a generated prompt:
 
 Note that the JSON presented here is pretty-printed for readability; the actual output from `takt --dry-run` is also pretty-printed with indentation for human readability.
 
-````json
-{
-  "description": "This structured prompt guides your response. First, understand the core instructions: `main_instruction` defines your thinking process. Next, identify the immediate objective from `current_task` and `todos`. Then, gather all context required to execute the task by processing `session_goal`, `roles`, `constraints`, `conversation_history`, and `file_references` in that order. Finally, execute the `current_task` by synthesizing all gathered information.",
-  "main_instruction": "Your main instruction is to be helpful and follow all previous instructions.",
-  "reasoning_process": {
-    "description": "Think step-by-step to achieve the goal."
-  },
-  "current_task": {
-    "type": "model_response",
-    "instruction": null,
-    "response": null,
-    "name": null,
-    "content": "Setup is complete. Awaiting the next command.\n",
-    "original_turns_range": null,
-    "timestamp": "2025-10-26T20:36:04.540328+09:00"
-  },
-  "todos": [
-    {
-      "title": "test1",
-      "description": "",
-      "checked": false
-    },
-    {
-      "title": "test2",
-      "description": "",
-      "checked": false
-    }
-  ],
-  "current_datetime": "2025-10-26T20:36:51.067644+09:00",
-  "session_goal": {
-    "description": "This section outlines the goal of the current session.",
-    "purpose": "Generate dry-run output for README",
-    "background": "To demonstrate the prompt structure in the project's main README file."
-  },
-  "roles": {
-    "description": "The following are the roles for this session.",
-    "definitions": [
-      "**Role: Conductor**\n\n**Responsibilities:**\n\nThe primary responsibility of any agent assigned the Conductor role is to **EXCLUSIVELY** delegate tasks to sub-agents via `takt`. The Conductor **MUST NEVER** perform any processing directly. Instead, the Conductor constructs and executes appropriate `takt` commands based on the provided instructions and session context. If a specific role is not provided, the Conductor should call `takt` without the `--roles` argument, allowing `takt` to handle default role assignment or execution without a specific role. All work must be delegated.\n\n**`takt` Usage:**\n\n`takt` provides the following key functionalities:\n\n1.  **Starting a New Session:**\n    *   `--purpose`: Defines the overall purpose of the session.\n    *   `--background`: Provides background context for the session.\n    *   `--roles`: Specifies role files to assign to sub-agents (comma-separated).\n    *   `--instruction`: The first specific instruction for the sub-agent.\n    *   Example: `takt --purpose \"Create a new React component\" --background \"Display user profile\" --roles \"roles/engineer.md\" --instruction \"Create a UserProfile component.\"`\n\n2.  **Continuing a Session:**\n    *   `--session <SESSION_ID>`: Specifies the ID of the session to continue.\n    *   `--instruction`: A new specific instruction for the sub-agent.\n    *   Example: `takt --session <SESSION_ID> --instruction \"Add state management.\"`\n\n3.  **Compressing a Session:**\n    *   `--session <SESSION_ID>`: Specifies the ID of the session to compress.\n    *   `--compress`: Summarizes the session history to reduce token count.\n    *   Example: `takt --session <SESSION_ID> --compress`\n\n4.  **Dry Run Mode:**\n    *   `--dry-run`: Reviews the generated JSON prompt without actual execution.\n    *   Example: `takt --purpose \"Test Prompt\" --instruction \"My instruction\" --dry-run`\n\n**Key Principles:**\n\n*   **STRICT RULE: No Self-Processing:** The Conductor **MUST NEVER** execute any task directly. All processing **MUST BE** delegated to sub-agents exclusively via `takt`. This is a foundational principle of the `pipe` architecture.\n*   **Role Handling:** If a specific sub-agent role is provided (e.g., via `@<role_name>` or `--roles`), the Conductor MUST use it. If no specific role is provided, the Conductor MUST call `takt` without the `--roles` argument, allowing `takt` to determine the appropriate handling (e.g., default role, no specific role).\n*   **Session Continuation:** Unless explicitly instructed otherwise, the Conductor will continue the current session and add new instructions to the existing session. New sessions are only initiated when clearly directed.\n*   **Transparency:** Clearly communicate the execution results of `takt` (including responses from sub-agents) to the user.\n\n---\n\n## Conductor Workflow Flowchart\n\n```mermaid\ngraph TD\n    A[\"Start: Appointed to Conductor Role\"] --> B{\"Is Session ID specified?\"};\n\n    B -- \"Yes\" --> C[\"Execute takt with Session ID and Instruction\"];\n    B -- \"No\" --> D[\"Enter Session ID to continue session, or parameters (--purpose, --background, --instruction, [Optional: --roles]) for a new session\"];\n\n    D --> E{\"Is input a Session ID?\"};\n\n    E -- \"Yes\" --> G{\"Is Session ID valid?\"};\n    E -- \"No\" --> F{\"Is it an instruction to start a new session?\"};\n\n    G -- \"Yes\" --> C;\n    G -- \"No\" --> I[\"Response: Session ID is invalid. Please enter Session ID again\"];\n    I --> D;\n\n    F -- \"Yes\" --> J{\"Are parameters (--purpose, --background, --instruction) clear?\"};\n    F -- \"No\" --> K[\"Response: Please enter Session ID or parameters for a new session\"];\n    K --> D;\n\n    J -- \"Yes\" --> C;\n    J -- \"No\" --> D;\n\n    C --> L{\"What is the next instruction?\"};\n    L -- \"Continue current session\" --> C;\n    L -- \"Another Session ID or New Session\" --> B;\n    L -- \"End\" --> M[\"End\"];\n```"
-    ]
-  },
-  "constraints": {
-    "description": "Constraints for the model.",
-    "language": "japanese",
-    "processing_config": {
-      "description": "Configuration for processing.",
-      "multi_step_reasoning_active": true
-    },
-    "hyperparameters": {
-      "description": "Hyperparameter settings for the model.",
-      "temperature": {
-        "type": "number",
-        "value": 0.2,
-        "description": "Be precise and factual. A lower value is preferred for deterministic output."
-      },
-      "top_p": {
-        "type": "number",
-        "value": 0.5,
-        "description": "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
-      },
-      "top_k": {
-        "type": "number",
-        "value": 5.0,
-        "description": "Limit the generation to the top 5 most likely tokens at each step."
-      }
-    }
-  },
-  "conversation_history": {
-    "description": "Historical record of past interactions in this session, in chronological order.",
-    "turns": [
-      {
-        "type": "user_task",
-        "instruction": "This is the initial instruction to set up the session.",
-        "timestamp": "2025-10-26T20:35:58.210075+09:00"
-      }
-    ]
-  },
-  "file_references": [
-    {
-      "path": "foo.txt",
-      "content": "bar"
-    }
-  ]
-}
-````
+See [docs/dry-run-sample.json](docs/dry-run-sample.json) for a full example.
+
+## License
+
+### The Spirit of the Jailbreak
+
+This project's _original code_ is released under the [CC0 1.0 Universal (CC0 1.0) Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/).
+
+Customize it as you wish. Jailbreak as you desire.
+
+**Important Note on Dependencies:**
+This project utilizes various third-party libraries, each governed by its own license. While the original code of `pipe` is dedicated to the public domain under CC0, the licenses of these dependencies (e.g., MIT, Apache 2.0, BSD) still apply to their respective components.
+
+- **Commercial Use**: Please review the licenses of all included third-party libraries to ensure compliance with your intended use, especially for commercial applications.
+- **Attribution**: Some third-party licenses may require attribution. It is your responsibility to comply with all applicable license terms.
+
+The purpose of this project is to be a **pipe to the agent**, and a **pipe to our followers** (the community).

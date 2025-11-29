@@ -68,7 +68,10 @@ class TestDispatcher(unittest.TestCase):
         dispatch(args, self.session_service, self.mock_parser)
         mock_help_run.assert_called_once_with(self.mock_parser)
 
-    @patch("pipe.core.delegates.gemini_api_delegate.run")
+    @patch(
+        "pipe.core.delegates.gemini_api_delegate.run_stream",
+        return_value=[("end", "model response", 100, [])],
+    )
     @patch("pipe.core.delegates.dry_run_delegate.run")
     def test_dispatch_run_handles_dry_run(self, mock_dry_run, mock_gemini_run):
         """Tests that _dispatch_run correctly routes to the dry_run_delegate."""
@@ -82,7 +85,10 @@ class TestDispatcher(unittest.TestCase):
         mock_dry_run.assert_called_once()
         mock_gemini_run.assert_not_called()
 
-    @patch("pipe.core.delegates.gemini_api_delegate.run", return_value=(None, 100, []))
+    @patch(
+        "pipe.core.delegates.gemini_api_delegate.run_stream",
+        return_value=[("end", "model response", 100, [])],
+    )
     def test_dispatch_run_handles_gemini_api_mode(self, mock_gemini_api_run):
         """Tests that _dispatch_run routes to gemini_api_delegate."""
         from pipe.core.dispatcher import _dispatch_run
@@ -99,7 +105,10 @@ class TestDispatcher(unittest.TestCase):
         _dispatch_run(args, self.session_service)
         mock_gemini_api_run.assert_called_once()
 
-    @patch("pipe.core.delegates.gemini_cli_delegate.run", return_value="cli response")
+    @patch(
+        "pipe.core.delegates.gemini_cli_delegate.run",
+        return_value=("cli response", 100),
+    )
     def test_dispatch_run_handles_gemini_cli_mode(self, mock_gemini_cli_run):
         """Tests that _dispatch_run routes to gemini_cli_delegate."""
         from pipe.core.dispatcher import _dispatch_run
@@ -132,7 +141,10 @@ class TestDispatcher(unittest.TestCase):
         with self.assertRaises(ValueError):
             _dispatch_run(args, self.session_service)
 
-    @patch("pipe.core.delegates.gemini_api_delegate.run", return_value=(None, 100, []))
+    @patch(
+        "pipe.core.delegates.gemini_api_delegate.run_stream",
+        return_value=[("end", "model response", 100, [])],
+    )
     def test_ttl_and_expiration_are_called(self, mock_gemini_run):
         """Tests that TTL decrement and tool response expiration are called."""
         from pipe.core.dispatcher import _dispatch_run

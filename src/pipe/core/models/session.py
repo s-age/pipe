@@ -30,17 +30,26 @@ class Session(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _preprocess_todos(cls, data: Any) -> Any:
-        if isinstance(data, dict) and "todos" in data and data["todos"] is not None:
-            processed_todos = []
-            for item in data["todos"]:
-                if isinstance(item, str):
-                    processed_todos.append(TodoItem(title=item))
-                elif isinstance(item, dict):
-                    processed_todos.append(TodoItem(**item))
-                else:
-                    processed_todos.append(item)
-            data["todos"] = processed_todos
+    def _preprocess_data(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Preprocess todos
+            if "todos" in data and data["todos"] is not None:
+                processed_todos = []
+                for item in data["todos"]:
+                    if isinstance(item, str):
+                        processed_todos.append(TodoItem(title=item))
+                    elif isinstance(item, dict):
+                        processed_todos.append(TodoItem(**item))
+                    else:
+                        processed_todos.append(item)
+                data["todos"] = processed_todos
+
+            # Preprocess hyperparameters
+            if "hyperparameters" in data and data["hyperparameters"] is not None:
+                if isinstance(data["hyperparameters"], dict):
+                    data["hyperparameters"] = Hyperparameters(**data["hyperparameters"])
+                # If it's already Hyperparameters, leave it as is
+
         return data
 
     if TYPE_CHECKING:

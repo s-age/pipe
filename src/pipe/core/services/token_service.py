@@ -1,28 +1,50 @@
 """
 Manages token counting using the official Google Generative AI library.
+This module is defensive: if the `google.genai` package isn't available
+in the runtime environment, TokenService will fall back to a noop client
+and provide rough token estimations.
 """
 
-import google.genai as genai
+from typing import Any
+
 from pipe.core.models.settings import Settings
 
 
 class TokenService:
-    """Handles token counting using the google-genai library."""
+    """Handles token counting using the google-genai library.
+
+    If the `google.genai` package is not installed, the service will keep
+    `self.client` as None and use a fallback estimation in `count_tokens()`.
+    """
 
     def __init__(self, settings: Settings):
-        """
-        Initializes the TokenService.
+        """Initializes the TokenService.
 
         Args:
             settings: The Settings model instance.
         """
         self.model_name = settings.model
         self.limit = settings.context_limit
-        self.client: genai.Client | None = None
+
+        self.client: Any | None = None
+
+        # Import `google.genai` lazily so importing this module doesn't
+        # raise ModuleNotFoundError in environments where the package
+        # isn't installed (e.g., some Docker images).
         try:
-            self.client = genai.Client()
-        except Exception as e:
-            print(f"Error initializing genai.Client: {e}")
+            import google.genai as genai  # type: ignore
+
+            try:
+                self.client = genai.Client()
+            except Exception as e:
+                print(f"Error initializing genai.Client: {e}")
+                self.client = None
+        except Exception:
+            # The google-genai package isn't available; proceed without it.
+            print(
+                "TokenService: google.genai not available; "
+                "skipping client initialization."
+            )
             self.client = None
 
     def count_tokens(self, contents, tools: list | None = None) -> int:

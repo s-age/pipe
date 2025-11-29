@@ -4,21 +4,31 @@ import { Button } from '@/components/atoms/Button'
 import { IconPaperPlane } from '@/components/atoms/IconPaperPlane'
 import { TextArea } from '@/components/molecules/TextArea'
 import { Form } from '@/components/organisms/Form'
+import { useSessionStore } from '@/stores/useChatHistoryStore'
 
 import { useInstructionFormHandlers } from './hooks/useInstructionFormHandlers'
 import { useInstructionFormLifecycle } from './hooks/useInstructionFormLifecycle'
-import { instructionWrapper, instructionTextarea, overlaySendButton } from './style.css'
+import {
+  instructionWrapper,
+  instructionTextarea,
+  overlaySendButton,
+  contextLeftText
+} from './style.css'
 
 type InstructionFormProperties = {
   currentSessionId: string | null
   onSendInstruction: (instruction: string) => Promise<void>
   isStreaming: boolean
+  tokenCount?: number
+  contextLimit?: number
 }
 
 export const InstructionForm = ({
   currentSessionId,
   onSendInstruction,
-  isStreaming
+  isStreaming,
+  tokenCount: tokenCountProperty,
+  contextLimit: contextLimitProperty
 }: InstructionFormProperties): JSX.Element => {
   // We must call `useInstructionFormHandlers` inside the `Form` provider created by
   // `Form`. To ensure `useFormContext` is available we define an inner
@@ -31,27 +41,37 @@ export const InstructionForm = ({
       onSendInstruction
     })
 
+    const { state } = useSessionStore()
+    const tokenCount = tokenCountProperty ?? 0
+    const contextLimit = contextLimitProperty ?? state.settings?.context_limit ?? 700000
+    const contextLeft = (100 - Math.floor((tokenCount / contextLimit) * 100)).toFixed(0)
+
     return (
-      <div className={instructionWrapper}>
-        <TextArea
-          id="new-instruction-text"
-          className={instructionTextarea}
-          placeholder="Enter your instruction here..."
-          name="instruction"
-          register={register}
-          disabled={isStreaming}
-        />
-        <Button
-          className={overlaySendButton}
-          kind="primary"
-          size="default"
-          onClick={onSendClick}
-          disabled={isStreaming}
-          tabIndex={0}
-          aria-label="Send Instruction"
-        >
-          <IconPaperPlane />
-        </Button>
+      <div>
+        <div className={instructionWrapper}>
+          <TextArea
+            id="new-instruction-text"
+            className={instructionTextarea}
+            placeholder="Enter your instruction here..."
+            name="instruction"
+            register={register}
+            disabled={isStreaming}
+          />
+          <Button
+            className={overlaySendButton}
+            kind="primary"
+            size="default"
+            onClick={onSendClick}
+            disabled={isStreaming}
+            tabIndex={0}
+            aria-label="Send Instruction"
+          >
+            <IconPaperPlane />
+          </Button>
+        </div>
+        {contextLimit > 0 && tokenCount !== null && (
+          <div className={contextLeftText}>({contextLeft}% context left)</div>
+        )}
       </div>
     )
   }

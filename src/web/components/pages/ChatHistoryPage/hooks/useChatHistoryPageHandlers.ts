@@ -10,7 +10,7 @@ type UseChatHistoryPageHandlersReturn = {
   expertMode: boolean
   selectSession: Actions['selectSession']
   setSessionDetail: Actions['setSessionDetail']
-  onRefresh: () => Promise<void>
+  onRefresh: (sessionId?: string) => Promise<void>
   refreshSessionsInStore: Actions['refreshSessions']
 }
 

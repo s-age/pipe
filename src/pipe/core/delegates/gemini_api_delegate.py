@@ -57,8 +57,8 @@ def execute_tool_call(tool_call, session_service, session_id, settings, project_
         return {"error": f"Failed to execute tool {tool_name}: {e}"}
 
 
-def run(args, session_service: SessionService, prompt_service: PromptService):
-    """The delegate function for running in gemini-api mode."""
+def run_stream(args, session_service: SessionService, prompt_service: PromptService):
+    """Streaming version for web UI."""
     model_response_text = ""
     token_count = 0
     intermediate_turns = []
@@ -86,11 +86,12 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
             ):
                 for part in chunk.candidates[0].content.parts:
                     if part.text:
-                        print(part.text, end="", flush=True)
+                        yield part.text
                         full_text_parts.append(part.text)
             response_chunks.append(chunk)
 
         if not response_chunks:
+            yield "API Error: Model stream was empty."
             model_response_text = "API Error: Model stream was empty."
             break
 
@@ -112,6 +113,7 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
         )
 
         if not response.candidates:
+            yield "API Error: No candidates in response."
             model_response_text = "API Error: No candidates in response."
             break
 
@@ -130,6 +132,7 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
 
         tool_call_count += 1
         if tool_call_count >= max_tool_calls:
+            yield "Error: Maximum number of tool calls reached. Halting execution."
             model_response_text = (
                 "Error: Maximum number of tool calls reached. Halting execution."
             )
@@ -142,7 +145,7 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
             f"```\nTool call: {function_call.name}\nArgs:\n"
             f"{args_json_string_for_display}\n```\n"
         )
-        print(tool_call_markdown, flush=True)
+        yield tool_call_markdown
 
         response_string = (
             f"{function_call.name}("
@@ -180,7 +183,7 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
             formatted_response = {"status": "succeeded", "message": message_content}
 
         status_markdown = f"```\nTool status: {formatted_response['status']}\n```\n"
-        print(status_markdown, flush=True)
+        yield status_markdown
 
         tool_turn = ToolResponseTurn(
             type="tool_response",
@@ -200,4 +203,5 @@ def run(args, session_service: SessionService, prompt_service: PromptService):
     )
     intermediate_turns.append(final_model_turn)
 
-    return "", token_count, intermediate_turns
+    # Return final data
+    yield ("end", model_response_text, token_count, intermediate_turns)

@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
@@ -15,6 +16,7 @@ export const useSessionItemHandlers = ({
   onClick: (event: React.MouseEvent<HTMLAnchorElement>) => Promise<void>
 } => {
   const { loadSession } = useSessionItemActions()
+  const navigate = useNavigate()
 
   const onClick = useCallback(
     async (event: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
@@ -27,9 +29,9 @@ export const useSessionItemHandlers = ({
 
       const sessionDetail = await loadSession(session.session_id)
       selectSession(session.session_id, sessionDetail)
-      window.history.replaceState({}, '', `/session/${session.session_id}`)
+      navigate(`/session/${session.session_id}`, { replace: true })
     },
-    [selectSession, session.session_id, loadSession]
+    [selectSession, session.session_id, loadSession, navigate]
   )
 
   return { onClick }

@@ -38,12 +38,26 @@ export const ChatHistoryBody = ({
   onRefresh,
   refreshSessionsInStore
 }: ChatHistoryBodyProperties): JSX.Element => {
-  if (!currentSessionId || !sessionDetail) {
+  if (!currentSessionId) {
     return (
       <div className={turnsColumn}>
         <div className={welcomeMessage}>
           <Heading level={1}>Welcome</Heading>
           <p>Select a session from the sidebar to view its details.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!sessionDetail) {
+    return (
+      <div className={turnsColumn}>
+        <div className={welcomeMessage}>
+          <Heading level={1}>Session Not Found</Heading>
+          <p>
+            The selected session could not be found. It may have been deleted or the ID
+            is invalid.
+          </p>
         </div>
       </div>
     )

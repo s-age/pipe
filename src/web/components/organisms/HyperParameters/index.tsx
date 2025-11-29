@@ -8,7 +8,12 @@ import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useHyperParametersHandlers } from './hooks/useHyperParametersHandlers'
-import { hyperparametersControl, sliderContainer, labelContainer } from './style.css'
+import {
+  hyperparametersControl,
+  sliderContainer,
+  labelContainer,
+  note
+} from './style.css'
 
 type HyperParametersProperties = {
   sessionDetail: SessionDetail
@@ -40,6 +45,10 @@ export const HyperParameters = ({
         legend="Hyperparameters"
         error={errors?.hyperparameters as unknown as React.ReactNode}
       >
+        <p className={note}>
+          Hyperparameters are fixed for GeminiAPI, but left to the model&apos;s
+          discretion for gemini-cli.
+        </p>
         <div>
           <div className={hyperparametersControl}>
             <div className={labelContainer}>

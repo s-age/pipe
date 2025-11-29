@@ -16,7 +16,6 @@ export const useTurnLifecycle = ({
 } => {
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const [editedContent, setEditedContent] = useState<string>(() => {
-
     if (turn.content || turn.instruction) {
       return turn.content ?? turn.instruction ?? ''
     }

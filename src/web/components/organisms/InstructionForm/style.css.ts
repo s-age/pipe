@@ -30,7 +30,7 @@ export const instructionTextarea = style({
 
 export const overlaySendButton = style({
   position: 'absolute',
-  top: '50%',
+  top: 'calc(50% - 4px)',
   right: '8px',
   minWidth: 'auto',
   marginRight: '8px',
@@ -52,4 +52,10 @@ export const overlaySendButton = style({
     background: colors.muted,
     boxShadow: 'none'
   }
+})
+
+export const contextLeftText = style({
+  fontSize: '0.8em',
+  textAlign: 'right',
+  color: colors.white
 })

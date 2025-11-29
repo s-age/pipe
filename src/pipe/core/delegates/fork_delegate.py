@@ -13,8 +13,7 @@ def run(args: TaktArgs, session_service: SessionService):
 
     try:
         fork_index = args.at_turn - 1
-        new_session_id = session_service.fork_session(args.fork, fork_index)
+        session_service.fork_session(args.fork, fork_index)
         print(f"Successfully forked session {args.fork} at turn {args.at_turn}.")
-        print(f"New session created: {new_session_id}")
     except (FileNotFoundError, IndexError) as e:
         raise ValueError(f"Error: {e}")

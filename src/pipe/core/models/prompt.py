@@ -46,6 +46,7 @@ class Prompt(BaseModel):
         settings: "Settings",
         project_root: str,
         artifacts: list[Artifact] | None = None,
+        current_instruction: str | None = None,
     ) -> "Prompt":
         """Builds and returns a Prompt object from a session's data."""
         from pipe.core.domains.references import get_references_for_prompt
@@ -91,7 +92,19 @@ class Prompt(BaseModel):
             session.turns, settings.tool_response_expiration
         )
 
-        current_task_turn_data = session.turns[-1].model_dump()
+        if session.turns:
+            current_task_turn_data = session.turns[-1].model_dump()
+        else:
+            # For dry-run or new sessions without turns, create from current_instruction
+            from pipe.core.models.turn import UserTaskTurn
+            from pipe.core.utils.datetime import get_current_timestamp
+            current_task_turn = UserTaskTurn(
+                type="user_task",
+                instruction=current_instruction or "",
+                timestamp=get_current_timestamp(zoneinfo.ZoneInfo(settings.timezone)),
+            )
+            current_task_turn_data = current_task_turn.model_dump()
+
         current_task = PromptCurrentTask(**current_task_turn_data)
 
         procedure_content = None

@@ -50,6 +50,9 @@ export const ChatHistory = ({
     refreshSessionsInStore
   })
 
+  const tokenCount = sessionDetail?.token_count ?? 0
+  const contextLimit = sessionDetail?.settings?.context_limit ?? 700000
+
   return (
     <div className={chatRoot}>
       <ChatHistoryHeader
@@ -70,6 +73,8 @@ export const ChatHistory = ({
         currentSessionId={sessionId}
         onSendInstruction={onSendInstruction}
         isStreaming={isStreaming}
+        tokenCount={tokenCount}
+        contextLimit={contextLimit}
       />
     </div>
   )

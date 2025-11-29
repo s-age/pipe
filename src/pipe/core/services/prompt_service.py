@@ -33,5 +33,9 @@ class PromptService:
         )
 
         return Prompt.from_session(
-            current_session, settings, self.project_root, artifacts=processed_artifacts
+            current_session,
+            settings,
+            self.project_root,
+            artifacts=processed_artifacts,
+            current_instruction=session_service.current_instruction,
         )

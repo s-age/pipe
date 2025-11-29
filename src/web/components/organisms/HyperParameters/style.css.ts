@@ -19,3 +19,10 @@ export const sliderContainer = style({
   flex: '1 1 65%',
   minWidth: '80px'
 })
+
+export const note = style({
+  marginTop: '8px',
+  fontSize: 'small',
+  color: 'gray',
+  opacity: 0.7
+})

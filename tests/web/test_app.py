@@ -382,7 +382,6 @@ class TestAppApi(unittest.TestCase):
                 "pipe.core.delegates.gemini_api_delegate.run_stream"
             ) as mock_run_stream,
         ):
-
             mock_session_service_patch.repository.find.return_value = mock_session
             mock_session_service_patch.get_session.return_value = mock_session
 

@@ -23,8 +23,8 @@ export const SessionControl = ({
 
   const tabs: { key: SessionControlTab; label: string }[] = [
     { key: 'meta', label: 'Meta' },
-    { key: 'compress', label: 'Compress' },
-    { key: 'therapist', label: 'Therapist' }
+    { key: 'compress', label: 'Compressor' }
+    // { key: 'therapist', label: 'Therapist' }
   ]
 
   return (

@@ -34,7 +34,7 @@ $$f(\text{context}) \rightarrow \text{result}$$
 # Example: Architect designs, then Engineer implements in the same session stream.
 takt --purpose "Design System" \
      --background "New E-commerce Platform" \
-     --roles roles/architect.md \
+     --roles roles/conductor.md \
      --instruction "Outline the API structure." \
 | jq -r '.session_id' \
 | xargs -I {} takt --session {} \

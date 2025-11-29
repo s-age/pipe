@@ -640,6 +640,9 @@ paths:
                   disabled:
                     type: boolean
                     description: The new disabled state after toggle
+                  disabled:
+                    type: boolean
+                    description: The new disabled state after toggle
         '404':
           description: Session not found
         '400':

@@ -12,6 +12,7 @@
 import json
 import os
 import subprocess
+import sys
 
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.services.session_service import SessionService
@@ -155,7 +156,9 @@ def call_gemini_cli(
                 return_code = process.returncode
 
                 if return_code == 0:
-                    print("DEBUG: gemini(stdin) completed successfully")
+                    print(
+                        "DEBUG: gemini(stdin) completed successfully", file=sys.stderr
+                    )
                     try:
                         result = json.loads(stdout)
                         return result
@@ -270,7 +273,7 @@ def call_gemini_cli(
             return_code = process.returncode
 
             if return_code == 0:
-                print("DEBUG: gemini(stdin) completed successfully")
+                print("DEBUG: gemini(stdin) completed successfully", file=sys.stderr)
                 try:
                     result = json.loads(stdout)
                     return result

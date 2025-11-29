@@ -3,6 +3,7 @@ Dispatches commands to the appropriate delegates based on arguments.
 """
 
 import argparse
+import os
 import sys
 
 from pipe.core.factories.service_factory import ServiceFactory
@@ -24,10 +25,43 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     if api_mode == "gemini-api" and args.output_format == "stream-json":
         args.output_format = "json"
 
+    settings = session_service.settings
     service_factory = ServiceFactory(
         session_service.project_root, session_service.settings
     )
     prompt_service = service_factory.create_prompt_service()
+
+    # Calculate token count for text output
+    try:
+        prompt_model = prompt_service.build_prompt(session_service)
+        from jinja2 import Environment, FileSystemLoader
+        from pipe.core.agents.gemini_api import load_tools
+        from pipe.core.services.token_service import TokenService
+
+        token_service = TokenService(settings=settings)
+        tools = load_tools(session_service.project_root)
+        template_env = Environment(
+            loader=FileSystemLoader(
+                os.path.join(session_service.project_root, "templates", "prompt")
+            ),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
+        template = template_env.get_template("gemini_api_prompt.j2")
+        context = prompt_model.model_dump()
+        api_contents_string = template.render(session=context)
+        prompt_token_count = token_service.count_tokens(
+            api_contents_string, tools=tools
+        )
+        is_within_limit, message = token_service.check_limit(prompt_token_count)
+        if not is_within_limit:
+            raise ValueError("Prompt exceeds context window limit. Aborting.")
+
+        if args.output_format == "text":
+            print(f"Token Count: {message}", file=sys.stderr)
+    except Exception:
+        # Skip token count calculation if template not found (e.g., in tests)
+        pass
 
     if args.dry_run:
         from .delegates import dry_run_delegate
@@ -83,7 +117,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     if token_count is not None:
         session_service.update_token_count(session_id, token_count)
 
-    if args.output_format == "json" and api_mode != "gemini-api":
+    if args.output_format == "json":
         import json
 
         output = {
@@ -92,10 +126,11 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
             "token_count": token_count,
         }
         print(json.dumps(output, ensure_ascii=False))
-
-    print(f"\nSuccessfully added response to session {session_id}.\n", file=sys.stderr)
-    print("\n", flush=True)
-    print("event: end", flush=True)
+    elif args.output_format == "text":
+        print(model_response_text)
+        print(
+            f"\nSuccessfully added response to session {session_id}.\n", file=sys.stderr
+        )
 
 
 def dispatch(

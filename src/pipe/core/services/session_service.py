@@ -109,7 +109,6 @@ class SessionService:
                     timestamp=get_current_timestamp(self.timezone_obj),
                 )
                 session.add_turn(first_turn)
-            print(f"New session created: {session.session_id}", file=sys.stderr)
 
         if args.references:
             from pipe.core.domains.references import add_reference
@@ -408,16 +407,6 @@ class SessionService:
         session_id = f"{parent_id}/{session_hash}" if parent_id else session_hash
 
         # TODO: Default hyperparameters should be handled more cleanly
-        print(
-            f"DEBUG: type of self.settings.parameters.temperature: "
-            f"{type(self.settings.parameters.temperature)}",
-            file=sys.stderr,
-        )
-        print(
-            f"DEBUG: self.settings.parameters.temperature: "
-            f"{self.settings.parameters.temperature}",
-            file=sys.stderr,
-        )
         default_hyperparameters = Hyperparameters(
             temperature=self.settings.parameters.temperature.value,
             top_p=self.settings.parameters.top_p.value,

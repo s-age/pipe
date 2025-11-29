@@ -22,6 +22,10 @@ Unlike traditional frameworks that treat agents as stateful, conversational part
 
 `pipe` provides a strong foundation for the Agent as Function (AasF) paradigm, enabling smaller contexts by structuring information effectively. It realizes bottom-heavy architecture—where the complexity lies in the well-designed tools and frameworks rather than overburdening the LLM at the top. This is achieved through easy multi-agent orchestration, allowing agents to handle small, specialized tasks and build complex workflows without requiring the LLM to manage everything at once.
 
+In this paradigm, the smaller the function, the smaller the deviation—ensuring that each agent remains highly predictable and composable.
+
+Ultimately, pipe aims to automate not just individual agent functions, but entire session lifecycles—from creation and execution to management and archival—enabling fully autonomous AI workflows.
+
 For a deeper dive into the principles of Context Engineering that underpin this philosophy, see our [Wiki article](https://github.com/s-age/pipe/wiki/Context-Engineering:-The-Art-of-Communicating-Intent-to-LLMs).
 
 ## Key Concepts

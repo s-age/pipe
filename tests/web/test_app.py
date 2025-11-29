@@ -363,18 +363,23 @@ class TestAppApi(unittest.TestCase):
         self.assertEqual(len(data["turns"]), 1)
         self.assertEqual(data["turns"][0]["instruction"], "test")
 
-    @patch("subprocess.Popen")
-    def test_send_instruction_api_success(self, mock_popen):
+    @patch("pipe.core.delegates.gemini_api_delegate.run_stream")
+    @patch("pipe.core.factories.service_factory.ServiceFactory")
+    def test_send_instruction_api_success(self, mock_service_factory, mock_run_stream):
         """Tests the streaming instruction endpoint."""
         mock_session = MagicMock()
         mock_session.pools = []
         self.mock_session_service.get_session.return_value = mock_session
 
-        mock_process = MagicMock()
-        mock_process.stdout = MagicMock()
-        mock_process.stdout.readline.side_effect = ["line 1\n", "line 2\n", ""]
-        mock_process.wait.return_value = 0
-        mock_popen.return_value = mock_process
+        mock_prompt_service = MagicMock()
+        mock_service_factory.return_value.create_prompt_service.return_value = (
+            mock_prompt_service
+        )
+
+        mock_run_stream.return_value = iter(
+            ["line 1\n", "line 2\n", ("end", "model response", 100, [MagicMock()])]
+        )
+
         response = self.client.post(
             "/api/v1/session/sid/instruction",
             data=json.dumps({"instruction": "stream test"}),
@@ -384,10 +389,10 @@ class TestAppApi(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.is_streamed)
 
-        # Consume the stream and check content
         stream_content = [line for line in response.iter_encoded()]
         self.assertIn(b'data: {"content": "line 1\\n"}\n\n', stream_content)
         self.assertIn(b'data: {"content": "line 2\\n"}\n\n', stream_content)
+        mock_run_stream.assert_called_once()
 
     def test_send_instruction_api_pool_limit(self):
         """Tests that the instruction endpoint rejects when the pool is full."""

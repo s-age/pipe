@@ -8,6 +8,7 @@ import sys
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.services.session_service import SessionService
+from pipe.core.utils.datetime import get_current_timestamp
 
 
 def _dispatch_run(args: TaktArgs, session_service: SessionService):
@@ -18,6 +19,11 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     session_id = session_service.current_session_id
 
     api_mode = session_service.settings.api_mode
+
+    # For gemini-api mode, treat stream-json as json since API already streams
+    if api_mode == "gemini-api" and args.output_format == "stream-json":
+        args.output_format = "json"
+
     service_factory = ServiceFactory(
         session_service.project_root, session_service.settings
     )
@@ -35,20 +41,18 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
 
     token_count = 0
     turns_to_save = []
+    model_response_text = ""
 
     if api_mode == "gemini-api":
         from .delegates import gemini_api_delegate
 
-        _, token_count, turns_to_save = gemini_api_delegate.run(
-            args, session_service, prompt_service
+        stream_results = list(
+            gemini_api_delegate.run_stream(args, session_service, prompt_service)
         )
+        # The last yielded item contains the final result
+        _, model_response_text, token_count, turns_to_save = stream_results[-1]
     elif api_mode == "gemini-cli":
         from pipe.core.models.turn import ModelResponseTurn
-
-        # Token counting for gemini-cli: use the TokenService to count tokens
-        # for the model response text so we don't leave token_count at 0.
-        from pipe.core.services.token_service import TokenService
-        from pipe.core.utils.datetime import get_current_timestamp
 
         from .delegates import gemini_cli_delegate
 
@@ -56,16 +60,14 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         # before calling the agent.
         session_service.merge_pool_into_turns(session_id)
 
-        model_response_text = gemini_cli_delegate.run(args, session_service)
-        try:
-            token_service = TokenService(session_service.settings)
-            token_count = token_service.count_tokens(model_response_text)
-        except Exception:
-            # Defensive fallback: if token counting fails for any reason,
-            # leave token_count as 0 (consistent with prior behavior) but
-            # do not crash the dispatcher.
-            token_count = 0
-        print(model_response_text)
+        model_response_text, token_count = gemini_cli_delegate.run(
+            args, session_service
+        )
+        if args.output_format == "text":
+            print(model_response_text)
+        elif args.output_format == "stream-json":
+            # For stream-json, the output is already streamed by gemini_cli_delegate
+            pass
         final_turn = ModelResponseTurn(
             type="model_response",
             content=model_response_text,
@@ -80,6 +82,16 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
 
     if token_count is not None:
         session_service.update_token_count(session_id, token_count)
+
+    if args.output_format == "json" and api_mode != "gemini-api":
+        import json
+
+        output = {
+            "session_id": session_id,
+            "response": model_response_text,
+            "token_count": token_count,
+        }
+        print(json.dumps(output, ensure_ascii=False))
 
     print(f"\nSuccessfully added response to session {session_id}.\n", file=sys.stderr)
     print("\n", flush=True)

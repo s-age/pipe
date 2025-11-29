@@ -28,11 +28,18 @@ In `pipe`, an agent is defined simply as:
 
 $$f(\text{context}) \rightarrow \text{result}$$
 
-`takt` acts as a context injector, not just a CLI wrapper. It structures and injects precisely crafted context into the LLM for each invocation, enabling deterministic, composable AI interactions that maintain control over conversational state.
+`takt` structures and injects precisely crafted context into the LLM. You must explicitly define the `--purpose` and `--background` to ground the agent, ensuring it never hallucinates the goal.
 
 ```bash
-# Example: The "Unix" way of AI orchestration
-echo '{"purpose": "Design system", "background": "Web app"}' | takt --roles roles/architect.md --instruction "Architect the solution" | jq '.session_id' | xargs -I {} takt --session {} --roles roles/engineer.md --instruction "Implement the design" > result.json
+# Example: Architect designs, then Engineer implements in the same session stream.
+takt --purpose "Design System" \
+     --background "New E-commerce Platform" \
+     --roles roles/architect.md \
+     --instruction "Outline the API structure." \
+| jq -r '.session_id' \
+| xargs -I {} takt --session {} \
+                   --roles roles/engineer.md \
+                   --instruction "Generate the OpenAPI spec based on the design." > result.json
 ```
 
 This approach leverages `takt`'s options like `--roles` for persona definition, `--instruction` for task specification, and `--session` for state continuity, ensuring modular and composable AI workflows. The output JSON can be piped through tools like `jq` for extraction and chaining, maintaining the deterministic context management central to `pipe`'s philosophy.

@@ -6,7 +6,6 @@ services:
     ports:
       - '5001:5001'
     depends_on:
-      - mcp
       - lsp
     environment:
       - FLASK_APP=pipe.web.app
@@ -29,25 +28,8 @@ services:
       - .:/app
       - /app/node_modules
     depends_on:
-      - mcp
       - lsp
     command: npm start
-
-  mcp:
-    build:
-      context: .
-      dockerfile: Dockerfile.python
-    ports:
-      - '3001:3001' # MCP default port, adjust if needed
-    environment:
-      - PYTHONPATH=/app/src
-    env_file:
-      - .env
-    volumes:
-      - .:/app
-      - /app/__pycache__
-    command: python -m pipe.cli.mcp_server
-    restart: unless-stopped
 
   lsp:
     build:

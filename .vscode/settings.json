@@ -4,7 +4,13 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "python.linting.mypyEnabled": true,
+  "python.linting.ruffEnabled": true,
+  "python.formatting.provider": "ruff",
+  "python.formatting.ruffArgs": ["--line-length", "88"],
+  "python.formatting.blackEnabled": false,
   "mcp": {
+    "enabled": true,
     "servers": {
       "pipe_tools": {
         "command": "python3",

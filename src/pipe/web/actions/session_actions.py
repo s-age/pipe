@@ -5,6 +5,7 @@ import sys
 from typing import Any
 
 from flask import Response, stream_with_context
+from pipe.core.models.turn import Turn
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests.sessions.send_instruction import SendInstructionRequest
 from pipe.web.requests.sessions.start_session import StartSessionRequest
@@ -38,6 +39,8 @@ class SessionStartAction(BaseAction):
                 session_id,
                 "--instruction",
                 request_data.instruction,
+                "--output-format",
+                "stream-json",
             ]
             if request_data.references:
                 command.extend(
@@ -170,7 +173,7 @@ class SessionRawAction(BaseAction):
 
 class SessionInstructionAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any] | Response, int]:
-        from pipe.web.app import session_service
+        from pipe.web.app import session_service, settings
 
         session_id = self.params.get("session_id")
         if not session_id:
@@ -205,47 +208,129 @@ class SessionInstructionAction(BaseAction):
 
             enable_multi_step_reasoning = session_data.multi_step_reasoning_enabled
 
-            command = [
-                sys.executable,
-                "-m",
-                "pipe.cli.takt",
-                "--session",
-                session_id,
-                "--instruction",
-                instruction,
-            ]
-            if enable_multi_step_reasoning:
-                command.append("--multi-step-reasoning")
+            response = None
+            if settings.api_mode == "gemini-api":
+                # For gemini-api, stream directly without subprocess
+                from pipe.core.delegates.gemini_api_delegate import run_stream
+                from pipe.core.factories.service_factory import ServiceFactory
 
-            def generate():
-                process = subprocess.Popen(
-                    command,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    encoding="utf-8",
-                    bufsize=1,
+                service_factory = ServiceFactory(session_service.project_root, settings)
+                prompt_service = service_factory.create_prompt_service()
+
+                # Prepare args-like object
+                args = type(
+                    "Args",
+                    (),
+                    {
+                        "instruction": instruction,
+                        "output_format": "stream-json",
+                        "dry_run": False,
+                        "session": session_id,
+                        "references": [],
+                        "references_persist": [],
+                        "artifacts": [],
+                        "purpose": None,
+                        "background": None,
+                        "roles": [],
+                        "parent": None,
+                        "procedure": None,
+                        "multi_step_reasoning": enable_multi_step_reasoning,
+                        "fork": None,
+                        "at_turn": None,
+                        "api_mode": None,
+                    },
+                )()
+
+                # Prepare session
+                session_service.prepare(args, is_dry_run=False)
+
+                def generate():
+                    token_count = 0
+                    turns_to_save: list[Turn] = []
+                    try:
+                        for item in run_stream(args, session_service, prompt_service):
+                            if (
+                                isinstance(item, tuple)
+                                and len(item) == 4
+                                and item[0] == "end"
+                            ):
+                                end, _, token_count, turns_to_save = item
+                                # After streaming, add turns
+                                for turn in turns_to_save:
+                                    session_service.add_turn_to_session(
+                                        session_id, turn
+                                    )
+                                if token_count is not None:
+                                    session_service.update_token_count(
+                                        session_id, token_count
+                                    )
+                                yield (f"data: {json.dumps({'end': True})}\n\n")
+                            else:
+                                # Ensure item is a string before JSON dumping
+                                content = (
+                                    item.decode("utf-8")
+                                    if isinstance(item, bytes)
+                                    else item
+                                )
+                                yield f"data: {json.dumps({'content': content})}\n\n"
+                    except Exception as e:
+                        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+                response = (
+                    Response(
+                        stream_with_context(generate()), mimetype="text/event-stream"
+                    ),
+                    200,
+                )
+            else:
+                # For gemini-cli, use subprocess
+                command = [
+                    sys.executable,
+                    "-m",
+                    "pipe.cli.takt",
+                    "--session",
+                    session_id,
+                    "--instruction",
+                    instruction,
+                    "--output-format",
+                    "stream-json",
+                ]
+                if enable_multi_step_reasoning:
+                    command.append("--multi-step-reasoning")
+
+                def generate():
+                    process = subprocess.Popen(
+                        command,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding="utf-8",
+                        bufsize=1,
+                    )
+
+                    if process.stdout:
+                        for line in iter(process.stdout.readline, ""):
+                            yield f"data: {json.dumps({'content': line})}\n\n"
+                        process.stdout.close()
+
+                    stderr_output = ""
+                    if process.stderr:
+                        stderr_output = process.stderr.read()
+                        process.stderr.close()
+
+                    return_code = process.wait()
+
+                    if return_code != 0:
+                        yield f"data: {json.dumps({'error': stderr_output})}\n\n"
+
+                response = (
+                    Response(
+                        stream_with_context(generate()), mimetype="text/event-stream"
+                    ),
+                    200,
                 )
 
-                if process.stdout:
-                    for line in iter(process.stdout.readline, ""):
-                        yield f"data: {json.dumps({'content': line})}\n\n"
-                    process.stdout.close()
-
-                stderr_output = ""
-                if process.stderr:
-                    stderr_output = process.stderr.read()
-                    process.stderr.close()
-
-                return_code = process.wait()
-
-                if return_code != 0:
-                    yield f"data: {json.dumps({'error': stderr_output})}\n\n"
-
-            return (
-                Response(stream_with_context(generate()), mimetype="text/event-stream"),
-                200,
-            )
+            return response
         except ValidationError as e:
             return {"message": str(e)}, 422
         except Exception as e:

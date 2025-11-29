@@ -98,6 +98,7 @@ class Prompt(BaseModel):
             # For dry-run or new sessions without turns, create from current_instruction
             from pipe.core.models.turn import UserTaskTurn
             from pipe.core.utils.datetime import get_current_timestamp
+
             current_task_turn = UserTaskTurn(
                 type="user_task",
                 instruction=current_instruction or "",

@@ -4,7 +4,6 @@ import { Button } from '@/components/atoms/Button'
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 
 import * as styles from './style.css'
-import type { Diagnosis } from './types'
 
 export type TherapistFormProperties = {
   sessionId: string
@@ -12,9 +11,6 @@ export type TherapistFormProperties = {
   isSubmitting: boolean
   error: string | null
   handleDiagnose: () => Promise<void>
-  setDiagnosis: (diagnosis: Diagnosis | null) => void
-  setError: (error: string | null) => void
-  setIsSubmitting: (isSubmitting: boolean) => void
   onRefresh: () => Promise<void>
 }
 

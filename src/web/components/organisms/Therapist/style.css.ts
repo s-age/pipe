@@ -18,6 +18,7 @@ export const body = style({
   minHeight: 0,
   overflowY: 'auto',
   padding: '16px',
+  color: colors.white,
   flexDirection: 'column',
   gap: '8px'
 })
@@ -63,10 +64,25 @@ export const results = style({
   marginTop: '16px'
 })
 
+export const list = style({
+  marginTop: '8px',
+  marginBottom: '16px'
+})
+
 export const buttonContainer = style({
   padding: '12px',
   borderRadius: '0 0 8px 8px',
   background: colors.darkGray,
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)',
   borderTop: `2px solid ${colors.black}`
+})
+
+export const resultItemHeading = style({
+  marginTop: '8px',
+
+  selectors: {
+    '&:first-child': {
+      marginBottom: '8px'
+    }
+  }
 })

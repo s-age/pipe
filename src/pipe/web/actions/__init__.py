@@ -29,6 +29,9 @@ from pipe.web.actions.session_actions import (
 )
 from pipe.web.actions.session_tree_action import SessionTreeAction
 from pipe.web.actions.settings_actions import SettingsGetAction
+from pipe.web.actions.therapist_actions import (
+    CreateTherapistSessionAction,
+)
 from pipe.web.actions.turn_actions import (
     SessionTurnsGetAction,
     TurnDeleteAction,
@@ -40,6 +43,7 @@ __all__ = [
     "ApproveCompressorAction",
     "CreateCompressorSessionAction",
     "DenyCompressorAction",
+    "CreateTherapistSessionAction",
     "SessionTreeAction",
     "SessionStartAction",
     "SessionGetAction",

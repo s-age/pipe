@@ -2,6 +2,7 @@ import type { JSX } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
+import { useTherapistActions } from './hooks/useTherapistActions'
 import { useTherapistHandlers } from './hooks/useTherapistHandlers'
 import { TherapistForm } from './TherapistForm'
 import { TherapistResult } from './TherapistResult'
@@ -18,16 +19,20 @@ export const Therapist = ({
   const sessionId = sessionDetail?.session_id ?? ''
   const turnsCount = sessionDetail?.turns?.length ?? 0
 
+  const actions = useTherapistActions()
   const {
     diagnosis,
     error,
     isSubmitting,
+    selectedDeletions,
+    selectedEdits,
+    selectedCompressions,
     handleDiagnose,
     handleNewDiagnosis,
-    setDiagnosis,
-    setError,
-    setIsSubmitting
-  } = useTherapistHandlers()
+    handleDeletionChange,
+    handleEditChange,
+    handleApply
+  } = useTherapistHandlers(actions, sessionId, onRefresh)
 
   return (
     <>
@@ -38,16 +43,19 @@ export const Therapist = ({
           isSubmitting={isSubmitting}
           error={error}
           handleDiagnose={handleDiagnose}
-          setDiagnosis={setDiagnosis}
-          setError={setError}
-          setIsSubmitting={setIsSubmitting}
           onRefresh={onRefresh}
         />
       ) : (
         <TherapistResult
           diagnosis={diagnosis}
           isSubmitting={isSubmitting}
+          selectedDeletions={selectedDeletions}
+          selectedEdits={selectedEdits}
+          selectedCompressions={selectedCompressions}
           handleNewDiagnosis={handleNewDiagnosis}
+          handleDeletionChange={handleDeletionChange}
+          handleEditChange={handleEditChange}
+          handleApply={handleApply}
         />
       )}
     </>

@@ -28,6 +28,9 @@ logging.basicConfig(
     filemode="w",  # Overwrite the log file on each run
 )
 
+# Suppress genai logging
+logging.getLogger('google.genai').setLevel(logging.WARNING)
+
 
 def load_tools(project_root: str) -> list:
     """

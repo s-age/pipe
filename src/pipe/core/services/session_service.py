@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import sys
+from typing import Any
 import zoneinfo
 
 from pipe.core.collections.references import ReferenceCollection
@@ -318,6 +319,18 @@ class SessionService:
             raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
 
         session.delete_turn(turn_index)
+        self.repository.save(session)
+
+    def delete_turns(self, session_id: str, turn_indices: list[int]):
+        """Deletes multiple turns from a session, handling index shifts."""
+        session = self._fetch_session(session_id)
+        if not session:
+            raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
+
+        # Sort indices in descending order to avoid index shifting issues
+        sorted_indices = sorted(turn_indices, reverse=True)
+        for index in sorted_indices:
+            session.delete_turn(index)
         self.repository.save(session)
 
     def edit_turn(self, session_id: str, turn_index: int, new_data: dict):
@@ -634,3 +647,305 @@ class SessionService:
 
         # Save the session
         self.repository.save(session)
+
+    def build_therapist_instruction(self, session_id: str, turns_count: int) -> str:
+        """Build the instruction for therapist session."""
+        return (
+            f"Diagnose the TARGET SESSION with ID: {session_id} which has exactly {turns_count} turns. "
+            f"IMPORTANT: Always use session_id='{session_id}' in all tool calls. This is the target session to diagnose, NOT your own session.\n\n"
+            f"First, call get_session(session_id='{session_id}') to retrieve the session data.\n\n"
+            f"Then, provide advice on edits, deletions, and compressions. All suggested turn numbers must be between 1 and {turns_count} inclusive. "
+            f"Do not suggest any operations on turns outside this range."
+        )
+
+    def run_takt_for_therapist(self, session_id: str) -> dict[str, str]:
+        """Create therapist session and run initial takt command."""
+        import re
+        import subprocess
+        import sys
+
+        # Get turns count
+        session = self.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
+        turns_count = len(session.turns)
+
+        # Build instruction
+        instruction = self.build_therapist_instruction(session_id, turns_count)
+
+        # Execute takt command
+        command = [
+            sys.executable,
+            "-m",
+            "pipe.cli.takt",
+            "--purpose",
+            "Act as a therapist agent to diagnose the target session "
+            "and suggest optimizations",
+            "--background",
+            "Responsible for analyzing conversation sessions, identifying issues, "
+            "and providing actionable advice for edits, deletions, and compressions",
+            "--roles",
+            "roles/therapist.md",
+            "--instruction",
+            instruction,
+            "--multi-step-reasoning",
+        ]
+
+        env = os.environ.copy()
+        env["PYTHONPATH"] = os.path.join(self.project_root, "src")
+
+        therapist_session_id = None
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                check=False,  # Don't raise exception on error
+                encoding="utf-8",
+                env=env,
+            )
+
+            if result.returncode != 0:
+                print(f"Command failed with return code {result.returncode}")
+                print("STDOUT:", result.stdout)
+                print("STDERR:", result.stderr)
+                raise RuntimeError("takt command failed")
+
+            print("STDOUT:", result.stdout)
+            print("STDERR:", result.stderr)
+
+            # Extract session ID from stdout (therapist returns JSON directly)
+            try:
+                therapist_output = json.loads(result.stdout.strip())
+                therapist_session_id = therapist_output.get("session_id")
+                if not therapist_session_id:
+                    raise ValueError("session_id not found in therapist output")
+            except json.JSONDecodeError:
+                # Fallback to stderr extraction if not JSON
+                match = re.search(r"New session created: (.+)", result.stderr)
+                if match:
+                    therapist_session_id = match.group(1)
+                else:
+                    raise RuntimeError("Failed to extract session ID from takt output")
+
+            # Reload the session to get the diagnosis
+            session = self.get_session(therapist_session_id)
+            if not session or not session.turns:
+                raise ValueError("Session or turns not found after creation")
+
+            # Find the last model_response
+            last_model_response = None
+            for turn in reversed(session.turns):
+                if turn.type == "model_response":
+                    last_model_response = turn
+                    break
+
+            diagnosis = ""
+            if last_model_response:
+                diagnosis = last_model_response.content.strip()
+                # Remove markdown code block formatting if present
+                if diagnosis.startswith("```json"):
+                    diagnosis = diagnosis[7:]  # Remove ```json
+                if diagnosis.endswith("```"):
+                    diagnosis = diagnosis[:-3]  # Remove ```
+                diagnosis = diagnosis.strip()
+
+            # Parse diagnosis as JSON
+            try:
+                diagnosis_data = json.loads(diagnosis)
+                # Ensure summary is present
+                if "summary" not in diagnosis_data:
+                    diagnosis_data["summary"] = "Analysis completed"
+            except json.JSONDecodeError:
+                # If not JSON, wrap in a basic structure
+                diagnosis_data = {
+                    "summary": diagnosis or "No analysis provided",
+                    "deletions": [],
+                    "edits": [],
+                    "compressions": [],
+                    "raw_diagnosis": diagnosis
+                }
+
+            return {
+                "session_id": therapist_session_id,
+                "diagnosis": diagnosis_data,
+            }
+        finally:
+            # Delete the therapist session as it's a shadow session
+            if therapist_session_id:
+                self.delete_session(therapist_session_id)
+
+    def run_takt_for_doctor(self, session_id: str, modifications: dict) -> dict[str, Any]:
+        """Create doctor session and run modifications."""
+        import re
+        import subprocess
+        import sys
+
+        # Get session to validate turn numbers
+        session = self.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
+        turns_count = len(session.turns)
+
+        # Extract modifications from diagnosis
+        deletions = modifications.get("deletions", [])
+        edits = modifications.get("edits", [])
+        compressions = modifications.get("compressions", [])
+
+        # Filter invalid modifications
+        valid_deletions = [d for d in deletions if 1 <= d <= turns_count]
+        valid_edits = [e for e in edits if 1 <= e['turn'] <= turns_count]
+        valid_compressions = [c for c in compressions if 1 <= c['start'] <= c['end'] <= turns_count]
+
+        modifications = {
+            "deletions": valid_deletions,
+            "edits": valid_edits,
+            "compressions": valid_compressions,
+        }
+
+        # Build instruction
+        instruction = self.build_doctor_instruction(session_id, modifications)
+
+        print(f"Doctor instruction: {instruction}")  # Debug print
+
+        # Execute takt command
+        command = [
+            sys.executable,
+            "-m",
+            "pipe.cli.takt",
+            "--purpose",
+            "Act as a doctor agent to apply approved modifications to the target session",
+            "--background",
+            "Responsible for executing deletions, edits, and compressions approved by the therapist",
+            "--roles",
+            "roles/doctor.md",
+            "--instruction",
+            instruction,
+            "--multi-step-reasoning",
+        ]
+
+        env = os.environ.copy()
+        env["PYTHONPATH"] = os.path.join(self.project_root, "src")
+        env["PIPE_SESSION_ID"] = session_id  # Pass session_id to doctor
+
+        doctor_session_id = None
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                check=False,  # Don't raise exception on error
+                encoding="utf-8",
+                env=env,
+            )
+
+            if result.returncode != 0:
+                print(f"Command failed with return code {result.returncode}")
+                print("STDOUT:", result.stdout)
+                print("STDERR:", result.stderr)
+                raise RuntimeError("takt command failed")
+
+            print("STDOUT:", result.stdout)
+            print("STDERR:", result.stderr)
+
+            # Extract session ID from stdout
+            try:
+                doctor_output = json.loads(result.stdout.strip())
+                doctor_session_id = doctor_output.get("session_id")
+                if not doctor_session_id:
+                    raise ValueError("session_id not found in doctor output")
+            except json.JSONDecodeError:
+                match = re.search(r"New session created: (.+)", result.stderr)
+                if match:
+                    doctor_session_id = match.group(1)
+                else:
+                    raise RuntimeError("Failed to extract session ID from takt output")
+
+            # Reload the session to get the result
+            session = self.get_session(doctor_session_id)
+            if not session or not session.turns:
+                raise ValueError("Session or turns not found after creation")
+
+            # Find the last model_response
+            last_model_response = None
+            for turn in reversed(session.turns):
+                if turn.type == "model_response":
+                    last_model_response = turn
+                    break
+
+            status = "Failed"
+            reason = ""
+            if last_model_response:
+                content = last_model_response.content.strip()
+                if "Succeeded" in content:
+                    status = "Succeeded"
+                elif "Failed" in content:
+                    status = "Failed"
+                    reason = content  # Include the full content as reason
+                else:
+                    status = "Unknown"
+                    reason = content
+
+            return {
+                "session_id": doctor_session_id,
+                "result": {
+                    "status": status,
+                    "reason": reason,
+                },
+            }
+        finally:
+            # Delete the doctor session as it's a shadow session
+            if doctor_session_id:
+                self.delete_session(doctor_session_id)
+
+    def build_doctor_instruction(self, session_id: str, modifications: dict) -> str:
+        """Build the instruction for doctor session."""
+        deletions = modifications.get("deletions", [])
+        edits = modifications.get("edits", [])
+        compressions = modifications.get("compressions", [])
+
+        # Adjust edits and compressions for deletions
+        deletions_set = sorted(set(deletions))
+        adjusted_edits = []
+        for edit in edits:
+            turn = edit['turn']
+            adjusted_turn = turn - sum(1 for d in deletions_set if d < turn)
+            adjusted_edits.append({**edit, 'turn': adjusted_turn})
+
+        adjusted_compressions = []
+        for comp in compressions:
+            start_turn = comp['start']
+            end_turn = comp['end']
+            adjusted_start = start_turn - sum(1 for d in deletions_set if d < start_turn)
+            adjusted_end = end_turn - sum(1 for d in deletions_set if d < end_turn)
+            adjusted_compressions.append({
+                **comp,
+                'start': adjusted_start,
+                'end': adjusted_end
+            })
+
+        instruction = f"Apply the following approved modifications to the TARGET SESSION with ID: {session_id}\n\n"
+        instruction += f"IMPORTANT: Always use session_id='{session_id}' in all tool calls. This is the target session to modify, NOT your own session.\n\n"
+
+        if deletions:
+            instruction += f"delete_session_turns(session_id='{session_id}', turns={deletions})\n"
+        for edit in adjusted_edits:
+            instruction += (
+                f"edit_session_turn(session_id='{session_id}', turn={edit['turn']}, "
+                f"new_content='{edit['new_content']}')\n"
+            )
+        for comp in adjusted_compressions:
+            instruction += (
+                f"compress_session_turns(session_id='{session_id}', "
+                f"start_turn={comp['start']}, end_turn={comp['end']}, "
+                f"summary='{comp['summary']}')\n"
+            )
+
+        if not deletions and not adjusted_edits and not adjusted_compressions:
+            instruction += "No modifications to apply. Output Succeeded.\n"
+        else:
+            instruction += "\nExecute these tool calls in the order listed above."
+
+        instruction += f"\nCRITICAL: Do NOT use your own session ID. Always use session_id='{session_id}' for the target session."
+
+        return instruction

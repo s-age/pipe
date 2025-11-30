@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.marked) {
     marked.setOptions({
       breaks: true,
-      gfm: true,
+      gfm: true
     })
   }
 
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch((parsingError) => {
           // If parsing the error JSON fails, throw a generic error
           throw new Error(
-            `HTTP error! status: ${response.status}. Could not parse error response.`,
+            `HTTP error! status: ${response.status}. Could not parse error response.`
           )
         })
     }
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function forkSession(sessionId, forkIndex) {
     if (
       !confirm(
-        `Are you sure you want to fork this session at turn index ${forkIndex + 1}?`,
+        `Are you sure you want to fork this session at turn index ${forkIndex + 1}?`
       )
     )
       return
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`/api/session/fork/${forkIndex}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: sessionId }),
+      body: JSON.stringify({ session_id: sessionId })
     })
       .then(handleResponse)
       .then((data) => {
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderMarkdown() {
     document
       .querySelectorAll(
-        '.model_response .turn-content, .compressed_history .turn-content',
+        '.model_response .turn-content, .compressed_history .turn-content'
       )
       .forEach((contentElement) => {
         const rawMarkdownDiv = contentElement.querySelector('.raw-markdown')
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then((data) =>
         data.success
           ? window.location.reload()
-          : Promise.reject(new Error(data.message)),
+          : Promise.reject(new Error(data.message))
       )
       .catch(handleError)
   }
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then((data) =>
         data.success
           ? (window.location.href = '/')
-          : Promise.reject(new Error(data.message)),
+          : Promise.reject(new Error(data.message))
       )
       .catch(handleError)
   }
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveButton.textContent = 'Save'
     saveButton.onclick = () =>
       saveEdit(sessionId, turnIndex, fieldName, textarea.value, () =>
-        exitEditMode(editButton, contentDiv, textarea, controls),
+        exitEditMode(editButton, contentDiv, textarea, controls)
       )
 
     const cancelButton = document.createElement('button')
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     textarea.remove()
     const buttonContainer = controls.parentElement.querySelector(
-      'div[style="text-align: right;"]',
+      'div[style="text-align: right;"]'
     )
     if (buttonContainer) buttonContainer.remove()
 
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`/api/session/${sessionId}/turn/${turnIndex}/edit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     })
       .then(handleResponse)
       .then((data) => {
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .map((s) => s.trim())
         .filter(Boolean),
       multi_step_reasoning_enabled: viewContainer.querySelector(
-        '[data-field="multi_step_reasoning_enabled"]',
+        '[data-field="multi_step_reasoning_enabled"]'
       ).checked,
       artifacts: viewContainer
         .querySelector('[data-field="artifacts"]')
@@ -342,25 +342,22 @@ document.addEventListener('DOMContentLoaded', () => {
       hyperparameters: {
         temperature: {
           value: parseFloat(
-            viewContainer.querySelector('[data-field="temperature"]').value,
-          ),
+            viewContainer.querySelector('[data-field="temperature"]').value
+          )
         },
         top_p: {
-          value: parseFloat(viewContainer.querySelector('[data-field="top_p"]').value),
+          value: parseFloat(viewContainer.querySelector('[data-field="top_p"]').value)
         },
         top_k: {
-          value: parseInt(
-            viewContainer.querySelector('[data-field="top_k"]').value,
-            10,
-          ),
-        },
-      },
+          value: parseInt(viewContainer.querySelector('[data-field="top_k"]').value, 10)
+        }
+      }
     }
 
     fetch(`/api/session/${sessionId}/meta/edit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     })
       .then(handleResponse)
       .then((data) => {
@@ -394,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
+      second: '2-digit'
     }).format(now)
 
     // 1. Create and insert the user's turn immediately
@@ -446,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`/api/session/${sessionId}/instruction`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ instruction }),
+      body: JSON.stringify({ instruction })
     })
       .then((response) => {
         if (!response.ok) {
@@ -463,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
               if (done) {
                 fetchAndReplaceTurns(sessionId, userTurnNumber - 1, [
                   userTurnPlaceholder,
-                  modelTurnPlaceholder,
+                  modelTurnPlaceholder
                 ])
 
                 return
@@ -480,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   reader.cancel()
                   fetchAndReplaceTurns(sessionId, userTurnNumber - 1, [
                     userTurnPlaceholder,
-                    modelTurnPlaceholder,
+                    modelTurnPlaceholder
                   ])
 
                   return
@@ -554,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (turn.type === 'model_response' || turn.type === 'compressed_history') {
       const compressedPrefix =
         turn.type === 'compressed_history'
-          ? `<p><strong><em>-- History Compressed --</em></strong></p>`
+          ? '<p><strong><em>-- History Compressed --</em></strong></p>'
           : ''
       turnContentHTML = `
                 ${compressedPrefix}
@@ -671,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update Procedure Content
     const procedureContentTextarea = document.querySelector(
-      '[data-field="procedure_content"]',
+      '[data-field="procedure_content"]'
     )
     if (procedureContentTextarea) {
       procedureContentTextarea.value = sessionDetail.procedure_content || ''
@@ -810,15 +807,16 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   document
-    .querySelectorAll('.delete-session-btn, .send-instruction-btn')
+    .querySelectorAll('.delete-session-btn, .send-instruction-btn, .therapist-btn')
     .forEach((button) => {
       button.addEventListener('click', function () {
         const actionMap = {
           'delete-session-btn': deleteSession,
           'send-instruction-btn': sendInstruction,
+          'therapist-btn': runTherapist
         }
         const action = Object.keys(actionMap).find((cls) =>
-          this.classList.contains(cls),
+          this.classList.contains(cls)
         )
         if (action) actionMap[action](this.dataset.sessionId)
       })
@@ -862,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`/api/session/${sessionId}/todos/edit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     })
       .then(handleResponse)
       .then((data) => {
@@ -907,7 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`/api/session/${sessionId}/references/edit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     })
       .then(handleResponse)
       .then((data) => {
@@ -971,7 +969,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`/api/session/${sessionId}/references/persist/${index}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ persist: newPersist }),
+      body: JSON.stringify({ persist: newPersist })
     })
       .then(handleResponse)
       .then((data) => {
@@ -985,7 +983,7 @@ document.addEventListener('DOMContentLoaded', () => {
         handleError(error)
         // Revert UI on error
         const button = document.querySelector(
-          `.reference-persist-toggle[data-index="${index}"]`,
+          `.reference-persist-toggle[data-index="${index}"]`
         )
         if (button) {
           const revertedPersist = !newPersist
@@ -1002,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`/api/session/${sessionId}/references/ttl/${index}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ttl: newTtl }),
+      body: JSON.stringify({ ttl: newTtl })
     })
       .then(handleResponse)
       .then((data) => {
@@ -1026,5 +1024,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
       .catch(handleError)
+  }
+
+  function runTherapist(sessionId) {
+    const therapistSection = document.getElementById('therapist-section')
+    const diagnosisDiv = document.getElementById('therapist-diagnosis')
+
+    // Show the section
+    therapistSection.style.display = 'block'
+    diagnosisDiv.textContent = 'Running therapist diagnosis...'
+
+    fetch('/api/v1/therapist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId })
+    })
+      .then(handleResponse)
+      .then((data) => {
+        if (data.success) {
+          diagnosisDiv.innerHTML = marked.parse(
+            data.diagnosis || 'No diagnosis provided.'
+          )
+        } else {
+          throw new Error(data.message)
+        }
+      })
+      .catch((error) => {
+        diagnosisDiv.textContent = `Error: ${error.message}`
+      })
   }
 })

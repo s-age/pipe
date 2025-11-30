@@ -57,6 +57,13 @@
           'floor') }}% context left){% endif %}
         </h2>
         <button
+          class="action-btn therapist-btn"
+          data-session-id="{{ current_session_id }}"
+          style="background-color: #28a745; margin-right: 10px"
+        >
+          Therapist
+        </button>
+        <button
           class="action-btn delete-session-btn"
           data-session-id="{{ current_session_id }}"
         >
@@ -153,6 +160,13 @@
         <p>Select a session from the sidebar to view its details.</p>
       </div>
       {% endif %} {% if current_session_id %}
+      <section
+        id="therapist-section"
+        style="display: none; padding: 20px; border-top: 1px solid #dee2e6"
+      >
+        <h3>Therapist Diagnosis</h3>
+        <div id="therapist-diagnosis" style="margin-bottom: 20px"></div>
+      </section>
       <section class="new-instruction-control">
         <textarea
           id="new-instruction-text"

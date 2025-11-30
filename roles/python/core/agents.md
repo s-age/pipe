@@ -452,6 +452,22 @@ if not api_key:
     raise RuntimeError("GEMINI_API_KEY environment variable not set")
 ```
 
+### 5. Agent-Specific Prompt Adjustments
+
+Different AI models may require subtle prompt adjustments for optimal performance. Here are some tips for common models:
+
+#### Claude (Anthropic)
+
+- **Issue**: Claude tends to ignore `current_task` and prioritizes previous instructions in `conversation_history`.
+- **Solution**: Append the current instruction to the end of `conversation_history` instead of sending it separately as `current_task`. This ensures Claude processes the most recent instruction correctly.
+- **Implementation**: Modify the prompt construction to merge `current_task` into the last turn of `conversation_history` when using Claude models.
+
+#### General Tips
+
+- **Test Prompt Variations**: Always test your prompt structure with `--dry-run` to see how different models interpret the JSON structure.
+- **Model-Specific Tuning**: Adjust hyperparameters and prompt formatting based on the target model's known behaviors.
+- **Fallback Strategies**: Implement model-specific fallbacks if the primary prompt structure doesn't work well.
+
 ## Summary
 
 Agents are the **boundary layer** between our deterministic system and external AI services:

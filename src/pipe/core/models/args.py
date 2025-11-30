@@ -22,6 +22,7 @@ class TaktArgs:
     fork: str | None = None
     at_turn: int | None = None
     api_mode: str | None = None
+    therapist: str | None = None
     output_format: str = "json"
 
     def to_turn(self, timestamp: str):
@@ -67,5 +68,6 @@ class TaktArgs:
             fork=parsed_args.fork,
             at_turn=parsed_args.at_turn,
             api_mode=parsed_args.api_mode,
+            therapist=getattr(parsed_args, "therapist", None),
             output_format=getattr(parsed_args, "output_format", "json"),
         )

@@ -5,7 +5,6 @@ import { zIndex } from '../../../styles/zIndex.css.ts'
 
 export const container = style({
   width: '300px',
-  height: '100%',
   overflowX: 'hidden',
   overflowY: 'auto',
   margin: '0 12px',
@@ -58,12 +57,13 @@ export const muted = style({
 })
 
 export const form = style({
-  flex: '1',
+  display: 'flex',
   height: '100%',
   margin: '0 12px',
   marginBottom: '16px',
   borderRadius: '8px',
   background: colors.gray,
+  flexDirection: 'column',
   gap: '10px'
 })
 
@@ -138,7 +138,7 @@ export const secondary = style({
 })
 
 export const previewBox = style({
-  height: '100%',
+  flex: '1',
   overflowY: 'auto',
   padding: '20px',
   border: `1px solid ${colors.gray}`,
@@ -180,7 +180,7 @@ export const pre = style({
 
 export const buttonContainer = style({
   position: 'sticky',
-  bottom: '16px',
+  bottom: '0',
   padding: '12px',
   borderRadius: '0 0 8px 8px',
   background: colors.darkGray,

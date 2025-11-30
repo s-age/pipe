@@ -117,6 +117,12 @@ def _parse_arguments():
         help="Specify the API mode (e.g., gemini-api, gemini-cli).",
     )
     parser.add_argument(
+        "--therapist",
+        type=str,
+        metavar="SESSION_ID",
+        help="Diagnose the specified session using the therapist role.",
+    )
+    parser.add_argument(
         "--output-format",
         type=str,
         choices=["json", "text", "stream-json"],

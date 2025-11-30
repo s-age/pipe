@@ -1,12 +1,63 @@
 import type { JSX } from 'react'
 
-import * as styles from './style.css'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 
-export const Therapist = (): JSX.Element => (
-  <div className={styles.container}>
-    <div className={styles.body}>
-      <h4 className={styles.title}>Therapist</h4>
-      <p className={styles.muted}>Therapist agent placeholder (empty)</p>
-    </div>
-  </div>
-)
+import { useTherapistActions } from './hooks/useTherapistActions'
+import { useTherapistHandlers } from './hooks/useTherapistHandlers'
+import { TherapistForm } from './TherapistForm'
+import { TherapistResult } from './TherapistResult'
+
+export type TherapistProperties = {
+  sessionDetail: SessionDetail | null
+  onRefresh: () => Promise<void>
+}
+
+export const Therapist = ({
+  sessionDetail,
+  onRefresh
+}: TherapistProperties): JSX.Element => {
+  const sessionId = sessionDetail?.session_id ?? ''
+  const turnsCount = sessionDetail?.turns?.length ?? 0
+
+  const actions = useTherapistActions()
+  const {
+    diagnosis,
+    error,
+    isSubmitting,
+    selectedDeletions,
+    selectedEdits,
+    selectedCompressions,
+    handleDiagnose,
+    handleNewDiagnosis,
+    handleDeletionChange,
+    handleEditChange,
+    handleApply
+  } = useTherapistHandlers(actions, sessionId, onRefresh)
+
+  return (
+    <>
+      {!diagnosis ? (
+        <TherapistForm
+          sessionId={sessionId}
+          turnsCount={turnsCount}
+          isSubmitting={isSubmitting}
+          error={error}
+          handleDiagnose={handleDiagnose}
+          onRefresh={onRefresh}
+        />
+      ) : (
+        <TherapistResult
+          diagnosis={diagnosis}
+          isSubmitting={isSubmitting}
+          selectedDeletions={selectedDeletions}
+          selectedEdits={selectedEdits}
+          selectedCompressions={selectedCompressions}
+          handleNewDiagnosis={handleNewDiagnosis}
+          handleDeletionChange={handleDeletionChange}
+          handleEditChange={handleEditChange}
+          handleApply={handleApply}
+        />
+      )}
+    </>
+  )
+}

@@ -12,6 +12,7 @@ from pipe.core.utils.file import read_text_file, read_yaml_file
 from pipe.web.actions import (
     ApproveCompressorAction,
     CreateCompressorSessionAction,
+    CreateTherapistSessionAction,
     DenyCompressorAction,
     GetProceduresAction,
     GetRolesAction,
@@ -42,6 +43,7 @@ from pipe.web.actions.file_search_actions import (
     SearchL2Action,
 )
 from pipe.web.actions.search_sessions_action import SearchSessionsAction
+from pipe.web.actions.therapist_actions import ApplyDoctorModificationsAction
 from pipe.web.controllers import SessionDetailController
 
 
@@ -170,6 +172,8 @@ def dispatch_action(
         ("compress", "POST", CreateCompressorSessionAction),
         ("compress/{session_id}/approve", "POST", ApproveCompressorAction),
         ("compress/{session_id}/deny", "POST", DenyCompressorAction),
+        ("therapist", "POST", CreateTherapistSessionAction),
+        ("doctor", "POST", ApplyDoctorModificationsAction),
         ("session/{session_id}/raw", "GET", SessionRawAction),
         ("session/{session_id}/instruction", "POST", SessionInstructionAction),
         ("session/{session_id}/meta", "PATCH", SessionMetaEditAction),
@@ -455,6 +459,22 @@ def search_sessions_api():
 def create_compressor_session():
     response_data, status_code = dispatch_action(
         action="compress", params={}, request_data=request
+    )
+    return jsonify(response_data), status_code
+
+
+@app.route("/api/v1/therapist", methods=["POST"])
+def create_therapist_session():
+    response_data, status_code = dispatch_action(
+        action="therapist", params={}, request_data=request
+    )
+    return jsonify(response_data), status_code
+
+
+@app.route("/api/v1/doctor", methods=["POST"])
+def apply_doctor_modifications():
+    response_data, status_code = dispatch_action(
+        action="doctor", params={}, request_data=request
     )
     return jsonify(response_data), status_code
 

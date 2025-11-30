@@ -4,11 +4,6 @@ import { colors } from '@/styles/colors.css'
 import { zIndex } from '@/styles/zIndex.css'
 
 export const tabsContainer = style({
-  display: 'flex',
-  position: 'sticky',
-  top: 0,
-  flexDirection: 'column',
-  gap: 8,
   zIndex: zIndex.tabs
 })
 

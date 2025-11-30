@@ -144,6 +144,13 @@ def dispatch(
 
         fork_delegate.run(args, session_service)
 
+    elif args.therapist:
+        # Run therapist diagnosis
+        result = session_service.run_takt_for_therapist(args.therapist)
+        import json
+
+        print(json.dumps(result, ensure_ascii=False))
+
     elif args.instruction:
         session_service.prepare(args, is_dry_run=args.dry_run)
         _dispatch_run(args, session_service)

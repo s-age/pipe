@@ -3,7 +3,7 @@
 # pipe
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/s-age/pipe/main/src/web/static/images/logo.png" alt="pipe logo" width="200">
+  <img src="https://raw.githubusercontent.com/s-age/pipe/main/src/web/static/images/logo.png" alt="pipe logo" width="320">
 </p>
 
 ## Overview

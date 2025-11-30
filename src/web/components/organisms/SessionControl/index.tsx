@@ -23,15 +23,15 @@ export const SessionControl = ({
 
   const tabs: { key: SessionControlTab; label: string }[] = [
     { key: 'meta', label: 'Meta' },
-    { key: 'compress', label: 'Compressor' }
-    // { key: 'therapist', label: 'Therapist' }
+    { key: 'compress', label: 'Compressor' },
+    { key: 'therapist', label: 'Therapist' }
   ]
 
   return (
-    <div className={styles.container}>
-      <div className={styles.right}>
-        <Tabs tabs={tabs} activeKey={active} onChange={handleTabChange} />
+    <div className={styles.rightColumn}>
+      <Tabs tabs={tabs} activeKey={active} onChange={handleTabChange} />
 
+      <div className={styles.metaBody}>
         {active === 'meta' && (
           <SessionMeta sessionDetail={sessionDetail} onRefresh={onRefresh} />
         )}
@@ -40,7 +40,9 @@ export const SessionControl = ({
           <Compressor sessionDetail={sessionDetail} onRefresh={onRefresh} />
         )}
 
-        {active === 'therapist' && <Therapist />}
+        {active === 'therapist' && (
+          <Therapist sessionDetail={sessionDetail} onRefresh={onRefresh} />
+        )}
       </div>
     </div>
   )

@@ -24,7 +24,6 @@ export const sessionMetaSection = style({
 
 export const sessionMetaView = style({
   flex: '1',
-  marginBottom: '16px',
   padding: '20px',
   borderRadius: '8px',
   background: colors.gray,
@@ -40,7 +39,7 @@ export const sessionMetaView = style({
 
 export const stickySaveMetaButtonContainer = style({
   position: 'sticky',
-  bottom: '16px',
+  bottom: '0',
   padding: '12px',
   borderRadius: '0 0 8px 8px',
   background: colors.darkGray,

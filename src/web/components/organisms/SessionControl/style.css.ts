@@ -1,28 +1,24 @@
 import { style } from '@vanilla-extract/css'
 
-export const container = style({
+export const rightColumn = style({
   display: 'flex',
   width: '320px',
+  height: '100%',
+  paddingBottom: '12px',
+  flexDirection: 'column',
   gap: '12px'
-})
-
-export const left = style({
-  display: 'flex',
-  flex: '0 0 300px',
-  flexDirection: 'column',
-  gap: '8px'
-})
-
-export const right = style({
-  display: 'flex',
-  flex: '1 1 auto',
-  flexDirection: 'column',
-  gap: '8px'
 })
 
 export const header = style({
   fontSize: '14px',
   fontWeight: 600
+})
+
+export const metaBody = style({
+  display: 'flex',
+  flex: '1',
+  minHeight: 0,
+  flexDirection: 'column'
 })
 
 export const field = style({

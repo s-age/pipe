@@ -6,8 +6,8 @@ import hashlib
 import json
 import os
 import sys
-from typing import Any
 import zoneinfo
+from typing import Any
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.sessions import SessionCollection
@@ -651,10 +651,15 @@ class SessionService:
     def build_therapist_instruction(self, session_id: str, turns_count: int) -> str:
         """Build the instruction for therapist session."""
         return (
-            f"Diagnose the TARGET SESSION with ID: {session_id} which has exactly {turns_count} turns. "
-            f"IMPORTANT: Always use session_id='{session_id}' in all tool calls. This is the target session to diagnose, NOT your own session.\n\n"
-            f"First, call get_session(session_id='{session_id}') to retrieve the session data.\n\n"
-            f"Then, provide advice on edits, deletions, and compressions. All suggested turn numbers must be between 1 and {turns_count} inclusive. "
+            f"Diagnose the TARGET SESSION with ID: {session_id} "
+            f"which has exactly {turns_count} turns. "
+            f"IMPORTANT: Always use session_id='{session_id}' in all tool calls. "
+            f"This is the target session to diagnose, NOT your own session.\n\n"
+            f"First, call get_session(session_id='{session_id}') "
+            f"to retrieve the session data.\n\n"
+            f"Then, provide advice on edits, deletions, and compressions. "
+            f"All suggested turn numbers must be between 1 and {turns_count} "
+            f"inclusive. "
             f"Do not suggest any operations on turns outside this range."
         )
 
@@ -763,7 +768,7 @@ class SessionService:
                     "deletions": [],
                     "edits": [],
                     "compressions": [],
-                    "raw_diagnosis": diagnosis
+                    "raw_diagnosis": diagnosis,
                 }
 
             return {
@@ -775,7 +780,9 @@ class SessionService:
             if therapist_session_id:
                 self.delete_session(therapist_session_id)
 
-    def run_takt_for_doctor(self, session_id: str, modifications: dict) -> dict[str, Any]:
+    def run_takt_for_doctor(
+        self, session_id: str, modifications: dict[str, Any]
+    ) -> dict[str, Any]:
         """Create doctor session and run modifications."""
         import re
         import subprocess
@@ -794,8 +801,10 @@ class SessionService:
 
         # Filter invalid modifications
         valid_deletions = [d for d in deletions if 1 <= d <= turns_count]
-        valid_edits = [e for e in edits if 1 <= e['turn'] <= turns_count]
-        valid_compressions = [c for c in compressions if 1 <= c['start'] <= c['end'] <= turns_count]
+        valid_edits = [e for e in edits if 1 <= e["turn"] <= turns_count]
+        valid_compressions = [
+            c for c in compressions if 1 <= c["start"] <= c["end"] <= turns_count
+        ]
 
         modifications = {
             "deletions": valid_deletions,
@@ -808,15 +817,16 @@ class SessionService:
 
         print(f"Doctor instruction: {instruction}")  # Debug print
 
-        # Execute takt command
         command = [
             sys.executable,
             "-m",
             "pipe.cli.takt",
             "--purpose",
-            "Act as a doctor agent to apply approved modifications to the target session",
+            "Act as a doctor agent to apply approved modifications "
+            "to the target session",
             "--background",
-            "Responsible for executing deletions, edits, and compressions approved by the therapist",
+            "Responsible for executing deletions, edits, and compressions "
+            "approved by the therapist",
             "--roles",
             "roles/doctor.md",
             "--instruction",
@@ -875,22 +885,39 @@ class SessionService:
 
             status = "Failed"
             reason = ""
+            applied_deletions = []
+            applied_edits = []
+            applied_compressions = []
             if last_model_response:
                 content = last_model_response.content.strip()
-                if "Succeeded" in content:
-                    status = "Succeeded"
-                elif "Failed" in content:
-                    status = "Failed"
-                    reason = content  # Include the full content as reason
-                else:
-                    status = "Unknown"
-                    reason = content
+                # Try to parse as JSON first
+                try:
+                    doctor_result = json.loads(content)
+                    status = doctor_result.get("status", "Unknown")
+                    applied_deletions = doctor_result.get("applied_deletions", [])
+                    applied_edits = doctor_result.get("applied_edits", [])
+                    applied_compressions = doctor_result.get("applied_compressions", [])
+                    if status == "Failed":
+                        reason = doctor_result.get("reason", content)
+                except json.JSONDecodeError:
+                    # Fallback to string matching
+                    if "Succeeded" in content:
+                        status = "Succeeded"
+                    elif "Failed" in content:
+                        status = "Failed"
+                        reason = content
+                    else:
+                        status = "Unknown"
+                        reason = content
 
             return {
                 "session_id": doctor_session_id,
                 "result": {
                     "status": status,
                     "reason": reason,
+                    "applied_deletions": applied_deletions,
+                    "applied_edits": applied_edits,
+                    "applied_compressions": applied_compressions,
                 },
             }
         finally:
@@ -908,27 +935,36 @@ class SessionService:
         deletions_set = sorted(set(deletions))
         adjusted_edits = []
         for edit in edits:
-            turn = edit['turn']
+            turn = edit["turn"]
             adjusted_turn = turn - sum(1 for d in deletions_set if d < turn)
-            adjusted_edits.append({**edit, 'turn': adjusted_turn})
+            adjusted_edits.append({**edit, "turn": adjusted_turn})
 
         adjusted_compressions = []
         for comp in compressions:
-            start_turn = comp['start']
-            end_turn = comp['end']
-            adjusted_start = start_turn - sum(1 for d in deletions_set if d < start_turn)
+            start_turn = comp["start"]
+            end_turn = comp["end"]
+            adjusted_start = start_turn - sum(
+                1 for d in deletions_set if d < start_turn
+            )
             adjusted_end = end_turn - sum(1 for d in deletions_set if d < end_turn)
-            adjusted_compressions.append({
-                **comp,
-                'start': adjusted_start,
-                'end': adjusted_end
-            })
+            adjusted_compressions.append(
+                {**comp, "start": adjusted_start, "end": adjusted_end}
+            )
 
-        instruction = f"Apply the following approved modifications to the TARGET SESSION with ID: {session_id}\n\n"
-        instruction += f"IMPORTANT: Always use session_id='{session_id}' in all tool calls. This is the target session to modify, NOT your own session.\n\n"
+        instruction = (
+            f"Apply the following approved modifications to the TARGET SESSION "
+            f"with ID: {session_id}\n\n"
+        )
+        instruction += (
+            f"IMPORTANT: Always use session_id='{session_id}' in all tool calls. "
+            f"This is the target session to modify, NOT your own session.\n\n"
+        )
 
         if deletions:
-            instruction += f"delete_session_turns(session_id='{session_id}', turns={deletions})\n"
+            instruction += (
+                f"delete_session_turns(session_id='{session_id}', "
+                f"turns={deletions})\n"
+            )
         for edit in adjusted_edits:
             instruction += (
                 f"edit_session_turn(session_id='{session_id}', turn={edit['turn']}, "
@@ -938,7 +974,7 @@ class SessionService:
             instruction += (
                 f"compress_session_turns(session_id='{session_id}', "
                 f"start_turn={comp['start']}, end_turn={comp['end']}, "
-                f"summary='{comp['summary']}')\n"
+                f"summary='{comp['reason']}')\n"
             )
 
         if not deletions and not adjusted_edits and not adjusted_compressions:
@@ -946,6 +982,9 @@ class SessionService:
         else:
             instruction += "\nExecute these tool calls in the order listed above."
 
-        instruction += f"\nCRITICAL: Do NOT use your own session ID. Always use session_id='{session_id}' for the target session."
+        instruction += (
+            f"\nCRITICAL: Do NOT use your own session ID. "
+            f"Always use session_id='{session_id}' for the target session."
+        )
 
         return instruction

@@ -32,12 +32,16 @@ graph TD
 3. **Apply Deletions**: Call the `delete_session_turns` tool with the target session ID to remove specified turns.
 4. **Apply Edits**: Call the `edit_session_turn` tool with the target session ID to modify specified turns.
 5. **Apply Compressions**: Call the `compress_session_turns` tool with the target session ID to replace ranges with summaries.
-6. **Verify Session Integrity**: Confirm all modifications were applied successfully to the target session.
+6. **Verify Target Session Integrity**: Confirm all modifications were applied successfully to the target session.
 7. **Report Completion**: Output a summary of applied modifications in JSON format.
+
+**CRITICAL**: You must execute all tool calls listed in the instruction before outputting the final JSON. Do not skip any tools or output the JSON prematurely. Check each tool result and only mark as applied if successful.
 
 ## Output Format
 
 Your final output must be valid JSON with the following structure. Output only the JSON object, no markdown code blocks or additional text.
+
+**IMPORTANT**: Do not output this JSON until you have executed all the tool calls specified in the instruction and verified their results. Only include modifications in the applied\_\* arrays if the corresponding tools succeeded.
 
 ```json
 {
@@ -63,12 +67,20 @@ You have access to the following tools. Use only these exact function names with
 
 - `delete_session_turns(session_id="target_session_id", turns=[1,5,10])`: Delete specified turns from the target session.
   **Important:** `session_id` and `turns` must be passed as keyword arguments in the exact format (e.g., `session_id="...", turns=[...]`).
+  **Result Check:** After calling this tool, check the result. If the result contains an "error" key, the deletion failed. If it contains a "message" key, it succeeded.
+  **Example:** If the instruction says `delete_session_turns(session_id='abc123', turns=[1,2])`, call `delete_session_turns(session_id='abc123', turns=[1,2])`.
 - `edit_session_turn(session_id="target_session_id", turn=3, new_content="new content")`: Edit the content of a specific turn in the target session.
   **Important:** `session_id`, `turn`, and `new_content` must be passed as keyword arguments in the exact format.
+  **Result Check:** After calling this tool, check the result. If the result contains an "error" key, the edit failed. If it contains a "message" key, it succeeded.
+  **Example:** If the instruction says `edit_session_turn(session_id='abc123', turn=3, new_content='Updated content')`, call `edit_session_turn(session_id='abc123', turn=3, new_content='Updated content')`.
 - `compress_session_turns(session_id="target_session_id", start_turn=1, end_turn=5, summary="summary")`: Compress a range of turns in the target session with a summary.
   **Important:** `session_id`, `start_turn`, `end_turn`, and `summary` must be passed as keyword arguments in the exact format.
+  **Result Check:** After calling this tool, check the result. If the result contains an "error" key, the compression failed. If it contains a "message" key, it succeeded.
+  **Example:** If the instruction says `compress_session_turns(session_id='abc123', start_turn=1, end_turn=5, summary='Summary text')`, call `compress_session_turns(session_id='abc123', start_turn=1, end_turn=5, summary='Summary text')`.
 
 **Critical:** Always use the target session ID provided in the instruction for all tool calls. Never use your own session ID or any other session ID. The target session is the one being diagnosed and modified, not your own working session.
+
+**Mandatory Execution:** You must execute every tool call listed in the instruction exactly as written. Do not modify the parameters or skip any calls. Execute them in the order they appear.
 
 If you need to check available tools, do not ask; just use the tools listed above.
 
@@ -78,3 +90,4 @@ If you need to check available tools, do not ask; just use the tools listed abov
 - Create backups automatically before any changes.
 - Report any errors or failures clearly.
 - Modifications are irreversible, so apply carefully.
+- **Check tool results:** After each tool call, examine the returned result. If it has an "error" field, mark that modification as failed. Only add to applied\_\* arrays if the tool succeeded.

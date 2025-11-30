@@ -11,7 +11,7 @@ export type TherapistResultProperties = {
   diagnosis: Diagnosis
   isSubmitting: boolean
   selectedDeletions: number[]
-  selectedEdits: { turn: number; suggestion: string }[]
+  selectedEdits: { turn: number; new_content: string }[]
   selectedCompressions: { start: number; end: number; reason: string }[]
   handleNewDiagnosis: () => void
   handleDeletionChange: (
@@ -19,7 +19,7 @@ export type TherapistResultProperties = {
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleEditChange: (edit: {
     turn: number
-    suggestion: string
+    new_content: string
   }) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleApply: () => void
 }
@@ -72,7 +72,7 @@ export const TherapistResult = ({
             <li key={edit.turn}>
               <label>
                 <Checkbox onChange={handleEditChange(edit)} />
-                Turn {edit.turn}: {edit.suggestion}
+                Turn {edit.turn}: {edit.new_content}
               </label>
             </li>
           )) || <li>None</li>}

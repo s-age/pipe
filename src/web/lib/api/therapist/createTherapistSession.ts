@@ -8,7 +8,7 @@ export type CreateTherapistSessionResponse = {
   session_id: string
   diagnosis: {
     deletions: number[]
-    edits: { turn: number; suggestion: string }[]
+    edits: { turn: number; new_content: string }[]
     compressions: { start: number; end: number; reason: string }[]
     summary: string
     raw_diagnosis?: string

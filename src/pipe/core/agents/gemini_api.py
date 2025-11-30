@@ -29,7 +29,7 @@ logging.basicConfig(
 )
 
 # Suppress genai logging
-logging.getLogger('google.genai').setLevel(logging.WARNING)
+logging.getLogger("google.genai").setLevel(logging.WARNING)
 
 
 def load_tools(project_root: str) -> list:

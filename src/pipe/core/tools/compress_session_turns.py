@@ -23,5 +23,3 @@ def compress_session_turns(
         }
     except Exception as e:
         return {"error": f"Failed to compress turns in session {session_id}: {e}"}
-
-

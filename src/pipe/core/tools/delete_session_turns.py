@@ -19,5 +19,3 @@ def delete_session_turns(
         }
     except Exception as e:
         return {"error": f"Failed to delete turns from session {session_id}: {e}"}
-
-

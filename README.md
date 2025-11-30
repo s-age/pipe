@@ -128,6 +128,7 @@ This Git-inspired approach ensures that session management feels natural to deve
     ```
   - **Customizing Verification:** If the verification process is too strict and frequently rejects summaries, you can edit `roles/verifier.md` to adjust the approval checklist for more lenient verification. This allows you to balance between context preservation and compression efficiency based on your needs.
 - **Turn-based Forking:** Easily fork a conversation from any specific turn. This allows you to explore alternative responses from the LLM or test different instructions without altering the original history, enabling robust validation and experimentation.
+- **Experimental: Therapist/Doctor Workflow:** LLM-powered session optimization where a specialized `Therapist` agent analyzes conversation sessions to identify issues and suggest improvements, and a `Doctor` agent applies approved modifications (edits, deletions, compressions) to reduce cognitive load and improve coherence.
 
 See [docs/tools.md](docs/tools.md) for information on available tools and integrations.
 

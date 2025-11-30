@@ -1,7 +1,7 @@
 from typing import Any
 
 from pipe.web.actions.base_action import BaseAction
-from pipe.web.requests import CreateTherapistRequest, ApplyDoctorRequest
+from pipe.web.requests import ApplyDoctorRequest, CreateTherapistRequest
 from pydantic import ValidationError
 
 

@@ -4,7 +4,7 @@ export type ApplyDoctorModificationsRequest = {
   session_id: string
   modifications: {
     deletions?: number[]
-    edits?: { turn: number; suggestion: string }[]
+    edits?: { turn: number; new_content: string }[]
     compressions?: { start: number; end: number; reason: string }[]
   }
 }

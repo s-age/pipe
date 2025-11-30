@@ -14,13 +14,13 @@ type TherapistHandlers = {
   error: string | null
   isSubmitting: boolean
   selectedDeletions: number[]
-  selectedEdits: { turn: number; suggestion: string }[]
+  selectedEdits: { turn: number; new_content: string }[]
   selectedCompressions: { start: number; end: number; reason: string }[]
   handleDiagnose: () => Promise<void>
   handleNewDiagnosis: () => void
   handleApplyModifications: (modifications: {
     deletions?: number[]
-    edits?: { turn: number; suggestion: string }[]
+    edits?: { turn: number; new_content: string }[]
     compressions?: { start: number; end: number; reason: string }[]
   }) => Promise<void>
   handleDeletionChange: (
@@ -28,7 +28,7 @@ type TherapistHandlers = {
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleEditChange: (edit: {
     turn: number
-    suggestion: string
+    new_content: string
   }) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleApply: () => void
 }
@@ -43,7 +43,7 @@ export const useTherapistHandlers = (
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedDeletions, setSelectedDeletions] = useState<number[]>([])
   const [selectedEdits, setSelectedEdits] = useState<
-    { turn: number; suggestion: string }[]
+    { turn: number; new_content: string }[]
   >([])
   const [selectedCompressions, setSelectedCompressions] = useState<
     { start: number; end: number; reason: string }[]
@@ -57,6 +57,10 @@ export const useTherapistHandlers = (
     try {
       const result = await actions.diagnoseSession(sessionId)
       setDiagnosis(result)
+      // Reset selections when new diagnosis is loaded
+      setSelectedDeletions([])
+      setSelectedEdits([])
+      setSelectedCompressions([])
     } catch (error_) {
       setError((error_ as Error).message)
     } finally {
@@ -74,7 +78,7 @@ export const useTherapistHandlers = (
   const handleApplyModifications = useCallback(
     async (modifications: {
       deletions?: number[]
-      edits?: { turn: number; suggestion: string }[]
+      edits?: { turn: number; new_content: string }[]
       compressions?: { start: number; end: number; reason: string }[]
     }): Promise<void> => {
       setIsSubmitting(true)
@@ -133,10 +137,10 @@ export const useTherapistHandlers = (
   const handleEditChange = useCallback<
     (edit: {
       turn: number
-      suggestion: string
+      new_content: string
     }) => (event: React.ChangeEvent<HTMLInputElement>) => void
   >(
-    (edit: { turn: number; suggestion: string }) =>
+    (edit: { turn: number; new_content: string }) =>
       (event: React.ChangeEvent<HTMLInputElement>): void => {
         const checked = event.target.checked
         if (checked) {

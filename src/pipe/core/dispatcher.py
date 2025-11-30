@@ -148,6 +148,7 @@ def dispatch(
         # Run therapist diagnosis
         result = session_service.run_takt_for_therapist(args.therapist)
         import json
+
         print(json.dumps(result, ensure_ascii=False))
 
     elif args.instruction:

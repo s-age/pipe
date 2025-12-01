@@ -2,7 +2,7 @@ import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
-import { Header } from '@/components/organisms/Header'
+import { AppLayout } from '@/components/layouts/AppLayout'
 import { SessionList } from '@/components/organisms/SessionList'
 import { useSessionStore } from '@/stores/useChatHistoryStore'
 
@@ -10,13 +10,12 @@ import { useSessionManagementActions } from './hooks/useSessionManagementActions
 import { useSessionManagementHandlers } from './hooks/useSessionManagementHandlers'
 import { useSessionManagementLifecycle } from './hooks/useSessionManagementLifecycle'
 import {
-  appContainer,
   mainContent,
   sessionManagementContainer,
   headerSection,
   title,
   actionsSection
-} from './style.css'
+} from './style.css.ts'
 
 export const SessionManagementPage: React.FC = () => {
   const { state, actions: storeActions } = useSessionStore()
@@ -28,8 +27,7 @@ export const SessionManagementPage: React.FC = () => {
     handlers
 
   return (
-    <div className={appContainer}>
-      <Header />
+    <AppLayout>
       <div className={mainContent}>
         <div className={sessionManagementContainer}>
           <div className={headerSection}>
@@ -53,6 +51,6 @@ export const SessionManagementPage: React.FC = () => {
           />
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }

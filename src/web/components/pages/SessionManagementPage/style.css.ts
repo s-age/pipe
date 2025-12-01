@@ -2,15 +2,6 @@ import { style } from '@vanilla-extract/css'
 
 import { colors } from '../../../styles/colors.css'
 
-export const appContainer = style({
-  display: 'flex',
-  width: '100%',
-  overflow: 'hidden',
-  padding: '0',
-  background: colors.pureBlack,
-  flexDirection: 'column'
-})
-
 export const mainContent = style({
   display: 'grid',
   padding: '12px',

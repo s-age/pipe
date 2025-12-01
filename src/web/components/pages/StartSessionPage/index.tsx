@@ -2,10 +2,11 @@ import type { JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner'
+import { AppLayout } from '@/components/layouts/AppLayout'
 import { StartSessionForm } from '@/components/organisms/StartSessionForm'
 
 import { useStartSessionPageLifecycle } from './hooks/useStartSessionPageLifecycle'
-import { pageContainer, pageContent } from './style.css'
+import { pageContent } from './style.css.ts'
 
 export const StartSessionPage: () => JSX.Element = () => {
   const {
@@ -24,14 +25,14 @@ export const StartSessionPage: () => JSX.Element = () => {
 
   if (error && !loading) {
     return (
-      <div className={pageContainer}>
+      <AppLayout>
         <ErrorMessage message={error} />
-      </div>
+      </AppLayout>
     )
   }
 
   return (
-    <div className={pageContainer}>
+    <AppLayout>
       <div className={pageContent}>
         <StartSessionForm
           settings={settings}
@@ -40,7 +41,7 @@ export const StartSessionPage: () => JSX.Element = () => {
         />
       </div>
       {error && <ErrorMessage message={error} />}
-    </div>
+    </AppLayout>
   )
 }
 

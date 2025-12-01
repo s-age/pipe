@@ -28,6 +28,7 @@ from pipe.web.actions import (
     SessionInstructionAction,
     SessionMetaEditAction,
     SessionRawAction,
+    SessionsDeleteAction,
     SessionStartAction,
     SessionTreeAction,
     SessionTurnsGetAction,
@@ -174,6 +175,7 @@ def dispatch_action(
         ("compress/{session_id}/deny", "POST", DenyCompressorAction),
         ("therapist", "POST", CreateTherapistSessionAction),
         ("doctor", "POST", ApplyDoctorModificationsAction),
+        ("sessions/delete", "POST", SessionsDeleteAction),
         ("session/{session_id}/raw", "GET", SessionRawAction),
         ("session/{session_id}/instruction", "POST", SessionInstructionAction),
         ("session/{session_id}/meta", "PATCH", SessionMetaEditAction),
@@ -735,6 +737,14 @@ def get_start_session_settings():
         return jsonify(response_data), status_code
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+
+@app.route("/api/v1/sessions/delete", methods=["POST"])
+def delete_sessions_api():
+    response_data, status_code = dispatch_action(
+        action="sessions/delete", params={}, request_data=request
+    )
+    return jsonify(response_data), status_code
 
 
 @app.route(

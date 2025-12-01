@@ -14,7 +14,7 @@ def edit_session_turn(
         session = session_service.history_manager.get_session(session_id)
         if not session or index >= len(session.turns):
             return {"error": f"Turn {turn} not found in session {session_id}"}
-        
+
         target_turn = session.turns[index]
         if target_turn.type == "user_task":
             update_data = {"instruction": new_content}
@@ -22,11 +22,10 @@ def edit_session_turn(
             update_data = {"content": new_content}
         else:
             return {"error": f"Cannot edit turn of type {target_turn.type}"}
-        
+
         session_service.history_manager.edit_turn(session_id, index, update_data)
         return {
             "message": (f"Successfully edited turn {turn} in session {session_id}.")
         }
     except Exception as e:
         return {"error": f"Failed to edit turn in session {session_id}: {e}"}
-

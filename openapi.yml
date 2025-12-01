@@ -724,6 +724,31 @@ paths:
         '500':
           description: Internal server error
 
+  # Bulk Delete Sessions (v1)
+  /api/v1/sessions/delete:
+    post:
+      summary: Bulk delete multiple sessions
+      description: Deletes multiple sessions by their IDs and returns the count of successfully deleted sessions
+      tags:
+        - v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteSessionsRequest'
+      responses:
+        '200':
+          description: Sessions deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteSessionsResponse'
+        '422':
+          description: Validation error
+        '500':
+          description: Internal server error
+
   /api/v1/session/{session_id}/fork/{fork_index}:
     post:
       summary: Fork a session from a specific turn (singular path used by Flask app)
@@ -790,6 +815,59 @@ paths:
                 type: string
         '400':
           description: Too many tasks in processing pool
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  # Therapist Endpoints
+  /api/v1/therapist:
+    post:
+      summary: Create a therapist session for diagnosis
+      description: Creates a therapist session that analyzes the specified session and provides diagnostic suggestions for optimization
+      tags:
+        - therapist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTherapistSessionRequest'
+      responses:
+        '200':
+          description: Therapist session created successfully with diagnosis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTherapistSessionResponse'
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
+  /api/v1/doctor:
+    post:
+      summary: Apply doctor modifications to a session
+      description: Applies approved modifications (deletions, edits, compressions) to the specified session
+      tags:
+        - therapist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyDoctorModificationsRequest'
+      responses:
+        '200':
+          description: Modifications applied successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplyDoctorModificationsResponse'
         '422':
           description: Validation error
         '404':
@@ -1289,3 +1367,208 @@ components:
             $ref: '#/components/schemas/SearchResult'
       required:
         - results
+    CreateTherapistSessionRequest:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: The ID of the session to analyze
+      required:
+        - session_id
+    CreateTherapistSessionResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: The ID of the therapist session
+        diagnosis:
+          type: object
+          properties:
+            deletions:
+              type: array
+              items:
+                type: integer
+              description: Array of turn indices to delete
+            edits:
+              type: array
+              items:
+                type: object
+                properties:
+                  turn:
+                    type: integer
+                    description: Turn index to edit
+                  new_content:
+                    type: string
+                    description: New content for the turn
+                required:
+                  - turn
+                  - new_content
+              description: Array of edits to apply
+            compressions:
+              type: array
+              items:
+                type: object
+                properties:
+                  start:
+                    type: integer
+                    description: Start turn index for compression
+                  end:
+                    type: integer
+                    description: End turn index for compression
+                  reason:
+                    type: string
+                    description: Reason for compression
+                required:
+                  - start
+                  - end
+                  - reason
+              description: Array of compressions to apply
+            summary:
+              type: string
+              description: Summary of the diagnosis
+            raw_diagnosis:
+              type: string
+              description: Raw diagnosis output (optional)
+          required:
+            - deletions
+            - edits
+            - compressions
+            - summary
+      required:
+        - session_id
+        - diagnosis
+    ApplyDoctorModificationsRequest:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: The ID of the session to modify
+        modifications:
+          type: object
+          properties:
+            deletions:
+              type: array
+              items:
+                type: integer
+                description: Turn indices to delete
+            edits:
+              type: array
+              items:
+                type: object
+                properties:
+                  turn:
+                    type: integer
+                    description: Turn index to edit
+                  new_content:
+                    type: string
+                    description: New content for the turn
+                required:
+                  - turn
+                  - new_content
+              description: Edits to apply
+            compressions:
+              type: array
+              items:
+                type: object
+                properties:
+                  start:
+                    type: integer
+                    description: Start turn index for compression
+                  end:
+                    type: integer
+                    description: End turn index for compression
+                  reason:
+                    type: string
+                    description: Reason for compression
+                required:
+                  - start
+                  - end
+                  - reason
+              description: Compressions to apply
+      required:
+        - session_id
+        - modifications
+    ApplyDoctorModificationsResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: The ID of the modified session
+        result:
+          type: object
+          properties:
+            applied_deletions:
+              type: array
+              items:
+                type: integer
+              description: Applied deletions (optional)
+            applied_edits:
+              type: array
+              items:
+                type: object
+                properties:
+                  turn:
+                    type: integer
+                    description: Turn index that was edited
+                  new_content:
+                    type: string
+                    description: New content applied
+                required:
+                  - turn
+                  - new_content
+              description: Applied edits (optional)
+            applied_compressions:
+              type: array
+              items:
+                type: object
+                properties:
+                  start:
+                    type: integer
+                    description: Start turn index of compression
+                  end:
+                    type: integer
+                    description: End turn index of compression
+                  summary:
+                    type: string
+                    description: Summary of the compressed content
+                required:
+                  - start
+                  - end
+                  - summary
+              description: Applied compressions (optional)
+            status:
+              type: string
+              description: Status of the operation
+            reason:
+              type: string
+              description: Reason for the status (optional)
+          required:
+            - status
+      required:
+        - session_id
+        - result
+    DeleteSessionsRequest:
+      type: object
+      properties:
+        session_ids:
+          type: array
+          items:
+            type: string
+          description: List of session IDs to delete
+      required:
+        - session_ids
+    DeleteSessionsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+        deleted_count:
+          type: integer
+          description: Number of sessions successfully deleted
+        total_requested:
+          type: integer
+          description: Total number of sessions requested for deletion
+      required:
+        - deleted_count
+        - total_requested

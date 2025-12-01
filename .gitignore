@@ -69,3 +69,6 @@ commit_message.txt
 
 # Test session files
 tests/sessions/
+
+# HTML Coverage Report
+htmlcov

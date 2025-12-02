@@ -11,10 +11,12 @@ type UseSessionManagementActions = {
 
 type Properties = {
   actions: UseSessionManagementActions
+  navigate: (path: string) => void
 }
 
 export const useSessionManagementHandlers = ({
-  actions
+  actions,
+  navigate
 }: Properties): {
   selectedSessionIds: string[]
   handleSelectSession: (sessionId: string, isSelected: boolean) => void
@@ -23,6 +25,7 @@ export const useSessionManagementHandlers = ({
     isSelected: boolean
   ) => void
   handleBulkDelete: () => Promise<void>
+  handleCancel: () => void
 } => {
   const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([])
 
@@ -67,10 +70,15 @@ export const useSessionManagementHandlers = ({
     }
   }, [actions, selectedSessionIds])
 
+  const handleCancel = useCallback((): void => {
+    navigate('/')
+  }, [navigate])
+
   return {
     selectedSessionIds,
     handleSelectSession,
     handleSelectAll,
-    handleBulkDelete
+    handleBulkDelete,
+    handleCancel
   }
 }

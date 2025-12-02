@@ -11,6 +11,8 @@ export const sessionList = style({
 
 export const header = style({
   display: 'flex',
+  position: 'sticky',
+  top: 0,
   padding: '12px',
   fontWeight: 'bold',
   color: colors.white,

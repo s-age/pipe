@@ -15,6 +15,13 @@ export const sessionItem = style({
   }
 })
 
+export const label = style({
+  display: 'flex',
+  flex: 1,
+  cursor: 'pointer',
+  alignItems: 'center'
+})
+
 export const checkbox = style({
   marginRight: '12px',
   flexShrink: 0

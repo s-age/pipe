@@ -1,9 +1,17 @@
 import { useCallback } from 'react'
 
 import { deleteSessions } from '@/lib/api/session/deleteSessions'
+import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
+import type { useSessionStore } from '@/stores/useChatHistoryStore'
 import { useToastStore } from '@/stores/useToastStore'
 
-export const useSessionManagementActions = (): {
+type Properties = {
+  storeActions: ReturnType<typeof useSessionStore>['actions']
+}
+
+export const useSessionManagementActions = ({
+  storeActions
+}: Properties): {
   deleteSessions: (sessionIds: string[]) => Promise<void>
 } => {
   const { addToast } = useToastStore()
@@ -16,6 +24,12 @@ export const useSessionManagementActions = (): {
           status: 'success',
           title: `Deleted ${result.deleted_count} out of ${result.total_requested} session(s) successfully.`
         })
+        // Refresh sessions after deletion
+        const sessionTree = await getSessionTree()
+        const sessions =
+          sessionTree.session_tree ||
+          sessionTree.sessions.map(([_, overview]) => overview)
+        storeActions.setSessions(sessions)
       } catch {
         addToast({
           status: 'failure',
@@ -23,7 +37,7 @@ export const useSessionManagementActions = (): {
         })
       }
     },
-    [addToast]
+    [addToast, storeActions]
   )
 
   return {

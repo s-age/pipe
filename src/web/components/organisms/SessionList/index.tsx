@@ -12,6 +12,7 @@ import { useSessionListLifecycle } from './hooks/useSessionListLifecycle'
 import {
   sessionList,
   header,
+  headerLabel,
   headerCheckbox,
   headerContent,
   headerSubject,
@@ -121,17 +122,20 @@ export const SessionList: React.FC<Properties> = ({
   return (
     <div className={sessionList}>
       <div className={header}>
-        <Checkbox
-          ref={checkboxRef}
-          className={headerCheckbox}
-          checked={allSelected}
-          onChange={handleSelectAll}
-        />
-        <div className={headerContent}>
-          <span className={headerSubject}>Subject</span>
-          <span className={headerShortHash}>Short Hash</span>
-          <span className={headerUpdatedAt}>Updated At</span>
-        </div>
+        <label className={headerLabel}>
+          <Checkbox
+            ref={checkboxRef}
+            id="select-all-sessions"
+            className={headerCheckbox}
+            checked={allSelected}
+            onChange={handleSelectAll}
+          />
+          <div className={headerContent}>
+            <span className={headerSubject}>Subject</span>
+            <span className={headerShortHash}>Short Hash</span>
+            <span className={headerUpdatedAt}>Updated At</span>
+          </div>
+        </label>
       </div>
       {renderSessions()}
     </div>

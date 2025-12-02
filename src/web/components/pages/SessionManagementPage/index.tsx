@@ -21,7 +21,7 @@ import {
 export const SessionManagementPage: React.FC = () => {
   const navigate = useNavigate()
   const { state, actions: storeActions } = useSessionStore()
-  const actions = useSessionManagementActions()
+  const actions = useSessionManagementActions({ storeActions })
   const handlers = useSessionManagementHandlers({ actions, navigate })
   useSessionManagementLifecycle({ storeActions })
 

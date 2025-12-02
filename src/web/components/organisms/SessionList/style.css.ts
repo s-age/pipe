@@ -21,6 +21,13 @@ export const header = style({
   borderBottom: `1px solid ${colors.darkGray}`
 })
 
+export const headerLabel = style({
+  display: 'flex',
+  flex: 1,
+  cursor: 'pointer',
+  alignItems: 'center'
+})
+
 export const headerCheckbox = style({
   marginRight: '12px',
   flexShrink: 0

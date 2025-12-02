@@ -7,7 +7,7 @@ import type {
 } from '@/lib/api/sessionTree/getSessionTree'
 
 import { useSessionItemHandlers } from './hooks/useSessionItemHandlers'
-import { sessionItem, checkbox, content, subject } from './style.css'
+import { sessionItem, label, checkbox, content, subject } from './style.css'
 
 type Properties = {
   session: SessionOverview | SessionTreeNode
@@ -53,12 +53,19 @@ export const SessionItem: React.FC<Properties> = ({
 
   return (
     <div className={sessionItem}>
-      <Checkbox className={checkbox} checked={isSelected} onChange={handleSelect} />
-      <div className={content}>
-        <span className={subject}>{sessionName}</span>
-        <span className={shortHash}>{shortHash}</span>
-        <span className={createdAt}>{createdAtDisplay}</span>
-      </div>
+      <label className={label}>
+        <Checkbox
+          id={`session-${sessionId}`}
+          className={checkbox}
+          checked={isSelected}
+          onChange={handleSelect}
+        />
+        <div className={content}>
+          <span className={subject}>{sessionName}</span>
+          <span className={shortHash}>{shortHash}</span>
+          <span className={createdAt}>{createdAtDisplay}</span>
+        </div>
+      </label>
     </div>
   )
 }

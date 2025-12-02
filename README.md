@@ -28,6 +28,8 @@ Ultimately, pipe aims to automate not just individual agent functions, but entir
 
 For a deeper dive into the principles of Context Engineering that underpin this philosophy, see our [Wiki article](https://github.com/s-age/pipe/wiki/Context-Engineering:-The-Art-of-Communicating-Intent-to-LLMs).
 
+For an overview of the AasF (Agent as a Function) paradigm that `pipe` implements, see our [Wiki article](https://github.com/s-age/pipe/wiki/Overview:-What-AasF-Is).
+
 ## Key Concepts
 
 ### Mechanism

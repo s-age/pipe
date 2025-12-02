@@ -13,8 +13,10 @@ import {
   sessionList,
   header,
   headerCheckbox,
-  headerName,
-  headerCreatedAt,
+  headerContent,
+  headerSubject,
+  headerShortHash,
+  headerUpdatedAt,
   sessionNode,
   sessionChildren
 } from './style.css'
@@ -125,8 +127,11 @@ export const SessionList: React.FC<Properties> = ({
           checked={allSelected}
           onChange={handleSelectAll}
         />
-        <span className={headerName}>Session Name</span>
-        <span className={headerCreatedAt}>Created At</span>
+        <div className={headerContent}>
+          <span className={headerSubject}>Subject</span>
+          <span className={headerShortHash}>Short Hash</span>
+          <span className={headerUpdatedAt}>Updated At</span>
+        </div>
       </div>
       {renderSessions()}
     </div>

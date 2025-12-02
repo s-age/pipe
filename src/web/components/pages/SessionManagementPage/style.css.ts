@@ -108,6 +108,8 @@ export const secondaryButton = style({
   height: '56px',
   boxSizing: 'border-box',
   borderRadius: '6px',
+  color: colors.white,
+  background: colors.muted,
   alignItems: 'center',
   justifyContent: 'center',
   '@media': {

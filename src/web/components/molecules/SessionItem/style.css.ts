@@ -8,7 +8,6 @@ export const sessionItem = style({
   color: colors.white,
   alignItems: 'center',
   borderBottom: `1px solid ${colors.darkGray}`,
-  justifyContent: 'space-between',
   selectors: {
     '&:hover': {
       background: colors.darkGray
@@ -17,16 +16,32 @@ export const sessionItem = style({
 })
 
 export const checkbox = style({
-  marginRight: '12px'
+  marginRight: '12px',
+  flexShrink: 0
 })
 
-export const sessionName = style({
+export const content = style({
+  display: 'grid',
   flex: 1,
-  fontWeight: '500'
+  gridTemplateColumns: '1fr 100px 180px',
+  gap: '12px'
+})
+
+export const subject = style({
+  overflow: 'hidden',
+  fontWeight: '500',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap'
+})
+
+export const shortHash = style({
+  fontSize: '0.9em',
+  color: colors.lightGray,
+  whiteSpace: 'nowrap'
 })
 
 export const createdAt = style({
   fontSize: '0.9em',
   color: colors.lightGray,
-  flexShrink: 0
+  whiteSpace: 'nowrap'
 })

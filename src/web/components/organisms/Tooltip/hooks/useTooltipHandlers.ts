@@ -7,14 +7,20 @@ export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right'
 let nextTooltipId = 1
 
 export const useTooltip = (
-  content: string
+  content: string,
+  forcedPlacement?: TooltipPlacement
 ): {
   isVisible: boolean
   placement: TooltipPlacement
   targetRect: DOMRect | null
   handleMouseEnter: (
     event: React.MouseEvent<HTMLElement>,
-    options?: { content?: string; offsetMain?: number; offsetCross?: number }
+    options?: {
+      content?: string
+      offsetMain?: number
+      offsetCross?: number
+      placement?: TooltipPlacement
+    }
   ) => void
   handleMouseLeave: () => void
   onEnter: (event: React.MouseEvent<HTMLElement>) => void
@@ -49,11 +55,16 @@ export const useTooltip = (
   const handleMouseEnter = useCallback(
     (
       event: React.MouseEvent<HTMLElement>,
-      options?: { content?: string; offsetMain?: number; offsetCross?: number }
+      options?: {
+        content?: string
+        offsetMain?: number
+        offsetCross?: number
+        placement?: TooltipPlacement
+      }
     ): void => {
       if (idReference.current === null) idReference.current = nextTooltipId++
 
-      const { content, offsetMain, offsetCross } = options ?? {}
+      const { content, offsetMain, offsetCross, placement } = options ?? {}
 
       const element = event.currentTarget as HTMLElement
       const rect = element.getBoundingClientRect()
@@ -68,7 +79,7 @@ export const useTooltip = (
       const spaceBottom = vh - rect.bottom
       const maxVertical = Math.max(spaceTop, spaceBottom)
 
-      const chosenPlacement: TooltipPlacement =
+      const computedPlacement: TooltipPlacement =
         maxHorizontal > maxVertical
           ? spaceRight >= spaceLeft
             ? 'right'
@@ -76,6 +87,9 @@ export const useTooltip = (
           : spaceBottom >= spaceTop
             ? 'bottom'
             : 'top'
+
+      const chosenPlacement: TooltipPlacement =
+        (placement as TooltipPlacement) ?? computedPlacement
 
       // Emit show to the tooltip store; include optional offsets/content
       showTooltip({
@@ -95,8 +109,9 @@ export const useTooltip = (
   }, [])
 
   const onEnter = useCallback(
-    (event: React.MouseEvent<HTMLElement>) => handleMouseEnter(event, { content }),
-    [handleMouseEnter, content]
+    (event: React.MouseEvent<HTMLElement>) =>
+      handleMouseEnter(event, { content, placement: forcedPlacement }),
+    [handleMouseEnter, content, forcedPlacement]
   )
 
   return {

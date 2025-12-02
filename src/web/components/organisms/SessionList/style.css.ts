@@ -17,24 +17,36 @@ export const header = style({
   fontWeight: 'bold',
   color: colors.white,
   background: colors.black,
-  justifyContent: 'space-between',
   alignItems: 'center',
   borderBottom: `1px solid ${colors.darkGray}`
 })
 
 export const headerCheckbox = style({
-  marginRight: '12px'
+  marginRight: '12px',
+  flexShrink: 0
 })
 
-export const headerName = style({
+export const headerContent = style({
+  display: 'grid',
   flex: 1,
+  gridTemplateColumns: '1fr 100px 180px',
+  gap: '12px'
+})
+
+export const headerSubject = style({
   fontWeight: '500'
 })
 
-export const headerCreatedAt = style({
+export const headerShortHash = style({
   fontSize: '0.9em',
   color: colors.lightGray,
-  flexShrink: 0
+  whiteSpace: 'nowrap'
+})
+
+export const headerUpdatedAt = style({
+  fontSize: '0.9em',
+  color: colors.lightGray,
+  whiteSpace: 'nowrap'
 })
 
 export const sessionItem = style({

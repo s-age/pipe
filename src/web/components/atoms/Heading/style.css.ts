@@ -4,7 +4,10 @@ import { colors } from '../../../styles/colors.css'
 
 export const heading = recipe({
   base: {
-    color: colors.cyan
+    color: colors.cyan,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
   },
   variants: {
     level: {

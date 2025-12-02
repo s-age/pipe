@@ -5,8 +5,9 @@ import { zIndex } from '@/styles/zIndex.css'
 import { colors } from '../../../styles/colors.css'
 
 export const tooltipContainer = style({
-  display: 'inline-block',
-  position: 'relative'
+  display: 'flex',
+  position: 'relative',
+  justifyContent: 'center'
 })
 
 export const tooltipText = style({
@@ -18,6 +19,7 @@ export const tooltipText = style({
   height: 'fit-content',
   padding: '6px 10px',
   borderRadius: '6px',
+  fontSize: '0.875rem',
   textAlign: 'center',
   color: colors.black,
   backgroundColor: colors.cyan,

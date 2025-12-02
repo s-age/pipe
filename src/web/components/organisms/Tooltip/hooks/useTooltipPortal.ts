@@ -32,13 +32,14 @@ export const useTooltipPortal = ({
       top = Math.round(rect.top + rect.height / 2)
       transform = 'translate(-100%, -50%)'
     } else if (placement === 'bottom') {
-      left = Math.round(rect.bottom + 8)
-      top = Math.round(rect.left + rect.width / 2)
+      // Center horizontally under the element
+      left = Math.round(rect.left + rect.width / 2)
+      top = Math.round(rect.bottom + 8)
       transform = 'translateX(-50%)'
     } else {
-      // top
-      left = Math.round(rect.top - 8)
-      top = Math.round(rect.left + rect.width / 2)
+      // top: center horizontally above the element
+      left = Math.round(rect.left + rect.width / 2)
+      top = Math.round(rect.top - 8)
       transform = 'translate(-50%, -100%)'
     }
 

@@ -1,6 +1,8 @@
 import type { JSX } from 'react'
 
+import { IconBulkDelete } from '@/components/atoms/IconBulkDelete'
 import { InputSearch } from '@/components/molecules/InputSearch'
+import { Tooltip } from '@/components/organisms/Tooltip'
 import logoSource from '@/static/images/logo.png'
 
 import { useSearchSessionsHandlers } from './hooks/useSearchSessionsHandlers'
@@ -9,6 +11,7 @@ import {
   brand,
   brandLogo,
   searchWrapper,
+  sessionManagementLink,
   searchModalOverlay,
   searchModalContent,
   searchModalHeader,
@@ -44,6 +47,15 @@ export const Header = (): JSX.Element => {
           onSubmit={handleSubmit}
           name="site_search"
         />
+        <Tooltip content="Session Management" placement="bottom">
+          <a
+            href="/session_management"
+            className={sessionManagementLink}
+            aria-label="Session Management"
+          >
+            <IconBulkDelete size={18} />
+          </a>
+        </Tooltip>
 
         {open && (
           <div

@@ -25,8 +25,13 @@ from pipe.web.actions.session_actions import (
     SessionGetAction,
     SessionInstructionAction,
     SessionRawAction,
-    SessionsDeleteAction,
     SessionStartAction,
+)
+from pipe.web.actions.session_management_actions import (
+    SessionsDeleteAction,
+    SessionsDeleteBackupAction,
+    SessionsListBackupAction,
+    SessionsMoveToBackup,
 )
 from pipe.web.actions.session_tree_action import SessionTreeAction
 from pipe.web.actions.settings_actions import SettingsGetAction
@@ -50,6 +55,9 @@ __all__ = [
     "SessionGetAction",
     "SessionDeleteAction",
     "SessionsDeleteAction",
+    "SessionsMoveToBackup",
+    "SessionsListBackupAction",
+    "SessionsDeleteBackupAction",
     "SessionRawAction",
     "SessionInstructionAction",
     "SessionForkAction",

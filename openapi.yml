@@ -724,11 +724,21 @@ paths:
         '500':
           description: Internal server error
 
-  # Bulk Delete Sessions (v1)
-  /api/v1/sessions/delete:
+  /api/v1/sessions/archives:
+    get:
+      summary: List archived sessions
+      tags:
+        - v1
+      responses:
+        '200':
+          description: List of archived sessions
+          content:
+            application/json:
+              schema:
+                type: object
     post:
-      summary: Bulk delete multiple sessions
-      description: Deletes multiple sessions by their IDs and returns the count of successfully deleted sessions
+      summary: Archive (move) multiple sessions
+      description: Archives multiple sessions by their IDs and returns the count of successfully archived sessions
       tags:
         - v1
       requestBody:
@@ -739,7 +749,28 @@ paths:
               $ref: '#/components/schemas/DeleteSessionsRequest'
       responses:
         '200':
-          description: Sessions deleted successfully
+          description: Sessions archived successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteSessionsResponse'
+        '422':
+          description: Validation error
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete multiple archived sessions
+      tags:
+        - v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteSessionsRequest'
+      responses:
+        '200':
+          description: Archives deleted successfully
           content:
             application/json:
               schema:

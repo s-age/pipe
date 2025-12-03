@@ -369,36 +369,3 @@ class SessionForkAction(BaseAction):
             return {"message": "Fork turn index out of range."}, 400
         except Exception as e:
             return {"message": str(e)}, 500
-
-
-class SessionsDeleteAction(BaseAction):
-    """
-    Action to bulk delete multiple sessions.
-
-    Deletes multiple sessions and returns the count of successfully deleted sessions.
-    """
-
-    def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
-        from pipe.web.requests.sessions.delete_sessions import DeleteSessionsRequest
-
-        try:
-            # Validate request data
-            request_data = DeleteSessionsRequest(**self.request_data.get_json())
-
-            # Delete sessions via service
-            deleted_count = session_service.delete_sessions(request_data.session_ids)
-
-            return {
-                "message": (
-                    f"Successfully deleted {deleted_count} out of "
-                    f"{len(request_data.session_ids)} sessions."
-                ),
-                "deleted_count": deleted_count,
-                "total_requested": len(request_data.session_ids),
-            }, 200
-
-        except ValidationError as e:
-            return {"message": str(e)}, 422
-        except Exception as e:
-            return {"message": str(e)}, 500

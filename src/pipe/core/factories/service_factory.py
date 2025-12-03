@@ -9,6 +9,7 @@ from pipe.core.models.settings import Settings
 from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.file_indexer_service import FileIndexerService
 from pipe.core.services.prompt_service import PromptService
+from pipe.core.services.session_management_service import SessionManagementService
 from pipe.core.services.session_service import SessionService
 
 
@@ -43,3 +44,8 @@ class ServiceFactory:
     def create_file_indexer_service(self) -> FileIndexerService:
         """Creates a FileIndexerService with its dependencies."""
         return FileIndexerService(self.project_root)
+
+    def create_session_management_service(self) -> SessionManagementService:
+        """Creates a SessionManagementService with its dependencies."""
+        repository = SessionRepository(self.project_root, self.settings)
+        return SessionManagementService(repository)

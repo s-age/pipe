@@ -179,3 +179,27 @@ class SessionRepository(FileRepository):
         backup_path = os.path.join(self.backups_dir, backup_filename)
 
         shutil.copy(session_path, backup_path)
+
+    def delete_backup(self, session_id: str):
+        """Deletes a backup session file."""
+        # Find the backup file for the session_id
+        backups_dir = self.backups_dir
+        if not os.path.exists(backups_dir):
+            return
+
+        session_hash = hashlib.sha256(session_id.encode("utf-8")).hexdigest()
+        for filename in os.listdir(backups_dir):
+            if filename.startswith(session_hash) and filename.endswith(".json"):
+                backup_path = os.path.join(backups_dir, filename)
+                lock_path = f"{backup_path}.lock"
+                with file_lock(lock_path):
+                    if os.path.exists(backup_path):
+                        try:
+                            os.remove(backup_path)
+                        except OSError as e:
+                            print(
+                                f"Error deleting backup file {backup_path}: {e}",
+                                file=sys.stderr,
+                            )
+                            raise
+                break

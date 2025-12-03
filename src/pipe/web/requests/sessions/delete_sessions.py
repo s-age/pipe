@@ -7,3 +7,7 @@ from pydantic import BaseModel
 
 class DeleteSessionsRequest(BaseModel):
     session_ids: list[str]
+
+
+class DeleteBackupRequest(BaseModel):
+    file_paths: list[str]

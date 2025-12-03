@@ -20,6 +20,8 @@ export const TooltipManager = (): JSX.Element | null => {
           isVisible={true}
           placement={activeTooltip.placement ?? 'top'}
           targetRect={activeTooltip.rect ?? null}
+          offsetMain={activeTooltip.offsetMain}
+          offsetCross={activeTooltip.offsetCross}
         />
       ) : null}
     </>,

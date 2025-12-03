@@ -13,6 +13,7 @@ export type ActiveTooltip = TooltipEventData | null
 
 const listeners: Set<() => void> = new Set()
 let active: ActiveTooltip = null
+let autoHideTimer: ReturnType<typeof setTimeout> | null = null
 
 export const getActive = (): ActiveTooltip => active
 
@@ -28,10 +29,29 @@ export const showTooltip = (data: TooltipEventData): void => {
   active = {
     ...data
   }
+  // Clear any existing auto-hide timer and start a new one for 5s.
+  if (autoHideTimer) {
+    clearTimeout(autoHideTimer)
+    autoHideTimer = null
+  }
+  autoHideTimer = setTimeout(() => {
+    // Only clear if the active tooltip is the same id we showed (or clear generally)
+    if (!active) return
+    if (data.id == null || String(active.id) === String(data.id)) {
+      active = null
+      notify()
+    }
+    autoHideTimer = null
+  }, 5000)
   notify()
 }
 
 export const hideTooltip = (id?: number | string): void => {
+  // If hiding manually, clear any pending auto-hide timer.
+  if (autoHideTimer) {
+    clearTimeout(autoHideTimer)
+    autoHideTimer = null
+  }
   if (!id) {
     active = null
     notify()
@@ -48,6 +68,10 @@ export const hideTooltip = (id?: number | string): void => {
 
 export const clearTooltips = (): void => {
   active = null
+  if (autoHideTimer) {
+    clearTimeout(autoHideTimer)
+    autoHideTimer = null
+  }
   notify()
 }
 

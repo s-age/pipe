@@ -23,7 +23,6 @@ export const TherapistForm = ({
 }: TherapistFormProperties): JSX.Element => (
   <div className={styles.container}>
     <div className={styles.body}>
-      <h4 className={styles.title}>Therapist Diagnosis</h4>
       <p className={styles.muted}>
         Session: {sessionId.substring(0, 8)}... ({turnsCount} turns)
       </p>

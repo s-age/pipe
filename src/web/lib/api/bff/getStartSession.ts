@@ -8,6 +8,5 @@ export type StartSessionSettingsResponse = {
   session_tree: [string, SessionOverview][]
 }
 
-export const getStartSessionSettings =
-  async (): Promise<StartSessionSettingsResponse> =>
-    client.get<StartSessionSettingsResponse>('/bff/start-session-settings')
+export const getStartSession = async (): Promise<StartSessionSettingsResponse> =>
+  client.get<StartSessionSettingsResponse>('/bff/start_session')

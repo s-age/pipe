@@ -1,4 +1,4 @@
-import React from 'react'
+import type { JSX } from 'react'
 
 import { Checkbox } from '@/components/atoms/Checkbox'
 import type {
@@ -7,28 +7,35 @@ import type {
 } from '@/lib/api/sessionTree/getSessionTree'
 
 import { useSessionItemHandlers } from './hooks/useSessionItemHandlers'
-import { sessionItem, label, checkbox, content, subject } from './style.css'
+import { sessionItem, label, checkbox, content, subject, createdAt } from './style.css'
 
 type Properties = {
   session: SessionOverview | SessionTreeNode
   isSelected: boolean
   onSelect: (sessionId: string, isSelected: boolean) => void
+  updateLabel?: string
 }
 
-export const SessionItem: React.FC<Properties> = ({
+export const SessionItem = ({
   session,
   isSelected,
-  onSelect
-}) => {
-  const sessionId = session.session_id
+  onSelect,
+  updateLabel = 'Updated At'
+}: Properties): JSX.Element => {
+  const sessionId = session.session_id || 'unknown'
   const sessionName =
     'purpose' in session
       ? session.purpose
       : (session.overview?.purpose as string) || 'Unknown'
-  const createdAt =
-    'last_update' in session
-      ? session.last_update
-      : (session.overview?.last_updated as string) || ''
+  const displayDate =
+    updateLabel === 'Deleted At'
+      ? 'children' in session
+        ? (session.overview?.deleted_at as string) || ''
+        : session.deleted_at || ''
+      : 'children' in session
+        ? (session.overview?.last_updated_at as string) || ''
+        : session.last_updated_at || ''
+  console.log({ displayDate, session })
 
   const formatDate = (date: Date): string => {
     const year = date.getFullYear()
@@ -41,10 +48,10 @@ export const SessionItem: React.FC<Properties> = ({
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
   }
 
-  const createdAtDate = createdAt ? new Date(createdAt) : null
-  const createdAtDisplay =
-    createdAtDate && !isNaN(createdAtDate.getTime())
-      ? formatDate(createdAtDate)
+  const displayDateDate = displayDate ? new Date(displayDate) : null
+  const displayDateDisplay =
+    displayDateDate && !isNaN(displayDateDate.getTime())
+      ? formatDate(displayDateDate)
       : 'Unknown'
 
   const shortHash = sessionId.slice(0, 7)
@@ -63,7 +70,7 @@ export const SessionItem: React.FC<Properties> = ({
         <div className={content}>
           <span className={subject}>{sessionName}</span>
           <span className={shortHash}>{shortHash}</span>
-          <span className={createdAt}>{createdAtDisplay}</span>
+          <span className={createdAt}>{displayDateDisplay}</span>
         </div>
       </label>
     </div>

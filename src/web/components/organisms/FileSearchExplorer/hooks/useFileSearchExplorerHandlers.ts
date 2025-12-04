@@ -105,7 +105,9 @@ export const useFileSearchExplorerHandlers = (
                 .filter((entry) => entry.name.startsWith(prefix))
                 .map((entry) => ({
                   label: entry.is_dir ? `${entry.name}/` : entry.name,
-                  value: entry.is_dir ? `${entry.name}/` : entry.name,
+                  value: entry.is_dir
+                    ? `${[...pathParts, entry.name].join('/')}/`
+                    : [...pathParts, entry.name].join('/'),
                   path: [...pathParts, entry.name].join('/')
                 }))
               const filteredWithoutDuplicates = filterExistingValues(filtered)
@@ -184,7 +186,9 @@ export const useFileSearchExplorerHandlers = (
             if (lsResult) {
               const filtered = lsResult.entries.map((entry) => ({
                 label: entry.is_dir ? `${entry.name}/` : entry.name,
-                value: entry.is_dir ? `${entry.name}/` : entry.name,
+                value: entry.is_dir
+                  ? `${[...newPathParts, entry.name].join('/')}/`
+                  : [...newPathParts, entry.name].join('/'),
                 path: [...newPathParts, entry.name].join('/')
               }))
               const filteredWithoutDuplicates = filterExistingValues(filtered)
@@ -194,7 +198,7 @@ export const useFileSearchExplorerHandlers = (
         }
       } else {
         // Item: add to selectedValues
-        void handleValueConfirm(suggestion.value)
+        void handleValueConfirm(suggestion.path || suggestion.value)
       }
       focusTriggerReference.current = true
     },

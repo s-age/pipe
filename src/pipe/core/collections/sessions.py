@@ -68,6 +68,8 @@ class SessionCollection:
 
         return sorted(
             self._index_data["sessions"].items(),
-            key=lambda item: item[1].get("last_updated", ""),
+            key=lambda item: item[1].get(
+                "last_updated_at", item[1].get("last_updated", "")
+            ),
             reverse=True,
         )

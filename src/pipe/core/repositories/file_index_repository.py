@@ -27,7 +27,13 @@ class FileIndexRepository:
 
     def _ensure_index_dir(self):
         if not os.path.exists(self.index_dir):
-            os.makedirs(self.index_dir)
+            try:
+                os.makedirs(self.index_dir, mode=0o755)
+                print(f"Created index directory: {self.index_dir}")
+            except OSError as e:
+                raise RuntimeError(
+                    f"Failed to create index directory {self.index_dir}: {e}"
+                ) from e
 
     def _get_gitignore_spec(self) -> PathSpec:
         gitignore_path = os.path.join(self.base_path, self.GITIGNORE_FILE)
@@ -54,10 +60,15 @@ class FileIndexRepository:
         return hashlib.sha256(parent_path.encode("utf-8")).hexdigest()
 
     def create_index(self):
+        print(f"Creating index in {self.index_dir} for {self.base_path}")
+        if not os.path.exists(self.base_path):
+            raise ValueError(f"Base path does not exist: {self.base_path}")
+
         ix = create_in(self.index_dir, self.schema)
         writer = ix.writer()
         gitignore_spec = self._get_gitignore_spec()
 
+        indexed_count = 0
         for root, dirs, files in os.walk(self.base_path):
             # .gitignoreで無視されるディレクトリをスキップ
             dirs[:] = [
@@ -95,7 +106,9 @@ class FileIndexRepository:
                     size=size,
                     last_modified=last_modified,
                 )
+                indexed_count += 1
         writer.commit()
+        print(f"Indexed {indexed_count} files and directories")
 
     def search_l1_candidates(
         self, current_parent_path: str, query: str
@@ -172,7 +185,15 @@ class FileIndexRepository:
         return prefetched_data
 
     def get_ls_data(self, full_path: str) -> list[LsEntry]:
-        ix = open_dir(self.index_dir)
+        if not os.path.exists(self.index_dir):
+            raise FileNotFoundError(
+                f"Index directory does not exist: {self.index_dir}. "
+                "Please create the index first by calling create_index()."
+            )
+        try:
+            ix = open_dir(self.index_dir)
+        except Exception as e:
+            raise RuntimeError(f"Failed to open index at {self.index_dir}: {e}") from e
         searcher = ix.searcher()
         ls_entries = []
         full_path = os.path.abspath(full_path)

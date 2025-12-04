@@ -110,18 +110,32 @@ class SessionsDeleteBackupAction(BaseAction):
             # Validate request data
             request_data = DeleteBackupRequest(**self.request_data.get_json())
 
-            # Delete backup files via service
-            deleted_count = session_management_service.delete_backup_files(
-                request_data.file_paths
-            )
+            # Determine whether to use session_ids or file_paths
+            if request_data.session_ids:
+                # Convert session_ids to file_paths
+                file_paths = []
+                backup_sessions = session_management_service.list_backup_sessions()
+                for session in backup_sessions:
+                    if session.get("session_id") in request_data.session_ids:
+                        file_paths.append(session.get("file_path"))
+                deleted_count = session_management_service.delete_backup_files(
+                    file_paths
+                )
+                total_requested = len(request_data.session_ids)
+            else:
+                # Use file_paths directly
+                deleted_count = session_management_service.delete_backup_files(
+                    request_data.file_paths or []
+                )
+                total_requested = len(request_data.file_paths or [])
 
             return {
                 "message": (
                     f"Successfully deleted {deleted_count} out of "
-                    f"{len(request_data.file_paths)} backup files."
+                    f"{total_requested} backup items."
                 ),
                 "deleted_count": deleted_count,
-                "total_requested": len(request_data.file_paths),
+                "total_requested": total_requested,
             }, 200
 
         except ValidationError as e:

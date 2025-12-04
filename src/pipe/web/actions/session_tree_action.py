@@ -21,11 +21,16 @@ class SessionTreeAction(BaseAction):
             sessions_collection = session_service.list_sessions()
             sorted_sessions = sessions_collection.get_sorted_by_last_updated()
 
-            # Build hierarchical tree from flat session id map.
-            # Each session_id may contain slashes indicating parent/child relation
-            # (parent_id/child_hash). We create nodes and attach children to parents.
             nodes: dict[str, dict] = {}
-            for sid, meta in sorted_sessions:
+            for sid, session_meta in sorted_sessions:
+                if not sid:
+                    continue
+                # Add session_id to the metadata from index
+                meta = {**session_meta, "session_id": sid}
+                # Ensure last_updated_at is present
+                meta["last_updated_at"] = meta.get(
+                    "last_updated_at", meta.get("last_updated", "")
+                )
                 nodes[sid] = {"session_id": sid, "overview": meta, "children": []}
 
             roots: list[dict] = []
@@ -45,6 +50,6 @@ class SessionTreeAction(BaseAction):
                 else:
                     roots.append(nodes[sid])
 
-            return {"sessions": sorted_sessions, "session_tree": roots}, 200
+            return {"sessions": dict(sorted_sessions), "session_tree": roots}, 200
         except Exception as e:
             return {"message": str(e)}, 500

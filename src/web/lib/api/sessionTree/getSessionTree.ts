@@ -9,12 +9,13 @@ export type SessionOverview = {
   artifacts: string[]
   multi_step_reasoning_enabled: boolean
   token_count: number
-  last_update: string
+  last_updated_at: string
+  deleted_at?: string
 }
 
 export type SessionTreeNode = {
   session_id: string
-  overview: Record<string, unknown>
+  overview: SessionOverview
   children: SessionTreeNode[]
 }
 

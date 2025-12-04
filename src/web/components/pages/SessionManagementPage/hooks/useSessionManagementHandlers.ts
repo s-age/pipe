@@ -6,7 +6,8 @@ import type {
 } from '@/lib/api/sessionTree/getSessionTree'
 
 type UseSessionManagementActions = {
-  deleteSessions: (sessionIds: string[]) => Promise<void>
+  archiveSessions: (sessionIds: string[]) => Promise<void>
+  deleteArchivedSessions: (sessionIds: string[]) => Promise<void>
 }
 
 type Properties = {
@@ -18,15 +19,19 @@ export const useSessionManagementHandlers = ({
   actions,
   navigate
 }: Properties): {
+  currentTab: 'sessions' | 'archives'
+  setCurrentTab: (tab: 'sessions' | 'archives') => void
   selectedSessionIds: string[]
   handleSelectSession: (sessionId: string, isSelected: boolean) => void
   handleSelectAll: (
     sessions: SessionOverview[] | SessionTreeNode[],
     isSelected: boolean
   ) => void
-  handleBulkDelete: () => Promise<void>
+  handleBulkArchive: () => Promise<void>
+  handleBulkDeleteArchived: () => Promise<void>
   handleCancel: () => void
 } => {
+  const [currentTab, setCurrentTab] = useState<'sessions' | 'archives'>('sessions')
   const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([])
 
   const handleSelectSession = useCallback<
@@ -60,25 +65,43 @@ export const useSessionManagementHandlers = ({
     setSelectedSessionIds(isSelected ? sessionIds : [])
   }, [])
 
-  const handleBulkDelete = useCallback(async (): Promise<void> => {
+  const handleBulkArchive = useCallback(async (): Promise<void> => {
     if (selectedSessionIds.length === 0) return
     try {
-      await actions.deleteSessions(selectedSessionIds)
+      await actions.archiveSessions(selectedSessionIds)
       setSelectedSessionIds([])
     } catch {
       // Error handled in actions
     }
   }, [actions, selectedSessionIds])
 
+  const handleBulkDeleteArchived = useCallback(async (): Promise<void> => {
+    if (selectedSessionIds.length === 0) return
+    try {
+      await actions.deleteArchivedSessions(selectedSessionIds)
+      setSelectedSessionIds([])
+    } catch {
+      // Error handled in actions
+    }
+  }, [actions, selectedSessionIds])
+
+  const handleSetCurrentTab = useCallback((tab: 'sessions' | 'archives') => {
+    setCurrentTab(tab)
+    setSelectedSessionIds([])
+  }, [])
+
   const handleCancel = useCallback((): void => {
     navigate('/')
   }, [navigate])
 
   return {
+    currentTab,
+    setCurrentTab: handleSetCurrentTab,
     selectedSessionIds,
     handleSelectSession,
     handleSelectAll,
-    handleBulkDelete,
+    handleBulkArchive,
+    handleBulkDeleteArchived,
     handleCancel
   }
 }

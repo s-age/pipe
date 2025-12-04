@@ -21,6 +21,7 @@ export type State = {
   sessionDetail: SessionDetail | null
   settings: Settings
   roleOptions: RoleOption[]
+  archivedSessions: SessionOverview[]
 }
 
 export const initialState: State = {
@@ -29,7 +30,8 @@ export const initialState: State = {
   settings: {
     hyperparameters: { temperature: null, top_p: null, top_k: null }
   } as Settings,
-  roleOptions: []
+  roleOptions: [],
+  archivedSessions: []
 }
 
 export type Action =
@@ -42,6 +44,7 @@ export type Action =
     }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<Settings> }
   | { type: 'SET_ROLE_OPTIONS'; payload: RoleOption[] }
+  | { type: 'SET_ARCHIVED_SESSIONS'; payload: SessionOverview[] }
   | { type: 'RESET' }
 
 export const reducer = (state: State, action: Action): State => {
@@ -77,6 +80,11 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         roleOptions: action.payload
       }
+    case 'SET_ARCHIVED_SESSIONS':
+      return {
+        ...state,
+        archivedSessions: action.payload
+      }
     case 'RESET':
       return initialState
     default:
@@ -91,6 +99,7 @@ export type Actions = {
   selectSession: (id: string | null, detail: SessionDetail | null) => void
   updateSettings: (partial: Partial<Settings>) => void
   setRoleOptions: (roleOptions: RoleOption[]) => void
+  setArchivedSessions: (sessions: SessionOverview[]) => void
   refreshSessions: (
     sessionDetail: SessionDetail | null,
     sessions?: SessionOverview[] | SessionTreeNode[]
@@ -135,6 +144,10 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
     dispatch({ type: 'SET_ROLE_OPTIONS', payload: roleOptions })
   }, [])
 
+  const setArchivedSessions = useCallback((sessions: SessionOverview[]) => {
+    dispatch({ type: 'SET_ARCHIVED_SESSIONS', payload: sessions })
+  }, [])
+
   const refreshSessions = useCallback(
     (
       sessionDetail: SessionDetail | null,
@@ -159,6 +172,7 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
       selectSession,
       updateSettings,
       setRoleOptions,
+      setArchivedSessions,
       refreshSessions,
       reset
     }

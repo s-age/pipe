@@ -110,7 +110,7 @@ class SessionRepository(FileRepository):
             index_data["sessions"][session.session_id] = {}
 
         session_meta = index_data["sessions"][session.session_id]
-        session_meta["last_updated"] = get_current_timestamp(self.timezone_obj)
+        session_meta["last_updated_at"] = get_current_timestamp(self.timezone_obj)
         session_meta["created_at"] = session.created_at
         session_meta["purpose"] = session.purpose
 

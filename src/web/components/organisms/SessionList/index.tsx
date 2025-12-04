@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { type JSX } from 'react'
 
 import { Checkbox } from '@/components/atoms/Checkbox'
 import { SessionItem } from '@/components/molecules/SessionItem'
@@ -30,14 +30,16 @@ type Properties = {
     isSelected: boolean
   ) => void
   onSelectSession: (sessionId: string, isSelected: boolean) => void
+  updateLabel?: string
 }
 
-export const SessionList: React.FC<Properties> = ({
+export const SessionList = ({
   sessions,
   selectedSessionIds,
   onSelectAll,
-  onSelectSession
-}) => {
+  onSelectSession,
+  updateLabel = 'Updated At'
+}: Properties): JSX.Element => {
   const getAllSessionIds = (
     sessions: SessionOverview[] | SessionTreeNode[]
   ): string[] => {
@@ -83,6 +85,7 @@ export const SessionList: React.FC<Properties> = ({
           session={session}
           isSelected={selectedSessionIds.includes(session.session_id)}
           onSelect={onSelectSession}
+          updateLabel={updateLabel}
         />
       ))
     }
@@ -99,7 +102,8 @@ export const SessionList: React.FC<Properties> = ({
       artifacts: (overview.artifacts as string[]) || [],
       multi_step_reasoning_enabled: !!overview.multi_step_reasoning_enabled,
       token_count: (overview.token_count as number) || 0,
-      last_update: (overview.last_updated as string) || ''
+      last_updated_at: (overview.last_updated_at as string) || '',
+      deleted_at: (overview.deleted_at as string) || ''
     }
 
     let childrenElements: React.ReactElement[] | null = null
@@ -113,6 +117,7 @@ export const SessionList: React.FC<Properties> = ({
           session={sessionObject}
           isSelected={selectedSessionIds.includes(node.session_id)}
           onSelect={onSelectSession}
+          updateLabel={updateLabel}
         />
         {childrenElements && <div className={sessionChildren}>{childrenElements}</div>}
       </div>
@@ -133,7 +138,7 @@ export const SessionList: React.FC<Properties> = ({
           <div className={headerContent}>
             <span className={headerSubject}>Subject</span>
             <span className={headerShortHash}>Short Hash</span>
-            <span className={headerUpdatedAt}>Updated At</span>
+            <span className={headerUpdatedAt}>{updateLabel}</span>
           </div>
         </label>
       </div>

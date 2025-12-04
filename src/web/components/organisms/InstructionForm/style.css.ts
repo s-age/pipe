@@ -1,4 +1,4 @@
-import { style } from '@vanilla-extract/css'
+import { style, styleVariants } from '@vanilla-extract/css'
 
 import { colors } from '@/styles/colors.css'
 
@@ -54,8 +54,13 @@ export const overlaySendButton = style({
   }
 })
 
-export const contextLeftText = style({
+export const contextLeftTextBase = style({
   fontSize: '0.8em',
-  textAlign: 'right',
-  color: colors.white
+  textAlign: 'right'
+})
+
+export const contextLeftText = styleVariants({
+  cyan: [contextLeftTextBase, { color: colors.cyan }],
+  orange: [contextLeftTextBase, { color: colors.orange }],
+  red: [contextLeftTextBase, { color: colors.red }]
 })

@@ -3,6 +3,7 @@ import type { JSX } from 'react'
 import { Button } from '@/components/atoms/Button'
 import { Checkbox } from '@/components/atoms/Checkbox'
 import { Heading } from '@/components/atoms/Heading'
+// reload icon removed from initial display per design decision
 
 import * as styles from './style.css'
 import type { Diagnosis } from './types'
@@ -13,7 +14,6 @@ export type TherapistResultProperties = {
   selectedDeletions: number[]
   selectedEdits: { turn: number; new_content: string }[]
   selectedCompressions: { start: number; end: number; reason: string }[]
-  handleNewDiagnosis: () => void
   handleDeletionChange: (
     turn: number
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void
@@ -30,16 +30,12 @@ export const TherapistResult = ({
   selectedDeletions,
   selectedEdits,
   selectedCompressions,
-  handleNewDiagnosis,
   handleDeletionChange,
   handleEditChange,
   handleApply
 }: TherapistResultProperties): JSX.Element => (
   <div className={styles.container}>
     <div className={styles.body}>
-      <Heading level={4} className={styles.title}>
-        Diagnosis Results
-      </Heading>
       <div className={styles.results}>
         <Heading level={5} className={styles.resultItemHeading}>
           Summary:
@@ -99,14 +95,6 @@ export const TherapistResult = ({
       </div>
     </div>
     <div className={styles.buttonContainer}>
-      <Button
-        type="button"
-        onClick={handleNewDiagnosis}
-        disabled={isSubmitting}
-        className={styles.button}
-      >
-        New Diagnosis
-      </Button>
       <Button
         type="button"
         onClick={handleApply}

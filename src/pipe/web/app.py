@@ -22,18 +22,7 @@ from pipe.web.actions import (
     ReferencesEditAction,
     ReferenceToggleDisabledAction,
     ReferenceTtlEditAction,
-    SessionDeleteAction,
-    SessionForkAction,
-    SessionGetAction,
-    SessionInstructionAction,
     SessionMetaEditAction,
-    SessionRawAction,
-    SessionStartAction,
-    SessionTreeAction,
-    SessionTurnsGetAction,
-    SettingsGetAction,
-    TodosDeleteAction,
-    TodosEditAction,
     TurnDeleteAction,
     TurnEditAction,
 )
@@ -42,8 +31,25 @@ from pipe.web.actions.file_search_actions import (
     LsAction,
     SearchL2Action,
 )
+from pipe.web.actions.meta_actions import TodosDeleteAction, TodosEditAction
 from pipe.web.actions.search_sessions_action import SearchSessionsAction
+from pipe.web.actions.session_actions import (
+    SessionDeleteAction,
+    SessionForkAction,
+    SessionGetAction,
+    SessionInstructionAction,
+    SessionRawAction,
+    SessionStartAction,
+)
+from pipe.web.actions.session_management_actions import (
+    SessionsDeleteBackupAction,
+    SessionsListBackupAction,
+    SessionsMoveToBackup,
+)
+from pipe.web.actions.session_tree_action import SessionTreeAction
+from pipe.web.actions.settings_actions import SettingsGetAction
 from pipe.web.actions.therapist_actions import ApplyDoctorModificationsAction
+from pipe.web.actions.turn_actions import SessionTurnsGetAction
 from pipe.web.controllers import SessionDetailController
 
 
@@ -145,6 +151,9 @@ except zoneinfo.ZoneInfoNotFoundError:
     local_tz = zoneinfo.ZoneInfo("UTC")
 
 session_service = ServiceFactory(project_root, settings).create_session_service()
+session_management_service = ServiceFactory(
+    project_root, settings
+).create_session_management_service()
 
 # BFF (Backend for Frontend) Controllers
 # BFF controllers aggregate multiple actions into optimized responses
@@ -174,6 +183,9 @@ def dispatch_action(
         ("compress/{session_id}/deny", "POST", DenyCompressorAction),
         ("therapist", "POST", CreateTherapistSessionAction),
         ("doctor", "POST", ApplyDoctorModificationsAction),
+        ("sessions/archives", "POST", SessionsMoveToBackup),
+        ("sessions/archives", "GET", SessionsListBackupAction),
+        ("sessions/archives", "DELETE", SessionsDeleteBackupAction),
         ("session/{session_id}/raw", "GET", SessionRawAction),
         ("session/{session_id}/instruction", "POST", SessionInstructionAction),
         ("session/{session_id}/meta", "PATCH", SessionMetaEditAction),
@@ -707,25 +719,12 @@ def get_settings_api():
 # These endpoints aggregate multiple API calls to optimize frontend performance
 # Naming: /api/v1/bff/<feature>-dashboard/{id}
 # This endpoint aggregates: session_tree + session/{session_id} + settings
-@app.route("/api/v1/bff/session-dashboard/<path:session_id>", methods=["GET"])
-def get_session_dashboard(session_id):
-    """
-    BFF endpoint for session dashboard.
-    Aggregates session tree, current session details, and settings in a single request.
-    """
-    try:
-        response_data, status_code = session_detail_controller.get_session_with_tree(
-            session_id=session_id, request_data=request
-        )
-        return jsonify(response_data), status_code
-    except Exception as e:
-        return jsonify({"message": str(e)}), 500
 
 
-@app.route("/api/v1/bff/start-session-settings", methods=["GET"])
-def get_start_session_settings():
+@app.route("/api/v1/bff/start_session", methods=["GET"])
+def get_start_session():
     """
-    BFF endpoint for start session settings.
+    BFF endpoint for start session page.
     Aggregates settings and session tree in a single request.
     """
     try:
@@ -735,6 +734,52 @@ def get_start_session_settings():
         return jsonify(response_data), status_code
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+
+@app.route("/api/v1/bff/session_management", methods=["GET"])
+def get_session_management():
+    """
+    BFF endpoint for session management page.
+    Aggregates session tree and archives in a single request.
+    """
+    try:
+        response_data, status_code = (
+            session_detail_controller.get_session_management_dashboard(
+                request_data=request
+            )
+        )
+        return jsonify(response_data), status_code
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
+@app.route("/api/v1/bff/chat_history", methods=["GET"])
+def get_chat_history():
+    """
+    BFF endpoint for chat history page.
+    Returns session tree, optionally current session details if session_id provided.
+    """
+    try:
+        session_id = request.args.get("session_id")
+        response_data, status_code = session_detail_controller.get_chat_history(
+            session_id, request
+        )
+        return jsonify(response_data), status_code
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
+@app.route("/api/v1/sessions/archives", methods=["GET", "POST", "DELETE"])
+def sessions_archives_api():
+    """Combined endpoint for archives list/create/delete.
+
+    Dispatches to the internal action name 'sessions/archives' and relies on
+    dispatch_action to route by HTTP method.
+    """
+    response_data, status_code = dispatch_action(
+        action="sessions/archives", params={}, request_data=request
+    )
+    return jsonify(response_data), status_code
 
 
 @app.route(
@@ -763,14 +808,6 @@ def dispatch_action_endpoint(action: str):
     try:
         # Handle BFF endpoints (Backend for Frontend aggregated responses)
         # BFF endpoints bypass dispatch_action and use specialized controllers
-        if action.startswith("bff/session-dashboard/"):
-            session_id = action.replace("bff/session-dashboard/", "")
-            response_data, status_code = (
-                session_detail_controller.get_session_with_tree(
-                    session_id=session_id, request_data=request
-                )
-            )
-            return jsonify(response_data), status_code
 
         params = dict(request.view_args or {})
         params.update(request.args.to_dict())
@@ -803,10 +840,20 @@ if __name__ == "__main__":
     # Rebuild Whoosh index on startup
     try:
         print("Rebuilding Whoosh index...")
-        file_indexer_service.index_files()
+        print(f"  Base path: {file_indexer_service.repository.base_path}")
+        print(f"  Index dir: {file_indexer_service.repository.index_dir}")
+        file_indexer_service.create_index()
         print("Whoosh index rebuilt successfully")
+        # Verify index was created
+        test_entries = file_indexer_service.get_ls_data([])
+        print(f"  Verified: {len(test_entries)} entries at root")
     except Exception as e:
-        print(f"Failed to rebuild Whoosh index: {e}")
+        print(f"FATAL: Failed to rebuild Whoosh index: {e}")
+        import traceback
+
+        traceback.print_exc()
+        print("Cannot start server without file index. Exiting.")
+        sys.exit(1)
 
     project_root_for_check = os.path.dirname(os.path.abspath(__file__))
     if check_and_show_warning(project_root_for_check):

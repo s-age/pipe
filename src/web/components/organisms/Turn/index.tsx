@@ -234,14 +234,14 @@ const Component = ({
           </span>
           <div className={turnHeaderControls}>
             {turn.type === 'model_response' && onFork && (
-              <Tooltip content="Fork Session">
+              <Tooltip content="Fork Session" placement="bottom">
                 <Button kind="ghost" size="xsmall" onClick={onFork}>
                   <IconFork size={24} className={forkButtonIcon} />
                 </Button>
               </Tooltip>
             )}
             {onCopy && (
-              <Tooltip content="Copy Turn">
+              <Tooltip content="Copy Turn" placement="bottom">
                 <Button kind="ghost" size="xsmall" onClick={onCopy}>
                   <IconCopy size={24} className={copyButtonIcon} />
                 </Button>
@@ -250,14 +250,14 @@ const Component = ({
             {expertMode &&
               (turn.type === 'user_task' || turn.type === 'model_response') &&
               onStartEdit && (
-                <Tooltip content="Edit Turn">
+                <Tooltip content="Edit Turn" placement="bottom">
                   <Button kind="ghost" size="xsmall" onClick={onStartEdit}>
                     <IconEdit size={24} className={editButtonIcon} />
                   </Button>
                 </Tooltip>
               )}
             {expertMode && onDelete && (
-              <Tooltip content="Delete Turn">
+              <Tooltip content="Delete Turn" placement="bottom">
                 <Button kind="ghost" size="xsmall" onClick={onDelete}>
                   <IconDelete size={24} className={deleteButtonIcon} />
                 </Button>

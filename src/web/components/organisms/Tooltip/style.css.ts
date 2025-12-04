@@ -5,19 +5,25 @@ import { zIndex } from '@/styles/zIndex.css'
 import { colors } from '../../../styles/colors.css'
 
 export const tooltipContainer = style({
-  display: 'inline-block',
-  position: 'relative'
+  display: 'flex',
+  position: 'relative',
+  justifyContent: 'center',
+
+  selectors: {
+    '&.right': {
+      justifyContent: 'right'
+    }
+  }
 })
 
 export const tooltipText = style({
   display: 'inline-block',
   position: 'absolute',
-  bottom: '125%',
-  left: '50%',
   width: 'fit-content',
   height: 'fit-content',
   padding: '6px 10px',
   borderRadius: '6px',
+  fontSize: '0.875rem',
   textAlign: 'center',
   color: colors.black,
   backgroundColor: colors.cyan,
@@ -29,26 +35,18 @@ export const tooltipText = style({
 })
 
 export const placementTop = style({
-  bottom: '125%',
-  left: '50%',
-  transform: 'translateX(-50%)'
+  transform: 'translate(-50%, -100%)'
 })
 
 export const placementBottom = style({
-  top: '125%',
-  left: '50%',
   transform: 'translateX(-50%)'
 })
 
 export const placementLeft = style({
-  top: '50%',
-  right: '125%',
   transform: 'translateY(-50%)'
 })
 
 export const placementRight = style({
-  top: '50%',
-  left: '125%',
   transform: 'translateY(-50%)'
 })
 

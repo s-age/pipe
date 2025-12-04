@@ -94,7 +94,7 @@ export const SessionTree = ({
                   artifacts: (overview.artifacts as string[]) || [],
                   multi_step_reasoning_enabled: !!overview.multi_step_reasoning_enabled,
                   token_count: (overview.token_count as number) || 0,
-                  last_update: (overview.last_update as string) || ''
+                  last_updated_at: (overview.last_updated_at as string) || ''
                 }
 
                 const depthClass = depthClasses[depth] ?? depthClasses[0]

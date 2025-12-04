@@ -1,12 +1,12 @@
 import type { JSX } from 'react'
 
+import { AppLayout } from '@/components/layouts/AppLayout'
 import { ChatHistory } from '@/components/organisms/ChatHistory'
-import { Header } from '@/components/organisms/Header'
 import { SessionControl } from '@/components/organisms/SessionControl'
 import { SessionTree } from '@/components/organisms/SessionTree'
 
 import { useChatHistoryPageHandlers } from './hooks/useChatHistoryPageHandlers'
-import { appContainer, mainContent, leftColumn, centerColumn } from './style.css'
+import { mainContent, leftColumn, centerColumn } from './style.css.ts'
 
 export const ChatHistoryPage = (): JSX.Element => {
   const {
@@ -20,8 +20,7 @@ export const ChatHistoryPage = (): JSX.Element => {
   } = useChatHistoryPageHandlers()
 
   return (
-    <div className={appContainer}>
-      <Header />
+    <AppLayout>
       <div className={mainContent}>
         <div className={leftColumn}>
           <SessionTree
@@ -45,6 +44,6 @@ export const ChatHistoryPage = (): JSX.Element => {
           <SessionControl sessionDetail={sessionDetail} onRefresh={onRefresh} />
         )}
       </div>
-    </div>
+    </AppLayout>
   )
 }

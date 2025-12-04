@@ -2,7 +2,7 @@ import { style } from '@vanilla-extract/css'
 
 import { colors } from '@/styles/colors.css.ts'
 
-export const container = style({
+export const wrapper = style({
   display: 'flex',
   height: '100%',
   boxSizing: 'border-box',
@@ -12,12 +12,25 @@ export const container = style({
   flexDirection: 'column'
 })
 
+export const container = style({
+  display: 'flex',
+  position: 'relative',
+  height: '100%',
+  boxSizing: 'border-box',
+  margin: '0',
+  flexDirection: 'column'
+})
+
 export const body = style({
   display: 'flex',
   flex: '1',
   minHeight: 0,
-  overflowY: 'auto',
-  padding: '16px',
+  // Make the body a flex column but let the inner `results` area handle
+  // scrolling so its height stays consistent while header/footer remain visible.
+  padding: '0 0 0 16px',
+  // Add bottom padding to ensure content doesn't get hidden behind the
+  // sticky footer/button container when the content is very long.
+  paddingBottom: '56px',
   color: colors.white,
   flexDirection: 'column',
   gap: '8px'
@@ -31,6 +44,7 @@ export const title = style({
 })
 
 export const muted = style({
+  marginTop: '16px',
   fontSize: 13,
   color: colors.muted
 })
@@ -61,7 +75,11 @@ export const button = style({
 })
 
 export const results = style({
-  marginTop: '16px'
+  flex: '1 1 auto',
+  minHeight: 0,
+  overflowY: 'auto',
+  margin: '0',
+  paddingRight: '8px'
 })
 
 export const list = style({
@@ -70,13 +88,50 @@ export const list = style({
 })
 
 export const buttonContainer = style({
+  position: 'sticky',
+  bottom: 0,
   padding: '12px',
   borderRadius: '0 0 8px 8px',
   background: colors.darkGray,
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)',
-  borderTop: `2px solid ${colors.black}`
+  borderTop: `2px solid ${colors.black}`,
+  zIndex: 55
 })
 
+export const reloadButton = style({
+  display: 'inline-flex',
+  // placed inside the header (no absolute positioning needed)
+  width: '40px',
+  height: '40px',
+  padding: 0,
+  border: 'none',
+  borderRadius: '8px',
+  color: colors.cyan,
+  background: 'transparent',
+  cursor: 'pointer',
+  transition: 'transform 140ms ease, background 120ms ease',
+  alignItems: 'center',
+  justifyContent: 'center',
+  selectors: {
+    '&:hover, &:focus-visible': {
+      transform: 'scale(1.15)',
+      background: 'rgba(0,255,255,0.04)'
+    }
+  }
+})
+
+export const header = style({
+  display: 'flex',
+  position: 'sticky',
+  top: 0,
+  height: '56px',
+  boxSizing: 'border-box',
+  padding: '12px 16px',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  borderBottom: `2px solid ${colors.black}`,
+  zIndex: 60
+})
 export const resultItemHeading = style({
   marginTop: '8px',
 

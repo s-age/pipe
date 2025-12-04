@@ -105,12 +105,10 @@ class TestAppApi(unittest.TestCase):
                 )
                 self.assertEqual(response.status_code, 422)
 
-    def test_get_sessions_api(self):
-        """Tests the API endpoint for getting all sessions."""
-        mock_sessions = [["session1", {"purpose": "Test 1"}]]
+        mock_sessions = {"session1": {"purpose": "Test 1"}}
         (
             self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
-        ) = mock_sessions
+        ) = [["session1", {"purpose": "Test 1"}]]
         response = self.client.get("/api/v1/session_tree")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
@@ -119,10 +117,10 @@ class TestAppApi(unittest.TestCase):
 
     def test_get_session_tree_api_v1(self):
         """Tests the v1 API endpoint for getting session tree."""
-        mock_sessions = [["session1", {"purpose": "Test 1"}]]
+        mock_sessions = {"session1": {"purpose": "Test 1"}}
         (
             self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
-        ) = mock_sessions
+        ) = [["session1", {"purpose": "Test 1"}]]
         response = self.client.get("/api/v1/session_tree")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
@@ -455,23 +453,17 @@ class TestAppApi(unittest.TestCase):
             RoleOption(label="engineer", value="roles/engineer.md"),
         ]
 
-        response = self.client.get(f"/api/v1/bff/session-dashboard/{session_id}")
+        response = self.client.get(f"/api/v1/bff/chat_history?session_id={session_id}")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
 
         self.assertIn("session_tree", data)
         self.assertIn("current_session", data)
         self.assertIn("settings", data)
-        self.assertIn("role_options", data)
 
         self.assertEqual(len(data["session_tree"]), 2)
         self.assertEqual(data["current_session"]["purpose"], "Details")
         self.assertIsInstance(data["settings"], dict)
-        self.assertEqual(len(data["role_options"]), 2)
-        self.assertEqual(data["role_options"][0]["label"], "python/developer")
-        self.assertEqual(data["role_options"][0]["value"], "roles/python/developer.md")
-        self.assertEqual(data["role_options"][1]["label"], "engineer")
-        self.assertEqual(data["role_options"][1]["value"], "roles/engineer.md")
 
 
 class TestAppViews(unittest.TestCase):

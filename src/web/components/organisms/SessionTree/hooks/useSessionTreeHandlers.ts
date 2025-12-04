@@ -64,9 +64,6 @@ export const useSessionTreeHandlers = (
 
       if (!sessionId) return
 
-      const sessionDetail = await loadSession(sessionId)
-      console.debug('[SessionTree] selectSession ->', sessionId)
-      selectSession(sessionId, sessionDetail)
       // Use react-router navigation so router params update reliably.
       navigate(`/session/${sessionId}`, { replace: true })
       await onRefresh(sessionId)

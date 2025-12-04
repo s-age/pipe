@@ -14,6 +14,12 @@ const StartSessionPage = lazy(() =>
   }))
 )
 
+const SessionManagementPage = lazy(() =>
+  import('./components/pages/SessionManagementPage').then((module) => ({
+    default: module.SessionManagementPage
+  }))
+)
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -28,6 +34,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<div>Loading...</div>}>
         <StartSessionPage />
+      </Suspense>
+    )
+  },
+  {
+    path: '/session_management',
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <SessionManagementPage />
       </Suspense>
     )
   }

@@ -1,4 +1,0 @@
-
-> pipe@1.0.0 lint
-> eslint "{src,tests}/**/*.{js,jsx,ts,tsx}" --fix
-

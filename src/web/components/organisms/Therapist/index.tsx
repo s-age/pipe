@@ -1,9 +1,13 @@
 import type { JSX } from 'react'
 
+import { Heading } from '@/components/atoms/Heading'
+import { IconReload } from '@/components/atoms/IconReload'
+import { Tooltip } from '@/components/organisms/Tooltip'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useTherapistActions } from './hooks/useTherapistActions'
 import { useTherapistHandlers } from './hooks/useTherapistHandlers'
+import * as styles from './style.css'
 import { TherapistForm } from './TherapistForm'
 import { TherapistResult } from './TherapistResult'
 
@@ -28,14 +32,31 @@ export const Therapist = ({
     selectedEdits,
     selectedCompressions,
     handleDiagnose,
-    handleNewDiagnosis,
     handleDeletionChange,
     handleEditChange,
     handleApply
   } = useTherapistHandlers(actions, sessionId, onRefresh)
 
   return (
-    <>
+    <div className={styles.wrapper}>
+      <div className={styles.header} role="region" aria-label="Therapist Diagnosis">
+        <Heading level={4} className={styles.title}>
+          Therapist Diagnosis(experimental)
+        </Heading>
+        {diagnosis ? (
+          <Tooltip content="Re-diagnose" placement="bottom">
+            <button
+              type="button"
+              className={styles.reloadButton}
+              onClick={handleDiagnose}
+              aria-label="Re-diagnose"
+              disabled={isSubmitting}
+            >
+              <IconReload size={18} />
+            </button>
+          </Tooltip>
+        ) : null}
+      </div>
       {!diagnosis ? (
         <TherapistForm
           sessionId={sessionId}
@@ -52,12 +73,11 @@ export const Therapist = ({
           selectedDeletions={selectedDeletions}
           selectedEdits={selectedEdits}
           selectedCompressions={selectedCompressions}
-          handleNewDiagnosis={handleNewDiagnosis}
           handleDeletionChange={handleDeletionChange}
           handleEditChange={handleEditChange}
           handleApply={handleApply}
         />
       )}
-    </>
+    </div>
   )
 }

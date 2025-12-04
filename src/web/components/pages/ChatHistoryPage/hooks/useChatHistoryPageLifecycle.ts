@@ -1,8 +1,7 @@
 import { useCallback } from 'react'
 
 import { useInitialLoading } from '@/hooks/useInitialLoading'
-import { getSessionDashboard } from '@/lib/api/bff/getSessionDashboard'
-import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
+import { getChatHistory } from '@/lib/api/bff/getChatHistory'
 import type { SessionTreeNode } from '@/lib/api/sessionTree/getSessionTree'
 import type { Actions, State } from '@/stores/useChatHistoryStore'
 import { addToast } from '@/stores/useToastStore'
@@ -50,46 +49,35 @@ export const useSessionLoader = ({
         setCurrentSessionId(urlSessionId)
       }
 
-      // Use BFF endpoint if we have a session ID, otherwise use session tree endpoint
+      // Always use BFF endpoint for chat history
       const sessionIdToLoad = shouldSetInitialId ? urlSessionId : currentSessionId
 
-      if (sessionIdToLoad) {
-        const data = await getSessionDashboard(sessionIdToLoad)
+      const data = await getChatHistory(sessionIdToLoad || undefined)
 
-        updateSettings(data.settings)
+      updateSettings(data.settings || {})
 
-        // `session_tree` from server may be hierarchical (SessionTreeNode[]) or flat pairs.
-        if (Array.isArray(data.session_tree) && data.session_tree.length > 0) {
-          const first = data.session_tree[0]
+      // `session_tree` from server may be hierarchical (SessionTreeNode[]) or flat pairs.
+      if (Array.isArray(data.session_tree) && data.session_tree.length > 0) {
+        const first = data.session_tree[0]
 
-          if (isSessionPair(first)) {
-            // legacy flat [id, overview][] pairs
-            setSessions(
-              (data.session_tree as SessionPair[]).map(([id, session]) => ({
-                ...session,
-                session_id: id
-              }))
-            )
-          } else {
-            // hierarchical nodes
-            setSessions(data.session_tree as SessionTreeNode[])
-          }
-        }
-
-        setSessionDetail(data.current_session)
-        setRoleOptions(data.role_options)
-      } else {
-        const fetchedSessions = await getSessionTree()
-        if (fetchedSessions.session_tree) {
-          setSessions(fetchedSessions.session_tree as SessionTreeNode[])
-        } else {
+        if (isSessionPair(first)) {
+          // legacy flat [id, overview][] pairs
           setSessions(
-            fetchedSessions.sessions.map(([id, session]) => ({
+            (data.session_tree as SessionPair[]).map(([id, session]) => ({
               ...session,
               session_id: id
             }))
           )
+        } else {
+          // hierarchical nodes
+          setSessions(data.session_tree as SessionTreeNode[])
         }
+      }
+
+      if (data.current_session) {
+        setSessionDetail(data.current_session)
+        setRoleOptions(data.role_options || [])
+      } else {
         setSessionDetail(null)
       }
     } catch (error: unknown) {

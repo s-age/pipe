@@ -1,12 +1,21 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 type UseInstructionFormLifecycleProperties = {
   isStreaming: boolean
+  tokenCount: number
+  contextLimit: number
+}
+
+type ContextLeftInfo = {
+  contextLeft: string
+  colorKey: 'cyan' | 'orange' | 'red'
 }
 
 export const useInstructionFormLifecycle = ({
-  isStreaming
-}: UseInstructionFormLifecycleProperties): void => {
+  isStreaming,
+  tokenCount,
+  contextLimit
+}: UseInstructionFormLifecycleProperties): ContextLeftInfo => {
   const previousStreamingState = useRef<boolean>(isStreaming)
 
   // Focus on initial mount
@@ -36,4 +45,16 @@ export const useInstructionFormLifecycle = ({
     }
     previousStreamingState.current = isStreaming
   }, [isStreaming])
+
+  // Calculate context left info
+  const contextLeftInfo = useMemo(() => {
+    const contextLeft = (100 - Math.floor((tokenCount / contextLimit) * 100)).toFixed(0)
+    const contextLeftPercent = parseInt(contextLeft)
+    const colorKey: 'cyan' | 'orange' | 'red' =
+      contextLeftPercent >= 80 ? 'cyan' : contextLeftPercent >= 50 ? 'orange' : 'red'
+
+    return { contextLeft, colorKey }
+  }, [tokenCount, contextLimit])
+
+  return contextLeftInfo
 }

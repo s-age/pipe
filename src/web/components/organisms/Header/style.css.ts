@@ -59,6 +59,29 @@ export const searchWrapper = style({
   justifyContent: 'center'
 })
 
+export const sessionManagementLink = style({
+  display: 'inline-flex',
+  marginLeft: '12px',
+  padding: '6px',
+  borderRadius: '8px',
+  color: colors.white,
+  background: 'transparent',
+  cursor: 'pointer',
+  transition: 'transform 180ms cubic-bezier(0.3,0.7,0.4,1), background 120ms ease',
+  transform: 'scale(1)',
+  alignItems: 'center',
+  textDecoration: 'none',
+  transformOrigin: 'center center',
+  zIndex: zIndex.header,
+  selectors: {
+    '&:hover, &:focus-visible': {
+      background: colors.cyanDark,
+      // only scale (no vertical lift) — keep slight baseline nudge
+      transform: 'scale(1.5)'
+    }
+  }
+})
+
 export const searchInput = style({
   width: '36%',
   minWidth: '320px',

@@ -16,15 +16,25 @@ type Properties = {
   isVisible: boolean
   placement: 'top' | 'bottom' | 'left' | 'right'
   targetRect: DOMRect | null
+  offsetMain?: number | null
+  offsetCross?: number | null
 }
 
 const TooltipPortal = ({
   content,
   isVisible,
   placement,
-  targetRect
+  targetRect,
+  offsetMain,
+  offsetCross
 }: Properties): JSX.Element | null => {
-  const elementReference = useTooltipPortal({ isVisible, placement, targetRect })
+  const elementReference = useTooltipPortal({
+    isVisible,
+    placement,
+    targetRect,
+    offsetMain,
+    offsetCross
+  })
 
   const className = `${tooltipText} ${
     placement === 'top'

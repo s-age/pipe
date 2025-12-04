@@ -17,7 +17,6 @@ type TherapistHandlers = {
   selectedEdits: { turn: number; new_content: string }[]
   selectedCompressions: { start: number; end: number; reason: string }[]
   handleDiagnose: () => Promise<void>
-  handleNewDiagnosis: () => void
   handleApplyModifications: (modifications: {
     deletions?: number[]
     edits?: { turn: number; new_content: string }[]
@@ -52,6 +51,9 @@ export const useTherapistHandlers = (
   const { addToast } = useToastStore()
 
   const handleDiagnose = useCallback(async (): Promise<void> => {
+    // Clear previous diagnosis immediately so UI reflects that a new
+    // diagnosis run has started (prevents user confusion when nothing appears).
+    setDiagnosis(null)
     setIsSubmitting(true)
     setError(null)
     try {
@@ -67,13 +69,6 @@ export const useTherapistHandlers = (
       setIsSubmitting(false)
     }
   }, [actions, sessionId])
-
-  const handleNewDiagnosis = useCallback(() => {
-    setDiagnosis(null)
-    setSelectedDeletions([])
-    setSelectedEdits([])
-    setSelectedCompressions([])
-  }, [])
 
   const handleApplyModifications = useCallback(
     async (modifications: {
@@ -170,7 +165,6 @@ export const useTherapistHandlers = (
     selectedEdits,
     selectedCompressions,
     handleDiagnose,
-    handleNewDiagnosis,
     handleApplyModifications,
     handleDeletionChange,
     handleEditChange,

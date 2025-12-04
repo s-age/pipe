@@ -312,6 +312,26 @@ class SessionService:
     def delete_session(self, session_id: str):
         self.repository.delete(session_id)
 
+    def delete_sessions(self, session_ids: list[str]) -> int:
+        """
+        Bulk delete multiple sessions.
+
+        Args:
+            session_ids: List of session IDs to delete
+
+        Returns:
+            Number of successfully deleted sessions
+        """
+        deleted_count = 0
+        for session_id in session_ids:
+            try:
+                self.repository.delete(session_id)
+                deleted_count += 1
+            except Exception:
+                # Continue with other deletions even if one fails
+                continue
+        return deleted_count
+
     def delete_turn(self, session_id: str, turn_index: int):
         """Deletes a specific turn from a session."""
         session = self._fetch_session(session_id)

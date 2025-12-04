@@ -34,8 +34,6 @@ export const InstructionForm = ({
   // `Form`. To ensure `useFormContext` is available we define an inner
   // component that consumes the context.
   const Inner = (): JSX.Element => {
-    useInstructionFormLifecycle({ isStreaming })
-
     const { register, onSendClick } = useInstructionFormHandlers({
       currentSessionId,
       onSendInstruction
@@ -44,7 +42,11 @@ export const InstructionForm = ({
     const { state } = useSessionStore()
     const tokenCount = tokenCountProperty ?? 0
     const contextLimit = contextLimitProperty ?? state.settings?.context_limit ?? 700000
-    const contextLeft = (100 - Math.floor((tokenCount / contextLimit) * 100)).toFixed(0)
+    const { contextLeft, colorKey } = useInstructionFormLifecycle({
+      isStreaming,
+      tokenCount,
+      contextLimit
+    })
 
     return (
       <div>
@@ -70,7 +72,7 @@ export const InstructionForm = ({
           </Button>
         </div>
         {contextLimit > 0 && tokenCount !== null && (
-          <div className={contextLeftText}>({contextLeft}% context left)</div>
+          <div className={contextLeftText[colorKey]}>({contextLeft}% context left)</div>
         )}
       </div>
     )

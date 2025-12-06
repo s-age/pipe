@@ -5,7 +5,7 @@ import type { SessionOverview } from '../sessionTree/getSessionTree'
 
 export type StartSessionSettingsResponse = {
   settings: Settings
-  session_tree: [string, SessionOverview][]
+  sessionTree: [string, SessionOverview][]
 }
 
 export const getStartSession = async (): Promise<StartSessionSettingsResponse> =>

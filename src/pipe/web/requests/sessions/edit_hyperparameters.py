@@ -15,6 +15,8 @@ from typing import Any
 
 from pydantic import BaseModel, model_validator
 
+from pipe.web.requests.common import normalize_camel_case_keys
+
 
 class EditHyperparametersRequest(BaseModel):
     temperature: float | None = None
@@ -27,11 +29,8 @@ class EditHyperparametersRequest(BaseModel):
         if not isinstance(data, dict):
             raise ValueError("Request body must be a JSON object.")
 
-        # Accept camelCase aliases and normalize to snake_case
-        if "topP" in data and "top_p" not in data:
-            data["top_p"] = data.pop("topP")
-        if "topK" in data and "top_k" not in data:
-            data["top_k"] = data.pop("topK")
+        # Normalize camelCase to snake_case
+        data = normalize_camel_case_keys(data)
 
         # Require at least one hyperparameter field
         if not any(k in data for k in ("temperature", "top_p", "top_k")):

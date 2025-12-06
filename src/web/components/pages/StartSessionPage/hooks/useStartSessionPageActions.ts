@@ -4,10 +4,10 @@ import type { StartSessionRequest } from '@/lib/api/session/startSession'
 import { startSession } from '@/lib/api/session/startSession'
 
 export const useStartSessionPageActions = (): {
-  createSession: (data: StartSessionRequest) => Promise<{ session_id: string }>
+  createSession: (data: StartSessionRequest) => Promise<{ sessionId: string }>
 } => {
   const createSession = useCallback(
-    async (data: StartSessionRequest): Promise<{ session_id: string }> =>
+    async (data: StartSessionRequest): Promise<{ sessionId: string }> =>
       await startSession(data),
     []
   )

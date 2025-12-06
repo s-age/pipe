@@ -7,17 +7,17 @@ import type { SessionOverview, SessionTreeNode } from '../sessionTree/getSession
 
 export type ChatHistoryResponse = {
   sessions: [string, SessionOverview][]
-  session_tree: SessionTreeNode[]
+  sessionTree: SessionTreeNode[]
   settings: Settings
-  current_session?: SessionDetail
-  role_options?: RoleOption[]
+  currentSession?: SessionDetail
+  roleOptions?: RoleOption[]
 }
 
 export const getChatHistory = async (
   sessionId?: string
 ): Promise<ChatHistoryResponse> => {
   const url = sessionId
-    ? `/bff/chat_history?session_id=${encodeURIComponent(sessionId)}`
+    ? `/bff/chat_history?sessionId=${encodeURIComponent(sessionId)}`
     : '/bff/chat_history'
 
   return client.get<ChatHistoryResponse>(url)

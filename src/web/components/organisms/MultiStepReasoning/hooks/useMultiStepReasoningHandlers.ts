@@ -33,7 +33,7 @@ export const useMultiStepReasoningHandlers = ({
 
       try {
         await updateMultiStepReasoning(currentSessionId, {
-          multi_step_reasoning_enabled: checked
+          multiStepReasoningEnabled: checked
         })
       } catch {
         // On error, revert local state to the previous value

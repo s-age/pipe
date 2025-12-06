@@ -14,12 +14,12 @@ type TherapistHandlers = {
   error: string | null
   isSubmitting: boolean
   selectedDeletions: number[]
-  selectedEdits: { turn: number; new_content: string }[]
+  selectedEdits: { turn: number; newContent: string }[]
   selectedCompressions: { start: number; end: number; reason: string }[]
   handleDiagnose: () => Promise<void>
   handleApplyModifications: (modifications: {
     deletions?: number[]
-    edits?: { turn: number; new_content: string }[]
+    edits?: { turn: number; newContent: string }[]
     compressions?: { start: number; end: number; reason: string }[]
   }) => Promise<void>
   handleDeletionChange: (
@@ -27,7 +27,7 @@ type TherapistHandlers = {
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleEditChange: (edit: {
     turn: number
-    new_content: string
+    newContent: string
   }) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleApply: () => void
 }
@@ -42,7 +42,7 @@ export const useTherapistHandlers = (
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedDeletions, setSelectedDeletions] = useState<number[]>([])
   const [selectedEdits, setSelectedEdits] = useState<
-    { turn: number; new_content: string }[]
+    { turn: number; newContent: string }[]
   >([])
   const [selectedCompressions, setSelectedCompressions] = useState<
     { start: number; end: number; reason: string }[]
@@ -73,17 +73,17 @@ export const useTherapistHandlers = (
   const handleApplyModifications = useCallback(
     async (modifications: {
       deletions?: number[]
-      edits?: { turn: number; new_content: string }[]
+      edits?: { turn: number; newContent: string }[]
       compressions?: { start: number; end: number; reason: string }[]
     }): Promise<void> => {
       setIsSubmitting(true)
       setError(null)
       try {
         const result = await applyDoctorModifications({
-          session_id: sessionId,
+          sessionId: sessionId,
           modifications
         })
-        console.log(result.result)
+
         if (result.result.status === 'Succeeded') {
           addToast({
             status: 'success',
@@ -132,10 +132,10 @@ export const useTherapistHandlers = (
   const handleEditChange = useCallback<
     (edit: {
       turn: number
-      new_content: string
+      newContent: string
     }) => (event: React.ChangeEvent<HTMLInputElement>) => void
   >(
-    (edit: { turn: number; new_content: string }) =>
+    (edit: { turn: number; newContent: string }) =>
       (event: React.ChangeEvent<HTMLInputElement>): void => {
         const checked = event.target.checked
         if (checked) {

@@ -67,7 +67,7 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
             'session_id' in (n as Record<string, unknown>)
           ) {
             const node = n as Record<string, unknown>
-            push(node.session_id, node.overview ?? node, depth)
+            push(node.sessionId, node.overview ?? node, depth)
             if (
               Array.isArray(node.children) &&
               (node.children as unknown[]).length > 0
@@ -99,11 +99,11 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
         }
       }
 
-      flatten(response.session_tree as unknown[])
+      flatten(response.sessionTree as unknown[])
       setParentOptions(out)
       setSettings(response.settings)
       setStartDefaults({
-        session_id: '',
+        sessionId: '',
         purpose: '',
         background: '',
         roles: [],
@@ -112,11 +112,11 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
         artifacts: [],
         procedure: null,
         instruction: '',
-        multi_step_reasoning_enabled: false,
+        multiStepReasoningEnabled: false,
         hyperparameters: response.settings.hyperparameters,
         todos: []
       })
-      setSessionTree(response.session_tree)
+      setSessionTree(response.sessionTree)
     } catch (error_: unknown) {
       setError((error_ as Error).message || 'Failed to load initial data.')
     } finally {

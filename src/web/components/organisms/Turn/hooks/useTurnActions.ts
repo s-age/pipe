@@ -12,7 +12,7 @@ export type UseTurnActionsReturn = {
   editTurnAction: (
     sessionId: string,
     turnIndex: number,
-    newContent: string,
+    new_content: string,
     turn: Turn
   ) => Promise<void>
 }
@@ -39,7 +39,7 @@ export const useTurnActions = (): UseTurnActionsReturn => {
       try {
         const response = await forkSession(sessionId, forkIndex)
         addToast({ status: 'success', title: 'Session forked successfully' })
-        window.location.href = `/session/${response.new_session_id}`
+        window.location.href = `/session/${response.newSessionId}`
       } catch (error: unknown) {
         addToast({
           status: 'failure',
@@ -55,15 +55,15 @@ export const useTurnActions = (): UseTurnActionsReturn => {
     async (
       sessionId: string,
       turnIndex: number,
-      newContent: string,
+      new_content: string,
       turn: Turn
     ): Promise<void> => {
       try {
         // Send the appropriate field based on turn type
         const updateData =
           turn.type === 'user_task'
-            ? { instruction: newContent }
-            : { content: newContent }
+            ? { instruction: new_content }
+            : { content: new_content }
 
         await editTurn(sessionId, turnIndex, updateData)
         addToast({ status: 'success', title: 'Turn updated successfully' })

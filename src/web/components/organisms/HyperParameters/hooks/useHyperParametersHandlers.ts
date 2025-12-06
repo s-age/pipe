@@ -29,11 +29,11 @@ export const useHyperParametersHandlers = ({
   // sequential setState calls inside an effect which the linter warns about.
   const [hpState, setHpState] = useState(() => ({
     temperature: sessionDetail.hyperparameters?.temperature ?? 0.7,
-    top_p: sessionDetail.hyperparameters?.top_p ?? 0.9,
-    top_k: sessionDetail.hyperparameters?.top_k ?? 5
+    topP: sessionDetail.hyperparameters?.topP ?? 0.9,
+    topK: sessionDetail.hyperparameters?.topK ?? 5
   }))
 
-  const { temperature, top_p: topP, top_k: topK } = hpState
+  const { temperature, topP: topP, topK: topK } = hpState
 
   // Provide individual setter functions compatible with existing callers.
   const setTemperature: React.Dispatch<React.SetStateAction<number>> = (value) => {
@@ -46,14 +46,14 @@ export const useHyperParametersHandlers = ({
   const setTopP: React.Dispatch<React.SetStateAction<number>> = (value) => {
     setHpState((previous) => ({
       ...previous,
-      top_p: typeof value === 'function' ? value(previous.top_p) : value
+      topP: typeof value === 'function' ? value(previous.topP) : value
     }))
   }
 
   const setTopK: React.Dispatch<React.SetStateAction<number>> = (value) => {
     setHpState((previous) => ({
       ...previous,
-      top_k: typeof value === 'function' ? value(previous.top_k) : value
+      topK: typeof value === 'function' ? value(previous.topK) : value
     }))
   }
 
@@ -70,15 +70,15 @@ export const useHyperParametersHandlers = ({
 
     const incoming = {
       temperature: sessionDetail.hyperparameters?.temperature ?? hpState.temperature,
-      top_p: sessionDetail.hyperparameters?.top_p ?? hpState.top_p,
-      top_k: sessionDetail.hyperparameters?.top_k ?? hpState.top_k
+      topP: sessionDetail.hyperparameters?.topP ?? hpState.topP,
+      topK: sessionDetail.hyperparameters?.topK ?? hpState.topK
     }
 
     // Only update if any value actually differs.
     if (
       incoming.temperature !== hpState.temperature ||
-      incoming.top_p !== hpState.top_p ||
-      incoming.top_k !== hpState.top_k
+      incoming.topP !== hpState.topP ||
+      incoming.topK !== hpState.topK
     ) {
       setHpState(incoming)
     }
@@ -89,11 +89,11 @@ export const useHyperParametersHandlers = ({
 
   const handleTemperatureMouseUp = useCallback(
     async (event: React.MouseEvent<HTMLDivElement>): Promise<void> => {
-      if (!sessionDetail.session_id) return
+      if (!sessionDetail.sessionId) return
       const newTemperature = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { temperature: newTemperature }
       try {
-        await updateHyperparameters(sessionDetail.session_id, payload)
+        await updateHyperparameters(sessionDetail.sessionId, payload)
       } finally {
         isInteractingReference.current = false
       }
@@ -107,11 +107,11 @@ export const useHyperParametersHandlers = ({
 
   const handleTopPMouseUp = useCallback(
     async (event: React.MouseEvent<HTMLDivElement>): Promise<void> => {
-      if (!sessionDetail.session_id) return
+      if (!sessionDetail.sessionId) return
       const newTopP = Number(event.currentTarget.dataset.value)
-      const payload: EditHyperparametersRequest = { top_p: newTopP }
+      const payload: EditHyperparametersRequest = { topP: newTopP }
       try {
-        await updateHyperparameters(sessionDetail.session_id, payload)
+        await updateHyperparameters(sessionDetail.sessionId, payload)
       } finally {
         isInteractingReference.current = false
       }
@@ -125,11 +125,11 @@ export const useHyperParametersHandlers = ({
 
   const handleTopKMouseUp = useCallback(
     async (event: React.MouseEvent<HTMLDivElement>): Promise<void> => {
-      if (!sessionDetail.session_id) return
+      if (!sessionDetail.sessionId) return
       const newTopK = Number(event.currentTarget.dataset.value)
-      const payload: EditHyperparametersRequest = { top_k: newTopK }
+      const payload: EditHyperparametersRequest = { topK: newTopK }
       try {
-        await updateHyperparameters(sessionDetail.session_id, payload)
+        await updateHyperparameters(sessionDetail.sessionId, payload)
       } finally {
         isInteractingReference.current = false
       }

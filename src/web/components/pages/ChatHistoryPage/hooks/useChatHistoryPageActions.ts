@@ -26,10 +26,10 @@ export const useChatHistoryPageActions = ({
       const data = await getChatHistory(idToUse || undefined)
       // `session_tree` may be either legacy flat pairs ([id, overview])
       // or hierarchical nodes. Normalize to a flat SessionOverview[]
-      const sessionTree = data.session_tree as SessionNode[]
+      const sessionTree = data.sessionTree as SessionNode[]
 
       const flattenPairs = (pairs: SessionPair[]): SessionOverview[] =>
-        pairs.map(([id, session]) => ({ ...session, session_id: id }))
+        pairs.map(([id, session]) => ({ ...session, sessionId: id }))
 
       // Preserve hierarchical nodes when backend returns a tree; otherwise
       // normalize legacy pair format to flat `SessionOverview[]`.
@@ -38,17 +38,14 @@ export const useChatHistoryPageActions = ({
 
         if (isSessionPair(first)) {
           const normalized = flattenPairs(sessionTree as SessionPair[])
-          refreshSessions(data.current_session ?? null, normalized)
+          refreshSessions(data.currentSession ?? null, normalized)
         } else {
           // Keep hierarchical nodes intact so the UI can render a tree.
-          refreshSessions(
-            data.current_session ?? null,
-            sessionTree as SessionTreeNode[]
-          )
+          refreshSessions(data.currentSession ?? null, sessionTree as SessionTreeNode[])
         }
       } else {
         // No sessions returned: ensure session detail is updated but don't touch sessions
-        refreshSessions(data.current_session ?? null)
+        refreshSessions(data.currentSession ?? null)
       }
     },
     [currentSessionId, refreshSessions]

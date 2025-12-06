@@ -18,7 +18,7 @@ export const Compressor = ({
   sessionDetail,
   onRefresh
 }: CompressorProperties): JSX.Element => {
-  const sessionId = sessionDetail?.session_id ?? ''
+  const sessionId = sessionDetail?.sessionId ?? ''
   const maxTurn = sessionDetail?.turns?.length ?? 0
   const effectiveMax = maxTurn
 

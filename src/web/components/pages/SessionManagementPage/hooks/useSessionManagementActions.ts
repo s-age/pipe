@@ -22,15 +22,15 @@ export const useSessionManagementActions = ({
   const archiveSessionsAction = useCallback<(sessionIds: string[]) => Promise<void>>(
     async (sessionIds: string[]): Promise<void> => {
       try {
-        const result = await archiveSessions({ session_ids: sessionIds })
+        const result = await archiveSessions({ sessionIds: sessionIds })
         addToast({
           status: 'success',
-          title: `Archived ${result.archived_count} out of ${result.total_requested} session(s) successfully.`
+          title: `Archived ${result.archivedCount} out of ${result.totalRequested} session(s) successfully.`
         })
         // Refresh sessions after archiving
         const sessionTree = await getSessionTree()
         const sessions =
-          sessionTree.session_tree ||
+          sessionTree.sessionTree ||
           sessionTree.sessions.map(([_, overview]) => overview)
         storeActions.setSessions(sessions)
         // Refresh archived sessions
@@ -51,10 +51,10 @@ export const useSessionManagementActions = ({
   >(
     async (sessionIds: string[]): Promise<void> => {
       try {
-        const result = await deleteArchivedSessions({ session_ids: sessionIds })
+        const result = await deleteArchivedSessions({ sessionIds: sessionIds })
         addToast({
           status: 'success',
-          title: `Deleted ${result.deleted_count} out of ${result.total_requested} archived session(s) successfully.`
+          title: `Deleted ${result.deletedCount} out of ${result.totalRequested} archived session(s) successfully.`
         })
         // Refresh archived sessions after deletion
         const archivedSessions = await getArchivedSessions()

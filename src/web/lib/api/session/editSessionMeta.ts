@@ -8,8 +8,8 @@ export type EditSessionMetaRequest = {
   roles?: string[] | null
   artifacts?: string[] | null
   procedure?: string | null
-  multi_step_reasoning_enabled?: boolean
-  token_count?: number
+  multiStepReasoningEnabled?: boolean
+  tokenCount?: number
   hyperparameters?: Hyperparameters | null
 }
 

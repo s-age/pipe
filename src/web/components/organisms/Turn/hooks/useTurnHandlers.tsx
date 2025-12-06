@@ -26,7 +26,7 @@ type UseTurnHandlersProperties = {
   editTurnAction: (
     sessionId: string,
     turnIndex: number,
-    newContent: string,
+    new_content: string,
     turn: Turn
   ) => Promise<void>
   forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
@@ -112,7 +112,7 @@ export const useTurnHandlers = ({
       const fetchedSessionTree = await getSessionTree()
       const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
         ...session,
-        session_id: id
+        sessionId: id
       }))
       refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
       hide(modalIdReference.current)
@@ -146,7 +146,7 @@ export const useTurnHandlers = ({
     const fetchedSessionTree = await getSessionTree()
     const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
       ...session,
-      session_id: id
+      sessionId: id
     }))
     refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
     setIsEditing(false)

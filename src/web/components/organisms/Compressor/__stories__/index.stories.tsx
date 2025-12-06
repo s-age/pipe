@@ -19,7 +19,7 @@ const createMockSessionDetail = (
   sessionId: string,
   turnCount: number
 ): SessionDetail => ({
-  session_id: sessionId,
+  sessionId: sessionId,
   purpose: 'Test session for compression',
   background: 'Mock background',
   roles: ['user', 'assistant'],
@@ -28,7 +28,7 @@ const createMockSessionDetail = (
   artifacts: [],
   procedure: null,
   instruction: 'Test instruction',
-  multi_step_reasoning_enabled: false,
+  multiStepReasoningEnabled: false,
   hyperparameters: null,
   todos: [],
   turns: Array.from({ length: turnCount }, (_, i) => ({

@@ -1,13 +1,13 @@
 import { client } from '../client'
 
 export type ArchiveSessionsRequest = {
-  session_ids: string[]
+  sessionIds: string[]
 }
 
 export type ArchiveSessionsResponse = {
   message: string
-  archived_count: number
-  total_requested: number
+  archivedCount: number
+  totalRequested: number
 }
 
 export const archiveSessions = async (

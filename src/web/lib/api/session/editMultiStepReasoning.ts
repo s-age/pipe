@@ -2,7 +2,7 @@ import { client } from '../client'
 import type { SessionDetail } from './getSession'
 
 export type EditMultiStepReasoningRequest = {
-  multi_step_reasoning_enabled: boolean
+  multiStepReasoningEnabled: boolean
 }
 
 export const editMultiStepReasoning = async (

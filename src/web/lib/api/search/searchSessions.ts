@@ -1,7 +1,7 @@
 import { client as apiClient } from '@/lib/api/client'
 
 export type SearchResult = {
-  session_id: string
+  sessionId: string
   title: string
 }
 

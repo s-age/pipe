@@ -51,7 +51,7 @@ export const useSessionManagementHandlers = ({
       const ids: string[] = []
       const collectIds = (sessions: SessionOverview[] | SessionTreeNode[]): void => {
         sessions.forEach((session) => {
-          ids.push(session.session_id)
+          ids.push(session.sessionId)
           if ('children' in session && session.children) {
             collectIds(session.children)
           }

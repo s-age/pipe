@@ -24,14 +24,14 @@ export const SessionOverviewComponent = forwardRef<
   const { onClick } = useSessionOverviewHandlers({ session, selectSession })
 
   return (
-    <li key={session.session_id} className={sessionListItem} ref={reference}>
+    <li key={session.sessionId} className={sessionListItem} ref={reference}>
       <a
-        href={`/session/${session.session_id}`}
-        className={`${sessionLink} ${session.session_id === currentSessionId ? sessionLinkActive : ''}`.trim()}
+        href={`/session/${session.sessionId}`}
+        className={`${sessionLink} ${session.sessionId === currentSessionId ? sessionLinkActive : ''}`.trim()}
         onClick={onClick}
       >
         {session.purpose}{' '}
-        <p className={sessionIdStyle}>{session.session_id.substring(0, 8)}</p>
+        <p className={sessionIdStyle}>{session.sessionId.substring(0, 8)}</p>
       </a>
     </li>
   )

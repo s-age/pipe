@@ -12,7 +12,7 @@ type TherapistActions = {
 export const useTherapistActions = (): TherapistActions => {
   const diagnoseSession = useCallback(async (sessionId: string): Promise<Diagnosis> => {
     try {
-      const result = await createTherapistSession({ session_id: sessionId })
+      const result = await createTherapistSession({ sessionId: sessionId })
       addToast({ status: 'success', title: 'Diagnosis completed successfully' })
 
       return result.diagnosis

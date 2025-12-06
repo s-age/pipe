@@ -1,5 +1,7 @@
 """Central action dispatcher for routing requests to action handlers."""
 
+import re
+from typing import Any
 from flask import Request, Response
 from pipe.web.actions import (
     ApproveCompressorAction,
@@ -44,6 +46,38 @@ from pipe.web.actions.therapist_actions import ApplyDoctorModificationsAction
 from pipe.web.actions.turn_actions import SessionTurnsGetAction
 
 
+def _camel_to_snake(name: str) -> str:
+    """Convert camelCase to snake_case."""
+    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+
+
+def _snake_to_camel(name: str) -> str:
+    """Convert snake_case to camelCase."""
+    components = name.split('_')
+    return components[0] + ''.join(x.title() for x in components[1:])
+
+
+def _convert_keys_to_snake(data: dict | list | Any) -> dict | list | Any:
+    """Recursively convert all dict keys from camelCase to snake_case."""
+    if isinstance(data, dict):
+        return {_camel_to_snake(k): _convert_keys_to_snake(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [_convert_keys_to_snake(item) for item in data]
+    else:
+        return data
+
+
+def _convert_keys_to_camel(data: dict | list | Any) -> dict | list | Any:
+    """Recursively convert all dict keys from snake_case to camelCase."""
+    if isinstance(data, dict):
+        return {_snake_to_camel(k): _convert_keys_to_camel(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [_convert_keys_to_camel(item) for item in data]
+    else:
+        return data
+
+
 class ActionDispatcher:
     """Dispatches actions to appropriate handlers based on route patterns."""
 
@@ -74,6 +108,32 @@ class ActionDispatcher:
             A tuple of (response_data, status_code)
         """
         method = request_data.method if request_data else "GET"
+
+        # Convert request body from camelCase to snake_case
+        converted_request_data = request_data
+        if request_data and request_data.is_json:
+            try:
+                original_json = request_data.get_json(silent=True)
+                if original_json:
+                    converted_json = _convert_keys_to_snake(original_json)
+                    # Create a wrapper that stores the converted data
+                    class RequestWrapper:
+                        def __init__(self, original_request: Request, converted_data: dict):
+                            self._original = original_request
+                            self._converted_data = converted_data
+                            self.method = original_request.method
+                            self.is_json = original_request.is_json
+                        
+                        def get_json(self, *args, **kwargs):
+                            return self._converted_data
+                        
+                        def __getattr__(self, name):
+                            return getattr(self._original, name)
+                    
+                    converted_request_data = RequestWrapper(request_data, converted_json)  # type: ignore
+            except Exception:
+                # If JSON parsing fails, just use the original request
+                pass
 
         route_map = [
             ("session_tree", "GET", SessionTreeAction),
@@ -149,13 +209,20 @@ class ActionDispatcher:
                     if isinstance(action_class, type):
                         action_instance = action_class(
                             params=extracted_params,
-                            request_data=request_data,
+                            request_data=converted_request_data,
                         )
                     else:
                         action_instance = action_class
                         action_instance.params = extracted_params
-                        action_instance.request_data = request_data
-                    return action_instance.execute()
+                        action_instance.request_data = converted_request_data
+                    
+                    response_data, status_code = action_instance.execute()
+                    
+                    # Convert response from snake_case to camelCase
+                    if isinstance(response_data, dict):
+                        response_data = _convert_keys_to_camel(response_data)
+                    
+                    return response_data, status_code
                 except Exception as e:
                     return {"message": str(e)}, 500
 

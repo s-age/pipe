@@ -5,6 +5,7 @@ Handles all /api/v1/bff/* endpoints.
 """
 
 from flask import Blueprint, jsonify, request
+from pipe.web.dispatcher import _convert_keys_to_camel
 from pipe.web.service_container import get_session_detail_controller
 
 bff_bp = Blueprint("bff", __name__, url_prefix="/api/v1/bff")
@@ -21,6 +22,8 @@ def get_start_session():
         response_data, status_code = controller.get_settings_with_tree(
             request_data=request
         )
+        if isinstance(response_data, dict):
+            response_data = _convert_keys_to_camel(response_data)
         return jsonify(response_data), status_code
     except Exception as e:
         return jsonify({"message": str(e)}), 500
@@ -37,6 +40,8 @@ def get_session_management():
         response_data, status_code = controller.get_session_management_dashboard(
             request_data=request
         )
+        if isinstance(response_data, dict):
+            response_data = _convert_keys_to_camel(response_data)
         return jsonify(response_data), status_code
     except Exception as e:
         return jsonify({"message": str(e)}), 500
@@ -50,8 +55,11 @@ def get_chat_history():
     """
     try:
         controller = get_session_detail_controller()
-        session_id = request.args.get("session_id")
+        # Support both camelCase (sessionId) and snake_case (session_id) for compatibility
+        session_id = request.args.get("sessionId") or request.args.get("session_id")
         response_data, status_code = controller.get_chat_history(session_id, request)
+        if isinstance(response_data, dict):
+            response_data = _convert_keys_to_camel(response_data)
         return jsonify(response_data), status_code
     except Exception as e:
         return jsonify({"message": str(e)}), 500

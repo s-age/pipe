@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import fs from 'fs'
 import path from 'path'
 import { dirname } from 'path'
@@ -375,8 +376,8 @@ const findSimilarCode = (
             `DEBUG: Found similar code (similarity > 0.5): ${targetSymbol} in ${filePath}\n`
           )
           similarCodes.push({
-            file_path: filePath,
-            symbol_name: targetSymbol,
+            filePath: filePath,
+            symbolName: targetSymbol,
             similarity: similarity,
             snippet: otherSnippet
           })

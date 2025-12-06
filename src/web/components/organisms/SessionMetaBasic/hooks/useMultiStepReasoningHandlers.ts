@@ -26,7 +26,7 @@ export const useMultiStepReasoningHandlers = ({
       const checked = event.target.checked
 
       void updateMultiStepReasoning(currentSessionId, {
-        multi_step_reasoning_enabled: checked
+        multiStepReasoningEnabled: checked
       })
     },
     [currentSessionId, sessionDetail, updateMultiStepReasoning]

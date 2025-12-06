@@ -2,10 +2,10 @@ import { client } from '../client'
 import type { SessionOverview } from '../sessionTree/getSessionTree'
 
 type ArchivedSession = {
-  session_id: string
-  file_path: string
+  sessionId: string
+  filePath: string
   purpose: string | null
-  deleted_at: string | null
+  deletedAt: string | null
 }
 
 export const getArchivedSessions = async (): Promise<SessionOverview[]> => {
@@ -14,15 +14,15 @@ export const getArchivedSessions = async (): Promise<SessionOverview[]> => {
   )
 
   return response.sessions.map((s) => ({
-    session_id: s.session_id,
+    sessionId: s.sessionId,
     purpose: s.purpose || '',
     background: '',
     roles: [],
     procedure: '',
     artifacts: [],
-    multi_step_reasoning_enabled: false,
-    token_count: 0,
-    last_updated_at: '',
-    deleted_at: s.deleted_at || ''
+    multiStepReasoningEnabled: false,
+    tokenCount: 0,
+    lastUpdatedAt: '',
+    deletedAt: s.deletedAt || ''
   }))
 }

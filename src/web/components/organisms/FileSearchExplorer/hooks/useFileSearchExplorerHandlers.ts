@@ -99,13 +99,13 @@ export const useFileSearchExplorerHandlers = (
           const pathParts = parts.slice(0, -1).filter((p) => p)
           const prefix = parts[parts.length - 1] || ''
           if (pathParts.length > 0) {
-            const lsResult = await actions.getLsData({ final_path_list: pathParts })
+            const lsResult = await actions.getLsData({ finalPathList: pathParts })
             if (lsResult) {
               const filtered = lsResult.entries
                 .filter((entry) => entry.name.startsWith(prefix))
                 .map((entry) => ({
-                  label: entry.is_dir ? `${entry.name}/` : entry.name,
-                  value: entry.is_dir
+                  label: entry.isDir ? `${entry.name}/` : entry.name,
+                  value: entry.isDir
                     ? `${[...pathParts, entry.name].join('/')}/`
                     : [...pathParts, entry.name].join('/'),
                   path: [...pathParts, entry.name].join('/')
@@ -115,13 +115,13 @@ export const useFileSearchExplorerHandlers = (
             }
           } else {
             // Root level
-            const lsResult = await actions.getLsData({ final_path_list: [] })
+            const lsResult = await actions.getLsData({ finalPathList: [] })
             if (lsResult) {
               const filtered = lsResult.entries
                 .filter((entry) => entry.name.startsWith(prefix))
                 .map((entry) => ({
-                  label: entry.is_dir ? `${entry.name}/` : entry.name,
-                  value: entry.is_dir ? `${entry.name}/` : entry.name,
+                  label: entry.isDir ? `${entry.name}/` : entry.name,
+                  value: entry.isDir ? `${entry.name}/` : entry.name,
                   path: entry.name
                 }))
               const filteredWithoutDuplicates = filterExistingValues(filtered)
@@ -130,13 +130,13 @@ export const useFileSearchExplorerHandlers = (
           }
         } else if (newQuery.length > 0) {
           // Root level search
-          const lsResult = await actions.getLsData({ final_path_list: [] })
+          const lsResult = await actions.getLsData({ finalPathList: [] })
           if (lsResult) {
             const filtered = lsResult.entries
               .filter((entry) => entry.name.startsWith(newQuery))
               .map((entry) => ({
-                label: entry.is_dir ? `${entry.name}/` : entry.name,
-                value: entry.is_dir ? `${entry.name}/` : entry.name,
+                label: entry.isDir ? `${entry.name}/` : entry.name,
+                value: entry.isDir ? `${entry.name}/` : entry.name,
                 path: entry.name
               }))
             const filteredWithoutDuplicates = filterExistingValues(filtered)
@@ -182,11 +182,11 @@ export const useFileSearchExplorerHandlers = (
         setQuery(newPath)
         // Refresh suggestions for the new directory
         if (!list) {
-          void actions.getLsData({ final_path_list: newPathParts }).then((lsResult) => {
+          void actions.getLsData({ finalPathList: newPathParts }).then((lsResult) => {
             if (lsResult) {
               const filtered = lsResult.entries.map((entry) => ({
-                label: entry.is_dir ? `${entry.name}/` : entry.name,
-                value: entry.is_dir
+                label: entry.isDir ? `${entry.name}/` : entry.name,
+                value: entry.isDir
                   ? `${[...newPathParts, entry.name].join('/')}/`
                   : [...newPathParts, entry.name].join('/'),
                 path: [...newPathParts, entry.name].join('/')
@@ -236,11 +236,11 @@ export const useFileSearchExplorerHandlers = (
     onFocus?.()
     if (!list) {
       // Load root suggestions for file search
-      const lsResult = await actions.getLsData({ final_path_list: [] })
+      const lsResult = await actions.getLsData({ finalPathList: [] })
       if (lsResult) {
         const filtered = lsResult.entries.map((entry) => ({
-          label: entry.is_dir ? `${entry.name}/` : entry.name,
-          value: entry.is_dir ? `${entry.name}/` : entry.name,
+          label: entry.isDir ? `${entry.name}/` : entry.name,
+          value: entry.isDir ? `${entry.name}/` : entry.name,
           path: entry.name
         }))
         const filteredWithoutDuplicates = filterExistingValues(filtered)

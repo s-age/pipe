@@ -126,9 +126,9 @@ class Session(BaseModel):
         cls.reference_ttl = settings.reference_ttl
 
         default_hyperparameters_dict = {
-            "temperature": settings.parameters.temperature.model_dump(),
-            "top_p": settings.parameters.top_p.model_dump(),
-            "top_k": settings.parameters.top_k.model_dump(),
+            "temperature": settings.parameters.temperature.value,
+            "top_p": settings.parameters.top_p.value,
+            "top_k": settings.parameters.top_k.value,
         }
         cls.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
 

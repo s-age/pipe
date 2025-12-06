@@ -5,6 +5,7 @@ Pydantic model for validating the request body of the edit session meta API endp
 from typing import Any
 
 from pipe.core.models.hyperparameters import Hyperparameters
+from pipe.web.requests.common import normalize_camel_case_keys
 from pydantic import BaseModel, model_validator
 
 
@@ -17,6 +18,11 @@ class EditSessionMetaRequest(BaseModel):
     multi_step_reasoning_enabled: bool | None = None
     token_count: int | None = None
     hyperparameters: Hyperparameters | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_keys(cls, data: Any) -> Any:
+        return normalize_camel_case_keys(data)
 
     @model_validator(mode="before")
     @classmethod

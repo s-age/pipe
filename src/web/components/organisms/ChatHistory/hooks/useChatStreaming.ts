@@ -118,7 +118,6 @@ export const useChatStreaming = ({
           }
         }
       } catch (error_: unknown) {
-        console.error('[ERROR] Failed to fetch stream:', error_)
         localError = (error_ as Error).message || 'Failed to fetch stream.'
         setError(localError)
       } finally {
@@ -144,8 +143,11 @@ export const useChatStreaming = ({
               const data = await getSession(currentSessionId)
               cacheSessionDetail(currentSessionId, data.session)
               setSessionDetail(data.session)
-            } catch (error: unknown) {
-              console.error('Failed to load session data after streaming:', error)
+            } catch {
+              addToast({
+                status: 'failure',
+                title: 'Failed to load session data after streaming.'
+              })
             }
           })()
         }

@@ -20,7 +20,7 @@ export const Therapist = ({
   sessionDetail,
   onRefresh
 }: TherapistProperties): JSX.Element => {
-  const sessionId = sessionDetail?.session_id ?? ''
+  const sessionId = sessionDetail?.sessionId ?? ''
   const turnsCount = sessionDetail?.turns?.length ?? 0
 
   const actions = useTherapistActions()

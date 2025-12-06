@@ -27,7 +27,7 @@ export const useSessionMetaLifecycle = ({
         })) ?? [],
       artifacts: sessionDetail.artifacts ?? null,
       hyperparameters: sessionDetail.hyperparameters ?? null,
-      multi_step_reasoning: sessionDetail.multi_step_reasoning_enabled ?? false
+      multiStepReasoning: sessionDetail.multiStepReasoningEnabled ?? false
     }),
     [sessionDetail]
   )

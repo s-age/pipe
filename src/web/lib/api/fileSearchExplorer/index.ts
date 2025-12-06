@@ -8,23 +8,23 @@ export type SearchL2Request = {
 
 export type SearchL2Response = {
   results: {
-    file_path: string
-    line_number: number
-    line_content: string
+    filePath: string
+    lineNumber: number
+    lineContent: string
   }[]
 }
 
 // Type definitions for ls request and response
 export type LsRequest = {
-  final_path_list: string[]
+  finalPathList: string[]
 }
 
 export type LsResponse = {
   entries: {
     name: string
-    is_dir: boolean
+    isDir: boolean
     size?: number
-    last_modified?: number
+    lastModified?: number
     path: string
   }[]
 }

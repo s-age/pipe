@@ -17,6 +17,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 import pluginNoUselessBackticks from './eslint-rules/no-useless-backticks.js'
+import pluginNoSnakeCaseProperties from './eslint-rules/no-snake-case-properties.js'
 import pluginVanillaExtract from './eslint-rules/vanilla-extract-recess-order.js'
 // To avoid Prettier conflicts, do not use eslint-config-prettier (use plugin-prettier instead)
 
@@ -47,6 +48,7 @@ export default [
       'unused-imports': pluginUnusedImports,
       'vanilla-extract': pluginVanillaExtract,
       'no-useless-backticks': pluginNoUselessBackticks,
+      'no-snake-case-properties': pluginNoSnakeCaseProperties,
       // Prettier is configured in rules, so it's often unnecessary here
       prettier: pluginPrettier
     },
@@ -169,7 +171,13 @@ export default [
           checkProperties: false
         }
       ],
-      'no-useless-backticks/no-useless-backticks': 'error'
+      'no-useless-backticks/no-useless-backticks': 'error',
+      'no-snake-case-properties/no-snake-case-properties': [
+        'error',
+        {
+          ignoreDestructuring: false
+        }
+      ]
     },
 
     settings: {
@@ -359,6 +367,14 @@ export default [
           skipBlankLines: true
         }
       ]
+    }
+  },
+  // ✅ console禁止ルール - *.stories.ts[x]と*.test.ts[x]以外で適用
+  {
+    files: ['**/*.{ts,tsx,js,jsx}'],
+    ignores: ['**/*.stories.{ts,tsx}', '**/*.test.{ts,tsx}'],
+    rules: {
+      'no-console': 'error'
     }
   }
 ]

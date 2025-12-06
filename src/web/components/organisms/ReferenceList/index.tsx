@@ -58,7 +58,7 @@ export const ReferenceList = ({
             <ReferenceComponent
               key={index}
               reference={reference}
-              currentSessionId={sessionDetail.session_id || null}
+              currentSessionId={sessionDetail.sessionId || null}
               index={index}
             />
           ))}

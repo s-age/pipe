@@ -20,36 +20,16 @@ export const useStartSessionFormHandlers = (): {
 
   const onFormSubmit = useCallback(
     async (data: StartSessionFormInputs): Promise<void> => {
-      try {
-        const result = await startSessionAction(data)
-        window.location.href = `/session/${result.session_id}`
-      } catch (error: unknown) {
-        // Log submitted hyperparameters and entire form values for debugging
-        try {
-          console.error('StartSession API error:', (error as Error).message)
-          // Print the data that was attempted to be submitted
-          console.log('StartSession submitted data:', data)
-        } catch {
-          // ignore logging errors
-        }
-        throw error
-      }
+      const result = await startSessionAction(data)
+      window.location.href = `/session/${result.sessionId}`
     },
     [startSessionAction]
   )
-  const onFormError = useCallback(
-    (errors: unknown): void => {
-      try {
-        console.error('StartSession form validation errors:', errors)
-        // If we have access to form context, print current values so we can inspect hyperparameters
-        const values = formContext?.getValues ? formContext.getValues() : undefined
-        console.log('StartSession current form values (on error):', values)
-      } catch {
-        // ignore
-      }
-    },
-    [formContext]
-  )
+  const onFormError = useCallback((errors: unknown): void => {
+    // If we have access to form context, print current values so we can inspect hyperparameters
+    // eslint-disable-next-line no-console
+    console.error('StartSession form validation errors:', errors)
+  }, [])
 
   const handleCreateClick = useCallback(async (): Promise<void> => {
     setIsSubmitting(true)

@@ -1,20 +1,20 @@
 import { client } from '../client'
 
 export type ApplyDoctorModificationsRequest = {
-  session_id: string
+  sessionId: string
   modifications: {
     deletions?: number[]
-    edits?: { turn: number; new_content: string }[]
+    edits?: { turn: number; newContent: string }[]
     compressions?: { start: number; end: number; reason: string }[]
   }
 }
 
 export type ApplyDoctorModificationsResponse = {
-  session_id: string
+  sessionId: string
   result: {
-    applied_deletions?: number[]
-    applied_edits?: { turn: number; new_content: string }[]
-    applied_compressions?: { start: number; end: number; summary: string }[]
+    appliedDeletions?: number[]
+    appliedEdits?: { turn: number; newContent: string }[]
+    appliedCompressions?: { start: number; end: number; summary: string }[]
     status: string
     reason?: string
   }

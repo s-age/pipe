@@ -4,8 +4,8 @@ import { optionalString } from '@/lib/validation'
 
 const hyperparametersSchema = object({
   temperature: number().nullable(),
-  top_p: number().nullable(),
-  top_k: number().nullable()
+  topP: number().nullable(),
+  topK: number().nullable()
 }).nullable()
 
 const referenceSchema = object({
@@ -23,7 +23,7 @@ export const sessionMetaSchema = object({
   references: array(referenceSchema).default([]),
   artifacts: array(string()).nullable().default(null),
   hyperparameters: hyperparametersSchema.nullable().default(null),
-  multi_step_reasoning: boolean().default(false)
+  multiStepReasoning: boolean().default(false)
 })
 
 export type SessionMetaFormInputs = TypeOf<typeof sessionMetaSchema>

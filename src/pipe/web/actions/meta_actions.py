@@ -50,11 +50,30 @@ class HyperparametersEditAction(BaseAction):
             except Exception:
                 return {"message": "No data provided."}, 400
 
-            hyperparams = request_data.model_dump(exclude_unset=True)
+            # Get current session to merge with existing hyperparameters
+            session = get_session_service().get_session(session_id)
+            if not session:
+                return {"message": "Session not found."}, 404
+
+            # Merge new values with existing hyperparameters
+            current_hp = session.hyperparameters
+            new_values = request_data.model_dump(exclude_unset=True)
+            
+            if current_hp:
+                # Update only the fields that were provided
+                merged_hp = {
+                    "temperature": new_values.get("temperature", current_hp.temperature),
+                    "top_p": new_values.get("top_p", current_hp.top_p),
+                    "top_k": new_values.get("top_k", current_hp.top_k),
+                }
+            else:
+                merged_hp = new_values
+
             get_session_service().edit_session_meta(
-                session_id, {"hyperparameters": hyperparams}
+                session_id, {"hyperparameters": merged_hp}
             )
 
+            # Reload session to get updated values
             session = get_session_service().get_session(session_id)
             if not session:
                 return {"message": "Session not found."}, 404

@@ -43,19 +43,17 @@ export const useCompressorActions = ({
         throw new Error('Form values not available')
       }
       const requestData = {
-        session_id: sessionId,
+        sessionId: sessionId,
         policy: formValues.policy,
-        target_length: formValues.targetLength ?? 500,
-        start_turn: formValues.startTurn,
-        end_turn: formValues.endTurn
+        targetLength: formValues.targetLength ?? 500,
+        startTurn: formValues.startTurn,
+        endTurn: formValues.endTurn
       }
       const response = await createCompressor(requestData)
-      // Log full response for debugging (helps diagnose missing summary)
-      console.log('createCompressor response:', response)
 
       // Store the compressor session ID for approval
-      if (response?.session_id) {
-        setCompressorSessionId(response.session_id)
+      if (response?.sessionId) {
+        setCompressorSessionId(response.sessionId)
       }
 
       // If the server returned a verified summary, use it.
@@ -63,10 +61,10 @@ export const useCompressorActions = ({
         setSummary(response.summary)
       } else if (response?.message) {
         setSummary(response.message)
-      } else if (response?.session_id) {
+      } else if (response?.sessionId) {
         // Provide a clearer user-facing message instead of raw session id
         setSummary(
-          `Compression started. Verifier session created (id: ${response.session_id}). The verified summary will appear here when ready.`
+          `Compression started. Verifier session created (id: ${response.sessionId}). The verified summary will appear here when ready.`
         )
       } else {
         setSummary(

@@ -1,13 +1,13 @@
 import { client } from '../client'
 
 export type DeleteSessionsRequest = {
-  session_ids: string[]
+  sessionIds: string[]
 }
 
 export type DeleteSessionsResponse = {
   message: string
-  deleted_count: number
-  total_requested: number
+  deletedCount: number
+  totalRequested: number
 }
 
 export const deleteSessions = async (

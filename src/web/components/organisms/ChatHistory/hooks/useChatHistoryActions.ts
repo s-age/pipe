@@ -47,32 +47,32 @@ export const useChatHistoryActions = ({
       const fetchedSessionDetailResponse = await getSession(currentSessionId)
       const fetchedSessionTree = await getSessionTree()
       let newSessions: SessionOverview[]
-      if (fetchedSessionTree.session_tree) {
+      if (fetchedSessionTree.sessionTree) {
         // hierarchical nodes — flatten for refreshSessionsInStore
         const flatten: SessionOverview[] = []
         const walk = (nodes: SessionTreeNode[]): void => {
           for (const n of nodes) {
             const overview = (n.overview || {}) as Partial<SessionOverview>
             flatten.push({
-              session_id: n.session_id,
+              sessionId: n.sessionId,
               purpose: (overview.purpose as string) || '',
               background: (overview.background as string) || '',
               roles: (overview.roles as string[]) || [],
               procedure: (overview.procedure as string) || '',
               artifacts: (overview.artifacts as string[]) || [],
-              multi_step_reasoning_enabled: !!overview.multi_step_reasoning_enabled,
-              token_count: (overview.token_count as number) || 0,
-              last_updated_at: (overview.last_updated_at as string) || ''
+              multiStepReasoningEnabled: !!overview.multiStepReasoningEnabled,
+              tokenCount: (overview.tokenCount as number) || 0,
+              lastUpdatedAt: (overview.lastUpdatedAt as string) || ''
             })
             if (n.children && n.children.length) walk(n.children)
           }
         }
-        walk(fetchedSessionTree.session_tree)
+        walk(fetchedSessionTree.sessionTree)
         newSessions = flatten
       } else {
         newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
           ...session,
-          session_id: id
+          sessionId: id
         }))
       }
       refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)

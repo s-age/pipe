@@ -28,7 +28,7 @@ export const initialState: State = {
   sessionTree: { sessions: [], currentSessionId: null },
   sessionDetail: null,
   settings: {
-    hyperparameters: { temperature: null, top_p: null, top_k: null }
+    hyperparameters: { temperature: null, topP: null, topK: null }
   } as Settings,
   roleOptions: [],
   archivedSessions: []
@@ -130,7 +130,6 @@ export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn
 
   const selectSession = useCallback(
     (id: string | null, detail: SessionDetail | null) => {
-      console.debug('[SessionStore] selectSession id:', id)
       dispatch({ type: 'SET_SESSION_AND_CURRENT', payload: { id, detail } })
     },
     []

@@ -27,10 +27,10 @@ type SessionMetaFormInputs = {
   artifacts: string[] | null
   hyperparameters: {
     temperature: number | null
-    top_p: number | null
-    top_k: number | null
+    topP: number | null
+    topK: number | null
   } | null
-  multi_step_reasoning: boolean
+  multiStepReasoning: boolean
 }
 import { sessionMetaSchema } from './schema'
 import {
@@ -72,7 +72,7 @@ export const SessionMeta = ({
         <input
           type="hidden"
           id="current-session-id"
-          value={sessionDetail?.session_id ?? ''}
+          value={sessionDetail?.sessionId ?? ''}
         />
         <section className={sessionMetaSection}>
           <div className={sessionMetaView}>
@@ -86,9 +86,9 @@ export const SessionMeta = ({
 
             <MultiStepReasoning
               multiStepReasoningEnabled={
-                sessionDetail?.multi_step_reasoning_enabled ?? false
+                sessionDetail?.multiStepReasoningEnabled ?? false
               }
-              currentSessionId={sessionDetail.session_id ?? null}
+              currentSessionId={sessionDetail.sessionId ?? null}
             />
 
             <TodoList sessionDetail={sessionDetail} />

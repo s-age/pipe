@@ -4,7 +4,7 @@ import { searchSessions } from '@/lib/api/search/searchSessions'
 import { addToast } from '@/stores/useToastStore'
 
 type SearchResult = {
-  session_id: string
+  sessionId: string
   title: string
 }
 

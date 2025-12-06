@@ -41,11 +41,11 @@ export const useReferenceListActions = (
   const loadRootSuggestions = useCallback(async () => {
     if (currentSessionId) {
       try {
-        const lsResult = await fileActions.getLsData({ final_path_list: [] })
+        const lsResult = await fileActions.getLsData({ finalPathList: [] })
         if (lsResult) {
           const rootEntries = lsResult.entries.map((entry) => ({
             name: entry.name,
-            isDirectory: entry.is_dir
+            isDirectory: entry.isDir
           }))
           addToast({ status: 'success', title: 'Root suggestions loaded successfully' })
 
@@ -65,11 +65,11 @@ export const useReferenceListActions = (
   const loadSubDirectorySuggestions = useCallback(
     async (pathParts: string[]) => {
       try {
-        const lsResult = await fileActions.getLsData({ final_path_list: pathParts })
+        const lsResult = await fileActions.getLsData({ finalPathList: pathParts })
         if (lsResult) {
           const entries = lsResult.entries.map((entry) => ({
             name: entry.name,
-            isDirectory: entry.is_dir
+            isDirectory: entry.isDir
           }))
           addToast({
             status: 'success',

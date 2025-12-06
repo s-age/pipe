@@ -25,8 +25,8 @@ export const useCompressorLifecycle = ({
     [effectiveMax]
   )
 
-  // Ensure the form's defaultValues set `endTurn` to the current maximum when
-  // no endTurn is provided by the handler. This initializes End to Max.
+  // Ensure the form's defaultValues set `end_turn` to the current maximum when
+  // no end_turn is provided by the handler. This initializes End to Max.
   const mergedDefaultValues = useMemo(() => {
     try {
       const dv = { ...(defaultValues as Record<string, unknown>) }

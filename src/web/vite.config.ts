@@ -18,15 +18,14 @@ export default defineConfig({
   plugins: [react(), vanillaExtractPlugin()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src/web'),
-      '@/lib': path.resolve(__dirname, './src/web/lib')
+      '@': path.resolve(__dirname, '.')
     }
   },
-  root: 'src/web',
+  root: '.',
   // src/web をルートディレクトリとして設定
   build: {
-    outDir: '../../dist/web',
-    // ビルド出力先を dist/web に設定
+    outDir: 'dist',
+    // ビルド出力先を dist に設定
     emptyOutDir: true
   },
   server: {

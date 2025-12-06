@@ -37,9 +37,9 @@ def ts_get_code_snippet(file_path: str, symbol_name: str) -> dict[str, Any]:
             "npx",
             "ts-node",
             script_path,
+            "get_code_snippet",
             file_path,
             symbol_name,
-            "get_code_snippet",
         ]
         process = subprocess.run(
             command, capture_output=True, text=True, check=True, cwd=project_root

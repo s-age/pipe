@@ -25,11 +25,11 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - .:/app
-      - /app/node_modules
+      - ./src/web:/app
+      - ./src/web/node_modules:/app/node_modules
     depends_on:
       - lsp
-    command: npm start
+    command: ["sh", "-c", "npm install && npm start"]
 
   lsp:
     build:
@@ -54,7 +54,8 @@ services:
     ports:
       - '6006:6006'
     volumes:
-      - .:/app
-      - /app/node_modules
+      - ./src/web:/app
+      - ./src/web/node_modules:/app/node_modules
     profiles:
       - storybook
+    command: ["sh", "-c", "npm install && npm run storybook"]

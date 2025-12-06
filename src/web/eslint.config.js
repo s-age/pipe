@@ -16,8 +16,8 @@ import globals from 'globals'
 // Import from typescript-eslint instead of tseslintPlugin, tseslintParser
 import tseslint from 'typescript-eslint'
 
-import pluginNoUselessBackticks from './eslint-rules/no-useless-backticks.js'
 import pluginNoSnakeCaseProperties from './eslint-rules/no-snake-case-properties.js'
+import pluginNoUselessBackticks from './eslint-rules/no-useless-backticks.js'
 import pluginVanillaExtract from './eslint-rules/vanilla-extract-recess-order.js'
 // To avoid Prettier conflicts, do not use eslint-config-prettier (use plugin-prettier instead)
 
@@ -186,7 +186,7 @@ export default [
   }, // 3. Apply Prettier last to disable all conflicting rules
   // Node.js specific configuration for ts_analyzer.ts
   {
-    files: ['src/pipe/cli/ts_analyzer.ts'],
+    files: ['../../../src/pipe/cli/ts_analyzer.ts'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {

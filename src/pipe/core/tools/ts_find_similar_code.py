@@ -51,9 +51,9 @@ def ts_find_similar_code(
                     "ts_analyzer.ts",
                 )
             ),
+            "find_similar_code",
             base_file_path,
             symbol_name,
-            "find_similar_code",
             search_directory,
             str(max_results),
         ]

@@ -38,9 +38,9 @@ def ts_get_type_definitions(file_path: str, symbol_name: str) -> dict[str, Any]:
             "npx",
             "ts-node",
             script_path,
+            "get_type_definitions",
             file_path,
             symbol_name,
-            "get_type_definitions",
         ]
         process = subprocess.run(
             command, capture_output=True, text=True, check=True, cwd=project_root

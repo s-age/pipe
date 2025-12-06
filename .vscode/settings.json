@@ -9,6 +9,9 @@
   "python.formatting.provider": "ruff",
   "python.formatting.ruffArgs": ["--line-length", "88"],
   "python.formatting.blackEnabled": false,
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.preferences.tsconfig": "src/web/tsconfig.json",
+  "eslint.workingDirectories": ["src/web"],
   "mcp": {
     "enabled": true,
     "servers": {

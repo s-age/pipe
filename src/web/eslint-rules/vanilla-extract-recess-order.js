@@ -156,7 +156,7 @@ export default {
             context.report({
               node: first,
               messageId: 'reorder',
-              // eslint-disable-next-line no-restricted-syntax
+
               fix(fixer) {
                 // Reconstruct the object literal contents using source text of properties
                 const propertyTexts = sorted.map((p) => sourceCode.getText(p))

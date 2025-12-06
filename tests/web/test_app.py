@@ -183,7 +183,7 @@ class TestAppApi(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertEqual(data["session_id"], "new_session_123")
+        self.assertEqual(data["sessionId"], "new_session_123")
         mock_subprocess_run.assert_called_once()
 
     def test_create_new_session_api_validation_error(self):
@@ -337,7 +337,7 @@ class TestAppApi(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertEqual(data["new_session_id"], "new_forked_id")
+        self.assertEqual(data["newSessionId"], "new_forked_id")
         self.mock_session_service.fork_session.assert_called_once_with("original_id", 1)
 
     def test_fork_session_api_not_found(self):
@@ -461,12 +461,12 @@ class TestAppApi(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
 
-        self.assertIn("session_tree", data)
-        self.assertIn("current_session", data)
+        self.assertIn("sessionTree", data)
+        self.assertIn("currentSession", data)
         self.assertIn("settings", data)
 
-        self.assertEqual(len(data["session_tree"]), 2)
-        self.assertEqual(data["current_session"]["purpose"], "Details")
+        self.assertEqual(len(data["sessionTree"]), 2)
+        self.assertEqual(data["currentSession"]["purpose"], "Details")
         self.assertIsInstance(data["settings"], dict)
 
 

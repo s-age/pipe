@@ -2,6 +2,7 @@
 
 import re
 from typing import Any
+
 from flask import Request, Response
 from pipe.web.actions import (
     ApproveCompressorAction,
@@ -48,14 +49,14 @@ from pipe.web.actions.turn_actions import SessionTurnsGetAction
 
 def _camel_to_snake(name: str) -> str:
     """Convert camelCase to snake_case."""
-    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
 
 def _snake_to_camel(name: str) -> str:
     """Convert snake_case to camelCase."""
-    components = name.split('_')
-    return components[0] + ''.join(x.title() for x in components[1:])
+    components = name.split("_")
+    return components[0] + "".join(x.title() for x in components[1:])
 
 
 def _convert_keys_to_snake(data: dict | list | Any) -> dict | list | Any:
@@ -116,21 +117,26 @@ class ActionDispatcher:
                 original_json = request_data.get_json(silent=True)
                 if original_json:
                     converted_json = _convert_keys_to_snake(original_json)
+
                     # Create a wrapper that stores the converted data
                     class RequestWrapper:
-                        def __init__(self, original_request: Request, converted_data: dict):
+                        def __init__(
+                            self, original_request: Request, converted_data: dict | Any
+                        ):
                             self._original = original_request
                             self._converted_data = converted_data
                             self.method = original_request.method
                             self.is_json = original_request.is_json
-                        
+
                         def get_json(self, *args, **kwargs):
                             return self._converted_data
-                        
+
                         def __getattr__(self, name):
                             return getattr(self._original, name)
-                    
-                    converted_request_data = RequestWrapper(request_data, converted_json)  # type: ignore
+
+                    converted_request_data = RequestWrapper(
+                        request_data, converted_json
+                    )  # type: ignore
             except Exception:
                 # If JSON parsing fails, just use the original request
                 pass
@@ -215,13 +221,13 @@ class ActionDispatcher:
                         action_instance = action_class
                         action_instance.params = extracted_params
                         action_instance.request_data = converted_request_data
-                    
+
                     response_data, status_code = action_instance.execute()
-                    
+
                     # Convert response from snake_case to camelCase
                     if isinstance(response_data, dict):
                         response_data = _convert_keys_to_camel(response_data)
-                    
+
                     return response_data, status_code
                 except Exception as e:
                     return {"message": str(e)}, 500

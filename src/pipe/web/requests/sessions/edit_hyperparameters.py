@@ -13,9 +13,8 @@ Behaviour:
 
 from typing import Any
 
-from pydantic import BaseModel, model_validator
-
 from pipe.web.requests.common import normalize_camel_case_keys
+from pydantic import BaseModel, model_validator
 
 
 class EditHyperparametersRequest(BaseModel):

@@ -55,7 +55,8 @@ def get_chat_history():
     """
     try:
         controller = get_session_detail_controller()
-        # Support both camelCase (sessionId) and snake_case (session_id) for compatibility
+        # Support both camelCase (sessionId) and snake_case (session_id)
+        # for compatibility
         session_id = request.args.get("sessionId") or request.args.get("session_id")
         response_data, status_code = controller.get_chat_history(session_id, request)
         if isinstance(response_data, dict):

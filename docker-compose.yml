@@ -2,7 +2,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.web
+      dockerfile: docker/Dockerfile.web
     ports:
       - '5001:5001'
     depends_on:
@@ -21,7 +21,7 @@ services:
   react:
     build:
       context: .
-      dockerfile: Dockerfile.react
+      dockerfile: docker/Dockerfile.react
     ports:
       - '3000:3000'
     volumes:
@@ -34,7 +34,7 @@ services:
   lsp:
     build:
       context: .
-      dockerfile: Dockerfile.python
+      dockerfile: docker/Dockerfile.python
     ports:
       - '2087:2087' # pygls default port, adjust if needed
     environment:
@@ -50,7 +50,7 @@ services:
   storybook:
     build:
       context: .
-      dockerfile: Dockerfile.storybook
+      dockerfile: docker/Dockerfile.storybook
     ports:
       - '6006:6006'
     volumes:

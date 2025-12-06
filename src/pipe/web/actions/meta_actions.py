@@ -58,11 +58,13 @@ class HyperparametersEditAction(BaseAction):
             # Merge new values with existing hyperparameters
             current_hp = session.hyperparameters
             new_values = request_data.model_dump(exclude_unset=True)
-            
+
             if current_hp:
                 # Update only the fields that were provided
                 merged_hp = {
-                    "temperature": new_values.get("temperature", current_hp.temperature),
+                    "temperature": new_values.get(
+                        "temperature", current_hp.temperature
+                    ),
                     "top_p": new_values.get("top_p", current_hp.top_p),
                     "top_k": new_values.get("top_k", current_hp.top_k),
                 }

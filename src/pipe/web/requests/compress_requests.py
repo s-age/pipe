@@ -27,9 +27,9 @@ class CreateCompressorRequest(BaseModel):
     @field_validator("session_id")
     @classmethod
     def validate_session_exists(cls, v, info):
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
-        session = session_service.get_session(v)
+        session = get_session_service().get_session(v)
         if not session:
             raise ValueError("Session not found")
         info.data["session"] = session  # Store session for later use

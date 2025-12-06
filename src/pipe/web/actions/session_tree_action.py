@@ -16,9 +16,9 @@ class SessionTreeAction(BaseAction):
         """
         try:
             # Import session_service from the Flask app module
-            from pipe.web.app import session_service
+            from pipe.web.service_container import get_session_service
 
-            sessions_collection = session_service.list_sessions()
+            sessions_collection = get_session_service().list_sessions()
             sorted_sessions = sessions_collection.get_sorted_by_last_updated()
 
             nodes: dict[str, dict] = {}

@@ -5,10 +5,10 @@ from pipe.web.actions.base_action import BaseAction
 
 class SettingsGetAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import settings
+        from pipe.web.service_container import get_settings
 
         try:
-            settings_dict: dict[str, Any] = settings.model_dump()
+            settings_dict: dict[str, Any] = get_settings().model_dump()
 
             # Convert internal `parameters` to public `hyperparameters` mapping
             params = settings_dict.pop("parameters", None)

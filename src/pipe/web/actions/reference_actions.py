@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 class ReferencesEditAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         if not session_id:
@@ -19,7 +19,7 @@ class ReferencesEditAction(BaseAction):
 
         try:
             request_data = EditReferencesRequest(**self.request_data.get_json())
-            session_service.update_references(session_id, request_data.references)
+            get_session_service().update_references(session_id, request_data.references)
             return {"message": f"Session {session_id} references updated."}, 200
         except ValidationError as e:
             return {"message": str(e)}, 422
@@ -31,7 +31,7 @@ class ReferencesEditAction(BaseAction):
 
 class ReferencePersistEditAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         reference_index = self.params.get("reference_index")
@@ -48,7 +48,7 @@ class ReferencePersistEditAction(BaseAction):
             request_data = EditReferencePersistRequest(**self.request_data.get_json())
             new_persist_state = request_data.persist
 
-            session = session_service.get_session(session_id)
+            session = get_session_service().get_session(session_id)
             if not session:
                 return {"message": "Session not found."}, 404
 
@@ -56,7 +56,7 @@ class ReferencePersistEditAction(BaseAction):
                 return {"message": "Reference index out of range."}, 400
 
             file_path = session.references[reference_index].path
-            session_service.update_reference_persist_in_session(
+            get_session_service().update_reference_persist_in_session(
                 session_id, file_path, new_persist_state
             )
 
@@ -71,7 +71,7 @@ class ReferencePersistEditAction(BaseAction):
 
 class ReferenceToggleDisabledAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         reference_index = self.params.get("reference_index")
@@ -85,7 +85,7 @@ class ReferenceToggleDisabledAction(BaseAction):
             return {"message": "reference_index must be an integer"}, 400
 
         try:
-            session = session_service.get_session(session_id)
+            session = get_session_service().get_session(session_id)
             if not session:
                 return {"message": "Session not found."}, 404
 
@@ -93,10 +93,10 @@ class ReferenceToggleDisabledAction(BaseAction):
                 return {"message": "Reference index out of range."}, 400
 
             file_path = session.references[reference_index].path
-            session_service.toggle_reference_disabled_in_session(session_id, file_path)
+            get_session_service().toggle_reference_disabled_in_session(session_id, file_path)
 
             # Get the new disabled state
-            updated_session = session_service.get_session(session_id)
+            updated_session = get_session_service().get_session(session_id)
             new_disabled_state = updated_session.references[reference_index].disabled
 
             return {
@@ -109,7 +109,7 @@ class ReferenceToggleDisabledAction(BaseAction):
 
 class ReferenceTtlEditAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         reference_index = self.params.get("reference_index")
@@ -126,7 +126,7 @@ class ReferenceTtlEditAction(BaseAction):
             request_data = EditReferenceTtlRequest(**self.request_data.get_json())
             new_ttl = request_data.ttl
 
-            session = session_service.get_session(session_id)
+            session = get_session_service().get_session(session_id)
             if not session:
                 return {"message": "Session not found."}, 404
 
@@ -134,7 +134,7 @@ class ReferenceTtlEditAction(BaseAction):
                 return {"message": "Reference index out of range."}, 400
 
             file_path = session.references[reference_index].path
-            session_service.update_reference_ttl_in_session(
+            get_session_service().update_reference_ttl_in_session(
                 session_id, file_path, new_ttl
             )
 

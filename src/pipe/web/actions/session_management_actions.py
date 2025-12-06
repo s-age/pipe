@@ -16,14 +16,14 @@ class SessionsDeleteAction(BaseAction):
     """
 
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_management_service
+        from pipe.web.service_container import get_session_management_service
 
         try:
             # Validate request data
             request_data = DeleteSessionsRequest(**self.request_data.get_json())
 
             # Delete sessions via service
-            deleted_count = session_management_service.delete_sessions(
+            deleted_count = get_session_management_service().delete_sessions(
                 request_data.session_ids
             )
 
@@ -50,14 +50,14 @@ class SessionsMoveToBackup(BaseAction):
     """
 
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_management_service
+        from pipe.web.service_container import get_session_management_service
 
         try:
             # Validate request data
             request_data = DeleteSessionsRequest(**self.request_data.get_json())
 
             # Move sessions to backup
-            moved_count = session_management_service.move_sessions_to_backup(
+            moved_count = get_session_management_service().move_sessions_to_backup(
                 request_data.session_ids
             )
 
@@ -85,10 +85,10 @@ class SessionsListBackupAction(BaseAction):
     """
 
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_management_service
+        from pipe.web.service_container import get_session_management_service
 
         try:
-            sessions = session_management_service.list_backup_sessions()
+            sessions = get_session_management_service().list_backup_sessions()
             return {"sessions": sessions}, 200
 
         except Exception as e:
@@ -104,7 +104,7 @@ class SessionsDeleteBackupAction(BaseAction):
     """
 
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_management_service
+        from pipe.web.service_container import get_session_management_service
 
         try:
             # Validate request data
@@ -114,17 +114,17 @@ class SessionsDeleteBackupAction(BaseAction):
             if request_data.session_ids:
                 # Convert session_ids to file_paths
                 file_paths = []
-                backup_sessions = session_management_service.list_backup_sessions()
+                backup_sessions = get_session_management_service().list_backup_sessions()
                 for session in backup_sessions:
                     if session.get("session_id") in request_data.session_ids:
                         file_paths.append(session.get("file_path"))
-                deleted_count = session_management_service.delete_backup_files(
+                deleted_count = get_session_management_service().delete_backup_files(
                     file_paths
                 )
                 total_requested = len(request_data.session_ids)
             else:
                 # Use file_paths directly
-                deleted_count = session_management_service.delete_backup_files(
+                deleted_count = get_session_management_service().delete_backup_files(
                     request_data.file_paths or []
                 )
                 total_requested = len(request_data.file_paths or [])

@@ -5,6 +5,22 @@ from pipe.core.models.turn import ToolResponseTurn, Turn
 
 if TYPE_CHECKING:
     from pipe.core.collections.turns import TurnCollection
+    from pipe.core.models.session import Session
+
+
+def delete_turns(session: "Session", turn_indices: list[int]) -> None:
+    """Delete multiple turns from a session, handling index shifts.
+
+    Sorts indices in descending order to avoid index shifting issues
+    when deleting multiple turns.
+
+    Args:
+        session: The session to modify
+        turn_indices: List of 0-based indices of turns to delete
+    """
+    sorted_indices = sorted(turn_indices, reverse=True)
+    for index in sorted_indices:
+        session.delete_turn(index)
 
 
 def get_turns_for_prompt(

@@ -11,7 +11,7 @@ class SearchSessionsAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
         try:
             # Lazy import app-level objects to avoid circular imports
-            from pipe.web.app import session_service
+            from pipe.web.service_container import get_session_service
 
             request_json = {}
             if self.request_data and self.request_data.is_json:
@@ -32,7 +32,7 @@ class SearchSessionsAction(BaseAction):
 
             query = req.query.strip()
 
-            sessions_dir = session_service.repository.sessions_dir
+            sessions_dir = get_session_service().repository.sessions_dir
 
             # Delegate the search logic to the service layer for reusability
             from pipe.core.services.search_sessions_service import (

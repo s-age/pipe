@@ -14,12 +14,12 @@ from pydantic import ValidationError
 
 class SessionStartAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         try:
             request_data = StartSessionRequest(**self.request_data.get_json())
 
-            session = session_service.create_new_session(
+            session = get_session_service().create_new_session(
                 purpose=request_data.purpose,
                 background=request_data.background,
                 roles=request_data.roles,
@@ -87,14 +87,14 @@ class SessionStartAction(BaseAction):
 
 class SessionGetAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         if not session_id:
             return {"message": "session_id is required"}, 400
 
         try:
-            session_data = session_service.get_session(session_id)
+            session_data = get_session_service().get_session(session_id)
             if not session_data:
                 return {"message": "Session not found."}, 404
 
@@ -105,14 +105,14 @@ class SessionGetAction(BaseAction):
 
 class SessionDeleteAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         if not session_id:
             return {"message": "session_id is required"}, 400
 
         try:
-            session_service.delete_session(session_id)
+            get_session_service().delete_session(session_id)
             return {"message": f"Session {session_id} deleted."}, 200
         except Exception as e:
             return {"message": str(e)}, 500
@@ -120,14 +120,14 @@ class SessionDeleteAction(BaseAction):
 
 class SessionRawAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         if not session_id:
             return {"message": "session_id is required"}, 400
 
         try:
-            repo = session_service.repository
+            repo = get_session_service().repository
             session_path = repo._get_path_for_id(session_id)
             exists = os.path.exists(session_path)
             result: dict = {
@@ -173,7 +173,7 @@ class SessionRawAction(BaseAction):
 
 class SessionInstructionAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any] | Response, int]:
-        from pipe.web.app import session_service, settings
+        from pipe.web.service_container import get_session_service, get_settings
 
         session_id = self.params.get("session_id")
         if not session_id:
@@ -183,7 +183,7 @@ class SessionInstructionAction(BaseAction):
             request_data = SendInstructionRequest(**self.request_data.get_json())
             instruction = request_data.instruction
 
-            session_data = session_service.get_session(session_id)
+            session_data = get_session_service().get_session(session_id)
             if not session_data:
                 return {"message": "Session not found."}, 404
 
@@ -209,12 +209,13 @@ class SessionInstructionAction(BaseAction):
             enable_multi_step_reasoning = session_data.multi_step_reasoning_enabled
 
             response = None
+            settings = get_settings()
             if settings.api_mode == "gemini-api":
                 # For gemini-api, stream directly without subprocess
                 from pipe.core.delegates.gemini_api_delegate import run_stream
                 from pipe.core.factories.service_factory import ServiceFactory
 
-                service_factory = ServiceFactory(session_service.project_root, settings)
+                service_factory = ServiceFactory(get_session_service().project_root, settings)
                 prompt_service = service_factory.create_prompt_service()
 
                 # Prepare args-like object
@@ -242,13 +243,13 @@ class SessionInstructionAction(BaseAction):
                 )()
 
                 # Prepare session
-                session_service.prepare(args, is_dry_run=False)
+                get_session_service().prepare(args, is_dry_run=False)
 
                 def generate():
                     token_count = 0
                     turns_to_save: list[Turn] = []
                     try:
-                        for item in run_stream(args, session_service, prompt_service):
+                        for item in run_stream(args, get_session_service(), prompt_service):
                             if (
                                 isinstance(item, tuple)
                                 and len(item) == 4
@@ -257,11 +258,11 @@ class SessionInstructionAction(BaseAction):
                                 end, _, token_count, turns_to_save = item
                                 # After streaming, add turns
                                 for turn in turns_to_save:
-                                    session_service.add_turn_to_session(
+                                    get_session_service().add_turn_to_session(
                                         session_id, turn
                                     )
                                 if token_count is not None:
-                                    session_service.update_token_count(
+                                    get_session_service().update_token_count(
                                         session_id, token_count
                                     )
                                 yield (f"data: {json.dumps({'end': True})}\n\n")
@@ -339,7 +340,7 @@ class SessionInstructionAction(BaseAction):
 
 class SessionForkAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         fork_index = self.params.get("fork_index")
         if fork_index is None:
@@ -355,7 +356,7 @@ class SessionForkAction(BaseAction):
             if not session_id:
                 return {"message": "session_id is required"}, 400
 
-            new_session_id = session_service.fork_session(session_id, fork_index)
+            new_session_id = get_session_service().fork_session(session_id, fork_index)
             if new_session_id:
                 return {"new_session_id": new_session_id}, 200
             else:

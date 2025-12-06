@@ -8,23 +8,27 @@ from pipe.core.models.reference import Reference
 from pipe.core.models.role import RoleOption
 from pipe.core.models.session import Session
 
-# The Flask app object needs to be imported for testing
-from pipe.web.app import app
+# The Flask app factory needs to be imported for testing
+from pipe.web.app import create_app
 
 
 class TestAppApi(unittest.TestCase):
     def setUp(self):
-        # Configure the app for testing
-        app.config["TESTING"] = True
-        with app.app_context():
-            self.client = app.test_client()
+        # Create the app using the factory
+        self.app = create_app(init_index=False)
+        self.app.config["TESTING"] = True
+        with self.app.app_context():
+            self.client = self.app.test_client()
 
         # We patch the session_service used by the app to isolate the web layer
         # and avoid actual file system operations.
         self.mock_session_service = MagicMock()
 
-        # The patch needs to target where the object is *used*
-        self.patcher = patch("pipe.web.app.session_service", self.mock_session_service)
+        # The patch needs to target the service container getter
+        self.patcher = patch(
+            "pipe.web.service_container.get_session_service",
+            return_value=self.mock_session_service,
+        )
         self.patcher.start()
 
     def tearDown(self):
@@ -468,10 +472,15 @@ class TestAppApi(unittest.TestCase):
 
 class TestAppViews(unittest.TestCase):
     def setUp(self):
-        app.config["TESTING"] = True
-        self.client = app.test_client()
+        self.app = create_app(init_index=False)
+        self.app.config["TESTING"] = True
+        self.client = self.app.test_client()
         self.mock_session_service = MagicMock()
-        self.patcher = patch("pipe.web.app.session_service", self.mock_session_service)
+        # Patch in the routes module where it's imported
+        self.patcher = patch(
+            "pipe.web.routes.pages.get_session_service",
+            return_value=self.mock_session_service,
+        )
         self.patcher.start()
 
     def tearDown(self):

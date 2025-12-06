@@ -7,12 +7,12 @@ from pydantic import ValidationError
 
 class CreateTherapistSessionAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         try:
             request_data = CreateTherapistRequest(**self.request_data.get_json())
 
-            result = session_service.run_takt_for_therapist(request_data.session_id)
+            result = get_session_service().run_takt_for_therapist(request_data.session_id)
 
             return result, 200
 
@@ -24,12 +24,12 @@ class CreateTherapistSessionAction(BaseAction):
 
 class ApplyDoctorModificationsAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         try:
             request_data = ApplyDoctorRequest(**self.request_data.get_json())
 
-            result = session_service.run_takt_for_doctor(
+            result = get_session_service().run_takt_for_doctor(
                 request_data.session_id, request_data.modifications
             )
 

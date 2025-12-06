@@ -5,7 +5,7 @@ from pipe.web.actions.base_action import BaseAction
 
 class SessionTurnsGetAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         if not session_id:
@@ -13,7 +13,7 @@ class SessionTurnsGetAction(BaseAction):
 
         try:
             since_index = int(self.params.get("since", 0))
-            session_data = session_service.get_session(session_id)
+            session_data = get_session_service().get_session(session_id)
             if not session_data:
                 return {"message": "Session not found."}, 404
 
@@ -27,7 +27,7 @@ class SessionTurnsGetAction(BaseAction):
 
 class TurnDeleteAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         turn_index = self.params.get("turn_index")
@@ -41,7 +41,7 @@ class TurnDeleteAction(BaseAction):
             return {"message": "turn_index must be an integer"}, 400
 
         try:
-            session_service.delete_turn(session_id, turn_index)
+            get_session_service().delete_turn(session_id, turn_index)
             return {
                 "message": f"Turn {turn_index} from session {session_id} deleted.",
             }, 200
@@ -55,7 +55,7 @@ class TurnDeleteAction(BaseAction):
 
 class TurnEditAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.app import session_service
+        from pipe.web.service_container import get_session_service
         from pipe.web.requests.sessions.edit_turn import EditTurnRequest
         from pydantic import ValidationError
 
@@ -83,7 +83,7 @@ class TurnEditAction(BaseAction):
                 error_messages = [err["msg"] for err in e.errors()]
                 return {"message": "; ".join(error_messages)}, 400
 
-            session_service.edit_turn(session_id, turn_index, validated_data)
+            get_session_service().edit_turn(session_id, turn_index, validated_data)
             return {
                 "message": f"Turn {turn_index + 1} from session {session_id} updated.",
             }, 200

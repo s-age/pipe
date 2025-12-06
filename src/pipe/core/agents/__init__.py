@@ -7,30 +7,29 @@ with @register_agent("mode-name").
 
 import importlib
 import pkgutil
-from typing import Type
 
 from .base import BaseAgent
 
 # Registry mapping api_mode strings to Agent classes
-AGENT_REGISTRY: dict[str, Type[BaseAgent]] = {}
+AGENT_REGISTRY: dict[str, type[BaseAgent]] = {}
 
 
 def register_agent(key: str):
     """Decorator to register an agent class in the registry.
-    
+
     Usage:
         @register_agent("gemini-api")
         class GeminiApiAgent(BaseAgent):
             ...
-    
+
     Args:
         key: The api_mode string that this agent handles
-        
+
     Returns:
         The decorator function
     """
 
-    def decorator(cls: Type[BaseAgent]):
+    def decorator(cls: type[BaseAgent]):
         AGENT_REGISTRY[key] = cls
         return cls
 
@@ -50,24 +49,22 @@ for loader, module_name, is_pkg in pkgutil.walk_packages(__path__):
         pass
 
 
-def get_agent_class(key: str) -> Type[BaseAgent]:
+def get_agent_class(key: str) -> type[BaseAgent]:
     """Get an agent class from the registry.
-    
+
     Args:
         key: The api_mode string (e.g., "gemini-api", "gemini-cli")
-        
+
     Returns:
         The agent class
-        
+
     Raises:
         ValueError: If the key is not found in the registry
     """
     agent_cls = AGENT_REGISTRY.get(key)
     if not agent_cls:
         available = ", ".join(sorted(AGENT_REGISTRY.keys()))
-        raise ValueError(
-            f"Unknown api_mode: '{key}'. Available agents: [{available}]"
-        )
+        raise ValueError(f"Unknown api_mode: '{key}'. Available agents: [{available}]")
     return agent_cls
 
 

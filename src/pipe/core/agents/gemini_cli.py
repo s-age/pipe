@@ -251,20 +251,19 @@ class GeminiCliAgent(BaseAgent):
         prompt_service: PromptService,
     ) -> tuple[str, int | None, list]:
         """Execute the Gemini CLI agent.
-        
+
         Args:
             args: Command line arguments
             session_service: Service for session management
             prompt_service: Service for prompt building
-            
+
         Returns:
             Tuple of (response_text, token_count, turns_to_save)
         """
-        from pipe.core.models.turn import ModelResponseTurn
-        from pipe.core.utils.datetime import get_current_timestamp
-
         # Import here to avoid circular dependency
         from pipe.core.delegates import gemini_cli_delegate
+        from pipe.core.models.turn import ModelResponseTurn
+        from pipe.core.utils.datetime import get_current_timestamp
 
         # Explicitly merge any tool calls from the pool into the main turns history
         # before calling the agent.

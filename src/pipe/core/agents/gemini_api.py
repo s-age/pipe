@@ -260,15 +260,15 @@ class GeminiApiAgent(BaseAgent):
         prompt_service: PromptService,
     ) -> tuple[str, int | None, list]:
         """Execute the Gemini API agent.
-        
+
         This wraps the streaming call_gemini_api function and returns
         the final result after all streaming is complete.
-        
+
         Args:
             args: Command line arguments
             session_service: Service for session management
             prompt_service: Service for prompt building
-            
+
         Returns:
             Tuple of (response_text, token_count, turns_to_save)
         """
@@ -290,14 +290,14 @@ class GeminiApiAgent(BaseAgent):
         prompt_service: PromptService,
     ):
         """Execute the Gemini API agent in streaming mode.
-        
+
         This method yields intermediate results for WebUI streaming support.
-        
+
         Args:
             args: Command line arguments
             session_service: Service for session management
             prompt_service: Service for prompt building
-            
+
         Yields:
             Intermediate streaming results and final tuple
         """

@@ -85,7 +85,10 @@ class TestDispatcher(unittest.TestCase):
         mock_dry_run.assert_called_once()
         mock_gemini_run.assert_not_called()
 
-    @patch("pipe.core.agents.gemini_api.GeminiApiAgent.run", return_value=("model response", 100, []))
+    @patch(
+        "pipe.core.agents.gemini_api.GeminiApiAgent.run",
+        return_value=("model response", 100, []),
+    )
     def test_dispatch_run_handles_gemini_api_mode(self, mock_agent_run):
         """Tests that _dispatch_run routes to gemini_api_delegate via registry."""
         from pipe.core.dispatcher import _dispatch_run
@@ -102,7 +105,10 @@ class TestDispatcher(unittest.TestCase):
         _dispatch_run(args, self.session_service)
         mock_agent_run.assert_called_once()
 
-    @patch("pipe.core.agents.gemini_cli.GeminiCliAgent.run", return_value=("cli response", 100, []))
+    @patch(
+        "pipe.core.agents.gemini_cli.GeminiCliAgent.run",
+        return_value=("cli response", 100, []),
+    )
     def test_dispatch_run_handles_gemini_cli_mode(self, mock_agent_run):
         """Tests that _dispatch_run routes to gemini_cli_delegate via registry."""
         from pipe.core.dispatcher import _dispatch_run
@@ -136,7 +142,10 @@ class TestDispatcher(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r"Unknown api_mode.*Available agents"):
             _dispatch_run(args, self.session_service)
 
-    @patch("pipe.core.agents.gemini_api.GeminiApiAgent.run", return_value=("model response", 100, []))
+    @patch(
+        "pipe.core.agents.gemini_api.GeminiApiAgent.run",
+        return_value=("model response", 100, []),
+    )
     def test_ttl_and_expiration_are_called(self, mock_agent_run):
         """Tests that TTL decrement and tool response expiration are called."""
         from pipe.core.dispatcher import _dispatch_run

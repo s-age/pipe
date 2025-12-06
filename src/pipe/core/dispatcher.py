@@ -10,7 +10,6 @@ from pipe.core.agents import get_agent_class
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.services.session_service import SessionService
-from pipe.core.utils.datetime import get_current_timestamp
 
 
 def _dispatch_run(args: TaktArgs, session_service: SessionService):
@@ -77,16 +76,16 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     # ----------------------------------------------------
     # NEW REGISTRY-BASED DISPATCH LOGIC
     # ----------------------------------------------------
-    
+
     # 1. Get the agent class from the registry based on api_mode
     AgentClass = get_agent_class(api_mode)
-    
+
     # 2. Instantiate and execute (polymorphism - no branching needed)
     agent_instance = AgentClass()
     model_response_text, token_count, turns_to_save = agent_instance.run(
         args, session_service, prompt_service
     )
-    
+
     # ----------------------------------------------------
 
     for turn in turns_to_save:

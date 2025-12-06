@@ -254,7 +254,9 @@ class SessionInstructionAction(BaseAction):
                     token_count = 0
                     turns_to_save: list[Turn] = []
                     try:
-                        for item in agent.run_stream(args, session_service, prompt_service):
+                        for item in agent.run_stream(
+                            args, session_service, prompt_service
+                        ):
                             if (
                                 isinstance(item, tuple)
                                 and len(item) == 4

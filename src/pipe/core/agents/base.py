@@ -9,7 +9,7 @@ from pipe.core.services.session_service import SessionService
 
 class BaseAgent(ABC):
     """Abstract base class for all agents.
-    
+
     All agents must implement the run method which returns a tuple of:
     - model_response_text: The text response from the model
     - token_count: Number of tokens used (or None)
@@ -24,12 +24,12 @@ class BaseAgent(ABC):
         prompt_service: PromptService,
     ) -> tuple[str, int | None, list]:
         """Execute the agent and return results.
-        
+
         Args:
             args: Command line arguments
             session_service: Service for session management
             prompt_service: Service for prompt building
-            
+
         Returns:
             Tuple of (response_text, token_count, turns_to_save)
         """

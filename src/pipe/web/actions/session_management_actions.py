@@ -114,13 +114,12 @@ class SessionsDeleteBackupAction(BaseAction):
             if request_data.session_ids:
                 # Convert session_ids to file_paths
                 file_paths = []
-                backup_sessions = get_session_management_service().list_backup_sessions()
+                service = get_session_management_service()
+                backup_sessions = service.list_backup_sessions()
                 for session in backup_sessions:
                     if session.get("session_id") in request_data.session_ids:
                         file_paths.append(session.get("file_path"))
-                deleted_count = get_session_management_service().delete_backup_files(
-                    file_paths
-                )
+                deleted_count = service.delete_backup_files(file_paths)
                 total_requested = len(request_data.session_ids)
             else:
                 # Use file_paths directly

@@ -327,6 +327,7 @@ class SessionService:
         if not session:
             raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
         from pipe.core.domains.turns import delete_turns
+
         delete_turns(session, turn_indices)
         self.repository.save(session)
 
@@ -358,6 +359,7 @@ class SessionService:
         session = self._fetch_session(session_id)
         if session:
             from pipe.core.collections.pools import PoolCollection
+
             PoolCollection.add(session, pool_data)
             self.repository.save(session)
 
@@ -372,6 +374,7 @@ class SessionService:
         if not session:
             return []
         from pipe.core.collections.pools import PoolCollection
+
         pools_to_return = PoolCollection.get_and_clear(session)
         self.repository.save(session)
         return pools_to_return
@@ -381,6 +384,7 @@ class SessionService:
         session = self._fetch_session(session_id)
         if session:
             from pipe.core.domains.turns import expire_old_tool_responses
+
             if expire_old_tool_responses(
                 session.turns, self.settings.tool_response_expiration
             ):

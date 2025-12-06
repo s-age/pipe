@@ -9,7 +9,6 @@ import os
 import re
 import subprocess
 import sys
-from typing import Any
 
 
 class TaktAgent:

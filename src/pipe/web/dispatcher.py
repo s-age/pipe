@@ -1,7 +1,6 @@
 """Central action dispatcher for routing requests to action handlers."""
 
 from flask import Request, Response
-
 from pipe.web.actions import (
     ApproveCompressorAction,
     CreateCompressorSessionAction,
@@ -91,7 +90,11 @@ class ActionDispatcher:
             ("session/{session_id}/raw", "GET", SessionRawAction),
             ("session/{session_id}/instruction", "POST", SessionInstructionAction),
             ("session/{session_id}/meta", "PATCH", SessionMetaEditAction),
-            ("session/{session_id}/hyperparameters", "PATCH", HyperparametersEditAction),
+            (
+                "session/{session_id}/hyperparameters",
+                "PATCH",
+                HyperparametersEditAction,
+            ),
             ("session/{session_id}/hyperparameters", "POST", HyperparametersEditAction),
             (
                 "session/{session_id}/multi-step-reasoning",

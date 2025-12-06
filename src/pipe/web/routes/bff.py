@@ -5,7 +5,6 @@ Handles all /api/v1/bff/* endpoints.
 """
 
 from flask import Blueprint, jsonify, request
-
 from pipe.web.service_container import get_session_detail_controller
 
 bff_bp = Blueprint("bff", __name__, url_prefix="/api/v1/bff")

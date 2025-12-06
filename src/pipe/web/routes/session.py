@@ -4,7 +4,6 @@ Handles all /api/v1/session/* endpoints.
 """
 
 from flask import Blueprint, Response, jsonify, request
-
 from pipe.web.dispatcher import dispatch_action
 
 session_bp = Blueprint("session", __name__, url_prefix="/api/v1")

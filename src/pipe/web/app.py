@@ -5,7 +5,6 @@ import zoneinfo
 import yaml
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
-
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
@@ -68,8 +67,9 @@ def load_settings(config_path: str) -> dict:
 
 def create_app(
     init_index: bool = True,
-) -> Flask:
-    """Create and configure the Flask application.
+):
+    """
+    Create and configure the Flask application.
 
     This factory function initializes all services and registers blueprints.
     Flask will auto-detect this function when running `flask run`.
@@ -80,12 +80,14 @@ def create_app(
     Returns:
         The configured Flask application.
     """
-    # Correctly determine the project root, which is three levels up from the current script
+    # Correctly determine the project root, which is three levels up from the
+    # current script
     project_root = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "..", "..")
     )
 
-    # Define paths for templates and static assets relative to the corrected project root
+    # Define paths for templates and static assets relative to the corrected
+    # project root
     template_dir = os.path.join(project_root, "templates")
     assets_dir = os.path.join(project_root, "assets")
 
@@ -106,7 +108,8 @@ def create_app(
 
     @app.before_request
     def _log_incoming_request():
-        # small debug logging so dev can see whether OPTIONS or PATCH actually reach Flask
+        # small debug logging so dev can see whether OPTIONS or PATCH actually
+        # reach Flask
         try:
             print(f"DEBUG: incoming {request.method} {request.path}")
         except Exception:
@@ -155,11 +158,11 @@ def create_app(
     init_dispatcher(search_l2_action, ls_action, index_files_action)
 
     # Register blueprints (like Laravel route groups with prefixes)
-    app.register_blueprint(pages_bp)      # HTML pages (no prefix)
-    app.register_blueprint(session_bp)    # /api/v1/session/*
-    app.register_blueprint(bff_bp)        # /api/v1/bff/*
-    app.register_blueprint(search_bp)     # /api/v1/search*, /api/v1/ls, etc.
-    app.register_blueprint(settings_bp)   # /api/v1/settings
+    app.register_blueprint(pages_bp)  # HTML pages (no prefix)
+    app.register_blueprint(session_bp)  # /api/v1/session/*
+    app.register_blueprint(bff_bp)  # /api/v1/bff/*
+    app.register_blueprint(search_bp)  # /api/v1/search*, /api/v1/ls, etc.
+    app.register_blueprint(settings_bp)  # /api/v1/settings
 
     # Catch-all dispatcher for any unmatched /api/v1/* routes
     @app.route(
@@ -221,6 +224,7 @@ def create_app(
         except Exception as e:
             print(f"WARNING: Failed to rebuild Whoosh index: {e}")
             import traceback
+
             traceback.print_exc()
 
     return app

@@ -4,7 +4,6 @@ Handles all /api/v1/settings/* endpoints.
 """
 
 from flask import Blueprint, jsonify, request
-
 from pipe.web.dispatcher import dispatch_action
 
 settings_bp = Blueprint("settings", __name__, url_prefix="/api/v1")

@@ -13,6 +13,9 @@ from typing import Any, Union, get_args, get_type_hints
 import google.genai as genai
 from google.genai import types
 from jinja2 import Environment, FileSystemLoader
+from pipe.core.agents import register_agent
+from pipe.core.agents.base import BaseAgent
+from pipe.core.models.args import TaktArgs
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.token_service import TokenService
@@ -244,3 +247,61 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
         yield from stream
     except Exception as e:
         raise RuntimeError(f"Error during Gemini API execution: {e}")
+
+
+@register_agent("gemini-api")
+class GeminiApiAgent(BaseAgent):
+    """Agent for Gemini API streaming mode."""
+
+    def run(
+        self,
+        args: TaktArgs,
+        session_service: SessionService,
+        prompt_service: PromptService,
+    ) -> tuple[str, int | None, list]:
+        """Execute the Gemini API agent.
+        
+        This wraps the streaming call_gemini_api function and returns
+        the final result after all streaming is complete.
+        
+        Args:
+            args: Command line arguments
+            session_service: Service for session management
+            prompt_service: Service for prompt building
+            
+        Returns:
+            Tuple of (response_text, token_count, turns_to_save)
+        """
+        # Import here to avoid circular dependency
+        from pipe.core.delegates import gemini_api_delegate
+
+        stream_results = list(
+            gemini_api_delegate.run_stream(args, session_service, prompt_service)
+        )
+        # The last yielded item contains the final result
+        _, model_response_text, token_count, turns_to_save = stream_results[-1]
+
+        return model_response_text, token_count, turns_to_save
+
+    def run_stream(
+        self,
+        args: TaktArgs,
+        session_service: SessionService,
+        prompt_service: PromptService,
+    ):
+        """Execute the Gemini API agent in streaming mode.
+        
+        This method yields intermediate results for WebUI streaming support.
+        
+        Args:
+            args: Command line arguments
+            session_service: Service for session management
+            prompt_service: Service for prompt building
+            
+        Yields:
+            Intermediate streaming results and final tuple
+        """
+        # Import here to avoid circular dependency
+        from pipe.core.delegates import gemini_api_delegate
+
+        yield from gemini_api_delegate.run_stream(args, session_service, prompt_service)

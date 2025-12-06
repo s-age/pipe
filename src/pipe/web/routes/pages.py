@@ -6,7 +6,6 @@ Handles all HTML page rendering endpoints.
 import json
 
 from flask import Blueprint, abort, render_template
-
 from pipe.web.service_container import get_session_service, get_settings
 
 pages_bp = Blueprint("pages", __name__)

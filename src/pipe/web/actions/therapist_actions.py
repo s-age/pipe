@@ -12,7 +12,8 @@ class CreateTherapistSessionAction(BaseAction):
         try:
             request_data = CreateTherapistRequest(**self.request_data.get_json())
 
-            result = get_session_service().run_takt_for_therapist(request_data.session_id)
+            service = get_session_service()
+            result = service.run_takt_for_therapist(request_data.session_id)
 
             return result, 200
 

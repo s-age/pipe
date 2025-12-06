@@ -18,11 +18,11 @@ class ServiceContainer:
     """Container for application services."""
 
     def __init__(self):
-        self._session_service: "SessionService | None" = None
-        self._session_management_service: "SessionManagementService | None" = None
-        self._session_detail_controller: "SessionDetailController | None" = None
-        self._file_indexer_service: "FileIndexerService | None" = None
-        self._settings: "Settings | None" = None
+        self._session_service: SessionService | None = None
+        self._session_management_service: SessionManagementService | None = None
+        self._session_detail_controller: SessionDetailController | None = None
+        self._file_indexer_service: FileIndexerService | None = None
+        self._settings: Settings | None = None
         self._project_root: str | None = None
 
     def init(

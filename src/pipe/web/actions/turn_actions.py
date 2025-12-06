@@ -55,8 +55,8 @@ class TurnDeleteAction(BaseAction):
 
 class TurnEditAction(BaseAction):
     def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.service_container import get_session_service
         from pipe.web.requests.sessions.edit_turn import EditTurnRequest
+        from pipe.web.service_container import get_session_service
         from pydantic import ValidationError
 
         session_id = self.params.get("session_id")

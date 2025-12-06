@@ -38,14 +38,17 @@ export const useChatHistoryPageActions = ({
 
         if (isSessionPair(first)) {
           const normalized = flattenPairs(sessionTree as SessionPair[])
-          refreshSessions(data.current_session, normalized)
+          refreshSessions(data.current_session ?? null, normalized)
         } else {
           // Keep hierarchical nodes intact so the UI can render a tree.
-          refreshSessions(data.current_session, sessionTree as SessionTreeNode[])
+          refreshSessions(
+            data.current_session ?? null,
+            sessionTree as SessionTreeNode[]
+          )
         }
       } else {
         // No sessions returned: ensure session detail is updated but don't touch sessions
-        refreshSessions(data.current_session)
+        refreshSessions(data.current_session ?? null)
       }
     },
     [currentSessionId, refreshSessions]

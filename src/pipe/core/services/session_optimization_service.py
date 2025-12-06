@@ -211,8 +211,9 @@ class SessionOptimizationService:
                     "and suggest optimizations"
                 ),
                 background=(
-                    "Responsible for analyzing conversation sessions, identifying issues, "
-                    "and providing actionable advice for edits, deletions, and compressions"
+                    "Responsible for analyzing conversation sessions, identifying "
+                    "issues, and providing actionable advice for edits, deletions, "
+                    "and compressions"
                 ),
                 roles="roles/therapist.md",
                 instruction=instruction,

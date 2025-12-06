@@ -212,10 +212,11 @@ class SessionInstructionAction(BaseAction):
             settings = get_settings()
             if settings.api_mode == "gemini-api":
                 # For gemini-api, stream directly without subprocess
-                from pipe.core.delegates.gemini_api_delegate import run_stream
+                from pipe.core.agents import get_agent_class
                 from pipe.core.factories.service_factory import ServiceFactory
 
-                service_factory = ServiceFactory(get_session_service().project_root, settings)
+                session_service = get_session_service()
+                service_factory = ServiceFactory(session_service.project_root, settings)
                 prompt_service = service_factory.create_prompt_service()
 
                 # Prepare args-like object
@@ -243,13 +244,17 @@ class SessionInstructionAction(BaseAction):
                 )()
 
                 # Prepare session
-                get_session_service().prepare(args, is_dry_run=False)
+                session_service.prepare(args, is_dry_run=False)
+
+                # Get agent from registry
+                AgentClass = get_agent_class(settings.api_mode)
+                agent = AgentClass()
 
                 def generate():
                     token_count = 0
                     turns_to_save: list[Turn] = []
                     try:
-                        for item in run_stream(args, get_session_service(), prompt_service):
+                        for item in agent.run_stream(args, session_service, prompt_service):
                             if (
                                 isinstance(item, tuple)
                                 and len(item) == 4

@@ -93,7 +93,8 @@ class ReferenceToggleDisabledAction(BaseAction):
                 return {"message": "Reference index out of range."}, 400
 
             file_path = session.references[reference_index].path
-            get_session_service().toggle_reference_disabled_in_session(session_id, file_path)
+            service = get_session_service()
+            service.toggle_reference_disabled_in_session(session_id, file_path)
 
             # Get the new disabled state
             updated_session = get_session_service().get_session(session_id)

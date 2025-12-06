@@ -63,7 +63,7 @@ export const useSessionLoader = ({
         if (isSessionPair(first)) {
           // legacy flat [id, overview][] pairs
           setSessions(
-            (data.session_tree as SessionPair[]).map(([id, session]) => ({
+            (data.session_tree as unknown as SessionPair[]).map(([id, session]) => ({
               ...session,
               session_id: id
             }))

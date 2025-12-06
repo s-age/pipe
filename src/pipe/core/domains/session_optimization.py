@@ -98,8 +98,7 @@ def build_doctor_instruction(session_id: str, modifications: dict) -> str:
 
     if deletions:
         instruction += (
-            f"delete_session_turns(session_id='{session_id}', "
-            f"turns={deletions})\n"
+            f"delete_session_turns(session_id='{session_id}', " f"turns={deletions})\n"
         )
     for edit in adjusted_edits:
         instruction += (
@@ -126,9 +125,7 @@ def build_doctor_instruction(session_id: str, modifications: dict) -> str:
     return instruction
 
 
-def filter_valid_modifications(
-    modifications: dict, turns_count: int
-) -> dict:
+def filter_valid_modifications(modifications: dict, turns_count: int) -> dict:
     """Filter modifications to only include valid turn indices.
 
     Args:
@@ -158,8 +155,9 @@ def filter_valid_modifications(
 def extract_summary_from_compressor_response(content: str) -> tuple[str, str | None]:
     """Extract summary and verifier session ID from compressor response.
 
-    The compressor agent MUST output in a format starting with "Approved:" or "Rejected:".
-    This is enforced by roles/compressor.md and Python will reject any other format.
+    The compressor agent MUST output in a format starting with "Approved:" or
+    "Rejected:". This is enforced by roles/compressor.md and Python will reject
+    any other format.
 
     Expected format:
         Approved: [message]

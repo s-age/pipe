@@ -4,7 +4,6 @@ Handles search and file indexing endpoints.
 """
 
 from flask import Blueprint, jsonify, request
-
 from pipe.web.dispatcher import dispatch_action
 
 search_bp = Blueprint("search", __name__, url_prefix="/api/v1")

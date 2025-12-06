@@ -1,5 +1,5 @@
-import type { SessionDetail } from './getSession'
 import { client } from '../client'
+import type { SessionDetail } from '../session/getSession'
 
 export type EditHyperparametersRequest = Partial<{
   temperature: number

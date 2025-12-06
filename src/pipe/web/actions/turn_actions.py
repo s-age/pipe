@@ -95,3 +95,38 @@ class TurnEditAction(BaseAction):
             return {"message": str(e)}, 403
         except Exception as e:
             return {"message": str(e)}, 500
+
+
+class SessionForkAction(BaseAction):
+    def execute(self) -> tuple[dict[str, Any], int]:
+        from pipe.web.service_container import get_session_service
+        from pydantic import ValidationError
+
+        fork_index = self.params.get("fork_index")
+        if fork_index is None:
+            return {"message": "fork_index is required"}, 400
+
+        try:
+            fork_index = int(fork_index)
+        except ValueError:
+            return {"message": "fork_index must be an integer"}, 400
+
+        try:
+            session_id = self.params.get("session_id")
+            if not session_id:
+                return {"message": "session_id is required"}, 400
+
+            new_session_id = get_session_service().fork_session(session_id, fork_index)
+            if new_session_id:
+                return {"new_session_id": new_session_id}, 200
+            else:
+                return {"message": "Failed to fork session."}, 500
+
+        except ValidationError as e:
+            return {"message": str(e)}, 422
+        except FileNotFoundError:
+            return {"message": "Session not found."}, 404
+        except IndexError:
+            return {"message": "Fork turn index out of range."}, 400
+        except Exception as e:
+            return {"message": str(e)}, 500

@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 
-import { archiveSessions } from '@/lib/api/session/archiveSessions'
-import { deleteArchivedSessions } from '@/lib/api/session/deleteArchivedSessions'
-import { getArchivedSessions } from '@/lib/api/session/getArchivedSessions'
+import { archiveSessions } from '@/lib/api/session_management/archiveSessions'
+import { deleteArchivedSessions } from '@/lib/api/session_management/deleteArchivedSessions'
+import { getArchivedSessions } from '@/lib/api/session_management/getArchivedSessions'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 import type { useSessionStore } from '@/stores/useChatHistoryStore'
 import { useToastStore } from '@/stores/useToastStore'

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 
-import type { EditHyperparametersRequest } from '@/lib/api/session/editHyperparameters'
+import type { EditHyperparametersRequest } from '@/lib/api/meta/editHyperparameters'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useHyperParametersActions } from './useHyperParametersActions'

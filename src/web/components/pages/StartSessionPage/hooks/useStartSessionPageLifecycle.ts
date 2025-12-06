@@ -2,14 +2,14 @@ import { useState } from 'react'
 
 import { useInitialLoading } from '@/hooks/useInitialLoading'
 import { getStartSession } from '@/lib/api/bff/getStartSession'
-import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
+import type { SessionTreeNode } from '@/lib/api/sessionTree/getSessionTree'
 import type { Option } from '@/types/option'
 import type { Settings } from '@/types/settings'
 
 type UseStartSessionPageLifecycleResult = {
   parentOptions: Option[]
   settings: Settings
-  sessionTree: [string, SessionOverview][]
+  sessionTree: SessionTreeNode[]
   loading: boolean
   error: string | null
   startDefaults?: Record<string, unknown> | null
@@ -20,7 +20,7 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
   const [settings, setSettings] = useState<
     UseStartSessionPageLifecycleResult['settings'] | null
   >(null)
-  const [sessionTree, setSessionTree] = useState<[string, SessionOverview][]>([])
+  const [sessionTree, setSessionTree] = useState<SessionTreeNode[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [startDefaults, setStartDefaults] = useState<Record<string, unknown> | null>(
@@ -40,7 +40,10 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
 
       const push = (id: unknown, overview: unknown, depth = 0): void => {
         const overviewRec = overview as Record<string, unknown> | undefined
-        const label = String(overviewRec?.purpose ?? overview ?? '')
+        const purpose = overviewRec?.purpose
+        const sessionId = String(overviewRec?.sessionId || id || '')
+        const label =
+          typeof purpose === 'string' && purpose.trim() ? purpose : sessionId
         out.push({
           value: String(id ?? ''),
           label: `${indentForDepth(depth)}${label}`
@@ -60,11 +63,11 @@ export const useStartSessionPageLifecycle = (): UseStartSessionPageLifecycleResu
             continue
           }
 
-          // Node form: { session_id, overview, children }
+          // Node form: { sessionId, overview, children }
           if (
             n &&
             typeof n === 'object' &&
-            'session_id' in (n as Record<string, unknown>)
+            'sessionId' in (n as Record<string, unknown>)
           ) {
             const node = n as Record<string, unknown>
             push(node.sessionId, node.overview ?? node, depth)

@@ -13,6 +13,6 @@ export type DeleteSessionsResponse = {
 export const deleteSessions = async (
   request: DeleteSessionsRequest
 ): Promise<DeleteSessionsResponse> =>
-  client.post<DeleteSessionsResponse>('/sessions/delete', {
+  client.delete<DeleteSessionsResponse>('/session_management/sessions', {
     body: request
   })

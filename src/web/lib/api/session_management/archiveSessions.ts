@@ -13,6 +13,6 @@ export type ArchiveSessionsResponse = {
 export const archiveSessions = async (
   request: ArchiveSessionsRequest
 ): Promise<ArchiveSessionsResponse> =>
-  client.post<ArchiveSessionsResponse>('/sessions/archives', {
+  client.post<ArchiveSessionsResponse>('/session_management/archives', {
     body: request
   })

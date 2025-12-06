@@ -1,4 +1,4 @@
-import type { RoleOption } from '@/lib/api/roles/getRoles'
+import type { RoleOption } from '@/lib/api/fs/roles'
 import type { Reference } from '@/types/reference'
 import type { Settings } from '@/types/settings'
 import type { Todo } from '@/types/todo'

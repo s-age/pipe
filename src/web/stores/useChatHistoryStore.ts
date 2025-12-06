@@ -1,6 +1,6 @@
 import { useCallback, useReducer } from 'react'
 
-import type { RoleOption } from '@/lib/api/roles/getRoles'
+import type { RoleOption } from '@/lib/api/fs/roles'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type {
   SessionOverview,

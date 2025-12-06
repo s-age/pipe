@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
-import type { ProcedureOption } from '@/lib/api/procedures/getProcedures'
+import type { ProcedureOption } from '@/lib/api/fs/procedures'
 
 import type { UseProceduresActionsReturn } from './useProceduresActions'
 

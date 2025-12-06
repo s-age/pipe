@@ -1,5 +1,5 @@
 import { client } from '../client'
-import type { SessionDetail } from './getSession'
+import type { SessionDetail } from '../session/getSession'
 
 export type EditMultiStepReasoningRequest = {
   multiStepReasoningEnabled: boolean

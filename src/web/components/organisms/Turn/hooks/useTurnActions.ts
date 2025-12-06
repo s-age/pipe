@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 
-import { deleteTurn } from '@/lib/api/session/deleteTurn'
-import { editTurn } from '@/lib/api/session/editTurn'
-import { forkSession } from '@/lib/api/session/forkSession'
 import type { Turn } from '@/lib/api/session/getSession'
+import { deleteTurn } from '@/lib/api/turn/deleteTurn'
+import { editTurn } from '@/lib/api/turn/editTurn'
+import { forkSession } from '@/lib/api/turn/forkSession'
 import { addToast } from '@/stores/useToastStore'
 
 export type UseTurnActionsReturn = {

@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 
-import { editHyperparameters } from '@/lib/api/session/editHyperparameters'
-import type { EditHyperparametersRequest } from '@/lib/api/session/editHyperparameters'
+import { editHyperparameters } from '@/lib/api/meta/editHyperparameters'
+import type { EditHyperparametersRequest } from '@/lib/api/meta/editHyperparameters'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { addToast } from '@/stores/useToastStore'
 

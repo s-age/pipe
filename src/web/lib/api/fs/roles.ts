@@ -6,4 +6,4 @@ export type RoleOption = {
 }
 
 export const getRoles = async (): Promise<RoleOption[]> =>
-  client.get<RoleOption[]>('/roles')
+  client.get<RoleOption[]>('/fs/roles')

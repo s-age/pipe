@@ -10,7 +10,7 @@ type ArchivedSession = {
 
 export const getArchivedSessions = async (): Promise<SessionOverview[]> => {
   const response = await client.get<{ sessions: ArchivedSession[] }>(
-    '/sessions/archives'
+    '/session_management/archives'
   )
 
   return response.sessions.map((s) => ({

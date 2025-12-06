@@ -6,4 +6,4 @@ export type ProcedureOption = {
 }
 
 export const getProcedures = async (): Promise<ProcedureOption[]> =>
-  client.get<ProcedureOption[]>('/procedures')
+  client.get<ProcedureOption[]>('/fs/procedures')

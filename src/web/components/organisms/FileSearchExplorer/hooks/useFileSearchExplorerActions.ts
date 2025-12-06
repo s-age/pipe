@@ -1,23 +1,25 @@
 import { useMemo } from 'react'
 
 import type {
-  SearchL2Request,
-  LsRequest,
-  SearchL2Response,
-  LsResponse
-} from '@/lib/api/fileSearchExplorer'
-import { fileSearchExplorerApi } from '@/lib/api/fileSearchExplorer'
+  FileSearchRequest,
+  BrowseRequest,
+  FileSearchResponse,
+  BrowseResponse
+} from '@/lib/api/fs/browse'
+import { fsApi } from '@/lib/api/fs/browse'
 import { addToast } from '@/stores/useToastStore'
 
 export const useFileSearchExplorerActions = (): {
-  searchL2: (request: SearchL2Request) => Promise<SearchL2Response | void>
-  getLsData: (request: LsRequest) => Promise<LsResponse | void>
+  searchFiles: (request: FileSearchRequest) => Promise<FileSearchResponse | void>
+  browseDirectory: (request: BrowseRequest) => Promise<BrowseResponse | void>
 } => {
   const actions = useMemo(
     () => ({
-      searchL2: async (request: SearchL2Request): Promise<SearchL2Response | void> => {
+      searchFiles: async (
+        request: FileSearchRequest
+      ): Promise<FileSearchResponse | void> => {
         try {
-          const result = await fileSearchExplorerApi.searchL2(request)
+          const result = await fsApi.searchFiles(request)
           addToast({ status: 'success', title: 'Search completed successfully' })
 
           return result
@@ -29,9 +31,11 @@ export const useFileSearchExplorerActions = (): {
         }
       },
 
-      getLsData: async (request: LsRequest): Promise<LsResponse | void> => {
+      browseDirectory: async (
+        request: BrowseRequest
+      ): Promise<BrowseResponse | void> => {
         try {
-          const result = await fileSearchExplorerApi.getLsData(request)
+          const result = await fsApi.browseDirectory(request)
 
           return result
         } catch (error: unknown) {

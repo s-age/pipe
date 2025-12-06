@@ -13,6 +13,6 @@ export type DeleteArchivedSessionsResponse = {
 export const deleteArchivedSessions = async (
   request: DeleteArchivedSessionsRequest
 ): Promise<DeleteArchivedSessionsResponse> =>
-  client.delete<DeleteArchivedSessionsResponse>('/sessions/archives', {
+  client.delete<DeleteArchivedSessionsResponse>('/session_management/archives', {
     body: request
   })

@@ -8,14 +8,23 @@ from flask_cors import CORS
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
-from pipe.web.actions.file_search_actions import (
+from pipe.web.actions.fs_actions import (
     IndexFilesAction,
     LsAction,
     SearchL2Action,
 )
 from pipe.web.controllers import SessionDetailController
 from pipe.web.dispatcher import dispatch_action, init_dispatcher
-from pipe.web.routes import bff_bp, pages_bp, search_bp, session_bp, settings_bp
+from pipe.web.routes import (
+    bff_bp,
+    fs_bp,
+    meta_bp,
+    session_bp,
+    session_management_bp,
+    session_tree_bp,
+    settings_bp,
+    turn_bp,
+)
 from pipe.web.service_container import get_container
 
 
@@ -158,10 +167,13 @@ def create_app(
     init_dispatcher(search_l2_action, ls_action, index_files_action)
 
     # Register blueprints (like Laravel route groups with prefixes)
-    app.register_blueprint(pages_bp)  # HTML pages (no prefix)
     app.register_blueprint(session_bp)  # /api/v1/session/*
+    app.register_blueprint(session_management_bp)  # /api/v1/session_management/*
+    app.register_blueprint(meta_bp)  # /api/v1/session/<session_id>/meta/*
+    app.register_blueprint(session_tree_bp)  # /api/v1/session_tree
+    app.register_blueprint(turn_bp)  # /api/v1/session/<session_id>/turn/*
     app.register_blueprint(bff_bp)  # /api/v1/bff/*
-    app.register_blueprint(search_bp)  # /api/v1/search*, /api/v1/ls, etc.
+    app.register_blueprint(fs_bp)  # /api/v1/fs/*
     app.register_blueprint(settings_bp)  # /api/v1/settings
 
     # Catch-all dispatcher for any unmatched /api/v1/* routes

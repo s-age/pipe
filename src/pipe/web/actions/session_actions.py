@@ -1,5 +1,4 @@
 import json
-import os
 import subprocess
 import sys
 from typing import Any
@@ -114,59 +113,6 @@ class SessionDeleteAction(BaseAction):
         try:
             get_session_service().delete_session(session_id)
             return {"message": f"Session {session_id} deleted."}, 200
-        except Exception as e:
-            return {"message": str(e)}, 500
-
-
-class SessionRawAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.service_container import get_session_service
-
-        session_id = self.params.get("session_id")
-        if not session_id:
-            return {"message": "session_id is required"}, 400
-
-        try:
-            repo = get_session_service().repository
-            session_path = repo._get_path_for_id(session_id)
-            exists = os.path.exists(session_path)
-            result: dict = {
-                "computed_path": session_path,
-                "sessions_dir": repo.sessions_dir,
-                "exists": exists,
-            }
-
-            if exists:
-                with open(session_path) as f:
-                    data = json.load(f)
-                result["file"] = data
-                return result, 200
-
-            backups_dir = getattr(
-                repo, "backups_dir", os.path.join(repo.sessions_dir, "backups")
-            )
-            matches = []
-            if os.path.isdir(backups_dir):
-                for name in os.listdir(backups_dir):
-                    path = os.path.join(backups_dir, name)
-                    try:
-                        with open(path) as bf:
-                            bd = json.load(bf)
-                            if bd.get("session_id") == session_id:
-                                matches.append({"backup_file": path, "content": bd})
-                    except Exception:
-                        continue
-
-            result["backups_found"] = len(matches)
-            if matches:
-                matches_sorted = sorted(
-                    matches,
-                    key=lambda m: os.path.getmtime(m["backup_file"]),
-                    reverse=True,
-                )
-                result["latest_backup"] = matches_sorted[0]
-
-            return result, 404
         except Exception as e:
             return {"message": str(e)}, 500
 
@@ -341,39 +287,5 @@ class SessionInstructionAction(BaseAction):
             return response
         except ValidationError as e:
             return {"message": str(e)}, 422
-        except Exception as e:
-            return {"message": str(e)}, 500
-
-
-class SessionForkAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.service_container import get_session_service
-
-        fork_index = self.params.get("fork_index")
-        if fork_index is None:
-            return {"message": "fork_index is required"}, 400
-
-        try:
-            fork_index = int(fork_index)
-        except ValueError:
-            return {"message": "fork_index must be an integer"}, 400
-
-        try:
-            session_id = self.params.get("session_id")
-            if not session_id:
-                return {"message": "session_id is required"}, 400
-
-            new_session_id = get_session_service().fork_session(session_id, fork_index)
-            if new_session_id:
-                return {"new_session_id": new_session_id}, 200
-            else:
-                return {"message": "Failed to fork session."}, 500
-
-        except ValidationError as e:
-            return {"message": str(e)}, 422
-        except FileNotFoundError:
-            return {"message": "Session not found."}, 404
-        except IndexError:
-            return {"message": "Fork turn index out of range."}, 400
         except Exception as e:
             return {"message": str(e)}, 500

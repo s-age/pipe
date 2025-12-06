@@ -1,7 +1,7 @@
 import type { Settings } from '@/types/settings'
 
 import { client } from '../client'
-import type { RoleOption } from '../roles/getRoles'
+import type { RoleOption } from '../fs/roles'
 import type { SessionDetail } from '../session/getSession'
 import type { SessionOverview, SessionTreeNode } from '../sessionTree/getSessionTree'
 

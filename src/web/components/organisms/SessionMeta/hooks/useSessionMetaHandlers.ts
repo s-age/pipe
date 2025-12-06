@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react'
 import type { FormMethods } from '@/components/organisms/Form'
 import { useSessionMetaActions } from '@/components/organisms/SessionMeta/hooks/useSessionMetaActions'
 import type { SessionMetaFormInputs } from '@/components/organisms/SessionMeta/schema'
-import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
+import type { EditSessionMetaRequest } from '@/lib/api/meta/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseSessionMetaHandlersProperties = {

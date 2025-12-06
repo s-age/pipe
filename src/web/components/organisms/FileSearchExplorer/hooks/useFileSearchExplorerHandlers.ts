@@ -1,6 +1,8 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import type { BrowseResponse } from '@/lib/api/fs/browse'
+
 import { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
 import { useFileSearchExplorerLifecycle } from './useFileSearchExplorerLifecycle'
 
@@ -93,17 +95,19 @@ export const useFileSearchExplorerHandlers = (
         const filteredWithoutDuplicates = filterExistingValues(filtered)
         setSuggestions(filteredWithoutDuplicates)
       } else {
-        // Use getLsData for file search
+        // Use browseDirectory for file search
         if (newQuery.includes('/')) {
           const parts = newQuery.split('/')
           const pathParts = parts.slice(0, -1).filter((p) => p)
           const prefix = parts[parts.length - 1] || ''
           if (pathParts.length > 0) {
-            const lsResult = await actions.getLsData({ finalPathList: pathParts })
+            const lsResult = await actions.browseDirectory({ finalPathList: pathParts })
             if (lsResult) {
               const filtered = lsResult.entries
-                .filter((entry) => entry.name.startsWith(prefix))
-                .map((entry) => ({
+                .filter((entry: BrowseResponse['entries'][number]) =>
+                  entry.name.startsWith(prefix)
+                )
+                .map((entry: BrowseResponse['entries'][number]) => ({
                   label: entry.isDir ? `${entry.name}/` : entry.name,
                   value: entry.isDir
                     ? `${[...pathParts, entry.name].join('/')}/`
@@ -115,11 +119,13 @@ export const useFileSearchExplorerHandlers = (
             }
           } else {
             // Root level
-            const lsResult = await actions.getLsData({ finalPathList: [] })
+            const lsResult = await actions.browseDirectory({ finalPathList: [] })
             if (lsResult) {
               const filtered = lsResult.entries
-                .filter((entry) => entry.name.startsWith(prefix))
-                .map((entry) => ({
+                .filter((entry: BrowseResponse['entries'][number]) =>
+                  entry.name.startsWith(prefix)
+                )
+                .map((entry: BrowseResponse['entries'][number]) => ({
                   label: entry.isDir ? `${entry.name}/` : entry.name,
                   value: entry.isDir ? `${entry.name}/` : entry.name,
                   path: entry.name
@@ -130,11 +136,13 @@ export const useFileSearchExplorerHandlers = (
           }
         } else if (newQuery.length > 0) {
           // Root level search
-          const lsResult = await actions.getLsData({ finalPathList: [] })
+          const lsResult = await actions.browseDirectory({ finalPathList: [] })
           if (lsResult) {
             const filtered = lsResult.entries
-              .filter((entry) => entry.name.startsWith(newQuery))
-              .map((entry) => ({
+              .filter((entry: BrowseResponse['entries'][number]) =>
+                entry.name.startsWith(newQuery)
+              )
+              .map((entry: BrowseResponse['entries'][number]) => ({
                 label: entry.isDir ? `${entry.name}/` : entry.name,
                 value: entry.isDir ? `${entry.name}/` : entry.name,
                 path: entry.name
@@ -182,19 +190,23 @@ export const useFileSearchExplorerHandlers = (
         setQuery(newPath)
         // Refresh suggestions for the new directory
         if (!list) {
-          void actions.getLsData({ finalPathList: newPathParts }).then((lsResult) => {
-            if (lsResult) {
-              const filtered = lsResult.entries.map((entry) => ({
-                label: entry.isDir ? `${entry.name}/` : entry.name,
-                value: entry.isDir
-                  ? `${[...newPathParts, entry.name].join('/')}/`
-                  : [...newPathParts, entry.name].join('/'),
-                path: [...newPathParts, entry.name].join('/')
-              }))
-              const filteredWithoutDuplicates = filterExistingValues(filtered)
-              setSuggestions(filteredWithoutDuplicates)
-            }
-          })
+          void actions
+            .browseDirectory({ finalPathList: newPathParts })
+            .then((lsResult) => {
+              if (lsResult) {
+                const filtered = lsResult.entries.map(
+                  (entry: BrowseResponse['entries'][number]) => ({
+                    label: entry.isDir ? `${entry.name}/` : entry.name,
+                    value: entry.isDir
+                      ? `${[...newPathParts, entry.name].join('/')}/`
+                      : [...newPathParts, entry.name].join('/'),
+                    path: [...newPathParts, entry.name].join('/')
+                  })
+                )
+                const filteredWithoutDuplicates = filterExistingValues(filtered)
+                setSuggestions(filteredWithoutDuplicates)
+              }
+            })
         }
       } else {
         // Item: add to selectedValues
@@ -236,13 +248,15 @@ export const useFileSearchExplorerHandlers = (
     onFocus?.()
     if (!list) {
       // Load root suggestions for file search
-      const lsResult = await actions.getLsData({ finalPathList: [] })
+      const lsResult = await actions.browseDirectory({ finalPathList: [] })
       if (lsResult) {
-        const filtered = lsResult.entries.map((entry) => ({
-          label: entry.isDir ? `${entry.name}/` : entry.name,
-          value: entry.isDir ? `${entry.name}/` : entry.name,
-          path: entry.name
-        }))
+        const filtered = lsResult.entries.map(
+          (entry: BrowseResponse['entries'][number]) => ({
+            label: entry.isDir ? `${entry.name}/` : entry.name,
+            value: entry.isDir ? `${entry.name}/` : entry.name,
+            path: entry.name
+          })
+        )
         const filteredWithoutDuplicates = filterExistingValues(filtered)
         setSuggestions(filteredWithoutDuplicates)
       }

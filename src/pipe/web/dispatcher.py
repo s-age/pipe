@@ -18,33 +18,33 @@ from pipe.web.actions import (
     ReferenceToggleDisabledAction,
     ReferenceTtlEditAction,
     SessionMetaEditAction,
+    TodosDeleteAction,
+    TodosEditAction,
     TurnDeleteAction,
     TurnEditAction,
 )
-from pipe.web.actions.file_search_actions import (
+from pipe.web.actions.fs_actions import (
     IndexFilesAction,
     LsAction,
     SearchL2Action,
+    SearchSessionsAction,
 )
-from pipe.web.actions.meta_actions import TodosDeleteAction, TodosEditAction
-from pipe.web.actions.search_sessions_action import SearchSessionsAction
 from pipe.web.actions.session_actions import (
     SessionDeleteAction,
-    SessionForkAction,
     SessionGetAction,
     SessionInstructionAction,
-    SessionRawAction,
     SessionStartAction,
 )
 from pipe.web.actions.session_management_actions import (
+    SessionsDeleteAction,
     SessionsDeleteBackupAction,
     SessionsListBackupAction,
     SessionsMoveToBackup,
 )
-from pipe.web.actions.session_tree_action import SessionTreeAction
+from pipe.web.actions.session_tree_actions import SessionTreeAction
 from pipe.web.actions.settings_actions import SettingsGetAction
 from pipe.web.actions.therapist_actions import ApplyDoctorModificationsAction
-from pipe.web.actions.turn_actions import SessionTurnsGetAction
+from pipe.web.actions.turn_actions import SessionForkAction, SessionTurnsGetAction
 
 
 def _camel_to_snake(name: str) -> str:
@@ -150,10 +150,10 @@ class ActionDispatcher:
             ("compress/{session_id}/deny", "POST", DenyCompressorAction),
             ("therapist", "POST", CreateTherapistSessionAction),
             ("doctor", "POST", ApplyDoctorModificationsAction),
-            ("sessions/archives", "POST", SessionsMoveToBackup),
-            ("sessions/archives", "GET", SessionsListBackupAction),
-            ("sessions/archives", "DELETE", SessionsDeleteBackupAction),
-            ("session/{session_id}/raw", "GET", SessionRawAction),
+            ("session_management/archives", "POST", SessionsMoveToBackup),
+            ("session_management/archives", "GET", SessionsListBackupAction),
+            ("session_management/archives", "DELETE", SessionsDeleteBackupAction),
+            ("session_management/sessions", "DELETE", SessionsDeleteAction),
             ("session/{session_id}/instruction", "POST", SessionInstructionAction),
             ("session/{session_id}/meta", "PATCH", SessionMetaEditAction),
             (
@@ -165,11 +165,6 @@ class ActionDispatcher:
             (
                 "session/{session_id}/multi-step-reasoning",
                 "PATCH",
-                MultiStepReasoningEditAction,
-            ),
-            (
-                "session/{session_id}/multi-step-reasoning",
-                "POST",
                 MultiStepReasoningEditAction,
             ),
             ("session/{session_id}/todos", "PATCH", TodosEditAction),
@@ -196,12 +191,12 @@ class ActionDispatcher:
             ("session/{session_id}/fork/{fork_index}", "POST", SessionForkAction),
             ("session/{session_id}", "GET", SessionGetAction),
             ("session/{session_id}", "DELETE", SessionDeleteAction),
-            ("roles", "GET", GetRolesAction),
-            ("procedures", "GET", GetProceduresAction),
-            ("search_l2", "POST", self.search_l2_action),
-            ("search", "POST", SearchSessionsAction),
-            ("ls", "POST", self.ls_action),
-            ("index_files", "POST", self.index_files_action),
+            ("fs/roles", "GET", GetRolesAction),
+            ("fs/procedures", "GET", GetProceduresAction),
+            ("fs/search_l2", "POST", self.search_l2_action),
+            ("fs/search", "POST", SearchSessionsAction),
+            ("fs/ls", "POST", self.ls_action),
+            ("fs/index_files", "POST", self.index_files_action),
         ]
 
         for route_pattern, route_method, action_class in route_map:

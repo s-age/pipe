@@ -433,7 +433,7 @@ class TestAppApi(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
 
-    @patch("pipe.web.actions.get_roles_action.RoleService")
+    @patch("pipe.web.actions.fs_actions.RoleService")
     def test_get_session_dashboard_api_success(self, MockRoleServiceForGetRolesAction):
         """Tests the /api/v1/bff/session-dashboard/{session_id} endpoint."""
         session_id = "test_session_id"
@@ -476,56 +476,15 @@ class TestAppViews(unittest.TestCase):
         self.app.config["TESTING"] = True
         self.client = self.app.test_client()
         self.mock_session_service = MagicMock()
-        # Patch in the routes module where it's imported
+        # Patch in the service container
         self.patcher = patch(
-            "pipe.web.routes.pages.get_session_service",
-            return_value=self.mock_session_service,
+            "pipe.web.service_container.get_container",
+            return_value=MagicMock(session_service=self.mock_session_service),
         )
         self.patcher.start()
 
     def tearDown(self):
         self.patcher.stop()
-
-    def test_index_page(self):
-        """Tests the index page rendering."""
-        (
-            self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
-        ) = [("session1", {"purpose": "Test Session 1"})]
-        response = self.client.get("/")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Test Session 1", response.data)
-
-    def test_new_session_page(self):
-        """Tests the new session page rendering."""
-        (
-            self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
-        ) = []
-        response = self.client.get("/start_session")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Create New Session", response.data)
-
-    def test_view_session_page(self):
-        """Tests viewing a specific session."""
-        session_id = "test_session_id"
-        mock_session = MagicMock(spec=Session)
-        mock_session.to_dict.return_value = {"turns": [], "purpose": "My Test Session"}
-        mock_session.purpose = "My Test Session"
-        mock_session.hyperparameters = None
-        mock_session.references = []
-        mock_session.artifacts = []  # Added to fix AttributeError
-        mock_session.multi_step_reasoning_enabled = False
-        mock_session.token_count = 123
-
-        self.mock_session_service.list_sessions().__contains__.return_value = True
-        (
-            self.mock_session_service.list_sessions().get_sorted_by_last_updated.return_value
-        ) = []
-        self.mock_session_service.get_session.return_value = mock_session
-
-        response = self.client.get(f"/session/{session_id}")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"My Test Session", response.data)
-        self.mock_session_service.get_session.assert_called_once_with(session_id)
 
     def test_view_session_not_found(self):
         """Tests that a 404 is returned for a non-existent session."""

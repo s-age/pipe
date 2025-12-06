@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 
-import { editReferencePersist } from '@/lib/api/session/editReferencePersist'
-import { editReferenceTtl } from '@/lib/api/session/editReferenceTtl'
-import { toggleReferenceDisabled } from '@/lib/api/session/toggleReferenceDisabled'
+import { editReferencePersist } from '@/lib/api/meta/editReferencePersist'
+import { editReferenceTtl } from '@/lib/api/meta/editReferenceTtl'
+import { toggleReferenceDisabled } from '@/lib/api/meta/toggleReferenceDisabled'
 import { addToast } from '@/stores/useToastStore'
 
 export const useReferenceActions = (

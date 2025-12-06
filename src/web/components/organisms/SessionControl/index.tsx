@@ -4,7 +4,7 @@ import { SessionMeta } from '@/components/organisms/SessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import * as styles from './style.css'
-import { Tabs } from '../../atoms/Tabs'
+import { Tabs } from '../../molecules/Tabs'
 import { Compressor } from '../Compressor'
 import { Therapist } from '../Therapist'
 import { useSessionControlHandlers } from './hooks/useSessionControlHandlers'

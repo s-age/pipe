@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { useTabs } from './hooks/useTabs'
 import * as styles from './style.css'
 
 export type TabItem<K extends string = string> = {
@@ -13,18 +14,12 @@ export type TabsProperties<K extends string> = {
   onChange: (key: K) => void
 }
 
-export function Tabs<K extends string>({
+export const Tabs = <K extends string>({
   tabs,
   activeKey,
   onChange
-}: TabsProperties<K>): React.ReactElement {
-  const handleClick = React.useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>): void => {
-      const key = event.currentTarget.dataset.key as K
-      onChange(key)
-    },
-    [onChange]
-  )
+}: TabsProperties<K>): React.ReactElement => {
+  const { handleClick } = useTabs(onChange)
 
   return (
     <div className={styles.tabsContainer}>

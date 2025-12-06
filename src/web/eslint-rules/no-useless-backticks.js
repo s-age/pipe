@@ -1,3 +1,5 @@
+/* eslint-disable import/no-default-export */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 // Local ESLint rule: no-useless-backticks
 // Detects template literals without variable interpolation and suggests converting to regular strings.
 

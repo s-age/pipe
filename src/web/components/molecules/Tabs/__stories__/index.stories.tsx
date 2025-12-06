@@ -3,7 +3,7 @@ import React from 'react'
 import { Tabs, type TabItem } from '..'
 
 export default {
-  title: 'Atoms/Tabs',
+  title: 'Molecules/Tabs',
   component: Tabs
 }
 

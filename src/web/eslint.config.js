@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 // For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
 // Use Compat to expand Prettier configuration
 import pluginJs from '@eslint/js'
@@ -250,7 +251,7 @@ export default [
   },
   // src/web/lib/validation ではZodを使用許可
   {
-    files: ['src/web/lib/validation/**/*.ts'],
+    files: ['lib/validation/**/*.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
@@ -262,6 +263,20 @@ export default [
           selector: 'TSTypeReference[typeName.name="FunctionComponent"]',
           message:
             'Avoid React.FunctionComponent. Use JSX.Element for component return types.'
+        },
+        {
+          // Forbid standard React hooks in non-hook files; custom hooks (useXxx) are allowed
+          selector:
+            'CallExpression[callee.name=/^use(State|Effect|Callback|Memo|Ref|Context|Reducer|ImperativeHandle|LayoutEffect|DebugValue|DeferredValue|Transition|Id|InsertionEffect)$/]',
+          message:
+            'Standard React hooks are only allowed in hook files (use*.ts or use*.tsx). Use custom hooks for logic.'
+        },
+        {
+          // Forbid React.use* calls; prefer direct imports for token efficiency
+          selector:
+            'CallExpression[callee.object.name="React"][callee.property.name=/^(useState|useEffect|useCallback|useMemo|useRef|useContext|useReducer|useImperativeHandle|useLayoutEffect|useDebugValue|useDeferredValue|useTransition|useId|useInsertionEffect)$/]',
+          message:
+            "Use direct import for React hooks (e.g., import { useMemo } from 'react') instead of React.useMemo for better token efficiency."
         }
       ]
     }

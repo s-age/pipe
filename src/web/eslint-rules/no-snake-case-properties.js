@@ -1,3 +1,5 @@
+/* eslint-disable import/no-default-export */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 /**
  * @fileoverview Disallow snake_case property names in TypeScript/JavaScript
  * @author pipe

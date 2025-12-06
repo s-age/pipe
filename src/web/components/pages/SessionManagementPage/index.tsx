@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
-import { Tabs } from '@/components/atoms/Tabs'
 import { AppLayout } from '@/components/layouts/AppLayout'
+import { Tabs } from '@/components/molecules/Tabs'
 import { SessionList } from '@/components/organisms/SessionList'
 import { useSessionStore } from '@/stores/useChatHistoryStore'
 

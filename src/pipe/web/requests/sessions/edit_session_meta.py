@@ -2,14 +2,21 @@
 Pydantic model for validating the request body of the edit session meta API endpoint.
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 from pipe.core.models.hyperparameters import Hyperparameters
+from pipe.web.requests.base_request import BaseRequest
 from pipe.web.requests.common import normalize_camel_case_keys
-from pydantic import BaseModel, model_validator
+from pydantic import model_validator
 
 
-class EditSessionMetaRequest(BaseModel):
+class EditSessionMetaRequest(BaseRequest):
+    path_params: ClassVar[list[str]] = ["session_id"]
+
+    # Path parameter (from URL)
+    session_id: str
+
+    # Body fields (all optional)
     purpose: str | None = None
     background: str | None = None
     roles: list[str] | None = None

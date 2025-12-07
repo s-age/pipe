@@ -10,28 +10,8 @@ import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useSessionMetaHandlers } from './hooks/useSessionMetaHandlers'
-// eslint-disable-next-line import/order
 import { useSessionMetaLifecycle } from './hooks/useSessionMetaLifecycle'
-
-type SessionMetaFormInputs = {
-  purpose: string | null
-  background: string | null
-  roles: string[] | null
-  procedure: string | null
-  references: {
-    path: string
-    ttl: number | null
-    persist: boolean
-    disabled: boolean
-  }[]
-  artifacts: string[] | null
-  hyperparameters: {
-    temperature: number | null
-    topP: number | null
-    topK: number | null
-  } | null
-  multiStepReasoning: boolean
-}
+import type { SessionMetaFormInputs } from './schema'
 import { sessionMetaSchema } from './schema'
 import {
   metaColumn,

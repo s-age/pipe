@@ -70,12 +70,14 @@ export const useChatHistoryActions = ({
         walk(fetchedSessionTree.sessionTree)
         newSessions = flatten
       } else {
-        newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
-          ...session,
-          sessionId: id
-        }))
+        newSessions = fetchedSessionTree.sessions.map(
+          ([id, session]: [string, SessionOverview]) => ({
+            ...session,
+            sessionId: id
+          })
+        )
       }
-      refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
+      refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
     } catch (error: unknown) {
       addToast({
         status: 'failure',

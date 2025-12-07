@@ -1,132 +1,108 @@
-from typing import Any
-
+from pipe.core.models.turn import Turn
 from pipe.web.actions.base_action import BaseAction
+from pipe.web.exceptions import BadRequestError, NotFoundError
+from pipe.web.requests.sessions.edit_turn import EditTurnRequest
+
+TurnList = list[Turn]
 
 
 class SessionTurnsGetAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
+    def execute(self) -> dict[str, list[dict]]:
         from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         if not session_id:
-            return {"message": "session_id is required"}, 400
+            raise BadRequestError("session_id is required")
 
-        try:
-            since_index = int(self.params.get("since", 0))
-            session_data = get_session_service().get_session(session_id)
-            if not session_data:
-                return {"message": "Session not found."}, 404
+        since_index = int(self.params.get("since", 0))
+        session_data = get_session_service().get_session(session_id)
+        if not session_data:
+            raise NotFoundError("Session not found.")
 
-            all_turns = [turn.model_dump() for turn in session_data.turns]
-            new_turns = all_turns[since_index:]
-
-            return {"turns": new_turns}, 200
-        except Exception as e:
-            return {"message": str(e)}, 500
+        turns = session_data.turns[since_index:]
+        return {"turns": [turn.model_dump() for turn in turns]}
 
 
 class TurnDeleteAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
+    def execute(self) -> dict[str, str]:
         from pipe.web.service_container import get_session_service
 
         session_id = self.params.get("session_id")
         turn_index = self.params.get("turn_index")
 
         if not session_id or turn_index is None:
-            return {"message": "session_id and turn_index are required"}, 400
+            raise BadRequestError("session_id and turn_index are required")
 
         try:
             turn_index = int(turn_index)
         except ValueError:
-            return {"message": "turn_index must be an integer"}, 400
+            raise BadRequestError("turn_index must be an integer")
 
         try:
             get_session_service().delete_turn(session_id, turn_index)
-            return {
-                "message": f"Turn {turn_index} from session {session_id} deleted.",
-            }, 200
+            return {"message": f"Turn {turn_index} from session {session_id} deleted."}
         except FileNotFoundError:
-            return {"message": "Session not found."}, 404
+            raise NotFoundError("Session not found.")
         except IndexError:
-            return {"message": "Turn index out of range."}, 400
-        except Exception as e:
-            return {"message": str(e)}, 500
+            raise BadRequestError("Turn index out of range.")
 
 
 class TurnEditAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.requests.sessions.edit_turn import EditTurnRequest
+    request_model = EditTurnRequest
+
+    def execute(self) -> dict[str, str]:
         from pipe.web.service_container import get_session_service
-        from pydantic import ValidationError
 
-        session_id = self.params.get("session_id")
-        turn_index = self.params.get("turn_index")
+        request = self.validated_request
+        turn_index = int(request.turn_index)
 
-        if not session_id or turn_index is None:
-            return {"message": "session_id and turn_index are required"}, 400
+        validated_data = request.model_dump(exclude={"session_id", "turn_index"})
 
         try:
-            turn_index = int(turn_index)
-        except ValueError:
-            return {"message": "turn_index must be an integer"}, 400
-
-        try:
-            new_data = self.request_data.get_json()
-            if not new_data:
-                return {"message": "No data provided."}, 400
-
-            # Validate request using Pydantic model
-            try:
-                edit_request = EditTurnRequest(**new_data)
-                validated_data = edit_request.model_dump()
-            except ValidationError as e:
-                error_messages = [err["msg"] for err in e.errors()]
-                return {"message": "; ".join(error_messages)}, 400
-
-            get_session_service().edit_turn(session_id, turn_index, validated_data)
+            get_session_service().edit_turn(
+                request.session_id, turn_index, validated_data
+            )
             return {
-                "message": f"Turn {turn_index + 1} from session {session_id} updated.",
-            }, 200
+                "message": (
+                    f"Turn {turn_index + 1} from session {request.session_id} updated."
+                )
+            }
         except FileNotFoundError:
-            return {"message": "Session not found."}, 404
+            raise NotFoundError("Session not found.")
         except IndexError:
-            return {"message": "Turn index out of range."}, 400
+            raise BadRequestError("Turn index out of range.")
         except ValueError as e:
-            return {"message": str(e)}, 403
-        except Exception as e:
-            return {"message": str(e)}, 500
+            from pipe.web.exceptions import InternalServerError
+
+            raise InternalServerError(str(e))
 
 
 class SessionForkAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
+    def execute(self) -> dict[str, str]:
         from pipe.web.service_container import get_session_service
-        from pydantic import ValidationError
 
         fork_index = self.params.get("fork_index")
         if fork_index is None:
-            return {"message": "fork_index is required"}, 400
+            raise BadRequestError("fork_index is required")
 
         try:
             fork_index = int(fork_index)
         except ValueError:
-            return {"message": "fork_index must be an integer"}, 400
+            raise BadRequestError("fork_index must be an integer")
+
+        session_id = self.params.get("session_id")
+        if not session_id:
+            raise BadRequestError("session_id is required")
 
         try:
-            session_id = self.params.get("session_id")
-            if not session_id:
-                return {"message": "session_id is required"}, 400
-
             new_session_id = get_session_service().fork_session(session_id, fork_index)
             if new_session_id:
-                return {"new_session_id": new_session_id}, 200
+                return {"new_session_id": new_session_id}
             else:
-                return {"message": "Failed to fork session."}, 500
+                from pipe.web.exceptions import InternalServerError
 
-        except ValidationError as e:
-            return {"message": str(e)}, 422
+                raise InternalServerError("Failed to fork session.")
         except FileNotFoundError:
-            return {"message": "Session not found."}, 404
+            raise NotFoundError("Session not found.")
         except IndexError:
-            return {"message": "Fork turn index out of range."}, 400
-        except Exception as e:
-            return {"message": str(e)}, 500
+            raise BadRequestError("Fork turn index out of range.")

@@ -45,6 +45,11 @@ from pipe.web.actions.session_tree_actions import SessionTreeAction
 from pipe.web.actions.settings_actions import SettingsGetAction
 from pipe.web.actions.therapist_actions import ApplyDoctorModificationsAction
 from pipe.web.actions.turn_actions import SessionForkAction, SessionTurnsGetAction
+from pipe.web.exceptions import HttpException
+from pipe.web.request_context import RequestContext
+from pipe.web.requests.base_request import BaseRequest
+from pipe.web.responses import ApiResponse
+from pydantic import ValidationError
 
 
 def _camel_to_snake(name: str) -> str:
@@ -97,7 +102,7 @@ class ActionDispatcher:
         action: str,
         params: dict,
         request_data: Request | None = None,
-    ) -> tuple[dict | Response, int]:
+    ) -> tuple[dict | Response | Any, int] | Response:
         """Dispatch an action to the appropriate handler.
 
         Args:
@@ -106,7 +111,7 @@ class ActionDispatcher:
             request_data: The Flask request object
 
         Returns:
-            A tuple of (response_data, status_code)
+            A tuple of (response_data, status_code) or Response object
         """
         method = request_data.method if request_data else "GET"
 
@@ -145,9 +150,9 @@ class ActionDispatcher:
             ("session_tree", "GET", SessionTreeAction),
             ("settings", "GET", SettingsGetAction),
             ("session/start", "POST", SessionStartAction),
-            ("compress", "POST", CreateCompressorSessionAction),
-            ("compress/{session_id}/approve", "POST", ApproveCompressorAction),
-            ("compress/{session_id}/deny", "POST", DenyCompressorAction),
+            ("session/compress", "POST", CreateCompressorSessionAction),
+            ("session/compress/{session_id}/approve", "POST", ApproveCompressorAction),
+            ("session/compress/{session_id}/deny", "POST", DenyCompressorAction),
             ("therapist", "POST", CreateTherapistSessionAction),
             ("doctor", "POST", ApplyDoctorModificationsAction),
             ("session_management/archives", "POST", SessionsMoveToBackup),
@@ -207,25 +212,100 @@ class ActionDispatcher:
 
             if match:
                 try:
+                    # Check if action uses BaseRequest for unified validation
+                    request_model = (
+                        getattr(action_class, "request_model", None)
+                        if isinstance(action_class, type)
+                        else None
+                    )
+                    validated_request = None
+
+                    if request_model and issubclass(request_model, BaseRequest):
+                        # Laravel/Struts style: validate before reaching the action
+                        body_data = None
+                        if converted_request_data and converted_request_data.is_json:
+                            body_data = converted_request_data.get_json(silent=True)
+
+                        try:
+                            validated_request = request_model.create_with_path_params(
+                                path_params=extracted_params,
+                                body_data=body_data,
+                            )
+                        except ValidationError as e:
+                            # Validation failed before reaching action
+                            error_messages = [
+                                (
+                                    f"{'.'.join(str(loc) for loc in err['loc'])}: "
+                                    f"{err['msg']}"
+                                )
+                                for err in e.errors()
+                            ]
+                            return {
+                                "success": False,
+                                "message": "; ".join(error_messages),
+                            }, 422
+
+                    # Create RequestContext for backward compatibility
+                    request_context = RequestContext(
+                        path_params=extracted_params,
+                        request_data=converted_request_data,
+                        body_model=getattr(action_class, "body_model", None)
+                        if isinstance(action_class, type)
+                        else None,
+                    )
+
                     if isinstance(action_class, type):
-                        action_instance = action_class(
-                            params=extracted_params,
-                            request_data=converted_request_data,
-                        )
+                        # Pass validated request if available
+                        if validated_request:
+                            action_instance = action_class(
+                                params=extracted_params,
+                                request_data=converted_request_data,
+                                request_context=request_context,
+                                validated_request=validated_request,
+                            )
+                        else:
+                            action_instance = action_class(
+                                params=extracted_params,
+                                request_data=converted_request_data,
+                                request_context=request_context,
+                            )
                     else:
+                        # For pre-instantiated actions (like fs actions)
                         action_instance = action_class
                         action_instance.params = extracted_params
                         action_instance.request_data = converted_request_data
+                        action_instance.request = request_context
 
-                    response_data, status_code = action_instance.execute()
+                    # Execute action
+                    result = action_instance.execute()
 
-                    # Convert response from snake_case to camelCase
-                    if isinstance(response_data, dict):
-                        response_data = _convert_keys_to_camel(response_data)
+                    # Handle different return types
+                    if isinstance(result, Response):
+                        # Flask Response object (e.g., streaming response)
+                        return result
+                    elif isinstance(result, tuple):
+                        # Legacy: (dict, status_code) or (ApiResponse, status_code)
+                        response_data, status_code = result
+                        if isinstance(response_data, dict):
+                            # Convert snake_case to camelCase
+                            response_data = _convert_keys_to_camel(response_data)
+                        return response_data, status_code
+                    else:
+                        # New pattern: Action returns data directly
+                        # Dispatcher wraps it in ApiResponse
+                        response = ApiResponse(success=True, data=result)
+                        response_dict = response.model_dump()
+                        response_dict = _convert_keys_to_camel(response_dict)
+                        return response_dict, 200
 
-                    return response_data, status_code
+                except HttpException as e:
+                    # Custom HTTP exceptions with specific status codes
+                    response = ApiResponse(success=False, message=e.message)
+                    return _convert_keys_to_camel(response.model_dump()), e.status_code
                 except Exception as e:
-                    return {"message": str(e)}, 500
+                    # Unexpected errors -> 500
+                    response = ApiResponse(success=False, message=str(e))
+                    return _convert_keys_to_camel(response.model_dump()), 500
 
         return {"message": f"Unknown action: {action} with method {method}"}, 404
 
@@ -335,7 +415,7 @@ def dispatch_action(
     action: str,
     params: dict,
     request_data: Request | None = None,
-) -> tuple[dict | Response, int]:
+) -> tuple[dict | Response | Any, int] | Response:
     """Dispatch an action using the global dispatcher.
 
     This is a convenience function for backward compatibility.

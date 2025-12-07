@@ -27,7 +27,9 @@ Controllers orchestrate **multiple actions** to fulfill complex requests. They c
 ```
 controllers/
 ├── __init__.py
-└── session_detail_controller.py    # Multi-view controller
+├── start_session_controller.py      # Session initialization
+├── session_chat_controller.py       # Chat interface context
+└── session_management_controller.py # Session management dashboard
 ```
 
 ## Dependencies
@@ -136,126 +138,208 @@ class FeatureController:
         }, 200
 ```
 
-## Real Example
+## Real Examples
 
-### session_detail_controller.py - Session Detail Orchestration
+### 1. start_session_controller.py - Session Initialization
 
-**Purpose**: Provide complete session view with tree context
+**Purpose**: Initialize new sessions and load initial session data with all required context
 
 **Orchestration**:
 
-1. Get session tree (all sessions)
+1. Get session tree (for navigation sidebar)
 2. Get specific session details
-3. Combine with settings
+3. Get available roles
+4. Get application settings
 
 ```python
-"""
-Controller for session detail operations.
-
-Orchestrates session and tree actions to provide a complete
-session detail view with navigation context.
-"""
+"""Controller for initializing new sessions and loading initial session data."""
 
 from typing import Any
-
 from flask import Request
-from pipe.web.actions import SessionGetAction, SessionTreeAction
+from pipe.web.actions import (
+    GetRolesAction,
+    SessionGetAction,
+    SessionTreeAction,
+    SettingsGetAction,
+)
+from pipe.web.exceptions import HttpException
 
 
-class SessionDetailController:
-    """
-    Controller for session detail view.
-
-    Provides a composite view that combines:
-    - Session tree (for navigation)
-    - Current session details
-    - Application settings
-
-    This is a frontend-specific view that requires data from
-    multiple sources.
-
-    Attributes:
-        session_service: Service for session operations
-        settings: Application settings
-    """
+class StartSessionController:
+    """Controller for session initialization operations."""
 
     def __init__(self, session_service, settings):
-        """
-        Initialize controller with dependencies.
-
-        Args:
-            session_service: SessionService instance
-            settings: Settings model instance
-        """
         self.session_service = session_service
         self.settings = settings
 
     def get_session_with_tree(
-        self,
-        session_id: str,
-        request_data: Request | None = None,
+        self, session_id: str, request_data: Request | None = None
     ) -> tuple[dict[str, Any], int]:
         """
-        Get session details with tree context.
-
-        This orchestrates multiple actions to provide a complete
-        view for the session detail page:
-        1. Gets the full session tree (for sidebar navigation)
-        2. Gets the specific session details
-        3. Includes application settings
-
-        Args:
-            session_id: ID of the session to retrieve
-            request_data: Optional Flask request data
+        Get complete session initialization context.
 
         Returns:
-            Tuple of (response_dict, status_code)
-
-            Response format:
             {
-                "session_tree": [...],      # All sessions for navigation
-                "current_session": {...},   # Selected session details
-                "settings": {...}           # Application settings
+                "session_tree": [...],
+                "current_session": {...},
+                "settings": {...},
+                "role_options": [...]
+            }
+        """
+        try:
+            # Actions return data directly or raise HttpException
+            tree_data = SessionTreeAction(params={}, request_data=request_data).execute()
+            session_data = SessionGetAction(
+                params={"session_id": session_id}, request_data=request_data
+            ).execute()
+            roles_data = GetRolesAction(params={}, request_data=request_data).execute()
+            settings_data = SettingsGetAction(params={}, request_data=request_data).execute()
+
+            return {
+                "session_tree": tree_data.get(
+                    "session_tree", tree_data.get("sessions", [])
+                ),
+                "current_session": session_data,
+                "settings": settings_data.get("settings", {}),
+                "role_options": roles_data,
+            }, 200
+        except HttpException as e:
+            return {"success": False, "message": e.message}, e.status_code
+```
+
+### 2. session_chat_controller.py - Chat Interface Context
+
+**Purpose**: Provide chat interface with session context and history
+
+**Orchestration**:
+
+1. Get session tree (all sessions)
+2. Get settings
+3. Optionally get specific session if session_id provided
+
+```python
+"""Controller for chat interface, providing session history and current session context."""
+
+from typing import Any
+from flask import Request
+from pipe.web.actions import SessionGetAction, SessionTreeAction, SettingsGetAction
+from pipe.web.exceptions import HttpException
+
+
+class SessionChatController:
+    """Controller for chat interface operations."""
+
+    def __init__(self, session_service, settings):
+        self.session_service = session_service
+        self.settings = settings
+
+    def get_chat_context(
+        self, session_id: str | None, request_data: Request | None = None
+    ) -> tuple[dict[str, Any], int]:
+        """
+        Get chat interface context.
+
+        Returns:
+            {
+                "sessions": [...],
+                "session_tree": [...],
+                "settings": {...},
+                "current_session": {...}  # if session_id provided
+            }
+        """
+        try:
+            tree_data = SessionTreeAction(params={}, request_data=request_data).execute()
+            settings_data = SettingsGetAction(params={}, request_data=request_data).execute()
+
+            response = {
+                "sessions": tree_data.get("sessions", []),
+                "session_tree": tree_data.get(
+                    "session_tree", tree_data.get("sessions", [])
+                ),
+                "settings": settings_data.get("settings", {}),
             }
 
-        Examples:
-            controller = SessionDetailController(service, settings)
-            response, status = controller.get_session_with_tree("abc-123")
+            if session_id:
+                session_data = SessionGetAction(
+                    params={"session_id": session_id}, request_data=request_data
+                ).execute()
+                response["current_session"] = session_data
 
-            if status == 200:
-                tree = response["session_tree"]
-                session = response["current_session"]
-                print(f"Session {session['session_id']} in tree of {len(tree)}")
-        """
-        # Step 1: Get session tree
-        session_tree_action = SessionTreeAction(
-            params={},
-            request_data=request_data,
-        )
-        tree_response, tree_status = session_tree_action.execute()
-
-        # Check for tree errors
-        if tree_status != 200:
-            return tree_response, tree_status
-
-        # Step 2: Get specific session
-        session_action = SessionGetAction(
-            params={"session_id": session_id},
-            request_data=request_data,
-        )
-        session_response, session_status = session_action.execute()
-
-        # Check for session errors
-        if session_status != 200:
-            return session_response, session_status
-
-        # Step 3: Combine into composite response
-        return {
-            "session_tree": tree_response.get("sessions", []),
-            "current_session": session_response.get("session", {}),
-            "settings": self.settings.model_dump(),
-        }, 200
+            return response, 200
+        except HttpException as e:
+            return {"success": False, "message": e.message}, e.status_code
 ```
+
+### 3. session_management_controller.py - Management Dashboard
+
+**Purpose**: Provide session management dashboard with archives
+
+**Orchestration**:
+
+1. Get session tree (active sessions)
+2. Get archived sessions
+3. Transform archive data for UI consumption
+
+```python
+"""Controller for session management dashboard, including archives and bulk operations."""
+
+from typing import Any
+from flask import Request
+from pipe.web.actions import SessionTreeAction
+from pipe.web.actions.session_management_actions import SessionsListBackupAction
+from pipe.web.exceptions import HttpException
+
+
+class SessionManagementController:
+    """Controller for session management operations."""
+
+    def __init__(self, session_service, settings):
+        self.session_service = session_service
+        self.settings = settings
+
+    def get_dashboard(
+        self, request_data: Request | None = None
+    ) -> tuple[dict[str, Any], int]:
+        """
+        Get session management dashboard data.
+
+        Returns:
+            {
+                "session_tree": [...],
+                "archives": [...]
+            }
+        """
+        try:
+            tree_data = SessionTreeAction(params={}, request_data=request_data).execute()
+            archives_raw = SessionsListBackupAction(params={}, request_data=request_data).execute()
+
+            archives = []
+            for item in archives_raw:
+                session_data = item.get("session_data", {})
+                archives.append({
+                    "session_id": item.get("session_id", ""),
+                    "purpose": session_data.get("purpose", ""),
+                    "background": session_data.get("background", ""),
+                    # ... transform data for UI
+                })
+
+            return {
+                "session_tree": tree_data.get(
+                    "session_tree", tree_data.get("sessions", [])
+                ),
+                "archives": archives,
+            }, 200
+        except HttpException as e:
+            return {"success": False, "message": e.message}, e.status_code
+```
+
+## Key Differences Between Controllers
+
+| Controller                  | Primary Use Case       | Actions Used                                | Unique Feature           |
+| --------------------------- | ---------------------- | ------------------------------------------- | ------------------------ |
+| StartSessionController      | Session initialization | SessionTree, SessionGet, GetRoles, Settings | Includes role_options    |
+| SessionChatController       | Chat interface         | SessionTree, SessionGet, Settings           | Optional session loading |
+| SessionManagementController | Admin dashboard        | SessionTree, SessionsListBackup             | Archive transformation   |
 
 ## Controller Patterns
 
@@ -263,65 +347,66 @@ class SessionDetailController:
 
 ```python
 def orchestrate_operations(self, resource_id: str):
-    # Execute actions sequentially
-    response1, status1 = Action1(...).execute()
-    if status1 != 200:
-        return response1, status1
+    """Execute actions sequentially with error handling."""
+    try:
+        # Actions return data directly, raise HttpException on error
+        data1 = Action1(...).execute()
+        data2 = Action2(...).execute()
 
-    response2, status2 = Action2(...).execute()
-    if status2 != 200:
-        return response2, status2
-
-    # Combine results
-    return {
-        "data1": response1["data"],
-        "data2": response2["data"],
-    }, 200
+        # Combine results
+        return {
+            "data1": data1,
+            "data2": data2,
+        }, 200
+    except HttpException as e:
+        return {"success": False, "message": e.message}, e.status_code
 ```
 
 ### Pattern 2: Conditional Action Execution
 
 ```python
 def conditional_orchestration(self, resource_id: str, include_extra: bool):
-    # Always get base data
-    base_response, status = BaseAction(...).execute()
-    if status != 200:
-        return base_response, status
+    """Conditionally execute additional actions."""
+    try:
+        # Always get base data
+        base_data = BaseAction(...).execute()
+        result = {"base": base_data}
 
-    result = {"base": base_response["data"]}
+        # Conditionally get extra data
+        if include_extra:
+            extra_data = ExtraAction(...).execute()
+            result["extra"] = extra_data
 
-    # Conditionally get extra data
-    if include_extra:
-        extra_response, status = ExtraAction(...).execute()
-        if status == 200:
-            result["extra"] = extra_response["data"]
-
-    return result, 200
+        return result, 200
+    except HttpException as e:
+        return {"success": False, "message": e.message}, e.status_code
 ```
 
-### Pattern 3: Error Aggregation
+### Pattern 3: Partial Success with Error Tracking
 
 ```python
 def aggregate_with_errors(self, resource_id: str):
+    """Handle multiple actions with partial success support."""
     errors = []
     result = {}
 
     # Try to get multiple resources
-    response1, status1 = Action1(...).execute()
-    if status1 == 200:
-        result["data1"] = response1["data"]
-    else:
-        errors.append(f"Action1 failed: {response1.get('message')}")
+    try:
+        data1 = Action1(...).execute()
+        result["data1"] = data1
+    except HttpException as e:
+        errors.append(f"Action1 failed: {e.message}")
 
-    response2, status2 = Action2(...).execute()
-    if status2 == 200:
-        result["data2"] = response2["data"]
-    else:
-        errors.append(f"Action2 failed: {response2.get('message')}")
+    try:
+        data2 = Action2(...).execute()
+        result["data2"] = data2
+    except HttpException as e:
+        errors.append(f"Action2 failed: {e.message}")
 
     # Return partial results with errors
     if errors:
         result["errors"] = errors
+        result["success"] = False
 
     return result, 200 if not errors else 207  # 207 = Multi-Status
 ```
@@ -331,36 +416,39 @@ def aggregate_with_errors(self, resource_id: str):
 ### Unit Testing Controllers
 
 ```python
-# tests/web/controllers/test_session_detail_controller.py
+# tests/web/controllers/test_start_session_controller.py
 from unittest.mock import Mock, patch
-from pipe.web.controllers import SessionDetailController
+from pipe.web.controllers import StartSessionController
+from pipe.web.exceptions import NotFoundError
 
 
 def test_get_session_with_tree_success():
     # Mock dependencies
     mock_service = Mock()
     mock_settings = Mock()
-    mock_settings.model_dump.return_value = {"key": "value"}
 
-    controller = SessionDetailController(mock_service, mock_settings)
+    controller = StartSessionController(mock_service, mock_settings)
 
-    # Mock action responses
+    # Mock action responses (actions return data directly)
     with patch("pipe.web.actions.SessionTreeAction") as MockTreeAction, \
-         patch("pipe.web.actions.SessionGetAction") as MockGetAction:
+         patch("pipe.web.actions.SessionGetAction") as MockGetAction, \
+         patch("pipe.web.actions.GetRolesAction") as MockRolesAction, \
+         patch("pipe.web.actions.SettingsGetAction") as MockSettingsAction:
 
-        # Mock tree action
+        # Mock successful data returns
         tree_instance = MockTreeAction.return_value
-        tree_instance.execute.return_value = (
-            {"sessions": [{"id": "1"}, {"id": "2"}]},
-            200,
-        )
+        tree_instance.execute.return_value = {
+            "session_tree": [{"id": "1"}, {"id": "2"}]
+        }
 
-        # Mock session action
         get_instance = MockGetAction.return_value
-        get_instance.execute.return_value = (
-            {"session": {"session_id": "abc-123"}},
-            200,
-        )
+        get_instance.execute.return_value = {"session_id": "abc-123"}
+
+        roles_instance = MockRolesAction.return_value
+        roles_instance.execute.return_value = ["role1", "role2"]
+
+        settings_instance = MockSettingsAction.return_value
+        settings_instance.execute.return_value = {"settings": {"key": "value"}}
 
         # Execute
         response, status = controller.get_session_with_tree("abc-123")
@@ -370,54 +458,30 @@ def test_get_session_with_tree_success():
         assert "session_tree" in response
         assert "current_session" in response
         assert "settings" in response
-        assert len(response["session_tree"]) == 2
+        assert "role_options" in response
 
 
-def test_get_session_with_tree_tree_error():
-    controller = SessionDetailController(Mock(), Mock())
-
-    with patch("pipe.web.actions.SessionTreeAction") as MockTreeAction:
-        # Tree action fails
-        tree_instance = MockTreeAction.return_value
-        tree_instance.execute.return_value = (
-            {"message": "Tree failed"},
-            500,
-        )
-
-        # Execute
-        response, status = controller.get_session_with_tree("abc-123")
-
-        # Should return tree error immediately
-        assert status == 500
-        assert response["message"] == "Tree failed"
-
-
-def test_get_session_with_tree_session_error():
-    controller = SessionDetailController(Mock(), Mock())
+def test_get_session_with_tree_not_found():
+    controller = StartSessionController(Mock(), Mock())
 
     with patch("pipe.web.actions.SessionTreeAction") as MockTreeAction, \
          patch("pipe.web.actions.SessionGetAction") as MockGetAction:
 
         # Tree succeeds
         tree_instance = MockTreeAction.return_value
-        tree_instance.execute.return_value = (
-            {"sessions": []},
-            200,
-        )
+        tree_instance.execute.return_value = {"session_tree": []}
 
-        # Session fails
+        # Session raises NotFoundError
         get_instance = MockGetAction.return_value
-        get_instance.execute.return_value = (
-            {"message": "Session not found"},
-            404,
-        )
+        get_instance.execute.side_effect = NotFoundError("Session not found")
 
         # Execute
         response, status = controller.get_session_with_tree("nonexistent")
 
-        # Should return session error
+        # Should return error response
         assert status == 404
-        assert response["message"] == "Session not found"
+        assert response["success"] is False
+        assert "not found" in response["message"].lower()
 ```
 
 ## Integration with Actions
@@ -428,14 +492,17 @@ def test_get_session_with_tree_session_error():
 # ✅ GOOD: Controller orchestrates actions
 class DashboardController:
     def get_dashboard(self):
-        # Use actions for operations
-        sessions_response, _ = SessionListAction(...).execute()
-        stats_response, _ = StatsAction(...).execute()
+        try:
+            # Use actions for operations
+            sessions_data = SessionListAction(...).execute()
+            stats_data = StatsAction(...).execute()
 
-        return {
-            "sessions": sessions_response["sessions"],
-            "stats": stats_response["stats"],
-        }, 200
+            return {
+                "sessions": sessions_data,
+                "stats": stats_data,
+            }, 200
+        except HttpException as e:
+            return {"success": False, "message": e.message}, e.status_code
 
 # ❌ BAD: Controller calls services directly for simple operations
 class DashboardController:
@@ -465,16 +532,22 @@ class SessionAction(BaseAction):
 # ✅ GOOD: Multiple actions need coordination
 class ReportController:
     def get_full_report(self):
-        data1 = Action1().execute()
-        data2 = Action2().execute()
-        data3 = Action3().execute()
-        return combine(data1, data2, data3)
+        try:
+            data1 = Action1().execute()
+            data2 = Action2().execute()
+            data3 = Action3().execute()
+            return self.combine(data1, data2, data3), 200
+        except HttpException as e:
+            return {"success": False, "message": e.message}, e.status_code
+
+    def combine(self, d1, d2, d3):
+        return {"report": {"data1": d1, "data2": d2, "data3": d3}}
 
 # ❌ BAD: Single action - no controller needed
 class ReportController:
     def get_simple_data(self):
         # Just use the action directly in routes
-        return Action1().execute()
+        return Action1().execute(), 200
 ```
 
 ### 2. Keep Business Logic in Core
@@ -499,23 +572,20 @@ class AnalyticsController:
 ### 3. Handle Errors Gracefully
 
 ```python
-# ✅ GOOD: Check each action's status
+# ✅ GOOD: Use try/except with HttpException
 def orchestrate(self):
-    response1, status1 = Action1().execute()
-    if status1 != 200:
-        return response1, status1  # Early return on error
+    try:
+        data1 = Action1().execute()
+        data2 = Action2().execute()
+        return self.combine(data1, data2), 200
+    except HttpException as e:
+        return {"success": False, "message": e.message}, e.status_code
 
-    response2, status2 = Action2().execute()
-    if status2 != 200:
-        return response2, status2
-
-    return combine(response1, response2), 200
-
-# ❌ BAD: Ignore action errors
+# ❌ BAD: No error handling
 def orchestrate(self):
-    response1, _ = Action1().execute()  # Ignoring status
-    response2, _ = Action2().execute()
-    return combine(response1, response2), 200
+    data1 = Action1().execute()  # May raise exception
+    data2 = Action2().execute()
+    return self.combine(data1, data2), 200
 ```
 
 ### 4. Frontend-Specific Shaping

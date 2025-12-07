@@ -8,21 +8,22 @@ Actions represent **single-purpose operations** in the web layer. Each action ex
 
 1. **Single Operation** - One action, one responsibility
 2. **Service Coordination** - Call core services to execute business logic
-3. **Request Parsing** - Extract and validate parameters
-4. **Error Handling** - Catch and format errors consistently
-5. **Response Formatting** - Return `(dict, status_code)` tuples
+3. **Request Parsing** - Extract and validate parameters (pre-validated in new pattern)
+4. **Error Handling** - Raise HttpException for errors
+5. **Data Return** - Return data directly (dispatcher wraps in ApiResponse)
 
 ## Characteristics
 
 - ✅ Single responsibility (one operation only)
 - ✅ Stateless execution
 - ✅ Direct service calls
-- ✅ Consistent error handling
-- ✅ Return `tuple[dict[str, Any], int]`
+- ✅ Raise HttpException for errors
+- ✅ Return data directly (dict, list, TypedDict, etc.)
 - ❌ **NO business logic** - delegate to services
 - ❌ **NO orchestration** - one operation only
 - ❌ **NO calling other actions** - let controllers orchestrate
 - ❌ **NO state** - actions are stateless
+- ❌ **NO manual ApiResponse wrapping** - dispatcher handles it
 
 ## File Structure
 
@@ -65,22 +66,51 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from flask import Request
+from pipe.web.request_context import RequestContext
+from pipe.web.requests.base_request import BaseRequest
+from pipe.web.exceptions import (
+    BadRequestError,
+    NotFoundError,
+    UnprocessableEntityError,
+    InternalServerError,
+)
 
 
 class BaseAction(ABC):
     """
     Abstract base class for all API actions.
 
-    All actions inherit from this base and implement execute().
-    Actions receive parameters and request data, then return
-    a tuple of (response_dict, status_code).
+    Supports two patterns:
+    1. Legacy pattern (body_model): For backward compatibility
+       - Set body_model class variable
+       - Access via self.request.get_body()
+       - Validation happens lazily
+
+    2. New pattern (request_model): Laravel/Struts style
+       - Set request_model to BaseRequest subclass
+       - Validation happens BEFORE action execution
+       - Access validated data via self.validated_request
 
     Attributes:
-        params: URL/query parameters
-        request_data: Flask Request object
+        request: RequestContext for accessing path params and body
+        validated_request: Pre-validated BaseRequest (if using request_model)
+        params: (Legacy) URL/query parameters
+        request_data: (Legacy) Flask Request object
     """
 
-    def __init__(self, params: dict, request_data: Request | None = None):
+    # Legacy: Pydantic model for request body only
+    body_model: type[BaseModel] | None = None
+
+    # New: BaseRequest subclass for unified validation
+    request_model: type[BaseRequest] | None = None
+
+    def __init__(
+        self,
+        params: dict | None = None,
+        request_data: Request | None = None,
+        request_context: RequestContext | None = None,
+        validated_request: BaseRequest | None = None,
+    ):
         """
         Initialize the action with parameters and optional request data.
 
@@ -89,44 +119,81 @@ class BaseAction(ABC):
             request_data: Optional Flask Request object for accessing body
 
         Examples:
-            # Action with URL params only
+            # Legacy initialization (still supported)
             action = SessionGetAction(
                 params={"session_id": "abc-123"},
                 request_data=None,
             )
 
-            # Action with request body
+            # New initialization (automatic in dispatcher)
             action = SessionStartAction(
-                params={},
-                request_data=request,  # Flask request with JSON body
+                request_context=context,
+                validated_request=validated_req,
             )
         """
-        self.params = params
+        # Support legacy initialization
+        if request_context is None:
+            request_context = RequestContext(
+                path_params=params or {},
+                request_data=request_data,
+                body_model=self.body_model,
+            )
+
+        self.request = request_context
+        self.validated_request = validated_request
+
+        # Keep legacy attributes for backward compatibility
+        self.params = params or {}
         self.request_data = request_data
 
     @abstractmethod
-    def execute(self) -> tuple[dict[str, Any], int]:
+    def execute(self) -> dict[str, Any] | list[Any] | Any:
         """
-        Execute the action and return a JSON response with status code.
+        Execute the action and return data directly.
+
+        The dispatcher automatically wraps the return value in ApiResponse
+        and handles status codes. Actions should raise HttpException for errors.
 
         This method must be implemented by all action subclasses.
-        It should:
-        1. Extract parameters from self.params and self.request_data
-        2. Validate inputs (or use request models)
-        3. Call core services to execute business logic
-        4. Handle errors appropriately
-        5. Return (response_dict, status_code)
+
+        Legacy pattern:
+        1. Extract parameters via self.request.get_path_param()
+        2. Get validated body via self.request.get_body()
+        3. Call core services
+        4. Return data (dict, list, TypedDict, etc.)
+        5. Raise HttpException (BadRequestError, NotFoundError, etc.) on errors
+
+        New pattern (Laravel/Struts style):
+        1. Access self.validated_request (already validated!)
+        2. Call core services
+        3. Return data directly
+        4. Raise HttpException on errors
 
         Returns:
-            Tuple of (response_dict, status_code)
+            Data (dict, list, TypedDict, or other serializable types)
+            Dispatcher wraps this in ApiResponse[T]
+
+        Raises:
+            BadRequestError: For 400 errors (invalid input)
+            NotFoundError: For 404 errors (resource not found)
+            UnprocessableEntityError: For 422 errors (validation failures)
+            InternalServerError: For 500 errors (unexpected failures)
 
         Examples:
-            response, status = action.execute()
+            # Legacy pattern
+            session_id = self.request.get_path_param("session_id")
+            body = self.request.get_body()
+            data = service.get_data(session_id)
+            return data  # Dispatcher wraps in ApiResponse
 
-            if status == 200:
-                print("Success:", response)
-            else:
-                print("Error:", response.get("message"))
+            # New pattern
+            req = self.validated_request
+            session_id = req.session_id  # Type-safe!
+            return service.get_data(session_id)
+
+            # Error handling
+            if not resource:
+                raise NotFoundError("Resource not found")
         """
         pass
 ```
@@ -255,45 +322,42 @@ class SessionGetAction(BaseAction):
     Simple retrieval action that gets session from service.
     """
 
-    def execute(self) -> tuple[dict[str, Any], int]:
+    def execute(self) -> dict[str, Any]:
         """
         Retrieve session by ID.
 
         Returns:
-            Success: ({"session": dict}, 200)
-            Missing param: ({"message": str}, 400)
-            Not found: ({"message": str}, 404)
-            Error: ({"message": str}, 500)
+            SessionData dict directly (dispatcher wraps in ApiResponse)
+
+        Raises:
+            BadRequestError: If session_id is missing
+            NotFoundError: If session not found
+            InternalServerError: For unexpected errors
 
         Examples:
             action = SessionGetAction(
                 params={"session_id": "abc-123"},
                 request_data=None,
             )
-            response, status = action.execute()
-
-            if status == 200:
-                session = response["session"]
-                print(f"Session: {session['session_id']}")
+            data = action.execute()  # Returns SessionData dict
+            # Dispatcher wraps: ApiResponse(success=True, data=data)
         """
         from pipe.web.app import session_service
+        from pipe.web.exceptions import BadRequestError, NotFoundError
 
         # Extract parameter
-        session_id = self.params.get("session_id")
+        session_id = self.request.get_path_param("session_id")
         if not session_id:
-            return {"message": "session_id is required"}, 400
+            raise BadRequestError("session_id is required")
 
-        try:
-            # Get session from service
-            session_data = session_service.get_session(session_id)
+        # Get session from service
+        session_data = session_service.get_session(session_id)
 
-            if not session_data:
-                return {"message": "Session not found."}, 404
+        if not session_data:
+            raise NotFoundError("Session not found")
 
-            return {"session": session_data.to_dict()}, 200
-
-        except Exception as e:
-            return {"message": str(e)}, 500
+        # Return data directly - dispatcher wraps it
+        return session_data.to_dict()
 
 
 class SessionDeleteAction(BaseAction):
@@ -303,27 +367,26 @@ class SessionDeleteAction(BaseAction):
     Deletes session and all related data via service.
     """
 
-    def execute(self) -> tuple[dict[str, Any], int]:
+    def execute(self) -> dict[str, str]:
         """
         Delete session by ID.
 
         Returns:
-            Success: ({"message": str}, 200)
-            Missing param: ({"message": str}, 400)
-            Error: ({"message": str}, 500)
+            Success message dict
+
+        Raises:
+            BadRequestError: If session_id is missing
+            InternalServerError: For unexpected errors
         """
         from pipe.web.app import session_service
+        from pipe.web.exceptions import BadRequestError
 
-        session_id = self.params.get("session_id")
+        session_id = self.request.get_path_param("session_id")
         if not session_id:
-            return {"message": "session_id is required"}, 400
+            raise BadRequestError("session_id is required")
 
-        try:
-            session_service.delete_session(session_id)
-            return {"message": f"Session {session_id} deleted."}, 200
-
-        except Exception as e:
-            return {"message": str(e)}, 500
+        session_service.delete_session(session_id)
+        return {"message": f"Session {session_id} deleted"}
 
 
 class SessionInstructionAction(BaseAction):
@@ -512,58 +575,49 @@ class ReferencePersistEditAction(BaseAction):
 
 ```python
 class GetResourceAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        resource_id = self.params.get("resource_id")
+    def execute(self) -> dict[str, Any]:
+        resource_id = self.request.get_path_param("resource_id")
 
-        try:
-            resource = service.get_resource(resource_id)
-            return {"resource": resource.to_dict()}, 200
-        except NotFoundError:
-            return {"message": "Not found"}, 404
+        resource = service.get_resource(resource_id)
+        if not resource:
+            raise NotFoundError("Resource not found")
+
+        return resource.to_dict()
 ```
 
 ### Pattern 2: Creation with Validation
 
 ```python
 class CreateResourceAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        try:
-            request_data = CreateResourceRequest(**self.request_data.get_json())
-            resource = service.create_resource(request_data)
-            return {"resource_id": resource.id}, 201
-        except ValidationError as e:
-            return {"message": str(e)}, 422
+    request_model = CreateResourceRequest  # Pre-validated!
+
+    def execute(self) -> dict[str, str]:
+        req = self.validated_request
+        resource = service.create_resource(req)
+        return {"resource_id": resource.id}
 ```
 
 ### Pattern 3: Update Operation
 
 ```python
 class UpdateResourceAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        resource_id = self.params.get("resource_id")
+    request_model = UpdateResourceRequest
 
-        try:
-            request_data = UpdateResourceRequest(**self.request_data.get_json())
-            service.update_resource(resource_id, request_data)
-            return {"message": "Updated successfully"}, 200
-        except NotFoundError:
-            return {"message": "Not found"}, 404
-        except ValidationError as e:
-            return {"message": str(e)}, 422
+    def execute(self) -> dict[str, str]:
+        req = self.validated_request
+        service.update_resource(req.resource_id, req)
+        return {"message": "Updated successfully"}
 ```
 
 ### Pattern 4: Delete Operation
 
 ```python
 class DeleteResourceAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        resource_id = self.params.get("resource_id")
+    def execute(self) -> dict[str, str]:
+        resource_id = self.request.get_path_param("resource_id")
 
-        try:
-            service.delete_resource(resource_id)
-            return {"message": "Deleted successfully"}, 200
-        except NotFoundError:
-            return {"message": "Not found"}, 404
+        service.delete_resource(resource_id)
+        return {"message": "Deleted successfully"}
 ```
 
 ## Testing
@@ -573,7 +627,9 @@ class DeleteResourceAction(BaseAction):
 ```python
 # tests/web/actions/test_session_actions.py
 from unittest.mock import Mock, patch
+import pytest
 from pipe.web.actions import SessionGetAction, SessionDeleteAction
+from pipe.web.exceptions import NotFoundError, BadRequestError
 
 
 def test_session_get_action_success():
@@ -588,11 +644,10 @@ def test_session_get_action_success():
             params={"session_id": "abc-123"},
             request_data=None,
         )
-        response, status = action.execute()
+        data = action.execute()
 
-        # Assert
-        assert status == 200
-        assert response["session"]["session_id"] == "abc-123"
+        # Assert - returns data directly
+        assert data["session_id"] == "abc-123"
         mock_service.get_session.assert_called_once_with("abc-123")
 
 
@@ -604,10 +659,10 @@ def test_session_get_action_not_found():
             params={"session_id": "nonexistent"},
             request_data=None,
         )
-        response, status = action.execute()
 
-        assert status == 404
-        assert "not found" in response["message"].lower()
+        # Should raise NotFoundError
+        with pytest.raises(NotFoundError, match="Session not found"):
+            action.execute()
 
 
 def test_session_delete_action_success():
@@ -616,12 +671,14 @@ def test_session_delete_action_success():
             params={"session_id": "abc-123"},
             request_data=None,
         )
-        response, status = action.execute()
+        result = action.execute()
 
-        assert status == 200
-        assert "deleted" in response["message"].lower()
+        # Returns success message
+        assert "deleted" in result["message"].lower()
         mock_service.delete_session.assert_called_once_with("abc-123")
 ```
+
+````
 
 ## Best Practices
 
@@ -632,7 +689,7 @@ def test_session_delete_action_success():
 class SessionGetAction(BaseAction):
     def execute(self):
         session = service.get_session(session_id)
-        return {"session": session.to_dict()}, 200
+        return session.to_dict()
 
 # ❌ BAD: Multiple operations
 class SessionAction(BaseAction):
@@ -641,55 +698,132 @@ class SessionAction(BaseAction):
         session = service.get_session(session_id)
         tree = service.get_tree()
         settings = service.get_settings()
-        return {...}, 200  # Use controller instead
-```
+        return {...}  # Use controller instead
+````
 
 ### 2. Consistent Error Handling
 
 ```python
-# ✅ GOOD: Consistent error responses
+# ✅ GOOD: Use HttpException hierarchy
+def execute(self):
+    resource_id = self.request.get_path_param("resource_id")
+    if not resource_id:
+        raise BadRequestError("resource_id is required")
+
+    result = service.do_something(resource_id)
+    if not result:
+        raise NotFoundError("Resource not found")
+
+    return result
+
+# ❌ BAD: Generic exceptions or manual error dicts
 def execute(self):
     try:
         result = service.do_something()
-        return {"result": result}, 200
-    except ValidationError as e:
-        return {"message": str(e)}, 422
-    except NotFoundError:
-        return {"message": "Not found"}, 404
+        return result
     except Exception as e:
-        return {"message": str(e)}, 500
-
-# ❌ BAD: Inconsistent error handling
-def execute(self):
-    result = service.do_something()  # No error handling
-    return result, 200  # Might crash
+        # Loses error context, wrong status code
+        return {"error": str(e)}
 ```
 
 ### 3. Use Request Models for Validation
 
 ```python
-# ✅ GOOD: Request model validates
-def execute(self):
-    request_data = CreateResourceRequest(**self.request_data.get_json())
-    # All validation done by model
-    return service.create(request_data), 201
+# ✅ GOOD: Unified request model (New pattern)
+class UpdateResourceRequest(BaseRequest):
+    path_params: ClassVar[list[str]] = ["resource_id"]
+    resource_id: str
+    name: str
+
+class UpdateResourceAction(BaseAction):
+    request_model = UpdateResourceRequest
+
+    def execute(self):
+        req = self.validated_request  # Already validated!
+        service.update(req.resource_id, req.name)
+        return {"message": "Updated"}
+
+# ✅ GOOD: Body-only model (Legacy pattern)
+class UpdateResourceBodyModel(BaseModel):
+    name: str
+
+class UpdateResourceAction(BaseAction):
+    body_model = UpdateResourceBodyModel
+
+    def execute(self):
+        resource_id = self.request.get_path_param("resource_id")
+        body = self.request.get_body()
+        service.update(resource_id, body.name)
+        return {"message": "Updated"}
 
 # ❌ BAD: Manual validation
 def execute(self):
     data = self.request_data.get_json()
     if not data.get("name"):
-        return {"message": "Name required"}, 400
+        raise BadRequestError("Name required")
     # Lots of manual validation...
 ```
 
-### 4. Stateless Operations
+### 4. New Pattern vs Legacy Pattern
+
+```python
+# ✅ NEW PATTERN (Recommended): Laravel/Struts style
+# Validation happens BEFORE action execution
+
+class SessionEditRequest(BaseRequest):
+    path_params: ClassVar[list[str]] = ["session_id"]
+    session_id: str
+    purpose: str | None = None
+
+    @field_validator("session_id")
+    @classmethod
+    def validate_session_exists(cls, v):
+        if not session_exists(v):
+            raise ValueError(f"Session '{v}' not found")
+        return v
+
+class SessionEditAction(BaseAction):
+    request_model = SessionEditRequest  # Enables pre-validation
+
+    def execute(self) -> dict[str, str]:
+        # Already validated by dispatcher!
+        req = self.validated_request
+
+        # Type-safe access
+        service.update_session(req.session_id, req.purpose)
+        return {"message": "Updated"}  # Dispatcher wraps in ApiResponse
+
+# ✅ LEGACY PATTERN (Still supported)
+# Validation happens inside action
+
+class SessionEditBodyModel(BaseModel):
+    purpose: str | None = None
+
+class SessionEditAction(BaseAction):
+    body_model = SessionEditBodyModel
+
+    def execute(self) -> dict[str, str]:
+        # Manual parameter extraction
+        session_id = self.request.get_path_param("session_id")
+        if not session_id:
+            raise BadRequestError("session_id is required")
+
+        # Lazy validation
+        body = self.request.get_body()
+
+        service.update_session(session_id, body.purpose)
+        return {"message": "Updated"}  # Dispatcher wraps in ApiResponse
+```
+
+### 5. Stateless Operations
 
 ```python
 # ✅ GOOD: Stateless
 class GetAction(BaseAction):
     def execute(self):
         # No state stored
-        return service.get(self.params["id"]), 200
+        resource_id = self.request.get_path_param("id")
+        return service.get(resource_id)
 
 # ❌ BAD: Stateful
 class GetAction(BaseAction):
@@ -698,8 +832,9 @@ class GetAction(BaseAction):
         self.cache = {}  # State - BAD!
 
     def execute(self):
+        id = self.request.get_path_param("id")
         if id in self.cache:
-            return self.cache[id], 200
+            return self.cache[id]
         ...
 ```
 
@@ -709,11 +844,13 @@ Actions are **single-purpose operations**:
 
 - ✅ One action, one operation
 - ✅ Stateless execution
-- ✅ Consistent response format
-- ✅ Clear error handling
+- ✅ Return data directly (dict, list, TypedDict, etc.)
+- ✅ Raise HttpException for errors
+- ✅ Dispatcher wraps responses in ApiResponse
 - ❌ No business logic
 - ❌ No orchestration
 - ❌ No calling other actions
 - ❌ No state
+- ❌ No manual ApiResponse wrapping
 
 Keep actions simple, focused, and stateless.

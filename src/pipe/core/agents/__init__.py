@@ -43,7 +43,14 @@ for loader, module_name, is_pkg in pkgutil.walk_packages(__path__):
         continue
     try:
         importlib.import_module(f".{module_name}", __package__)
-    except Exception:
+    except Exception as e:
+        # Print import errors to help debug registration issues
+        import sys
+
+        print(
+            f"Warning: Failed to import agent module '{module_name}': {e}",
+            file=sys.stderr,
+        )
         # Silently skip modules that fail to import
         # (e.g., missing dependencies for optional agents)
         pass

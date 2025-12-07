@@ -47,7 +47,7 @@ export const Compressor = ({
 
   return (
     <Form defaultValues={mergedDefaultValues} schema={compressorSchema}>
-      {!compressorSessionId ? (
+      {!compressorSessionId || !summary || summary.startsWith('Rejected:') ? (
         <CompressorForm
           sessionId={sessionId}
           effectiveMax={effectiveMax}

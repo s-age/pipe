@@ -10,7 +10,10 @@ class TestSendInstructionRequest(unittest.TestCase):
         Tests that a valid, non-empty instruction passes validation.
         """
         try:
-            SendInstructionRequest(instruction="This is a valid instruction.")
+            SendInstructionRequest.create_with_path_params(
+                path_params={"session_id": "test_session"},
+                body_data={"instruction": "This is a valid instruction."},
+            )
         except ValidationError as e:
             self.fail(f"Validation failed unexpectedly: {e}")
 
@@ -19,14 +22,20 @@ class TestSendInstructionRequest(unittest.TestCase):
         Tests that an empty instruction string raises a ValueError.
         """
         with self.assertRaises(ValidationError):
-            SendInstructionRequest(instruction="")
+            SendInstructionRequest.create_with_path_params(
+                path_params={"session_id": "test_session"},
+                body_data={"instruction": ""},
+            )
 
     def test_whitespace_instruction_raises_error(self):
         """
         Tests that an instruction containing only whitespace raises a ValueError.
         """
         with self.assertRaises(ValidationError):
-            SendInstructionRequest(instruction="   ")
+            SendInstructionRequest.create_with_path_params(
+                path_params={"session_id": "test_session"},
+                body_data={"instruction": "   "},
+            )
 
 
 if __name__ == "__main__":

@@ -60,7 +60,6 @@ export const useTurnHandlers = ({
 
   const handleCopy = useCallback(async (): Promise<void> => {
     await navigator.clipboard.writeText(editedContent)
-
     toast.addToast({ status: 'success', title: 'Copied to clipboard.' })
   }, [editedContent, toast])
 
@@ -107,17 +106,23 @@ export const useTurnHandlers = ({
 
   const handleConfirmDelete = useCallback(async (): Promise<void> => {
     if (modalIdReference.current !== null) {
-      await deleteTurnAction(sessionId, index)
-      await onRefresh()
-      const fetchedSessionDetailResponse = await getSession(sessionId)
-      const fetchedSessionTree = await getSessionTree()
-      const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
-        ...session,
-        sessionId: id
-      }))
-      refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
-      hide(modalIdReference.current)
-      modalIdReference.current = null
+      try {
+        await deleteTurnAction(sessionId, index)
+        await onRefresh()
+        const fetchedSessionDetailResponse = await getSession(sessionId)
+        const fetchedSessionTree = await getSessionTree()
+        const newSessions = fetchedSessionTree.sessions.map(
+          ([id, session]: [string, SessionOverview]) => ({
+            ...session,
+            sessionId: id
+          })
+        )
+        refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
+      } finally {
+        // Always hide modal, even if there's an error
+        hide(modalIdReference.current)
+        modalIdReference.current = null
+      }
     }
   }, [deleteTurnAction, sessionId, index, onRefresh, refreshSessionsInStore, hide])
 
@@ -141,16 +146,22 @@ export const useTurnHandlers = ({
   }, [show, handleConfirmDelete, handleCancelDelete])
 
   const handleSaveEdit = useCallback(async (): Promise<void> => {
-    await editTurnAction(sessionId, index, editedContent, turn)
-    await onRefresh()
-    const fetchedSessionDetailResponse = await getSession(sessionId)
-    const fetchedSessionTree = await getSessionTree()
-    const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
-      ...session,
-      sessionId: id
-    }))
-    refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
-    setIsEditing(false)
+    try {
+      await editTurnAction(sessionId, index, editedContent, turn)
+      await onRefresh()
+      const fetchedSessionDetailResponse = await getSession(sessionId)
+      const fetchedSessionTree = await getSessionTree()
+      const newSessions = fetchedSessionTree.sessions.map(
+        ([id, session]: [string, SessionOverview]) => ({
+          ...session,
+          sessionId: id
+        })
+      )
+      refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
+    } finally {
+      // Always exit edit mode, even if there's an error
+      setIsEditing(false)
+    }
   }, [
     editTurnAction,
     sessionId,

@@ -4,7 +4,10 @@ Handles all /api/v1/session/* endpoints.
 """
 
 from flask import Blueprint, Response, jsonify, request
+from pipe.web.actions.session_actions import SessionInstructionAction
 from pipe.web.dispatcher import dispatch_action
+from pipe.web.request_context import RequestContext
+from pipe.web.streaming_dispatcher import dispatch_streaming_action
 
 session_bp = Blueprint("session", __name__, url_prefix="/api/v1")
 
@@ -33,15 +36,30 @@ def session_api(session_id):
 
 @session_bp.route("/session/<path:session_id>/instruction", methods=["POST"])
 def send_instruction(session_id):
-    """Send an instruction to a session."""
-    response_data, status_code = dispatch_action(
-        action=f"session/{session_id}/instruction",
-        params={"session_id": session_id},
-        request_data=request,
-    )
-    if isinstance(response_data, Response):
-        return response_data
-    return jsonify(response_data), status_code
+    """Send an instruction to a session - returns streaming response."""
+    try:
+        request_context = RequestContext(
+            path_params={"session_id": session_id}, request_data=request
+        )
+        response = dispatch_streaming_action(
+            action_class=SessionInstructionAction,
+            params={"session_id": session_id},
+            request_data=request_context,
+        )
+        return response
+    except Exception as e:
+        from pipe.web.exceptions import HttpException
+        from pipe.web.responses import ApiResponse
+
+        if isinstance(e, HttpException):
+            return (
+                jsonify(ApiResponse(success=False, message=e.message).model_dump()),
+                e.status_code,
+            )
+        return (
+            jsonify(ApiResponse(success=False, message=str(e)).model_dump()),
+            500,
+        )
 
 
 @session_bp.route("/session/<path:session_id>/turns", methods=["GET"])

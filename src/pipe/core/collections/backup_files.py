@@ -9,6 +9,15 @@ import os
 from typing import Any
 
 from pipe.core.repositories.session_repository import SessionRepository
+from pydantic import BaseModel
+
+
+class SessionSummary(BaseModel):
+    session_id: str
+    file_path: str
+    purpose: str | None
+    deleted_at: str | None
+    session_data: dict[str, Any]
 
 
 class BackupFiles:
@@ -21,7 +30,7 @@ class BackupFiles:
     def __init__(self, repository: SessionRepository):
         self.repository = repository
 
-    def list_sessions(self) -> list[dict[str, Any]]:
+    def list_sessions(self) -> list[SessionSummary]:
         """
         List all sessions in the backup directory.
 
@@ -102,13 +111,13 @@ class BackupFiles:
                                     deleted_at = None
 
                                 sessions.append(
-                                    {
-                                        "session_id": session_id,
-                                        "file_path": path,
-                                        "purpose": purpose,
-                                        "deleted_at": deleted_at,
-                                        "session_data": data,
-                                    }
+                                    SessionSummary(
+                                        session_id=session_id,
+                                        file_path=path,
+                                        purpose=purpose,
+                                        deleted_at=deleted_at,
+                                        session_data=data,
+                                    )
                                 )
                     except Exception:
                         # Skip files that can't be read or parsed

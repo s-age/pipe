@@ -141,8 +141,8 @@ export const useChatStreaming = ({
             // Fetch from API if not cached
             try {
               const data = await getSession(currentSessionId)
-              cacheSessionDetail(currentSessionId, data.session)
-              setSessionDetail(data.session)
+              cacheSessionDetail(currentSessionId, data)
+              setSessionDetail(data)
             } catch {
               addToast({
                 status: 'failure',

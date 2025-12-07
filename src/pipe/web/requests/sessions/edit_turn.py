@@ -2,18 +2,26 @@
 Pydantic model for validating the request body of the edit turn API endpoint.
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
+from pipe.web.requests.base_request import BaseRequest
 from pipe.web.requests.common import normalize_camel_case_keys
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import field_validator, model_validator
 
 
-class EditTurnRequest(BaseModel):
+class EditTurnRequest(BaseRequest):
+    path_params: ClassVar[list[str]] = ["session_id", "turn_index"]
+
     """
     Request model for editing a turn.
     Accepts partial updates with either 'content' or 'instruction' fields.
     """
 
+    # Path parameters (from URL)
+    session_id: str
+    turn_index: int
+
+    # Body fields (optional)
     content: str | None = None
     instruction: str | None = None
 

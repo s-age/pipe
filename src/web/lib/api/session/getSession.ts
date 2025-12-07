@@ -46,7 +46,5 @@ export type SessionDetail = {
   roleOptions?: RoleOption[]
 }
 
-export const getSession = async (
-  sessionId: string
-): Promise<{ session: SessionDetail }> =>
-  client.get<{ session: SessionDetail }>(`/session/${sessionId}`)
+export const getSession = async (sessionId: string): Promise<SessionDetail> =>
+  client.get<SessionDetail>(`/session/${sessionId}`)

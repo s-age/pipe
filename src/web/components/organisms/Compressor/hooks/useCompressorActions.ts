@@ -56,6 +56,15 @@ export const useCompressorActions = ({
         setCompressorSessionId(response.sessionId)
       }
 
+      // Check if the summary was rejected by verifier
+      if (response?.summary && response.summary.startsWith('Rejected:')) {
+        // Extract rejection reason from the summary
+        setError(response.summary)
+        setSummary('')
+
+        return
+      }
+
       // If the server returned a verified summary, use it.
       if (response?.summary) {
         setSummary(response.summary)

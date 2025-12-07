@@ -13,7 +13,11 @@ from pipe.web.actions.fs_actions import (
     LsAction,
     SearchL2Action,
 )
-from pipe.web.controllers import SessionDetailController
+from pipe.web.controllers import (
+    SessionChatController,
+    SessionManagementController,
+    StartSessionController,
+)
 from pipe.web.dispatcher import dispatch_action, init_dispatcher
 from pipe.web.routes import (
     bff_bp,
@@ -148,13 +152,19 @@ def create_app(
     ).create_file_indexer_service()
 
     # BFF (Backend for Frontend) Controllers
-    session_detail_controller = SessionDetailController(session_service, settings)
+    start_session_controller = StartSessionController(session_service, settings)
+    session_chat_controller = SessionChatController(session_service, settings)
+    session_management_controller = SessionManagementController(
+        session_service, settings
+    )
 
     # Initialize service container for dependency injection
     get_container().init(
         session_service=session_service,
         session_management_service=session_management_service,
-        session_detail_controller=session_detail_controller,
+        start_session_controller=start_session_controller,
+        session_chat_controller=session_chat_controller,
+        session_management_controller=session_management_controller,
         file_indexer_service=file_indexer_service,
         settings=settings,
         project_root=project_root,

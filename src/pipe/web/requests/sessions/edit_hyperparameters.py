@@ -11,13 +11,20 @@ Behaviour:
   - top_k: int >= 0
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
+from pipe.web.requests.base_request import BaseRequest
 from pipe.web.requests.common import normalize_camel_case_keys
-from pydantic import BaseModel, model_validator
+from pydantic import model_validator
 
 
-class EditHyperparametersRequest(BaseModel):
+class EditHyperparametersRequest(BaseRequest):
+    path_params: ClassVar[list[str]] = ["session_id"]
+
+    # Path parameter (from URL)
+    session_id: str
+
+    # Body fields (all optional, at least one required)
     temperature: float | None = None
     top_p: float | None = None
     top_k: int | None = None

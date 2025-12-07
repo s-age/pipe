@@ -50,7 +50,10 @@ class TestTurnModels(unittest.TestCase):
 
     def test_tool_response_turn_creation(self):
         """Tests the creation of a ToolResponseTurn."""
-        tool_response_dict = {"status": "succeeded", "content": "File content here."}
+        tool_response_dict = {
+            "status": "succeeded",
+            "message": "File read successfully",
+        }
         data = {
             "type": "tool_response",
             "name": "read_file",
@@ -60,7 +63,8 @@ class TestTurnModels(unittest.TestCase):
         turn = ToolResponseTurn(**data)
         self.assertEqual(turn.type, "tool_response")
         self.assertEqual(turn.name, "read_file")
-        self.assertEqual(turn.response, tool_response_dict)
+        self.assertEqual(turn.response.status, "succeeded")
+        self.assertEqual(turn.response.message, "File read successfully")
 
     def test_compressed_history_turn_creation(self):
         """Tests the creation of a CompressedHistoryTurn."""

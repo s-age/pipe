@@ -1,7 +1,7 @@
 import os
 import sys
 import zoneinfo
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from pydantic import BaseModel
 
@@ -19,12 +19,19 @@ if TYPE_CHECKING:
     from pipe.core.models.settings import Settings
 
 
+class ReasoningProcess(TypedDict):
+    """Structure for multi-step reasoning process configuration."""
+
+    description: str
+    flowchart: NotRequired[str]
+
+
 # Top-level model corresponding to gemini_api_prompt.j2
 class Prompt(BaseModel):
     # Core instructions and immediate task
     description: str
     main_instruction: str
-    reasoning_process: dict[str, Any] | None = None
+    reasoning_process: ReasoningProcess | None = None
     current_task: PromptCurrentTask
     todos: list[PromptTodo] | None = None
 

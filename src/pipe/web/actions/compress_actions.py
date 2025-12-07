@@ -1,64 +1,109 @@
-from typing import Any
-
+from pipe.core.services.session_optimization_service import CompressorResult
 from pipe.web.actions.base_action import BaseAction
-from pipe.web.requests import CreateCompressorRequest
-from pydantic import ValidationError
+from pipe.web.requests.compress_requests import (
+    ApproveCompressorRequest,
+    CreateCompressorRequest,
+    DenyCompressorRequest,
+)
+from pipe.web.service_container import get_session_service
 
 
 class CreateCompressorSessionAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.service_container import get_session_service
+    """
+    Action to create a compressor session.
 
-        try:
-            request_data = CreateCompressorRequest(**self.request_data.get_json())
+    Uses the new pattern:
+    - Validation happens BEFORE this action (in Dispatcher)
+    - Returns result directly (no ApiResponse)
+    - Raises exceptions for errors (Dispatcher handles them)
 
-            result = get_session_service().run_takt_for_compression(
-                request_data.session_id,
-                request_data.policy,
-                request_data.target_length,
-                request_data.start_turn,
-                request_data.end_turn,
-            )
+    This action:
+    1. Receives pre-validated request
+    2. Calls compression service
+    3. Returns result directly
+    """
 
-            return result, 200
+    request_model = CreateCompressorRequest
 
-        except ValidationError as e:
-            return {"message": str(e)}, 422
-        except Exception as e:
-            return {"message": str(e)}, 500
+    def execute(self) -> CompressorResult:
+        """
+        Execute compression with pre-validated request.
+
+        Returns:
+            CompressorResult directly (Dispatcher wraps in ApiResponse)
+
+        Raises:
+            Exception: Any unexpected errors (Dispatcher converts to 500)
+        """
+        req = self.validated_request
+
+        # All validation already done by Dispatcher:
+        # - session_id exists
+        # - start_turn and end_turn are valid
+        # - turn range is correct
+        # - target_length is positive
+        return get_session_service().run_takt_for_compression(
+            req.session_id,
+            req.policy,
+            req.target_length,
+            req.start_turn,
+            req.end_turn,
+        )
 
 
 class ApproveCompressorAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.service_container import get_session_service
+    """
+    Action to approve a compression session.
 
-        try:
-            session_id = self.params.get("session_id")
-            if not session_id:
-                return {"message": "session_id is required"}, 400
+    Uses the new pattern:
+    - session_id validated BEFORE reaching this action
+    - Returns None (204 No Content)
+    - Raises exceptions for errors
+    """
 
-            # session_serviceの承認メソッドを呼び出す
-            get_session_service().approve_compression(session_id)
+    request_model = ApproveCompressorRequest
 
-            return {"message": "Compression approved"}, 200
+    def execute(self) -> dict[str, str]:
+        """
+        Approve compression for session.
 
-        except Exception as e:
-            return {"message": str(e)}, 500
+        Returns:
+            Success message dict
+
+        Raises:
+            Exception: Any unexpected errors
+        """
+        req = self.validated_request
+
+        get_session_service().approve_compression(req.session_id)
+
+        return {"message": "Compression approved"}
 
 
 class DenyCompressorAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        from pipe.web.service_container import get_session_service
+    """
+    Action to deny a compression session.
 
-        try:
-            session_id = self.params.get("session_id")
-            if not session_id:
-                return {"message": "session_id is required"}, 400
+    Uses the new pattern:
+    - session_id validated BEFORE reaching this action
+    - Returns None (for 204 No Content)
+    - Raises exceptions for errors
+    """
 
-            # session_serviceの拒否メソッドを呼び出す
-            get_session_service().deny_compression(session_id)
+    request_model = DenyCompressorRequest
 
-            return {}, 204
+    def execute(self) -> None:
+        """
+        Deny compression for session.
 
-        except Exception as e:
-            return {"message": str(e)}, 500
+        Returns:
+            None (Dispatcher will return 204)
+
+        Raises:
+            Exception: Any unexpected errors
+        """
+        req = self.validated_request
+
+        get_session_service().deny_compression(req.session_id)
+
+        return None

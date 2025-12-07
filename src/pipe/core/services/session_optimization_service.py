@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from pipe.core.agents.takt_agent import TaktAgent
 from pipe.core.domains.session_optimization import (
+    DiagnosisData,
     build_compressor_instruction,
     build_doctor_instruction,
     build_therapist_instruction,
@@ -19,9 +20,21 @@ from pipe.core.domains.session_optimization import (
 )
 from pipe.core.models.turn import CompressedHistoryTurn
 from pipe.core.utils.datetime import get_current_timestamp
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from pipe.core.services.session_service import SessionService
+
+
+class TherapistResult(BaseModel):
+    session_id: str
+    diagnosis: DiagnosisData
+
+
+class CompressorResult(BaseModel):
+    session_id: str
+    summary: str
+    verifier_session_id: str
 
 
 class SessionOptimizationService:
@@ -61,7 +74,7 @@ class SessionOptimizationService:
         target_length: int,
         start_turn: int,
         end_turn: int,
-    ) -> dict[str, str]:
+    ) -> CompressorResult:
         """Create compressor session and run initial takt command.
 
         Args:
@@ -110,11 +123,11 @@ class SessionOptimizationService:
                 last_model_response.content
             )
 
-        return {
-            "session_id": compressor_session_id,
-            "summary": summary,
-            "verifier_session_id": verifier_session_id or "",
-        }
+        return CompressorResult(
+            session_id=compressor_session_id,
+            summary=summary,
+            verifier_session_id=verifier_session_id or "",
+        )
 
     def approve_compression(self, compressor_session_id: str) -> None:
         """Approve the compression by running takt with approval instruction.
@@ -186,14 +199,14 @@ class SessionOptimizationService:
     # Therapist Operations
     # =========================================================================
 
-    def run_therapist(self, session_id: str) -> dict[str, Any]:
+    def run_therapist(self, session_id: str) -> TherapistResult:
         """Create therapist session and run initial takt command.
 
         Args:
             session_id: Target session ID to diagnose
 
         Returns:
-            Dict with session_id and diagnosis
+            TherapistResult with session_id and diagnosis
         """
         # Get turns count
         session = self.session_service.get_session(session_id)
@@ -236,10 +249,10 @@ class SessionOptimizationService:
             if last_model_response:
                 diagnosis_data = parse_therapist_diagnosis(last_model_response.content)
 
-            return {
-                "session_id": therapist_session_id,
-                "diagnosis": diagnosis_data,
-            }
+            return TherapistResult(
+                session_id=therapist_session_id,
+                diagnosis=diagnosis_data,
+            )
         finally:
             # Delete the therapist session as it's a shadow session
             if therapist_session_id:

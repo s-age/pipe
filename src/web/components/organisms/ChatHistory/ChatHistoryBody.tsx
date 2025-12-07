@@ -63,6 +63,8 @@ export const ChatHistoryBody = ({
     )
   }
 
+  console.log(sessionDetail)
+
   return (
     <div className={`${panel} ${panelBottomSpacing}`}>
       <section className={turnsListSection} ref={turnsListReference}>

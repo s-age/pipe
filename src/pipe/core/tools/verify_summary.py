@@ -1,4 +1,4 @@
-from typing import Any
+import json
 
 from pipe.core.agents.takt_agent import TaktAgent
 from pipe.core.models.settings import Settings
@@ -13,19 +13,22 @@ def verify_summary(
     settings: Settings,
     project_root: str,
     session_service=None,
-) -> dict[str, Any]:
+) -> str:
     """
     Verifies a summary by creating a new temporary session for a sub-agent,
     and returns the verification status and the ID of the temporary session.
+
+    Returns:
+        JSON string containing verification result
     """
     if not session_service:
-        return {"error": "This tool requires a session_service."}
+        return json.dumps({"error": "This tool requires a session_service."})
 
     try:
         # === Step 1: Prepare the data for the verifier agent ===
         original_session_data = session_service.get_session(session_id)
         if not original_session_data:
-            return {"error": f"Session with ID {session_id} not found."}
+            return json.dumps({"error": f"Session with ID {session_id} not found."})
 
         original_turns = original_session_data.turns
         temp_turns = list(original_turns)
@@ -45,11 +48,14 @@ def verify_summary(
             and 0 <= end_index < len(temp_turns)
             and start_index <= end_index
         ):
-            return {
-                "error": (
-                    "Turn indices are out of range for creating verification context."
-                )
-            }
+            return json.dumps(
+                {
+                    "error": (
+                        "Turn indices are out of range for creating "
+                        "verification context."
+                    )
+                }
+            )
 
         del temp_turns[start_index : end_index + 1]
         temp_turns.insert(start_index, summary_turn)
@@ -83,9 +89,13 @@ def verify_summary(
         rejected_text = "Verification failed. Please modify the summary policy."
         verifier_instruction = (
             "## TASK\n"
-            "You are a verification agent. Your task is to review the provided "
-            "conversation history and generate a final, formatted response based on "
-            "your verification.\n\n"
+            f"You are a verification agent. Your task is to verify the summary for "
+            f"session {session_id} (turns {start_turn} to {end_turn}).\n\n"
+            "You are reviewing a conversation history where a summary has been "
+            "inserted. The summary marked as 'compressed_history' replaces the "
+            f"original turns {start_turn} through {end_turn}.\n\n"
+            "Judge if this summary is a good replacement (i.e., preserves "
+            "context, flows logically).\n\n"
             "## STEP-BY-STEP INSTRUCTIONS\n"
             "1.  **Analyze**: Read the entire conversation history provided. A "
             "part of it is replaced by a summary marked as 'compressed_history'. "
@@ -108,10 +118,37 @@ def verify_summary(
         )
 
         takt_agent = TaktAgent(project_root)
-        stdout, stderr = takt_agent.run_existing_session(
-            session_id=verifier_session_id,
-            instruction=verifier_instruction,
-        )
+        try:
+            stdout, stderr = takt_agent.run_existing_session(
+                session_id=verifier_session_id,
+                instruction=verifier_instruction,
+            )
+            # Log the output for debugging
+            if stderr:
+                print(f"TaktAgent stderr: {stderr}", flush=True)
+        except Exception as agent_error:
+            import subprocess
+            import traceback
+
+            # Extract stderr from CalledProcessError if available
+            stderr_output = ""
+            if isinstance(agent_error, subprocess.CalledProcessError):
+                stderr_output = agent_error.stderr or ""
+                stdout_output = agent_error.stdout or ""
+                error_detail = (
+                    f"TaktAgent execution failed with exit code "
+                    f"{agent_error.returncode}\n"
+                    f"STDOUT:\n{stdout_output}\n"
+                    f"STDERR:\n{stderr_output}"
+                )
+            else:
+                error_detail = (
+                    f"TaktAgent execution failed: {agent_error}\n"
+                    f"{traceback.format_exc()}"
+                )
+
+            error_result = {"error": error_detail}
+            return json.dumps(error_result, ensure_ascii=False, indent=2)
 
         # === Step 4: Get the response from verifier session ===
         verifier_session_data = session_service.get_session(verifier_session_id)
@@ -122,6 +159,20 @@ def verify_summary(
                 if turn.type == "model_response":
                     response_text = turn.content.strip()
                     break
+
+        # Check if we got a response
+        if not response_text:
+            turn_count = (
+                len(verifier_session_data.turns) if verifier_session_data else 0
+            )
+            error_result = {
+                "error": (
+                    f"No model_response found in verifier session "
+                    f"{verifier_session_id}. "
+                    f"Total turns: {turn_count}"
+                )
+            }
+            return json.dumps(error_result, ensure_ascii=False, indent=2)
 
         # === Step 5: Process result and construct the final turn content ===
         status = "rejected"
@@ -154,7 +205,7 @@ def verify_summary(
         session_service.add_to_pool(session_id, final_turn)
 
         # === Step 6: Return the result and the verifier session ID ===
-        return {
+        result = {
             "status": status,
             "verifier_session_id": verifier_session_id,
             "message": (
@@ -162,13 +213,15 @@ def verify_summary(
                 f"Status: {status}."
             ),
         }
+        return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:
         import traceback
 
-        return {
+        error_result = {
             "error": (
                 "An unexpected error occurred during summary verification: "
                 f"{e}\n{traceback.format_exc()}"
             )
         }
+        return json.dumps(error_result, ensure_ascii=False, indent=2)

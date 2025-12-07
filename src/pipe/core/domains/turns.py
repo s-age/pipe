@@ -66,11 +66,10 @@ def expire_old_tool_responses(
         if (
             turn.type == "tool_response"
             and turn.timestamp < expiration_threshold_timestamp
-            and isinstance(turn.response, dict)
-            and turn.response.get("status") == "succeeded"
+            and turn.response.status == "succeeded"
         ):
             modified_turn = turn.model_copy(deep=True)
-            modified_turn.response["message"] = (
+            modified_turn.response.message = (
                 "This tool response has expired to save tokens."
             )
             new_turns.append(modified_turn)

@@ -4,6 +4,20 @@
 
 Request models provide **input validation and parsing** for HTTP requests using Pydantic. They ensure all incoming data meets requirements before reaching business logic.
 
+**Two patterns are supported:**
+
+1. **Body-only models** (Legacy): Validate only request body
+
+   - Simple Pydantic BaseModel
+   - Used with body_model in actions
+   - Validation happens in action
+
+2. **Unified request models** (New - Laravel/Struts style): Validate path params + body together
+   - Inherit from BaseRequest
+   - Declare path_params at class level
+   - Validation happens BEFORE action execution
+   - Type-safe access to all request data
+
 ## Responsibilities
 
 1. **Input Validation** - Validate request data structure and types
@@ -28,6 +42,8 @@ Request models provide **input validation and parsing** for HTTP requests using 
 ```
 requests/
 ├── __init__.py
+├── base_request.py          # Base class for unified requests (NEW)
+├── common.py                # CamelCase conversion utilities
 └── sessions/
     ├── __init__.py
     ├── start_session.py
@@ -58,7 +74,9 @@ requests/
 - ❌ Actions (no action calls)
 - ❌ Controllers (no controller calls)
 
-## Template
+## Templates
+
+### Pattern 1: Body-only Model (Legacy)
 
 ```python
 """
@@ -69,6 +87,119 @@ from typing import Any
 from pydantic import BaseModel, field_validator
 
 
+class OperationBodyModel(BaseModel):
+    """
+    Request body model for [operation] operation.
+
+    Validates only the request body fields.
+    Path parameters are accessed separately in the action.
+
+    Attributes:
+        field1: Description of field1
+        field2: Description of field2
+        optional_field: Optional field description
+
+    Examples:
+        # Valid request
+        request = OperationBodyModel(
+            field1="value1",
+            field2="value2",
+        )
+
+        # Invalid request raises ValidationError
+        request = OperationBodyModel(
+            field1="",  # Empty - fails validation
+            field2="value2",
+        )
+    """
+
+    # Body fields only
+    field1: str
+    field2: str
+    optional_field: str | None = None
+
+    @field_validator("field1")
+    @classmethod
+    def validate_field1(cls, v: str) -> str:
+        """Validate field1."""
+        if not v or not v.strip():
+            raise ValueError("field1 must not be empty")
+        return v
+```
+
+### Pattern 2: Unified Request Model (New - Recommended)
+
+```python
+"""
+Unified request model for [operation] (path params + body).
+"""
+
+from typing import ClassVar
+from pipe.web.requests.base_request import BaseRequest
+from pydantic import field_validator
+
+
+class OperationRequest(BaseRequest):
+    """
+    Unified request model for [operation] operation.
+
+    Validates both path parameters and request body together.
+    Validation happens BEFORE action execution (Laravel/Struts style).
+
+    Path Parameters:
+        resource_id: ID from URL path
+
+    Body Fields:
+        field1: Description of field1
+        field2: Description of field2
+
+    Examples:
+        # Created automatically by dispatcher
+        request = OperationRequest.create_with_path_params(
+            path_params={"resource_id": "123"},
+            body_data={"field1": "value1", "field2": "value2"},
+        )
+
+        # Type-safe access in action
+        resource_id = request.resource_id
+        field1 = request.field1
+    """
+
+    # Declare which path parameters this request expects
+    path_params: ClassVar[list[str]] = ["resource_id"]
+
+    # Path parameter fields
+    resource_id: str
+
+    # Body fields
+    field1: str
+    field2: str
+    optional_field: str | None = None
+
+    @field_validator("resource_id")
+    @classmethod
+    def validate_resource_exists(cls, v: str) -> str:
+        """Validate that resource exists."""
+        # Custom validation logic
+        if not resource_exists(v):
+            raise ValueError(f"Resource '{v}' not found")
+        return v
+
+    @field_validator("field1")
+    @classmethod
+    def validate_field1(cls, v: str) -> str:
+        """Validate field1."""
+        if not v or not v.strip():
+            raise ValueError("field1 must not be empty")
+        return v
+```
+
+## Template (Legacy - for reference)
+
+## Template (Legacy - for reference)
+
+```python
+# This is the old pattern - still works but new code should use BaseRequest
 class OperationRequest(BaseModel):
     """
     Request model for [operation] operation.
@@ -80,19 +211,6 @@ class OperationRequest(BaseModel):
         field1: Description of field1
         field2: Description of field2
         optional_field: Optional field description
-
-    Examples:
-        # Valid request
-        request = OperationRequest(
-            field1="value1",
-            field2="value2",
-        )
-
-        # Invalid request raises ValidationError
-        request = OperationRequest(
-            field1="",  # Empty - fails validation
-            field2="value2",
-        )
     """
 
     # Required fields
@@ -668,7 +786,23 @@ class CreateRequest(BaseModel):
 
 Request models are **input validators**:
 
-- ✅ Pydantic BaseModel subclasses
+**Two patterns available:**
+
+1. **Body-only models (Legacy)**: Simple BaseModel subclasses
+
+   - Used with `body_model` in actions
+   - Validation happens in action
+   - Good for simple requests
+
+2. **Unified models (New - Recommended)**: BaseRequest subclasses
+   - Combine path params + body
+   - Validation happens BEFORE action (Laravel/Struts style)
+   - Type-safe access to all request data
+   - Better for complex endpoints
+
+**General principles:**
+
+- ✅ Pydantic BaseModel or BaseRequest subclasses
 - ✅ Field validators for custom rules
 - ✅ Clear error messages
 - ✅ Type coercion and validation

@@ -19,6 +19,7 @@ from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import Turn, UserTaskTurn
 from pipe.core.repositories.session_repository import SessionRepository
+from pipe.core.services.session_optimization_service import CompressorResult
 from pipe.core.utils.datetime import get_current_timestamp
 
 
@@ -509,7 +510,7 @@ class SessionService:
         target_length: int,
         start_turn: int,
         end_turn: int,
-    ) -> dict[str, str]:
+    ) -> CompressorResult:
         """Create compressor session and run initial takt command.
 
         Delegates to SessionOptimizationService.

@@ -13,18 +13,23 @@ import json
 import os
 import subprocess
 import sys
+from typing import TYPE_CHECKING
 
 from pipe.core.agents import register_agent
 from pipe.core.agents.base import BaseAgent
-from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
-from pipe.core.services.prompt_service import PromptService
-from pipe.core.services.session_service import SessionService
+
+if TYPE_CHECKING:
+    from pipe.core.services.prompt_service import PromptService
+    from pipe.core.services.session_service import SessionService
 
 
 def call_gemini_cli(
-    session_service: SessionService, output_format: str = "json"
+    session_service: "SessionService", output_format: str = "json"
 ) -> dict:
+    # Import here to avoid circular dependency
+    from pipe.core.factories.service_factory import ServiceFactory
+
     settings = session_service.settings
     project_root = session_service.project_root
 
@@ -247,8 +252,8 @@ class GeminiCliAgent(BaseAgent):
     def run(
         self,
         args: TaktArgs,
-        session_service: SessionService,
-        prompt_service: PromptService,
+        session_service: "SessionService",
+        prompt_service: "PromptService",
     ) -> tuple[str, int | None, list]:
         """Execute the Gemini CLI agent.
 

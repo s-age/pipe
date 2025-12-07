@@ -2,41 +2,35 @@ from typing import Any
 
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests import ApplyDoctorRequest, CreateTherapistRequest
-from pydantic import ValidationError
 
 
 class CreateTherapistSessionAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
+    body_model = CreateTherapistRequest  # Legacy pattern: no path params
+
+    def execute(self) -> dict[str, str]:
+        """Create therapist session and return session_id."""
         from pipe.web.service_container import get_session_service
 
-        try:
-            request_data = CreateTherapistRequest(**self.request_data.get_json())
+        request_data = CreateTherapistRequest(**self.request_data.get_json())
 
-            service = get_session_service()
-            result = service.run_takt_for_therapist(request_data.session_id)
+        service = get_session_service()
+        result = service.run_takt_for_therapist(request_data.session_id)
 
-            return result, 200
-
-        except ValidationError as e:
-            return {"message": str(e)}, 422
-        except Exception as e:
-            return {"message": str(e)}, 500
+        return result
 
 
 class ApplyDoctorModificationsAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
+    body_model = ApplyDoctorRequest  # Legacy pattern: no path params
+
+    def execute(self) -> dict[str, Any]:
+        """Apply doctor modifications and return result with Any due to dynamic
+        modifications."""
         from pipe.web.service_container import get_session_service
 
-        try:
-            request_data = ApplyDoctorRequest(**self.request_data.get_json())
+        request_data = ApplyDoctorRequest(**self.request_data.get_json())
 
-            result = get_session_service().run_takt_for_doctor(
-                request_data.session_id, request_data.modifications
-            )
+        result = get_session_service().run_takt_for_doctor(
+            request_data.session_id, request_data.modifications
+        )
 
-            return result, 200
-
-        except ValidationError as e:
-            return {"message": str(e)}, 422
-        except Exception as e:
-            return {"message": str(e)}, 500
+        return result

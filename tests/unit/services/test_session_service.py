@@ -336,7 +336,10 @@ class TestSessionService(unittest.TestCase):
             ToolResponseTurn(
                 type="tool_response",
                 name="tool1",
-                response={"status": "succeeded"},
+                response={
+                    "status": "succeeded",
+                    "message": "Tool executed successfully",
+                },
                 timestamp="...",
             ),
         ]

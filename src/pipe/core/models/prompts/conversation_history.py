@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
+from pipe.core.models.turn import Turn
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
@@ -8,7 +9,7 @@ if TYPE_CHECKING:
 
 class PromptConversationHistory(BaseModel):
     description: str
-    turns: list[dict[str, Any]]
+    turns: list[Turn]
 
     @classmethod
     def build(
@@ -17,10 +18,7 @@ class PromptConversationHistory(BaseModel):
         """Builds the PromptConversationHistory component."""
         from pipe.core.domains.turns import get_turns_for_prompt
 
-        history_turns = [
-            turn.model_dump()
-            for turn in reversed(list(get_turns_for_prompt(turns, tool_response_limit)))
-        ]
+        history_turns = list(get_turns_for_prompt(turns, tool_response_limit))
         return cls(
             description=(
                 "Historical record of past interactions in this session, in "

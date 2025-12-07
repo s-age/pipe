@@ -1,10 +1,13 @@
 """Base class for all agents in the pipe system."""
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from pipe.core.models.args import TaktArgs
-from pipe.core.services.prompt_service import PromptService
-from pipe.core.services.session_service import SessionService
+
+if TYPE_CHECKING:
+    from pipe.core.services.prompt_service import PromptService
+    from pipe.core.services.session_service import SessionService
 
 
 class BaseAgent(ABC):
@@ -20,8 +23,8 @@ class BaseAgent(ABC):
     def run(
         self,
         args: TaktArgs,
-        session_service: SessionService,
-        prompt_service: PromptService,
+        session_service: "SessionService",
+        prompt_service: "PromptService",
     ) -> tuple[str, int | None, list]:
         """Execute the agent and return results.
 

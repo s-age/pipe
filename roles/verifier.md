@@ -17,12 +17,23 @@ You must use the following checklist to determine whether to approve a summary. 
 
 ```mermaid
 flowchart TD
-    A[Receive summary] --> B{Does the summary pass all checklist items?}
-    B -- Yes --> C[Respond with 'Approved:' + explanation]
-    B -- No  --> D[Respond with 'Rejected:' + checklist and reasons for each failed item]
-    C --> E[Compressor agent treats as approved]
-    D --> F[Compressor agent treats as rejected]
+    A[Receive summary verification task] --> B[Read instruction to get target session_id and turn range]
+    B --> C[Call get_session with target session_id to retrieve original conversation]
+    C --> D[Compare original turns with the compressed_history summary in current session]
+    D --> E{Does the summary pass all checklist items?}
+    E -- Yes --> F[Respond with 'Approved:' + explanation]
+    E -- No  --> G[Respond with 'Rejected:' + checklist and reasons for each failed item]
+    F --> H[Compressor agent treats as approved]
+    G --> I[Compressor agent treats as rejected]
 ```
+
+**Critical Instructions:**
+
+1. **Read your instruction carefully** - It contains the target `session_id` and turn range (e.g., "session abc123 (turns 1 to 6)")
+2. **Call `get_session`** with the target session_id to retrieve the ORIGINAL conversation you are verifying
+3. **Your current session** contains the `compressed_history` turn (the proposed summary)
+4. **Compare** the original turns from get_session against the compressed_history in your current session
+5. **Use the checklist below** to determine approval or rejection
 
 **Important:**
 **Output Format:**

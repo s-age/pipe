@@ -5,6 +5,16 @@ This module contains pure functions for building instructions and
 processing optimization results.
 """
 
+from typing import TypedDict
+
+
+class DiagnosisData(TypedDict, total=False):
+    summary: str
+    deletions: list
+    edits: list
+    compressions: list
+    raw_diagnosis: str
+
 
 def build_compressor_instruction(
     session_id: str,
@@ -159,7 +169,7 @@ def extract_summary_from_compressor_response(content: str) -> tuple[str, str | N
     "Rejected:". This is enforced by roles/compressor.md and Python will reject
     any other format.
 
-    Expected format:
+    Expected format (Approved):
         Approved: [message]
 
         ## SUMMARY CONTENTS
@@ -167,16 +177,26 @@ def extract_summary_from_compressor_response(content: str) -> tuple[str, str | N
 
         Verifier Session ID: `{session_id}`
 
+    Expected format (Rejected):
+        Rejected: [rejection reason and details]
+
     Args:
         content: Model response content
 
     Returns:
-        Tuple of (summary, verifier_session_id)
-        Returns ("", None) if format is invalid
+        Tuple of (summary_or_message, verifier_session_id)
+        - For Approved: (summary_text, verifier_session_id)
+        - For Rejected: (full_rejected_message, None)
+        - For invalid format: ("", None)
     """
     content = content.strip()
 
-    # Must start with "Approved:" to be valid
+    # Handle Rejected responses
+    if content.startswith("Rejected:"):
+        # Return the full rejection message as the "summary"
+        return content, None
+
+    # Must start with "Approved:" to be valid for extraction
     if not content.startswith("Approved:"):
         return "", None
 
@@ -211,7 +231,7 @@ def extract_summary_from_compressor_response(content: str) -> tuple[str, str | N
     return summary, verifier_session_id
 
 
-def parse_therapist_diagnosis(content: str) -> dict:
+def parse_therapist_diagnosis(content: str) -> DiagnosisData:
     """Parse therapist diagnosis from response content.
 
     Args:
@@ -258,8 +278,14 @@ def parse_doctor_result(content: str) -> dict:
         Parsed result dict with status, reason, and applied modifications
     """
     import json
+    import re
 
     content = content.strip()
+
+    # Remove markdown code blocks if present
+    code_block_match = re.search(r"```(?:json)?\s*\n(.*?)\n```", content, re.DOTALL)
+    if code_block_match:
+        content = code_block_match.group(1).strip()
 
     try:
         doctor_result = json.loads(content)

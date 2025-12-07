@@ -57,6 +57,8 @@ class TaktAgent:
             roles,
             "--instruction",
             instruction,
+            "--output-format",
+            "json",
         ]
 
         if multi_step_reasoning:
@@ -72,6 +74,19 @@ class TaktAgent:
             encoding="utf-8",
             env=env,
         )
+
+        # Debug output to file
+        import os
+
+        debug_file = os.path.join(self.project_root, "takt_debug.log")
+        with open(debug_file, "a", encoding="utf-8") as f:
+            f.write(f"\n{'='*80}\n")
+            f.write(f"Timestamp: {__import__('datetime').datetime.now()}\n")
+            f.write(f"Command: {' '.join(command)}\n")
+            f.write(f"Return code: {result.returncode}\n")
+            f.write(f"STDOUT:\n{result.stdout}\n")
+            f.write(f"STDERR:\n{result.stderr}\n")
+            f.write(f"{'='*80}\n")
 
         if result.returncode != 0:
             raise RuntimeError(
@@ -149,14 +164,17 @@ class TaktAgent:
         """
         import json
 
-        # Try to parse stdout as JSON first
-        try:
-            output = json.loads(stdout.strip())
-            session_id = output.get("session_id")
-            if session_id:
-                return session_id
-        except json.JSONDecodeError:
-            pass
+        # Try to parse stdout as JSON, searching line by line for JSON
+        for line in stdout.strip().split("\n"):
+            line = line.strip()
+            if line.startswith("{"):
+                try:
+                    output = json.loads(line)
+                    session_id = output.get("session_id")
+                    if session_id:
+                        return session_id
+                except json.JSONDecodeError:
+                    continue
 
         # Fallback to stderr extraction
         match = re.search(r"New session created: (.+)", stderr)

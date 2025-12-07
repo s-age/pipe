@@ -117,11 +117,12 @@ class TestPromptService(unittest.TestCase):
         prompt = self.prompt_service.build_prompt(self.session_service)
 
         self.assertEqual(len(prompt.conversation_history.turns), 2)
+        # Turns are yielded in reverse order by get_turns_for_prompt
         self.assertEqual(
-            prompt.conversation_history.turns[0]["instruction"], "First instruction"
+            prompt.conversation_history.turns[0].content, "Response to first"
         )
         self.assertEqual(
-            prompt.conversation_history.turns[1]["content"], "Response to first"
+            prompt.conversation_history.turns[1].instruction, "First instruction"
         )
         self.assertEqual(prompt.current_task.instruction, "Third instruction")
 
@@ -211,9 +212,7 @@ class TestPromptService(unittest.TestCase):
         self.assertEqual(prompt.session_goal.purpose, "Initial")  # Purpose is retained
         self.assertEqual(prompt.current_task.instruction, "Second task")
         self.assertEqual(len(prompt.conversation_history.turns), 1)
-        self.assertEqual(
-            prompt.conversation_history.turns[0]["instruction"], "First task"
-        )
+        self.assertEqual(prompt.conversation_history.turns[0].instruction, "First task")
 
     def test_build_prompt_after_fork(self):
         """Tests prompt generation for a forked session."""
@@ -256,11 +255,10 @@ class TestPromptService(unittest.TestCase):
         self.assertTrue(prompt.session_goal.purpose.startswith("Fork of: Original"))
         self.assertEqual(prompt.current_task.instruction, "New task for fork")
         # History should contain turns up to the fork point
+        # Turns are yielded in reverse order by get_turns_for_prompt
         self.assertEqual(len(prompt.conversation_history.turns), 2)
-        self.assertEqual(prompt.conversation_history.turns[0]["instruction"], "First")
-        self.assertEqual(
-            prompt.conversation_history.turns[1]["content"], "First response"
-        )
+        self.assertEqual(prompt.conversation_history.turns[1].instruction, "First")
+        self.assertEqual(prompt.conversation_history.turns[0].content, "First response")
 
     def test_build_prompt_property_order(self):
         """Tests that the prompt properties are in the correct logical (cognitive)

@@ -2,13 +2,20 @@
 Pydantic model for validating the request body of the send instruction API endpoint.
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
+from pipe.web.requests.base_request import BaseRequest
 from pipe.web.requests.common import normalize_camel_case_keys
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import field_validator, model_validator
 
 
-class SendInstructionRequest(BaseModel):
+class SendInstructionRequest(BaseRequest):
+    path_params: ClassVar[list[str]] = ["session_id"]
+
+    # Path parameter
+    session_id: str
+
+    # Body field
     instruction: str
 
     @model_validator(mode="before")

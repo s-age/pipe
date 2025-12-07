@@ -8,7 +8,7 @@ import importlib.util
 import inspect
 import logging
 import os
-from typing import Any, Union, get_args, get_type_hints
+from typing import TYPE_CHECKING, Union, get_args, get_type_hints
 
 import google.genai as genai
 from google.genai import types
@@ -16,9 +16,11 @@ from jinja2 import Environment, FileSystemLoader
 from pipe.core.agents import register_agent
 from pipe.core.agents.base import BaseAgent
 from pipe.core.models.args import TaktArgs
-from pipe.core.services.prompt_service import PromptService
-from pipe.core.services.session_service import SessionService
 from pipe.core.services.token_service import TokenService
+
+if TYPE_CHECKING:
+    from pipe.core.services.prompt_service import PromptService
+    from pipe.core.services.session_service import SessionService
 
 # Configure logging
 log_file_path = os.path.abspath(
@@ -147,7 +149,7 @@ def load_tools(project_root: str) -> list:
     return tool_defs
 
 
-def call_gemini_api(session_service: SessionService, prompt_service: PromptService):
+def call_gemini_api(session_service: "SessionService", prompt_service: "PromptService"):
     settings = session_service.settings
     session_data = session_service.current_session
     project_root = session_service.project_root
@@ -225,14 +227,17 @@ def call_gemini_api(session_service: SessionService, prompt_service: PromptServi
 
     # GoogleSearchツールを追加 (GroundingとFunction Callingは両立しないため、
     # Function Callingツールのみを渡す)
-    all_tools: list[Any] = converted_tools  # 既存ツールのみを渡す
+    all_tools: list[types.Tool] = converted_tools
     logging.debug(
         "Final tools passed to Gemini API: "
-        f"{[func.name for tool in all_tools for func in tool.function_declarations]}"
+        f"{[
+            func.name for tool in all_tools
+            for func in (tool.function_declarations or [])
+        ]}"
     )
 
     config = types.GenerateContentConfig(
-        tools=all_tools,  # <-- 統合したツールを渡す
+        tools=all_tools,  # type: ignore[arg-type]
         temperature=gen_config_params.get("temperature"),
         top_p=gen_config_params.get("top_p"),
         top_k=gen_config_params.get("top_k"),
@@ -256,8 +261,8 @@ class GeminiApiAgent(BaseAgent):
     def run(
         self,
         args: TaktArgs,
-        session_service: SessionService,
-        prompt_service: PromptService,
+        session_service: "SessionService",
+        prompt_service: "PromptService",
     ) -> tuple[str, int | None, list]:
         """Execute the Gemini API agent.
 
@@ -286,8 +291,8 @@ class GeminiApiAgent(BaseAgent):
     def run_stream(
         self,
         args: TaktArgs,
-        session_service: SessionService,
-        prompt_service: PromptService,
+        session_service: "SessionService",
+        prompt_service: "PromptService",
     ):
         """Execute the Gemini API agent in streaming mode.
 

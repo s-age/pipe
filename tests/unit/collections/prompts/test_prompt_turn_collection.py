@@ -25,8 +25,8 @@ class TestPromptTurnCollection(unittest.TestCase):
         prompt_turns = collection.get_turns()
 
         self.assertEqual(len(prompt_turns), 2)
-        self.assertEqual(prompt_turns[0]["instruction"], "Hello")
-        self.assertEqual(prompt_turns[1]["content"], "Hi there!")
+        self.assertEqual(prompt_turns[0].instruction, "Hello")
+        self.assertEqual(prompt_turns[1].content, "Hi there!")
 
     def test_get_turns_with_empty_list(self):
         """

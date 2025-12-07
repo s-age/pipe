@@ -11,7 +11,11 @@ if TYPE_CHECKING:
     from pipe.core.services.file_indexer_service import FileIndexerService
     from pipe.core.services.session_management_service import SessionManagementService
     from pipe.core.services.session_service import SessionService
-    from pipe.web.controllers import SessionDetailController
+    from pipe.web.controllers import (
+        SessionChatController,
+        SessionManagementController,
+        StartSessionController,
+    )
 
 
 class ServiceContainer:
@@ -20,7 +24,9 @@ class ServiceContainer:
     def __init__(self):
         self._session_service: SessionService | None = None
         self._session_management_service: SessionManagementService | None = None
-        self._session_detail_controller: SessionDetailController | None = None
+        self._start_session_controller: StartSessionController | None = None
+        self._session_chat_controller: SessionChatController | None = None
+        self._session_management_controller: SessionManagementController | None = None
         self._file_indexer_service: FileIndexerService | None = None
         self._settings: Settings | None = None
         self._project_root: str | None = None
@@ -29,7 +35,9 @@ class ServiceContainer:
         self,
         session_service: "SessionService",
         session_management_service: "SessionManagementService",
-        session_detail_controller: "SessionDetailController",
+        start_session_controller: "StartSessionController",
+        session_chat_controller: "SessionChatController",
+        session_management_controller: "SessionManagementController",
         file_indexer_service: "FileIndexerService",
         settings: "Settings",
         project_root: str,
@@ -37,7 +45,9 @@ class ServiceContainer:
         """Initialize the container with services."""
         self._session_service = session_service
         self._session_management_service = session_management_service
-        self._session_detail_controller = session_detail_controller
+        self._start_session_controller = start_session_controller
+        self._session_chat_controller = session_chat_controller
+        self._session_management_controller = session_management_controller
         self._file_indexer_service = file_indexer_service
         self._settings = settings
         self._project_root = project_root
@@ -55,10 +65,22 @@ class ServiceContainer:
         return self._session_management_service
 
     @property
-    def session_detail_controller(self) -> "SessionDetailController":
-        if self._session_detail_controller is None:
+    def start_session_controller(self) -> "StartSessionController":
+        if self._start_session_controller is None:
             raise RuntimeError("ServiceContainer not initialized")
-        return self._session_detail_controller
+        return self._start_session_controller
+
+    @property
+    def session_chat_controller(self) -> "SessionChatController":
+        if self._session_chat_controller is None:
+            raise RuntimeError("ServiceContainer not initialized")
+        return self._session_chat_controller
+
+    @property
+    def session_management_controller(self) -> "SessionManagementController":
+        if self._session_management_controller is None:
+            raise RuntimeError("ServiceContainer not initialized")
+        return self._session_management_controller
 
     @property
     def file_indexer_service(self) -> "FileIndexerService":
@@ -98,9 +120,19 @@ def get_session_management_service() -> "SessionManagementService":
     return _container.session_management_service
 
 
-def get_session_detail_controller() -> "SessionDetailController":
-    """Get the session detail controller from the container."""
-    return _container.session_detail_controller
+def get_start_session_controller() -> "StartSessionController":
+    """Get the start session controller from the container."""
+    return _container.start_session_controller
+
+
+def get_session_chat_controller() -> "SessionChatController":
+    """Get the session chat controller from the container."""
+    return _container.session_chat_controller
+
+
+def get_session_management_controller() -> "SessionManagementController":
+    """Get the session management controller from the container."""
+    return _container.session_management_controller
 
 
 def get_file_indexer_service() -> "FileIndexerService":

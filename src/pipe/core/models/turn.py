@@ -1,6 +1,11 @@
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel
+
+
+class TurnResponse(BaseModel):
+    status: str
+    message: str
 
 
 class UserTaskTurn(BaseModel):
@@ -24,7 +29,7 @@ class FunctionCallingTurn(BaseModel):
 class ToolResponseTurn(BaseModel):
     type: Literal["tool_response"]
     name: str
-    response: dict[str, Any]
+    response: TurnResponse
     timestamp: str
 
 

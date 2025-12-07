@@ -2,14 +2,21 @@
 Pydantic model for validating the request body of the edit references API endpoint.
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 from pipe.core.models.reference import Reference
+from pipe.web.requests.base_request import BaseRequest
 from pipe.web.requests.common import normalize_camel_case_keys
-from pydantic import BaseModel, model_validator
+from pydantic import model_validator
 
 
-class EditReferencesRequest(BaseModel):
+class EditReferencesRequest(BaseRequest):
+    path_params: ClassVar[list[str]] = ["session_id"]
+
+    # Path parameter (from URL)
+    session_id: str
+
+    # Body field
     references: list[Reference]
 
     @model_validator(mode="before")

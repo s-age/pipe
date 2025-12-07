@@ -46,10 +46,10 @@ class TestTurnCollection(unittest.TestCase):
         self.assertTrue(modified)
         self.assertEqual(len(mock_session.turns), 6)
         self.assertEqual(
-            mock_session.turns[1].response["message"],
+            mock_session.turns[1].response.message,
             "This tool response has expired to save tokens.",
         )
-        self.assertEqual(mock_session.turns[5].response["message"], "recent")
+        self.assertEqual(mock_session.turns[5].response.message, "recent")
 
     def test_expire_old_tool_responses_no_change_due_to_threshold(self):
         """
@@ -76,7 +76,7 @@ class TestTurnCollection(unittest.TestCase):
 
         modified = expire_old_tool_responses(mock_session.turns)
         self.assertFalse(modified)
-        self.assertEqual(mock_session.turns[1].response["message"], "old")
+        self.assertEqual(mock_session.turns[1].response.message, "old")
 
     def test_expire_old_tool_responses_empty_collection(self):
         """
@@ -93,16 +93,28 @@ class TestTurnCollection(unittest.TestCase):
         turns = TurnCollection(
             [
                 ToolResponseTurn(
-                    type="tool_response", name="t1", response={}, timestamp="1"
+                    type="tool_response",
+                    name="t1",
+                    response={"status": "succeeded", "message": "msg1"},
+                    timestamp="1",
                 ),
                 ToolResponseTurn(
-                    type="tool_response", name="t2", response={}, timestamp="2"
+                    type="tool_response",
+                    name="t2",
+                    response={"status": "succeeded", "message": "msg2"},
+                    timestamp="2",
                 ),
                 ToolResponseTurn(
-                    type="tool_response", name="t3", response={}, timestamp="3"
+                    type="tool_response",
+                    name="t3",
+                    response={"status": "succeeded", "message": "msg3"},
+                    timestamp="3",
                 ),
                 ToolResponseTurn(
-                    type="tool_response", name="t4", response={}, timestamp="4"
+                    type="tool_response",
+                    name="t4",
+                    response={"status": "succeeded", "message": "msg4"},
+                    timestamp="4",
                 ),
                 UserTaskTurn(type="user_task", instruction="last", timestamp="5"),
             ]
@@ -143,7 +155,7 @@ class TestTurnCollection(unittest.TestCase):
                 ToolResponseTurn(
                     type="tool_response",
                     name="t",
-                    response={"status": "failed"},
+                    response={"status": "failed", "message": "error occurred"},
                     timestamp="2",
                 ),
                 UserTaskTurn(type="user_task", instruction="2", timestamp="3"),

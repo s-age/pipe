@@ -19,16 +19,11 @@ def execute_tool_call(tool_call, session_service, session_id, settings, project_
     tool_name = tool_call.name
     tool_args = dict(tool_call.args)
 
-    print(f"--- Attempting to execute tool: {tool_name} ---", file=sys.stderr)
-
     try:
-        print(f"Importing module: pipe.core.tools.{tool_name}", file=sys.stderr)
         tool_module = importlib.import_module(f"pipe.core.tools.{tool_name}")
         importlib.reload(tool_module)
-        print("Module imported successfully.", file=sys.stderr)
 
         tool_function = getattr(tool_module, tool_name)
-        print("Tool function retrieved.", file=sys.stderr)
 
         sig = inspect.signature(tool_function)
         params = sig.parameters
@@ -44,9 +39,7 @@ def execute_tool_call(tool_call, session_service, session_id, settings, project_
         if "project_root" in params:
             final_args["project_root"] = project_root
 
-        print(f"Executing tool with args: {final_args}", file=sys.stderr)
         result = tool_function(**final_args)
-        print(f"Tool execution successful. Result: {result}", file=sys.stderr)
         return result
     except Exception as e:
         import traceback
@@ -107,10 +100,11 @@ def run_stream(args, session_service: SessionService, prompt_service: PromptServ
             final_response.candidates[0].content.parts[0].text = full_text
 
         response = final_response
-        token_count = (
-            response.usage_metadata.prompt_token_count
-            + response.usage_metadata.candidates_token_count
-        )
+        token_count = 0
+        if response.usage_metadata:
+            prompt_tokens = response.usage_metadata.prompt_token_count or 0
+            candidate_tokens = response.usage_metadata.candidates_token_count or 0
+            token_count = prompt_tokens + candidate_tokens
 
         if not response.candidates:
             yield "API Error: No candidates in response."

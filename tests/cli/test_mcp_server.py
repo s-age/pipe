@@ -104,6 +104,7 @@ def tool_optional(optional_param: Union[str, None] = None):
 @patch("pipe.cli.mcp_server.ServiceFactory")
 @patch("pipe.core.utils.file.read_yaml_file")
 @patch("pipe.cli.mcp_server.get_latest_session_id")
+@patch("pipe.cli.mcp_server.get_services")
 class TestExecuteTool(unittest.TestCase):
     def setUp(self):
         """Prepare a valid settings dictionary for all tests."""
@@ -119,6 +120,7 @@ class TestExecuteTool(unittest.TestCase):
 
     def test_execute_tool_success(
         self,
+        mock_get_services,
         mock_get_id,
         mock_read_yaml,
         mock_service_factory,
@@ -137,9 +139,8 @@ class TestExecuteTool(unittest.TestCase):
         mock_session.pools = []
         mock_session_service.get_session.return_value = mock_session
 
-        mock_service_factory.return_value.create_session_service.return_value = (
-            mock_session_service
-        )
+        mock_settings = MagicMock()
+        mock_get_services.return_value = (mock_settings, mock_session_service)
 
         mock_spec = MagicMock()
         mock_module = MagicMock()
@@ -159,6 +160,7 @@ class TestExecuteTool(unittest.TestCase):
 
     def test_execute_tool_not_found(
         self,
+        mock_get_services,
         mock_get_id,
         mock_read_yaml,
         mock_service_factory,
@@ -171,12 +173,17 @@ class TestExecuteTool(unittest.TestCase):
 
         mock_read_yaml.return_value = self.valid_settings
         mock_get_id.return_value = "test_session"
+        
+        mock_settings = MagicMock()
+        mock_session_service = MagicMock()
+        mock_get_services.return_value = (mock_settings, mock_session_service)
 
         with self.assertRaisesRegex(FileNotFoundError, "Tool 'bad_tool' not found."):
             execute_tool("bad_tool", {})
 
     def test_execute_tool_invalid_name(
         self,
+        mock_get_services,
         mock_get_id,
         mock_read_yaml,
         mock_service_factory,
@@ -187,6 +194,10 @@ class TestExecuteTool(unittest.TestCase):
         mock_exists.return_value = True  # setting.yml exists
         mock_read_yaml.return_value = self.valid_settings
         mock_get_id.return_value = "test_session"
+        
+        mock_settings = MagicMock()
+        mock_session_service = MagicMock()
+        mock_get_services.return_value = (mock_settings, mock_session_service)
 
         with self.assertRaisesRegex(ValueError, "Invalid tool name."):
             execute_tool("../../bad", {})

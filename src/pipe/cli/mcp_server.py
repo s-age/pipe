@@ -25,30 +25,66 @@ import os
 import sys
 import traceback
 import warnings
-from typing import Union, get_args, get_type_hints
+from functools import lru_cache
+from typing import TYPE_CHECKING, Union, get_args, get_type_hints
 
-from pydantic import BaseModel  # Added for BaseModel schema generation
+if TYPE_CHECKING:
+    from pipe.core.factories.service_factory import ServiceFactory
+    from pipe.core.models.settings import Settings
+
+# Suppress Pydantic warnings early, before importing any pydantic models
+warnings.filterwarnings("ignore", message=".*is not a Python type.*\n")
+warnings.filterwarnings("ignore", message='Field name .* shadows an attribute')
+
+from pydantic import BaseModel  # noqa: E402
 
 # Add src directory to Python path BEFORE local imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 
-import select
+import select  # noqa: E402
 
-from pipe.core.factories.service_factory import ServiceFactory
-from pipe.core.models.settings import Settings
-from pipe.core.utils.datetime import get_current_timestamp
-from pipe.core.utils.file import append_to_text_file, read_yaml_file
+if not TYPE_CHECKING:
+    from pipe.core.factories.service_factory import ServiceFactory  # noqa: E402
+    from pipe.core.models.settings import Settings  # noqa: E402
 
-# Suppress Pydantic's ArbitraryTypeWarning by matching the specific message
-warnings.filterwarnings("ignore", message=".*is not a Python type.*\n")
+from pipe.core.utils.datetime import get_current_timestamp  # noqa: E402
+from pipe.core.utils.file import append_to_text_file, read_yaml_file  # noqa: E402
 
 # --- Global Paths ---
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 TOOLS_DIR = os.path.join(BASE_DIR, "src", "pipe", "core", "tools")
 SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
 
+# --- Global Services (initialized once) ---
+_SETTINGS: "Settings | None" = None
+_SERVICE_FACTORY: "ServiceFactory | None" = None
+_SESSION_SERVICE: object | None = None
+
+
+def initialize_services():
+    """
+    Initialize global services once to avoid repeated file I/O and object creation.
+    This significantly improves performance for tool execution.
+    """
+    global _SETTINGS, _SERVICE_FACTORY, _SESSION_SERVICE
+    if _SETTINGS is None:
+        project_root = BASE_DIR
+        config_path = os.path.join(project_root, "setting.yml")
+        settings_dict = read_yaml_file(config_path)
+        _SETTINGS = Settings(**settings_dict)
+        _SERVICE_FACTORY = ServiceFactory(project_root, _SETTINGS)
+        _SESSION_SERVICE = _SERVICE_FACTORY.create_session_service()
+
+
+def get_services():
+    """Get initialized services, initializing them if needed."""
+    if _SETTINGS is None:
+        initialize_services()
+    return _SETTINGS, _SESSION_SERVICE
+
 
 # --- Tool Definition Generation ---
+@lru_cache(maxsize=1)
 def get_tool_definitions():
     """
     Scans the 'tools' directory to discover available tool scripts and generates
@@ -62,6 +98,8 @@ def get_tool_definitions():
     This list of definitions is then sent to the MCP client during the 'initialize'
     and 'tools/list' calls, allowing the client (and the AI model) to understand
     what tools are available and how to use them.
+
+    Results are cached to avoid repeated filesystem scans and module imports.
     """
     tool_defs = []
     type_mapping = {
@@ -185,12 +223,12 @@ def get_latest_session_id():
     PRIORITY: Checks for a session ID in the environment variable
     'PIPE_SESSION_ID' first.
     """
-    # 1. 環境変数からセッションIDを取得する（Gemini-CLIから渡される）
+    # 1. Get session ID from environment variable (passed from Gemini-CLI)
     session_id_from_env = os.getenv("PIPE_SESSION_ID")
     if session_id_from_env:
         return session_id_from_env
 
-    # 2. 環境変数にない場合、従来のロジックで最新のセッションIDを取得
+    # 2. If not in environment variable, get latest session ID using traditional logic
     try:
         files = [
             os.path.join(SESSIONS_DIR, f)
@@ -226,14 +264,10 @@ def execute_tool(tool_name, arguments):
         history pool.
     9.  Returns the result to the main loop to be sent back to the client.
     """
+    # Use globally initialized services for performance
+    settings, session_service = get_services()
     project_root = BASE_DIR
-    config_path = os.path.join(project_root, "setting.yml")
-    settings_dict = read_yaml_file(config_path)
-    settings = Settings(**settings_dict)
-
     session_id = get_latest_session_id()
-    factory = ServiceFactory(project_root, settings)
-    session_service = factory.create_session_service()
 
     # Log the start of the tool call to the pool
     if session_id:
@@ -346,21 +380,21 @@ def prepare_tool_arguments(
     tool_function, client_arguments, session_service, session_id, settings, project_root
 ):
     """
-    ツール関数のシグネチャを検査し、必要に応じてサーバー引数を注入して、
-    最終的な引数ディクショナリを構築する。
+    Inspects the tool function signature and injects server arguments as needed
+    to build the final arguments dictionary.
     """
 
     sig = inspect.signature(tool_function)
     params = sig.parameters
 
-    # クライアントからの引数（arguments）をベースとする
+    # Base arguments from client
     final_arguments = client_arguments.copy()
 
-    # ツール関数が定義しているパラメーターに基づいてサーバー引数を注入
+    # Inject server arguments based on tool function's defined parameters
     if session_service and "session_service" in params:
         final_arguments["session_service"] = session_service
 
-    # session_id はクライアントから指定されていない場合のみ注入する
+    # Only inject session_id if not specified by client
     if "session_id" in params and "session_id" not in final_arguments:
         final_arguments["session_id"] = session_id
 
@@ -370,6 +404,22 @@ def prepare_tool_arguments(
         final_arguments["project_root"] = project_root
 
     return final_arguments
+
+
+def format_mcp_tool_result(result, is_error=False):
+    """
+    Format tool result in MCP-compliant format.
+    Always returns content array as per MCP specification.
+    """
+    if isinstance(result, str):
+        content_text = result
+    else:
+        content_text = json.dumps(result, ensure_ascii=False)
+
+    return {
+        "content": [{"type": "text", "text": content_text}],
+        "isError": is_error
+    }
 
 
 # --- Main Stdio Loop ---
@@ -451,63 +501,41 @@ def main():
                 if not arguments:
                     arguments = params.get(
                         "arguments", {}
-                    )  # 'args'が空なら'arguments'を試す
+                    )  # Try 'arguments' if 'args' is empty
 
                 try:
                     tool_result = execute_tool(tool_name, arguments)
 
+                    # Check if tool result indicates an error
                     if isinstance(tool_result, dict) and "error" in tool_result:
                         error_message = tool_result.get(
                             "error", "Tool execution failed."
                         )
+                        # Return MCP-compliant error response
                         response = {
                             "jsonrpc": "2.0",
                             "id": req_id,
-                            "error": {
-                                "code": -32000,
-                                "message": (
-                                    f"Tool '{tool_name}' failed: {error_message}"
-                                ),
-                            },
+                            "result": format_mcp_tool_result(
+                                {"error": error_message}, is_error=True
+                            ),
                         }
                     else:
-                        # Load settings to check api_mode and format response
-                        # accordingly
-                        project_root = BASE_DIR
-                        config_path = os.path.join(project_root, "setting.yml")
-                        settings_dict = read_yaml_file(config_path)
-                        settings = Settings(**settings_dict)
-                        api_mode = settings.api_mode
-
-                        if api_mode == "gemini-cli":
-                            # Transform the result to the format expected by the
-                            # gemini-cli client
-                            transformed_result = {
-                                "isError": False,
-                                "content": [
-                                    {"type": "text", "text": json.dumps(tool_result)}
-                                ],
-                            }
-                            response = {
-                                "jsonrpc": "2.0",
-                                "id": req_id,
-                                "result": transformed_result,
-                            }
-                        else:
-                            # Keep the original structure for other modes
-                            response = {
-                                "jsonrpc": "2.0",
-                                "id": req_id,
-                                "result": {
-                                    "status": "succeeded",
-                                    "result": tool_result,
-                                },
-                            }
+                        # Return MCP-compliant success response
+                        response = {
+                            "jsonrpc": "2.0",
+                            "id": req_id,
+                            "result": format_mcp_tool_result(
+                                tool_result, is_error=False
+                            ),
+                        }
                 except Exception as e:
+                    # Return MCP-compliant error response for exceptions
                     response = {
                         "jsonrpc": "2.0",
                         "id": req_id,
-                        "error": {"code": -32603, "message": str(e)},
+                        "result": format_mcp_tool_result(
+                            {"error": str(e)}, is_error=True
+                        ),
                     }
             elif method == "run_tool":
                 params = request.get("params", {})
@@ -544,19 +572,26 @@ def main():
                         "error": {"code": -32603, "message": str(e)},
                     }
             else:
-                response = {
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "error": {"code": -32601, "message": f"Method not found: {method}"},
-                }
+                # Only send error response if request has an id (not a notification)
+                if req_id is not None:
+                    response = {
+                        "jsonrpc": "2.0",
+                        "id": req_id,
+                        "error": {
+                            "code": -32601,
+                            "message": f"Method not found: {method}",
+                        },
+                    }
 
-            if response:
+            # JSON-RPC 2.0: Only send response if request had an id
+            # (notifications don't get responses)
+            if response and req_id is not None:
                 payload = json.dumps(response)
 
-                # sys.stdout.writeを使用し、write後に明示的にflushする
+                # Use sys.stdout.write and explicitly flush after writing
                 sys.stdout.write(
                     payload + "\n"
-                )  # 標準的なJSON-RPC over stdioでは末尾に改行を付けることが多い
+                )  # Standard JSON-RPC over stdio typically adds a newline at the end
                 sys.stdout.flush()
 
         except json.JSONDecodeError:

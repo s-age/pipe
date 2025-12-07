@@ -173,7 +173,7 @@ class TestExecuteTool(unittest.TestCase):
 
         mock_read_yaml.return_value = self.valid_settings
         mock_get_id.return_value = "test_session"
-        
+
         mock_settings = MagicMock()
         mock_session_service = MagicMock()
         mock_get_services.return_value = (mock_settings, mock_session_service)
@@ -194,7 +194,7 @@ class TestExecuteTool(unittest.TestCase):
         mock_exists.return_value = True  # setting.yml exists
         mock_read_yaml.return_value = self.valid_settings
         mock_get_id.return_value = "test_session"
-        
+
         mock_settings = MagicMock()
         mock_session_service = MagicMock()
         mock_get_services.return_value = (mock_settings, mock_session_service)

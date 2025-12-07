@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 # Suppress Pydantic warnings early, before importing any pydantic models
 warnings.filterwarnings("ignore", message=".*is not a Python type.*\n")
-warnings.filterwarnings("ignore", message='Field name .* shadows an attribute')
+warnings.filterwarnings("ignore", message="Field name .* shadows an attribute")
 
 from pydantic import BaseModel  # noqa: E402
 
@@ -416,10 +416,7 @@ def format_mcp_tool_result(result, is_error=False):
     else:
         content_text = json.dumps(result, ensure_ascii=False)
 
-    return {
-        "content": [{"type": "text", "text": content_text}],
-        "isError": is_error
-    }
+    return {"content": [{"type": "text", "text": content_text}], "isError": is_error}
 
 
 # --- Main Stdio Loop ---
@@ -455,7 +452,7 @@ def main():
     sys.path.insert(0, BASE_DIR)
     while True:
         try:
-            # Wait for input on stdin for 10 seconds
+            # Wait indefinitely for input on stdin
             ready, _, _ = select.select([sys.stdin], [], [], None)
             if not ready:
                 break  # Exit if timeout is reached

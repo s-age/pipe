@@ -1,6 +1,6 @@
 """Base request class for all API request models."""
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pipe.web.requests.common import normalize_camel_case_keys
 from pydantic import BaseModel, ConfigDict, model_validator
@@ -42,7 +42,7 @@ class BaseRequest(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def normalize_and_merge(cls, data: Any) -> Any:
+    def normalize_and_merge(cls, data: dict | list) -> dict | list:
         """Normalize camelCase keys to snake_case.
 
         This validator is called before field validation, allowing frontend
@@ -53,8 +53,8 @@ class BaseRequest(BaseModel):
     @classmethod
     def create_with_path_params(
         cls,
-        path_params: dict[str, Any],
-        body_data: dict[str, Any] | None = None,
+        path_params: dict[str, str | int | bool],
+        body_data: dict | None = None,
     ) -> "BaseRequest":
         """Create a request instance with path parameters and body data.
 

@@ -1,10 +1,17 @@
 import json
 import os
 import subprocess
-from typing import Any
+from typing import Any, TypedDict
 
 
-def ts_get_type_definitions(file_path: str, symbol_name: str) -> dict[str, Any]:
+class TypeDefinitionsResult(TypedDict, total=False):
+    """Result from extracting TypeScript type definitions."""
+
+    type_definitions: dict[str, Any]  # TS type system is complex (5-2 Data Boundary)
+    error: str
+
+
+def ts_get_type_definitions(file_path: str, symbol_name: str) -> TypeDefinitionsResult:
     """
     Extracts type definitions for a function, class, or variable within the
     specified TypeScript file using ts-morph for full AST analysis.

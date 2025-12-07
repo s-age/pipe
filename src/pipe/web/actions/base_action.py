@@ -1,7 +1,7 @@
 """Base Action class for all API actions."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from flask import Request
 from pipe.web.request_context import RequestContext
@@ -35,7 +35,7 @@ class BaseAction(ABC, Generic[TBody, TRequest]):
 
     Examples:
         # New pattern with type safety
-        class CreateSessionAction(BaseAction[Any, CreateSessionRequest]):
+        class CreateSessionAction(BaseAction[CreateSessionBody, CreateSessionRequest]):
             request_model = CreateSessionRequest
 
             def execute(self):
@@ -43,7 +43,7 @@ class BaseAction(ABC, Generic[TBody, TRequest]):
                 return service.create(req.session_id)  # IDE completion works!
 
         # Legacy pattern (still supported)
-        class UpdateSessionAction(BaseAction[UpdateSessionBody, Any]):
+        class UpdateSessionAction(BaseAction[UpdateSessionBody, BaseRequest]):
             body_model = UpdateSessionBody
 
             def execute(self):
@@ -91,7 +91,7 @@ class BaseAction(ABC, Generic[TBody, TRequest]):
         self.request_data = request_data
 
     @abstractmethod
-    def execute(self) -> Any:
+    def execute(self) -> dict | list | str | int | bool:
         """Execute the action and return the result.
 
         Actions should return the business logic result directly.

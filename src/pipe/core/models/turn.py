@@ -8,6 +8,20 @@ class TurnResponse(BaseModel):
     message: str
 
 
+class UserTaskTurnUpdate(BaseModel):
+    """Update DTO for UserTaskTurn. All fields optional for partial updates."""
+
+    instruction: str | None = None
+    timestamp: str | None = None
+
+
+class ModelResponseTurnUpdate(BaseModel):
+    """Update DTO for ModelResponseTurn. All fields optional for partial updates."""
+
+    content: str | None = None
+    timestamp: str | None = None
+
+
 class UserTaskTurn(BaseModel):
     type: Literal["user_task"]
     instruction: str

@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pipe.core.models.turn import ToolResponseTurn, Turn
 from pydantic import GetCoreSchemaHandler
@@ -17,7 +17,7 @@ class TurnCollection(list[Turn]):
     @classmethod
     def __get_pydantic_core_schema__(
         cls: type["TurnCollection"],
-        source: type[Any],
+        source: type["TurnCollection"],
         handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
         """

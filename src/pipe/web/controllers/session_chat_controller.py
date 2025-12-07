@@ -45,11 +45,15 @@ class SessionChatController:
             }
 
             if session_id:
-                session_action = SessionGetAction(
-                    params={"session_id": session_id}, request_data=request_data
-                )
-                session_data = session_action.execute()
-                response["current_session"] = session_data
+                try:
+                    session_action = SessionGetAction(
+                        params={"session_id": session_id}, request_data=request_data
+                    )
+                    session_data = session_action.execute()
+                    response["current_session"] = session_data
+                except HttpException:
+                    # Session not found, but still return tree and settings
+                    response["current_session"] = None
 
             return response, 200
         except HttpException as e:

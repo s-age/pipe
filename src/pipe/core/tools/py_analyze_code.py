@@ -1,9 +1,27 @@
 import ast
 import os
-from typing import Any
+from typing import TypedDict
 
 
-def py_analyze_code(file_path: str) -> dict[str, Any]:
+class SymbolInfo(TypedDict, total=False):
+    """Information about a code symbol."""
+
+    name: str
+    lineno: int
+    end_lineno: int | None
+    docstring: str | None
+
+
+class AnalyzeCodeResult(TypedDict, total=False):
+    """Result from analyzing Python code."""
+
+    classes: list[SymbolInfo]
+    functions: list[SymbolInfo]
+    variables: list[SymbolInfo]
+    error: str
+
+
+def py_analyze_code(file_path: str) -> AnalyzeCodeResult:
     """
     Analyzes the AST of the given Python file for symbol information.
     """
@@ -14,7 +32,7 @@ def py_analyze_code(file_path: str) -> dict[str, Any]:
         source_code = f.read()
 
     tree = ast.parse(source_code)
-    symbols: dict[str, list[dict[str, Any]]] = {
+    symbols: AnalyzeCodeResult = {
         "classes": [],
         "functions": [],
         "variables": [],
@@ -22,7 +40,7 @@ def py_analyze_code(file_path: str) -> dict[str, Any]:
 
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef):
-            class_info = {
+            class_info: SymbolInfo = {
                 "name": node.name,
                 "lineno": node.lineno,
                 "end_lineno": node.end_lineno,
@@ -30,7 +48,7 @@ def py_analyze_code(file_path: str) -> dict[str, Any]:
             }
             symbols["classes"].append(class_info)
         elif isinstance(node, ast.FunctionDef):
-            func_info = {
+            func_info: SymbolInfo = {
                 "name": node.name,
                 "lineno": node.lineno,
                 "end_lineno": node.end_lineno,
@@ -40,7 +58,7 @@ def py_analyze_code(file_path: str) -> dict[str, Any]:
         elif isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name):
-                    var_info = {
+                    var_info: SymbolInfo = {
                         "name": target.id,
                         "lineno": target.lineno,
                         "end_lineno": target.end_lineno,

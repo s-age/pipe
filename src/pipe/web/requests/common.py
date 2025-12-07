@@ -1,25 +1,28 @@
-"""
-Common utilities for Pydantic request models.
+"""Common utilities for Pydantic request models.
 
 Provides automatic camelCase to snake_case conversion for all request models.
 """
 
 import re
-from typing import Any
 
 
 def camel_to_snake(name: str) -> str:
     """Convert camelCase to snake_case."""
-    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+    name = re.sub("(.)([A-Z][a-z]+)", r"_", name)
+    return re.sub("([a-z0-9])([A-Z])", r"_", name).lower()
 
 
-def normalize_camel_case_keys(data: Any) -> Any:
-    """
-    Recursively convert camelCase keys to snake_case in dictionaries.
+def normalize_camel_case_keys(data: dict | list) -> dict | list:
+    """Recursively convert camelCase keys to snake_case in dictionaries.
 
     This allows frontend to send camelCase while backend uses snake_case.
     Only converts keys that match camelCase pattern (contain uppercase letters).
+
+    Args:
+        data: Dictionary or list to process (I/O Boundary 5-1)
+
+    Returns:
+        Data with keys converted to snake_case
     """
     if not isinstance(data, dict):
         return data

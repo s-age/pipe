@@ -3,8 +3,8 @@ Pydantic model for validating the request body of the new session API endpoint.
 """
 
 import os
-from typing import Any
 
+from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.reference import Reference
 from pipe.web.requests.common import normalize_camel_case_keys
 from pipe.web.validators.rules.file_exists import validate_list_of_files_exist
@@ -21,11 +21,11 @@ class StartSessionRequest(BaseModel):
     artifacts: list[str] | None = None
     procedure: str | None = None
     multi_step_reasoning_enabled: bool = False
-    hyperparameters: dict[str, Any] | None = None
+    hyperparameters: Hyperparameters | None = None
 
     @model_validator(mode="before")
     @classmethod
-    def normalize_keys(cls, data: Any) -> Any:
+    def normalize_keys(cls, data: dict | list) -> dict | list:
         return normalize_camel_case_keys(data)
 
     @field_validator("purpose", "background", "instruction")

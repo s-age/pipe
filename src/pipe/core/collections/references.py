@@ -83,7 +83,9 @@ class ReferenceCollection(UserList):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: Any, handler: Callable[[Any], core_schema.CoreSchema]
+        cls,
+        source_type: Any,  # Pydantic framework requirement (checklist 5-4)
+        handler: Callable[[Any], core_schema.CoreSchema],
     ) -> core_schema.CoreSchema:
         reference_schema = handler(Reference)
         items_schema = core_schema.list_schema(reference_schema)
@@ -110,8 +112,9 @@ class ReferenceCollection(UserList):
     def __get_pydantic_json_schema__(
         cls,
         core_schema: core_schema.CoreSchema,
+        # Pydantic framework requirement (checklist 5-4)
         handler: Callable[[Any], dict[str, Any]],
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # Pydantic framework requirement (checklist 5-4)
         # handler(core_schema) will generate the schema for the inner items
         # and add them to the definitions.
         field_schema = handler(core_schema)

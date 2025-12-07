@@ -11,7 +11,7 @@ Behaviour:
   - top_k: int >= 0
 """
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pipe.web.requests.base_request import BaseRequest
 from pipe.web.requests.common import normalize_camel_case_keys
@@ -31,12 +31,14 @@ class EditHyperparametersRequest(BaseRequest):
 
     @model_validator(mode="before")
     @classmethod
-    def normalize_and_validate(cls, data: Any) -> Any:
+    def normalize_and_validate(cls, data: dict | list) -> dict:
         if not isinstance(data, dict):
             raise ValueError("Request body must be a JSON object.")
 
         # Normalize camelCase to snake_case
-        data = normalize_camel_case_keys(data)
+        normalized = normalize_camel_case_keys(data)
+        assert isinstance(normalized, dict)  # Type narrowing for mypy
+        data = normalized
 
         # Require at least one hyperparameter field
         if not any(k in data for k in ("temperature", "top_p", "top_k")):

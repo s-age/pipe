@@ -2,7 +2,7 @@
 Pydantic model for validating the request body of the edit todos API endpoint.
 """
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pipe.core.models.todo import TodoItem
 from pipe.web.requests.base_request import BaseRequest
@@ -21,5 +21,5 @@ class EditTodosRequest(BaseRequest):
 
     @model_validator(mode="before")
     @classmethod
-    def normalize_keys(cls, data: Any) -> Any:
+    def normalize_keys(cls, data: dict | list) -> dict | list:
         return normalize_camel_case_keys(data)

@@ -1,6 +1,6 @@
 """RequestContext for unified access to request parameters and body."""
 
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from flask import Request
 from pydantic import BaseModel, ValidationError
@@ -16,7 +16,7 @@ class RequestContext(Generic[T]):
 
     def __init__(
         self,
-        path_params: dict[str, Any],
+        path_params: dict[str, str | int | bool],
         request_data: Request | None = None,
         body_model: type[T] | None = None,
     ):
@@ -35,7 +35,9 @@ class RequestContext(Generic[T]):
         self._validated_body: T | None = None
         self._body_errors: list[str] | None = None
 
-    def get_path_param(self, key: str, required: bool = True) -> Any:
+    def get_path_param(
+        self, key: str, required: bool = True
+    ) -> str | int | bool | None:
         """Get a path parameter with optional requirement validation.
 
         Args:

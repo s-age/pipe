@@ -4,9 +4,7 @@ Session Management Service
 Handles bulk operations for session management including deletion, backup, and listing.
 """
 
-from typing import Any
-
-from pipe.core.collections.backup_files import BackupFiles
+from pipe.core.collections.backup_files import BackupFiles, SessionSummary
 from pipe.core.collections.files_to_delete import FilesToDelete
 from pipe.core.collections.files_to_move import FilesToMove
 from pipe.core.repositories.session_repository import SessionRepository
@@ -51,13 +49,12 @@ class SessionManagementService:
         files_to_move = FilesToMove(session_ids, self.repository)
         return files_to_move.execute()
 
-    def list_backup_sessions(self) -> list[dict[str, Any]]:
+    def list_backup_sessions(self) -> list[SessionSummary]:
         """
         List all sessions in the backup directory.
 
         Returns:
-            List of dictionaries containing session_id and file_path for each
-            backup session
+            List of SessionSummary objects containing session metadata
         """
         backup_files = BackupFiles(self.repository)
         return backup_files.list_sessions()

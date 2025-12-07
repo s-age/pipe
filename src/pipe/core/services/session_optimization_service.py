@@ -5,11 +5,13 @@ Handles compression, therapist diagnosis, and doctor modifications.
 These operations create shadow sessions to analyze and optimize target sessions.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pipe.core.agents.takt_agent import TaktAgent
 from pipe.core.domains.session_optimization import (
     DiagnosisData,
+    DoctorResult,
+    SessionModifications,
     build_compressor_instruction,
     build_doctor_instruction,
     build_therapist_instruction,
@@ -35,6 +37,11 @@ class CompressorResult(BaseModel):
     session_id: str
     summary: str
     verifier_session_id: str
+
+
+class DoctorResultResponse(BaseModel):
+    session_id: str
+    result: DoctorResult
 
 
 class SessionOptimizationService:
@@ -263,8 +270,8 @@ class SessionOptimizationService:
     # =========================================================================
 
     def run_doctor(
-        self, session_id: str, modifications: dict[str, Any]
-    ) -> dict[str, Any]:
+        self, session_id: str, modifications: SessionModifications
+    ) -> DoctorResultResponse:
         """Create doctor session and run modifications.
 
         Args:
@@ -272,7 +279,7 @@ class SessionOptimizationService:
             modifications: Dict containing deletions, edits, compressions
 
         Returns:
-            Dict with session_id and result
+            DoctorResultResponse with session_id and result
         """
         # Get session to validate turn numbers
         session = self.session_service.get_session(session_id)
@@ -313,14 +320,20 @@ class SessionOptimizationService:
                     last_model_response = turn
                     break
 
-            result = {"status": "Failed", "reason": "No response"}
+            result = DoctorResult(
+                status="Failed",
+                reason="No response",
+                applied_deletions=[],
+                applied_edits=[],
+                applied_compressions=[],
+            )
             if last_model_response:
                 result = parse_doctor_result(last_model_response.content)
 
-            return {
-                "session_id": doctor_session_id,
-                "result": result,
-            }
+            return DoctorResultResponse(
+                session_id=doctor_session_id,
+                result=result,
+            )
         finally:
             # Delete the doctor session as it's a shadow session
             if doctor_session_id:

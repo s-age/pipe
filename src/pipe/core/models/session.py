@@ -10,13 +10,32 @@ from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.todo import TodoItem
-from pipe.core.models.turn import Turn
+from pipe.core.models.turn import (
+    ModelResponseTurnUpdate,
+    Turn,
+    UserTaskTurnUpdate,
+)
 from pipe.core.utils.datetime import get_current_timestamp
 from pipe.core.utils.file import (
     FileLock,
     delete_file,
 )
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
+
+
+class SessionMetaUpdate(BaseModel):
+    """Session metadata update DTO.
+
+    All fields are optional to support partial updates (PATCH).
+    Only provided fields will be updated.
+    """
+
+    purpose: str | None = None
+    background: str | None = None
+    roles: list[str] | None = None
+    multi_step_reasoning_enabled: bool | None = None
+    artifacts: list[str] | None = None
+    procedure: str | None = None
 
 
 class Session(BaseModel):
@@ -30,25 +49,24 @@ class Session(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _preprocess_data(cls, data: Any) -> Any:
-        if isinstance(data, dict):
-            # Preprocess todos
-            if "todos" in data and data["todos"] is not None:
-                processed_todos = []
-                for item in data["todos"]:
-                    if isinstance(item, str):
-                        processed_todos.append(TodoItem(title=item))
-                    elif isinstance(item, dict):
-                        processed_todos.append(TodoItem(**item))
-                    else:
-                        processed_todos.append(item)
-                data["todos"] = processed_todos
+    def _preprocess_data(cls, data: dict[str, Any]) -> dict[str, Any]:
+        # Preprocess todos
+        if "todos" in data and data["todos"] is not None:
+            processed_todos = []
+            for item in data["todos"]:
+                if isinstance(item, str):
+                    processed_todos.append(TodoItem(title=item))
+                elif isinstance(item, dict):
+                    processed_todos.append(TodoItem(**item))
+                else:
+                    processed_todos.append(item)
+            data["todos"] = processed_todos
 
-            # Preprocess hyperparameters
-            if "hyperparameters" in data and data["hyperparameters"] is not None:
-                if isinstance(data["hyperparameters"], dict):
-                    data["hyperparameters"] = Hyperparameters(**data["hyperparameters"])
-                # If it's already Hyperparameters, leave it as is
+        # Preprocess hyperparameters
+        if "hyperparameters" in data and data["hyperparameters"] is not None:
+            if isinstance(data["hyperparameters"], dict):
+                data["hyperparameters"] = Hyperparameters(**data["hyperparameters"])
+            # If it's already Hyperparameters, leave it as is
 
         return data
 
@@ -218,8 +236,18 @@ class Session(BaseModel):
         """Adds a turn to the session's history."""
         self.turns.append(turn_data)
 
-    def edit_turn(self, turn_index: int, new_data: dict):
-        """Edits a specific turn in the session's history."""
+    def edit_turn(
+        self,
+        turn_index: int,
+        new_data: UserTaskTurnUpdate | ModelResponseTurnUpdate | dict[str, Any],
+    ):
+        """Edits a specific turn in the session's history.
+
+        Args:
+            turn_index: Index of the turn to edit
+            new_data: Update data - accepts typed Update DTOs or dict
+                      for I/O Boundary (5-1)
+        """
         from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
 
         if not (0 <= turn_index < len(self.turns)):
@@ -232,7 +260,14 @@ class Session(BaseModel):
             )
 
         turn_as_dict = original_turn.model_dump()
-        turn_as_dict.update(new_data)
+
+        # Convert DTO to dict, excluding unset fields for partial updates
+        if isinstance(new_data, UserTaskTurnUpdate | ModelResponseTurnUpdate):
+            update_dict = new_data.model_dump(exclude_unset=True)
+        else:
+            update_dict = new_data
+
+        turn_as_dict.update(update_dict)
 
         if original_turn.type == "user_task":
             self.turns[turn_index] = UserTaskTurn(**turn_as_dict)
@@ -253,8 +288,20 @@ class Session(BaseModel):
             self.turns.extend(self.pools)
             self.pools = TurnCollection()
 
-    def edit_meta(self, new_meta_data: dict):
-        """Edits the session's metadata."""
-        for key, value in new_meta_data.items():
+    def edit_meta(self, update_data: SessionMetaUpdate | dict[str, Any]):
+        """Edits the session's metadata.
+
+        Args:
+            update_data: Either a SessionMetaUpdate model or dict for
+                         backward compatibility. Dict will be validated
+                         against SessionMetaUpdate.
+        """
+        # Convert dict to SessionMetaUpdate for validation
+        if isinstance(update_data, dict):
+            update_data = SessionMetaUpdate(**update_data)
+
+        # Only update fields that were explicitly set
+        update_dict = update_data.model_dump(exclude_unset=True)
+        for key, value in update_dict.items():
             if hasattr(self, key):
                 setattr(self, key, value)

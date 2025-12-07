@@ -1,10 +1,28 @@
 import json
 import os
 import subprocess
-from typing import Any
+from typing import TypedDict
 
 
-def ts_get_references(file_path: str, symbol_name: str) -> dict[str, Any]:
+class TSReference(TypedDict):
+    """A reference to a TypeScript symbol."""
+
+    file: str
+    line: int
+    column: int
+    text: str
+
+
+class TSReferencesResult(TypedDict, total=False):
+    """Result from finding TypeScript references."""
+
+    references: list[TSReference]
+    symbol_name: str
+    reference_count: int
+    error: str
+
+
+def ts_get_references(file_path: str, symbol_name: str) -> TSReferencesResult:
     """
     Searches for references to a specific symbol within the given TypeScript file
     using ts-morph for full AST analysis.

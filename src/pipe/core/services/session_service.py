@@ -7,20 +7,34 @@ import json
 import os
 import sys
 import zoneinfo
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.sessions import SessionCollection
 from pipe.core.domains.references import add_reference
+from pipe.core.domains.session_optimization import SessionModifications
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.artifact import Artifact
 from pipe.core.models.hyperparameters import Hyperparameters
-from pipe.core.models.session import Session
+from pipe.core.models.reference import Reference
+from pipe.core.models.session import Session, SessionMetaUpdate
 from pipe.core.models.settings import Settings
-from pipe.core.models.turn import Turn, UserTaskTurn
+from pipe.core.models.todo import TodoItem
+from pipe.core.models.turn import (
+    ModelResponseTurnUpdate,
+    Turn,
+    UserTaskTurn,
+    UserTaskTurnUpdate,
+)
 from pipe.core.repositories.session_repository import SessionRepository
-from pipe.core.services.session_optimization_service import CompressorResult
+from pipe.core.services.session_optimization_service import (
+    CompressorResult,
+    DoctorResultResponse,
+)
 from pipe.core.utils.datetime import get_current_timestamp
+
+if TYPE_CHECKING:
+    from pipe.core.services.file_indexer_service import FileIndexerService
 
 
 class SessionService:
@@ -29,7 +43,7 @@ class SessionService:
         project_root: str,
         settings: Settings,
         repository: SessionRepository,
-        file_indexer_service=None,
+        file_indexer_service: "FileIndexerService | None" = None,
     ):
         self.project_root = project_root
         self.settings = settings
@@ -152,10 +166,10 @@ class SessionService:
         self,
         purpose: str,
         background: str,
-        roles: list,
+        roles: list[str],
         multi_step_reasoning_enabled: bool = False,
         token_count: int = 0,
-        hyperparameters: dict | None = None,
+        hyperparameters: dict[str, Any] | None = None,
         parent_id: str | None = None,
         artifacts: list[str] | None = None,
         procedure: str | None = None,
@@ -183,16 +197,25 @@ class SessionService:
 
         return session
 
-    def edit_session_meta(self, session_id: str, new_meta_data: dict):
+    def edit_session_meta(
+        self, session_id: str, update_data: SessionMetaUpdate | dict[str, Any]
+    ):
+        """Edit session metadata with type-safe updates.
+
+        Args:
+            session_id: Session ID to edit
+            update_data: SessionMetaUpdate model or dict (for backward compatibility)
+        """
         session = self._fetch_session(session_id)
         if not session:
             return
 
         self.repository.backup(session)
-        session.edit_meta(new_meta_data)
+        session.edit_meta(update_data)
         self.repository.save(session)
 
-    def update_references(self, session_id: str, references: list):
+    def update_references(self, session_id: str, references: list[Reference]):
+        """Updates session references with typed Reference objects."""
         session = self._fetch_session(session_id)
         if session:
             session.references = ReferenceCollection(references)
@@ -271,7 +294,8 @@ class SessionService:
             add_reference(session.references, file_path, session.references.default_ttl)
         self._save_session(session)
 
-    def update_todos(self, session_id: str, todos: list):
+    def update_todos(self, session_id: str, todos: list[TodoItem]):
+        """Updates session todos with typed TodoItem objects."""
         session = self._fetch_session(session_id)
         if session:
             from pipe.core.domains.todos import update_todos_in_session
@@ -332,8 +356,20 @@ class SessionService:
         delete_turns(session, turn_indices)
         self.repository.save(session)
 
-    def edit_turn(self, session_id: str, turn_index: int, new_data: dict):
-        """Edits a specific turn in a session."""
+    def edit_turn(
+        self,
+        session_id: str,
+        turn_index: int,
+        new_data: UserTaskTurnUpdate | ModelResponseTurnUpdate | dict[str, Any],
+    ):
+        """Edits a specific turn in a session.
+
+        Args:
+            session_id: The session ID
+            turn_index: Index of the turn to edit
+            new_data: Update data - accepts typed Update DTOs or dict
+                      for I/O Boundary (5-1)
+        """
         session = self._fetch_session(session_id)
         if not session:
             raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
@@ -423,10 +459,10 @@ class SessionService:
         self,
         purpose: str,
         background: str,
-        roles: list,
+        roles: list[str],
         multi_step_reasoning_enabled: bool = False,
         token_count: int = 0,
-        hyperparameters: dict | None = None,
+        hyperparameters: dict[str, Any] | None = None,
         parent_id: str | None = None,
         artifacts: list[Artifact] | None = None,  # Changed type to list[Artifact]
         procedure: str | None = None,
@@ -552,8 +588,8 @@ class SessionService:
         return self._get_optimization_service().run_therapist(session_id)
 
     def run_takt_for_doctor(
-        self, session_id: str, modifications: dict[str, Any]
-    ) -> dict[str, Any]:
+        self, session_id: str, modifications: SessionModifications
+    ) -> DoctorResultResponse:
         """Create doctor session and run modifications.
 
         Delegates to SessionOptimizationService.

@@ -1,9 +1,16 @@
 import ast
 import os
-from typing import Any
+from typing import TypedDict
 
 
-def py_get_type_hints(file_path: str, symbol_name: str) -> dict[str, Any]:
+class TypeHintsResult(TypedDict, total=False):
+    """Result from extracting type hints."""
+
+    type_hints: dict[str, str]
+    error: str
+
+
+def py_get_type_hints(file_path: str, symbol_name: str) -> TypeHintsResult:
     """
     指定されたPythonファイル内の関数またはクラスのタイプヒントを抽出する。
     """

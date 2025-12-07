@@ -1,7 +1,25 @@
 import json
 import os
 import subprocess
-from typing import Any
+from typing import Any, TypedDict
+
+
+class SimilarCodeMatch(TypedDict):
+    """A similar code match result."""
+
+    file: str
+    symbol: str
+    similarity: float
+    snippet: str
+
+
+class SimilarCodeResult(TypedDict, total=False):
+    """Result from finding similar code."""
+
+    base_snippet: str
+    base_type_definitions: dict[str, Any]  # TS type system is complex (5-2)
+    matches: list[SimilarCodeMatch]
+    error: str
 
 
 def ts_find_similar_code(
@@ -9,7 +27,7 @@ def ts_find_similar_code(
     symbol_name: str,
     search_directory: str,
     max_results: int = 3,
-) -> dict[str, Any]:
+) -> SimilarCodeResult:
     """
     Finds similar TypeScript code snippets based on a given symbol in a base file.
     It uses ts-morph via ts_analyzer.ts to extract code snippets and then compares them.

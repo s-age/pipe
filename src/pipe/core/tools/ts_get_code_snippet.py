@@ -1,9 +1,16 @@
 import os
 import subprocess
-from typing import Any
+from typing import TypedDict
 
 
-def ts_get_code_snippet(file_path: str, symbol_name: str) -> dict[str, Any]:
+class CodeSnippetResult(TypedDict, total=False):
+    """Result from extracting code snippet."""
+
+    snippet: str
+    error: str
+
+
+def ts_get_code_snippet(file_path: str, symbol_name: str) -> CodeSnippetResult:
     """
     Extracts a code snippet for a specific symbol from the given TypeScript file
     using ts-morph for full AST analysis.

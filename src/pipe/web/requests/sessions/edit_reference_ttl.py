@@ -2,7 +2,7 @@
 Pydantic model for validating the request body of the edit reference TTL API endpoint.
 """
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pipe.web.requests.base_request import BaseRequest
 from pipe.web.requests.common import normalize_camel_case_keys
@@ -25,5 +25,5 @@ class EditReferenceTtlRequest(BaseRequest):
 
     @model_validator(mode="before")
     @classmethod
-    def normalize_keys(cls, data: Any) -> Any:
+    def normalize_keys(cls, data: dict | list) -> dict | list:
         return normalize_camel_case_keys(data)

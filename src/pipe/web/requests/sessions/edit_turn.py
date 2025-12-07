@@ -2,7 +2,7 @@
 Pydantic model for validating the request body of the edit turn API endpoint.
 """
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pipe.web.requests.base_request import BaseRequest
 from pipe.web.requests.common import normalize_camel_case_keys
@@ -27,7 +27,7 @@ class EditTurnRequest(BaseRequest):
 
     @model_validator(mode="before")
     @classmethod
-    def normalize_keys(cls, data: Any) -> Any:
+    def normalize_keys(cls, data: dict | list) -> dict | list:
         return normalize_camel_case_keys(data)
 
     @field_validator("content")
@@ -52,7 +52,7 @@ class EditTurnRequest(BaseRequest):
                 raise ValueError("Instruction cannot be empty or only whitespace")
         return value
 
-    def model_dump(self, **kwargs: Any) -> dict[str, Any]:
+    def model_dump(self, **kwargs) -> dict:
         """Override to only include non-None fields in the output."""
         data = super().model_dump(**kwargs)
         return {k: v for k, v in data.items() if v is not None}

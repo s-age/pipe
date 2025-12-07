@@ -8,6 +8,30 @@ processing optimization results.
 from typing import TypedDict
 
 
+class TurnEdit(TypedDict):
+    turn: int
+    new_content: str
+
+
+class TurnCompression(TypedDict):
+    start: int
+    end: int
+
+
+class SessionModifications(TypedDict):
+    deletions: list[int]
+    edits: list[TurnEdit]
+    compressions: list[TurnCompression]
+
+
+class DoctorResult(TypedDict):
+    status: str
+    reason: str
+    applied_deletions: list[int]
+    applied_edits: list[int]
+    applied_compressions: list[dict[str, int]]
+
+
 class DiagnosisData(TypedDict, total=False):
     summary: str
     deletions: list
@@ -135,7 +159,9 @@ def build_doctor_instruction(session_id: str, modifications: dict) -> str:
     return instruction
 
 
-def filter_valid_modifications(modifications: dict, turns_count: int) -> dict:
+def filter_valid_modifications(
+    modifications: SessionModifications, turns_count: int
+) -> SessionModifications:
     """Filter modifications to only include valid turn indices.
 
     Args:
@@ -155,11 +181,11 @@ def filter_valid_modifications(modifications: dict, turns_count: int) -> dict:
         c for c in compressions if 1 <= c["start"] <= c["end"] <= turns_count
     ]
 
-    return {
-        "deletions": valid_deletions,
-        "edits": valid_edits,
-        "compressions": valid_compressions,
-    }
+    return SessionModifications(
+        deletions=valid_deletions,
+        edits=valid_edits,
+        compressions=valid_compressions,
+    )
 
 
 def extract_summary_from_compressor_response(content: str) -> tuple[str, str | None]:
@@ -268,7 +294,7 @@ def parse_therapist_diagnosis(content: str) -> DiagnosisData:
         }
 
 
-def parse_doctor_result(content: str) -> dict:
+def parse_doctor_result(content: str) -> DoctorResult:
     """Parse doctor result from response content.
 
     Args:
@@ -293,13 +319,13 @@ def parse_doctor_result(content: str) -> dict:
         reason = ""
         if status == "Failed":
             reason = doctor_result.get("reason", content)
-        return {
-            "status": status,
-            "reason": reason,
-            "applied_deletions": doctor_result.get("applied_deletions", []),
-            "applied_edits": doctor_result.get("applied_edits", []),
-            "applied_compressions": doctor_result.get("applied_compressions", []),
-        }
+        return DoctorResult(
+            status=status,
+            reason=reason,
+            applied_deletions=doctor_result.get("applied_deletions", []),
+            applied_edits=doctor_result.get("applied_edits", []),
+            applied_compressions=doctor_result.get("applied_compressions", []),
+        )
     except json.JSONDecodeError:
         # Fallback to string matching
         if "Succeeded" in content:
@@ -312,10 +338,10 @@ def parse_doctor_result(content: str) -> dict:
             status = "Unknown"
             reason = content
 
-        return {
-            "status": status,
-            "reason": reason,
-            "applied_deletions": [],
-            "applied_edits": [],
-            "applied_compressions": [],
-        }
+        return DoctorResult(
+            status=status,
+            reason=reason,
+            applied_deletions=[],
+            applied_edits=[],
+            applied_compressions=[],
+        )

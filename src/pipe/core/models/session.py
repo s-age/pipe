@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import json
 import os
 import zoneinfo
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -10,16 +8,6 @@ from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.todo import TodoItem
-from pipe.core.models.turn import (
-    ModelResponseTurnUpdate,
-    Turn,
-    UserTaskTurnUpdate,
-)
-from pipe.core.utils.datetime import get_current_timestamp
-from pipe.core.utils.file import (
-    FileLock,
-    delete_file,
-)
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
 
@@ -162,55 +150,6 @@ class Session(BaseModel):
     def _get_lock_path(self) -> str:
         return f"{self._get_session_path()}.lock"
 
-    def destroy(self):
-        """Deletes the session's JSON file and lock file."""
-        session_path = self._get_session_path()
-        lock_path = self._get_lock_path()
-        with FileLock(lock_path):
-            delete_file(session_path)
-
-    def fork(self, fork_index: int, timezone_obj: zoneinfo.ZoneInfo) -> Session:
-        """Creates a new, in-memory Session object by forking this one."""
-        from pipe.core.collections.turns import TurnCollection
-
-        timestamp = get_current_timestamp(timezone_obj)
-        forked_purpose = f"Fork of: {self.purpose}"
-        forked_turns = TurnCollection(self.turns[: fork_index + 1])
-
-        identity_str = json.dumps(
-            {
-                "purpose": forked_purpose,
-                "original_id": self.session_id,
-                "fork_at_turn": fork_index,
-                "timestamp": timestamp,
-            },
-            sort_keys=True,
-        )
-        new_session_id_suffix = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
-
-        parent_path = (
-            self.session_id.rsplit("/", 1)[0] if "/" in self.session_id else None
-        )
-        new_session_id = (
-            f"{parent_path}/{new_session_id_suffix}"
-            if parent_path
-            else new_session_id_suffix
-        )
-
-        return Session(
-            session_id=new_session_id,
-            created_at=timestamp,
-            purpose=forked_purpose,
-            background=self.background,
-            roles=self.roles,
-            multi_step_reasoning_enabled=self.multi_step_reasoning_enabled,
-            hyperparameters=self.hyperparameters,
-            references=self.references,
-            artifacts=self.artifacts,
-            procedure=self.procedure,
-            turns=forked_turns,
-        )
-
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the session suitable for templates."""
         return {
@@ -231,77 +170,3 @@ class Session(BaseModel):
             "pools": [p.model_dump() for p in self.pools],
             "todos": [t.model_dump() for t in self.todos] if self.todos else [],
         }
-
-    def add_turn(self, turn_data: Turn):
-        """Adds a turn to the session's history."""
-        self.turns.append(turn_data)
-
-    def edit_turn(
-        self,
-        turn_index: int,
-        new_data: UserTaskTurnUpdate | ModelResponseTurnUpdate | dict[str, Any],
-    ):
-        """Edits a specific turn in the session's history.
-
-        Args:
-            turn_index: Index of the turn to edit
-            new_data: Update data - accepts typed Update DTOs or dict
-                      for I/O Boundary (5-1)
-        """
-        from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
-
-        if not (0 <= turn_index < len(self.turns)):
-            raise IndexError("Turn index out of range.")
-
-        original_turn = self.turns[turn_index]
-        if original_turn.type not in ["user_task", "model_response"]:
-            raise ValueError(
-                f"Editing turns of type '{original_turn.type}' is not allowed."
-            )
-
-        turn_as_dict = original_turn.model_dump()
-
-        # Convert DTO to dict, excluding unset fields for partial updates
-        if isinstance(new_data, UserTaskTurnUpdate | ModelResponseTurnUpdate):
-            update_dict = new_data.model_dump(exclude_unset=True)
-        else:
-            update_dict = new_data
-
-        turn_as_dict.update(update_dict)
-
-        if original_turn.type == "user_task":
-            self.turns[turn_index] = UserTaskTurn(**turn_as_dict)
-        elif original_turn.type == "model_response":
-            self.turns[turn_index] = ModelResponseTurn(**turn_as_dict)
-
-    def delete_turn(self, turn_index: int):
-        """Deletes a specific turn from the session's history."""
-        if not (0 <= turn_index < len(self.turns)):
-            raise IndexError("Turn index out of range.")
-        del self.turns[turn_index]
-
-    def merge_pool(self):
-        """Merges the turn pool into the main history."""
-        from pipe.core.collections.turns import TurnCollection
-
-        if self.pools:
-            self.turns.extend(self.pools)
-            self.pools = TurnCollection()
-
-    def edit_meta(self, update_data: SessionMetaUpdate | dict[str, Any]):
-        """Edits the session's metadata.
-
-        Args:
-            update_data: Either a SessionMetaUpdate model or dict for
-                         backward compatibility. Dict will be validated
-                         against SessionMetaUpdate.
-        """
-        # Convert dict to SessionMetaUpdate for validation
-        if isinstance(update_data, dict):
-            update_data = SessionMetaUpdate(**update_data)
-
-        # Only update fields that were explicitly set
-        update_dict = update_data.model_dump(exclude_unset=True)
-        for key, value in update_dict.items():
-            if hasattr(self, key):
-                setattr(self, key, value)

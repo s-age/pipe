@@ -49,7 +49,9 @@ class TestDispatcher(unittest.TestCase):
         """Tests that dispatch() correctly routes to the fork_delegate."""
         args = TaktArgs(fork="some-session-id", at_turn=1)
         dispatch(args, self.session_service, self.mock_parser)
-        mock_fork_run.assert_called_once_with(args, self.session_service)
+        mock_fork_run.assert_called_once_with(
+            args, self.session_service.project_root, self.session_service.settings
+        )
 
     @patch("pipe.core.dispatcher._dispatch_run")
     def test_dispatch_routes_to_run_for_instruction(self, mock_dispatch_run):
@@ -146,24 +148,60 @@ class TestDispatcher(unittest.TestCase):
         "pipe.core.agents.gemini_api.GeminiApiAgent.run",
         return_value=("model response", 100, []),
     )
-    def test_ttl_and_expiration_are_called(self, mock_agent_run):
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_ttl_and_expiration_are_called(self, mock_factory_class, mock_agent_run):
         """Tests that TTL decrement and tool response expiration are called."""
         from pipe.core.dispatcher import _dispatch_run
+
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
 
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
         mock_session_service = MagicMock(spec=SessionService)
         mock_session_service.settings = self.settings
         mock_session_service.current_session_id = "test_session"
-        mock_session_service.project_root = self.project_root  # Set attribute
+        mock_session_service.project_root = self.project_root
         _dispatch_run(args, mock_session_service)
-        mock_session_service.decrement_all_references_ttl_in_session.assert_called_once()
-        mock_session_service.expire_old_tool_responses.assert_called_once()
+        mock_reference_service.decrement_all_references_ttl_in_session.assert_called_once_with(
+            "test_session"
+        )
+        mock_turn_service.expire_old_tool_responses.assert_called_once_with(
+            "test_session"
+        )
         mock_agent_run.assert_called_once()
 
     @patch("pipe.core.delegates.dry_run_delegate.run")
-    def test_dry_run_does_not_call_ttl_or_expiration(self, mock_dry_run):
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_dry_run_does_not_call_ttl_or_expiration(
+        self, mock_factory_class, mock_dry_run
+    ):
         """Tests that TTL and expiration methods are NOT called on a dry run."""
         from pipe.core.dispatcher import _dispatch_run
+
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
 
         args = TaktArgs(
             instruction="Do something", dry_run=True, purpose="p", background="b"
@@ -171,10 +209,10 @@ class TestDispatcher(unittest.TestCase):
         mock_session_service = MagicMock(spec=SessionService)
         mock_session_service.settings = self.settings
         mock_session_service.current_session_id = "test_session"
-        mock_session_service.project_root = self.project_root  # Set attribute
+        mock_session_service.project_root = self.project_root
         _dispatch_run(args, mock_session_service)
-        mock_session_service.decrement_all_references_ttl_in_session.assert_not_called()
-        mock_session_service.expire_old_tool_responses.assert_not_called()
+        mock_reference_service.decrement_all_references_ttl_in_session.assert_not_called()
+        mock_turn_service.expire_old_tool_responses.assert_not_called()
         mock_dry_run.assert_called_once()
 
 

@@ -30,6 +30,9 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         session_service.project_root, session_service.settings
     )
     prompt_service = service_factory.create_prompt_service()
+    reference_service = service_factory.create_session_reference_service()
+    turn_service = service_factory.create_session_turn_service()
+    meta_service = service_factory.create_session_meta_service()
 
     # Calculate token count for text output
     try:
@@ -70,8 +73,8 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         return
 
     # Decrement TTL for all active references before calling the delegate
-    session_service.decrement_all_references_ttl_in_session(session_id)
-    session_service.expire_old_tool_responses(session_id)
+    reference_service.decrement_all_references_ttl_in_session(session_id)
+    turn_service.expire_old_tool_responses(session_id)
 
     # ----------------------------------------------------
     # NEW REGISTRY-BASED DISPATCH LOGIC
@@ -92,7 +95,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         session_service.add_turn_to_session(session_id, turn)
 
     if token_count is not None:
-        session_service.update_token_count(session_id, token_count)
+        meta_service.update_token_count(session_id, token_count)
 
     if args.output_format == "json":
         import json
@@ -119,7 +122,7 @@ def dispatch(
     if args.fork:
         from .delegates import fork_delegate
 
-        fork_delegate.run(args, session_service)
+        fork_delegate.run(args, session_service.project_root, session_service.settings)
 
     elif args.therapist:
         # Run therapist diagnosis

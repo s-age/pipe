@@ -13,6 +13,7 @@ def FileLock(lock_file_path: str):
     """A simple file-based lock context manager for process-safe file operations."""
     retry_interval = 0.1
     timeout = 10.0
+    stale_lock_timeout = 300.0  # 5 minutes - consider lock stale after this
     start_time = time.monotonic()
 
     while True:
@@ -21,6 +22,23 @@ def FileLock(lock_file_path: str):
             os.close(fd)
             break
         except FileExistsError:
+            # Check if lock file is stale
+            try:
+                lock_age = time.time() - os.path.getmtime(lock_file_path)
+                if lock_age > stale_lock_timeout:
+                    # Lock is stale, try to remove it
+                    try:
+                        os.remove(lock_file_path)
+                        print(
+                            f"WARNING: Removed stale lock file {lock_file_path} "
+                            f"(age: {lock_age:.1f}s)"
+                        )
+                        continue  # Try to acquire lock again
+                    except OSError:
+                        pass  # Someone else removed it, continue waiting
+            except OSError:
+                pass  # Lock file disappeared, continue waiting
+
             if time.monotonic() - start_time >= timeout:
                 raise TimeoutError(
                     f"Could not acquire lock on {lock_file_path} within {timeout} "

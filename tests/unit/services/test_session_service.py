@@ -4,10 +4,10 @@ import tempfile
 import unittest
 from unittest.mock import Mock
 
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
 from pipe.core.repositories.session_repository import SessionRepository
-from pipe.core.services.session_service import SessionService
 
 
 class TestSessionService(unittest.TestCase):
@@ -29,18 +29,16 @@ class TestSessionService(unittest.TestCase):
             },
         }
         self.settings = Settings(**settings_data)
-        self.mock_repository = Mock(spec=SessionRepository)
-        self.session_service = SessionService(
-            project_root=self.project_root,
-            settings=self.settings,
-            repository=self.mock_repository,
-        )
 
         # In-memory session storage for testing
         self.sessions: dict = {}
 
+        # Create mock repository BEFORE service creation
+        self.mock_repository = Mock(spec=SessionRepository)
+
         def save_session(session):
             self.sessions[session.session_id] = session
+            return session
 
         def find_session(session_id):
             return self.sessions.get(session_id)
@@ -67,6 +65,36 @@ class TestSessionService(unittest.TestCase):
         self.mock_repository.find.side_effect = find_session
         self.mock_repository.get_index.side_effect = get_index
         self.mock_repository.delete.side_effect = delete_session
+        self.mock_repository.backup.return_value = None  # No-op for tests
+
+        # Mock _get_path_for_id to return a fake path
+        self.mock_repository._get_path_for_id = Mock(
+            side_effect=lambda sid: f"{self.project_root}/sessions/{sid}.json"
+        )
+
+        # Create service factory for proper service initialization
+        self.service_factory = ServiceFactory(self.project_root, self.settings)
+        self.session_service = self.service_factory.create_session_service()
+
+        # Replace repository with mock BEFORE creating other services
+        self.session_service.repository = self.mock_repository
+
+        # Now create other services - they will create new session_service instances
+        # so we need to replace their repositories too
+        self.workflow_service = self.service_factory.create_session_workflow_service()
+        self.workflow_service.session_service.repository = self.mock_repository
+
+        self.reference_service = self.service_factory.create_session_reference_service()
+        self.reference_service.session_service.repository = self.mock_repository
+
+        self.todo_service = self.service_factory.create_session_todo_service()
+        self.todo_service.session_service.repository = self.mock_repository
+
+        self.meta_service = self.service_factory.create_session_meta_service()
+        self.meta_service.session_service.repository = self.mock_repository
+
+        self.turn_service = self.service_factory.create_session_turn_service()
+        self.turn_service.session_service.repository = self.mock_repository
 
     def tearDown(self):
         shutil.rmtree(self.project_root)
@@ -113,7 +141,7 @@ class TestSessionService(unittest.TestCase):
         )
         self.session_service._save_session(session)
 
-        forked_id = self.session_service.fork_session(session_id, fork_index=1)
+        forked_id = self.workflow_service.fork_session(session_id, fork_index=1)
         self.assertIsNotNone(forked_id)
 
         forked_session = self.session_service.get_session(forked_id)
@@ -126,7 +154,7 @@ class TestSessionService(unittest.TestCase):
         session = self.session_service.create_new_session("Original", "BG", [])
         session_id = session.session_id
         new_meta = {"purpose": "Updated Purpose", "background": "Updated BG"}
-        self.session_service.edit_session_meta(session_id, new_meta)
+        self.meta_service.edit_session_meta(session_id, new_meta)
 
         fetched_session = self.session_service.get_session(session_id)
         self.assertEqual(fetched_session.purpose, "Updated Purpose")
@@ -143,7 +171,7 @@ class TestSessionService(unittest.TestCase):
             f.write("ref content")
 
         # Add a reference
-        self.session_service.add_reference_to_session(session_id, "ref1.txt")
+        self.reference_service.add_reference_to_session(session_id, "ref1.txt")
         fetched_session = self.session_service.get_session(session_id)
         self.assertEqual(len(fetched_session.references), 1)
         self.assertEqual(fetched_session.references[0].path, "ref1.txt")
@@ -152,7 +180,7 @@ class TestSessionService(unittest.TestCase):
         from pipe.core.models.reference import Reference
 
         new_refs = [Reference(path="new_ref.txt", disabled=True)]
-        self.session_service.update_references(session_id, new_refs)
+        self.reference_service.update_references(session_id, new_refs)
         fetched_session = self.session_service.get_session(session_id)
         self.assertEqual(len(fetched_session.references), 1)
         self.assertEqual(fetched_session.references[0].path, "new_ref.txt")
@@ -166,13 +194,13 @@ class TestSessionService(unittest.TestCase):
         from pipe.core.models.todo import TodoItem
 
         todos = [TodoItem(title="My Todo", checked=False)]
-        self.session_service.update_todos(session_id, todos)
+        self.todo_service.update_todos(session_id, todos)
 
         fetched_session = self.session_service.get_session(session_id)
         self.assertEqual(len(fetched_session.todos), 1)
         self.assertEqual(fetched_session.todos[0].title, "My Todo")
 
-        self.session_service.delete_todos(session_id)
+        self.todo_service.delete_todos(session_id)
         fetched_session = self.session_service.get_session(session_id)
         self.assertIsNone(fetched_session.todos)
 
@@ -215,7 +243,7 @@ class TestSessionService(unittest.TestCase):
         """Tests updating the token count of a session."""
         session = self.session_service.create_new_session("TokenTest", "BG", [])
         session_id = session.session_id
-        self.session_service.update_token_count(session_id, 1234)
+        self.meta_service.update_token_count(session_id, 1234)
 
         fetched_session = self.session_service.get_session(session_id)
         self.assertEqual(fetched_session.token_count, 1234)
@@ -225,7 +253,7 @@ class TestSessionService(unittest.TestCase):
         session = self.session_service.create_new_session("Original", "BG", [])
         session_id = session.session_id
         with self.assertRaises(IndexError):
-            self.session_service.fork_session(session_id, fork_index=5)
+            self.workflow_service.fork_session(session_id, fork_index=5)
 
     def test_fork_session_from_non_model_response_turn(self):
         """Tests that forking from a turn that is not a model_response raises
@@ -239,7 +267,7 @@ class TestSessionService(unittest.TestCase):
         self.session_service._save_session(fetched_session)
 
         with self.assertRaises(ValueError):
-            self.session_service.fork_session(session_id, fork_index=0)
+            self.workflow_service.fork_session(session_id, fork_index=0)
 
     def test_add_reference_to_session(self):
         """Tests that add_reference_to_session adds new but not duplicate references."""
@@ -250,14 +278,14 @@ class TestSessionService(unittest.TestCase):
             f.write("content")
 
         # Add new reference
-        self.session_service.add_reference_to_session(session_id, "ref.txt")
+        self.reference_service.add_reference_to_session(session_id, "ref.txt")
         fetched_session = self.session_service.get_session(session_id)
         self.assertEqual(len(fetched_session.references), 1)
         self.assertEqual(fetched_session.references[0].path, "ref.txt")
         self.assertEqual(fetched_session.references[0].ttl, 3)
 
         # Try to add the same reference again
-        self.session_service.add_reference_to_session(session_id, "ref.txt")
+        self.reference_service.add_reference_to_session(session_id, "ref.txt")
         fetched_session = self.session_service.get_session(session_id)
         self.assertEqual(len(fetched_session.references), 1)  # Should not add duplicate
 
@@ -268,16 +296,16 @@ class TestSessionService(unittest.TestCase):
         ref_path = os.path.join(self.project_root, "ref.txt")
         with open(ref_path, "w") as f:
             f.write("content")
-        self.session_service.add_reference_to_session(session_id, "ref.txt")
+        self.reference_service.add_reference_to_session(session_id, "ref.txt")
 
         # Update TTL
-        self.session_service.update_reference_ttl_in_session(session_id, "ref.txt", 5)
+        self.reference_service.update_reference_ttl_in_session(session_id, "ref.txt", 5)
         fetched_session = self.session_service.get_session(session_id)
         self.assertEqual(fetched_session.references[0].ttl, 5)
         self.assertFalse(fetched_session.references[0].disabled)
 
         # Update TTL to 0
-        self.session_service.update_reference_ttl_in_session(session_id, "ref.txt", 0)
+        self.reference_service.update_reference_ttl_in_session(session_id, "ref.txt", 0)
         fetched_session = self.session_service.get_session(session_id)
         self.assertEqual(fetched_session.references[0].ttl, 0)
         self.assertTrue(fetched_session.references[0].disabled)

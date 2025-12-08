@@ -4,7 +4,7 @@ Handles all /api/v1/session/* endpoints.
 """
 
 from flask import Blueprint, Response, jsonify, request
-from pipe.web.actions.session_actions import SessionInstructionAction
+from pipe.web.actions.session import SessionInstructionAction
 from pipe.web.dispatcher import dispatch_action
 from pipe.web.request_context import RequestContext
 from pipe.web.streaming_dispatcher import dispatch_streaming_action

@@ -72,6 +72,30 @@ class SessionManagementService:
         backup_files = BackupFiles(self.repository)
         return backup_files.delete(session_ids)
 
+    def delete_backups_by_session_ids(self, session_ids: list[str]) -> int:
+        """
+        Delete backup sessions by their session IDs.
+
+        This method handles the conversion from session_ids to file_paths internally.
+
+        Args:
+            session_ids: List of session IDs whose backups should be deleted
+
+        Returns:
+            Number of successfully deleted backup files
+        """
+        backup_files = BackupFiles(self.repository)
+        backup_sessions = backup_files.list_sessions()
+
+        # Convert session_ids to file_paths
+        file_paths = [
+            session.file_path
+            for session in backup_sessions
+            if session.session_id in session_ids
+        ]
+
+        return backup_files.delete_files(file_paths)
+
     def delete_backup_files(self, file_paths: list[str]) -> int:
         """
         Delete specific backup files.

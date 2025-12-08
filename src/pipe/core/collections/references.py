@@ -81,6 +81,61 @@ class ReferenceCollection(UserList):
             reverse=True,
         )
 
+    def update_ttl_by_index(self, index: int, new_ttl: int):
+        """Update TTL of a reference by index with validation.
+
+        Args:
+            index: Zero-based reference index
+            new_ttl: New TTL value
+
+        Raises:
+            IndexError: If reference index out of range
+        """
+        if not (0 <= index < len(self.data)):
+            raise IndexError(
+                f"Reference index {index} out of range (0-{len(self.data)-1})."
+            )
+        self.data[index].ttl = new_ttl
+        self.data[index].disabled = new_ttl <= 0
+        self.sort_by_ttl()
+
+    def update_persist_by_index(self, index: int, persist: bool):
+        """Update persist state of a reference by index with validation.
+
+        Args:
+            index: Zero-based reference index
+            persist: New persist state
+
+        Raises:
+            IndexError: If reference index out of range
+        """
+        if not (0 <= index < len(self.data)):
+            raise IndexError(
+                f"Reference index {index} out of range (0-{len(self.data)-1})."
+            )
+        self.data[index].persist = persist
+        self.sort_by_ttl()
+
+    def toggle_disabled_by_index(self, index: int) -> bool:
+        """Toggle disabled state of a reference by index with validation.
+
+        Args:
+            index: Zero-based reference index
+
+        Returns:
+            New disabled state after toggle
+
+        Raises:
+            IndexError: If reference index out of range
+        """
+        if not (0 <= index < len(self.data)):
+            raise IndexError(
+                f"Reference index {index} out of range (0-{len(self.data)-1})."
+            )
+        self.data[index].disabled = not self.data[index].disabled
+        self.sort_by_ttl()
+        return self.data[index].disabled
+
     @classmethod
     def __get_pydantic_core_schema__(
         cls,

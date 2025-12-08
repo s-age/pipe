@@ -66,9 +66,9 @@ class Prompt(BaseModel):
         merged_params = settings.parameters.model_dump()
         if session.hyperparameters:
             if session.hyperparameters.temperature is not None:
-                merged_params["temperature"]["value"] = (
-                    session.hyperparameters.temperature
-                )
+                merged_params["temperature"][
+                    "value"
+                ] = session.hyperparameters.temperature
             if session.hyperparameters.top_p is not None:
                 merged_params["top_p"]["value"] = session.hyperparameters.top_p
             if session.hyperparameters.top_k is not None:

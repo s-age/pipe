@@ -1,81 +1,81 @@
 import json
 import os
+import shutil
 import tempfile
 import unittest
 import zoneinfo
 from unittest.mock import patch
 
-from pipe.core.collections.sessions import SessionCollection
 from pipe.core.collections.turns import TurnCollection
-from pipe.core.models.hyperparameters import Hyperparameters
-from pipe.core.models.session import Session
+from pipe.core.factories.service_factory import ServiceFactory
+from pipe.core.models.settings import Settings
 from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
 
 
 class TestSessionCollectionExtensions(unittest.TestCase):
     def setUp(self):
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.sessions_dir = self.temp_dir.name
+        self.temp_dir = tempfile.mkdtemp()
+        self.sessions_dir = os.path.join(self.temp_dir, "sessions")
+        os.makedirs(self.sessions_dir, exist_ok=True)
         self.index_path = os.path.join(self.sessions_dir, "index.json")
         self.timezone_name = "UTC"
         self.timezone_obj = zoneinfo.ZoneInfo(self.timezone_name)
 
-        # Mock Session static variables
-        Session.sessions_dir = self.sessions_dir
-        Session.backups_dir = os.path.join(self.sessions_dir, "backups")
-        Session.timezone_name = self.timezone_name
-        Session.default_hyperparameters = Hyperparameters()
-
-        # Create a dummy session file for testing
-        self.session_id = "test_session"
-        self.session_path = os.path.join(self.sessions_dir, f"{self.session_id}.json")
-        self.session = Session(
-            session_id=self.session_id,
-            purpose="Test Session",
-            created_at="2025-01-01T00:00:00Z",
-            turns=TurnCollection(
-                [
-                    UserTaskTurn(
-                        type="user_task",
-                        instruction="Do something",
-                        timestamp="2025-01-01T00:00:00Z",
-                    ),
-                    ModelResponseTurn(
-                        type="model_response",
-                        content=json.dumps({"message": "Done"}),
-                        timestamp="2025-01-01T00:01:00Z",
-                    ),
-                ]
-            ),
-            pools=TurnCollection(
-                [
-                    UserTaskTurn(
-                        type="user_task",
-                        instruction="Pool task",
-                        timestamp="2025-01-01T00:02:00Z",
-                    )
-                ]
-            ),
-        )
-        # self.session.save() is removed
-
-        # Create an initial index
-        self.initial_data = {
-            "sessions": {
-                self.session_id: {
-                    "purpose": "Test Session",
-                    "created_at": "2025-01-01T00:00:00Z",
-                    "last_updated": "2025-01-01T01:00:00Z",
-                }
-            }
+        # Setup settings
+        settings_data = {
+            "api_mode": "gemini-cli",
+            "model": "gemini-2.0-flash-exp",
+            "expert_mode": False,
+            "timezone": "UTC",
+            "parameters": {
+                "temperature": {"value": 0.5, "description": "t"},
+                "top_p": {"value": 0.9, "description": "p"},
+                "top_k": {"value": 40, "description": "k"},
+            },
         }
-        with open(self.index_path, "w") as f:
-            json.dump(self.initial_data, f)
+        self.settings = Settings(**settings_data)
+        self.service_factory = ServiceFactory(self.temp_dir, self.settings)
+        self.session_service = self.service_factory.create_session_service()
+        self.turn_service = self.service_factory.create_session_turn_service()
+        self.workflow_service = self.service_factory.create_session_workflow_service()
 
-        self.collection = SessionCollection(self.initial_data, self.timezone_name)
+        # Create a test session using the service
+        test_session = self.session_service.create_new_session(
+            purpose="Test Session",
+            background="Test Background",
+            roles=[],
+        )
+        self.session_id = test_session.session_id
+
+        # Add initial turns
+        session = self.session_service.get_session(self.session_id)
+        session.turns.append(
+            UserTaskTurn(
+                type="user_task",
+                instruction="Do something",
+                timestamp="2025-01-01T00:00:00Z",
+            )
+        )
+        session.turns.append(
+            ModelResponseTurn(
+                type="model_response",
+                content=json.dumps({"message": "Done"}),
+                timestamp="2025-01-01T00:01:00Z",
+            )
+        )
+        session.pools = TurnCollection(
+            [
+                UserTaskTurn(
+                    type="user_task",
+                    instruction="Pool task",
+                    timestamp="2025-01-01T00:02:00Z",
+                )
+            ]
+        )
+        self.session_service._save_session(session)
 
     def tearDown(self):
-        self.temp_dir.cleanup()
+        shutil.rmtree(self.temp_dir)
 
     def test_add_turn(self):
         new_turn = UserTaskTurn(
@@ -83,30 +83,35 @@ class TestSessionCollectionExtensions(unittest.TestCase):
             instruction="A new task",
             timestamp="2025-01-01T00:03:00Z",
         )
-        self.session.add_turn(new_turn)
-        self.assertEqual(len(self.session.turns), 3)
-        self.assertEqual(self.session.turns[-1].instruction, "A new task")
+        self.turn_service.add_turn_to_session(self.session_id, new_turn)
+        session = self.session_service.get_session(self.session_id)
+        self.assertEqual(len(session.turns), 3)
+        self.assertEqual(session.turns[-1].instruction, "A new task")
 
     def test_edit_turn(self):
         new_data = {"instruction": "Updated instruction"}
-        self.session.edit_turn(0, new_data)
-        self.assertEqual(self.session.turns[0].instruction, "Updated instruction")
+        self.turn_service.edit_turn(self.session_id, 0, new_data)
+        session = self.session_service.get_session(self.session_id)
+        self.assertEqual(session.turns[0].instruction, "Updated instruction")
 
     def test_delete_turn(self):
-        self.session.delete_turn(0)
-        self.assertEqual(len(self.session.turns), 1)
-        self.assertEqual(self.session.turns[0].type, "model_response")
+        self.turn_service.delete_turn(self.session_id, 0)
+        session = self.session_service.get_session(self.session_id)
+        self.assertEqual(len(session.turns), 1)
+        self.assertEqual(session.turns[0].type, "model_response")
 
     def test_merge_pool(self):
-        self.session.merge_pool()
-        self.assertEqual(len(self.session.turns), 3)
-        self.assertEqual(len(self.session.pools), 0)
-        self.assertEqual(self.session.turns[-1].instruction, "Pool task")
+        self.turn_service.merge_pool_into_turns(self.session_id)
+        session = self.session_service.get_session(self.session_id)
+        self.assertEqual(len(session.turns), 3)
+        self.assertEqual(len(session.pools), 0)
+        self.assertEqual(session.turns[-1].instruction, "Pool task")
 
-    @patch("pipe.core.models.session.get_current_timestamp")
+    @patch("pipe.core.utils.datetime.get_current_timestamp")
     def test_fork(self, mock_get_current_timestamp):
         mock_get_current_timestamp.return_value = "2025-01-02T00:00:00Z"
-        new_session = self.session.fork(1, self.timezone_obj)
+        new_session_id = self.workflow_service.fork_session(self.session_id, 1)
+        new_session = self.session_service.get_session(new_session_id)
 
         self.assertIsNotNone(new_session)
         self.assertEqual(len(new_session.turns), 2)

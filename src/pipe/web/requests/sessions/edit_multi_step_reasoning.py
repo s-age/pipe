@@ -2,6 +2,7 @@
 
 from typing import ClassVar
 
+from pipe.web.exceptions import NotFoundError
 from pipe.web.requests.base_request import BaseRequest
 from pipe.web.requests.common import normalize_camel_case_keys
 from pydantic import model_validator
@@ -26,3 +27,14 @@ class EditMultiStepReasoningRequest(BaseRequest):
     @classmethod
     def normalize_keys(cls, data: dict | list) -> dict | list:
         return normalize_camel_case_keys(data)
+
+    @model_validator(mode="after")
+    def validate_session_exists(self):
+        """Validate that the session exists."""
+        from pipe.web.service_container import get_session_service
+
+        session_data = get_session_service().get_session(self.session_id)
+        if not session_data:
+            raise NotFoundError("Session not found.")
+
+        return self

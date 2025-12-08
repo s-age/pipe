@@ -20,7 +20,7 @@ def delete_turns(session: "Session", turn_indices: list[int]) -> None:
     """
     sorted_indices = sorted(turn_indices, reverse=True)
     for index in sorted_indices:
-        session.delete_turn(index)
+        session.turns.delete_by_index(index)
 
 
 def get_turns_for_prompt(

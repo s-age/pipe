@@ -8,7 +8,7 @@ from flask_cors import CORS
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_text_file, read_yaml_file
-from pipe.web.actions.fs_actions import (
+from pipe.web.actions.fs import (
     IndexFilesAction,
     LsAction,
     SearchL2Action,
@@ -143,13 +143,19 @@ def create_app(
         )
 
     # Initialize services
-    session_service = ServiceFactory(project_root, settings).create_session_service()
-    session_management_service = ServiceFactory(
-        project_root, settings
-    ).create_session_management_service()
-    file_indexer_service = ServiceFactory(
-        project_root, settings
-    ).create_file_indexer_service()
+    service_factory = ServiceFactory(project_root, settings)
+    session_service = service_factory.create_session_service()
+    session_management_service = service_factory.create_session_management_service()
+    session_tree_service = service_factory.create_session_tree_service()
+    session_workflow_service = service_factory.create_session_workflow_service()
+    session_optimization_service = service_factory.create_session_optimization_service()
+    session_reference_service = service_factory.create_session_reference_service()
+    session_turn_service = service_factory.create_session_turn_service()
+    session_meta_service = service_factory.create_session_meta_service()
+    session_todo_service = service_factory.create_session_todo_service()
+    file_indexer_service = service_factory.create_file_indexer_service()
+    procedure_service = service_factory.create_procedure_service()
+    role_service = service_factory.create_role_service()
 
     # BFF (Backend for Frontend) Controllers
     start_session_controller = StartSessionController(session_service, settings)
@@ -162,10 +168,19 @@ def create_app(
     get_container().init(
         session_service=session_service,
         session_management_service=session_management_service,
+        session_tree_service=session_tree_service,
+        session_workflow_service=session_workflow_service,
+        session_optimization_service=session_optimization_service,
+        session_reference_service=session_reference_service,
+        session_turn_service=session_turn_service,
+        session_meta_service=session_meta_service,
+        session_todo_service=session_todo_service,
         start_session_controller=start_session_controller,
         session_chat_controller=session_chat_controller,
         session_management_controller=session_management_controller,
         file_indexer_service=file_indexer_service,
+        procedure_service=procedure_service,
+        role_service=role_service,
         settings=settings,
         project_root=project_root,
     )

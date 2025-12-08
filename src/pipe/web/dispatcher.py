@@ -23,33 +23,33 @@ from pipe.web.actions import (
     TurnDeleteAction,
     TurnEditAction,
 )
-from pipe.web.actions.fs_actions import (
+from pipe.web.actions.fs import (
     IndexFilesAction,
     LsAction,
     SearchL2Action,
     SearchSessionsAction,
 )
-from pipe.web.actions.session_actions import (
+from pipe.web.actions.session import (
     SessionDeleteAction,
     SessionGetAction,
     SessionInstructionAction,
     SessionStartAction,
 )
-from pipe.web.actions.session_management_actions import (
+from pipe.web.actions.session_management import (
     SessionsDeleteAction,
     SessionsDeleteBackupAction,
     SessionsListBackupAction,
     SessionsMoveToBackup,
 )
-from pipe.web.actions.session_tree_actions import SessionTreeAction
-from pipe.web.actions.settings_actions import SettingsGetAction
-from pipe.web.actions.therapist_actions import ApplyDoctorModificationsAction
-from pipe.web.actions.turn_actions import SessionForkAction, SessionTurnsGetAction
+from pipe.web.actions.session_tree import SessionTreeAction
+from pipe.web.actions.settings import SettingsGetAction
+from pipe.web.actions.therapist import ApplyDoctorModificationsAction
+from pipe.web.actions.turn import SessionForkAction, SessionTurnsGetAction
 from pipe.web.exceptions import HttpException
 from pipe.web.request_context import RequestContext
 from pipe.web.requests.base_request import BaseRequest
 from pipe.web.responses import ApiResponse
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 
 def _camel_to_snake(name: str) -> str:
@@ -211,6 +211,20 @@ class ActionDispatcher:
             match, extracted_params = self._match_route(route_pattern, action, params)
 
             if match:
+                # Debug: print which route matched
+                action_name = (
+                    action_class.__name__
+                    if isinstance(action_class, type)
+                    else action_class.__class__.__name__
+                )
+                import sys
+
+                print(
+                    f"DEBUG: Route matched - pattern={route_pattern}, "
+                    f"method={route_method}, action={action_name}, "
+                    f"params={extracted_params}"
+                )
+                sys.stdout.flush()
                 try:
                     # Check if action uses BaseRequest for unified validation
                     request_model = (
@@ -249,9 +263,11 @@ class ActionDispatcher:
                     request_context = RequestContext(
                         path_params=extracted_params,
                         request_data=converted_request_data,
-                        body_model=getattr(action_class, "body_model", None)
-                        if isinstance(action_class, type)
-                        else None,
+                        body_model=(
+                            getattr(action_class, "body_model", None)
+                            if isinstance(action_class, type)
+                            else None
+                        ),
                     )
 
                     if isinstance(action_class, type):
@@ -286,7 +302,12 @@ class ActionDispatcher:
                     elif isinstance(result, tuple):
                         # Legacy: (dict, status_code) or (ApiResponse, status_code)
                         response_data, status_code = result
-                        if isinstance(response_data, dict):
+                        if isinstance(response_data, BaseModel):
+                            # Convert Pydantic model to dict, then to camelCase
+                            response_data = _convert_keys_to_camel(
+                                response_data.model_dump()
+                            )
+                        elif isinstance(response_data, dict):
                             # Convert snake_case to camelCase
                             response_data = _convert_keys_to_camel(response_data)
                         return response_data, status_code

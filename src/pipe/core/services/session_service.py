@@ -4,33 +4,18 @@ Manages the overall session, excluding conversation_history.
 
 import hashlib
 import json
-import os
 import sys
 import zoneinfo
 from typing import TYPE_CHECKING, Any
 
-from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.sessions import SessionCollection
-from pipe.core.domains.references import add_reference
-from pipe.core.domains.session_optimization import SessionModifications
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.artifact import Artifact
 from pipe.core.models.hyperparameters import Hyperparameters
-from pipe.core.models.reference import Reference
-from pipe.core.models.session import Session, SessionMetaUpdate
+from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
-from pipe.core.models.todo import TodoItem
-from pipe.core.models.turn import (
-    ModelResponseTurnUpdate,
-    Turn,
-    UserTaskTurn,
-    UserTaskTurnUpdate,
-)
+from pipe.core.models.turn import UserTaskTurn
 from pipe.core.repositories.session_repository import SessionRepository
-from pipe.core.services.session_optimization_service import (
-    CompressorResult,
-    DoctorResultResponse,
-)
 from pipe.core.utils.datetime import get_current_timestamp
 
 if TYPE_CHECKING:
@@ -99,7 +84,7 @@ class SessionService:
                     instruction=args.instruction,
                     timestamp=get_current_timestamp(self.timezone_obj),
                 )
-                session.add_turn(new_turn)
+                session.turns.add(new_turn)
             print(f"Continuing session: {session.session_id}", file=sys.stderr)
         else:
             if not all([args.purpose, args.background]):
@@ -124,7 +109,7 @@ class SessionService:
                     instruction=args.instruction,
                     timestamp=get_current_timestamp(self.timezone_obj),
                 )
-                session.add_turn(first_turn)
+                session.turns.add(first_turn)
 
         if args.references:
             from pipe.core.domains.references import add_reference
@@ -197,121 +182,12 @@ class SessionService:
 
         return session
 
-    def edit_session_meta(
-        self, session_id: str, update_data: SessionMetaUpdate | dict[str, Any]
-    ):
-        """Edit session metadata with type-safe updates.
+    def delete_session(self, session_id: str):
+        """Delete a session by ID.
 
         Args:
-            session_id: Session ID to edit
-            update_data: SessionMetaUpdate model or dict (for backward compatibility)
+            session_id: Session ID to delete
         """
-        session = self._fetch_session(session_id)
-        if not session:
-            return
-
-        self.repository.backup(session)
-        session.edit_meta(update_data)
-        self.repository.save(session)
-
-    def update_references(self, session_id: str, references: list[Reference]):
-        """Updates session references with typed Reference objects."""
-        session = self._fetch_session(session_id)
-        if session:
-            session.references = ReferenceCollection(references)
-            self._save_session(session)
-
-    def add_reference_to_session(self, session_id: str, file_path: str):
-        session = self._fetch_session(session_id)
-        if not session:
-            return
-
-        abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
-        if not os.path.isfile(abs_path):
-            print(f"Warning: Path is not a file, skipping: {abs_path}", file=sys.stderr)
-            return
-
-        add_reference(session.references, file_path, session.references.default_ttl)
-        self._save_session(session)
-
-    def update_reference_ttl_in_session(
-        self, session_id: str, file_path: str, new_ttl: int
-    ):
-        session = self._fetch_session(session_id)
-        if not session:
-            return
-
-        from pipe.core.domains.references import update_reference_ttl
-
-        update_reference_ttl(session.references, file_path, new_ttl)
-        self._save_session(session)
-
-    def update_reference_persist_in_session(
-        self, session_id: str, file_path: str, new_persist_state: bool
-    ):
-        session = self._fetch_session(session_id)
-        if not session:
-            return
-
-        from pipe.core.domains.references import update_reference_persist
-
-        update_reference_persist(session.references, file_path, new_persist_state)
-        self._save_session(session)
-
-    def toggle_reference_disabled_in_session(self, session_id: str, file_path: str):
-        session = self._fetch_session(session_id)
-        if not session:
-            return
-
-        from pipe.core.domains.references import toggle_reference_disabled
-
-        toggle_reference_disabled(session.references, file_path)
-        self._save_session(session)
-
-    def decrement_all_references_ttl_in_session(self, session_id: str):
-        session = self._fetch_session(session_id)
-        if not session:
-            return
-
-        from pipe.core.domains.references import decrement_all_references_ttl
-
-        decrement_all_references_ttl(session.references)
-        self._save_session(session)
-
-    def add_multiple_references(self, session_id: str, file_paths: list[str]):
-        session = self._fetch_session(session_id)
-        if not session:
-            return
-
-        for file_path in file_paths:
-            abs_path = os.path.abspath(os.path.join(self.project_root, file_path))
-            if not os.path.isfile(abs_path):
-                print(
-                    f"Warning: Path is not a file, skipping: {abs_path}",
-                    file=sys.stderr,
-                )
-                continue
-            add_reference(session.references, file_path, session.references.default_ttl)
-        self._save_session(session)
-
-    def update_todos(self, session_id: str, todos: list[TodoItem]):
-        """Updates session todos with typed TodoItem objects."""
-        session = self._fetch_session(session_id)
-        if session:
-            from pipe.core.domains.todos import update_todos_in_session
-
-            update_todos_in_session(session, todos)
-            self._save_session(session)
-
-    def delete_todos(self, session_id: str):
-        session = self._fetch_session(session_id)
-        if session:
-            from pipe.core.domains.todos import delete_todos_in_session
-
-            delete_todos_in_session(session)
-            self._save_session(session)
-
-    def delete_session(self, session_id: str):
         self.repository.delete(session_id)
 
     def delete_sessions(self, session_ids: list[str]) -> int:
@@ -334,126 +210,8 @@ class SessionService:
                 continue
         return deleted_count
 
-    # =========================================================================
-    # Turn Operations (using domain functions and Session model directly)
-    # =========================================================================
-
-    def delete_turn(self, session_id: str, turn_index: int):
-        """Deletes a specific turn from a session."""
-        session = self._fetch_session(session_id)
-        if not session:
-            raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
-        session.delete_turn(turn_index)
-        self.repository.save(session)
-
-    def delete_turns(self, session_id: str, turn_indices: list[int]):
-        """Deletes multiple turns from a session, handling index shifts."""
-        session = self._fetch_session(session_id)
-        if not session:
-            raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
-        from pipe.core.domains.turns import delete_turns
-
-        delete_turns(session, turn_indices)
-        self.repository.save(session)
-
-    def edit_turn(
-        self,
-        session_id: str,
-        turn_index: int,
-        new_data: UserTaskTurnUpdate | ModelResponseTurnUpdate | dict[str, Any],
-    ):
-        """Edits a specific turn in a session.
-
-        Args:
-            session_id: The session ID
-            turn_index: Index of the turn to edit
-            new_data: Update data - accepts typed Update DTOs or dict
-                      for I/O Boundary (5-1)
-        """
-        session = self._fetch_session(session_id)
-        if not session:
-            raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
-        session.edit_turn(turn_index, new_data)
-        self.repository.save(session)
-
-    def add_turn_to_session(self, session_id: str, turn_data: Turn):
-        """Adds a turn to a session."""
-        session = self._fetch_session(session_id)
-        if session:
-            session.add_turn(turn_data)
-            self.repository.save(session)
-
-    def merge_pool_into_turns(self, session_id: str):
-        """Merges all turns from the pool into the main turns list and clears the
-        pool."""
-        session = self._fetch_session(session_id)
-        if session:
-            session.merge_pool()
-            self.repository.save(session)
-
-    def add_to_pool(self, session_id: str, pool_data: Turn):
-        """Adds a turn to the session's pool."""
-        session = self._fetch_session(session_id)
-        if session:
-            from pipe.core.collections.pools import PoolCollection
-
-            PoolCollection.add(session, pool_data)
-            self.repository.save(session)
-
-    def get_pool(self, session_id: str) -> list[Turn]:
-        """Gets all turns from the session's pool."""
-        session = self._fetch_session(session_id)
-        return session.pools if session else []
-
-    def get_and_clear_pool(self, session_id: str) -> list[Turn]:
-        """Gets all turns from the pool and clears it."""
-        session = self._fetch_session(session_id)
-        if not session:
-            return []
-        from pipe.core.collections.pools import PoolCollection
-
-        pools_to_return = PoolCollection.get_and_clear(session)
-        self.repository.save(session)
-        return pools_to_return
-
-    def expire_old_tool_responses(self, session_id: str):
-        """Expires the message content of old tool_responses to save tokens."""
-        session = self._fetch_session(session_id)
-        if session:
-            from pipe.core.domains.turns import expire_old_tool_responses
-
-            if expire_old_tool_responses(
-                session.turns, self.settings.tool_response_expiration
-            ):
-                self._save_session(session)
-
     def _generate_hash(self, content: str) -> str:
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
-
-    def fork_session(self, session_id: str, fork_index: int) -> str | None:
-        """Forks a session at a specific turn index."""
-        original_session = self._fetch_session(session_id)
-        if not original_session:
-            raise FileNotFoundError(
-                f"Original session with ID '{session_id}' not found."
-            )
-
-        if not (0 <= fork_index < len(original_session.turns)):
-            raise IndexError("fork_index is out of range.")
-
-        fork_turn = original_session.turns[fork_index]
-        if fork_turn.type != "model_response":
-            raise ValueError(
-                "Forking is only allowed from a 'model_response' turn. "
-                f"Turn {fork_index + 1} is of type '{fork_turn.type}'."
-            )
-
-        # This logic should be part of a pure domain object method
-        new_session = original_session.fork(fork_index, self.timezone_obj)
-
-        self.repository.save(new_session)
-
-        return new_session.session_id
 
     def _create_session_object(
         self,
@@ -516,82 +274,3 @@ class SessionService:
         )
 
         return session
-
-    def update_token_count(self, session_id: str, token_count: int):
-        session = self._fetch_session(session_id)
-        if session:
-            session.token_count = token_count
-            self.repository.save(session)
-
-    # =========================================================================
-    # Optimization Operations (delegated to SessionOptimizationService)
-    # =========================================================================
-
-    def _get_optimization_service(self):
-        """Get or create the optimization service (lazy initialization)."""
-        if not hasattr(self, "_optimization_service"):
-            from pipe.core.services.session_optimization_service import (
-                SessionOptimizationService,
-            )
-
-            self._optimization_service = SessionOptimizationService(
-                self.project_root, self
-            )
-        return self._optimization_service
-
-    def run_takt_for_compression(
-        self,
-        session_id: str,
-        policy: str,
-        target_length: int,
-        start_turn: int,
-        end_turn: int,
-    ) -> CompressorResult:
-        """Create compressor session and run initial takt command.
-
-        Delegates to SessionOptimizationService.
-        """
-        return self._get_optimization_service().run_compression(
-            session_id, policy, target_length, start_turn, end_turn
-        )
-
-    def approve_compression(self, compressor_session_id: str) -> None:
-        """Approve the compression.
-
-        Delegates to SessionOptimizationService.
-        """
-        self._get_optimization_service().approve_compression(compressor_session_id)
-
-    def deny_compression(self, compressor_session_id: str) -> None:
-        """Deny the compression and clean up.
-
-        Delegates to SessionOptimizationService.
-        """
-        self._get_optimization_service().deny_compression(compressor_session_id)
-
-    def replace_turn_range_with_summary(
-        self, session_id: str, summary: str, start_index: int, end_index: int
-    ) -> None:
-        """Replace a range of turns with a summary.
-
-        Delegates to SessionOptimizationService.
-        """
-        self._get_optimization_service().replace_turn_range_with_summary(
-            session_id, summary, start_index, end_index
-        )
-
-    def run_takt_for_therapist(self, session_id: str) -> dict[str, str]:
-        """Create therapist session and run initial takt command.
-
-        Delegates to SessionOptimizationService.
-        """
-        return self._get_optimization_service().run_therapist(session_id)
-
-    def run_takt_for_doctor(
-        self, session_id: str, modifications: SessionModifications
-    ) -> DoctorResultResponse:
-        """Create doctor session and run modifications.
-
-        Delegates to SessionOptimizationService.
-        """
-        return self._get_optimization_service().run_doctor(session_id, modifications)

@@ -4,13 +4,14 @@ services:
       context: .
       dockerfile: docker/Dockerfile.web
     ports:
-      - '5001:5001'
+      - "5001:5001"
     depends_on:
       - lsp
     environment:
       - FLASK_APP=pipe.web.app
       - FLASK_ENV=development
       - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
     env_file:
       - .env
     volumes:
@@ -23,7 +24,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.react
     ports:
-      - '3000:3000'
+      - "3000:3000"
     volumes:
       - ./src/web:/app
       - ./src/web/node_modules:/app/node_modules
@@ -36,7 +37,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.python
     ports:
-      - '2087:2087' # pygls default port, adjust if needed
+      - "2087:2087" # pygls default port, adjust if needed
     environment:
       - PYTHONPATH=/app/src
     env_file:
@@ -52,7 +53,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.storybook
     ports:
-      - '6006:6006'
+      - "6006:6006"
     volumes:
       - ./src/web:/app
       - ./src/web/node_modules:/app/node_modules

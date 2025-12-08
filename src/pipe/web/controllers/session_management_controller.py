@@ -2,7 +2,7 @@ from typing import Any
 
 from flask import Request
 from pipe.web.actions import SessionTreeAction
-from pipe.web.actions.session_management_actions import SessionsListBackupAction
+from pipe.web.actions.session_management import SessionsListBackupAction
 from pipe.web.exceptions import HttpException
 
 

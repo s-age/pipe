@@ -45,6 +45,8 @@ class TestPromptService(unittest.TestCase):
         self.service_factory = ServiceFactory(self.project_root, self.settings)
         self.session_service = self.service_factory.create_session_service()
         self.prompt_service = self.service_factory.create_prompt_service()
+        self.workflow_service = self.service_factory.create_session_workflow_service()
+        self.todo_service = self.service_factory.create_session_todo_service()
 
         # Setup mock repository to return a session with valid hyperparameters
         self.mock_session = Mock(spec=Session)
@@ -145,7 +147,7 @@ class TestPromptService(unittest.TestCase):
 
         # Add todos
         todos = [TodoItem(title="My Todo", checked=False)]
-        self.session_service.update_todos(session_id, todos)
+        self.todo_service.update_todos(session_id, todos)
         self.session_service.current_session = self.session_service.get_session(
             session_id
         )
@@ -244,7 +246,7 @@ class TestPromptService(unittest.TestCase):
         self.session_service._save_session(session)
 
         # 2. Fork the session at the first model response (turn index 1)
-        forked_session_id = self.session_service.fork_session(session_id, fork_index=1)
+        forked_session_id = self.workflow_service.fork_session(session_id, fork_index=1)
 
         # 3. Continue the forked session
         args_fork = TaktArgs(session=forked_session_id, instruction="New task for fork")
@@ -279,7 +281,7 @@ class TestPromptService(unittest.TestCase):
         self.mock_repository.find.return_value = self.session_service.current_session
         session_id = self.session_service.current_session_id
         todos = [TodoItem(title="My Todo", checked=False)]
-        self.session_service.update_todos(session_id, todos)
+        self.todo_service.update_todos(session_id, todos)
         self.session_service.current_session = self.session_service.get_session(
             session_id
         )

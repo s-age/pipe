@@ -34,3 +34,41 @@ class Settings(BaseModel):
     timezone: str = "UTC"
 
     model_config = ConfigDict(populate_by_name=True)
+
+    def to_api_dict(self) -> dict:
+        """Convert settings to API-friendly dictionary format.
+
+        Converts internal 'parameters' structure to public 'hyperparameters' format.
+
+        Returns:
+            Dictionary with hyperparameters instead of parameters
+        """
+        settings_dict = self.model_dump()
+
+        # Convert internal `parameters` to public `hyperparameters` mapping
+        params = settings_dict.pop("parameters", None)
+        hyperparameters: dict[str, float | None] = {}
+
+        if params and isinstance(params, dict):
+            hyperparameters = {
+                "temperature": (
+                    params.get("temperature", {}).get("value")
+                    if isinstance(params.get("temperature"), dict)
+                    else None
+                ),
+                "top_p": (
+                    params.get("top_p", {}).get("value")
+                    if isinstance(params.get("top_p"), dict)
+                    else None
+                ),
+                "top_k": (
+                    params.get("top_k", {}).get("value")
+                    if isinstance(params.get("top_k"), dict)
+                    else None
+                ),
+            }
+        else:
+            hyperparameters = {"temperature": None, "top_p": None, "top_k": None}
+
+        settings_dict["hyperparameters"] = hyperparameters
+        return settings_dict

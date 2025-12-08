@@ -103,6 +103,11 @@ class TaktAgent:
         self,
         session_id: str,
         instruction: str,
+        output_format: str = "json",
+        multi_step_reasoning: bool = False,
+        references: list[str] | None = None,
+        artifacts: list[str] | None = None,
+        procedure: str | None = None,
         extra_env: dict[str, str] | None = None,
     ) -> tuple[str, str]:
         """Run takt on an existing session.
@@ -110,6 +115,11 @@ class TaktAgent:
         Args:
             session_id: Existing session ID
             instruction: Instruction to execute
+            output_format: Output format (json, text, stream-json)
+            multi_step_reasoning: Enable multi-step reasoning
+            references: List of reference file paths
+            artifacts: List of artifact file paths
+            procedure: Path to procedure file
             extra_env: Additional environment variables
 
         Returns:
@@ -126,7 +136,21 @@ class TaktAgent:
             session_id,
             "--instruction",
             instruction,
+            "--output-format",
+            output_format,
         ]
+
+        if multi_step_reasoning:
+            command.append("--multi-step-reasoning")
+
+        if references:
+            command.extend(["--references", ",".join(references)])
+
+        if artifacts:
+            command.extend(["--artifacts", ",".join(artifacts)])
+
+        if procedure:
+            command.extend(["--procedure", procedure])
 
         env = self._get_env()
         if extra_env:
@@ -142,6 +166,73 @@ class TaktAgent:
         )
 
         return result.stdout, result.stderr
+
+    def run_existing_session_stream(
+        self,
+        session_id: str,
+        instruction: str,
+        multi_step_reasoning: bool = False,
+        extra_env: dict[str, str] | None = None,
+    ):
+        """Run takt on an existing session with streaming output.
+
+        Args:
+            session_id: Existing session ID
+            instruction: Instruction to execute
+            multi_step_reasoning: Enable multi-step reasoning
+            extra_env: Additional environment variables
+
+        Yields:
+            Output lines from the takt process
+
+        Raises:
+            RuntimeError: If takt command fails
+        """
+        command = [
+            sys.executable,
+            "-m",
+            "pipe.cli.takt",
+            "--session",
+            session_id,
+            "--instruction",
+            instruction,
+            "--output-format",
+            "stream-json",
+        ]
+
+        if multi_step_reasoning:
+            command.append("--multi-step-reasoning")
+
+        env = self._get_env()
+        if extra_env:
+            env.update(extra_env)
+
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            bufsize=1,
+            env=env,
+        )
+
+        if process.stdout:
+            yield from iter(process.stdout.readline, "")
+            process.stdout.close()
+
+        stderr_output = ""
+        if process.stderr:
+            stderr_output = process.stderr.read()
+            process.stderr.close()
+
+        return_code = process.wait()
+
+        if return_code != 0:
+            raise RuntimeError(
+                f"takt command failed with return code {return_code}. "
+                f"stderr: {stderr_output}"
+            )
 
     def _get_env(self) -> dict[str, str]:
         """Get environment variables for subprocess."""
@@ -182,6 +273,36 @@ class TaktAgent:
             return match.group(1)
 
         raise RuntimeError("Failed to extract session ID from takt output")
+
+    def run_instruction_stream_unified(
+        self,
+        session_id: str,
+        instruction: str,
+        multi_step_reasoning: bool = False,
+    ):
+        """Run instruction with streaming output via CLI subprocess.
+
+        This method provides a unified interface for streaming execution,
+        delegating all logic to the CLI which handles agent selection,
+        Turn saving, and token counting internally.
+
+        Args:
+            session_id: Existing session ID
+            instruction: Instruction to execute
+            multi_step_reasoning: Enable multi-step reasoning
+
+        Yields:
+            str: Streaming output lines
+
+        Raises:
+            RuntimeError: If execution fails
+        """
+        # Always use subprocess - let CLI handle agent selection
+        yield from self.run_existing_session_stream(
+            session_id=session_id,
+            instruction=instruction,
+            multi_step_reasoning=multi_step_reasoning,
+        )
 
 
 def create_takt_agent(project_root: str) -> TaktAgent:

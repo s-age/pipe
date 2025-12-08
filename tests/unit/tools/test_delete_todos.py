@@ -1,11 +1,11 @@
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.models.todo import TodoItem
-from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_service import SessionService
 from pipe.core.tools.delete_todos import delete_todos
 
@@ -29,12 +29,10 @@ class TestDeleteTodosTool(unittest.TestCase):
             },
         }
         self.settings = Settings(**settings_data)
-        self.mock_repository = Mock(spec=SessionRepository)
-        self.session_service = SessionService(
-            project_root=self.project_root,
-            settings=self.settings,
-            repository=self.mock_repository,
-        )
+        self.service_factory = ServiceFactory(self.project_root, self.settings)
+        self.session_service = self.service_factory.create_session_service()
+        self.todo_service = self.service_factory.create_session_todo_service()
+
         session = self.session_service.create_new_session("Test", "Test", [])
         self.session_id = session.session_id
 
@@ -43,8 +41,8 @@ class TestDeleteTodosTool(unittest.TestCase):
             TodoItem(title="Task 1", checked=False),
             TodoItem(title="Task 2", checked=True),
         ]
-        self.session_service.update_todos(
-            self.session_id, [t.model_dump() for t in initial_todos]
+        self.todo_service.update_todos(
+            self.session_id, initial_todos
         )
 
     def tearDown(self):

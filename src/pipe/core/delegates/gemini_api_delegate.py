@@ -197,5 +197,10 @@ def run_stream(args, session_service: SessionService, prompt_service: PromptServ
     )
     intermediate_turns.append(final_model_turn)
 
-    # Return final data
-    yield ("end", model_response_text, token_count, intermediate_turns)
+    # Save all turns to session
+    for turn in intermediate_turns:
+        session_service.add_turn_to_session(session_id, turn)
+
+    # Update token count
+    if token_count > 0:
+        session_service.update_token_count(session_id, token_count)

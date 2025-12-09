@@ -35,7 +35,7 @@ def read_file(
         # Then, explicitly update the TTL to 3 to reset it if it already existed.
         update_reference_ttl(session.references, abs_path, 3)
 
-        session_service._save_session(session)
+        session_service.repository.save(session)
 
         # Check if the file is empty and tailor the message
         if os.path.getsize(abs_path) == 0:

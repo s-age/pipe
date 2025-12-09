@@ -30,7 +30,7 @@ class TestForkSessionRequest(unittest.TestCase):
                     content="Turn 2",
                     timestamp="2024-01-01T00:00:02Z",
                 ),
-            ]
+            ],
         )
 
     @patch("pipe.web.service_container.get_session_service")

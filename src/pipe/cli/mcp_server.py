@@ -59,6 +59,7 @@ SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
 _SETTINGS: "Settings | None" = None
 _SERVICE_FACTORY: "ServiceFactory | None" = None
 _SESSION_SERVICE: object | None = None
+_SESSION_TURN_SERVICE: object | None = None
 
 
 def initialize_services():
@@ -66,7 +67,7 @@ def initialize_services():
     Initialize global services once to avoid repeated file I/O and object creation.
     This significantly improves performance for tool execution.
     """
-    global _SETTINGS, _SERVICE_FACTORY, _SESSION_SERVICE
+    global _SETTINGS, _SERVICE_FACTORY, _SESSION_SERVICE, _SESSION_TURN_SERVICE
     if _SETTINGS is None:
         project_root = BASE_DIR
         config_path = os.path.join(project_root, "setting.yml")
@@ -74,13 +75,14 @@ def initialize_services():
         _SETTINGS = Settings(**settings_dict)
         _SERVICE_FACTORY = ServiceFactory(project_root, _SETTINGS)
         _SESSION_SERVICE = _SERVICE_FACTORY.create_session_service()
+        _SESSION_TURN_SERVICE = _SERVICE_FACTORY.create_session_turn_service()
 
 
 def get_services():
     """Get initialized services, initializing them if needed."""
     if _SETTINGS is None:
         initialize_services()
-    return _SETTINGS, _SESSION_SERVICE
+    return _SETTINGS, _SESSION_SERVICE, _SESSION_TURN_SERVICE
 
 
 # --- Tool Definition Generation ---
@@ -265,7 +267,7 @@ def execute_tool(tool_name, arguments):
     9.  Returns the result to the main loop to be sent back to the client.
     """
     # Use globally initialized services for performance
-    settings, session_service = get_services()
+    settings, session_service, session_turn_service = get_services()
     project_root = BASE_DIR
     session_id = get_latest_session_id()
 
@@ -289,10 +291,10 @@ def execute_tool(tool_name, arguments):
             # model_response, creating an incorrect sequence like:
             # user_task -> function_calling -> tool_response -> user_task ->
             # model_response.
-            # The pool acts as a staging area, allowing the dispatcher to merge
+            # pool acts as a staging area, allowing the dispatcher to merge
             # these turns back in the correct final order:
             # user_task -> function_calling -> tool_response -> model_response.
-            session_service.add_to_pool(session_id, function_calling_turn)
+            session_turn_service.add_to_pool(session_id, function_calling_turn)
         except Exception:
             # Avoid crashing the server if logging fails
             pass
@@ -364,7 +366,7 @@ def execute_tool(tool_name, arguments):
                 # This follows the same logic as the function_calling turn, ensuring
                 # the complete tool interaction sequence is staged correctly before
                 # being merged by the dispatcher.
-                session_service.add_to_pool(session_id, tool_response_turn)
+                session_turn_service.add_to_pool(session_id, tool_response_turn)
             except Exception:
                 # Avoid crashing the server if logging fails
                 pass

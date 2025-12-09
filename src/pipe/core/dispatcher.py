@@ -92,7 +92,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     # ----------------------------------------------------
 
     for turn in turns_to_save:
-        session_service.add_turn_to_session(session_id, turn)
+        turn_service.add_turn_to_session(session_id, turn)
 
     if token_count is not None:
         meta_service.update_token_count(session_id, token_count)

@@ -121,14 +121,12 @@ class TurnCollection(list[Turn]):
     def get_turns_for_prompt(self, tool_response_limit: int = 3) -> Iterator[Turn]:
         """
         Yields turns for prompt generation, applying filtering rules.
-        - The last turn (current task) is excluded.
         - Only the last N 'tool_response' turns from the history are included.
         """
         tool_response_count = 0
-        history = self[:-1]  # Exclude the last turn
 
         # Iterate in reverse to easily count the last N tool_responses
-        for turn in reversed(history):
+        for turn in reversed(self):
             if isinstance(turn, ToolResponseTurn):
                 tool_response_count += 1
                 if tool_response_count > tool_response_limit:

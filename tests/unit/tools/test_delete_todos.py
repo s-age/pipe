@@ -41,9 +41,7 @@ class TestDeleteTodosTool(unittest.TestCase):
             TodoItem(title="Task 1", checked=False),
             TodoItem(title="Task 2", checked=True),
         ]
-        self.todo_service.update_todos(
-            self.session_id, initial_todos
-        )
+        self.todo_service.update_todos(self.session_id, initial_todos)
 
     def tearDown(self):
         shutil.rmtree(self.project_root)

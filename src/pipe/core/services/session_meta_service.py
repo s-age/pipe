@@ -4,14 +4,14 @@ from typing import Any
 
 from pipe.core.domains.hyperparameters import merge_hyperparameters
 from pipe.core.models.session import Session, SessionMetaUpdate
-from pipe.core.services.session_service import SessionService
+from pipe.core.repositories.session_repository import SessionRepository
 
 
 class SessionMetaService:
     """Handles all metadata-related operations for sessions."""
 
-    def __init__(self, session_service: SessionService):
-        self.session_service = session_service
+    def __init__(self, repository: SessionRepository):
+        self.repository = repository
 
     def edit_session_meta(
         self, session_id: str, update_data: SessionMetaUpdate | dict[str, Any]
@@ -22,7 +22,7 @@ class SessionMetaService:
             session_id: Session ID to edit
             update_data: SessionMetaUpdate model or dict (for backward compatibility)
         """
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             return
 
@@ -30,7 +30,7 @@ class SessionMetaService:
         if isinstance(update_data, dict):
             update_data = SessionMetaUpdate(**update_data)
 
-        self.session_service.repository.backup(session)
+        self.repository.backup(session)
 
         # Only update fields that were explicitly set
         update_dict = update_data.model_dump(exclude_unset=True)
@@ -38,7 +38,7 @@ class SessionMetaService:
             if hasattr(session, key):
                 setattr(session, key, value)
 
-        self.session_service.repository.save(session)
+        self.repository.save(session)
 
     def update_hyperparameters(
         self, session_id: str, new_params: dict[str, Any]
@@ -55,7 +55,7 @@ class SessionMetaService:
         Raises:
             FileNotFoundError: If session not found
         """
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             raise FileNotFoundError(f"Session {session_id} not found.")
 
@@ -63,12 +63,12 @@ class SessionMetaService:
         session.hyperparameters = merge_hyperparameters(
             session.hyperparameters, new_params
         )
-        self.session_service.repository.save(session)
+        self.repository.save(session)
 
         return session
 
     def update_token_count(self, session_id: str, token_count: int):
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if session:
             session.token_count = token_count
-            self.session_service.repository.save(session)
+            self.repository.save(session)

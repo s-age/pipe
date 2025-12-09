@@ -11,6 +11,7 @@ from pipe.core.models.turn import (
 )
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
+from pipe.core.services.session_turn_service import SessionTurnService
 from pipe.core.utils.datetime import get_current_timestamp
 
 
@@ -50,7 +51,12 @@ def execute_tool_call(tool_call, session_service, session_id, settings, project_
         return {"error": f"Failed to execute tool {tool_name}: {e}"}
 
 
-def run_stream(args, session_service: SessionService, prompt_service: PromptService):
+def run_stream(
+    args,
+    session_service: SessionService,
+    prompt_service: PromptService,
+    session_turn_service: SessionTurnService,
+):
     """Streaming version for web UI."""
     model_response_text = ""
     token_count = 0
@@ -65,7 +71,7 @@ def run_stream(args, session_service: SessionService, prompt_service: PromptServ
     timezone_obj = session_service.timezone_obj
 
     while tool_call_count < max_tool_calls:
-        session_service.merge_pool_into_turns(session_id)
+        session_turn_service.merge_pool_into_turns(session_id)
         stream = call_gemini_api(session_service, prompt_service)
 
         response_chunks = []
@@ -199,8 +205,14 @@ def run_stream(args, session_service: SessionService, prompt_service: PromptServ
 
     # Save all turns to session
     for turn in intermediate_turns:
-        session_service.add_turn_to_session(session_id, turn)
+        session_turn_service.add_turn_to_session(session_id, turn)
 
     # Update token count
     if token_count > 0:
-        session_service.update_token_count(session_id, token_count)
+        from pipe.core.services.session_meta_service import SessionMetaService
+
+        session_meta_service = SessionMetaService(session_service.repository)
+        session_meta_service.update_token_count(session_id, token_count)
+
+    # Return final data
+    yield ("end", model_response_text, token_count, intermediate_turns)

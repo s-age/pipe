@@ -162,11 +162,11 @@ class TestAppApi(unittest.TestCase):
         """Tests the v1 API endpoint for getting session tree."""
         mock_tree_data = {
             "sessions": {"session1": {"purpose": "Test 1"}},
-            "sessionTree": {}  # camelCase for API response
+            "sessionTree": {},  # camelCase for API response
         }
         self.mock_session_tree_service.get_session_tree.return_value = {
             "sessions": {"session1": {"purpose": "Test 1"}},
-            "session_tree": {}  # snake_case from service
+            "session_tree": {},  # snake_case from service
         }
         response = self.client.get("/api/v1/session_tree")
         self.assertEqual(response.status_code, 200)
@@ -528,9 +528,9 @@ class TestAppApi(unittest.TestCase):
         mock_tree_data = {
             "sessions": {
                 "session1": {"purpose": "Test 1"},
-                "session2": {"purpose": "Test 2"}
+                "session2": {"purpose": "Test 2"},
             },
-            "session_tree": {}
+            "session_tree": {},
         }
         self.mock_session_service.get_session_tree.return_value = mock_tree_data
 

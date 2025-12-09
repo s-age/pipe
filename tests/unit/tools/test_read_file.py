@@ -92,6 +92,7 @@ class TestReadFileTool(unittest.TestCase):
         updating a reference.
         """
         mock_session_service = MagicMock(spec=SessionService)
+        mock_session_service.repository = MagicMock()
         mock_session = MagicMock()
         mock_session.references.default_ttl = 3
         mock_session_service.get_session.return_value = mock_session
@@ -115,7 +116,7 @@ class TestReadFileTool(unittest.TestCase):
                     mock_update_reference_ttl.assert_called_once_with(
                         mock_session.references, self.test_file_path, 3
                     )
-                    mock_session_service._save_session.assert_called_once_with(
+                    mock_session_service.repository.save.assert_called_once_with(
                         mock_session
                     )
 

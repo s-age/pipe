@@ -123,15 +123,19 @@ class TestTurnCollection(unittest.TestCase):
         # Default limit is 3
         prompt_turns = list(get_turns_for_prompt(turns))
 
-        # Should get t4, t3, t2 in reverse order of yield
-        self.assertEqual(len(prompt_turns), 3)
-        self.assertEqual(prompt_turns[0].name, "t4")
-        self.assertEqual(prompt_turns[1].name, "t3")
-        self.assertEqual(prompt_turns[2].name, "t2")
+        # Should get last UserTaskTurn + last 3 tool responses (t2, t3, t4)
+        # Note: t1 is excluded due to limit
+        self.assertEqual(len(prompt_turns), 4)
+        # Reversed order from iteration
+        self.assertEqual(prompt_turns[0].instruction, "last")
+        self.assertEqual(prompt_turns[1].name, "t4")
+        self.assertEqual(prompt_turns[2].name, "t3")
+        self.assertEqual(prompt_turns[3].name, "t2")
 
     def test_get_turns_for_prompt_excludes_last_turn(self):
         """
-        Tests that get_turns_for_prompt excludes the last turn (current task).
+        Tests that get_turns_for_prompt returns all turns (no longer excludes
+        last turn). The exclusion logic has moved to Prompt.build().
         """
         turns = TurnCollection(
             [
@@ -142,8 +146,9 @@ class TestTurnCollection(unittest.TestCase):
 
         prompt_turns = list(get_turns_for_prompt(turns))
 
-        self.assertEqual(len(prompt_turns), 1)
-        self.assertEqual(prompt_turns[0].instruction, "first")
+        self.assertEqual(len(prompt_turns), 2)
+        self.assertEqual(prompt_turns[0].instruction, "last")  # Reversed order
+        self.assertEqual(prompt_turns[1].instruction, "first")
 
     def test_expire_old_tool_responses_no_change_due_to_status(self):
         """

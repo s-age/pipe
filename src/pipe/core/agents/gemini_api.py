@@ -279,9 +279,15 @@ class GeminiApiAgent(BaseAgent):
         """
         # Import here to avoid circular dependency
         from pipe.core.delegates import gemini_api_delegate
+        from pipe.core.services.session_turn_service import SessionTurnService
 
+        session_turn_service = SessionTurnService(
+            session_service.settings, session_service.repository
+        )
         stream_results = list(
-            gemini_api_delegate.run_stream(args, session_service, prompt_service)
+            gemini_api_delegate.run_stream(
+                args, session_service, prompt_service, session_turn_service
+            )
         )
         # The last yielded item contains the final result
         _, model_response_text, token_count, turns_to_save = stream_results[-1]
@@ -308,5 +314,11 @@ class GeminiApiAgent(BaseAgent):
         """
         # Import here to avoid circular dependency
         from pipe.core.delegates import gemini_api_delegate
+        from pipe.core.services.session_turn_service import SessionTurnService
 
-        yield from gemini_api_delegate.run_stream(args, session_service, prompt_service)
+        session_turn_service = SessionTurnService(
+            session_service.settings, session_service.repository
+        )
+        yield from gemini_api_delegate.run_stream(
+            args, session_service, prompt_service, session_turn_service
+        )

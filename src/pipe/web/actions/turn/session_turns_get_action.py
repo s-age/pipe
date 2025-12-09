@@ -12,5 +12,5 @@ class SessionTurnsGetAction(BaseAction):
 
         request = self.validated_request
         session_data = get_session_service().get_session(request.session_id)
-        turns = session_data.turns[request.since:]
+        turns = session_data.turns[request.since :]
         return {"turns": [turn.model_dump() for turn in turns]}

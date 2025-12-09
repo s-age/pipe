@@ -34,21 +34,29 @@ def dispatch_streaming_action(
         HttpException: For HTTP-specific errors (400, 404, 422, 500)
         Exception: For unexpected errors
     """
+
     # Pre-validate with request_model if present (new pattern)
     if hasattr(action_class, "request_model") and action_class.request_model:
         try:
             # Extract body from the underlying Flask request
             body_data = None
+            flask_request = None
             if hasattr(request_data, "_request_data") and request_data._request_data:
-                if request_data._request_data.is_json:
-                    body_data = request_data._request_data.get_json(silent=True)
+                flask_request = request_data._request_data
+                if flask_request.is_json:
+                    body_data = flask_request.get_json(silent=True)
 
             validated = action_class.request_model.create_with_path_params(
                 path_params=params, body_data=body_data
             )
 
-            # Create action WITH validated_request
-            action = action_class(params, request_data, validated_request=validated)
+            # Create action WITH validated_request and request_context
+            action = action_class(
+                params=params,
+                request_data=flask_request,
+                request_context=request_data,
+                validated_request=validated,
+            )
         except ValidationError as e:
             from pipe.web.exceptions import UnprocessableEntityError
 
@@ -58,9 +66,11 @@ def dispatch_streaming_action(
         try:
             # Extract body from the underlying Flask request
             body_data = None
+            flask_request = None
             if hasattr(request_data, "_request_data") and request_data._request_data:
-                if request_data._request_data.is_json:
-                    body_data = request_data._request_data.get_json(silent=True)
+                flask_request = request_data._request_data
+                if flask_request.is_json:
+                    body_data = flask_request.get_json(silent=True)
 
             validated = (
                 action_class.body_model(**body_data)
@@ -68,15 +78,25 @@ def dispatch_streaming_action(
                 else action_class.body_model()
             )
 
-            # Create action WITH validated_request
-            action = action_class(params, request_data, validated_request=validated)
+            # Create action WITH validated body and request_context
+            action = action_class(
+                params=params,
+                request_data=flask_request,
+                request_context=request_data,
+                validated_request=validated,
+            )
         except ValidationError as e:
             from pipe.web.exceptions import UnprocessableEntityError
 
             raise UnprocessableEntityError(str(e))
     else:
         # No validation model - create action normally
-        action = action_class(params, request_data)
+        flask_request = None
+        if hasattr(request_data, "_request_data") and request_data._request_data:
+            flask_request = request_data._request_data
+        action = action_class(
+            params=params, request_data=flask_request, request_context=request_data
+        )
 
     # Execute the action - should return Flask Response
     try:

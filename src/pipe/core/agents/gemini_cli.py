@@ -268,15 +268,19 @@ class GeminiCliAgent(BaseAgent):
         # Import here to avoid circular dependency
         from pipe.core.delegates import gemini_cli_delegate
         from pipe.core.models.turn import ModelResponseTurn
+        from pipe.core.services.session_turn_service import SessionTurnService
         from pipe.core.utils.datetime import get_current_timestamp
 
         # Explicitly merge any tool calls from the pool into the main turns history
         # before calling the agent.
         session_id = session_service.current_session_id
-        session_service.merge_pool_into_turns(session_id)
+        session_turn_service = SessionTurnService(
+            session_service.settings, session_service.repository
+        )
+        session_turn_service.merge_pool_into_turns(session_id)
 
         model_response_text, token_count = gemini_cli_delegate.run(
-            args, session_service
+            args, session_service, session_turn_service
         )
 
         if args.output_format == "text":

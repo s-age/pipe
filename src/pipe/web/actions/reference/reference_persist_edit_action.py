@@ -19,7 +19,6 @@ class ReferencePersistEditAction(BaseAction):
 
         return {
             "message": (
-                f"Persist state for reference {request.reference_index} "
-                "updated."
+                f"Persist state for reference {request.reference_index} " "updated."
             )
         }

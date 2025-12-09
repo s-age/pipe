@@ -82,19 +82,19 @@ class TestSessionService(unittest.TestCase):
         # Now create other services - they will create new session_service instances
         # so we need to replace their repositories too
         self.workflow_service = self.service_factory.create_session_workflow_service()
-        self.workflow_service.session_service.repository = self.mock_repository
+        self.workflow_service.repository = self.mock_repository
 
         self.reference_service = self.service_factory.create_session_reference_service()
-        self.reference_service.session_service.repository = self.mock_repository
+        self.reference_service.repository = self.mock_repository
 
         self.todo_service = self.service_factory.create_session_todo_service()
-        self.todo_service.session_service.repository = self.mock_repository
+        self.todo_service.repository = self.mock_repository
 
         self.meta_service = self.service_factory.create_session_meta_service()
-        self.meta_service.session_service.repository = self.mock_repository
+        self.meta_service.repository = self.mock_repository
 
         self.turn_service = self.service_factory.create_session_turn_service()
-        self.turn_service.session_service.repository = self.mock_repository
+        self.turn_service.repository = self.mock_repository
 
     def tearDown(self):
         shutil.rmtree(self.project_root)
@@ -139,7 +139,7 @@ class TestSessionService(unittest.TestCase):
                 type="model_response", content="First response", timestamp="..."
             )
         )
-        self.session_service._save_session(session)
+        self.session_service.repository.save(session)
 
         forked_id = self.workflow_service.fork_session(session_id, fork_index=1)
         self.assertIsNotNone(forked_id)
@@ -264,7 +264,7 @@ class TestSessionService(unittest.TestCase):
         fetched_session.turns.append(
             UserTaskTurn(type="user_task", instruction="First", timestamp="...")
         )
-        self.session_service._save_session(fetched_session)
+        self.session_service.repository.save(fetched_session)
 
         with self.assertRaises(ValueError):
             self.workflow_service.fork_session(session_id, fork_index=0)
@@ -311,7 +311,7 @@ class TestSessionService(unittest.TestCase):
         self.assertTrue(fetched_session.references[0].disabled)
 
     def test_save_session_sorts_references(self):
-        """Tests that _save_session correctly sorts references by TTL."""
+        """Tests that repository.save correctly sorts references by TTL."""
         from pipe.core.collections.references import ReferenceCollection
         from pipe.core.models.reference import Reference
 
@@ -326,7 +326,7 @@ class TestSessionService(unittest.TestCase):
                 Reference(path="ref4.txt", disabled=False, ttl=5),
             ]
         )
-        self.session_service._save_session(fetched_session)
+        self.session_service.repository.save(fetched_session)
 
         # Re-fetch and check order
         saved_session = self.session_service.get_session(session_id)

@@ -5,8 +5,6 @@ Handles compression, therapist diagnosis, and doctor modifications.
 These operations create shadow sessions to analyze and optimize target sessions.
 """
 
-from typing import TYPE_CHECKING
-
 from pipe.core.agents.takt_agent import TaktAgent
 from pipe.core.domains.session_optimization import (
     DiagnosisData,
@@ -23,9 +21,6 @@ from pipe.core.domains.session_optimization import (
 from pipe.core.models.turn import CompressedHistoryTurn
 from pipe.core.utils.datetime import get_current_timestamp
 from pydantic import BaseModel
-
-if TYPE_CHECKING:
-    from pipe.core.services.session_service import SessionService
 
 
 class TherapistResult(BaseModel):
@@ -58,16 +53,16 @@ class SessionOptimizationService:
     def __init__(
         self,
         project_root: str,
-        session_service: "SessionService",
+        repository=None,
     ):
         """Initialize the service.
 
         Args:
             project_root: Path to the project root directory
-            session_service: Session service for session operations
+            repository: SessionRepository for persistence
         """
         self.project_root = project_root
-        self.session_service = session_service
+        self.repository = repository
         self.takt_agent = TaktAgent(project_root)
 
     # =========================================================================
@@ -112,7 +107,7 @@ class SessionOptimizationService:
         )
 
         # Reload the session to get the summary
-        session = self.session_service.get_session(compressor_session_id)
+        session = self.repository.find(compressor_session_id)
         if not session or not session.turns:
             raise ValueError("Session or turns not found after creation")
 
@@ -153,7 +148,7 @@ class SessionOptimizationService:
         )
 
         # Delete the compressor session after approval
-        self.session_service.delete_session(compressor_session_id)
+        self.repository.delete(compressor_session_id)
 
     def deny_compression(self, compressor_session_id: str) -> None:
         """Deny the compression and clean up the compressor session.
@@ -161,7 +156,7 @@ class SessionOptimizationService:
         Args:
             compressor_session_id: The compressor session ID
         """
-        self.session_service.delete_session(compressor_session_id)
+        self.repository.delete(compressor_session_id)
 
     def replace_turn_range_with_summary(
         self, session_id: str, summary: str, start_index: int, end_index: int
@@ -174,7 +169,7 @@ class SessionOptimizationService:
             start_index: Start turn index (0-based)
             end_index: End turn index (0-based)
         """
-        session = self.session_service.get_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             raise ValueError(f"Session {session_id} not found")
 
@@ -200,7 +195,7 @@ class SessionOptimizationService:
         )
 
         # Save the session
-        self.session_service.repository.save(session)
+        self.repository.save(session)
 
     # =========================================================================
     # Therapist Operations
@@ -216,7 +211,7 @@ class SessionOptimizationService:
             TherapistResult with session_id and diagnosis
         """
         # Get turns count
-        session = self.session_service.get_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             raise ValueError(f"Session {session_id} not found")
         turns_count = len(session.turns)
@@ -241,7 +236,7 @@ class SessionOptimizationService:
             )
 
             # Reload the session to get the diagnosis
-            session = self.session_service.get_session(therapist_session_id)
+            session = self.repository.find(therapist_session_id)
             if not session or not session.turns:
                 raise ValueError("Session or turns not found after creation")
 
@@ -263,7 +258,7 @@ class SessionOptimizationService:
         finally:
             # Delete the therapist session as it's a shadow session
             if therapist_session_id:
-                self.session_service.delete_session(therapist_session_id)
+                self.repository.delete(therapist_session_id)
 
     # =========================================================================
     # Doctor Operations
@@ -282,7 +277,7 @@ class SessionOptimizationService:
             DoctorResultResponse with session_id and result
         """
         # Get session to validate turn numbers
-        session = self.session_service.get_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             raise ValueError(f"Session {session_id} not found")
         turns_count = len(session.turns)
@@ -309,7 +304,7 @@ class SessionOptimizationService:
             )
 
             # Reload the session to get the result
-            session = self.session_service.get_session(doctor_session_id)
+            session = self.repository.find(doctor_session_id)
             if not session or not session.turns:
                 raise ValueError("Session or turns not found after creation")
 
@@ -337,4 +332,4 @@ class SessionOptimizationService:
         finally:
             # Delete the doctor session as it's a shadow session
             if doctor_session_id:
-                self.session_service.delete_session(doctor_session_id)
+                self.repository.delete(doctor_session_id)

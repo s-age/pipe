@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import zoneinfo
@@ -30,6 +31,11 @@ from pipe.web.routes import (
     turn_bp,
 )
 from pipe.web.service_container import get_container
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 
 def check_and_show_warning(project_root: str) -> bool:

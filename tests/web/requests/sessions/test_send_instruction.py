@@ -14,7 +14,7 @@ class TestSendInstructionRequest(unittest.TestCase):
             created_at="2024-01-01T00:00:00Z",
             roles=[],
             turns=[],
-            pools=[]
+            pools=[],
         )
 
     @patch("pipe.web.service_container.get_session_service")

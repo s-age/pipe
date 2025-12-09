@@ -19,8 +19,28 @@ class SessionInstructionAction(BaseAction):
         from pipe.web.service_container import get_session_service
 
         request = self.validated_request
+
+        if not request:
+
+            def error_response():
+                yield (
+                    f"data: {json.dumps({'error': 'Internal Error (Request Missing)'})}"
+                    "\n\n"
+                )
+
+            return Response(error_response(), mimetype="text/event-stream")
+
         session_service = get_session_service()
         session_data = session_service.get_session(request.session_id)
+
+        if not session_data:
+            # This shouldn't happen as validation already checked,
+            # but handle it gracefully
+            def error_response():
+                yield f"data: {json.dumps({'error': 'Session not found'})}\n\n"
+
+            return Response(error_response(), mimetype="text/event-stream")
+
         takt_agent = TaktAgent(session_service.project_root)
 
         def generate():
@@ -34,6 +54,4 @@ class SessionInstructionAction(BaseAction):
             except (RuntimeError, Exception) as e:
                 yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-        return Response(
-            stream_with_context(generate()), mimetype="text/event-stream"
-        )
+        return Response(stream_with_context(generate()), mimetype="text/event-stream")

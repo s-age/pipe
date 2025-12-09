@@ -7,6 +7,7 @@ from pipe.web.actions import (
     SettingsGetAction,
 )
 from pipe.web.exceptions import HttpException
+from pipe.web.requests.sessions.get_session import GetSessionRequest
 
 
 class SessionChatController:
@@ -46,8 +47,12 @@ class SessionChatController:
 
             if session_id:
                 try:
+                    # Create validated request for the action
+                    validated_request = GetSessionRequest(session_id=session_id)
                     session_action = SessionGetAction(
-                        params={"session_id": session_id}, request_data=request_data
+                        params={"session_id": session_id},
+                        request_data=request_data,
+                        validated_request=validated_request,
                     )
                     session_data = session_action.execute()
                     response["current_session"] = session_data

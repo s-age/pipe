@@ -66,9 +66,9 @@ class Prompt(BaseModel):
         merged_params = settings.parameters.model_dump()
         if session.hyperparameters:
             if session.hyperparameters.temperature is not None:
-                merged_params["temperature"][
-                    "value"
-                ] = session.hyperparameters.temperature
+                merged_params["temperature"]["value"] = (
+                    session.hyperparameters.temperature
+                )
             if session.hyperparameters.top_p is not None:
                 merged_params["top_p"]["value"] = session.hyperparameters.top_p
             if session.hyperparameters.top_k is not None:
@@ -95,25 +95,44 @@ class Prompt(BaseModel):
             PromptTodo(**todo) for todo in get_todos_for_prompt(session.todos)
         ]
 
+        history_turns_for_prompt = session.turns
+        current_task_instruction_content = ""
+
+        from pipe.core.models.turn import UserTaskTurn
+
+        if current_instruction is not None and current_instruction.strip() != "":
+            # If current_instruction is provided, it's the current task.
+            # Check if the last turn is a UserTaskTurn with matching instruction
+            if session.turns and isinstance(session.turns[-1], UserTaskTurn):
+                if session.turns[-1].instruction == current_instruction:
+                    # Last turn matches current_instruction, exclude it from history
+                    history_turns_for_prompt = session.turns[:-1]
+            current_task_instruction_content = current_instruction
+        elif session.turns:
+            # If no current_instruction, but session has turns,
+            # the last turn might be the current task if it's a UserTaskTurn.
+            last_turn = session.turns[-1]
+            if isinstance(last_turn, UserTaskTurn):
+                current_task_instruction_content = last_turn.instruction
+                history_turns_for_prompt = session.turns[:-1]  # Exclude from history
+            else:
+                # If the last turn is not a UserTaskTurn, it remains in history,
+                # and the current task is empty unless current_instruction
+                # was explicitly passed.
+                pass  # current_task_instruction_content remains empty
+
+        # Now build conversation history from the determined history_turns_for_prompt
         conversation_history = PromptConversationHistory.build(
-            session.turns, settings.tool_response_expiration
+            history_turns_for_prompt, settings.tool_response_expiration
         )
 
-        if session.turns:
-            current_task_turn_data = session.turns[-1].model_dump()
-        else:
-            # For dry-run or new sessions without turns, create from current_instruction
-            from pipe.core.models.turn import UserTaskTurn
-            from pipe.core.utils.datetime import get_current_timestamp
-
-            current_task_turn = UserTaskTurn(
-                type="user_task",
-                instruction=current_instruction or "",
-                timestamp=get_current_timestamp(zoneinfo.ZoneInfo(settings.timezone)),
-            )
-            current_task_turn_data = current_task_turn.model_dump()
-
-        current_task = PromptCurrentTask(**current_task_turn_data)
+        # Build current task
+        current_task_turn = UserTaskTurn(
+            type="user_task",
+            instruction=current_task_instruction_content or "",
+            timestamp=get_current_timestamp(zoneinfo.ZoneInfo(settings.timezone)),
+        )
+        current_task = PromptCurrentTask(**current_task_turn.model_dump())
 
         procedure_content = None
         if session.procedure:

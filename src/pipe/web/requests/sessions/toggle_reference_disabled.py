@@ -32,9 +32,8 @@ class ToggleReferenceDisabledRequest(BaseRequest):
         if not session_data:
             raise NotFoundError("Session not found.")
 
-        if (
-            self.reference_index < 0
-            or self.reference_index >= len(session_data.references)
+        if self.reference_index < 0 or self.reference_index >= len(
+            session_data.references
         ):
             raise BadRequestError("Reference index out of range.")
 

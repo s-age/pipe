@@ -12,25 +12,25 @@ from pipe.core.domains.references import (
     update_reference_ttl,
 )
 from pipe.core.models.reference import Reference
-from pipe.core.services.session_service import SessionService
+from pipe.core.repositories.session_repository import SessionRepository
 
 
 class SessionReferenceService:
     """Handles all reference-related operations for sessions."""
 
-    def __init__(self, project_root: str, session_service: SessionService):
+    def __init__(self, project_root: str, repository: SessionRepository):
         self.project_root = project_root
-        self.session_service = session_service
+        self.repository = repository
 
     def update_references(self, session_id: str, references: list[Reference]):
         """Updates session references with typed Reference objects."""
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if session:
             session.references = ReferenceCollection(references)
-            self.session_service._save_session(session)
+            self.repository.save(session)
 
     def add_reference_to_session(self, session_id: str, file_path: str):
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             return
 
@@ -40,17 +40,17 @@ class SessionReferenceService:
             return
 
         add_reference(session.references, file_path, session.references.default_ttl)
-        self.session_service._save_session(session)
+        self.repository.save(session)
 
     def update_reference_ttl_in_session(
         self, session_id: str, file_path: str, new_ttl: int
     ):
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             return
 
         update_reference_ttl(session.references, file_path, new_ttl)
-        self.session_service._save_session(session)
+        self.repository.save(session)
 
     def update_reference_ttl_by_index(
         self, session_id: str, reference_index: int, new_ttl: int
@@ -66,23 +66,23 @@ class SessionReferenceService:
             FileNotFoundError: If session not found
             IndexError: If reference index out of range
         """
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             raise FileNotFoundError(f"Session {session_id} not found.")
 
         # Delegate validation and operation to ReferenceCollection
         session.references.update_ttl_by_index(reference_index, new_ttl)
-        self.session_service._save_session(session)
+        self.repository.save(session)
 
     def update_reference_persist_in_session(
         self, session_id: str, file_path: str, new_persist_state: bool
     ):
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             return
 
         update_reference_persist(session.references, file_path, new_persist_state)
-        self.session_service._save_session(session)
+        self.repository.save(session)
 
     def update_reference_persist_by_index(
         self, session_id: str, reference_index: int, new_persist_state: bool
@@ -98,21 +98,21 @@ class SessionReferenceService:
             FileNotFoundError: If session not found
             IndexError: If reference index out of range
         """
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             raise FileNotFoundError(f"Session {session_id} not found.")
 
         # Delegate validation and operation to ReferenceCollection
         session.references.update_persist_by_index(reference_index, new_persist_state)
-        self.session_service._save_session(session)
+        self.repository.save(session)
 
     def toggle_reference_disabled_in_session(self, session_id: str, file_path: str):
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             return
 
         toggle_reference_disabled(session.references, file_path)
-        self.session_service._save_session(session)
+        self.repository.save(session)
 
     def toggle_reference_disabled_by_index(
         self, session_id: str, reference_index: int
@@ -130,7 +130,7 @@ class SessionReferenceService:
             FileNotFoundError: If session not found
             IndexError: If reference index out of range
         """
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             raise FileNotFoundError(f"Session {session_id} not found.")
 
@@ -138,19 +138,19 @@ class SessionReferenceService:
         new_disabled_state = session.references.toggle_disabled_by_index(
             reference_index
         )
-        self.session_service._save_session(session)
+        self.repository.save(session)
         return new_disabled_state
 
     def decrement_all_references_ttl_in_session(self, session_id: str):
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             return
 
         decrement_all_references_ttl(session.references)
-        self.session_service._save_session(session)
+        self.repository.save(session)
 
     def add_multiple_references(self, session_id: str, file_paths: list[str]):
-        session = self.session_service._fetch_session(session_id)
+        session = self.repository.find(session_id)
         if not session:
             return
 
@@ -163,4 +163,4 @@ class SessionReferenceService:
                 )
                 continue
             add_reference(session.references, file_path, session.references.default_ttl)
-        self.session_service._save_session(session)
+        self.repository.save(session)

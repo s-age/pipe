@@ -72,7 +72,7 @@ class TestSessionCollectionExtensions(unittest.TestCase):
                 )
             ]
         )
-        self.session_service._save_session(session)
+        self.session_service.repository.save(session)
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)

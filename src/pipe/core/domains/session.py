@@ -65,9 +65,7 @@ def fork_session(
     new_session_id_suffix = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
 
     parent_path = (
-        original.session_id.rsplit("/", 1)[0]
-        if "/" in original.session_id
-        else None
+        original.session_id.rsplit("/", 1)[0] if "/" in original.session_id else None
     )
     new_session_id = (
         f"{parent_path}/{new_session_id_suffix}"

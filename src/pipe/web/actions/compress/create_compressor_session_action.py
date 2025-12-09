@@ -41,7 +41,7 @@ class CreateCompressorSessionAction(BaseAction):
         # - start_turn and end_turn are valid
         # - turn range is correct
         # - target_length is positive
-        return get_session_optimization_service().run_takt_for_compression(
+        return get_session_optimization_service().run_compression(
             req.session_id,
             req.policy,
             req.target_length,

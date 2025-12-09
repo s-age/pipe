@@ -5,21 +5,49 @@ This service handles complex business workflows that involve sessions,
 such as forking sessions and initiating specialized workflow processes.
 """
 
+import sys
+import zoneinfo
+
 from pipe.core.domains.session import fork_session
 from pipe.core.domains.session_optimization import SessionModifications
+from pipe.core.models.settings import Settings
+from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_optimization_service import DoctorResultResponse
 
 
 class SessionWorkflowService:
     """Service for session workflow operations."""
 
-    def __init__(self, session_service):
-        """Initialize with a reference to SessionService.
+    def __init__(
+        self,
+        optimization_service=None,
+        repository: SessionRepository = None,
+        settings: Settings = None,
+    ):
+        """Initialize with dependencies.
 
         Args:
-            session_service: SessionService instance for data access and operations
+            optimization_service: SessionOptimizationService for workflow operations
+            repository: SessionRepository for persistence
+            settings: Settings for timezone
         """
-        self.session_service = session_service
+        self.optimization_service = optimization_service
+        self.repository = repository
+        self.settings = settings
+
+        # Initialize timezone_obj
+        if settings:
+            tz_name = settings.timezone
+            try:
+                self.timezone_obj = zoneinfo.ZoneInfo(tz_name)
+            except zoneinfo.ZoneInfoNotFoundError:
+                print(
+                    f"Warning: Timezone '{tz_name}' not found. Using UTC.",
+                    file=sys.stderr,
+                )
+                self.timezone_obj = zoneinfo.ZoneInfo("UTC")
+        else:
+            self.timezone_obj = zoneinfo.ZoneInfo("UTC")
 
     def fork_session(self, session_id: str, fork_index: int) -> str | None:
         """Fork a session at a specific turn index.
@@ -39,18 +67,16 @@ class SessionWorkflowService:
             IndexError: If fork_index is out of range
             ValueError: If the turn at fork_index is not a model_response
         """
-        original_session = self.session_service._fetch_session(session_id)
+        original_session = self.repository.find(session_id)
         if not original_session:
             raise FileNotFoundError(
                 f"Original session with ID '{session_id}' not found."
             )
 
         # Use domain logic for fork operation and validation
-        new_session = fork_session(
-            original_session, fork_index, self.session_service.timezone_obj
-        )
+        new_session = fork_session(original_session, fork_index, self.timezone_obj)
 
-        self.session_service.repository.save(new_session)
+        self.repository.save(new_session)
 
         return new_session.session_id
 
@@ -67,9 +93,7 @@ class SessionWorkflowService:
 
         Delegates to SessionOptimizationService.
         """
-        return self.session_service._get_optimization_service().run_therapist(
-            session_id
-        )
+        return self.optimization_service.run_therapist(session_id)
 
     def run_takt_for_doctor(
         self, session_id: str, modifications: SessionModifications
@@ -87,6 +111,4 @@ class SessionWorkflowService:
 
         Delegates to SessionOptimizationService.
         """
-        return self.session_service._get_optimization_service().run_doctor(
-            session_id, modifications
-        )
+        return self.optimization_service.run_doctor(session_id, modifications)

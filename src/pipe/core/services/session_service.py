@@ -38,7 +38,7 @@ class SessionService:
         self.current_session_id: str | None = None
         self.current_instruction: str | None = None
 
-        self.history_manager = self  # For compatibility with tools
+        self.history_manager = None  # Will be set by ServiceFactory
 
         tz_name = settings.timezone
         try:
@@ -52,13 +52,13 @@ class SessionService:
         # The repository now handles initialization of directories.
         # self._initialize()
 
-    def _fetch_session(self, session_id: str) -> Session | None:
-        """Loads a single session using the repository."""
-        return self.repository.find(session_id)
+    def set_history_manager(self, history_manager):
+        """Set the history manager for tool compatibility."""
+        self.history_manager = history_manager
 
     def get_session(self, session_id: str) -> Session | None:
         """Loads a specific session."""
-        return self._fetch_session(session_id)
+        return self.repository.find(session_id)
 
     def list_sessions(self) -> SessionCollection:
         """Loads and returns the latest session collection from the repository."""
@@ -140,13 +140,6 @@ class SessionService:
     def _get_session_lock_path(self, session_id: str) -> str:
         return f"{self._get_session_path(session_id)}.lock"
 
-    def _initialize(self):
-        # This logic is now in the repository
-        pass
-
-    def _save_session(self, session: Session):
-        self.repository.save(session)
-
     def create_new_session(
         self,
         purpose: str,
@@ -176,7 +169,7 @@ class SessionService:
         # Rebuild Whoosh index when creating new session
         if self.file_indexer_service:
             try:
-                self.file_indexer_service.index_files()
+                self.file_indexer_service.create_index()
             except Exception as e:
                 print(f"Warning: Failed to rebuild Whoosh index: {e}", file=sys.stderr)
 

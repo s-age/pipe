@@ -202,7 +202,12 @@ def verify_summary(
         )
 
         # Add the result to the original session's pool so the calling agent can see it
-        session_service.add_to_pool(session_id, final_turn)
+        from pipe.core.services.session_turn_service import SessionTurnService
+
+        session_turn_service = SessionTurnService(
+            session_service.settings, session_service.repository
+        )
+        session_turn_service.add_to_pool(session_id, final_turn)
 
         # === Step 6: Return the result and the verifier session ID ===
         result = {

@@ -21,7 +21,7 @@ def edit_todos(
         from pipe.core.domains.todos import update_todos_in_session
 
         update_todos_in_session(session, todos)
-        session_service._save_session(session)
+        session_service.repository.save(session)
         return {"message": f"Todos successfully updated in session {session_id}."}
     except Exception as e:
         return {"error": f"Failed to update todos in session: {e}"}

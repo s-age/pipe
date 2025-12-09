@@ -34,6 +34,8 @@ class ServiceFactory:
         self.project_root = project_root
         self.settings = settings
         self.jinja_env = self._create_jinja_environment()
+        self._session_service_instance = None
+        self._session_optimization_service_instance = None
 
     def _create_jinja_environment(self) -> Environment:
         template_path = os.path.join(self.project_root, "templates", "prompt")
@@ -42,12 +44,15 @@ class ServiceFactory:
 
     def create_session_service(self) -> SessionService:
         """Creates a SessionService with its dependencies."""
-        repository = SessionRepository(self.project_root, self.settings)
-        file_indexer = self.create_file_indexer_service()
-        service = SessionService(
-            self.project_root, self.settings, repository, file_indexer
-        )
-        return service
+        if self._session_service_instance is None:
+            repository = SessionRepository(self.project_root, self.settings)
+            file_indexer = self.create_file_indexer_service()
+            self._session_service_instance = SessionService(
+                self.project_root, self.settings, repository, file_indexer
+            )
+            # Ensure history_manager is set up
+            self.create_session_optimization_service()
+        return self._session_service_instance
 
     def create_prompt_service(self) -> PromptService:
         """Creates a PromptService with its dependencies."""
@@ -76,35 +81,45 @@ class ServiceFactory:
 
     def create_session_tree_service(self) -> SessionTreeService:
         """Creates a SessionTreeService with its dependencies."""
-        session_service = self.create_session_service()
-        return SessionTreeService(session_service)
+        repository = SessionRepository(self.project_root, self.settings)
+        return SessionTreeService(repository, self.settings)
 
     def create_session_workflow_service(self) -> SessionWorkflowService:
         """Creates a SessionWorkflowService with its dependencies."""
-        session_service = self.create_session_service()
-        return SessionWorkflowService(session_service)
+        optimization_service = self.create_session_optimization_service()
+        repository = SessionRepository(self.project_root, self.settings)
+        return SessionWorkflowService(optimization_service, repository, self.settings)
 
     def create_session_optimization_service(self) -> SessionOptimizationService:
         """Creates a SessionOptimizationService with its dependencies."""
-        session_service = self.create_session_service()
-        return SessionOptimizationService(self.project_root, session_service)
+        if self._session_optimization_service_instance is None:
+            session_service = self.create_session_service()
+            repository = SessionRepository(self.project_root, self.settings)
+            self._session_optimization_service_instance = SessionOptimizationService(
+                self.project_root, repository
+            )
+            # Set history_manager to enable tool compatibility
+            session_service.set_history_manager(
+                self._session_optimization_service_instance
+            )
+        return self._session_optimization_service_instance
 
     def create_session_reference_service(self) -> SessionReferenceService:
         """Creates a SessionReferenceService with its dependencies."""
-        session_service = self.create_session_service()
-        return SessionReferenceService(self.project_root, session_service)
+        repository = SessionRepository(self.project_root, self.settings)
+        return SessionReferenceService(self.project_root, repository)
 
     def create_session_turn_service(self) -> SessionTurnService:
         """Creates a SessionTurnService with its dependencies."""
-        session_service = self.create_session_service()
-        return SessionTurnService(self.settings, session_service)
+        repository = SessionRepository(self.project_root, self.settings)
+        return SessionTurnService(self.settings, repository)
 
     def create_session_meta_service(self) -> SessionMetaService:
         """Creates a SessionMetaService with its dependencies."""
-        session_service = self.create_session_service()
-        return SessionMetaService(session_service)
+        repository = SessionRepository(self.project_root, self.settings)
+        return SessionMetaService(repository)
 
     def create_session_todo_service(self) -> SessionTodoService:
         """Creates a SessionTodoService with its dependencies."""
-        session_service = self.create_session_service()
-        return SessionTodoService(session_service)
+        repository = SessionRepository(self.project_root, self.settings)
+        return SessionTodoService(repository)

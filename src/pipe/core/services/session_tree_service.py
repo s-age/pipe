@@ -5,18 +5,23 @@ This service is responsible for constructing hierarchical views of sessions,
 handling parent-child relationships, and providing tree-based queries.
 """
 
+from pipe.core.collections.sessions import SessionCollection
+from pipe.core.models.settings import Settings
+from pipe.core.repositories.session_repository import SessionRepository
 
 
 class SessionTreeService:
     """Service for session tree operations."""
 
-    def __init__(self, session_service):
-        """Initialize with a reference to SessionService for data access.
+    def __init__(self, repository: SessionRepository, settings: Settings):
+        """Initialize with repository and settings for data access.
 
         Args:
-            session_service: SessionService instance for accessing session data
+            repository: SessionRepository instance for accessing session data
+            settings: Settings for timezone information
         """
-        self.session_service = session_service
+        self.repository = repository
+        self.settings = settings
 
     def get_session_tree(self) -> dict:
         """Build a hierarchical tree structure from sessions.
@@ -44,7 +49,8 @@ class SessionTreeService:
                 ]
             }
         """
-        sessions_collection = self.session_service.list_sessions()
+        index_data = self.repository.get_index()
+        sessions_collection = SessionCollection(index_data, self.settings.timezone)
         sorted_sessions = sessions_collection.get_sorted_by_last_updated()
 
         # Build nodes dictionary

@@ -32,10 +32,9 @@ def get_turns_for_prompt(
     - Only the last N 'tool_response' turns from the history are included.
     """
     tool_response_count = 0
-    history = turns_collection[:-1]  # Exclude the last turn
 
     # Iterate in reverse to easily count the last N tool_responses
-    for turn in reversed(history):
+    for turn in reversed(turns_collection):
         if isinstance(turn, ToolResponseTurn):
             tool_response_count += 1
             if tool_response_count > tool_response_limit:

@@ -60,7 +60,7 @@ export const SessionMeta = ({
           </div>
 
           <div className={sessionMetaView}>
-            <ReferenceList sessionDetail={sessionDetail} />
+            <ReferenceList sessionDetail={sessionDetail} refreshSessions={onRefresh} />
 
             <HyperParameters sessionDetail={sessionDetail} />
 

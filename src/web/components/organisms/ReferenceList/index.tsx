@@ -16,11 +16,13 @@ import { referencesList, noItemsMessage } from './style.css'
 type ReferenceListProperties = {
   sessionDetail: SessionDetail
   placeholder?: string
+  refreshSessions: () => Promise<void>
 }
 
 export const ReferenceList = ({
   sessionDetail,
-  placeholder = 'Type to search files... (select from suggestions)'
+  placeholder = 'Type to search files... (select from suggestions)',
+  refreshSessions
 }: ReferenceListProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
   const errors = formContext?.formState?.errors?.references
@@ -60,6 +62,7 @@ export const ReferenceList = ({
               reference={reference}
               currentSessionId={sessionDetail.sessionId || null}
               index={index}
+              refreshSessions={refreshSessions}
             />
           ))}
         </ul>

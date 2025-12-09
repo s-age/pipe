@@ -9,7 +9,8 @@ export const useReferenceHandlers = (
   currentSessionId: string | null,
   reference: Reference,
   referenceIndex: number,
-  setLocalReference?: React.Dispatch<React.SetStateAction<Reference>>
+  setLocalReference: React.Dispatch<React.SetStateAction<Reference>>,
+  refreshSessions: () => Promise<void>
 ): {
   handlePersistToggle: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
   handleTtlAction: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
@@ -21,7 +22,7 @@ export const useReferenceHandlers = (
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
     handleToggleReferenceDisabled
-  } = useReferenceActions()
+  } = useReferenceActions(refreshSessions)
 
   const updateReferences = useCallback(
     (updater: (reference_: Reference) => Reference) => {

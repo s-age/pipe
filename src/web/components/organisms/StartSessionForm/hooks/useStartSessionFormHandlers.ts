@@ -8,6 +8,7 @@ import type { StartSessionFormInputs } from '../schema'
 export const useStartSessionFormHandlers = (): {
   handleCancel: () => void
   handleCreateClick: () => Promise<void>
+  dummyHandler: () => Promise<void>
   isSubmitting: boolean
 } => {
   const { startSessionAction } = useStartSessionFormActions()
@@ -44,9 +45,14 @@ export const useStartSessionFormHandlers = (): {
     }
   }, [formContext, onFormSubmit, onFormError])
 
+  const dummyHandler = useCallback(async (): Promise<void> => {
+    // no-op
+  }, [])
+
   return {
     handleCancel,
     handleCreateClick,
+    dummyHandler,
     isSubmitting
   }
 }

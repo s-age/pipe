@@ -6,7 +6,7 @@ import { toggleReferenceDisabled } from '@/lib/api/meta/toggleReferenceDisabled'
 import { addToast } from '@/stores/useToastStore'
 
 export const useReferenceActions = (
-  refreshSessions?: () => Promise<void>
+  refreshSessions: () => Promise<void>
 ): {
   handleUpdateReferencePersist: (
     sessionId: string,
@@ -35,7 +35,7 @@ export const useReferenceActions = (
           title: 'Reference persist state updated successfully'
         })
         // Prefer refreshSessions to allow parent to re-fetch canonical session state
-        if (refreshSessions) await refreshSessions()
+        await refreshSessions()
       } catch (error: unknown) {
         addToast({
           status: 'failure',
@@ -53,7 +53,7 @@ export const useReferenceActions = (
       try {
         await editReferenceTtl(sessionId, index, ttl)
         addToast({ status: 'success', title: 'Reference TTL updated successfully' })
-        if (refreshSessions) await refreshSessions()
+        await refreshSessions()
       } catch (error: unknown) {
         addToast({
           status: 'failure',
@@ -74,7 +74,7 @@ export const useReferenceActions = (
           status: 'success',
           title: 'Reference disabled state updated successfully'
         })
-        if (refreshSessions) await refreshSessions()
+        await refreshSessions()
       } catch (error: unknown) {
         addToast({
           status: 'failure',

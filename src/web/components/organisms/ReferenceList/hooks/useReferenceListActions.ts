@@ -24,10 +24,10 @@ export const useReferenceListActions = (
 
       try {
         await editReferences(currentSessionId, newReferences)
-        const { session } = await getSession(currentSessionId)
+        const sessionDetail = await getSession(currentSessionId)
         addToast({ status: 'success', title: 'Reference added successfully' })
 
-        return session.references
+        return sessionDetail.references
       } catch (error: unknown) {
         addToast({
           status: 'failure',

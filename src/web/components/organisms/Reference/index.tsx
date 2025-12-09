@@ -24,12 +24,14 @@ type ReferenceProperties = {
   reference: Reference
   index: number
   currentSessionId: string | null
+  refreshSessions: () => Promise<void>
 }
 
 export const ReferenceComponent = ({
   reference,
   index,
-  currentSessionId
+  currentSessionId,
+  refreshSessions
 }: ReferenceProperties): JSX.Element => {
   const { localReference, setLocalReference } = useReferenceLifecycle(reference)
 
@@ -37,7 +39,8 @@ export const ReferenceComponent = ({
     currentSessionId,
     localReference,
     index,
-    setLocalReference
+    setLocalReference,
+    refreshSessions
   )
 
   const ttl = localReference.ttl !== null ? localReference.ttl : 3

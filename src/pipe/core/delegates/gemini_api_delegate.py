@@ -203,10 +203,6 @@ def run_stream(
     )
     intermediate_turns.append(final_model_turn)
 
-    # Save all turns to session
-    for turn in intermediate_turns:
-        session_turn_service.add_turn_to_session(session_id, turn)
-
     # Update token count
     if token_count > 0:
         from pipe.core.services.session_meta_service import SessionMetaService

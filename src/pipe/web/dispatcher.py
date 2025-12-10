@@ -34,6 +34,7 @@ from pipe.web.actions.session import (
     SessionGetAction,
     SessionInstructionAction,
     SessionStartAction,
+    SessionStopAction,
 )
 from pipe.web.actions.session_management import (
     SessionsDeleteAction,
@@ -160,6 +161,7 @@ class ActionDispatcher:
             ("session_management/archives", "DELETE", SessionsDeleteBackupAction),
             ("session_management/sessions", "DELETE", SessionsDeleteAction),
             ("session/{session_id}/instruction", "POST", SessionInstructionAction),
+            ("session/{session_id}/stop", "POST", SessionStopAction),
             ("session/{session_id}/meta", "PATCH", SessionMetaEditAction),
             (
                 "session/{session_id}/hyperparameters",

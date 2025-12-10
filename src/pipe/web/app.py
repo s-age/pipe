@@ -36,6 +36,7 @@ from pipe.web.service_container import get_container
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+logger = logging.getLogger(__name__)
 
 
 def check_and_show_warning(project_root: str) -> bool:
@@ -127,10 +128,9 @@ def create_app(
 
     @app.before_request
     def _log_incoming_request():
-        # small debug logging so dev can see whether OPTIONS or PATCH actually
-        # reach Flask
+        # Log incoming requests for debugging
         try:
-            print(f"DEBUG: incoming {request.method} {request.path}")
+            logger.debug(f"Incoming {request.method} {request.path}")
         except Exception:
             pass
 
@@ -252,23 +252,21 @@ def create_app(
 
             return jsonify(response_data), status_code
         except Exception as e:
+            logger.error("Error in dispatch_action_endpoint", exc_info=True)
             return jsonify({"message": str(e)}), 500
 
     # Optionally rebuild Whoosh index on startup
     if init_index:
         try:
-            print("Rebuilding Whoosh index...")
-            print(f"  Base path: {file_indexer_service.repository.base_path}")
-            print(f"  Index dir: {file_indexer_service.repository.index_dir}")
+            logger.info("Rebuilding Whoosh index...")
+            logger.debug(f"Base path: {file_indexer_service.repository.base_path}")
+            logger.debug(f"Index dir: {file_indexer_service.repository.index_dir}")
             file_indexer_service.create_index()
-            print("Whoosh index rebuilt successfully")
+            logger.info("Whoosh index rebuilt successfully")
             test_entries = file_indexer_service.get_ls_data([])
-            print(f"  Verified: {len(test_entries)} entries at root")
+            logger.debug(f"Verified: {len(test_entries)} entries at root")
         except Exception as e:
-            print(f"WARNING: Failed to rebuild Whoosh index: {e}")
-            import traceback
-
-            traceback.print_exc()
+            logger.warning(f"Failed to rebuild Whoosh index: {e}", exc_info=True)
 
     return app
 
@@ -282,34 +280,6 @@ if __name__ == "__main__":
     )
     project_root_for_check = os.path.dirname(os.path.abspath(__file__))
     if check_and_show_warning(project_root_for_check):
-        # Debug: print URL map so we can inspect which methods are registered
-        try:
-            for rule in app.url_map.iter_rules():
-                print(f"DEBUG: route {rule.rule} methods={sorted(rule.methods or [])}")
-        except Exception:
-            pass
-
-        # Print runtime path diagnostics so we can detect mismatches between
-        # the module-computed project_root and the runtime working directory.
-        try:
-            import os as _os
-
-            from pipe.web.service_container import get_session_service
-
-            print(f"DEBUG: module project_root = {project_root}")
-            print(f"DEBUG: current working dir = {_os.getcwd()}")
-            # session_service created at module import; print its repository path
-            session_service = get_session_service()
-            repo = getattr(session_service, "repository", None)
-            if repo is not None:
-                print(
-                    f"DEBUG: session repository sessions_dir = "
-                    f"{getattr(repo, 'sessions_dir', None)}"
-                )
-            else:
-                print("DEBUG: session_service.repository not available")
-        except Exception:
-            pass
         app.run(host="0.0.0.0", port=5001, debug=False)
     else:
         sys.exit(1)

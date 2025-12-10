@@ -19,7 +19,7 @@ type ChatHistoryBodyProperties = {
   currentSessionId: string | null
   expertMode: boolean
   isStreaming: boolean
-  streamedText: string | null
+  streamingTurns: TurnType[]
   turnsListReference: React.RefObject<HTMLDivElement | null>
   onRefresh: () => Promise<void>
   refreshSessionsInStore: (
@@ -33,7 +33,7 @@ export const ChatHistoryBody = ({
   currentSessionId,
   expertMode,
   isStreaming,
-  streamedText,
+  streamingTurns,
   turnsListReference,
   onRefresh,
   refreshSessionsInStore
@@ -63,8 +63,6 @@ export const ChatHistoryBody = ({
     )
   }
 
-  console.log(sessionDetail)
-
   return (
     <div className={`${panel} ${panelBottomSpacing}`}>
       <section className={turnsListSection} ref={turnsListReference}>
@@ -93,19 +91,17 @@ export const ChatHistoryBody = ({
             />
           )
         })}
-        {isStreaming && streamedText && (
-          <Turn
-            key="streaming-response"
-            turn={{
-              type: 'model_response',
-              content: streamedText,
-              timestamp: new Date().toISOString()
-            }}
-            index={sessionDetail.turns.length}
-            expertMode={expertMode}
-            isStreaming={isStreaming}
-          />
-        )}
+
+        {isStreaming &&
+          streamingTurns.map((turn, turnIndex) => (
+            <Turn
+              key={`streaming-turn-${turnIndex}`}
+              turn={turn}
+              index={sessionDetail.turns.length + turnIndex}
+              expertMode={expertMode}
+              isStreaming={isStreaming}
+            />
+          ))}
       </section>
     </div>
   )

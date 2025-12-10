@@ -1,5 +1,6 @@
 """Service for managing session turns and pools."""
 
+import zoneinfo
 from typing import Any
 
 from pipe.core.collections.pools import PoolCollection
@@ -23,6 +24,13 @@ class SessionTurnService:
     ):
         self.settings = settings
         self.repository = repository
+
+        # Convert timezone string to ZoneInfo object
+        try:
+            self.timezone = zoneinfo.ZoneInfo(settings.timezone)
+        except zoneinfo.ZoneInfoNotFoundError:
+            # Fallback to UTC if timezone not found
+            self.timezone = zoneinfo.ZoneInfo("UTC")
 
     def delete_turn(self, session_id: str, turn_index: int):
         """Deletes a specific turn from a session."""
@@ -109,3 +117,110 @@ class SessionTurnService:
                 session.turns, self.settings.tool_response_expiration
             ):
                 self.repository.save(session)
+
+    # ========== Transaction Methods ==========
+
+    def start_transaction(self, session_id: str, instruction: str):
+        """
+        Start a transaction by adding user_instruction to pools.
+
+        Transaction Flow:
+        1. Read or create session file
+        2. Create user_task turn and add to pools (temporary area)
+        3. Save session with updated pools
+
+        Args:
+            session_id: Session identifier
+            instruction: User instruction to execute
+
+        Returns:
+            Session object with user_task in pools
+
+        Note:
+            pools is a temporary storage area. Changes are not reflected in turns
+            until commit_transaction() is called.
+        """
+        from pipe.core.models.turn import UserTaskTurn
+        from pipe.core.utils.datetime import get_current_timestamp
+
+        session = self.repository.find(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
+
+        # Create user_task turn and add to pools
+        user_turn = UserTaskTurn(
+            type="user_task",
+            instruction=instruction,
+            timestamp=get_current_timestamp(self.timezone),
+        )
+
+        PoolCollection.add(session, user_turn)
+        self.repository.save(session)
+
+        return session
+
+    def add_to_transaction(self, session_id: str, turn_data: Turn) -> None:
+        """
+        Add a turn to the transaction (pools area).
+
+        Args:
+            session_id: Session identifier
+            turn_data: Turn to add (model_response, function_calling,
+                tool_response, etc.)
+
+        Note:
+            pools is a temporary storage area (not the main database).
+            Changes are saved to the session file but only in the pools field.
+            Call commit_transaction() to merge pools into turns for persistence.
+        """
+        session = self.repository.find(session_id)
+        if session:
+            PoolCollection.add(session, turn_data)
+            self.repository.save(session)
+
+    def commit_transaction(self, session_id: str) -> None:
+        """
+        Commit the transaction by merging pools into turns.
+
+        Transaction Flow:
+        1. Move all turns from pools to turns
+        2. Clear pools
+        3. Save session (transaction completed)
+
+        Args:
+            session_id: Session identifier
+
+        Note:
+            After this operation, all changes in pools are persisted to turns.
+            This completes the transaction.
+        """
+        from pipe.core.collections.turns import TurnCollection
+
+        session = self.repository.find(session_id)
+        if session and session.pools:
+            session.turns.merge_from(session.pools)
+            session.pools = TurnCollection()
+            self.repository.save(session)
+
+    def rollback_transaction(self, session_id: str) -> None:
+        """
+        Rollback the transaction by discarding all changes in pools.
+
+        Transaction Flow:
+        1. Clear pools (discard all temporary changes)
+        2. Save session
+
+        Args:
+            session_id: Session identifier
+
+        Note:
+            Used when errors occur or process is stopped. Discards all changes
+            made since start_transaction(), effectively rolling back to the
+            state before the transaction started.
+        """
+        from pipe.core.collections.turns import TurnCollection
+
+        session = self.repository.find(session_id)
+        if session:
+            session.pools = TurnCollection()
+            self.repository.save(session)

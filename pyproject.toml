@@ -21,6 +21,7 @@ watchdog = "4.0.1"
 Whoosh = "2.7.4"
 pathspec = "0.12.1"
 google-genai = "^1.52.0"
+psutil = "^6.1.1"
 
 [tool.poetry.scripts]
 takt = "pipe.cli.takt:main"

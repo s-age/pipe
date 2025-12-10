@@ -91,19 +91,31 @@ class TestDispatcher(unittest.TestCase):
         "pipe.core.agents.gemini_api.GeminiApiAgent.run",
         return_value=("model response", 100, []),
     )
-    def test_dispatch_run_handles_gemini_api_mode(self, mock_agent_run):
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_dispatch_run_handles_gemini_api_mode(
+        self, mock_factory_class, mock_agent_run
+    ):
         """Tests that _dispatch_run routes to gemini_api_delegate via registry."""
         from pipe.core.dispatcher import _dispatch_run
 
         self.session_service.settings.api_mode = "gemini-api"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
-        # Create a mock session with a mock references collection
-        mock_session = MagicMock()
-        from pipe.core.collections.references import ReferenceCollection
-
-        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
-        self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
+
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
+
         _dispatch_run(args, self.session_service)
         mock_agent_run.assert_called_once()
 
@@ -111,35 +123,57 @@ class TestDispatcher(unittest.TestCase):
         "pipe.core.agents.gemini_cli.GeminiCliAgent.run",
         return_value=("cli response", 100, []),
     )
-    def test_dispatch_run_handles_gemini_cli_mode(self, mock_agent_run):
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_dispatch_run_handles_gemini_cli_mode(
+        self, mock_factory_class, mock_agent_run
+    ):
         """Tests that _dispatch_run routes to gemini_cli_delegate via registry."""
         from pipe.core.dispatcher import _dispatch_run
 
         self.session_service.settings.api_mode = "gemini-cli"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
-        # Create a mock session with a mock references collection
-        mock_session = MagicMock()
-        from pipe.core.collections.references import ReferenceCollection
-
-        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
-        self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
+
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
+
         _dispatch_run(args, self.session_service)
         mock_agent_run.assert_called_once()
 
-    def test_dispatch_run_handles_unknown_api_mode(self):
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_dispatch_run_handles_unknown_api_mode(self, mock_factory_class):
         """Tests that _dispatch_run raises ValueError for an unknown api_mode."""
         from pipe.core.dispatcher import _dispatch_run
 
         self.session_service.settings.api_mode = "unknown-api"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
-        # Create a mock session with a mock references collection
-        mock_session = MagicMock()
-        from pipe.core.collections.references import ReferenceCollection
-
-        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
-        self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
+
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
+
         # The registry pattern now raises ValueError with a more descriptive message
         with self.assertRaisesRegex(ValueError, r"Unknown api_mode.*Available agents"):
             _dispatch_run(args, self.session_service)

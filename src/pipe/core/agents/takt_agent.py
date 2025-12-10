@@ -44,6 +44,11 @@ class TaktAgent:
 
         Raises:
             RuntimeError: If takt command fails or session ID cannot be extracted
+
+        Note:
+            This method uses subprocess.run (blocking, non-streaming) for session
+            creation. Process management is less critical here since execution is
+            short-lived, but we still check for session ID extraction.
         """
         command = [
             sys.executable,
@@ -76,8 +81,6 @@ class TaktAgent:
         )
 
         # Debug output to file
-        import os
-
         debug_file = os.path.join(self.project_root, "takt_debug.log")
         with open(debug_file, "a", encoding="utf-8") as f:
             f.write(f"\n{'='*80}\n")
@@ -126,8 +129,23 @@ class TaktAgent:
             Tuple of (stdout, stderr)
 
         Raises:
-            RuntimeError: If takt command fails
+            RuntimeError: If takt command fails or session is already running
+
+        Note:
+            This method uses subprocess.run (blocking, non-streaming).
+            Still checks for concurrent execution to prevent conflicts.
         """
+        from pipe.core.services.process_manager_service import ProcessManagerService
+
+        process_manager = ProcessManagerService(self.project_root)
+
+        # Check for concurrent execution
+        if process_manager.is_running(session_id):
+            raise RuntimeError(
+                f"Session {session_id} is already running. "
+                "Stop the existing process before starting a new one."
+            )
+
         command = [
             sys.executable,
             "-m",
@@ -186,8 +204,25 @@ class TaktAgent:
             Output lines from the takt process
 
         Raises:
-            RuntimeError: If takt command fails
+            RuntimeError: If takt command fails or session is already running
+
+        Note:
+            Integrates with ProcessManagerService for:
+            - Concurrent execution prevention
+            - Process registration and tracking
+            - Cleanup on completion or error
         """
+        from pipe.core.services.process_manager_service import ProcessManagerService
+
+        process_manager = ProcessManagerService(self.project_root)
+
+        # Check for concurrent execution
+        if process_manager.is_running(session_id):
+            raise RuntimeError(
+                f"Session {session_id} is already running. "
+                "Stop the existing process before starting a new one."
+            )
+
         command = [
             sys.executable,
             "-m",
@@ -217,22 +252,40 @@ class TaktAgent:
             env=env,
         )
 
-        if process.stdout:
-            yield from iter(process.stdout.readline, "")
-            process.stdout.close()
-
-        stderr_output = ""
-        if process.stderr:
-            stderr_output = process.stderr.read()
-            process.stderr.close()
-
-        return_code = process.wait()
-
-        if return_code != 0:
-            raise RuntimeError(
-                f"takt command failed with return code {return_code}. "
-                f"stderr: {stderr_output}"
+        # Register process immediately after starting
+        log_file = os.path.join(
+            self.project_root, "sessions", f"{session_id}.streaming.log"
+        )
+        try:
+            process_manager.register_process(
+                session_id, process.pid, instruction, log_file
             )
+        except Exception as e:
+            # If registration fails, kill the process
+            process.terminate()
+            raise RuntimeError(f"Failed to register process: {e}") from e
+
+        try:
+            # Stream output
+            if process.stdout:
+                yield from iter(process.stdout.readline, "")
+                process.stdout.close()
+
+            stderr_output = ""
+            if process.stderr:
+                stderr_output = process.stderr.read()
+                process.stderr.close()
+
+            return_code = process.wait()
+
+            if return_code != 0:
+                raise RuntimeError(
+                    f"takt command failed with return code {return_code}. "
+                    f"stderr: {stderr_output}"
+                )
+        finally:
+            # Always cleanup process registration
+            process_manager.cleanup_process(session_id)
 
     def _get_env(self) -> dict[str, str]:
         """Get environment variables for subprocess."""

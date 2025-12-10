@@ -41,13 +41,20 @@ def send_instruction(session_id):
         request_context = RequestContext(
             path_params={"session_id": session_id}, request_data=request
         )
+
         response = dispatch_streaming_action(
             action_class=SessionInstructionAction,
             params={"session_id": session_id},
             request_data=request_context,
         )
+
         return response
     except Exception as e:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.error("Error in send_instruction", exc_info=True)
+
         from pipe.web.exceptions import HttpException
         from pipe.web.responses import ApiResponse
 

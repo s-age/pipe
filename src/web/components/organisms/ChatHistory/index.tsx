@@ -32,7 +32,7 @@ export const ChatHistory = ({
   const parameters = useParams()
   const sessionId = parameters['*'] || null
 
-  const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
+  const { streamingTurns, isStreaming, turnsListReference, onSendInstruction } =
     useChatStreaming({
       currentSessionId: sessionId,
       // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
@@ -63,7 +63,7 @@ export const ChatHistory = ({
         currentSessionId={sessionId ?? null}
         expertMode={expertMode}
         isStreaming={isStreaming}
-        streamedText={streamedText}
+        streamingTurns={streamingTurns}
         turnsListReference={turnsListReference}
         onRefresh={refreshSession}
         refreshSessionsInStore={refreshSessionsInStore}

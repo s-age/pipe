@@ -24,6 +24,10 @@ import pluginVanillaExtract from './eslint-rules/vanilla-extract-recess-order.js
 
 // eslint-disable-next-line import/no-default-export
 export default [
+  // Ignore node_modules, dist, and build directories
+  {
+    ignores: ['node_modules/**', 'dist/**', '.vite/**', '.storybook/**']
+  },
   // 1. Base Configuration (JavaScript + TypeScript)
   // ESLint recommended configuration
   pluginJs.configs.recommended, // Expand TypeScript plugin configuration

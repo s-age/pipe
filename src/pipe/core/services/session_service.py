@@ -14,7 +14,6 @@ from pipe.core.models.artifact import Artifact
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
-from pipe.core.models.turn import UserTaskTurn
 from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.utils.datetime import get_current_timestamp
 
@@ -78,14 +77,8 @@ class SessionService:
             if not session:
                 raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
 
-            if args.instruction and not is_dry_run:
-                new_turn = UserTaskTurn(
-                    type="user_task",
-                    instruction=args.instruction,
-                    timestamp=get_current_timestamp(self.timezone_obj),
-                )
-                session.turns.add(new_turn)
-            print(f"Continuing session: {session.session_id}", file=sys.stderr)
+            # Note: user_task turn will be added by start_transaction() in dispatcher
+            # Do not add it here to avoid duplication
         else:
             if not all([args.purpose, args.background]):
                 raise ValueError(
@@ -103,13 +96,8 @@ class SessionService:
                 parent_id=args.parent,
             )
 
-            if args.instruction and not is_dry_run:
-                first_turn = UserTaskTurn(
-                    type="user_task",
-                    instruction=args.instruction,
-                    timestamp=get_current_timestamp(self.timezone_obj),
-                )
-                session.turns.add(first_turn)
+            # Note: first user_task turn will be added by start_transaction()
+            # in dispatcher. Do not add it here to avoid duplication
 
         if args.references:
             from pipe.core.domains.references import add_reference

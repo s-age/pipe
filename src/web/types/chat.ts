@@ -8,7 +8,8 @@ export type ChatSegment =
   | {
       type: 'tool'
       content: string
-      status?: 'running' | 'completed'
+      name?: string
+      status?: 'running' | 'completed' | 'succeeded' | 'failed'
       isComplete: boolean
     }
 

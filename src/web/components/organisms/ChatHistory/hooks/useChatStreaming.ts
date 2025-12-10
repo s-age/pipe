@@ -11,6 +11,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Turn } from '@/lib/api/session/getSession'
 import { getSession } from '@/lib/api/session/getSession'
 import { streamInstruction } from '@/lib/api/session/streamInstruction'
+import { segmentsToTurns, createUserTaskTurn } from '@/lib/turns/turnFactory'
 import { addToast } from '@/stores/useToastStore'
 import type { ChatSegment, SSEEvent } from '@/types/chat'
 
@@ -22,6 +23,32 @@ type SessionDetailCache = {
 }
 
 const SESSION_DETAIL_CACHE_TTL = 30000 // 30秒
+
+/**
+ * Extract tool name from tool call content
+ * Matches patterns like "Tool call: google_web_search"
+ */
+const extractToolName = (content: string): string | undefined => {
+  const match = content.match(/Tool call:\s*(\w+)/i)
+
+  return match ? match[1] : undefined
+}
+
+/**
+ * Check if content is a tool call (function invocation)
+ */
+const isToolCall = (content: string): boolean => /Tool call:/i.test(content)
+
+/**
+ * Detect tool status from content
+ * Returns 'succeeded', 'failed', or undefined
+ */
+const detectToolStatus = (content: string): 'succeeded' | 'failed' | undefined => {
+  if (/Tool status:\s*succeeded/i.test(content)) return 'succeeded'
+  if (/Tool status:\s*failed/i.test(content)) return 'failed'
+
+  return undefined
+}
 
 /**
  * Parse accumulated content into structured segments
@@ -43,16 +70,41 @@ const parseContentToSegments = (
       // Tool block (starts with ``` and may or may not end with ```)
       if (part.startsWith('```')) {
         const isClosed = part.endsWith('```') && part.length > 3
+        const toolName = extractToolName(part)
+        const toolStatus = detectToolStatus(part)
+        const isCall = isToolCall(part)
+
+        // Determine the status based on content
+        let status: 'running' | 'completed' | 'succeeded' | 'failed' = 'running'
+
+        if (isClosed) {
+          // If it has an explicit status, use it
+          if (toolStatus) {
+            status = toolStatus
+          }
+          // If it's a tool call but no explicit status, mark as completed
+          else if (isCall) {
+            status = 'completed'
+          }
+          // Otherwise it's a completed block
+          else {
+            status = 'completed'
+          }
+        }
 
         return {
           type: 'tool',
           content: part,
-          status: isClosed ? 'completed' : 'running',
+          name: toolName,
+          status,
           isComplete: !isStreaming || isClosed
         } as ChatSegment
       }
 
-      // Text block
+      // Text block - only return if it has meaningful content
+      const trimmedContent = part.trim()
+      if (!trimmedContent) return null
+
       return {
         type: 'text',
         content: part,
@@ -83,6 +135,7 @@ export const useChatStreaming = ({
     instruction: string
     sessionId: string
   } | null>(null)
+  const [instructionTurn, setInstructionTurn] = useState<Turn | null>(null)
   const [streamedText, setStreamedText] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
@@ -96,18 +149,13 @@ export const useChatStreaming = ({
     [streamedText, isLoading]
   )
 
-  // Convert segments to Turn objects for display
-  const streamingTurns = useMemo(
-    () =>
-      segments.map(
-        (segment): Turn => ({
-          type: segment.type === 'tool' ? 'function_calling' : 'model_response',
-          content: segment.content,
-          timestamp: new Date().toISOString()
-        })
-      ),
-    [segments]
-  )
+  // Convert segments to Turn objects for display using the dispatcher
+  const streamingTurns = useMemo(() => {
+    const segmentTurns = segmentsToTurns(segments)
+
+    // Prepend instruction turn if it exists
+    return instructionTurn ? [instructionTurn, ...segmentTurns] : segmentTurns
+  }, [segments, instructionTurn])
 
   // Session detail cache helpers
   const getSessionDetailFromCache = useCallback(
@@ -161,6 +209,7 @@ export const useChatStreaming = ({
       setIsLoading(true)
       setError(null)
       setStreamedText('')
+      setInstructionTurn(null)
       let localError: string | null = null
       let accumContent = '' // Accumulated content from chunks
 
@@ -198,13 +247,20 @@ export const useChatStreaming = ({
               try {
                 const data = JSON.parse(jsonString) as SSEEvent
 
+                // Handle instruction event - create UserTaskTurn
+                if (data.type === 'instruction' && data.content) {
+                  setInstructionTurn(
+                    createUserTaskTurn(data.content, new Date().toISOString())
+                  )
+                }
+
                 // Extract content from chunk events
                 if (data.type === 'chunk' && data.content) {
                   accumContent += data.content
                   setStreamedText(accumContent)
                 }
                 // Handle other event types if needed
-                // (start, instruction, complete events don't need to be displayed)
+                // (start, complete events are handled separately)
               } catch {
                 addToast({
                   status: 'failure',

@@ -5,24 +5,47 @@ import type { Todo } from '@/types/todo'
 
 import { client } from '../client'
 
-export type Turn = {
-  type:
-    | 'user_task'
-    | 'model_response'
-    | 'function_calling'
-    | 'tool_response'
-    | 'compressed_history'
-    | 'unknown'
-  instruction?: string
-  content?: string
-  response?: {
-    status?: 'success' | 'error'
-    output?: unknown
-    [key: string]: unknown
-  }
-  timestamp?: string
-  [key: string]: unknown
+export type UserTaskTurn = {
+  type: 'user_task'
+  instruction: string
+  timestamp: string
 }
+
+export type ModelResponseTurn = {
+  type: 'model_response'
+  content: string
+  timestamp: string
+}
+
+export type FunctionCallingTurn = {
+  type: 'function_calling'
+  response: string
+  timestamp: string
+}
+
+export type ToolResponseTurn = {
+  type: 'tool_response'
+  name: string
+  response: {
+    status: string
+    message: string
+  }
+  timestamp: string
+}
+
+export type CompressedHistoryTurn = {
+  type: 'compressed_history'
+  content: string
+  originalTurnsRange: number[]
+  timestamp: string
+}
+
+export type Turn =
+  | UserTaskTurn
+  | ModelResponseTurn
+  | FunctionCallingTurn
+  | ToolResponseTurn
+  | CompressedHistoryTurn
 
 export type SessionDetail = {
   sessionId: string | null

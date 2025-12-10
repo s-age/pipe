@@ -1,19 +1,22 @@
-from typing import Any
+import json
 
 
 def get_session(
     session_id: str,
     session_service=None,
-) -> dict[str, Any]:
+) -> str:
     """
     Retrieves the session data for the given session_id and returns the turns as text.
+
+    Returns:
+        JSON string containing session information
     """
     if not session_service:
-        return {"error": "This tool requires a session_service."}
+        return json.dumps({"error": "This tool requires a session_service."})
 
     session = session_service.get_session(session_id)
     if not session:
-        return {"error": f"Session {session_id} not found."}
+        return json.dumps({"error": f"Session {session_id} not found."})
 
     # Convert turns to text
     turns_text = []
@@ -28,8 +31,10 @@ def get_session(
                 f"{getattr(turn, 'content', getattr(turn, 'instruction', str(turn)))}"
             )
 
-    return {
+    result = {
         "session_id": session_id,
         "turns": turns_text,
         "turns_count": len(session.turns),
     }
+
+    return json.dumps(result, ensure_ascii=False, indent=2)

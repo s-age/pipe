@@ -1,4 +1,4 @@
-import type { RoleOption } from '@/lib/api/roles/getRoles'
+import type { RoleOption } from '@/lib/api/fs/roles'
 import type { Reference } from '@/types/reference'
 import type { Settings } from '@/types/settings'
 import type { Todo } from '@/types/todo'
@@ -25,7 +25,7 @@ export type Turn = {
 }
 
 export type SessionDetail = {
-  session_id: string | null
+  sessionId: string | null
   purpose: string
   background: string
   roles: string[]
@@ -34,19 +34,17 @@ export type SessionDetail = {
   artifacts: string[]
   procedure: string | null
   instruction: string
-  multi_step_reasoning_enabled: boolean
+  multiStepReasoningEnabled: boolean
   hyperparameters: Settings['hyperparameters'] | null
-  // token_count and settings are returned by the server in some endpoints
+  // tokenCount and settings are returned by the server in some endpoints
   // (e.g. session dashboard). Make them optional so callers can use them
   // when available without causing type errors.
-  token_count?: number
+  tokenCount?: number
   settings?: Settings
   todos: Todo[]
   turns: Turn[]
   roleOptions?: RoleOption[]
 }
 
-export const getSession = async (
-  sessionId: string
-): Promise<{ session: SessionDetail }> =>
-  client.get<{ session: SessionDetail }>(`/session/${sessionId}`)
+export const getSession = async (sessionId: string): Promise<SessionDetail> =>
+  client.get<SessionDetail>(`/session/${sessionId}`)

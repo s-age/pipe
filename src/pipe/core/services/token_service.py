@@ -26,6 +26,7 @@ class TokenService:
         self.model_name = settings.model
         self.limit = settings.context_limit
 
+        # Acceptable per checklist 5-3: Opaque Third-Party Object (google.genai.Client)
         self.client: Any | None = None
 
         # Import `google.genai` lazily so importing this module doesn't
@@ -49,7 +50,7 @@ class TokenService:
 
     def count_tokens(self, contents, tools: list | None = None) -> int:
         """
-        Counts the number of tokens in the prompt contents using the Gemini API.
+        Counts tokens using API, falling back to estimation if API is unavailable/fails.
 
         Args:
             contents: A string or a list of content dictionaries.
@@ -58,31 +59,40 @@ class TokenService:
         Returns:
             The total number of tokens, or a fallback estimation if an error occurs.
         """
-        if not self.client:
-            print("TokenService: Client not initialized, cannot count tokens.")
-            return 0
-        try:
-            response = self.client.models.count_tokens(
-                model=self.model_name, contents=contents
-            )
-            return response.total_tokens if response.total_tokens is not None else 0
-        except Exception as e:
-            print(f"Error counting tokens via API: {e}")
-            # As a rough fallback, estimate based on characters.
-            estimated_tokens = 0
-            if isinstance(contents, str):
-                estimated_tokens = len(contents) // 4
-            elif isinstance(contents, list):
-                estimated_tokens = (
-                    sum(
-                        len(part.get("text", ""))
-                        for content in contents
-                        for part in content.get("parts", [])
-                    )
-                    // 4
+        # 1. If client is available, try to use API
+        if self.client:
+            try:
+                response = self.client.models.count_tokens(
+                    model=self.model_name, contents=contents
                 )
-            print(f"Using rough fallback estimation: {estimated_tokens} tokens.")
-            return estimated_tokens
+                return response.total_tokens if response.total_tokens is not None else 0
+            except Exception as e:
+                print(f"Error counting tokens via API: {e}")
+                # Fall through to fallback estimation
+
+        # 2. Fallback when client is unavailable or API fails
+        print("TokenService: Using rough fallback estimation.")
+        return self._estimate_tokens_locally(contents)
+
+    def _estimate_tokens_locally(self, contents) -> int:
+        """Rough estimation based on characters (char_len / 4).
+
+        Args:
+            contents: A string or a list of content dictionaries.
+
+        Returns:
+            Estimated token count based on character length.
+        """
+        if isinstance(contents, str):
+            return len(contents) // 4
+        elif isinstance(contents, list):
+            total_chars = sum(
+                len(part.get("text", ""))
+                for content in contents
+                for part in content.get("parts", [])
+            )
+            return total_chars // 4
+        return 0
 
     def check_limit(self, tokens: int) -> tuple[bool, str]:
         """

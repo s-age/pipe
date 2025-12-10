@@ -29,18 +29,18 @@ export const useSessionTodosHandlers = ({
 
   const handleUpdateTodo = useCallback(
     async (todos: Todo[]) => {
-      if (!sessionDetail.session_id) return
-      void updateTodos(sessionDetail.session_id, todos)
+      if (!sessionDetail.sessionId) return
+      void updateTodos(sessionDetail.sessionId, todos)
     },
     [sessionDetail, updateTodos]
   )
 
   const handleDeleteAllTodos = useCallback(async (): Promise<void> => {
-    if (!sessionDetail.session_id) return
+    if (!sessionDetail.sessionId) return
     if (!window.confirm('Are you sure you want to delete all todos for this session?'))
       return
 
-    void deleteAllTodos(sessionDetail.session_id)
+    void deleteAllTodos(sessionDetail.sessionId)
   }, [sessionDetail, deleteAllTodos])
 
   const handleTodoCheckboxChange = useCallback(

@@ -1,9 +1,16 @@
 import ast
 import os
-from typing import Any
+from typing import TypedDict
 
 
-def py_get_code_snippet(file_path: str, symbol_name: str) -> dict[str, Any]:
+class CodeSnippetResult(TypedDict, total=False):
+    """Result from extracting code snippet."""
+
+    snippet: str
+    error: str
+
+
+def py_get_code_snippet(file_path: str, symbol_name: str) -> CodeSnippetResult:
     """
     指定されたファイルから特定のシンボルのコードスニペットを抽出する。
     """

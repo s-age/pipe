@@ -45,6 +45,8 @@ class TestPromptService(unittest.TestCase):
         self.service_factory = ServiceFactory(self.project_root, self.settings)
         self.session_service = self.service_factory.create_session_service()
         self.prompt_service = self.service_factory.create_prompt_service()
+        self.workflow_service = self.service_factory.create_session_workflow_service()
+        self.todo_service = self.service_factory.create_session_todo_service()
 
         # Setup mock repository to return a session with valid hyperparameters
         self.mock_session = Mock(spec=Session)
@@ -90,38 +92,38 @@ class TestPromptService(unittest.TestCase):
 
     def test_build_prompt_with_history(self):
         """Tests that conversation history is correctly populated."""
-        args = TaktArgs(
-            purpose="Test", background="Test", instruction="Third instruction"
+        # 1. Create a session without an initial instruction
+        session = self.session_service.create_new_session(
+            purpose="Test", background="Test", roles=[]
         )
-        self.session_service.prepare(args)
-        self.mock_repository.find.return_value = self.session_service.current_session
-        session_id = self.session_service.current_session_id
+        session_id = session.session_id
 
-        # Manually add older turns to simulate a history
-        session = self.session_service.get_session(session_id)
-        session.turns.insert(
-            0,
+        # 2. Manually add historical turns in chronological order
+        session.turns.append(TaktArgs(instruction="First instruction").to_turn("..."))
+        session.turns.append(
             ModelResponseTurn(
                 type="model_response", content="Response to first", timestamp="..."
-            ),
+            )
         )
-        session.turns.insert(
-            0, TaktArgs(instruction="First instruction").to_turn("...")
-        )  # Simulate another user turn
-        self.session_service._save_session(session)
-        self.mock_repository.find.return_value = session
-        self.session_service.current_session = self.session_service.get_session(
-            session_id
+        self.session_service.repository.save(session)
+
+        # Update current session context for the prompt service
+        self.session_service.current_session_id = session_id
+        self.session_service.current_session = session  # Directly set the session
+        self.session_service.current_instruction = (
+            "Third instruction"  # Set current instruction
         )
 
         prompt = self.prompt_service.build_prompt(self.session_service)
 
+        # With current_instruction provided, all turns are included in history
+        # (reversed)
         self.assertEqual(len(prompt.conversation_history.turns), 2)
         self.assertEqual(
-            prompt.conversation_history.turns[0]["instruction"], "First instruction"
+            prompt.conversation_history.turns[0].content, "Response to first"
         )
         self.assertEqual(
-            prompt.conversation_history.turns[1]["content"], "Response to first"
+            prompt.conversation_history.turns[1].instruction, "First instruction"
         )
         self.assertEqual(prompt.current_task.instruction, "Third instruction")
 
@@ -144,7 +146,7 @@ class TestPromptService(unittest.TestCase):
 
         # Add todos
         todos = [TodoItem(title="My Todo", checked=False)]
-        self.session_service.update_todos(session_id, todos)
+        self.todo_service.update_todos(session_id, todos)
         self.session_service.current_session = self.session_service.get_session(
             session_id
         )
@@ -210,10 +212,9 @@ class TestPromptService(unittest.TestCase):
 
         self.assertEqual(prompt.session_goal.purpose, "Initial")  # Purpose is retained
         self.assertEqual(prompt.current_task.instruction, "Second task")
-        self.assertEqual(len(prompt.conversation_history.turns), 1)
-        self.assertEqual(
-            prompt.conversation_history.turns[0]["instruction"], "First task"
-        )
+        # History excludes last UserTaskTurn (used as current_task)
+        # With only two UserTaskTurns and no model responses, history is empty
+        self.assertEqual(len(prompt.conversation_history.turns), 0)
 
     def test_build_prompt_after_fork(self):
         """Tests prompt generation for a forked session."""
@@ -242,10 +243,10 @@ class TestPromptService(unittest.TestCase):
         self.mock_repository.find.side_effect = mock_find_by_id
         self.mock_repository.save.side_effect = mock_save_by_id
 
-        self.session_service._save_session(session)
+        self.session_service.repository.save(session)
 
-        # 2. Fork the session at the first model response (turn index 1)
-        forked_session_id = self.session_service.fork_session(session_id, fork_index=1)
+        # 2. Fork the session at the first model response (turn index 0)
+        forked_session_id = self.workflow_service.fork_session(session_id, fork_index=0)
 
         # 3. Continue the forked session
         args_fork = TaktArgs(session=forked_session_id, instruction="New task for fork")
@@ -255,12 +256,12 @@ class TestPromptService(unittest.TestCase):
 
         self.assertTrue(prompt.session_goal.purpose.startswith("Fork of: Original"))
         self.assertEqual(prompt.current_task.instruction, "New task for fork")
-        # History should contain turns up to the fork point
-        self.assertEqual(len(prompt.conversation_history.turns), 2)
-        self.assertEqual(prompt.conversation_history.turns[0]["instruction"], "First")
-        self.assertEqual(
-            prompt.conversation_history.turns[1]["content"], "First response"
-        )
+        # History should contain turns from the forked session except the last
+        # UserTaskTurn because it matches current_instruction and is used as
+        # current_task.
+        # When forking at model response, only that response is in history
+        self.assertEqual(len(prompt.conversation_history.turns), 1)
+        self.assertEqual(prompt.conversation_history.turns[0].content, "First response")
 
     def test_build_prompt_property_order(self):
         """Tests that the prompt properties are in the correct logical (cognitive)
@@ -281,7 +282,7 @@ class TestPromptService(unittest.TestCase):
         self.mock_repository.find.return_value = self.session_service.current_session
         session_id = self.session_service.current_session_id
         todos = [TodoItem(title="My Todo", checked=False)]
-        self.session_service.update_todos(session_id, todos)
+        self.todo_service.update_todos(session_id, todos)
         self.session_service.current_session = self.session_service.get_session(
             session_id
         )

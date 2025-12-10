@@ -49,7 +49,9 @@ class TestDispatcher(unittest.TestCase):
         """Tests that dispatch() correctly routes to the fork_delegate."""
         args = TaktArgs(fork="some-session-id", at_turn=1)
         dispatch(args, self.session_service, self.mock_parser)
-        mock_fork_run.assert_called_once_with(args, self.session_service)
+        mock_fork_run.assert_called_once_with(
+            args, self.session_service.project_root, self.session_service.settings
+        )
 
     @patch("pipe.core.dispatcher._dispatch_run")
     def test_dispatch_routes_to_run_for_instruction(self, mock_dispatch_run):
@@ -86,83 +88,154 @@ class TestDispatcher(unittest.TestCase):
         mock_gemini_run.assert_not_called()
 
     @patch(
-        "pipe.core.delegates.gemini_api_delegate.run_stream",
-        return_value=[("end", "model response", 100, [])],
+        "pipe.core.agents.gemini_api.GeminiApiAgent.run",
+        return_value=("model response", 100, []),
     )
-    def test_dispatch_run_handles_gemini_api_mode(self, mock_gemini_api_run):
-        """Tests that _dispatch_run routes to gemini_api_delegate."""
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_dispatch_run_handles_gemini_api_mode(
+        self, mock_factory_class, mock_agent_run
+    ):
+        """Tests that _dispatch_run routes to gemini_api_delegate via registry."""
         from pipe.core.dispatcher import _dispatch_run
 
         self.session_service.settings.api_mode = "gemini-api"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
-        # Create a mock session with a mock references collection
-        mock_session = MagicMock()
-        from pipe.core.collections.references import ReferenceCollection
-
-        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
-        self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
+
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
+
         _dispatch_run(args, self.session_service)
-        mock_gemini_api_run.assert_called_once()
+        mock_agent_run.assert_called_once()
 
     @patch(
-        "pipe.core.delegates.gemini_cli_delegate.run",
-        return_value=("cli response", 100),
+        "pipe.core.agents.gemini_cli.GeminiCliAgent.run",
+        return_value=("cli response", 100, []),
     )
-    def test_dispatch_run_handles_gemini_cli_mode(self, mock_gemini_cli_run):
-        """Tests that _dispatch_run routes to gemini_cli_delegate."""
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_dispatch_run_handles_gemini_cli_mode(
+        self, mock_factory_class, mock_agent_run
+    ):
+        """Tests that _dispatch_run routes to gemini_cli_delegate via registry."""
         from pipe.core.dispatcher import _dispatch_run
 
         self.session_service.settings.api_mode = "gemini-cli"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
-        # Create a mock session with a mock references collection
-        mock_session = MagicMock()
-        from pipe.core.collections.references import ReferenceCollection
-
-        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
-        self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
-        _dispatch_run(args, self.session_service)
-        mock_gemini_cli_run.assert_called_once()
 
-    def test_dispatch_run_handles_unknown_api_mode(self):
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
+
+        _dispatch_run(args, self.session_service)
+        mock_agent_run.assert_called_once()
+
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_dispatch_run_handles_unknown_api_mode(self, mock_factory_class):
         """Tests that _dispatch_run raises ValueError for an unknown api_mode."""
         from pipe.core.dispatcher import _dispatch_run
 
         self.session_service.settings.api_mode = "unknown-api"
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
-        # Create a mock session with a mock references collection
-        mock_session = MagicMock()
-        from pipe.core.collections.references import ReferenceCollection
-
-        mock_session.references = MagicMock(spec=ReferenceCollection, return_value=[])
-        self.mock_repository.find.return_value = mock_session
         self.session_service.prepare(args, is_dry_run=False)
-        with self.assertRaises(ValueError):
+
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
+
+        # The registry pattern now raises ValueError with a more descriptive message
+        with self.assertRaisesRegex(ValueError, r"Unknown api_mode.*Available agents"):
             _dispatch_run(args, self.session_service)
 
     @patch(
-        "pipe.core.delegates.gemini_api_delegate.run_stream",
-        return_value=[("end", "model response", 100, [])],
+        "pipe.core.agents.gemini_api.GeminiApiAgent.run",
+        return_value=("model response", 100, []),
     )
-    def test_ttl_and_expiration_are_called(self, mock_gemini_run):
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_ttl_and_expiration_are_called(self, mock_factory_class, mock_agent_run):
         """Tests that TTL decrement and tool response expiration are called."""
         from pipe.core.dispatcher import _dispatch_run
+
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
 
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
         mock_session_service = MagicMock(spec=SessionService)
         mock_session_service.settings = self.settings
         mock_session_service.current_session_id = "test_session"
-        mock_session_service.project_root = self.project_root  # Set attribute
+        mock_session_service.project_root = self.project_root
         _dispatch_run(args, mock_session_service)
-        mock_session_service.decrement_all_references_ttl_in_session.assert_called_once()
-        mock_session_service.expire_old_tool_responses.assert_called_once()
-        mock_gemini_run.assert_called_once()
+        mock_reference_service.decrement_all_references_ttl_in_session.assert_called_once_with(
+            "test_session"
+        )
+        mock_turn_service.expire_old_tool_responses.assert_called_once_with(
+            "test_session"
+        )
+        mock_agent_run.assert_called_once()
 
     @patch("pipe.core.delegates.dry_run_delegate.run")
-    def test_dry_run_does_not_call_ttl_or_expiration(self, mock_dry_run):
+    @patch("pipe.core.dispatcher.ServiceFactory")
+    def test_dry_run_does_not_call_ttl_or_expiration(
+        self, mock_factory_class, mock_dry_run
+    ):
         """Tests that TTL and expiration methods are NOT called on a dry run."""
         from pipe.core.dispatcher import _dispatch_run
+
+        # Setup mock services
+        mock_factory = MagicMock()
+        mock_reference_service = MagicMock()
+        mock_turn_service = MagicMock()
+        mock_prompt_service = MagicMock()
+        mock_meta_service = MagicMock()
+        mock_factory.create_session_reference_service.return_value = (
+            mock_reference_service
+        )
+        mock_factory.create_session_turn_service.return_value = mock_turn_service
+        mock_factory.create_prompt_service.return_value = mock_prompt_service
+        mock_factory.create_session_meta_service.return_value = mock_meta_service
+        mock_factory_class.return_value = mock_factory
 
         args = TaktArgs(
             instruction="Do something", dry_run=True, purpose="p", background="b"
@@ -170,10 +243,10 @@ class TestDispatcher(unittest.TestCase):
         mock_session_service = MagicMock(spec=SessionService)
         mock_session_service.settings = self.settings
         mock_session_service.current_session_id = "test_session"
-        mock_session_service.project_root = self.project_root  # Set attribute
+        mock_session_service.project_root = self.project_root
         _dispatch_run(args, mock_session_service)
-        mock_session_service.decrement_all_references_ttl_in_session.assert_not_called()
-        mock_session_service.expire_old_tool_responses.assert_not_called()
+        mock_reference_service.decrement_all_references_ttl_in_session.assert_not_called()
+        mock_turn_service.expire_old_tool_responses.assert_not_called()
         mock_dry_run.assert_called_once()
 
 

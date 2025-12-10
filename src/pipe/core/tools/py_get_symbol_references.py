@@ -1,9 +1,27 @@
 import ast
 import os
-from typing import Any
+from typing import TypedDict
 
 
-def py_get_symbol_references(file_path: str, symbol_name: str) -> dict[str, Any]:
+class SymbolReference(TypedDict):
+    """A reference to a symbol in code."""
+
+    lineno: int
+    line_content: str
+
+
+class SymbolReferencesResult(TypedDict, total=False):
+    """Result from finding symbol references."""
+
+    references: list[SymbolReference]
+    symbol_name: str
+    reference_count: int
+    error: str
+
+
+def py_get_symbol_references(
+    file_path: str, symbol_name: str
+) -> SymbolReferencesResult:
     """
     Searches for references to a specific symbol within the given Python file.
     """
@@ -14,7 +32,7 @@ def py_get_symbol_references(file_path: str, symbol_name: str) -> dict[str, Any]
         source_code = f.read()
 
     tree = ast.parse(source_code)
-    references: list[dict[str, Any]] = []
+    references: list[SymbolReference] = []
     symbol_found = False
 
     # First, check if the symbol exists in the file and determine its definition range.

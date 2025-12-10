@@ -38,6 +38,25 @@ class FileIndexRepository:
     def _get_gitignore_spec(self) -> PathSpec:
         gitignore_path = os.path.join(self.base_path, self.GITIGNORE_FILE)
         patterns = []
+
+        # Always exclude common patterns
+        default_patterns = [
+            "__pycache__/",
+            "*.pyc",
+            "*.pyo",
+            "*.pyd",
+            ".Python",
+            "*.so",
+            "*.egg-info/",
+            ".git/",
+            ".venv/",
+            "venv/",
+            "node_modules/",
+            ".DS_Store",
+        ]
+        patterns.extend(default_patterns)
+
+        # Add patterns from .gitignore if it exists
         if os.path.exists(gitignore_path):
             with open(gitignore_path, encoding="utf-8") as f:
                 for line in f:

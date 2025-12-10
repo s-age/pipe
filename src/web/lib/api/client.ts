@@ -52,7 +52,17 @@ const request = async <T>(
     return {} as T
   }
 
-  return response.json() as Promise<T>
+  const json = await response.json()
+
+  // If response follows new API format {success, data, message}, extract data
+  if (json && typeof json === 'object' && 'data' in json) {
+    // Return the data field directly, even if it's null
+    // The caller should handle null/undefined cases
+    return json.data as T
+  }
+
+  // For responses without 'data' field, return the whole response
+  return json as T
 }
 
 export const client = {

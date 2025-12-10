@@ -1,0 +1,20 @@
+# Dockerfile for Storybook
+FROM node:24
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY src/web/package.json src/web/package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application
+COPY src/web .
+
+# Expose port
+EXPOSE 6006
+
+# Command to run Storybook
+CMD ["npm", "run", "storybook"]

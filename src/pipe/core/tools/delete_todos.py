@@ -12,7 +12,7 @@ def delete_todos(session_service=None, session_id=None) -> dict[str, str]:
         from pipe.core.domains.todos import delete_todos_in_session
 
         delete_todos_in_session(session)
-        session_service._save_session(session)
+        session_service.repository.save(session)
         return {"message": f"Todos successfully deleted from session {session_id}."}
     except Exception as e:
         return {"error": f"Failed to delete todos from session: {e}"}

@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react'
 import type { FormMethods } from '@/components/organisms/Form'
 import { useSessionMetaActions } from '@/components/organisms/SessionMeta/hooks/useSessionMetaActions'
 import type { SessionMetaFormInputs } from '@/components/organisms/SessionMeta/schema'
-import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
+import type { EditSessionMetaRequest } from '@/lib/api/meta/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseSessionMetaHandlersProperties = {
@@ -24,12 +24,12 @@ export const useSessionMetaHandlers = ({
 
   const onSubmit = useCallback(
     (data: SessionMetaFormInputs) => {
-      if (!sessionDetail.session_id) return
+      if (!sessionDetail.sessionId) return
 
       // roles, artifacts, references, procedure はすべて既に正しい形式なので変換不要
-      void handleMetaSave(sessionDetail.session_id, data as EditSessionMetaRequest)
+      void handleMetaSave(sessionDetail.sessionId, data as EditSessionMetaRequest)
     },
-    [sessionDetail.session_id, handleMetaSave]
+    [sessionDetail.sessionId, handleMetaSave]
   )
 
   const [isSubmitting, setIsSubmitting] = useState(false)

@@ -77,7 +77,7 @@ export const CompressorForm = ({
             className={styles.fieldsetContainer}
           >
             <InputText
-              name="targetLength"
+              name="target_length"
               type="number"
               placeholder="1000"
               register={formContext?.register}
@@ -88,7 +88,7 @@ export const CompressorForm = ({
               <div className={styles.label}>Start Turn</div>
               <select
                 className={styles.input}
-                {...(formContext?.register ? formContext.register('startTurn') : {})}
+                {...(formContext?.register ? formContext.register('start_turn') : {})}
                 value={String(startLocal)}
                 onChange={handleStartChange}
               >
@@ -100,7 +100,7 @@ export const CompressorForm = ({
               <div className={styles.label}>End Turn</div>
               <select
                 className={styles.input}
-                {...(formContext?.register ? formContext.register('endTurn') : {})}
+                {...(formContext?.register ? formContext.register('end_turn') : {})}
                 value={String(endLocal)}
                 onChange={handleEndChange}
               >

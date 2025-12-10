@@ -1,13 +1,28 @@
 import fnmatch
 import os
-from typing import Any
+from typing import TypedDict
+
+
+class DirectoryListResult(TypedDict, total=False):
+    """Result from listing a directory."""
+
+    files: list[str]
+    directories: list[str]
+    error: str
+
+
+class FileFilteringOptions(TypedDict, total=False):
+    """Options for filtering files in directory listing."""
+
+    extensions: list[str]
+    patterns: list[str]
 
 
 def list_directory(
     path: str,
-    file_filtering_options: dict[str, Any] | None = None,
+    file_filtering_options: FileFilteringOptions | None = None,
     ignore: list[str] | None = None,
-) -> dict[str, Any]:
+) -> DirectoryListResult:
     """
     Lists the names of files and subdirectories directly within a specified directory.
     """

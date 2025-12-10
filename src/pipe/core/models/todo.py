@@ -1,5 +1,3 @@
-from typing import Any
-
 from pydantic import BaseModel, model_validator
 
 
@@ -10,7 +8,7 @@ class TodoItem(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _map_item_to_title(cls, data: Any) -> Any:
-        if isinstance(data, dict) and "item" in data:
+    def _map_item_to_title(cls, data: dict[str, str | bool]) -> dict[str, str | bool]:
+        if "item" in data:
             data["title"] = data.pop("item")
         return data

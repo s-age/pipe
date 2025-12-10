@@ -17,7 +17,7 @@ export const useReferenceListHandlers = (
 } => {
   const [references, setReferences] = useState(sessionDetail.references || [])
   const { handleUpdateReference } = useReferenceListActions(
-    sessionDetail.session_id || null
+    sessionDetail.sessionId || null
   )
 
   const existsValue = useMemo(
@@ -42,7 +42,7 @@ export const useReferenceListHandlers = (
 
       // If there's no session yet, write references locally into the form
       // and component state so they are included in the final submit payload.
-      if (!sessionDetail.session_id) {
+      if (!sessionDetail.sessionId) {
         formContext.setValue('references', newReferences)
         // wrote references locally
         setReferences(newReferences)

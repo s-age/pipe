@@ -10,28 +10,8 @@ import { TodoList } from '@/components/organisms/TodoList'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useSessionMetaHandlers } from './hooks/useSessionMetaHandlers'
-// eslint-disable-next-line import/order
 import { useSessionMetaLifecycle } from './hooks/useSessionMetaLifecycle'
-
-type SessionMetaFormInputs = {
-  purpose: string | null
-  background: string | null
-  roles: string[] | null
-  procedure: string | null
-  references: {
-    path: string
-    ttl: number | null
-    persist: boolean
-    disabled: boolean
-  }[]
-  artifacts: string[] | null
-  hyperparameters: {
-    temperature: number | null
-    top_p: number | null
-    top_k: number | null
-  } | null
-  multi_step_reasoning: boolean
-}
+import type { SessionMetaFormInputs } from './schema'
 import { sessionMetaSchema } from './schema'
 import {
   metaColumn,
@@ -72,7 +52,7 @@ export const SessionMeta = ({
         <input
           type="hidden"
           id="current-session-id"
-          value={sessionDetail?.session_id ?? ''}
+          value={sessionDetail?.sessionId ?? ''}
         />
         <section className={sessionMetaSection}>
           <div className={sessionMetaView}>
@@ -80,15 +60,15 @@ export const SessionMeta = ({
           </div>
 
           <div className={sessionMetaView}>
-            <ReferenceList sessionDetail={sessionDetail} />
+            <ReferenceList sessionDetail={sessionDetail} refreshSessions={onRefresh} />
 
             <HyperParameters sessionDetail={sessionDetail} />
 
             <MultiStepReasoning
               multiStepReasoningEnabled={
-                sessionDetail?.multi_step_reasoning_enabled ?? false
+                sessionDetail?.multiStepReasoningEnabled ?? false
               }
-              currentSessionId={sessionDetail.session_id ?? null}
+              currentSessionId={sessionDetail.sessionId ?? null}
             />
 
             <TodoList sessionDetail={sessionDetail} />

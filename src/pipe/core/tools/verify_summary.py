@@ -1,7 +1,6 @@
-from typing import Any
+import json
 
-from pipe.core.agents.gemini_api import call_gemini_api
-from pipe.core.agents.gemini_cli import call_gemini_cli
+from pipe.core.agents.takt_agent import TaktAgent
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import CompressedHistoryTurn
 
@@ -14,21 +13,22 @@ def verify_summary(
     settings: Settings,
     project_root: str,
     session_service=None,
-) -> dict[str, Any]:
+) -> str:
     """
     Verifies a summary by creating a new temporary session for a sub-agent,
     and returns the verification status and the ID of the temporary session.
+
+    Returns:
+        JSON string containing verification result
     """
     if not session_service:
-        return {"error": "This tool requires a session_service."}
-
-    api_mode = settings.api_mode
+        return json.dumps({"error": "This tool requires a session_service."})
 
     try:
         # === Step 1: Prepare the data for the verifier agent ===
         original_session_data = session_service.get_session(session_id)
         if not original_session_data:
-            return {"error": f"Session with ID {session_id} not found."}
+            return json.dumps({"error": f"Session with ID {session_id} not found."})
 
         original_turns = original_session_data.turns
         temp_turns = list(original_turns)
@@ -48,11 +48,14 @@ def verify_summary(
             and 0 <= end_index < len(temp_turns)
             and start_index <= end_index
         ):
-            return {
-                "error": (
-                    "Turn indices are out of range for creating verification context."
-                )
-            }
+            return json.dumps(
+                {
+                    "error": (
+                        "Turn indices are out of range for creating "
+                        "verification context."
+                    )
+                }
+            )
 
         del temp_turns[start_index : end_index + 1]
         temp_turns.insert(start_index, summary_turn)
@@ -72,41 +75,27 @@ def verify_summary(
         verifier_session = session_service.create_new_session(
             purpose=verifier_purpose,
             background=verifier_background,
-            roles=["roles/verifier.md"],  # Using a dedicated verifier role
+            roles=["roles/verifier.md"],
             multi_step_reasoning_enabled=True,
         )
         verifier_session_id = verifier_session.session_id
 
         # Add the prepared history to the new verifier session
-        # Insert a user_task turn instructing the agent to evaluate the summary
-        # and context per roles/verifier.md
-        from pipe.core.models.turn import UserTaskTurn
-
-        evaluation_instruction = (
-            "Evaluate the summary and the surrounding flow according to the rules "
-            "written in roles/verifier.md. "
-            "Follow the output format (start with Approved: or Rejected:. If "
-            "Rejected, include the checklist and reasons). "
-            "Output the result."
-        )
-        temp_turns.append(
-            UserTaskTurn(
-                type="user_task",
-                instruction=evaluation_instruction,
-                timestamp=get_current_timestamp(),
-            )
-        )
         verifier_session.turns = temp_turns
         session_service.repository.save(verifier_session)
 
-        # === Step 3: Call the verifier agent ===
+        # === Step 3: Call the verifier agent using TaktAgent ===
         approved_text = "Please approve the summary."
         rejected_text = "Verification failed. Please modify the summary policy."
         verifier_instruction = (
             "## TASK\n"
-            "You are a verification agent. Your task is to review the provided "
-            "conversation history and generate a final, formatted response based on "
-            "your verification.\n\n"
+            f"You are a verification agent. Your task is to verify the summary for "
+            f"session {session_id} (turns {start_turn} to {end_turn}).\n\n"
+            "You are reviewing a conversation history where a summary has been "
+            "inserted. The summary marked as 'compressed_history' replaces the "
+            f"original turns {start_turn} through {end_turn}.\n\n"
+            "Judge if this summary is a good replacement (i.e., preserves "
+            "context, flows logically).\n\n"
             "## STEP-BY-STEP INSTRUCTIONS\n"
             "1.  **Analyze**: Read the entire conversation history provided. A "
             "part of it is replaced by a summary marked as 'compressed_history'. "
@@ -128,49 +117,73 @@ def verify_summary(
             "[Explain the reason for rejection here]"
         )
 
+        takt_agent = TaktAgent(project_root)
+        try:
+            stdout, stderr = takt_agent.run_existing_session(
+                session_id=verifier_session_id,
+                instruction=verifier_instruction,
+            )
+            # Log the output for debugging
+            if stderr:
+                print(f"TaktAgent stderr: {stderr}", flush=True)
+        except Exception as agent_error:
+            import subprocess
+            import traceback
+
+            # Extract stderr from CalledProcessError if available
+            stderr_output = ""
+            if isinstance(agent_error, subprocess.CalledProcessError):
+                stderr_output = agent_error.stderr or ""
+                stdout_output = agent_error.stdout or ""
+                error_detail = (
+                    f"TaktAgent execution failed with exit code "
+                    f"{agent_error.returncode}\n"
+                    f"STDOUT:\n{stdout_output}\n"
+                    f"STDERR:\n{stderr_output}"
+                )
+            else:
+                error_detail = (
+                    f"TaktAgent execution failed: {agent_error}\n"
+                    f"{traceback.format_exc()}"
+                )
+
+            error_result = {"error": error_detail}
+            return json.dumps(error_result, ensure_ascii=False, indent=2)
+
+        # === Step 4: Get the response from verifier session ===
         verifier_session_data = session_service.get_session(verifier_session_id)
-        verifier_session_data.turns.append(
-            {"type": "user_task", "instruction": verifier_instruction}
-        )
+        response_text = ""
+        if verifier_session_data and verifier_session_data.turns:
+            # Find the last model_response turn
+            for turn in reversed(verifier_session_data.turns):
+                if turn.type == "model_response":
+                    response_text = turn.content.strip()
+                    break
 
-        if api_mode == "gemini-api":
-            # Set the current session to the verifier session
-            original_current_session = session_service.current_session
-            session_service.current_session = verifier_session
-            try:
-                from pipe.core.services.prompt_service import PromptService
+        # Check if we got a response
+        if not response_text:
+            turn_count = (
+                len(verifier_session_data.turns) if verifier_session_data else 0
+            )
+            error_result = {
+                "error": (
+                    f"No model_response found in verifier session "
+                    f"{verifier_session_id}. "
+                    f"Total turns: {turn_count}"
+                )
+            }
+            return json.dumps(error_result, ensure_ascii=False, indent=2)
 
-                prompt_service = PromptService(project_root, settings)
-                response_stream = call_gemini_api(session_service, prompt_service)
-                response_text = ""
-                for chunk in response_stream:
-                    response_text += chunk.text
-                response_text = response_text.strip()
-            finally:
-                session_service.current_session = original_current_session
-        elif api_mode == "gemini-cli":
-            # Set the current session to the verifier session
-            original_current_session = session_service.current_session
-            session_service.current_session = verifier_session
-            try:
-                response_text = call_gemini_cli(session_service).strip()
-            finally:
-                session_service.current_session = original_current_session
-        else:
-            raise ValueError(f"Unsupported api_mode: {api_mode}")
-
-        # === Step 4: Process result and construct the final turn content ===
+        # === Step 5: Process result and construct the final turn content ===
         status = "rejected"
         final_turn_content = ""
-        if response_text.strip().startswith("Approved:"):
+        if response_text.startswith("Approved:"):
             status = "approved"
             final_turn_content = (
-                f"{response_text.strip()}\n\n## SUMMARY CONTENTS\n\n{summary_text}"
+                f"{response_text}\n\n## SUMMARY CONTENTS\n\n{summary_text}"
             )
-        elif response_text.strip().startswith("Rejected:"):
-            # Extract reason if present
-
-            final_turn_content = f"{response_text.strip()}"
+        elif response_text.startswith("Rejected:"):
+            final_turn_content = response_text
         else:
             final_turn_content = (
                 "Rejected: Verification failed. Please modify the summary policy.\n\n"
@@ -181,7 +194,6 @@ def verify_summary(
 
         # Create the turn with the complete content
         from pipe.core.models.turn import ModelResponseTurn
-        from pipe.core.utils.datetime import get_current_timestamp
 
         final_turn = ModelResponseTurn(
             type="model_response",
@@ -189,15 +201,16 @@ def verify_summary(
             timestamp=get_current_timestamp(session_service.timezone_obj),
         )
 
-        # Add to the verifier session for logging
-        session_service.add_turn_to_session(verifier_session_id, final_turn)
+        # Add the result to the original session's pool so the calling agent can see it
+        from pipe.core.services.session_turn_service import SessionTurnService
 
-        # Also add the result to the original session's pool so the calling agent
-        # can see it.
-        session_service.add_to_pool(session_id, final_turn)
+        session_turn_service = SessionTurnService(
+            session_service.settings, session_service.repository
+        )
+        session_turn_service.add_to_pool(session_id, final_turn)
 
-        # === Step 5: Return the result and the verifier session ID ===
-        return {
+        # === Step 6: Return the result and the verifier session ID ===
+        result = {
             "status": status,
             "verifier_session_id": verifier_session_id,
             "message": (
@@ -205,13 +218,15 @@ def verify_summary(
                 f"Status: {status}."
             ),
         }
+        return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:
         import traceback
 
-        return {
+        error_result = {
             "error": (
                 "An unexpected error occurred during summary verification: "
                 f"{e}\n{traceback.format_exc()}"
             )
         }
+        return json.dumps(error_result, ensure_ascii=False, indent=2)

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import json
 import os
 import zoneinfo
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -10,13 +8,22 @@ from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.todo import TodoItem
-from pipe.core.models.turn import Turn
-from pipe.core.utils.datetime import get_current_timestamp
-from pipe.core.utils.file import (
-    FileLock,
-    delete_file,
-)
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
+
+
+class SessionMetaUpdate(BaseModel):
+    """Session metadata update DTO.
+
+    All fields are optional to support partial updates (PATCH).
+    Only provided fields will be updated.
+    """
+
+    purpose: str | None = None
+    background: str | None = None
+    roles: list[str] | None = None
+    multi_step_reasoning_enabled: bool | None = None
+    artifacts: list[str] | None = None
+    procedure: str | None = None
 
 
 class Session(BaseModel):
@@ -30,25 +37,24 @@ class Session(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _preprocess_data(cls, data: Any) -> Any:
-        if isinstance(data, dict):
-            # Preprocess todos
-            if "todos" in data and data["todos"] is not None:
-                processed_todos = []
-                for item in data["todos"]:
-                    if isinstance(item, str):
-                        processed_todos.append(TodoItem(title=item))
-                    elif isinstance(item, dict):
-                        processed_todos.append(TodoItem(**item))
-                    else:
-                        processed_todos.append(item)
-                data["todos"] = processed_todos
+    def _preprocess_data(cls, data: dict[str, Any]) -> dict[str, Any]:
+        # Preprocess todos
+        if "todos" in data and data["todos"] is not None:
+            processed_todos = []
+            for item in data["todos"]:
+                if isinstance(item, str):
+                    processed_todos.append(TodoItem(title=item))
+                elif isinstance(item, dict):
+                    processed_todos.append(TodoItem(**item))
+                else:
+                    processed_todos.append(item)
+            data["todos"] = processed_todos
 
-            # Preprocess hyperparameters
-            if "hyperparameters" in data and data["hyperparameters"] is not None:
-                if isinstance(data["hyperparameters"], dict):
-                    data["hyperparameters"] = Hyperparameters(**data["hyperparameters"])
-                # If it's already Hyperparameters, leave it as is
+        # Preprocess hyperparameters
+        if "hyperparameters" in data and data["hyperparameters"] is not None:
+            if isinstance(data["hyperparameters"], dict):
+                data["hyperparameters"] = Hyperparameters(**data["hyperparameters"])
+            # If it's already Hyperparameters, leave it as is
 
         return data
 
@@ -126,9 +132,9 @@ class Session(BaseModel):
         cls.reference_ttl = settings.reference_ttl
 
         default_hyperparameters_dict = {
-            "temperature": settings.parameters.temperature.model_dump(),
-            "top_p": settings.parameters.top_p.model_dump(),
-            "top_k": settings.parameters.top_k.model_dump(),
+            "temperature": settings.parameters.temperature.value,
+            "top_p": settings.parameters.top_p.value,
+            "top_k": settings.parameters.top_k.value,
         }
         cls.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
 
@@ -143,55 +149,6 @@ class Session(BaseModel):
 
     def _get_lock_path(self) -> str:
         return f"{self._get_session_path()}.lock"
-
-    def destroy(self):
-        """Deletes the session's JSON file and lock file."""
-        session_path = self._get_session_path()
-        lock_path = self._get_lock_path()
-        with FileLock(lock_path):
-            delete_file(session_path)
-
-    def fork(self, fork_index: int, timezone_obj: zoneinfo.ZoneInfo) -> Session:
-        """Creates a new, in-memory Session object by forking this one."""
-        from pipe.core.collections.turns import TurnCollection
-
-        timestamp = get_current_timestamp(timezone_obj)
-        forked_purpose = f"Fork of: {self.purpose}"
-        forked_turns = TurnCollection(self.turns[: fork_index + 1])
-
-        identity_str = json.dumps(
-            {
-                "purpose": forked_purpose,
-                "original_id": self.session_id,
-                "fork_at_turn": fork_index,
-                "timestamp": timestamp,
-            },
-            sort_keys=True,
-        )
-        new_session_id_suffix = hashlib.sha256(identity_str.encode("utf-8")).hexdigest()
-
-        parent_path = (
-            self.session_id.rsplit("/", 1)[0] if "/" in self.session_id else None
-        )
-        new_session_id = (
-            f"{parent_path}/{new_session_id_suffix}"
-            if parent_path
-            else new_session_id_suffix
-        )
-
-        return Session(
-            session_id=new_session_id,
-            created_at=timestamp,
-            purpose=forked_purpose,
-            background=self.background,
-            roles=self.roles,
-            multi_step_reasoning_enabled=self.multi_step_reasoning_enabled,
-            hyperparameters=self.hyperparameters,
-            references=self.references,
-            artifacts=self.artifacts,
-            procedure=self.procedure,
-            turns=forked_turns,
-        )
 
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the session suitable for templates."""
@@ -213,48 +170,3 @@ class Session(BaseModel):
             "pools": [p.model_dump() for p in self.pools],
             "todos": [t.model_dump() for t in self.todos] if self.todos else [],
         }
-
-    def add_turn(self, turn_data: Turn):
-        """Adds a turn to the session's history."""
-        self.turns.append(turn_data)
-
-    def edit_turn(self, turn_index: int, new_data: dict):
-        """Edits a specific turn in the session's history."""
-        from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
-
-        if not (0 <= turn_index < len(self.turns)):
-            raise IndexError("Turn index out of range.")
-
-        original_turn = self.turns[turn_index]
-        if original_turn.type not in ["user_task", "model_response"]:
-            raise ValueError(
-                f"Editing turns of type '{original_turn.type}' is not allowed."
-            )
-
-        turn_as_dict = original_turn.model_dump()
-        turn_as_dict.update(new_data)
-
-        if original_turn.type == "user_task":
-            self.turns[turn_index] = UserTaskTurn(**turn_as_dict)
-        elif original_turn.type == "model_response":
-            self.turns[turn_index] = ModelResponseTurn(**turn_as_dict)
-
-    def delete_turn(self, turn_index: int):
-        """Deletes a specific turn from the session's history."""
-        if not (0 <= turn_index < len(self.turns)):
-            raise IndexError("Turn index out of range.")
-        del self.turns[turn_index]
-
-    def merge_pool(self):
-        """Merges the turn pool into the main history."""
-        from pipe.core.collections.turns import TurnCollection
-
-        if self.pools:
-            self.turns.extend(self.pools)
-            self.pools = TurnCollection()
-
-    def edit_meta(self, new_meta_data: dict):
-        """Edits the session's metadata."""
-        for key, value in new_meta_data.items():
-            if hasattr(self, key):
-                setattr(self, key, value)

@@ -22,16 +22,16 @@ export const useSessionItemHandlers = ({
     async (event: React.MouseEvent<HTMLAnchorElement>): Promise<void> => {
       event.preventDefault()
 
-      if (typeof session.session_id !== 'string') {
+      if (typeof session.sessionId !== 'string') {
         // Actions hook will handle toast for invalid session ID
         return
       }
 
-      const sessionDetail = await loadSession(session.session_id)
-      selectSession(session.session_id, sessionDetail)
-      navigate(`/session/${session.session_id}`, { replace: true })
+      const sessionDetail = await loadSession(session.sessionId)
+      selectSession(session.sessionId, sessionDetail)
+      navigate(`/session/${session.sessionId}`, { replace: true })
     },
-    [selectSession, session.session_id, loadSession, navigate]
+    [selectSession, session.sessionId, loadSession, navigate]
   )
 
   return { onClick }

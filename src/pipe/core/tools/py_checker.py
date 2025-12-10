@@ -1,9 +1,28 @@
 import os
 import subprocess
-from typing import Any
+from typing import TypedDict
 
 
-def py_checker(project_root: str) -> dict[str, Any]:
+class CheckStepResult(TypedDict):
+    """Result from a single check step."""
+
+    stdout: str
+    stderr: str
+    exit_code: int
+    success: bool
+
+
+class PyCheckerResult(TypedDict, total=False):
+    """Result from running Python code quality checks."""
+
+    ruff_check: CheckStepResult
+    ruff_format: CheckStepResult
+    mypy: CheckStepResult
+    overall_success: bool
+    error: str
+
+
+def py_checker(project_root: str) -> PyCheckerResult:
     """
     Runs a sequence of Python code quality checks and fixes:
     1. ruff check --fix (lint and auto-fix)
@@ -29,7 +48,7 @@ def py_checker(project_root: str) -> dict[str, Any]:
         if not os.path.isdir(abs_project_root):
             return {"error": f"Project root is not a directory: {project_root}"}
 
-        results: dict[str, Any] = {}
+        results: PyCheckerResult = {}
 
         # Step 1: ruff check --fix
         try:
@@ -92,8 +111,10 @@ def py_checker(project_root: str) -> dict[str, Any]:
             return {"error": f"Error running mypy: {str(e)}"}
 
         # Overall success
-        all_success = all(
-            step["success"] for step in results.values() if "success" in step
+        all_success = (
+            results.get("ruff_check", {}).get("success", False)
+            and results.get("ruff_format", {}).get("success", False)
+            and results.get("mypy", {}).get("success", False)
         )
         results["overall_success"] = all_success
 

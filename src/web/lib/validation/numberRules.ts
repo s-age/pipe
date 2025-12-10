@@ -18,7 +18,7 @@ import { z } from 'zod'
  * ```ts
  * const schema = z.object({
  *   temperature: rangedNumber('Temperature', 0, 2),
- *   top_p: rangedNumber('Top P', 0, 1)
+ *   topP: rangedNumber('Top P', 0, 1)
  * })
  * ```
  */
@@ -43,7 +43,7 @@ export const rangedNumber = (
  * ```ts
  * const schema = z.object({
  *   temperature: optionalNumber(0, 2).default(0.7),
- *   top_k: optionalNumber(1, 50).default(5)
+ *   topK: optionalNumber(1, 50).default(5)
  * })
  * ```
  */

@@ -22,7 +22,7 @@ export const SessionItem = ({
   onSelect,
   updateLabel = 'Updated At'
 }: Properties): JSX.Element => {
-  const sessionId = session.session_id || 'unknown'
+  const sessionId = session.sessionId || 'unknown'
   const sessionName =
     'purpose' in session
       ? session.purpose
@@ -30,12 +30,11 @@ export const SessionItem = ({
   const displayDate =
     updateLabel === 'Deleted At'
       ? 'children' in session
-        ? (session.overview?.deleted_at as string) || ''
-        : session.deleted_at || ''
+        ? (session.overview?.deletedAt as string) || ''
+        : session.deletedAt || ''
       : 'children' in session
-        ? (session.overview?.last_updated_at as string) || ''
-        : session.last_updated_at || ''
-  console.log({ displayDate, session })
+        ? (session.overview?.lastUpdatedAt as string) || ''
+        : session.lastUpdatedAt || ''
 
   const formatDate = (date: Date): string => {
     const year = date.getFullYear()

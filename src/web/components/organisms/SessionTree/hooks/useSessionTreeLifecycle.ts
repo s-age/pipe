@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 
 type UseSessionTreeLifecycleProperties = {
   currentSessionId: string | null
-  sessions: Array<{ session_id: string }>
+  sessions: Array<{ sessionId: string }>
   sessionReferences: React.MutableRefObject<Map<string, HTMLLIElement>>
 }
 

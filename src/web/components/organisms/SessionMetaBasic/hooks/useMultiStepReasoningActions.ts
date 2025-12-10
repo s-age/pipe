@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 
-import { editMultiStepReasoning } from '@/lib/api/session/editMultiStepReasoning'
-import type { EditMultiStepReasoningRequest } from '@/lib/api/session/editMultiStepReasoning'
+import { editMultiStepReasoning } from '@/lib/api/meta/editMultiStepReasoning'
+import type { EditMultiStepReasoningRequest } from '@/lib/api/meta/editMultiStepReasoning'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { addToast } from '@/stores/useToastStore'
 

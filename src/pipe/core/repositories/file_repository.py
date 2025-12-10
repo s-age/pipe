@@ -5,7 +5,6 @@ Base repository for file-based persistence.
 import fcntl
 import json
 import os
-import sys
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -34,12 +33,9 @@ def file_lock(lock_path: str, timeout: float = 10.0) -> Generator[None, None, No
     finally:
         fcntl.flock(lock_file_descriptor, fcntl.LOCK_UN)
         lock_file_descriptor.close()
-        try:
-            os.remove(lock_path)
-        except OSError as e:
-            print(
-                f"Warning: Could not remove lock file {lock_path}: {e}", file=sys.stderr
-            )
+        # Note: Lock file is intentionally NOT removed to avoid race conditions.
+        # Removing it would cause the flock to operate on a different inode,
+        # allowing multiple processes to acquire locks simultaneously.
 
 
 class FileRepository:

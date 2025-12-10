@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 
-import { deleteTodos } from '@/lib/api/session/deleteTodos'
-import { editTodos } from '@/lib/api/session/editTodos'
+import { deleteTodos } from '@/lib/api/meta/deleteTodos'
+import { editTodos } from '@/lib/api/meta/editTodos'
 import { addToast } from '@/stores/useToastStore'
 import type { Todo } from '@/types/todo'
 

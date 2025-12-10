@@ -39,7 +39,7 @@ export const StartSessionFormInner = ({
   // react-hook-form internal `formState.isSubmitting` which may not update
   // when native form submission is prevented or when navigation happens
   // quickly after submit. The hook will manage a local `isSubmitting` flag.
-  const { handleCancel, handleCreateClick, isSubmitting } =
+  const { handleCancel, handleCreateClick, dummyHandler, isSubmitting } =
     useStartSessionFormHandlers()
 
   const formContext = useOptionalFormContext()
@@ -85,7 +85,7 @@ export const StartSessionFormInner = ({
           />
         </Fieldset>
 
-        <ReferenceList sessionDetail={sessionDetail} />
+        <ReferenceList sessionDetail={sessionDetail} refreshSessions={dummyHandler} />
 
         <HyperParameters sessionDetail={sessionDetail} />
 

@@ -6,15 +6,15 @@ import { addToast } from '@/stores/useToastStore'
 import type { StartSessionFormInputs } from '../schema'
 
 export type UseStartSessionFormActionsReturn = {
-  startSessionAction: (data: StartSessionFormInputs) => Promise<{ session_id: string }>
+  startSessionAction: (data: StartSessionFormInputs) => Promise<{ sessionId: string }>
 }
 
 export const useStartSessionFormActions = (): UseStartSessionFormActionsReturn => {
   const startSessionAction = useCallback(
-    async (data: StartSessionFormInputs): Promise<{ session_id: string }> => {
+    async (data: StartSessionFormInputs): Promise<{ sessionId: string }> => {
       try {
         const result = await startSession(data)
-        if (result.session_id) {
+        if (result.sessionId) {
           addToast({ status: 'success', title: 'Session created successfully' })
 
           return result

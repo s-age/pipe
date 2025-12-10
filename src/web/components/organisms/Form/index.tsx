@@ -81,6 +81,7 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
         } catch (error) {
           // swallow errors from user-provided handlers to avoid breaking flow
           // but surface debug info in development
+          // eslint-disable-next-line no-console
           if (process.env.NODE_ENV !== 'production') console.error(error)
         }
       }

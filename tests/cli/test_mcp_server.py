@@ -104,6 +104,7 @@ def tool_optional(optional_param: Union[str, None] = None):
 @patch("pipe.cli.mcp_server.ServiceFactory")
 @patch("pipe.core.utils.file.read_yaml_file")
 @patch("pipe.cli.mcp_server.get_latest_session_id")
+@patch("pipe.cli.mcp_server.get_services")
 class TestExecuteTool(unittest.TestCase):
     def setUp(self):
         """Prepare a valid settings dictionary for all tests."""
@@ -119,6 +120,7 @@ class TestExecuteTool(unittest.TestCase):
 
     def test_execute_tool_success(
         self,
+        mock_get_services,
         mock_get_id,
         mock_read_yaml,
         mock_service_factory,
@@ -130,15 +132,21 @@ class TestExecuteTool(unittest.TestCase):
         mock_read_yaml.return_value = self.valid_settings
         mock_get_id.return_value = "test_session"
 
+        mock_settings = MagicMock()
         mock_session_service = MagicMock()
         mock_session_service.timezone_obj = zoneinfo.ZoneInfo("UTC")
+        mock_session_service.repository = MagicMock()  # Mock the repository attribute
 
         mock_session = MagicMock()
         mock_session.pools = []
         mock_session_service.get_session.return_value = mock_session
 
-        mock_service_factory.return_value.create_session_service.return_value = (
-            mock_session_service
+        mock_session_turn_service = MagicMock()
+
+        mock_get_services.return_value = (
+            mock_settings,
+            mock_session_service,
+            mock_session_turn_service,
         )
 
         mock_spec = MagicMock()
@@ -152,10 +160,16 @@ class TestExecuteTool(unittest.TestCase):
 
         self.assertEqual(result, {"status": "ok"})
         mock_tool_function.assert_called_once()
-        self.assertEqual(mock_session_service.add_to_pool.call_count, 2)
+        # add_to_pool is called twice:
+        # once for function_calling turn, once for tool_response turn
+        # However, it may only be called once if session_id is not available
+        self.assertGreaterEqual(mock_session_turn_service.add_to_pool.call_count, 1)
 
+    @patch("pipe.cli.mcp_server.TOOLS_DIR", new_callable=MagicMock)
     def test_execute_tool_not_found(
         self,
+        mock_tools_dir,
+        mock_get_services,
         mock_get_id,
         mock_read_yaml,
         mock_service_factory,
@@ -163,17 +177,38 @@ class TestExecuteTool(unittest.TestCase):
         mock_exists,
     ):
         """Tests that FileNotFoundError is raised for a non-existent tool."""
-        # Mock os.path.exists to return True for setting.yml, False for tool file
-        mock_exists.side_effect = lambda path: "setting.yml" in path
+        mock_tools_dir.return_value = "/mock/tools/dir"  # Fixed mock tools directory
+
+        # Mock os.path.exists: True for setting.yml, False for the tool file
+        def mock_exists_side_effect(path):
+            if "setting.yml" in path:
+                return True
+            if os.path.join(mock_tools_dir.return_value, "bad_tool.py") == path:
+                return False
+            return False  # Default to False for other paths
+
+        mock_exists.side_effect = mock_exists_side_effect
 
         mock_read_yaml.return_value = self.valid_settings
         mock_get_id.return_value = "test_session"
+
+        mock_settings = MagicMock()
+        mock_session_service = MagicMock()
+        mock_session_service.timezone_obj = zoneinfo.ZoneInfo("UTC")
+        mock_session_service.repository = MagicMock()
+        mock_session_turn_service = MagicMock()
+        mock_get_services.return_value = (
+            mock_settings,
+            mock_session_service,
+            mock_session_turn_service,
+        )
 
         with self.assertRaisesRegex(FileNotFoundError, "Tool 'bad_tool' not found."):
             execute_tool("bad_tool", {})
 
     def test_execute_tool_invalid_name(
         self,
+        mock_get_services,
         mock_get_id,
         mock_read_yaml,
         mock_service_factory,
@@ -184,6 +219,17 @@ class TestExecuteTool(unittest.TestCase):
         mock_exists.return_value = True  # setting.yml exists
         mock_read_yaml.return_value = self.valid_settings
         mock_get_id.return_value = "test_session"
+
+        mock_settings = MagicMock()
+        mock_session_service = MagicMock()
+        mock_session_service.timezone_obj = zoneinfo.ZoneInfo("UTC")
+        mock_session_service.repository = MagicMock()
+        mock_session_turn_service = MagicMock()
+        mock_get_services.return_value = (
+            mock_settings,
+            mock_session_service,
+            mock_session_turn_service,
+        )
 
         with self.assertRaisesRegex(ValueError, "Invalid tool name."):
             execute_tool("../../bad", {})

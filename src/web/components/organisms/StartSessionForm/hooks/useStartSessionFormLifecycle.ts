@@ -22,7 +22,7 @@ export const useStartSessionFormLifecycle = ({
       return defaultValuesFromParent as StartSessionFormInputs
 
     return {
-      session_id: '',
+      sessionId: '',
       purpose: '',
       background: '',
       roles: [],
@@ -32,7 +32,7 @@ export const useStartSessionFormLifecycle = ({
       procedure: null,
       instruction: '',
       turns: [],
-      multi_step_reasoning_enabled: false,
+      multiStepReasoningEnabled: false,
       hyperparameters: settings.hyperparameters,
       todos: []
     }

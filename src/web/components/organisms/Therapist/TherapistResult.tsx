@@ -12,14 +12,14 @@ export type TherapistResultProperties = {
   diagnosis: Diagnosis
   isSubmitting: boolean
   selectedDeletions: number[]
-  selectedEdits: { turn: number; new_content: string }[]
+  selectedEdits: { turn: number; newContent: string }[]
   selectedCompressions: { start: number; end: number; reason: string }[]
   handleDeletionChange: (
     turn: number
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleEditChange: (edit: {
     turn: number
-    new_content: string
+    newContent: string
   }) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleApply: () => void
 }
@@ -68,7 +68,7 @@ export const TherapistResult = ({
             <li key={edit.turn}>
               <label>
                 <Checkbox onChange={handleEditChange(edit)} />
-                Turn {edit.turn}: {edit.new_content}
+                Turn {edit.turn}: {edit.newContent}
               </label>
             </li>
           )) || <li>None</li>}
@@ -86,10 +86,10 @@ export const TherapistResult = ({
             </li>
           )) || <li>None</li>}
         </ul>
-        {diagnosis.raw_diagnosis && (
+        {diagnosis.rawDiagnosis && (
           <>
             <Heading level={5}>Raw Diagnosis:</Heading>
-            <pre>{diagnosis.raw_diagnosis}</pre>
+            <pre>{diagnosis.rawDiagnosis}</pre>
           </>
         )}
       </div>

@@ -79,13 +79,13 @@ export const Header = (): JSX.Element => {
               {results.length === 0 ? (
                 <div className={searchNoResults}>No results</div>
               ) : (
-                results.map((r: { session_id: string; title: string }) => (
+                results.map((r: { sessionId: string; title: string }) => (
                   <div
-                    key={r.session_id}
+                    key={r.sessionId}
                     className={searchResultItem}
                     role="button"
                     tabIndex={0}
-                    data-session-id={r.session_id}
+                    data-session-id={r.sessionId}
                     onMouseDown={handleResultPointerDown}
                     onKeyDown={handleResultKeyDown}
                   >

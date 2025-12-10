@@ -4,6 +4,8 @@
 
 Validators provide **reusable validation functions** for custom business rules that are used across multiple request models. They centralize common validation logic.
 
+**Note**: With the new BaseRequest pattern, many validations can be done directly in request models using `@field_validator`. Use this layer only for truly reusable validation logic shared across multiple requests.
+
 ## Responsibilities
 
 1. **Reusable Validation** - Functions used by multiple request models
@@ -11,6 +13,20 @@ Validators provide **reusable validation functions** for custom business rules t
 3. **Clear Errors** - Raise ValueError with descriptive messages
 4. **Pure Functions** - No side effects, only validation
 5. **Independent** - No dependencies on request models
+
+## When to Use
+
+**Use validators when:**
+
+- ✅ Same validation logic is needed in multiple request models
+- ✅ Complex validation that would clutter request models
+- ✅ External resource validation (files, databases, etc.)
+
+**Don't use validators when:**
+
+- ❌ Validation is specific to one request model (use `@field_validator`)
+- ❌ Simple type/format checks (Pydantic handles these)
+- ❌ Business logic (belongs in services)
 
 ## Characteristics
 

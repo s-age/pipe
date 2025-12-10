@@ -1,5 +1,5 @@
-import { editSessionMeta } from '@/lib/api/session/editSessionMeta'
-import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
+import { editSessionMeta } from '@/lib/api/meta/editSessionMeta'
+import type { EditSessionMetaRequest } from '@/lib/api/meta/editSessionMeta'
 import { addToast } from '@/stores/useToastStore'
 
 type UseSessionMetaActionsProperties = {

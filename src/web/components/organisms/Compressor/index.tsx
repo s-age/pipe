@@ -18,7 +18,7 @@ export const Compressor = ({
   sessionDetail,
   onRefresh
 }: CompressorProperties): JSX.Element => {
-  const sessionId = sessionDetail?.session_id ?? ''
+  const sessionId = sessionDetail?.sessionId ?? ''
   const maxTurn = sessionDetail?.turns?.length ?? 0
   const effectiveMax = maxTurn
 
@@ -47,7 +47,7 @@ export const Compressor = ({
 
   return (
     <Form defaultValues={mergedDefaultValues} schema={compressorSchema}>
-      {!compressorSessionId ? (
+      {!compressorSessionId || !summary || summary.startsWith('Rejected:') ? (
         <CompressorForm
           sessionId={sessionId}
           effectiveMax={effectiveMax}

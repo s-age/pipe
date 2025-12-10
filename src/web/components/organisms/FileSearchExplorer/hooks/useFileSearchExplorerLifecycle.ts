@@ -45,7 +45,7 @@ export const useFileSearchExplorerLifecycle = ({
   useEffect((): void => {
     if (debouncedQuery) {
       // Call searchL2 API here
-      void actions.searchL2({ query: debouncedQuery, path: '' }) // Set appropriate path
+      void actions.searchFiles({ query: debouncedQuery, path: '' }) // Set appropriate path
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -10,9 +10,8 @@ import zoneinfo
 
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
-from pipe.core.repositories.file_repository import FileRepository
+from pipe.core.repositories.file_repository import FileRepository, file_lock
 from pipe.core.utils.datetime import get_current_timestamp
-from pipe.core.utils.file import FileLock as file_lock
 
 
 class SessionRepository(FileRepository):
@@ -92,29 +91,31 @@ class SessionRepository(FileRepository):
 
     def save(self, session: Session):
         """Saves a session to its file and updates the main index."""
-        # Part 1: Save the session object to its own JSON file.
         session_path = self._get_path_for_id(session.session_id)
         lock_path = f"{session_path}.lock"
-        self._locked_write_json(
-            lock_path, session_path, session.model_dump(mode="json")
-        )
 
-        # Part 2: Update the `index.json` with the session's metadata.
-        index_data = self._locked_read_json(
-            self.index_lock_path, self.index_path, default_data={"sessions": {}}
-        )
+        # Acquire locks in a consistent order: always index lock first,
+        # then session lock
+        # This prevents deadlocks when multiple processes access different sessions
+        with file_lock(self.index_lock_path):
+            # Part 1: Save the session object to its own JSON file.
+            with file_lock(lock_path):
+                self._write_json(session_path, session.model_dump(mode="json"))
 
-        if "sessions" not in index_data:
-            index_data["sessions"] = {}
-        if session.session_id not in index_data["sessions"]:
-            index_data["sessions"][session.session_id] = {}
+            # Part 2: Update the `index.json` with the session's metadata.
+            index_data = self._read_json(self.index_path, default_data={"sessions": {}})
 
-        session_meta = index_data["sessions"][session.session_id]
-        session_meta["last_updated_at"] = get_current_timestamp(self.timezone_obj)
-        session_meta["created_at"] = session.created_at
-        session_meta["purpose"] = session.purpose
+            if "sessions" not in index_data:
+                index_data["sessions"] = {}
+            if session.session_id not in index_data["sessions"]:
+                index_data["sessions"][session.session_id] = {}
 
-        self._locked_write_json(self.index_lock_path, self.index_path, index_data)
+            session_meta = index_data["sessions"][session.session_id]
+            session_meta["last_updated_at"] = get_current_timestamp(self.timezone_obj)
+            session_meta["created_at"] = session.created_at
+            session_meta["purpose"] = session.purpose
+
+            self._write_json(self.index_path, index_data)
 
     def get_index(self) -> dict:
         """Reads and returns the raw session index data."""

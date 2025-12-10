@@ -31,9 +31,8 @@ export const ChatHistory = ({
 }: ChatHistoryProperties): JSX.Element => {
   const parameters = useParams()
   const sessionId = parameters['*'] || null
-  console.log(useParams<{ sessionId: string }>())
 
-  const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
+  const { streamingTurns, isStreaming, turnsListReference, onSendInstruction } =
     useChatStreaming({
       currentSessionId: sessionId,
       // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
@@ -50,8 +49,8 @@ export const ChatHistory = ({
     refreshSessionsInStore
   })
 
-  const tokenCount = sessionDetail?.token_count ?? 0
-  const contextLimit = sessionDetail?.settings?.context_limit ?? 700000
+  const tokenCount = sessionDetail?.tokenCount ?? 0
+  const contextLimit = sessionDetail?.settings?.contextLimit ?? 700000
 
   return (
     <div className={chatRoot}>
@@ -64,7 +63,7 @@ export const ChatHistory = ({
         currentSessionId={sessionId ?? null}
         expertMode={expertMode}
         isStreaming={isStreaming}
-        streamedText={streamedText}
+        streamingTurns={streamingTurns}
         turnsListReference={turnsListReference}
         onRefresh={refreshSession}
         refreshSessionsInStore={refreshSessionsInStore}

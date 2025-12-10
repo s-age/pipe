@@ -50,7 +50,7 @@ export const SessionTree = ({
     handleNewChatClick,
     handleAnchorClick,
     setSessionReference
-  } = useSessionTreeHandlers(selectSession, onRefresh)
+  } = useSessionTreeHandlers(onRefresh)
 
   // Handle scroll to selected session on mount and selection change
   useSessionTreeLifecycle({
@@ -86,15 +86,15 @@ export const SessionTree = ({
               const renderNode = (n: SessionTreeNode, depth = 0): JSX.Element => {
                 const overview = n.overview || {}
                 const sessionObject: SessionOverview = {
-                  session_id: n.session_id,
+                  sessionId: n.sessionId,
                   purpose: (overview.purpose as string) || '',
                   background: (overview.background as string) || '',
                   roles: (overview.roles as string[]) || [],
                   procedure: (overview.procedure as string) || '',
                   artifacts: (overview.artifacts as string[]) || [],
-                  multi_step_reasoning_enabled: !!overview.multi_step_reasoning_enabled,
-                  token_count: (overview.token_count as number) || 0,
-                  last_updated_at: (overview.last_updated_at as string) || ''
+                  multiStepReasoningEnabled: !!overview.multiStepReasoningEnabled,
+                  tokenCount: (overview.tokenCount as number) || 0,
+                  lastUpdatedAt: (overview.lastUpdatedAt as string) || ''
                 }
 
                 const depthClass = depthClasses[depth] ?? depthClasses[0]
@@ -109,19 +109,19 @@ export const SessionTree = ({
 
                 return (
                   <li
-                    key={n.session_id}
+                    key={n.sessionId}
                     className={`${sessionListItem} ${depthClass}`}
-                    ref={setSessionReference(n.session_id)}
+                    ref={setSessionReference(n.sessionId)}
                   >
                     <a
-                      href={`/session/${n.session_id}`}
-                      data-session-id={n.session_id}
-                      className={`${sessionLink} ${n.session_id === currentSessionId ? sessionLinkActive : ''}`.trim()}
+                      href={`/session/${n.sessionId}`}
+                      data-session-id={n.sessionId}
+                      className={`${sessionLink} ${n.sessionId === currentSessionId ? sessionLinkActive : ''}`.trim()}
                       onClick={handleAnchorClick}
                     >
                       {sessionObject.purpose}{' '}
                       <p className={sessionIdStyle}>
-                        {String(sessionObject.session_id).substring(0, 8)}
+                        {String(sessionObject.sessionId).substring(0, 8)}
                       </p>
                     </a>
                     {childrenElements && (
@@ -135,19 +135,17 @@ export const SessionTree = ({
             })
           : // flat list: render as before
             (sessions as SessionOverview[]).map((session) => {
-              if (!session.session_id || typeof session.session_id !== 'string') {
-                console.warn('Skipping session with invalid session_id:', session)
-
+              if (!session.sessionId || typeof session.sessionId !== 'string') {
                 return null // Invalid session, skip rendering
               }
 
               return (
                 <SessionOverviewComponent
-                  key={session.session_id}
+                  key={session.sessionId}
                   session={session}
                   currentSessionId={currentSessionId || ''}
                   selectSession={selectSession}
-                  ref={setSessionReference(session.session_id)}
+                  ref={setSessionReference(session.sessionId)}
                 />
               )
             })}

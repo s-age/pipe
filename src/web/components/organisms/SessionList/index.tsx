@@ -46,7 +46,7 @@ export const SessionList = ({
     const ids: string[] = []
     const collectIds = (items: SessionOverview[] | SessionTreeNode[]): void => {
       items.forEach((item) => {
-        ids.push(item.session_id)
+        ids.push(item.sessionId)
         if ('children' in item && item.children) {
           collectIds(item.children)
         }
@@ -81,9 +81,9 @@ export const SessionList = ({
 
       return flatSessions.map((session) => (
         <SessionItem
-          key={session.session_id}
+          key={session.sessionId}
           session={session}
-          isSelected={selectedSessionIds.includes(session.session_id)}
+          isSelected={selectedSessionIds.includes(session.sessionId)}
           onSelect={onSelectSession}
           updateLabel={updateLabel}
         />
@@ -94,16 +94,16 @@ export const SessionList = ({
   const renderNode = (node: SessionTreeNode): React.ReactElement => {
     const overview = node.overview || {}
     const sessionObject: SessionOverview = {
-      session_id: node.session_id,
+      sessionId: node.sessionId,
       purpose: (overview.purpose as string) || '',
       background: (overview.background as string) || '',
       roles: (overview.roles as string[]) || [],
       procedure: (overview.procedure as string) || '',
       artifacts: (overview.artifacts as string[]) || [],
-      multi_step_reasoning_enabled: !!overview.multi_step_reasoning_enabled,
-      token_count: (overview.token_count as number) || 0,
-      last_updated_at: (overview.last_updated_at as string) || '',
-      deleted_at: (overview.deleted_at as string) || ''
+      multiStepReasoningEnabled: !!overview.multiStepReasoningEnabled,
+      tokenCount: (overview.tokenCount as number) || 0,
+      lastUpdatedAt: (overview.lastUpdatedAt as string) || '',
+      deletedAt: (overview.deletedAt as string) || ''
     }
 
     let childrenElements: React.ReactElement[] | null = null
@@ -112,10 +112,10 @@ export const SessionList = ({
     }
 
     return (
-      <div key={node.session_id} className={sessionNode}>
+      <div key={node.sessionId} className={sessionNode}>
         <SessionItem
           session={sessionObject}
-          isSelected={selectedSessionIds.includes(node.session_id)}
+          isSelected={selectedSessionIds.includes(node.sessionId)}
           onSelect={onSelectSession}
           updateLabel={updateLabel}
         />

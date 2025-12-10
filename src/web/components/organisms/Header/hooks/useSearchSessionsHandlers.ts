@@ -4,7 +4,7 @@ import type { MouseEvent, KeyboardEvent, Dispatch, SetStateAction } from 'react'
 import { useSearchSessionsActions } from './useSearchSessionsActions'
 
 type SearchResult = {
-  session_id: string
+  sessionId: string
   title: string
 }
 
@@ -70,7 +70,7 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
     async (_value?: string) => {
       const matches = await fetchResults(query)
       if (matches.length > 0) {
-        window.location.href = `/session/${matches[0].session_id}`
+        window.location.href = `/session/${matches[0].sessionId}`
       } else {
         setOpen(true)
       }

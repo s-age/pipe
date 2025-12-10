@@ -1,7 +1,6 @@
 import os
 import sys
 import warnings
-from typing import Any
 
 import google.genai as genai
 from google.genai import types
@@ -23,7 +22,7 @@ def call_gemini_api_with_grounding(
 
     api_contents = [{"role": "user", "parts": [{"text": instruction}]}]
 
-    all_tools: list[Any] = [types.Tool(google_search=types.GoogleSearch())]
+    all_tools: list[types.Tool] = [types.Tool(google_search=types.GoogleSearch())]
 
     gen_config_params = {
         "temperature": settings.parameters.temperature.value,
@@ -32,7 +31,7 @@ def call_gemini_api_with_grounding(
     }
 
     config = types.GenerateContentConfig(
-        tools=all_tools,
+        tools=all_tools,  # type: ignore[arg-type]
         temperature=gen_config_params.get("temperature"),
         top_p=gen_config_params.get("top_p"),
         top_k=gen_config_params.get("top_k"),

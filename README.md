@@ -136,6 +136,8 @@ See [docs/tools.md](docs/tools.md) for information on available tools and integr
 
 See [docs/extending.md](docs/extending.md) for information on extending the framework with new agents.
 
+See [docs/agent-registry.md](docs/agent-registry.md) for details on the agent registry pattern and how to add custom agents.
+
 ---
 
 ## Installation

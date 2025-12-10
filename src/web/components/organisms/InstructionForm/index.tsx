@@ -41,7 +41,7 @@ export const InstructionForm = ({
 
     const { state } = useSessionStore()
     const tokenCount = tokenCountProperty ?? 0
-    const contextLimit = contextLimitProperty ?? state.settings?.context_limit ?? 700000
+    const contextLimit = contextLimitProperty ?? state.settings?.contextLimit ?? 700000
     const { contextLeft, colorKey } = useInstructionFormLifecycle({
       isStreaming,
       tokenCount,

@@ -1,10 +1,17 @@
 import os
 import subprocess
 import sys
-from typing import Any
+from typing import TypedDict
 
 
-def google_web_search(query: str) -> dict[str, Any]:
+class WebSearchResult(TypedDict, total=False):
+    """Result from web search."""
+
+    content: str
+    error: str
+
+
+def google_web_search(query: str) -> WebSearchResult:
     """
     Performs a web search using Google Search and returns the results by
     executing a search agent.

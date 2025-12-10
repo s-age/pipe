@@ -53,7 +53,7 @@ paths:
           description: Internal server error
 
   # Roles (v1)
-  /api/v1/roles:
+  /api/v1/fs/roles:
     get:
       summary: Get available roles (v1)
       description: Returns a list of available roles for selection, including their labels and values.
@@ -72,7 +72,7 @@ paths:
           description: Internal server error
 
   # Procedures (v1)
-  /api/v1/procedures:
+  /api/v1/fs/procedures:
     get:
       summary: Get available procedures (v1)
       description: Returns a list of available procedures for selection, including their labels and values.
@@ -416,7 +416,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/search:
+  /api/v1/fs/search:
     post:
       summary: Search sessions by query
       description: "Search session files (filename, purpose, background, and turns) for a given query string. Returns matching session IDs and titles."
@@ -724,7 +724,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/sessions/archives:
+  /api/v1/session_management/archives:
     get:
       summary: List archived sessions
       tags:
@@ -956,7 +956,7 @@ paths:
           description: Internal server error
 
   # File Search Endpoints
-  /api/v1/search_l2:
+  /api/v1/fs/browse_l2:
     post:
       summary: Search for level 1 candidates and prefetch level 2 data
       tags:
@@ -979,9 +979,9 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/ls:
+  /api/v1/fs/browse:
     post:
-      summary: Get ls-like data for a final path
+      summary: Browse directory contents
       tags:
         - file-search
       requestBody:
@@ -1007,7 +1007,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/index_files:
+  /api/v1/fs/index_files:
     post:
       summary: Create or update the Whoosh file index
       tags:

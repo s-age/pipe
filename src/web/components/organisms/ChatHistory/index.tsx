@@ -32,12 +32,17 @@ export const ChatHistory = ({
   const parameters = useParams()
   const sessionId = parameters['*'] || null
 
-  const { streamingTurns, isStreaming, turnsListReference, onSendInstruction } =
-    useChatStreaming({
-      currentSessionId: sessionId,
-      // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
-      setSessionDetail: setSessionDetail
-    })
+  const {
+    streamingTurns,
+    isStreaming,
+    turnsListReference,
+    onSendInstruction,
+    scrollToBottom
+  } = useChatStreaming({
+    currentSessionId: sessionId,
+    // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
+    setSessionDetail: setSessionDetail
+  })
 
   const { handleDeleteCurrentSession } = useChatHistoryHandlers({
     currentSessionId: sessionId,
@@ -67,6 +72,7 @@ export const ChatHistory = ({
         turnsListReference={turnsListReference}
         onRefresh={refreshSession}
         refreshSessionsInStore={refreshSessionsInStore}
+        scrollToBottom={scrollToBottom}
       />
       <ChatHistoryFooter
         currentSessionId={sessionId}
@@ -74,6 +80,7 @@ export const ChatHistory = ({
         isStreaming={isStreaming}
         tokenCount={tokenCount}
         contextLimit={contextLimit}
+        onRefresh={refreshSession}
       />
     </div>
   )

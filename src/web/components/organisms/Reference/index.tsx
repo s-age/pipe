@@ -50,6 +50,7 @@ export const ReferenceComponent = ({
       <div className={referenceLabel}>
         <Tooltip
           content={localReference.persist ? 'Unlock reference' : 'Lock reference'}
+          placement="bottom"
         >
           <Button
             kind="ghost"
@@ -82,7 +83,7 @@ export const ReferenceComponent = ({
 
       <div className={referenceActions}>
         <div className={ttlControls}>
-          <Tooltip content="Decrease TTL">
+          <Tooltip content="Decrease TTL" placement="bottom">
             <Button
               kind="primary"
               size="xsmall"
@@ -95,7 +96,7 @@ export const ReferenceComponent = ({
             </Button>
           </Tooltip>
           <span className={ttlValue}>{ttl}</span>
-          <Tooltip content="Increase TTL">
+          <Tooltip content="Increase TTL" placement="bottom">
             <Button
               kind="primary"
               size="xsmall"
@@ -108,7 +109,7 @@ export const ReferenceComponent = ({
             </Button>
           </Tooltip>
         </div>
-        <Tooltip content="Toggle reference enabled">
+        <Tooltip content="Toggle reference enabled" placement="bottom">
           <ToggleSwitch
             checked={!localReference.disabled}
             onChange={handleToggle}

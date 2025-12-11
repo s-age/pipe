@@ -21,7 +21,14 @@ export const useSessionMetaLifecycle = ({
       artifacts: sessionDetail.artifacts ?? null,
       hyperparameters: sessionDetail.hyperparameters ?? null
     }),
-    [sessionDetail]
+    [
+      sessionDetail.purpose,
+      sessionDetail.background,
+      sessionDetail.roles,
+      sessionDetail.procedure,
+      sessionDetail.artifacts,
+      sessionDetail.hyperparameters
+    ]
   )
 
   return { computedDefaultValues }

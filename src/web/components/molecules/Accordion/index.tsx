@@ -17,6 +17,8 @@ type AccordionProperties = {
   title: string | JSX.Element
   summary?: string | JSX.Element
   defaultOpen?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   children?: ReactNode
   className?: string
 }
@@ -26,12 +28,16 @@ export const Accordion = ({
   title,
   summary,
   defaultOpen = false,
+  open: controlledOpen,
+  onOpenChange,
   children,
   className
 }: AccordionProperties): JSX.Element => {
   const { open, contentId, handleToggle, handleKeyDown } = useAccordion({
     id,
-    defaultOpen
+    defaultOpen,
+    controlledOpen,
+    onOpenChange
   })
 
   return (

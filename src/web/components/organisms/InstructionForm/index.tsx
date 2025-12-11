@@ -21,6 +21,7 @@ type InstructionFormProperties = {
   isStreaming: boolean
   tokenCount?: number
   contextLimit?: number
+  onRefresh?: () => Promise<void>
 }
 
 export const InstructionForm = ({
@@ -28,15 +29,17 @@ export const InstructionForm = ({
   onSendInstruction,
   isStreaming,
   tokenCount: tokenCountProperty,
-  contextLimit: contextLimitProperty
+  contextLimit: contextLimitProperty,
+  onRefresh
 }: InstructionFormProperties): JSX.Element => {
   // We must call `useInstructionFormHandlers` inside the `Form` provider created by
   // `Form`. To ensure `useFormContext` is available we define an inner
   // component that consumes the context.
   const Inner = (): JSX.Element => {
-    const { register, onSendClick } = useInstructionFormHandlers({
+    const { register, submit, onStopClick } = useInstructionFormHandlers({
       currentSessionId,
-      onSendInstruction
+      onSendInstruction,
+      onRefresh
     })
 
     const { state } = useSessionStore()
@@ -59,17 +62,29 @@ export const InstructionForm = ({
             register={register}
             disabled={isStreaming}
           />
-          <Button
-            className={overlaySendButton}
-            kind="primary"
-            size="default"
-            onClick={onSendClick}
-            disabled={isStreaming}
-            tabIndex={0}
-            aria-label="Send Instruction"
-          >
-            <IconPaperPlane />
-          </Button>
+          {isStreaming ? (
+            <Button
+              className={overlaySendButton}
+              kind="primary"
+              size="default"
+              onClick={onStopClick}
+              tabIndex={0}
+              aria-label="Stop Session"
+            >
+              ◽️
+            </Button>
+          ) : (
+            <Button
+              className={overlaySendButton}
+              kind="primary"
+              size="default"
+              onClick={submit}
+              tabIndex={0}
+              aria-label="Send Instruction"
+            >
+              <IconPaperPlane />
+            </Button>
+          )}
         </div>
         {contextLimit > 0 && tokenCount !== null && (
           <div className={contextLeftText[colorKey]}>({contextLeft}% context left)</div>

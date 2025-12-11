@@ -10,6 +10,7 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { ReferenceComponent } from '../Reference'
 import { useReferenceListHandlers } from './hooks/useReferenceListHandlers'
+import { useReferenceListLifecycle } from './hooks/useReferenceListLifecycle'
 import { referenceSummary } from './style.css'
 import { referencesList, noItemsMessage } from './style.css'
 
@@ -30,6 +31,10 @@ export const ReferenceList = ({
   const { handleReferencesChange, references, existsValue } = useReferenceListHandlers(
     sessionDetail,
     formContext
+  )
+
+  const { accordionOpen, setAccordionOpen } = useReferenceListLifecycle(
+    sessionDetail.sessionId
   )
 
   return (
@@ -54,11 +59,13 @@ export const ReferenceList = ({
           >{`${references.length} ${references.length === 1 ? 'reference' : 'references'} · Advanced settings`}</span>
         }
         defaultOpen={false}
+        open={accordionOpen}
+        onOpenChange={setAccordionOpen}
       >
         <ul className={referencesList}>
           {references.map((reference, index) => (
             <ReferenceComponent
-              key={index}
+              key={reference.path}
               reference={reference}
               currentSessionId={sessionDetail.sessionId || null}
               index={index}

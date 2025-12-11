@@ -15,7 +15,9 @@ export const useReferenceListHandlers = (
   existsValue: string[]
   handleReferencesChange: (values: string[]) => void
 } => {
-  const [references, setReferences] = useState(sessionDetail.references || [])
+  const [references, setReferences] = useState<Reference[]>(
+    sessionDetail.references || []
+  )
   const { handleUpdateReference } = useReferenceListActions(
     sessionDetail.sessionId || null
   )

@@ -1,4 +1,4 @@
-import type { JSX } from 'react'
+import type { JSX, RefObject } from 'react'
 
 import { Heading } from '@/components/atoms/Heading'
 import { TurnComponent as Turn } from '@/components/organisms/Turn'
@@ -6,6 +6,7 @@ import type { Turn as TurnType } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
+import { useChatHistoryLifecycle } from './hooks/useChatHistoryLifecycle'
 import {
   turnsColumn,
   turnsListSection,
@@ -20,12 +21,13 @@ type ChatHistoryBodyProperties = {
   expertMode: boolean
   isStreaming: boolean
   streamingTurns: TurnType[]
-  turnsListReference: React.RefObject<HTMLDivElement | null>
+  turnsListReference: RefObject<HTMLDivElement | null>
   onRefresh: () => Promise<void>
   refreshSessionsInStore: (
     sessionDetail: SessionDetail,
     sessions: SessionOverview[]
   ) => void
+  scrollToBottom: () => void
 }
 
 export const ChatHistoryBody = ({
@@ -36,8 +38,15 @@ export const ChatHistoryBody = ({
   streamingTurns,
   turnsListReference,
   onRefresh,
-  refreshSessionsInStore
+  refreshSessionsInStore,
+  scrollToBottom
 }: ChatHistoryBodyProperties): JSX.Element => {
+  // Scroll to bottom when session changes
+  useChatHistoryLifecycle({
+    currentSessionId,
+    scrollToBottom
+  })
+
   if (!currentSessionId) {
     return (
       <div className={turnsColumn}>
@@ -66,31 +75,17 @@ export const ChatHistoryBody = ({
   return (
     <div className={`${panel} ${panelBottomSpacing}`}>
       <section className={turnsListSection} ref={turnsListReference}>
-        {sessionDetail.turns.map((turn: TurnType, i: number) => {
-          // Use a composite key that includes content/instruction to force remount on edit
-          // Simple hash function to keep key reasonable length
-          const content = turn.content ?? turn.instruction ?? ''
-          const simpleHash = content
-            .split('')
-            .reduce(
-              (accumulator, char) =>
-                ((accumulator << 5) - accumulator + char.charCodeAt(0)) | 0,
-              0
-            )
-          const key = `${turn.timestamp}-${i}-${simpleHash}`
-
-          return (
-            <Turn
-              key={key}
-              turn={turn}
-              index={i}
-              expertMode={expertMode}
-              sessionId={currentSessionId}
-              onRefresh={onRefresh}
-              refreshSessionsInStore={refreshSessionsInStore}
-            />
-          )
-        })}
+        {sessionDetail.turns.map((turn: TurnType, i: number) => (
+          <Turn
+            key={i}
+            turn={turn}
+            index={i}
+            expertMode={expertMode}
+            sessionId={currentSessionId}
+            onRefresh={onRefresh}
+            refreshSessionsInStore={refreshSessionsInStore}
+          />
+        ))}
 
         {isStreaming &&
           streamingTurns.map((turn, turnIndex) => (

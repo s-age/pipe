@@ -1,6 +1,6 @@
 import React from 'react'
 
-import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { SessionDetail, Turn } from '@/lib/api/session/getSession'
 import { AppStoreProvider } from '@/stores/useAppStore'
 
 import { CompressorApproval } from '../CompressorApproval'
@@ -34,8 +34,10 @@ const createMockSessionDetail = (
   turns: Array.from({ length: turnCount }, (_, i) => ({
     type: i % 2 === 0 ? 'user_task' : 'model_response',
     content: `Turn ${i} content`,
+    instruction: `Turn ${i} instruction`,
+    timestamp: new Date().toISOString(),
     response: { status: 'success' }
-  }))
+  })) as unknown as Turn[]
 })
 
 export default {

@@ -4,7 +4,7 @@ import type { ButtonHTMLAttributes, JSX } from 'react'
 import { button } from './style.css'
 
 type ButtonProperties = {
-  kind?: 'primary' | 'secondary' | 'ghost'
+  kind?: 'primary' | 'secondary' | 'ghost' | 'danger'
   size?: 'small' | 'default' | 'large' | 'xsmall'
   text?: 'bold' | 'uppercase'
   hasBorder?: boolean

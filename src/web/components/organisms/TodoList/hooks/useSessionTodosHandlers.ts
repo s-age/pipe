@@ -8,10 +8,12 @@ import type { Todo } from '@/types/todo'
 
 type UseSessionTodosProperties = {
   sessionDetail: SessionDetail
+  onSessionDetailUpdate?: (sessionDetail: SessionDetail) => void
 }
 
 export const useSessionTodosHandlers = ({
-  sessionDetail
+  sessionDetail,
+  onSessionDetailUpdate
 }: UseSessionTodosProperties): {
   handleUpdateTodo: (todos: Todo[]) => Promise<void>
   handleDeleteAllTodos: () => Promise<void>
@@ -23,7 +25,9 @@ export const useSessionTodosHandlers = ({
 } => {
   const register = useOptionalFormContext()?.register
 
-  const { updateTodos, deleteAllTodos } = useSessionTodosActions()
+  const { updateTodos, deleteAllTodos } = useSessionTodosActions({
+    onSessionDetailUpdate
+  })
 
   // NOTE: getSession is available if callers need to fetch a fresh session.
 

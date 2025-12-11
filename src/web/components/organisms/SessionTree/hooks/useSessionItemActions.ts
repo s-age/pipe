@@ -13,7 +13,7 @@ export const useSessionItemActions = (): UseSessionItemActionsReturn => {
     try {
       const sessionDetail = await getSession(sessionId)
 
-      return sessionDetail.session
+      return sessionDetail
     } catch (error: unknown) {
       addToast({
         status: 'failure',

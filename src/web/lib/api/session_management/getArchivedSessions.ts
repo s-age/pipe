@@ -23,6 +23,7 @@ export const getArchivedSessions = async (): Promise<SessionOverview[]> => {
     multiStepReasoningEnabled: false,
     tokenCount: 0,
     lastUpdatedAt: '',
-    deletedAt: s.deletedAt || ''
+    deletedAt: s.deletedAt || '',
+    filePath: s.filePath
   }))
 }

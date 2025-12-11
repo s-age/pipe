@@ -99,6 +99,16 @@ export const SessionTree = ({
 
                 const depthClass = depthClasses[depth] ?? depthClasses[0]
 
+                // Extract the last part of sessionId after '/' for display
+                const getShortHash = (sessionId: string): string => {
+                  const parts = sessionId.split('/')
+
+                  return (
+                    parts[parts.length - 1]?.substring(0, 8) ||
+                    sessionId.substring(0, 8)
+                  )
+                }
+
                 let childrenElements: JSX.Element[] | null = null
 
                 if (n.children && n.children.length > 0) {
@@ -120,9 +130,7 @@ export const SessionTree = ({
                       onClick={handleAnchorClick}
                     >
                       {sessionObject.purpose}{' '}
-                      <p className={sessionIdStyle}>
-                        {String(sessionObject.sessionId).substring(0, 8)}
-                      </p>
+                      <p className={sessionIdStyle}>{getShortHash(n.sessionId)}</p>
                     </a>
                     {childrenElements && (
                       <ul className={nestedList}>{childrenElements}</ul>

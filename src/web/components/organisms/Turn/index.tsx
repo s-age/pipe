@@ -198,8 +198,8 @@ const Component = ({
           <div className={toolResponseContent}>
             <strong>Status: </strong>
             <span className={statusClass}>{turn.response.status}</span>
-            {turn.response.output !== undefined && turn.response.output !== null && (
-              <pre>{JSON.stringify(turn.response.output, null, 2)}</pre>
+            {turn.response.message !== undefined && turn.response.message !== null && (
+              <pre>{JSON.stringify(turn.response.message, null, 2)}</pre>
             )}
           </div>
         )

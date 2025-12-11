@@ -217,6 +217,7 @@ def verify_summary(
                 f"Verification process completed in session {verifier_session_id}. "
                 f"Status: {status}."
             ),
+            "verifier_response": response_text,
         }
         return json.dumps(result, ensure_ascii=False, indent=2)
 

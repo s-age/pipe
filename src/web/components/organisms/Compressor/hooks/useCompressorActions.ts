@@ -1,13 +1,14 @@
 import { useCallback } from 'react'
 
-import { useOptionalFormContext } from '@/components/organisms/Form'
 import {
   approveCompressor,
   createCompressor,
   denyCompressor
 } from '@/lib/api/session/compress'
 
-type UseCompressorActionsProperties = {
+import type { CompressorFormInputs } from '../schema'
+
+export type UseCompressorActionsProperties = {
   sessionId: string
   setSummary: (summary: string) => void
   setError: (error: string | null) => void
@@ -18,7 +19,7 @@ type UseCompressorActionsProperties = {
 }
 
 export type UseCompressorActionsReturn = {
-  handleExecute: () => Promise<void>
+  handleExecute: (data: CompressorFormInputs) => Promise<void>
   handleApprove: () => Promise<void>
   handleDeny: () => Promise<void>
 }
@@ -32,60 +33,57 @@ export const useCompressorActions = ({
   setCompressorSessionId,
   onRefresh
 }: UseCompressorActionsProperties): UseCompressorActionsReturn => {
-  const form = useOptionalFormContext()
+  const handleExecute = useCallback(
+    async (data: CompressorFormInputs): Promise<void> => {
+      setIsSubmitting(true)
+      setError(null)
+      try {
+        const requestData = {
+          sessionId: sessionId,
+          policy: data.policy,
+          targetLength: data.targetLength ?? 500,
+          startTurn: data.startTurn ?? 1,
+          endTurn: data.endTurn ?? 0
+        }
+        const response = await createCompressor(requestData)
 
-  const handleExecute = useCallback(async (): Promise<void> => {
-    setIsSubmitting(true)
-    setError(null)
-    try {
-      const formValues = form?.getValues()
-      if (!formValues) {
-        throw new Error('Form values not available')
-      }
-      const requestData = {
-        sessionId: sessionId,
-        policy: formValues.policy,
-        targetLength: formValues.targetLength ?? 500,
-        startTurn: formValues.startTurn,
-        endTurn: formValues.endTurn
-      }
-      const response = await createCompressor(requestData)
+        // Store the compressor session ID for approval
+        if (response?.sessionId) {
+          setCompressorSessionId(response.sessionId)
+        }
 
-      // Store the compressor session ID for approval
-      if (response?.sessionId) {
-        setCompressorSessionId(response.sessionId)
-      }
+        // Check if the summary was rejected by verifier
+        if (response?.summary && response.summary.startsWith('Rejected:')) {
+          // Extract rejection reason from the summary
+          setError(response.summary)
+          setSummary('')
 
-      // Check if the summary was rejected by verifier
-      if (response?.summary && response.summary.startsWith('Rejected:')) {
-        // Extract rejection reason from the summary
-        setError(response.summary)
-        setSummary('')
+          return
+        }
 
-        return
+        // If the server returned a verified summary, use it.
+        if (response?.summary) {
+          setSummary(response.summary)
+        } else if (response?.message) {
+          setSummary(response.message)
+        } else if (response?.sessionId) {
+          // Provide a clearer user-facing message instead of raw session id
+          setSummary(
+            `Compression started. Verifier session created (id: ${response.sessionId}). The verified summary will appear here when ready.`
+          )
+        } else {
+          setSummary(
+            'Compression started. The verified summary will appear here when ready.'
+          )
+        }
+      } catch (error_: unknown) {
+        setError(String(error_))
+      } finally {
+        setIsSubmitting(false)
       }
-
-      // If the server returned a verified summary, use it.
-      if (response?.summary) {
-        setSummary(response.summary)
-      } else if (response?.message) {
-        setSummary(response.message)
-      } else if (response?.sessionId) {
-        // Provide a clearer user-facing message instead of raw session id
-        setSummary(
-          `Compression started. Verifier session created (id: ${response.sessionId}). The verified summary will appear here when ready.`
-        )
-      } else {
-        setSummary(
-          'Compression started. The verified summary will appear here when ready.'
-        )
-      }
-    } catch (error_: unknown) {
-      setError(String(error_))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [form, sessionId, setSummary, setError, setIsSubmitting, setCompressorSessionId])
+    },
+    [sessionId, setSummary, setError, setIsSubmitting, setCompressorSessionId]
+  )
 
   const handleApprove = useCallback(async (): Promise<void> => {
     setIsSubmitting(true)

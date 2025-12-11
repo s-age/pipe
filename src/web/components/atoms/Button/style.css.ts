@@ -52,6 +52,23 @@ export const button = recipe({
           backgroundColor: 'transparent',
           opacity: 1
         }
+      },
+      danger: {
+        backgroundColor: colors.red,
+        color: colors.white,
+        ':hover': {
+          backgroundColor: '#a01a2d'
+        },
+        selectors: {
+          '&:disabled': {
+            backgroundColor: colors.muted,
+            color: colors.white,
+            cursor: 'not-allowed',
+            opacity: 0.8,
+            border: 'none',
+            boxShadow: 'none'
+          }
+        }
       }
     },
     size: {

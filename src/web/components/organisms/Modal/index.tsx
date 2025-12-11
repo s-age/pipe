@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { getModalRoot, useModalHandlers } from './hooks/useModalHandlers'
 import * as styles from './style.css'
 export { ModalManager } from './hooks/useModalManager'
+export { useModal } from './hooks/useModal'
 
 type ModalProperties = {
   open: boolean

@@ -16,20 +16,21 @@ export const useTurnLifecycle = ({
 } => {
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const [editedContent, setEditedContent] = useState<string>(() => {
-    if (turn.content || turn.instruction) {
-      return turn.content ?? turn.instruction ?? ''
+    if (turn.type === 'user_task') {
+      return turn.instruction
     }
-    if (turn.response) {
-      if (typeof turn.response === 'string') {
-        return turn.response
-      }
-      if (turn.response.message) {
-        return typeof turn.response.message === 'string'
-          ? turn.response.message
-          : JSON.stringify(turn.response.message, null, 2)
+    if (turn.type === 'model_response' || turn.type === 'compressed_history') {
+      return turn.content
+    }
+    if (turn.type === 'function_calling') {
+      return turn.response
+    }
+    if (turn.type === 'tool_response') {
+      if (typeof turn.response.message === 'string') {
+        return turn.response.message
       }
 
-      return JSON.stringify(turn.response, null, 2)
+      return JSON.stringify(turn.response.message, null, 2)
     }
 
     return ''

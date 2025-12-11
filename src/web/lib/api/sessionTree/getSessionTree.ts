@@ -11,6 +11,7 @@ export type SessionOverview = {
   tokenCount: number
   lastUpdatedAt: string
   deletedAt?: string
+  filePath?: string
 }
 
 export type SessionTreeNode = {

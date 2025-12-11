@@ -1,4 +1,5 @@
 import type { JSX } from 'react'
+import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
 import { Button } from '@/components/atoms/Button'
 import { Fieldset } from '@/components/molecules/Fieldset'
@@ -6,7 +7,9 @@ import { InputText } from '@/components/molecules/InputText'
 import { TextArea } from '@/components/molecules/TextArea'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
-import { useCompressorActions } from './hooks/useCompressorActions'
+import { useCompressorFormLogic } from './hooks/useCompressorFormLogic'
+import { useCompressorSync } from './hooks/useCompressorSync'
+import type { CompressorFormInputs } from './schema'
 import * as styles from './style.css'
 import { renderTurnOptions } from './TurnOptions'
 
@@ -47,9 +50,9 @@ export const CompressorForm = ({
   setCompressorSessionId,
   onRefresh
 }: CompressorFormProperties): JSX.Element => {
-  const formContext = useOptionalFormContext()
+  const formContext = useOptionalFormContext<CompressorFormInputs>()
 
-  const { handleExecute } = useCompressorActions({
+  const { onExecuteClick } = useCompressorFormLogic({
     sessionId,
     setSummary,
     setError,
@@ -57,6 +60,13 @@ export const CompressorForm = ({
     compressorSessionId,
     setCompressorSessionId,
     onRefresh
+  })
+
+  // Sync local state to RHF
+  useCompressorSync({
+    formContext,
+    startLocal,
+    endLocal
   })
 
   return (
@@ -69,7 +79,9 @@ export const CompressorForm = ({
               name="policy"
               rows={4}
               placeholder="Compression policy"
-              register={formContext?.register}
+              register={
+                formContext?.register as unknown as UseFormRegister<FieldValues>
+              }
             />
           </Fieldset>
           <Fieldset
@@ -77,10 +89,12 @@ export const CompressorForm = ({
             className={styles.fieldsetContainer}
           >
             <InputText
-              name="target_length"
+              name="targetLength"
               type="number"
               placeholder="1000"
-              register={formContext?.register}
+              register={
+                formContext?.register as unknown as UseFormRegister<FieldValues>
+              }
             />
           </Fieldset>
           <Fieldset legend="Range" className={styles.fieldsetContainer}>
@@ -88,7 +102,7 @@ export const CompressorForm = ({
               <div className={styles.label}>Start Turn</div>
               <select
                 className={styles.input}
-                {...(formContext?.register ? formContext.register('start_turn') : {})}
+                {...(formContext?.register ? formContext.register('startTurn') : {})}
                 value={String(startLocal)}
                 onChange={handleStartChange}
               >
@@ -100,7 +114,7 @@ export const CompressorForm = ({
               <div className={styles.label}>End Turn</div>
               <select
                 className={styles.input}
-                {...(formContext?.register ? formContext.register('end_turn') : {})}
+                {...(formContext?.register ? formContext.register('endTurn') : {})}
                 value={String(endLocal)}
                 onChange={handleEndChange}
               >
@@ -134,7 +148,7 @@ export const CompressorForm = ({
             size="default"
             type="button"
             disabled={isSubmitting}
-            onClick={handleExecute}
+            onClick={onExecuteClick}
             className={styles.executeButton}
           >
             {isSubmitting ? 'Compressing...' : 'Compress'}

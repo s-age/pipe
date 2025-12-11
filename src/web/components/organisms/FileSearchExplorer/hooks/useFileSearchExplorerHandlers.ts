@@ -55,7 +55,6 @@ export const useFileSearchExplorerHandlers = (
 
   const lifecycle = useFileSearchExplorerLifecycle({
     query,
-    actions,
     inputReference: inputReference || { current: null },
     suggestionListReference: suggestionListReference || { current: null },
     setSuggestions,

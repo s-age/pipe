@@ -1,6 +1,7 @@
 {
   "name": "pipe-cli",
   "version": "1.0.0",
+  "license": "CC0-1.0",
   "type": "module",
   "dependencies": {
     "ts-morph": "^27.0.2"

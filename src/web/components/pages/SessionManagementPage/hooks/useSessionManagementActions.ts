@@ -15,7 +15,10 @@ export const useSessionManagementActions = ({
   storeActions
 }: Properties): {
   archiveSessions: (sessionIds: string[]) => Promise<void>
-  deleteArchivedSessions: (sessionIds: string[]) => Promise<void>
+  deleteArchivedSessions: (parameters: {
+    sessionIds?: string[]
+    filePaths?: string[]
+  }) => Promise<void>
 } => {
   const { addToast } = useToastStore()
 
@@ -47,11 +50,14 @@ export const useSessionManagementActions = ({
   )
 
   const deleteArchivedSessionsAction = useCallback<
-    (sessionIds: string[]) => Promise<void>
+    (parameters: { sessionIds?: string[]; filePaths?: string[] }) => Promise<void>
   >(
-    async (sessionIds: string[]): Promise<void> => {
+    async (parameters: {
+      sessionIds?: string[]
+      filePaths?: string[]
+    }): Promise<void> => {
       try {
-        const result = await deleteArchivedSessions({ sessionIds: sessionIds })
+        const result = await deleteArchivedSessions(parameters)
         addToast({
           status: 'success',
           title: `Deleted ${result.deletedCount} out of ${result.totalRequested} archived session(s) successfully.`

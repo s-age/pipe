@@ -41,7 +41,11 @@ export const ChatHistoryPage = (): JSX.Element => {
         </div>
 
         {sessionDetail && (
-          <SessionControl sessionDetail={sessionDetail} onRefresh={onRefresh} />
+          <SessionControl
+            sessionDetail={sessionDetail}
+            onRefresh={onRefresh}
+            onSessionDetailUpdate={setSessionDetail}
+          />
         )}
       </div>
     </AppLayout>

@@ -30,7 +30,9 @@ flowchart TD
 **Critical Instructions:**
 
 1. **Read your instruction carefully** - It contains the target `session_id` and turn range (e.g., "session abc123 (turns 1 to 6)")
-2. **Call `get_session`** with the target session_id to retrieve the ORIGINAL conversation you are verifying
+2. **Call `get_session` WITH ARGUMENTS**: You MUST provide the `session_id` argument to `get_session`.
+   - ❌ WRONG: `get_session()` or `get_session({})` (This returns the CURRENT verifier session, which is useless)
+   - ✅ CORRECT: `get_session(session_id="target_session_id")`
 3. **Your current session** contains the `compressed_history` turn (the proposed summary)
 4. **Compare** the original turns from get_session against the compressed_history in your current session
 5. **Use the checklist below** to determine approval or rejection

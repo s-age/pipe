@@ -23,7 +23,11 @@ export const SessionManagementPage = (): JSX.Element => {
   const navigate = useNavigate()
   const { state, actions: storeActions } = useSessionStore()
   const actions = useSessionManagementActions({ storeActions })
-  const handlers = useSessionManagementHandlers({ actions, navigate })
+  const handlers = useSessionManagementHandlers({
+    actions,
+    navigate,
+    archivedSessions: state.archivedSessions
+  })
   useSessionManagementLifecycle({ storeActions })
 
   const {
@@ -32,15 +36,13 @@ export const SessionManagementPage = (): JSX.Element => {
     selectedSessionIds,
     handleSelectAll,
     handleSelectSession,
-    handleBulkArchive,
-    handleBulkDeleteArchived,
+    handleBulkAction,
     handleCancel
   } = handlers
 
   const currentSessions =
     currentTab === 'sessions' ? state.sessionTree.sessions : state.archivedSessions
-  const currentAction =
-    currentTab === 'sessions' ? handleBulkArchive : handleBulkDeleteArchived
+
   const buttonText =
     currentTab === 'sessions'
       ? 'Bulk Archive Selected Sessions'
@@ -71,7 +73,7 @@ export const SessionManagementPage = (): JSX.Element => {
           </Button>
           <Button
             className={primaryButton}
-            onClick={currentAction}
+            onClick={handleBulkAction}
             disabled={selectedSessionIds.length === 0}
           >
             {buttonText}

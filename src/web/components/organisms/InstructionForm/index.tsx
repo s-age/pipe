@@ -65,7 +65,7 @@ export const InstructionForm = ({
           {isStreaming ? (
             <Button
               className={overlaySendButton}
-              kind="primary"
+              kind="danger"
               size="default"
               onClick={onStopClick}
               tabIndex={0}

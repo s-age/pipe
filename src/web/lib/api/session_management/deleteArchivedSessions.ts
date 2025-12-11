@@ -1,7 +1,8 @@
 import { client } from '../client'
 
 export type DeleteArchivedSessionsRequest = {
-  sessionIds: string[]
+  sessionIds?: string[]
+  filePaths?: string[]
 }
 
 export type DeleteArchivedSessionsResponse = {

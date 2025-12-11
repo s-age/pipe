@@ -24,11 +24,13 @@ import {
 type SessionMetaProperties = {
   sessionDetail: SessionDetail
   onRefresh: () => Promise<void>
+  onSessionDetailUpdate?: (sessionDetail: SessionDetail) => void
 }
 
 export const SessionMeta = ({
   sessionDetail,
-  onRefresh
+  onRefresh,
+  onSessionDetailUpdate
 }: SessionMetaProperties): JSX.Element | null => {
   const { computedDefaultValues } = useSessionMetaLifecycle({
     sessionDetail
@@ -71,7 +73,10 @@ export const SessionMeta = ({
               currentSessionId={sessionDetail.sessionId ?? null}
             />
 
-            <TodoList sessionDetail={sessionDetail} />
+            <TodoList
+              sessionDetail={sessionDetail}
+              onSessionDetailUpdate={onSessionDetailUpdate}
+            />
           </div>
         </section>
 

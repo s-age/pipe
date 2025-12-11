@@ -184,4 +184,20 @@ When calling the `verify_summary` tool, you MUST specify all of the following pa
 3. Call `verify_summary` with all required parameters
 4. Output the final response in the required format starting with `Approved:` or `Rejected:`
 
+**CRITICAL: SINGLE VERIFICATION RULE**
+- You MUST NOT call `verify_summary` multiple times in parallel.
+- You MUST wait for the result of `verify_summary` before taking any further action.
+- Only if the result is "rejected" may you generate a NEW summary and call `verify_summary` again.
+- NEVER create multiple verification sessions for the same turn range simultaneously.
+
+**CRITICAL: STOP ON SUCCESS**
+- When `replace_session_turns` returns `status: "succeeded"`, your task is COMPLETE.
+- DO NOT call `replace_session_turns` again for the same range.
+- DO NOT ask for confirmation again.
+- Terminate the conversation immediately.
+
+**CRITICAL: HANDLE "INVALID TURN RANGE"**
+- If `replace_session_turns` returns `Invalid turn range` error, it likely means the turns have ALREADY been compressed or modified.
+- In this case, DO NOT RETRY. Assume the task is already done or invalid, and terminate.
+
 **Do NOT output partial results. Do NOT stop after step 1.**

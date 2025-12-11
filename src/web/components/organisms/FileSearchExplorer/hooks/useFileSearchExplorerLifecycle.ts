@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 
-import type { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
-
 type Item = {
   label: string
   value: string
@@ -10,7 +8,6 @@ type Item = {
 
 type UseFileSearchExplorerLifecycleProperties = {
   query: string
-  actions: ReturnType<typeof useFileSearchExplorerActions>
   inputReference: React.RefObject<HTMLInputElement | null>
   suggestionListReference: React.RefObject<HTMLUListElement | null>
   setSuggestions: (suggestions: Item[]) => void
@@ -20,7 +17,6 @@ type UseFileSearchExplorerLifecycleProperties = {
 
 export const useFileSearchExplorerLifecycle = ({
   query,
-  actions,
   inputReference,
   suggestionListReference,
   setSuggestions,
@@ -40,15 +36,6 @@ export const useFileSearchExplorerLifecycle = ({
       clearTimeout(handler)
     }
   }, [query])
-
-  // Monitor changes in debouncedQuery and trigger API call
-  useEffect((): void => {
-    if (debouncedQuery) {
-      // Call searchL2 API here
-      void actions.searchFiles({ query: debouncedQuery, path: '' }) // Set appropriate path
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Close suggestions when clicking outside
   useEffect(() => {

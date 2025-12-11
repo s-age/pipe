@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react'
 import { useCallback, useRef } from 'react'
 
-import { useModal } from '@/components/molecules/Modal/hooks/useModal'
+import { useModal } from '@/components/organisms/Modal'
 import { getSession } from '@/lib/api/session/getSession'
 import type { Turn } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -72,8 +72,21 @@ export const useTurnHandlers = ({
 
   const handleCancelEdit = useCallback((): void => {
     setIsEditing(false)
-    setEditedContent(turn.content ?? turn.instruction ?? '')
-  }, [turn.content, turn.instruction, setIsEditing, setEditedContent])
+    let content = ''
+    if (turn.type === 'user_task') {
+      content = turn.instruction
+    } else if (turn.type === 'model_response' || turn.type === 'compressed_history') {
+      content = turn.content
+    } else if (turn.type === 'function_calling') {
+      content = turn.response
+    } else if (turn.type === 'tool_response') {
+      content =
+        typeof turn.response.message === 'string'
+          ? turn.response.message
+          : JSON.stringify(turn.response.message, null, 2)
+    }
+    setEditedContent(content)
+  }, [turn, setIsEditing, setEditedContent])
 
   const handleStartEdit = useCallback((): void => setIsEditing(true), [setIsEditing])
 

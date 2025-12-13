@@ -61,7 +61,7 @@ def build_compressor_instruction(
     """
     return (
         f"Compress session {session_id} from turn {start_turn} to {end_turn} "
-        f"with policy '{policy}' and target length {target_length}"
+        f"with policy '{policy}' and target length {target_length} tokens"
     )
 
 

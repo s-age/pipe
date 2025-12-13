@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 
 from pathspec import PathSpec
@@ -23,13 +24,14 @@ class FileIndexRepository:
             size=NUMERIC(stored=True, sortable=True),
             last_modified=NUMERIC(stored=True, sortable=True),
         )
+        self.logger = logging.getLogger(__name__)
         self._ensure_index_dir()
 
     def _ensure_index_dir(self):
         if not os.path.exists(self.index_dir):
             try:
                 os.makedirs(self.index_dir, mode=0o755)
-                print(f"Created index directory: {self.index_dir}")
+                self.logger.info(f"Created index directory: {self.index_dir}")
             except OSError as e:
                 raise RuntimeError(
                     f"Failed to create index directory {self.index_dir}: {e}"
@@ -79,7 +81,7 @@ class FileIndexRepository:
         return hashlib.sha256(parent_path.encode("utf-8")).hexdigest()
 
     def create_index(self):
-        print(f"Creating index in {self.index_dir} for {self.base_path}")
+        self.logger.info(f"Creating index in {self.index_dir} for {self.base_path}")
         if not os.path.exists(self.base_path):
             raise ValueError(f"Base path does not exist: {self.base_path}")
 
@@ -127,7 +129,7 @@ class FileIndexRepository:
                 )
                 indexed_count += 1
         writer.commit()
-        print(f"Indexed {indexed_count} files and directories")
+        self.logger.info(f"Indexed {indexed_count} files and directories")
 
     def search_l1_candidates(
         self, current_parent_path: str, query: str

@@ -1,54 +1,15 @@
-import importlib
-import inspect
 import json
-import sys
+import os
 
+from pipe.cli.mcp_server import execute_tool
 from pipe.core.agents.gemini_api import call_gemini_api
 from pipe.core.models.turn import (
-    FunctionCallingTurn,
     ModelResponseTurn,
-    ToolResponseTurn,
 )
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.session_turn_service import SessionTurnService
 from pipe.core.utils.datetime import get_current_timestamp
-
-
-def execute_tool_call(tool_call, session_service, session_id, settings, project_root):
-    """Dynamically imports and executes a tool function, passing context if needed."""
-    tool_name = tool_call.name
-    tool_args = dict(tool_call.args)
-
-    try:
-        tool_module = importlib.import_module(f"pipe.core.tools.{tool_name}")
-        importlib.reload(tool_module)
-
-        tool_function = getattr(tool_module, tool_name)
-
-        sig = inspect.signature(tool_function)
-        params = sig.parameters
-
-        final_args = tool_args.copy()
-
-        if "session_service" in params:
-            final_args["session_service"] = session_service
-        if "session_id" in params and "session_id" not in tool_args:
-            final_args["session_id"] = session_id
-        if "settings" in params:
-            final_args["settings"] = settings
-        if "project_root" in params:
-            final_args["project_root"] = project_root
-
-        result = tool_function(**final_args)
-        return result
-    except Exception as e:
-        import traceback
-
-        print(f"--- ERROR during tool execution: {tool_name} ---", file=sys.stderr)
-        print(traceback.format_exc(), file=sys.stderr)
-        print("-------------------------------------------------", file=sys.stderr)
-        return {"error": f"Failed to execute tool {tool_name}: {e}"}
 
 
 def run_stream(
@@ -66,12 +27,21 @@ def run_stream(
     settings = session_service.settings
     max_tool_calls = settings.max_tool_calls
     session_data = session_service.current_session
-    project_root = session_service.project_root
     session_id = session_service.current_session_id
     timezone_obj = session_service.timezone_obj
 
+    # Ensure PIPE_SESSION_ID is set for mcp_server
+    os.environ["PIPE_SESSION_ID"] = session_id
+
     while tool_call_count < max_tool_calls:
         session_turn_service.merge_pool_into_turns(session_id)
+
+        # Reload session to ensure we have the latest turns and file changes
+        reloaded_session = session_service.get_session(session_id)
+        if reloaded_session:
+            session_service.current_session = reloaded_session
+            session_data = session_service.current_session
+
         stream = call_gemini_api(session_service, prompt_service)
 
         response_chunks = []
@@ -147,24 +117,18 @@ def run_stream(
         )
         yield tool_call_markdown
 
-        response_string = (
-            f"{function_call.name}("
-            f"{json.dumps(dict(function_call.args), ensure_ascii=False)})"
-        )
+        # Note: execute_tool from mcp_server handles adding FunctionCallingTurn to pool
 
-        model_turn = FunctionCallingTurn(
-            type="function_calling",
-            response=response_string,
-            timestamp=get_current_timestamp(timezone_obj),
-        )
-
-        tool_result = execute_tool_call(
-            function_call, session_service, session_id, settings, project_root
-        )
+        try:
+            tool_result = execute_tool(function_call.name, dict(function_call.args))
+        except Exception as e:
+            tool_result = {"error": str(e)}
 
         reloaded_session = session_service.get_session(session_id)
         if reloaded_session:
             session_data.references = reloaded_session.references
+            session_data.todos = reloaded_session.todos
+            session_data.hyperparameters = reloaded_session.hyperparameters
 
         if (
             isinstance(tool_result, dict)
@@ -175,26 +139,19 @@ def run_stream(
         else:
             # Handle different successful tool return formats
             if isinstance(tool_result, dict):
-                message_content = tool_result.get(
-                    "message", tool_result.get("content", tool_result)
-                )
+                formatted_response = tool_result.copy()
+                formatted_response["status"] = "succeeded"
+                if "message" not in formatted_response:
+                    formatted_response["message"] = formatted_response.get(
+                        "content", str(tool_result)
+                    )
             else:
-                message_content = tool_result
-            formatted_response = {"status": "succeeded", "message": message_content}
+                formatted_response = {"status": "succeeded", "message": tool_result}
 
         status_markdown = f"```\nTool status: {formatted_response['status']}\n```\n"
         yield status_markdown
 
-        tool_turn = ToolResponseTurn(
-            type="tool_response",
-            name=function_call.name,
-            response=formatted_response,
-            timestamp=get_current_timestamp(timezone_obj),
-        )
-        intermediate_turns.append(model_turn)
-        intermediate_turns.append(tool_turn)
-        session_data.turns.append(model_turn)
-        session_data.turns.append(tool_turn)
+        # Note: execute_tool from mcp_server handles adding ToolResponseTurn to pool
 
     final_model_turn = ModelResponseTurn(
         type="model_response",

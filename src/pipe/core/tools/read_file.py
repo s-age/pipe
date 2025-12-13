@@ -1,5 +1,8 @@
 import os
 
+from pipe.core.factories.service_factory import ServiceFactory
+from pipe.core.factories.settings_factory import SettingsFactory
+
 
 # session_manager and session_id are dynamically passed by the tool executor
 def read_file(
@@ -10,12 +13,9 @@ def read_file(
     session_id=None,
 ) -> dict[str, str]:
     """
-    Adds a file to the session's reference list for inclusion in the prompt.
-    It does not read the file content directly.
+    Reads and returns the content of a specified file.
+    If a session_id is provided, it also adds the file to the session's reference list.
     """
-    if not session_service or not session_id:
-        return {"error": "This tool requires an active session."}
-
     abs_path = os.path.abspath(absolute_path)
 
     if not os.path.exists(abs_path):
@@ -23,31 +23,69 @@ def read_file(
     if not os.path.isfile(abs_path):
         return {"error": f"Path is not a file: {abs_path}"}
 
+    session_message = ""
+    # Resolve session_id from env if not provided
+    if not session_id:
+        session_id = os.environ.get("PIPE_SESSION_ID")
+
+    if session_id:
+        try:
+            project_root = os.getcwd()
+            settings = SettingsFactory.get_settings(project_root)
+            factory = ServiceFactory(project_root, settings)
+            reference_service = factory.create_session_reference_service()
+
+            reference_service.add_reference_to_session(session_id, abs_path)
+            reference_service.update_reference_ttl_in_session(session_id, abs_path, 3)
+
+            if os.path.getsize(abs_path) == 0:
+                session_message = (
+                    f"File '{abs_path}' has been added or updated in session "
+                    "references, but it is empty."
+                )
+            else:
+                session_message = (
+                    f"File '{abs_path}' has been added or updated in session "
+                    "references."
+                )
+        except Exception as e:
+            # Don't fail the entire read_file operation if session reference fails
+            session_message = (
+                f"Warning: Failed to add or update reference in session: {e}"
+            )
+
+    # Always read the file content
     try:
-        session = session_service.get_session(session_id)
-        if not session:
-            return {"error": f"Session with ID {session_id} not found."}
+        with open(abs_path, encoding="utf-8") as f:
+            lines = f.readlines()
 
-        from pipe.core.domains.references import add_reference, update_reference_ttl
-
-        # First, ensure the reference exists with a default TTL if it's new.
-        add_reference(session.references, abs_path, session.references.default_ttl)
-        # Then, explicitly update the TTL to 3 to reset it if it already existed.
-        update_reference_ttl(session.references, abs_path, 3)
-
-        session_service.repository.save(session)
-
-        # Check if the file is empty and tailor the message
-        if os.path.getsize(abs_path) == 0:
-            message = (
-                f"File '{abs_path}' has been added or updated in session "
-                "references, but it is empty."
-            )
+        if offset is not None:
+            start = int(offset)
         else:
-            message = (
-                f"File '{abs_path}' has been added or updated in session references."
-            )
+            start = 0
 
-        return {"message": message}
+        if limit is not None:
+            end = start + int(limit)
+            lines_slice = lines[start:end]
+        else:
+            lines_slice = lines[start:]
+
+        content = "".join(lines_slice)
+
+        result = {"content": content}
+        if session_message:
+            result["message"] = session_message
+
+        return result
+    except UnicodeDecodeError:
+        return {
+            "error": (
+                f"Cannot decode file {abs_path} as text. It might be a binary file."
+            )
+        }
     except Exception as e:
-        return {"error": f"Failed to add or update reference in session: {e}"}
+        # If session_message exists, combine it with the file read error
+        if session_message:
+            return {"error": f"{session_message} Also, failed to read file: {e}"}
+        else:
+            return {"error": f"Failed to read file: {e}"}

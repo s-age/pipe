@@ -18,7 +18,11 @@ class PromptConversationHistory(BaseModel):
         """Builds the PromptConversationHistory component."""
         from pipe.core.domains.turns import get_turns_for_prompt
 
+        # get_turns_for_prompt yields turns in reverse order (newest first).
+        # We need to reverse them back to chronological order (oldest first).
         history_turns = list(get_turns_for_prompt(turns, tool_response_limit))
+        history_turns.reverse()
+
         return cls(
             description=(
                 "Historical record of past interactions in this session, in "

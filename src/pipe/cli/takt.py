@@ -6,9 +6,9 @@ import warnings
 from dotenv import load_dotenv
 from pipe.core.dispatcher import dispatch
 from pipe.core.factories.service_factory import ServiceFactory
+from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.models.args import TaktArgs
-from pipe.core.models.settings import Settings
-from pipe.core.utils.file import read_text_file, read_yaml_file
+from pipe.core.utils.file import read_text_file
 from pipe.core.validators.sessions import start_session as start_session_validator
 
 # Ignore specific warnings from the genai library
@@ -167,12 +167,7 @@ def main():
         sys.exit(1)
 
     load_dotenv()
-    config_path = os.path.join(project_root, "setting.yml")
-    if not os.path.exists(config_path):
-        config_path = os.path.join(project_root, "setting.default.yml")
-
-    settings_dict = read_yaml_file(config_path)
-    settings = Settings(**settings_dict)
+    settings = SettingsFactory.get_settings(project_root)
 
     parsed_args, parser = _parse_arguments()
     args = TaktArgs.from_parsed_args(parsed_args)

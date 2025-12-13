@@ -312,12 +312,9 @@ class TestMainLoop(unittest.TestCase):
         response = json.loads(output)
 
         self.assertEqual(response["id"], "2")
-        self.assertEqual(response["result"]["isError"], False)
-        self.assertIn("content", response["result"])
-        self.assertEqual(
-            response["result"]["content"][0]["text"],
-            json.dumps({"data": "success"}),
-        )
+        # With the new logic, result is the dict itself (plus status)
+        self.assertEqual(response["result"]["status"], "succeeded")
+        self.assertEqual(response["result"]["data"], "success")
 
     def test_method_not_found(
         self,

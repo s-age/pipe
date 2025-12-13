@@ -117,13 +117,13 @@ class TestPromptService(unittest.TestCase):
         prompt = self.prompt_service.build_prompt(self.session_service)
 
         # With current_instruction provided, all turns are included in history
-        # (reversed)
+        # (chronological order)
         self.assertEqual(len(prompt.conversation_history.turns), 2)
         self.assertEqual(
-            prompt.conversation_history.turns[0].content, "Response to first"
+            prompt.conversation_history.turns[0].instruction, "First instruction"
         )
         self.assertEqual(
-            prompt.conversation_history.turns[1].instruction, "First instruction"
+            prompt.conversation_history.turns[1].content, "Response to first"
         )
         self.assertEqual(prompt.current_task.instruction, "Third instruction")
 

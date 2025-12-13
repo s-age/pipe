@@ -140,7 +140,7 @@ class SessionOptimizationService:
         approval_instruction = (
             "The user has approved the compression. "
             "Proceed with replacing the session turns using the "
-            "replace_session_turns tool."
+            "compress_session_turns tool."
         )
 
         self.takt_agent.run_existing_session(

@@ -52,9 +52,11 @@ class SessionRepository(FileRepository):
         Applies data migrations if necessary.
         """
         session_path = self._get_path_for_id(session_id)
+        lock_path = f"{session_path}.lock"
 
         try:
-            data = self._read_json(session_path)
+            with file_lock(lock_path):
+                data = self._read_json(session_path)
             if data is None:
                 return None
         except (FileNotFoundError, ValueError):
@@ -123,15 +125,18 @@ class SessionRepository(FileRepository):
             self.index_lock_path, self.index_path, default_data={"sessions": {}}
         )
 
-    def delete(self, session_id: str):
-        """Deletes a session file and its entry from the index."""
-        # Delete session file
+    def delete(self, session_id: str) -> bool:
+        """Deletes a session file and its entry from the index.
+        Returns True if a session was found and deleted, False otherwise."""
         session_path = self._get_path_for_id(session_id)
-        lock_path = f"{session_path}.lock"
-        with file_lock(lock_path):
-            if os.path.exists(session_path):
+        session_deleted = False
+
+        if os.path.exists(session_path):
+            lock_path = f"{session_path}.lock"
+            with file_lock(lock_path):
                 try:
                     os.remove(session_path)
+                    session_deleted = True
                 except OSError as e:
                     print(
                         f"Error deleting session file {session_path}: {e}",
@@ -139,19 +144,19 @@ class SessionRepository(FileRepository):
                     )
                     raise
 
-        # Attempt to remove empty parent directories
-        current_dir = os.path.dirname(session_path)
-        while current_dir != self.sessions_dir and not os.listdir(current_dir):
-            try:
-                os.rmdir(current_dir)
-                current_dir = os.path.dirname(current_dir)
-            except OSError as e:
-                self._write_error_log(
-                    f"Error deleting empty directory {current_dir}: {e}"
-                )
-                break  # Stop if we encounter an error or non-empty directory
+            # Attempt to remove empty parent directories
+            current_dir = os.path.dirname(session_path)
+            while current_dir != self.sessions_dir and not os.listdir(current_dir):
+                try:
+                    os.rmdir(current_dir)
+                    current_dir = os.path.dirname(current_dir)
+                except OSError as e:
+                    self._write_error_log(
+                        f"Error deleting empty directory {current_dir}: {e}"
+                    )
+                    break  # Stop if we encounter an error or non-empty directory
 
-        # Delete from index
+        # Delete from index regardless, in case file was manually removed
         index_data = self._locked_read_json(
             self.index_lock_path, self.index_path, default_data={"sessions": {}}
         )
@@ -165,8 +170,13 @@ class SessionRepository(FileRepository):
             ]
             for child_id in children_to_delete:
                 del index_data["sessions"][child_id]
+            self._locked_write_json(self.index_lock_path, self.index_path, index_data)
+            # Consider it deleted if it was in the index and removed, even if
+            # file was gone
+            return True
 
-        self._locked_write_json(self.index_lock_path, self.index_path, index_data)
+        # Return true if file existed and deleted, or if it was in index and removed
+        return session_deleted
 
     def backup(self, session: Session):
         """Creates a timestamped backup of the session file."""

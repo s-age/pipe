@@ -3,12 +3,11 @@ import os
 import sys
 import zoneinfo
 
-import yaml
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 from pipe.core.factories.service_factory import ServiceFactory
-from pipe.core.models.settings import Settings
-from pipe.core.utils.file import read_text_file, read_yaml_file
+from pipe.core.factories.settings_factory import SettingsFactory
+from pipe.core.utils.file import read_text_file
 from pipe.web.actions.fs import (
     IndexFilesAction,
     LsAction,
@@ -74,17 +73,6 @@ def check_and_show_warning(project_root: str) -> bool:
             return False
 
 
-def load_settings(config_path: str) -> dict:
-    try:
-        return read_yaml_file(config_path)
-    except (FileNotFoundError, yaml.YAMLError):
-        default_path = config_path.replace("setting.yml", "setting.default.yml")
-        try:
-            return read_yaml_file(default_path)
-        except (FileNotFoundError, yaml.YAMLError):
-            return {}
-
-
 def create_app(
     init_index: bool = True,
 ):
@@ -135,9 +123,7 @@ def create_app(
             pass
 
     # Load settings
-    config_path = os.path.join(project_root, "setting.yml")
-    settings_dict = load_settings(config_path)
-    settings = Settings(**settings_dict)
+    settings = SettingsFactory.get_settings(project_root)
 
     tz_name = settings.timezone
     try:

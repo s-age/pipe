@@ -344,15 +344,16 @@ def execute_tool(tool_name, arguments):
                         "message": result["error"],
                     }
                 else:
-                    message_content = (
-                        result.get("message")
-                        if isinstance(result, dict) and "message" in result
-                        else result
-                    )
-                    formatted_response = {
-                        "status": "succeeded",
-                        "message": message_content,
-                    }
+                    if isinstance(result, dict):
+                        formatted_response = result.copy()
+                        formatted_response["status"] = "succeeded"
+                        if "message" not in formatted_response:
+                            formatted_response["message"] = str(result)
+                    else:
+                        formatted_response = {
+                            "status": "succeeded",
+                            "message": result,
+                        }
 
                 from pipe.core.models.turn import ToolResponseTurn
 
@@ -520,12 +521,21 @@ def main():
                         }
                     else:
                         # Return MCP-compliant success response
+                        # If tool_result is already a dictionary, return it directly
+                        # to preserve its structured nature. Otherwise, format as text.
+                        if isinstance(tool_result, dict):
+                            tool_result_with_status = tool_result.copy()
+                            tool_result_with_status["status"] = "succeeded"
+                            final_result = tool_result_with_status
+                        else:
+                            final_result = format_mcp_tool_result(
+                                tool_result, is_error=False
+                            )
+
                         response = {
                             "jsonrpc": "2.0",
                             "id": req_id,
-                            "result": format_mcp_tool_result(
-                                tool_result, is_error=False
-                            ),
+                            "result": final_result,
                         }
                 except Exception as e:
                     # Return MCP-compliant error response for exceptions

@@ -123,3 +123,14 @@ class ServiceFactory:
         """Creates a SessionTodoService with its dependencies."""
         repository = SessionRepository(self.project_root, self.settings)
         return SessionTodoService(repository)
+
+    def create_verification_service(self):
+        """Creates a VerificationService with its dependencies."""
+        from pipe.core.agents.takt_agent import TaktAgent
+        from pipe.core.services.verification_service import VerificationService
+
+        session_service = self.create_session_service()
+        turn_service = self.create_session_turn_service()
+        takt_agent = TaktAgent(self.project_root)
+
+        return VerificationService(session_service, turn_service, takt_agent)

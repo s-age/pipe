@@ -1,158 +1,214 @@
+import json
 import os
 import shutil
-import tempfile
 import unittest
+import warnings
 
-from pipe.core.factories.service_factory import ServiceFactory
-from pipe.core.models.settings import Settings
 from pipe.core.tools.read_many_files import read_many_files
+from pipe.core.utils.file import write_yaml_file
 
 
-class TestReadManyFilesTool(unittest.TestCase):
+class TestReadManyFiles(unittest.TestCase):
     def setUp(self):
-        self.project_root = tempfile.mkdtemp()
+        warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
-        # Create dummy files and directories for testing
-        self.dir1 = os.path.join(self.project_root, "dir1")
-        os.makedirs(self.dir1)
-        self.file1 = os.path.join(self.dir1, "file1.txt")
+        self.original_cwd = os.getcwd()
+        import tempfile
+
+        self.test_dir = tempfile.mkdtemp(prefix="pipe_test_read_many_files_")
+
+        os.chdir(self.test_dir)
+
+        # Create setting.yml
+        self.settings_data = {
+            "model": "gemini-2.5-flash",
+            "search_model": "gemini-2.5-flash",
+            "context_limit": 100000,
+            "api_mode": "gemini-api",
+            "max_tool_calls": 5,
+            "language": "english",
+            "yolo": False,
+            "parameters": {
+                "temperature": {"value": 0.2, "description": "desc"},
+                "top_p": {"value": 0.5, "description": "desc"},
+                "top_k": {"value": 5, "description": "desc"},
+            },
+            "expert_mode": False,
+            "sessions_path": "sessions",
+            "reference_ttl": 3,
+            "tool_response_expiration": 3,
+            "timezone": "UTC",
+        }
+        write_yaml_file("setting.yml", self.settings_data)
+
+        # Create sessions dir
+        self.sessions_dir = os.path.join(self.test_dir, "sessions")
+        os.makedirs(self.sessions_dir)
+
+        # Create dummy session
+        self.test_session_id = "test_session"
+        self.session_file = os.path.join(
+            self.sessions_dir, f"{self.test_session_id}.json"
+        )
+        with open(self.session_file, "w") as f:
+            json.dump(
+                {
+                    "session_id": self.test_session_id,
+                    "references": [],
+                    "turns": [],
+                    "created_at": "2023-01-01T00:00:00Z",
+                },
+                f,
+            )
+
+        os.environ["PIPE_SESSION_ID"] = self.test_session_id
+
+        # Create dummy files
+        self.file1 = "file1.txt"
         with open(self.file1, "w") as f:
             f.write("content1")
-        self.file2 = os.path.join(self.dir1, "file2.log")
+
+        self.subdir = "subdir"
+        os.makedirs(self.subdir)
+        self.file2 = os.path.join(self.subdir, "file2.txt")
         with open(self.file2, "w") as f:
             f.write("content2")
-        self.file3 = os.path.join(self.project_root, "file3.md")
-        with open(self.file3, "w") as f:
-            f.write("content3")
 
-        settings_data = {
-            "model": "test-model",
-            "search_model": "test-model",
-            "context_limit": 10000,
-            "api_mode": "gemini-api",
-            "language": "en",
-            "yolo": False,
-            "expert_mode": False,
-            "timezone": "UTC",
-            "parameters": {
-                "temperature": {"value": 0.5, "description": "t"},
-                "top_p": {"value": 0.9, "description": "p"},
-                "top_k": {"value": 40, "description": "k"},
-            },
-        }
-        self.settings = Settings(**settings_data)
-        self.service_factory = ServiceFactory(self.project_root, self.settings)
-        self.session_service = self.service_factory.create_session_service()
-        self.reference_service = self.service_factory.create_session_reference_service()
-
-        # Create a session
-        session = self.session_service.create_new_session("Test", "Test", [])
-        self.session_id = session.session_id
-
-        # Add method to session_service for tool compatibility
-        self.session_service.add_multiple_references = (
-            self.reference_service.add_multiple_references
-        )
+        self.ignored_file = "ignored.log"
+        with open(self.ignored_file, "w") as f:
+            f.write("log")
 
     def tearDown(self):
-        shutil.rmtree(self.project_root)
+        os.chdir(self.original_cwd)
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        if "PIPE_SESSION_ID" in os.environ:
+            del os.environ["PIPE_SESSION_ID"]
 
-    def test_simple_glob(self):
-        read_many_files(
-            paths=["dir1/*.txt"],
-            session_service=self.session_service,
-            session_id=self.session_id,
-        )
-        fetched_session = self.session_service.get_session(self.session_id)
-        self.assertEqual(len(fetched_session.references), 1)
-        self.assertTrue(
-            any("file1.txt" in ref.path for ref in fetched_session.references)
-        )
+    def test_read_many_files_success(self):
+        result = read_many_files(paths=["**/*.txt"])
 
-    def test_directory_glob(self):
-        read_many_files(
-            paths=["dir1"],
-            useDefaultExcludes=False,  # Disable default excludes to find .log file
-            session_service=self.session_service,
-            session_id=self.session_id,
-        )
-        fetched_session = self.session_service.get_session(self.session_id)
-        self.assertEqual(len(fetched_session.references), 2)
+        self.assertIn("files", result, f"Result did not contain 'files' key: {result}")
+        self.assertEqual(len(result["files"]), 2)
 
-    def test_default_excludes(self):
-        read_many_files(
-            paths=["**/*"],
-            useDefaultExcludes=True,
-            session_service=self.session_service,
-            session_id=self.session_id,
-        )
-        # Check that .log files are excluded
-        fetched_session = self.session_service.get_session(self.session_id)
-        paths = [ref.path for ref in fetched_session.references]
-        # file2.log should be excluded
-        self.assertFalse(any("file2.log" in p for p in paths))
-        # file1.txt and file3.md should be included
-        self.assertTrue(any("file1.txt" in p for p in paths))
-        self.assertTrue(any("file3.md" in p for p in paths))
+        file_contents = {f["path"]: f["content"] for f in result["files"]}
+        abs_file1 = os.path.abspath(self.file1)
+        abs_file2 = os.path.abspath(self.file2)
 
-    def test_custom_exclude(self):
-        read_many_files(
-            paths=["dir1/*"],
-            exclude=["*.log"],
-            useDefaultExcludes=False,
-            session_service=self.session_service,
-            session_id=self.session_id,
+        self.assertIn(abs_file1, file_contents)
+        self.assertEqual(file_contents[abs_file1], "content1")
+        self.assertIn(abs_file2, file_contents)
+        self.assertEqual(file_contents[abs_file2], "content2")
+        self.assertIn("Added 2 files", result["message"])
+
+        # Verify session file
+        with open(self.session_file) as f:
+            data = json.load(f)
+
+        references = data.get("references", [])
+        self.assertEqual(len(references), 2)
+
+        abs_file1 = os.path.abspath(self.file1)
+        abs_file2 = os.path.abspath(self.file2)
+
+        found_file1 = any(
+            ref["path"] == self.file1 or ref["path"] == abs_file1 for ref in references
         )
-        fetched_session = self.session_service.get_session(self.session_id)
-        self.assertEqual(len(fetched_session.references), 1)
-        self.assertTrue(
-            any("file1.txt" in ref.path for ref in fetched_session.references)
+        found_file2 = any(
+            ref["path"] == self.file2 or ref["path"] == abs_file2 for ref in references
         )
 
-    def test_custom_include(self):
-        read_many_files(
-            paths=["dir1/*"],
-            include=["*.log"],
-            useDefaultExcludes=False,  # Disable default excludes
-            session_service=self.session_service,
-            session_id=self.session_id,
+        self.assertTrue(found_file1)
+        self.assertTrue(found_file2)
+
+    def test_read_many_files_exclude(self):
+        result = read_many_files(paths=["**/*.txt", "*.log"], exclude=["**/subdir/**"])
+
+        self.assertIn("files", result, f"Result did not contain 'files' key: {result}")
+        self.assertEqual(len(result["files"]), 1)  # Only file1 should be included
+
+        file_contents = {f["path"]: f["content"] for f in result["files"]}
+        abs_file1 = os.path.abspath(self.file1)
+        abs_file2 = os.path.abspath(self.file2)
+
+        self.assertIn(abs_file1, file_contents)
+        self.assertEqual(file_contents[abs_file1], "content1")
+        self.assertNotIn(abs_file2, file_contents)  # file2 should be excluded
+
+        # Verify message
+        self.assertIn("message", result, f"Result did not contain message: {result}")
+        # The message will still indicate files added to references because
+        # PIPE_SESSION_ID is set
+        self.assertIn("Added 1 files", result["message"])
+
+        with open(self.session_file) as f:
+            data = json.load(f)
+        references = data.get("references", [])
+
+        # Check that file2 is NOT in paths (in references)
+        found_file2_in_refs = any(
+            ref["path"] == self.file2 or ref["path"] == abs_file2 for ref in references
         )
-        fetched_session = self.session_service.get_session(self.session_id)
-        self.assertEqual(len(fetched_session.references), 1)
-        self.assertTrue(
-            any("file2.log" in ref.path for ref in fetched_session.references)
+        self.assertFalse(found_file2_in_refs)
+
+        # Check that file1 IS in paths (in references)
+        found_file1_in_refs = any(
+            ref["path"] == self.file1 or ref["path"] == abs_file1 for ref in references
+        )
+        self.assertTrue(found_file1_in_refs)
+
+    def test_read_many_files_no_session_id(self):
+        # Temporarily remove PIPE_SESSION_ID from environment
+        if "PIPE_SESSION_ID" in os.environ:
+            del os.environ["PIPE_SESSION_ID"]
+
+        result = read_many_files(paths=["**/*.txt"])
+
+        # Assert files content is returned
+        self.assertIn("files", result, f"Result did not contain 'files' key: {result}")
+        self.assertEqual(len(result["files"]), 2)
+        file_contents = {f["path"]: f["content"] for f in result["files"]}
+        abs_file1 = os.path.abspath(self.file1)
+        abs_file2 = os.path.abspath(self.file2)
+
+        self.assertIn(abs_file1, file_contents)
+        self.assertEqual(file_contents[abs_file1], "content1")
+        self.assertIn(abs_file2, file_contents)
+        self.assertEqual(file_contents[abs_file2], "content2")
+
+        # Assert no references were added to the session file
+        with open(self.session_file) as f:
+            data = json.load(f)
+        references = data.get("references", [])
+        self.assertEqual(len(references), 0)
+
+        # Assert message indicates no active session
+        self.assertIn("message", result)
+        self.assertIn(
+            "No active session. Files were not added to references.", result["message"]
         )
 
-    def test_no_files_found(self):
-        result = read_many_files(
-            paths=["non_existent_dir/*"],
-            session_service=self.session_service,
-            session_id=self.session_id,
-        )
+    def test_read_many_files_no_match(self):
+        result = read_many_files(paths=["**/*.xyz"])  # A pattern that won't match
+        # any files
+
+        self.assertIn("files", result, f"Result did not contain 'files' key: {result}")
+        self.assertEqual(len(result["files"]), 0)
         self.assertIn("message", result)
         self.assertEqual(result["message"], "No files found matching the criteria.")
-        fetched_session = self.session_service.get_session(self.session_id)
-        self.assertEqual(len(fetched_session.references), 0)
 
-    def test_no_session_service(self):
-        result = read_many_files(paths=["dir1/*.txt"], session_id=self.session_id)
+    def test_read_many_files_max_limit_exceeded(self):
+        # Default max_files is 5. We have 2 .txt files.
+        # Set max_files to 1, expecting it to fail.
+        result = read_many_files(paths=["**/*.txt"], max_files=1)
+
         self.assertIn("error", result)
-        self.assertEqual(result["error"], "This tool requires an active session.")
-
-    def test_error_handling(self):
-        # Test with invalid path that gets no files
-        result = read_many_files(
-            paths=["/invalid/../path"],
-            session_service=self.session_service,
-            session_id=self.session_id,
-        )
-        # Should return message about no files found
-        self.assertIsInstance(result, dict)
-        self.assertTrue(
-            "error" in result or "message" in result,
-            f"Expected 'error' or 'message' in result, got: {result}",
+        self.assertIn(
+            "Too many files found (2). Maximum allowed is 1.", result["error"]
         )
 
-
-if __name__ == "__main__":
-    unittest.main()
+        # Test with a higher limit that should pass
+        result_pass = read_many_files(paths=["**/*.txt"], max_files=2)
+        self.assertNotIn("error", result_pass)
+        self.assertIn("files", result_pass)
+        self.assertEqual(len(result_pass["files"]), 2)

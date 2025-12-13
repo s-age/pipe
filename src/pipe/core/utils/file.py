@@ -112,6 +112,12 @@ def read_yaml_file(file_path: str) -> dict:
         return yaml.safe_load(f)
 
 
+def write_yaml_file(file_path: str, data: dict):
+    """Writes a dictionary to a YAML file."""
+    with open(file_path, "w", encoding="utf-8") as f:
+        yaml.dump(data, f, default_flow_style=False)
+
+
 def read_text_file(file_path: str) -> str:
     """Reads a text file and returns its content as a string."""
     if not os.path.exists(file_path):

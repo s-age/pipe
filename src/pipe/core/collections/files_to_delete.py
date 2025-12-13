@@ -28,8 +28,8 @@ class FilesToDelete:
         deleted_count = 0
         for session_id in self.session_ids:
             try:
-                self.repository.delete(session_id)
-                deleted_count += 1
+                if self.repository.delete(session_id):
+                    deleted_count += 1
             except Exception:
                 # Continue with other deletions even if one fails
                 continue

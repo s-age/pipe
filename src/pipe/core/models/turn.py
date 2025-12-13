@@ -1,9 +1,10 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class TurnResponse(BaseModel):
+    model_config = ConfigDict(extra="allow")  # Allow extra fields for flexibility
     status: str
     message: str
 

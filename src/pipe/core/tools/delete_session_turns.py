@@ -1,17 +1,35 @@
+import os
+
+from pipe.core.factories.service_factory import ServiceFactory
+from pipe.core.factories.settings_factory import SettingsFactory
+
+
 def delete_session_turns(
     session_id: str, turns: list[int], session_service=None
 ) -> dict[str, str]:
     """
     Deletes specified turns from a target session's history.
     This action is irreversible and automatically creates a backup.
-    """
-    if not session_service or not session_id:
-        return {"error": "This tool requires an active session."}
 
+    Args:
+        session_id: The ID of the session.
+        turns: List of turn numbers (1-based) to delete.
+        session_service: (Legacy) Ignored in favor of ServiceFactory.
+    """
     try:
+        project_root = os.getcwd()
+
+        # Load settings
+        settings = SettingsFactory.get_settings(project_root)
+
+        factory = ServiceFactory(project_root, settings)
+        turn_service = factory.create_session_turn_service()
+
         # Convert 1-based turn numbers to 0-based indices
         indices = [turn - 1 for turn in turns]
-        session_service.history_manager.delete_turns(session_id, indices)
+
+        turn_service.delete_turns(session_id, indices)
+
         return {
             "message": (
                 f"Successfully deleted turns {turns} from session {session_id}."

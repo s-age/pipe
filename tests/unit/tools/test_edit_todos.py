@@ -63,8 +63,17 @@ class TestEditTodosTool(unittest.TestCase):
         self.assertIn("message", result)
         self.assertNotIn("error", result)
         self.assertIn("successfully updated", result["message"])
+        self.assertIn("current_todos", result)
 
-        # Verify that the todos were actually updated
+        # Verify that the returned todos match the new todos
+        self.assertEqual(len(result["current_todos"]), 2)
+        self.assertEqual(result["current_todos"][0]["title"], "Task 1")
+        self.assertTrue(result["current_todos"][0]["checked"])
+        self.assertEqual(result["current_todos"][1]["title"], "Task 3")
+        self.assertFalse(result["current_todos"][1]["checked"])
+
+        # Optional: Verify actual session state (though tool's return should be
+        # sufficient)
         session = self.session_service.get_session(self.session_id)
         self.assertEqual(len(session.todos), 2)
         self.assertEqual(session.todos[0].title, "Task 1")
@@ -78,7 +87,7 @@ class TestEditTodosTool(unittest.TestCase):
         """
         result = edit_todos(todos=[], session_id=self.session_id)
         self.assertIn("error", result)
-        self.assertEqual(result["error"], "This tool requires an active session.")
+        self.assertEqual(result["error"], "This tool requires a session_service.")
 
     def test_edit_todos_failure(self):
         """
@@ -90,17 +99,28 @@ class TestEditTodosTool(unittest.TestCase):
         mock_session_service.get_session.return_value = mock_session
         error_message = "Test exception"
 
+        # Mock the create_session_todo_service method of the ServiceFactory
         with patch(
-            "pipe.core.domains.todos.update_todos_in_session",
-            side_effect=Exception(error_message),
-        ) as mock_update_todos_in_session:
+            "pipe.core.tools.edit_todos.ServiceFactory.create_session_todo_service"
+        ) as mock_create_todo_service:
+            mock_todo_service = MagicMock(spec_set=self.todo_service)  # Create a mock
+            # for SessionTodoService
+            mock_create_todo_service.return_value = mock_todo_service
+
+            # Set the side effect on the update_todos method of the mock_todo_service
+            mock_todo_service.update_todos.side_effect = Exception(error_message)
+
             result = edit_todos(
                 todos=[],
-                session_service=mock_session_service,
+                session_service=self.session_service,
                 session_id=self.session_id,
             )
 
-            mock_update_todos_in_session.assert_called_once_with(mock_session, [])
+            mock_create_todo_service.assert_called_once()  # Ensure the factory
+            # method was called
+            mock_todo_service.update_todos.assert_called_once_with(
+                self.session_id, []
+            )  # Ensure update_todos was called on the mock service
             self.assertIn("error", result)
             self.assertEqual(
                 result["error"], f"Failed to update todos in session: {error_message}"

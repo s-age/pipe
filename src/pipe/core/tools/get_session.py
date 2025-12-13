@@ -1,8 +1,12 @@
 import json
+import os
+
+from pipe.core.factories.service_factory import ServiceFactory
+from pipe.core.factories.settings_factory import SettingsFactory
 
 
 def get_session(
-    session_id: str,
+    session_id: str | None = None,
     session_service=None,
 ) -> str:
     """
@@ -11,8 +15,18 @@ def get_session(
     Returns:
         JSON string containing session information
     """
+    if not session_id:
+        return json.dumps({"error": "session_id is required."})
+
     if not session_service:
-        return json.dumps({"error": "This tool requires a session_service."})
+        project_root = os.getcwd()
+        try:
+            settings = SettingsFactory.get_settings(project_root)
+        except Exception as e:
+            return json.dumps({"error": f"Failed to load settings: {e}"})
+
+        factory = ServiceFactory(project_root, settings)
+        session_service = factory.create_session_service()
 
     session = session_service.get_session(session_id)
     if not session:

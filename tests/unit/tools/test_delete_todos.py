@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.models.todo import TodoItem
-from pipe.core.services.session_service import SessionService
 from pipe.core.tools.delete_todos import delete_todos
 
 
@@ -61,8 +60,10 @@ class TestDeleteTodosTool(unittest.TestCase):
 
         self.assertIn("message", result)
         self.assertNotIn("error", result)
+        self.assertIn("current_todos", result)
+        self.assertEqual(result["current_todos"], [])
 
-        # Verify that the todos were actually deleted
+        # Verify that the todos were actually deleted from the session object
         session_after = self.session_service.get_session(self.session_id)
         self.assertIsNone(session_after.todos)
 
@@ -72,27 +73,36 @@ class TestDeleteTodosTool(unittest.TestCase):
         """
         result = delete_todos(session_id=self.session_id)
         self.assertIn("error", result)
-        self.assertEqual(result["error"], "This tool requires an active session.")
+        self.assertEqual(result["error"], "This tool requires a session_service.")
 
     def test_delete_todos_failure(self):
         """
         Tests that the tool returns an error if the session_service raises an
         exception.
         """
-        mock_session_service = MagicMock(spec=SessionService)
-        mock_session = MagicMock()
-        mock_session_service.get_session.return_value = mock_session
         error_message = "Test exception"
 
+        # Mock the create_session_todo_service method of the ServiceFactory
         with patch(
-            "pipe.core.domains.todos.delete_todos_in_session",
-            side_effect=Exception(error_message),
-        ) as mock_delete_todos_in_session:
+            "pipe.core.tools.delete_todos.ServiceFactory.create_session_todo_service"
+        ) as mock_create_todo_service:
+            mock_todo_service = MagicMock(spec_set=self.todo_service)  # Create a mock
+            # for SessionTodoService
+            mock_create_todo_service.return_value = mock_todo_service
+
+            # Set the side effect on the delete_todos method of the mock_todo_service
+            mock_todo_service.delete_todos.side_effect = Exception(error_message)
+
             result = delete_todos(
-                session_service=mock_session_service, session_id=self.session_id
+                session_service=self.session_service,
+                session_id=self.session_id,
             )
 
-            mock_delete_todos_in_session.assert_called_once_with(mock_session)
+            mock_create_todo_service.assert_called_once()  # Ensure the factory
+            # method was called
+            mock_todo_service.delete_todos.assert_called_once_with(
+                self.session_id
+            )  # Ensure delete_todos was called on the mock service
             self.assertIn("error", result)
             self.assertEqual(
                 result["error"], f"Failed to delete todos from session: {error_message}"

@@ -31,7 +31,7 @@ flowchart TD
 
 1. **Read your instruction carefully** - It contains the target `session_id` and turn range (e.g., "session abc123 (turns 1 to 6)")
 2. **Call `get_session` WITH ARGUMENTS**: You MUST provide the `session_id` argument to `get_session`.
-   - ❌ WRONG: `get_session()` or `get_session({})` (This returns the CURRENT verifier session, which is useless)
+   - ❌ WRONG: `get_session()` or `get_session({})` (This will return an ERROR "session_id is required")
    - ✅ CORRECT: `get_session(session_id="target_session_id")`
 3. **Your current session** contains the `compressed_history` turn (the proposed summary)
 4. **Compare** the original turns from get_session against the compressed_history in your current session

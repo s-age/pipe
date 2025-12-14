@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import os
 import zoneinfo
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
@@ -11,6 +10,109 @@ from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.todo import TodoItem
 from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 from pydantic.alias_generators import to_camel
+
+
+class TodoItemInput(TypedDict, total=False):
+    """Typed dictionary for TodoItem input data."""
+
+    title: str
+    description: str | None
+    checked: bool
+
+
+class HyperparametersInput(TypedDict, total=False):
+    """Typed dictionary for Hyperparameters input data."""
+
+    temperature: float | None
+    top_p: float | None
+    top_k: float | None
+
+
+class ReferenceInput(TypedDict, total=False):
+    """Typed dictionary for Reference input data."""
+
+    path: str
+    disabled: bool
+    ttl: int | None
+    persist: bool
+
+
+class TurnResponseInput(TypedDict, total=False):
+    """Typed dictionary for TurnResponse input data."""
+
+    status: str
+    message: str
+
+
+class UserTaskTurnInput(TypedDict):
+    """Typed dictionary for UserTaskTurn input data."""
+
+    type: str
+    instruction: str
+    timestamp: str
+
+
+class ModelResponseTurnInput(TypedDict):
+    """Typed dictionary for ModelResponseTurn input data."""
+
+    type: str
+    content: str
+    timestamp: str
+
+
+class FunctionCallingTurnInput(TypedDict):
+    """Typed dictionary for FunctionCallingTurn input data."""
+
+    type: str
+    response: str
+    timestamp: str
+
+
+class ToolResponseTurnInput(TypedDict):
+    """Typed dictionary for ToolResponseTurn input data."""
+
+    type: str
+    name: str
+    response: TurnResponseInput
+    timestamp: str
+
+
+class CompressedHistoryTurnInput(TypedDict):
+    """Typed dictionary for CompressedHistoryTurn input data."""
+
+    type: str
+    content: str
+    original_turns_range: list[int]
+    timestamp: str
+
+
+# Type alias for Turn inputs
+TurnInputType = (
+    UserTaskTurnInput
+    | ModelResponseTurnInput
+    | FunctionCallingTurnInput
+    | ToolResponseTurnInput
+    | CompressedHistoryTurnInput
+)
+
+
+class SessionInputData(TypedDict, total=False):
+    """Typed dictionary for Session input data during deserialization from JSON."""
+
+    session_id: str
+    created_at: str
+    purpose: str | None
+    background: str | None
+    roles: list[str]
+    multi_step_reasoning_enabled: bool
+    token_count: int
+    hyperparameters: HyperparametersInput | None
+    references: list[ReferenceInput]
+    artifacts: list[str]
+    procedure: str | None
+    turns: list[TurnInputType]
+    pools: list[TurnInputType]
+    todos: list[TodoItemInput | str]
 
 
 class SessionMetaUpdate(CamelCaseModel):
@@ -39,7 +141,7 @@ class Session(CamelCaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _preprocess_data(cls, data: dict[str, Any]) -> dict[str, Any]:
+    def _preprocess_data(cls, data: SessionInputData) -> SessionInputData:
         # Preprocess todos
         if "todos" in data:
             if data["todos"] is None:
@@ -49,17 +151,20 @@ class Session(CamelCaseModel):
                 for item in data["todos"]:
                     if isinstance(item, str):
                         processed_todos.append(TodoItem(title=item))
-                    elif isinstance(item, dict):
-                        processed_todos.append(TodoItem(**item))
-                    else:
+                    elif isinstance(item, TodoItem):
                         processed_todos.append(item)
+                    else:
+                        # Assume it's dict-like with TodoItem fields
+                        processed_todos.append(TodoItem(**item))
                 data["todos"] = processed_todos
 
         # Preprocess hyperparameters
         if "hyperparameters" in data and data["hyperparameters"] is not None:
-            if isinstance(data["hyperparameters"], dict):
+            if isinstance(data["hyperparameters"], Hyperparameters):
+                pass  # Already Hyperparameters, leave it as is
+            else:
+                # Assume it's dict-like with Hyperparameters fields
                 data["hyperparameters"] = Hyperparameters(**data["hyperparameters"])
-            # If it's already Hyperparameters, leave it as is
 
         return data
 
@@ -107,7 +212,11 @@ class Session(CamelCaseModel):
     todos: list[TodoItem] = Field(default_factory=list)
 
     def model_post_init(self, __context: Any) -> None:
-        """Initializes instance-specific configurations after the model is created."""
+        """Initializes instance-specific configurations after the model is created.
+
+        Note: __context parameter type is Any because it's a Pydantic framework
+        requirement. The context parameter is opaque and not used.
+        """
         # Populate private attributes from class variables. This ensures that
         # instances created by factories or direct instantiation are self-contained.
         self._sessions_dir = self.__class__.sessions_dir
@@ -119,10 +228,6 @@ class Session(CamelCaseModel):
         # Configure the reference collection with the instance-specific TTL
         if self.references:
             self.references.default_ttl = self._reference_ttl
-
-    @property
-    def file_path(self) -> str:
-        return self._get_session_path()
 
     @classmethod
     def setup(
@@ -147,18 +252,6 @@ class Session(CamelCaseModel):
             "top_k": settings.parameters.top_k.value,
         }
         cls.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
-
-    def _get_session_path(self) -> str:
-        if not self._sessions_dir:
-            raise ValueError("Session._sessions_dir is not configured.")
-        safe_path_parts = [
-            part for part in self.session_id.split("/") if part not in ("", ".", "..")
-        ]
-        final_path = os.path.join(self._sessions_dir, *safe_path_parts)
-        return f"{final_path}.json"
-
-    def _get_lock_path(self) -> str:
-        return f"{self._get_session_path()}.lock"
 
     def to_dict(self) -> dict:
         """Returns a dictionary representation of the session suitable for templates."""

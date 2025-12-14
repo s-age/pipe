@@ -55,17 +55,50 @@ class SessionTurnService:
         turn_index: int,
         new_data: UserTaskTurnUpdate | ModelResponseTurnUpdate | dict[str, Any],
     ):
-        """Edits a specific turn in a session.
+        """
+        Edits a specific turn in a session.
 
         Args:
             session_id: The session ID
             turn_index: Index of the turn to edit
-            new_data: Update data - accepts typed Update DTOs or dict
-                      for I/O Boundary (5-1)
+            new_data: Update data - accepts typed Update DTOs or dict[str, Any]
+                     Dict is converted to appropriate DTO at I/O boundary
+
+        Raises:
+            FileNotFoundError: If session not found
+            IndexError: If turn_index is out of range
+            ValueError: If turn type cannot be edited or invalid update data
+
+        Note:
+            This method accepts dict[str, Any] at the service layer (I/O boundary)
+            to support external callers (API, CLI, etc.). Dicts are automatically
+            validated and converted to typed DTOs before being passed to the
+            domain layer.
         """
         session = self.repository.find(session_id)
         if not session:
             raise FileNotFoundError(f"Session with ID '{session_id}' not found.")
+
+        # Validate turn index first
+        if not (0 <= turn_index < len(session.turns)):
+            raise IndexError("Turn index out of range.")
+
+        # Convert dict to appropriate DTO at I/O boundary
+        if isinstance(new_data, dict):
+            turn = session.turns[turn_index]
+            try:
+                if turn.type == "user_task":
+                    new_data = UserTaskTurnUpdate.model_validate(new_data)
+                elif turn.type == "model_response":
+                    new_data = ModelResponseTurnUpdate.model_validate(new_data)
+                else:
+                    raise ValueError(
+                        f"Editing turns of type '{turn.type}' is not allowed."
+                    )
+            except ValueError as e:
+                # Re-raise Pydantic validation errors with context
+                raise ValueError(f"Invalid turn update data: {e}") from e
+
         session.turns.edit_by_index(turn_index, new_data)
         self.repository.save(session)
 

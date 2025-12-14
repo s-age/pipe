@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.utils.datetime import get_current_timestamp
-from pipe.core.utils.file import FileLock, delete_file
 
 if TYPE_CHECKING:
     from pipe.core.models.session import Session
@@ -89,12 +88,16 @@ def fork_session(
 
 
 def destroy_session(session: "Session"):
-    """Deletes the session's JSON file and lock file.
+    """
+    Deletes the session's data files.
+
+    Note: This function is deprecated. Use SessionRepository.delete() instead,
+    which properly handles both session files and index updates.
 
     Args:
-        session: The session to destroy
+        session: The session to destroy (not used, kept for backward compatibility)
     """
-    session_path = session._get_session_path()
-    lock_path = session._get_lock_path()
-    with FileLock(lock_path):
-        delete_file(session_path)
+    raise NotImplementedError(
+        "destroy_session() is deprecated. "
+        "Use SessionRepository.delete(session_id) instead."
+    )

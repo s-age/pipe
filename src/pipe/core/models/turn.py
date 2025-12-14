@@ -17,14 +17,30 @@ class TurnResponse(CamelCaseModel):
 
 
 class UserTaskTurnUpdate(CamelCaseModel):
-    """Update DTO for UserTaskTurn. All fields optional for partial updates."""
+    """
+    Update DTO for UserTaskTurn.
+
+    Used at service layer (I/O boundary) for partial updates.
+    All fields are optional to support partial updates.
+    Extra fields are rejected to prevent invalid data.
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
     instruction: str | None = None
     timestamp: str | None = None
 
 
 class ModelResponseTurnUpdate(CamelCaseModel):
-    """Update DTO for ModelResponseTurn. All fields optional for partial updates."""
+    """
+    Update DTO for ModelResponseTurn.
+
+    Used at service layer (I/O boundary) for partial updates.
+    All fields are optional to support partial updates.
+    Extra fields are rejected to prevent invalid data.
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
     content: str | None = None
     timestamp: str | None = None

@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pipe.core.models.turn import (
     ModelResponseTurnUpdate,
@@ -59,13 +59,14 @@ class TurnCollection(list[Turn]):
     def edit_by_index(
         self,
         turn_index: int,
-        new_data: UserTaskTurnUpdate | ModelResponseTurnUpdate | dict[str, Any],
+        new_data: UserTaskTurnUpdate | ModelResponseTurnUpdate,
     ):
         """Edits a specific turn in this collection.
 
         Args:
             turn_index: Index of the turn to edit
-            new_data: Update data - accepts typed Update DTOs or dict
+            new_data: Update data - accepts typed DTOs (UserTaskTurnUpdate
+                or ModelResponseTurnUpdate)
 
         Raises:
             IndexError: If turn_index is out of range
@@ -88,8 +89,8 @@ class TurnCollection(list[Turn]):
         if isinstance(new_data, UserTaskTurnUpdate | ModelResponseTurnUpdate):
             update_dict = new_data.model_dump(exclude_unset=True)
         else:
-            update_dict = new_data
-
+            # Should not reach here due to type hints, but handle gracefully
+            update_dict = new_data if isinstance(new_data, dict) else {}
         turn_as_dict.update(update_dict)
 
         if original_turn.type == "user_task":

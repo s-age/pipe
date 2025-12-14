@@ -54,6 +54,13 @@ class ActionDispatcher:
             response = ApiResponse(success=False, message="; ".join(error_messages))
             return response.model_dump(mode="json", by_alias=True), 422
         except Exception as e:
+            # Check if this is a custom HTTP exception from validation
+            from pipe.web.exceptions import HttpException
+
+            if isinstance(e, HttpException):
+                response = ApiResponse(success=False, message=e.message)
+                return response.model_dump(mode="json", by_alias=True), e.status_code
+
             return {"success": False, "message": str(e)}, 500
 
         # 2. Prepare Runtime Context

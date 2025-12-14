@@ -5,5 +5,11 @@ export type RoleOption = {
   value: string
 }
 
-export const getRoles = async (): Promise<RoleOption[]> =>
-  client.get<RoleOption[]>('/fs/roles')
+type RolesResponse = {
+  roles: RoleOption[]
+}
+
+export const getRoles = async (): Promise<RoleOption[]> => {
+  const response = await client.get<RolesResponse>('/fs/roles')
+  return response.roles
+}

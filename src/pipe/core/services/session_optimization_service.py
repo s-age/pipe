@@ -53,17 +53,19 @@ class SessionOptimizationService:
     def __init__(
         self,
         project_root: str,
+        takt_agent: TaktAgent,
         repository=None,
     ):
         """Initialize the service.
 
         Args:
             project_root: Path to the project root directory
+            takt_agent: Agent for running optimization sessions
             repository: SessionRepository for persistence
         """
         self.project_root = project_root
         self.repository = repository
-        self.takt_agent = TaktAgent(project_root)
+        self.takt_agent = takt_agent
 
     # =========================================================================
     # Compression Operations

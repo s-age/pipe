@@ -3,8 +3,8 @@ from pipe.core.repositories.file_index_repository import FileIndexRepository
 
 
 class FileIndexerService:
-    def __init__(self, base_path: str):
-        self.repository = FileIndexRepository(base_path=base_path)
+    def __init__(self, repository: FileIndexRepository):
+        self.repository = repository
 
     def create_index(self):
         """Creates or updates the Whoosh index."""

@@ -174,9 +174,7 @@ class SessionRepository(FileRepository):
             ValueError: If the index data is invalid
         """
         with file_lock(self.index_lock_path):
-            index_data = self._read_json(
-                self.index_path, default_data={"sessions": {}}
-            )
+            index_data = self._read_json(self.index_path, default_data={"sessions": {}})
         # Convert dict entries to SessionIndexEntry objects
         sessions = {}
         for session_id, entry_data in index_data.get("sessions", {}).items():
@@ -239,8 +237,9 @@ class SessionRepository(FileRepository):
                     os.rmdir(current_dir)
                     current_dir = os.path.dirname(current_dir)
                 except OSError as e:
-                    self._write_error_log(
-                        f"Error deleting empty directory {current_dir}: {e}"
+                    print(
+                        f"Error deleting empty directory {current_dir}: {e}",
+                        file=sys.stderr,
                     )
                     break  # Stop if we encounter an error or non-empty directory
 
@@ -292,6 +291,36 @@ class SessionRepository(FileRepository):
         backup_path = os.path.join(self.backups_dir, backup_filename)
 
         shutil.copy(session_path, backup_path)
+
+    def move_to_backup(self, session_id: str) -> bool:
+        """
+        Moves a session to backup and removes it from the active sessions.
+
+        This operation:
+        1. Creates a backup of the session
+        2. Deletes the original session file
+        3. Removes the session from the index
+
+        Args:
+            session_id: ID of the session to move to backup
+
+        Returns:
+            True if the session was successfully moved, False otherwise
+        """
+        try:
+            # Load session
+            session = self.find(session_id)
+            if not session:
+                return False
+
+            # Create backup
+            self.backup(session)
+
+            # Delete original (which also removes from index)
+            return self.delete(session_id)
+
+        except Exception:
+            return False
 
     def delete_backup(self, session_id: str):
         """Deletes a backup session file."""

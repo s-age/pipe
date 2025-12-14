@@ -1,14 +1,15 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pipe.core.models.base import CamelCaseModel
+from pydantic import ConfigDict, Field
 
 
-class HyperparameterValue(BaseModel):
+class HyperparameterValue(CamelCaseModel):
     """Represents the value and description of a hyperparameter."""
 
     value: float
     description: str
 
 
-class Parameters(BaseModel):
+class Parameters(CamelCaseModel):
     """Container for model hyperparameters."""
 
     temperature: HyperparameterValue
@@ -16,7 +17,7 @@ class Parameters(BaseModel):
     top_k: HyperparameterValue = Field(..., alias="top_k")
 
 
-class Settings(BaseModel):
+class Settings(CamelCaseModel):
     """Represents the application settings loaded from setting.yml."""
 
     model: str = "gemini-2.5-flash"
@@ -33,8 +34,6 @@ class Settings(BaseModel):
     tool_response_expiration: int = 3
     timezone: str = "UTC"
 
-    model_config = ConfigDict(populate_by_name=True)
-
     def to_api_dict(self) -> dict:
         """Convert settings to API-friendly dictionary format.
 
@@ -43,7 +42,7 @@ class Settings(BaseModel):
         Returns:
             Dictionary with hyperparameters instead of parameters
         """
-        settings_dict = self.model_dump()
+        settings_dict = self.model_dump(by_alias=True)
 
         # Convert internal `parameters` to public `hyperparameters` mapping
         params = settings_dict.pop("parameters", None)

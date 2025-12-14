@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from pydantic import BaseModel
+from pipe.core.models.base import CamelCaseModel
 
 from ..models.artifact import Artifact  # Import Artifact model
 from .prompts.constraints import PromptConstraints
@@ -24,7 +24,7 @@ class ReasoningProcess(TypedDict):
 
 
 # Top-level model corresponding to gemini_api_prompt.j2
-class Prompt(BaseModel):
+class Prompt(CamelCaseModel):
     # Core instructions and immediate task
     description: str
     main_instruction: str

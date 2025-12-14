@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING
 
+from pipe.core.models.base import CamelCaseModel
 from pipe.core.models.turn import Turn
-from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from pipe.core.collections.turns import TurnCollection
 
 
-class PromptConversationHistory(BaseModel):
+class PromptConversationHistory(CamelCaseModel):
     description: str
     turns: list[Turn]
 

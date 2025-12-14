@@ -5,7 +5,7 @@ This service is responsible for constructing hierarchical views of sessions,
 handling parent-child relationships, and providing tree-based queries.
 """
 
-from pipe.core.collections.sessions import SessionCollection
+from pipe.core.models.session_index import SessionIndex
 from pipe.core.models.settings import Settings
 from pipe.core.repositories.session_repository import SessionRepository
 
@@ -49,21 +49,18 @@ class SessionTreeService:
                 ]
             }
         """
-        index_data = self.repository.get_index()
-        sessions_collection = SessionCollection(index_data, self.settings.timezone)
-        sorted_sessions = sessions_collection.get_sorted_by_last_updated()
+        index = self.repository.load_index()
+        sorted_sessions = index.get_sessions_sorted_by_last_updated()
 
         # Build nodes dictionary
         nodes: dict[str, dict] = {}
         for sid, session_meta in sorted_sessions:
             if not sid:
                 continue
-            # Add session_id to the metadata from index
-            meta = {**session_meta, "session_id": sid}
-            # Ensure last_updated_at is present
-            meta["last_updated_at"] = meta.get(
-                "last_updated_at", meta.get("last_updated", "")
-            )
+            # Convert SessionIndexEntry to dict and add session_id
+            meta = session_meta.model_dump(by_alias=True)
+            meta["session_id"] = sid
+            # last_updated_at is already present in SessionIndexEntry
             nodes[sid] = {"session_id": sid, "overview": meta, "children": []}
 
         # Build tree structure by resolving parent-child relationships
@@ -87,7 +84,8 @@ class SessionTreeService:
         # Prepare sessions dict with session_id included in the value
         sessions_with_id = {}
         for sid, meta in sorted_sessions:
-            sessions_with_id[sid] = {**meta, "session_id": sid}
+            meta_dict = meta.model_dump(by_alias=True)
+            sessions_with_id[sid] = {**meta_dict, "session_id": sid}
 
         return {
             "sessions": sessions_with_id,

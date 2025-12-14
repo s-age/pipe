@@ -7,6 +7,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 from pipe.core.models.settings import Settings
+from pipe.core.repositories.file_index_repository import FileIndexRepository
 from pipe.core.repositories.procedure_repository import ProcedureRepository
 from pipe.core.repositories.role_repository import RoleRepository
 from pipe.core.repositories.session_repository import SessionRepository
@@ -61,7 +62,8 @@ class ServiceFactory:
 
     def create_file_indexer_service(self) -> FileIndexerService:
         """Creates a FileIndexerService with its dependencies."""
-        return FileIndexerService(self.project_root)
+        repository = FileIndexRepository(base_path=self.project_root)
+        return FileIndexerService(repository)
 
     def create_session_management_service(self) -> SessionManagementService:
         """Creates a SessionManagementService with its dependencies."""
@@ -94,10 +96,13 @@ class ServiceFactory:
     def create_session_optimization_service(self) -> SessionOptimizationService:
         """Creates a SessionOptimizationService with its dependencies."""
         if self._session_optimization_service_instance is None:
+            from pipe.core.agents.takt_agent import TaktAgent
+
             session_service = self.create_session_service()
             repository = SessionRepository(self.project_root, self.settings)
+            takt_agent = TaktAgent(self.project_root)
             self._session_optimization_service_instance = SessionOptimizationService(
-                self.project_root, repository
+                self.project_root, takt_agent, repository
             )
             # Set history_manager to enable tool compatibility
             session_service.set_history_manager(

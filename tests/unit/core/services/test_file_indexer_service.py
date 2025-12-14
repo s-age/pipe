@@ -1,5 +1,5 @@
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 from pipe.core.models.file_search import (  # noqa: F401
@@ -14,17 +14,14 @@ TEST_BASE_PATH = "/tmp/test_project_root"
 
 @pytest.fixture
 def mock_repository():
-    with patch(
-        "pipe.core.services.file_indexer_service.FileIndexRepository"
-    ) as MockRepo:
-        repo_instance = MockRepo.return_value
-        repo_instance.base_path = TEST_BASE_PATH
-        yield repo_instance
+    repo_instance = MagicMock()
+    repo_instance.base_path = TEST_BASE_PATH
+    return repo_instance
 
 
 @pytest.fixture
 def file_indexer_service(mock_repository):
-    return FileIndexerService(base_path=TEST_BASE_PATH)
+    return FileIndexerService(repository=mock_repository)
 
 
 def test_create_index(file_indexer_service, mock_repository):

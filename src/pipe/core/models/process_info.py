@@ -1,9 +1,10 @@
 """Process information model for session execution tracking."""
 
-from pydantic import BaseModel, Field
+from pipe.core.models.base import CamelCaseModel
+from pydantic import Field
 
 
-class ProcessInfo(BaseModel):
+class ProcessInfo(CamelCaseModel):
     """
     Tracks process information for a running session.
 

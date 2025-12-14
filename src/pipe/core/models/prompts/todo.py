@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from pipe.core.models.base import CamelCaseModel
 
 
-class PromptTodo(BaseModel):
+class PromptTodo(CamelCaseModel):
     title: str
     description: str
     checked: bool

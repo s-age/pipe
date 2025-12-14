@@ -5,5 +5,11 @@ export type ProcedureOption = {
   value: string
 }
 
-export const getProcedures = async (): Promise<ProcedureOption[]> =>
-  client.get<ProcedureOption[]>('/fs/procedures')
+type ProceduresResponse = {
+  procedures: ProcedureOption[]
+}
+
+export const getProcedures = async (): Promise<ProcedureOption[]> => {
+  const response = await client.get<ProceduresResponse>('/fs/procedures')
+  return response.procedures
+}

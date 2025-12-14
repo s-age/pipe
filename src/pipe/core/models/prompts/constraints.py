@@ -1,18 +1,18 @@
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel
+from pipe.core.models.base import CamelCaseModel
 
 if TYPE_CHECKING:
     from pipe.core.models.settings import Settings
 
 
-class PromptHyperparameter(BaseModel):
+class PromptHyperparameter(CamelCaseModel):
     type: str
     value: float
     description: str
 
 
-class PromptHyperparameters(BaseModel):
+class PromptHyperparameters(CamelCaseModel):
     description: str
     temperature: PromptHyperparameter
     top_p: PromptHyperparameter
@@ -33,12 +33,12 @@ class PromptHyperparameters(BaseModel):
         )
 
 
-class PromptProcessingConfig(BaseModel):
+class PromptProcessingConfig(CamelCaseModel):
     description: str
     multi_step_reasoning_active: bool
 
 
-class PromptConstraints(BaseModel):
+class PromptConstraints(CamelCaseModel):
     description: str
     language: str
     processing_config: PromptProcessingConfig

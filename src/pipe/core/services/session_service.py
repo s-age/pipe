@@ -8,7 +8,7 @@ import sys
 import zoneinfo
 from typing import TYPE_CHECKING, Any
 
-from pipe.core.collections.sessions import SessionCollection
+from pipe.core.models.session_index import SessionIndex
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.artifact import Artifact
 from pipe.core.models.hyperparameters import Hyperparameters
@@ -59,10 +59,9 @@ class SessionService:
         """Loads a specific session."""
         return self.repository.find(session_id)
 
-    def list_sessions(self) -> SessionCollection:
-        """Loads and returns the latest session collection from the repository."""
-        index_data = self.repository.get_index()
-        return SessionCollection(index_data, self.settings.timezone)
+    def list_sessions(self) -> SessionIndex:
+        """Loads and returns the latest session index from the repository."""
+        return self.repository.load_index()
 
     def prepare(self, args: TaktArgs, is_dry_run: bool = False):
         """

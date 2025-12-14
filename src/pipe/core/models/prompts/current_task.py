@@ -1,8 +1,8 @@
+from pipe.core.models.base import CamelCaseModel
 from pipe.core.models.turn import TurnResponse
-from pydantic import BaseModel
 
 
-class PromptCurrentTask(BaseModel):
+class PromptCurrentTask(CamelCaseModel):
     type: str
     instruction: str | None = None
     response: str | TurnResponse | None = None

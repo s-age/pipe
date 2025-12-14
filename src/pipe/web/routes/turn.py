@@ -1,6 +1,7 @@
 """Turn-related API routes."""
 
 from flask import Blueprint, Response, jsonify, request
+from pipe.web.actions.turn import SessionForkAction, TurnDeleteAction, TurnEditAction
 from pipe.web.dispatcher import dispatch_action
 
 turn_bp = Blueprint("turn", __name__, url_prefix="/api/v1/session/<path:session_id>")
@@ -10,7 +11,7 @@ turn_bp = Blueprint("turn", __name__, url_prefix="/api/v1/session/<path:session_
 def delete_turn(session_id, turn_index):
     """Delete a turn from a session."""
     response_data, status_code = dispatch_action(
-        action=f"session/{session_id}/turn/{turn_index}",
+        action=TurnDeleteAction,
         params={"session_id": session_id, "turn_index": turn_index},
         request_data=request,
     )
@@ -23,7 +24,7 @@ def delete_turn(session_id, turn_index):
 def edit_turn(session_id, turn_index):
     """Edit a turn in a session."""
     response_data, status_code = dispatch_action(
-        action=f"session/{session_id}/turn/{turn_index}",
+        action=TurnEditAction,
         params={"session_id": session_id, "turn_index": turn_index},
         request_data=request,
     )
@@ -36,7 +37,7 @@ def edit_turn(session_id, turn_index):
 def fork_session(session_id, fork_index):
     """Fork a session at a specific index."""
     response_data, status_code = dispatch_action(
-        action=f"session/{session_id}/fork/{fork_index}",
+        action=SessionForkAction,
         params={"session_id": session_id, "fork_index": fork_index},
         request_data=request,
     )

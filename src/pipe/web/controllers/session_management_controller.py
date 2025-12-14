@@ -35,14 +35,14 @@ class SessionManagementController:
             archives_response = archives_action.execute()
 
             # Extract sessions list from the response
-            sessions_list = archives_response.get("sessions", [])
+            sessions_list = archives_response.sessions
 
             archives = []
             for item in sessions_list:
-                session_data = item.get("session_data", {})
+                session_data = item.session_data or {}
                 archives.append(
                     {
-                        "session_id": item.get("session_id", ""),
+                        "session_id": item.session_id or "",
                         "purpose": session_data.get("purpose", ""),
                         "background": session_data.get("background", ""),
                         "roles": session_data.get("roles", []),
@@ -53,14 +53,12 @@ class SessionManagementController:
                         ),
                         "token_count": session_data.get("token_count", 0),
                         "last_updated_at": session_data.get("last_updated", ""),
-                        "deleted_at": item.get("deleted_at") or "",
+                        "deleted_at": item.deleted_at or "",
                     }
                 )
 
             return {
-                "session_tree": tree_response.get(
-                    "session_tree", tree_response.get("sessions", [])
-                ),
+                "session_tree": tree_response.session_tree,
                 "archives": archives,
             }, 200
         except HttpException as e:

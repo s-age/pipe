@@ -38,11 +38,9 @@ class SessionChatController:
             settings_data = settings_action.execute()
 
             response = {
-                "sessions": tree_response.get("sessions", []),
-                "session_tree": tree_response.get(
-                    "session_tree", tree_response.get("sessions", [])
-                ),
-                "settings": settings_data.get("settings", {}),
+                "sessions": tree_response.sessions,
+                "session_tree": tree_response.session_tree,
+                "settings": settings_data.settings,
             }
 
             if session_id:

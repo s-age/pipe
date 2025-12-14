@@ -1,21 +1,22 @@
 """Index files action."""
 
 from flask import Request
-from pipe.core.services.file_indexer_service import FileIndexerService
+from pipe.web.action_responses import SuccessMessageResponse
 from pipe.web.actions.base_action import BaseAction
 
 
 class IndexFilesAction(BaseAction):
     def __init__(
         self,
-        file_indexer_service: FileIndexerService,
         params: dict | None = None,
         request_data: Request | None = None,
-        **kwargs,  # Accept additional kwargs from dispatcher
+        **kwargs,
     ):
         super().__init__(params, request_data, **kwargs)
-        self.file_indexer_service = file_indexer_service
 
-    def execute(self) -> dict[str, str]:
-        self.file_indexer_service.create_index()
-        return {"message": "Index created successfully"}
+    def execute(self) -> SuccessMessageResponse:
+        from pipe.web.service_container import get_file_indexer_service
+
+        get_file_indexer_service().create_index()
+
+        return SuccessMessageResponse(message="Indexing started")

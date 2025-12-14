@@ -3,7 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from flask import Request
+from flask import Request, Response
+from pipe.core.models.base import CamelCaseModel
 from pipe.web.request_context import RequestContext
 from pipe.web.requests.base_request import BaseRequest
 from pydantic import BaseModel
@@ -38,7 +39,7 @@ class BaseAction(ABC, Generic[TBody, TRequest]):
         class CreateSessionAction(BaseAction[CreateSessionBody, CreateSessionRequest]):
             request_model = CreateSessionRequest
 
-            def execute(self):
+            def execute(self) -> SessionResponse:
                 req = self.validated_request  # Type: CreateSessionRequest
                 return service.create(req.session_id)  # IDE completion works!
 
@@ -46,7 +47,7 @@ class BaseAction(ABC, Generic[TBody, TRequest]):
         class UpdateSessionAction(BaseAction[UpdateSessionBody, BaseRequest]):
             body_model = UpdateSessionBody
 
-            def execute(self):
+            def execute(self) -> SessionResponse:
                 body = self.request.get_body()  # Type: UpdateSessionBody
                 return service.update(body.name)
     """
@@ -91,16 +92,14 @@ class BaseAction(ABC, Generic[TBody, TRequest]):
         self.request_data = request_data
 
     @abstractmethod
-    def execute(self) -> dict | list | str | int | bool:
+    def execute(self) -> CamelCaseModel | Response:
         """Execute the action and return the result.
 
         Actions should return the business logic result directly.
         The dispatcher will wrap it in ApiResponse and handle errors.
 
         Return types:
-        - Data object: Wrapped in ApiResponse with 200 status
-        - tuple[dict, int]: Legacy support for (response_dict, status_code)
-        - tuple[ApiResponse, int]: Legacy support
+        - CamelCaseModel: Pydantic model (wrapped in ApiResponse with 200 status)
         - Response: Flask Response object (for streaming, etc.)
 
         Error handling:
@@ -109,23 +108,10 @@ class BaseAction(ABC, Generic[TBody, TRequest]):
         - No need to catch and format errors yourself
 
         Returns:
-            Business logic result (any type)
+            Business logic result (Pydantic model or Flask Response)
 
         Raises:
             HttpException: For specific HTTP status codes
             Exception: For unexpected errors (becomes 500)
-
-        Examples:
-            # New pattern - return data directly
-            def execute(self):
-                req = self.validated_request
-                result = service.do_something(req.param)
-                return result  # Dispatcher wraps in ApiResponse
-
-            # Raise errors for non-200 responses
-            def execute(self):
-                if not found:
-                    raise NotFoundError("Resource not found")
-                return data
         """
         pass

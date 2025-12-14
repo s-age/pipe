@@ -74,7 +74,7 @@ class TestSessionModel(unittest.TestCase):
         self.assertEqual(session.references, [])
         self.assertIsInstance(session.turns, TurnCollection)
         self.assertEqual(len(session.turns), 0)
-        self.assertIsNone(session.todos)
+        self.assertEqual(session.todos, [])
 
     def test_save_session_to_file(self):
         """

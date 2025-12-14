@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from pipe.core.services.file_indexer_service import FileIndexerService
     from pipe.core.services.procedure_service import ProcedureService
     from pipe.core.services.role_service import RoleService
+    from pipe.core.services.search_sessions_service import SearchSessionsService
     from pipe.core.services.session_management_service import SessionManagementService
     from pipe.core.services.session_meta_service import SessionMetaService
     from pipe.core.services.session_optimization_service import (
@@ -46,6 +47,7 @@ class ServiceContainer:
         self._session_chat_controller: SessionChatController | None = None
         self._session_management_controller: SessionManagementController | None = None
         self._file_indexer_service: FileIndexerService | None = None
+        self._search_sessions_service: SearchSessionsService | None = None
         self._procedure_service: ProcedureService | None = None
         self._role_service: RoleService | None = None
         self._settings: Settings | None = None
@@ -66,6 +68,7 @@ class ServiceContainer:
         session_chat_controller: "SessionChatController",
         session_management_controller: "SessionManagementController",
         file_indexer_service: "FileIndexerService",
+        search_sessions_service: "SearchSessionsService",
         procedure_service: "ProcedureService",
         role_service: "RoleService",
         settings: "Settings",
@@ -85,6 +88,7 @@ class ServiceContainer:
         self._session_chat_controller = session_chat_controller
         self._session_management_controller = session_management_controller
         self._file_indexer_service = file_indexer_service
+        self._search_sessions_service = search_sessions_service
         self._procedure_service = procedure_service
         self._role_service = role_service
         self._settings = settings
@@ -167,6 +171,12 @@ class ServiceContainer:
         if self._file_indexer_service is None:
             raise RuntimeError("ServiceContainer not initialized")
         return self._file_indexer_service
+
+    @property
+    def search_sessions_service(self) -> "SearchSessionsService":
+        if self._search_sessions_service is None:
+            raise RuntimeError("ServiceContainer not initialized")
+        return self._search_sessions_service
 
     @property
     def settings(self) -> "Settings":
@@ -265,6 +275,11 @@ def get_session_management_controller() -> "SessionManagementController":
 def get_file_indexer_service() -> "FileIndexerService":
     """Get the file indexer service from the container."""
     return _container.file_indexer_service
+
+
+def get_search_sessions_service() -> "SearchSessionsService":
+    """Get the search sessions service from the container."""
+    return _container.search_sessions_service
 
 
 def get_settings() -> "Settings":

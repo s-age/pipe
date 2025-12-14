@@ -5,7 +5,7 @@ Handles all /api/v1/bff/* endpoints.
 """
 
 from flask import Blueprint, jsonify, request
-from pipe.web.dispatcher import _convert_keys_to_camel
+from pipe.web.binder import _convert_keys_to_camel
 from pipe.web.responses import ApiResponse
 from pipe.web.service_container import (
     get_session_chat_controller,
@@ -31,10 +31,10 @@ def get_start_session():
             response_data = _convert_keys_to_camel(response_data)
         # Wrap in ApiResponse format
         api_response = ApiResponse(success=True, data=response_data)
-        return jsonify(api_response.model_dump()), status_code
+        return jsonify(api_response.model_dump(mode="json", by_alias=True)), status_code
     except Exception as e:
         api_response = ApiResponse(success=False, message=str(e))
-        return jsonify(api_response.model_dump()), 500
+        return jsonify(api_response.model_dump(mode="json", by_alias=True)), 500
 
 
 @bff_bp.route("/session_management", methods=["GET"])
@@ -50,10 +50,10 @@ def get_session_management():
             response_data = _convert_keys_to_camel(response_data)
         # Wrap in ApiResponse format
         api_response = ApiResponse(success=True, data=response_data)
-        return jsonify(api_response.model_dump()), status_code
+        return jsonify(api_response.model_dump(mode="json", by_alias=True)), status_code
     except Exception as e:
         api_response = ApiResponse(success=False, message=str(e))
-        return jsonify(api_response.model_dump()), 500
+        return jsonify(api_response.model_dump(mode="json", by_alias=True)), 500
 
 
 @bff_bp.route("/chat_history", methods=["GET"])
@@ -72,7 +72,7 @@ def get_chat_history():
             response_data = _convert_keys_to_camel(response_data)
         # Wrap in ApiResponse format
         api_response = ApiResponse(success=True, data=response_data)
-        return jsonify(api_response.model_dump()), status_code
+        return jsonify(api_response.model_dump(mode="json", by_alias=True)), status_code
     except Exception as e:
         api_response = ApiResponse(success=False, message=str(e))
-        return jsonify(api_response.model_dump()), 500
+        return jsonify(api_response.model_dump(mode="json", by_alias=True)), 500

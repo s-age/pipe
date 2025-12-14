@@ -1,5 +1,6 @@
 """Todos delete action."""
 
+from pipe.web.action_responses import SuccessMessageResponse
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests.sessions.delete_todos import DeleteTodosRequest
 
@@ -7,9 +8,9 @@ from pipe.web.requests.sessions.delete_todos import DeleteTodosRequest
 class TodosDeleteAction(BaseAction):
     request_model = DeleteTodosRequest
 
-    def execute(self) -> dict[str, str]:
+    def execute(self) -> SuccessMessageResponse:
         from pipe.web.service_container import get_session_todo_service
 
-        request = self.validated_request
-        get_session_todo_service().delete_todos(request.session_id)
-        return {"message": f"Todos deleted from session {request.session_id}."}
+        get_session_todo_service().delete_todos(self.validated_request.session_id)
+
+        return SuccessMessageResponse(message="Todos deleted successfully")

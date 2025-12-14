@@ -2,6 +2,7 @@
 
 import logging
 
+from pipe.web.action_responses import SessionStopResponse
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests.sessions.stop_session import StopSessionRequest
 
@@ -23,7 +24,7 @@ class SessionStopAction(BaseAction):
 
     request_model = StopSessionRequest
 
-    def execute(self) -> dict[str, str]:
+    def execute(self) -> SessionStopResponse:
         from pipe.core.factories.service_factory import ServiceFactory
         from pipe.core.services.process_manager_service import ProcessManagerService
         from pipe.web.service_container import get_session_service
@@ -57,4 +58,7 @@ class SessionStopAction(BaseAction):
         logger.info(f"Cleaning up process information for session {session_id}")
         process_manager.cleanup_process(session_id)
 
-        return {"message": f"Session {session_id} stopped and transaction rolled back."}
+        return SessionStopResponse(
+            message=f"Session {session_id} stopped and transaction rolled back.",
+            session_id=session_id,
+        )

@@ -8,11 +8,6 @@ from flask_cors import CORS
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.utils.file import read_text_file
-from pipe.web.actions.fs import (
-    IndexFilesAction,
-    LsAction,
-    SearchL2Action,
-)
 from pipe.web.controllers import (
     SessionChatController,
     SessionManagementController,
@@ -146,6 +141,7 @@ def create_app(
     session_meta_service = service_factory.create_session_meta_service()
     session_todo_service = service_factory.create_session_todo_service()
     file_indexer_service = service_factory.create_file_indexer_service()
+    search_sessions_service = service_factory.create_search_sessions_service()
     procedure_service = service_factory.create_procedure_service()
     role_service = service_factory.create_role_service()
 
@@ -171,17 +167,16 @@ def create_app(
         session_chat_controller=session_chat_controller,
         session_management_controller=session_management_controller,
         file_indexer_service=file_indexer_service,
+        search_sessions_service=search_sessions_service,
         procedure_service=procedure_service,
         role_service=role_service,
         settings=settings,
         project_root=project_root,
     )
 
-    # Initialize dispatcher with file indexer actions
-    search_l2_action = SearchL2Action(file_indexer_service, {})
-    ls_action = LsAction(file_indexer_service, {})
-    index_files_action = IndexFilesAction(file_indexer_service, {})
-    init_dispatcher(search_l2_action, ls_action, index_files_action)
+    # Initialize dispatcher
+    # Passed file_indexer_service to be registered in the internal DI container
+    init_dispatcher(file_indexer_service)
 
     # Register blueprints (like Laravel route groups with prefixes)
     app.register_blueprint(session_bp)  # /api/v1/session/*
@@ -201,6 +196,11 @@ def create_app(
         """
         Central dispatcher for v1 API endpoints not handled by specific blueprints.
         Routes actions to appropriate handlers via dispatch_action().
+
+        Note: With the new type-based dispatching, this catch-all might fail if
+        'action' is just a string. It's recommended to rely on explicit Blueprints.
+        This function is kept for backward compatibility if any string-based routing
+        remains.
         """
         if request.method == "OPTIONS":
             response = jsonify({"status": "ok"})
@@ -229,6 +229,8 @@ def create_app(
                         elif parts[2] == "fork" and len(parts) >= 4:
                             params["fork_index"] = parts[3]
 
+            # Warning: dispatch_action now expects a Type, not a string.
+            # This endpoint will likely raise a ValueError if hit.
             response_data, status_code = dispatch_action(
                 action=action, params=params, request_data=request
             )

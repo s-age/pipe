@@ -4,7 +4,18 @@ Handles all /api/v1/session/* endpoints.
 """
 
 from flask import Blueprint, Response, jsonify, request
-from pipe.web.actions.session import SessionInstructionAction
+from pipe.web.actions import (
+    ApproveCompressorAction,
+    CreateCompressorSessionAction,
+    CreateTherapistSessionAction,
+    DenyCompressorAction,
+    SessionDeleteAction,
+    SessionGetAction,
+    SessionInstructionAction,
+    SessionStartAction,
+    SessionTurnsGetAction,
+)
+from pipe.web.actions.therapist import ApplyDoctorModificationsAction
 from pipe.web.dispatcher import dispatch_action
 from pipe.web.request_context import RequestContext
 from pipe.web.streaming_dispatcher import dispatch_streaming_action
@@ -16,7 +27,7 @@ session_bp = Blueprint("session", __name__, url_prefix="/api/v1")
 def create_new_session():
     """Create a new session."""
     response_data, status_code = dispatch_action(
-        action="session/start", params={}, request_data=request
+        action=SessionStartAction, params={}, request_data=request
     )
     return jsonify(response_data), status_code
 
@@ -24,8 +35,12 @@ def create_new_session():
 @session_bp.route("/session/<path:session_id>", methods=["GET", "DELETE"])
 def session_api(session_id):
     """Get or delete a session."""
+    action_class = (
+        SessionDeleteAction if request.method == "DELETE" else SessionGetAction
+    )
+
     response_data, status_code = dispatch_action(
-        action=f"session/{session_id}",
+        action=action_class,
         params={"session_id": session_id},
         request_data=request,
     )
@@ -73,7 +88,7 @@ def send_instruction(session_id):
 def get_session_turns(session_id):
     """Get turns for a session."""
     response_data, status_code = dispatch_action(
-        action=f"session/{session_id}/turns",
+        action=SessionTurnsGetAction,
         params={"session_id": session_id, "since": request.args.get("since", 0)},
         request_data=request,
     )
@@ -84,7 +99,29 @@ def get_session_turns(session_id):
 def create_compressor_session():
     """Create a compressor session."""
     response_data, status_code = dispatch_action(
-        action="compress", params={}, request_data=request
+        action=CreateCompressorSessionAction, params={}, request_data=request
+    )
+    return jsonify(response_data), status_code
+
+
+@session_bp.route("/compress/<path:session_id>/approve", methods=["POST"])
+def approve_compressor_session(session_id):
+    """Approve compressor session."""
+    response_data, status_code = dispatch_action(
+        action=ApproveCompressorAction,
+        params={"session_id": session_id},
+        request_data=request,
+    )
+    return jsonify(response_data), status_code
+
+
+@session_bp.route("/compress/<path:session_id>/deny", methods=["POST"])
+def deny_compressor_session(session_id):
+    """Deny compressor session."""
+    response_data, status_code = dispatch_action(
+        action=DenyCompressorAction,
+        params={"session_id": session_id},
+        request_data=request,
     )
     return jsonify(response_data), status_code
 
@@ -93,7 +130,7 @@ def create_compressor_session():
 def create_therapist_session():
     """Create a therapist session."""
     response_data, status_code = dispatch_action(
-        action="therapist", params={}, request_data=request
+        action=CreateTherapistSessionAction, params={}, request_data=request
     )
     return jsonify(response_data), status_code
 
@@ -102,6 +139,6 @@ def create_therapist_session():
 def apply_doctor_modifications():
     """Apply doctor modifications."""
     response_data, status_code = dispatch_action(
-        action="doctor", params={}, request_data=request
+        action=ApplyDoctorModificationsAction, params={}, request_data=request
     )
     return jsonify(response_data), status_code

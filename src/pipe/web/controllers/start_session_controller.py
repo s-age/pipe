@@ -45,12 +45,10 @@ class StartSessionController:
 
             return {
                 # Prefer hierarchical session_tree if provided by the action
-                "session_tree": tree_response.get(
-                    "session_tree", tree_response.get("sessions", [])
-                ),
+                "session_tree": tree_response.session_tree,
                 "current_session": session_data,
-                "settings": settings_data.get("settings", {}),
-                "role_options": roles_data,
+                "settings": settings_data.settings,
+                "role_options": roles_data.roles,
             }, 200
         except HttpException as e:
             return {"success": False, "message": e.message}, e.status_code
@@ -70,12 +68,14 @@ class StartSessionController:
             settings_action = SettingsGetAction(params={}, request_data=request_data)
             settings_data = settings_action.execute()
 
+            roles_action = GetRolesAction(params={}, request_data=request_data)
+            roles_data = roles_action.execute()
+
             return {
-                "settings": settings_data.get("settings", {}),
+                "settings": settings_data.settings,
                 # Prefer hierarchical session_tree when available
-                "session_tree": tree_response.get(
-                    "session_tree", tree_response.get("sessions", [])
-                ),
+                "session_tree": tree_response.session_tree,
+                "role_options": roles_data.roles,
             }, 200
         except HttpException as e:
             return {"success": False, "message": e.message}, e.status_code

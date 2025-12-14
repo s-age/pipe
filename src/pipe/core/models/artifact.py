@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pipe.core.models.base import CamelCaseModel
 
 
-class Artifact(BaseModel):
+class Artifact(CamelCaseModel):
     path: str
     contents: str | None = None

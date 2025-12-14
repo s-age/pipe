@@ -84,7 +84,12 @@ class SessionTreeService:
             else:
                 roots.append(nodes[sid])
 
+        # Prepare sessions dict with session_id included in the value
+        sessions_with_id = {}
+        for sid, meta in sorted_sessions:
+            sessions_with_id[sid] = {**meta, "session_id": sid}
+
         return {
-            "sessions": dict(sorted_sessions),
+            "sessions": sessions_with_id,
             "session_tree": roots,
         }

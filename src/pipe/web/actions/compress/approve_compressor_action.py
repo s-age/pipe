@@ -1,5 +1,6 @@
 """Approve compressor action."""
 
+from pipe.web.action_responses import SuccessMessageResponse
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests.compress_requests import ApproveCompressorRequest
 
@@ -16,7 +17,7 @@ class ApproveCompressorAction(BaseAction):
 
     request_model = ApproveCompressorRequest
 
-    def execute(self) -> dict[str, str]:
+    def execute(self) -> SuccessMessageResponse:
         """
         Approve compression for session.
 
@@ -32,4 +33,4 @@ class ApproveCompressorAction(BaseAction):
 
         get_session_optimization_service().approve_compression(req.session_id)
 
-        return {"message": "Compression approved"}
+        return SuccessMessageResponse(message="Compression approved")

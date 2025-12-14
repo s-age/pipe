@@ -4,6 +4,13 @@ Handles search, file indexing, roles, and procedures endpoints.
 """
 
 from flask import Blueprint, jsonify, request
+from pipe.web.actions import GetProceduresAction, GetRolesAction
+from pipe.web.actions.fs import (
+    IndexFilesAction,
+    LsAction,
+    SearchL2Action,
+    SearchSessionsAction,
+)
 from pipe.web.dispatcher import dispatch_action
 
 fs_bp = Blueprint("fs", __name__, url_prefix="/api/v1/fs")
@@ -13,7 +20,7 @@ fs_bp = Blueprint("fs", __name__, url_prefix="/api/v1/fs")
 def search_sessions():
     """Search sessions."""
     response_data, status_code = dispatch_action(
-        action="fs/search", params={}, request_data=request
+        action=SearchSessionsAction, params={}, request_data=request
     )
     return jsonify(response_data), status_code
 
@@ -22,7 +29,7 @@ def search_sessions():
 def browse_l2():
     """L2 file search."""
     response_data, status_code = dispatch_action(
-        action="fs/search_l2", params={}, request_data=request
+        action=SearchL2Action, params={}, request_data=request
     )
     return jsonify(response_data), status_code
 
@@ -31,7 +38,7 @@ def browse_l2():
 def browse():
     """List directory contents."""
     response_data, status_code = dispatch_action(
-        action="fs/ls", params={}, request_data=request
+        action=LsAction, params={}, request_data=request
     )
     return jsonify(response_data), status_code
 
@@ -40,7 +47,7 @@ def browse():
 def index_files():
     """Index files for search."""
     response_data, status_code = dispatch_action(
-        action="fs/index_files", params={}, request_data=request
+        action=IndexFilesAction, params={}, request_data=request
     )
     return jsonify(response_data), status_code
 
@@ -49,7 +56,7 @@ def index_files():
 def get_roles():
     """Get available roles."""
     response_data, status_code = dispatch_action(
-        action="fs/roles", params={}, request_data=request
+        action=GetRolesAction, params={}, request_data=request
     )
     return jsonify(response_data), status_code
 
@@ -58,6 +65,6 @@ def get_roles():
 def get_procedures():
     """Get available procedures."""
     response_data, status_code = dispatch_action(
-        action="fs/procedures", params={}, request_data=request
+        action=GetProceduresAction, params={}, request_data=request
     )
     return jsonify(response_data), status_code

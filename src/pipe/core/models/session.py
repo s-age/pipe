@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
+from pipe.core.models.base import CamelCaseModel
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.todo import TodoItem
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
+from pydantic import ConfigDict, Field, PrivateAttr, model_validator
+from pydantic.alias_generators import to_camel
 
 
-class SessionMetaUpdate(BaseModel):
+class SessionMetaUpdate(CamelCaseModel):
     """Session metadata update DTO.
 
     All fields are optional to support partial updates (PATCH).
@@ -26,7 +28,7 @@ class SessionMetaUpdate(BaseModel):
     procedure: str | None = None
 
 
-class Session(BaseModel):
+class Session(CamelCaseModel):
     """
     Represents a single user session, corresponding to a unique session file
     (e.g., `${session_id}.json`).
@@ -39,16 +41,19 @@ class Session(BaseModel):
     @classmethod
     def _preprocess_data(cls, data: dict[str, Any]) -> dict[str, Any]:
         # Preprocess todos
-        if "todos" in data and data["todos"] is not None:
-            processed_todos = []
-            for item in data["todos"]:
-                if isinstance(item, str):
-                    processed_todos.append(TodoItem(title=item))
-                elif isinstance(item, dict):
-                    processed_todos.append(TodoItem(**item))
-                else:
-                    processed_todos.append(item)
-            data["todos"] = processed_todos
+        if "todos" in data:
+            if data["todos"] is None:
+                data["todos"] = []
+            elif data["todos"] is not None:
+                processed_todos = []
+                for item in data["todos"]:
+                    if isinstance(item, str):
+                        processed_todos.append(TodoItem(title=item))
+                    elif isinstance(item, dict):
+                        processed_todos.append(TodoItem(**item))
+                    else:
+                        processed_todos.append(item)
+                data["todos"] = processed_todos
 
         # Preprocess hyperparameters
         if "hyperparameters" in data and data["hyperparameters"] is not None:
@@ -64,7 +69,12 @@ class Session(BaseModel):
         from pipe.core.models.settings import Settings
 
     # --- Pydantic Configuration ---
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+        from_attributes=True,
+    )
 
     # --- Class Variables for Configuration (used by factories) ---
     sessions_dir: ClassVar[str | None] = None
@@ -94,7 +104,7 @@ class Session(BaseModel):
     procedure: str | None = None
     turns: TurnCollection = Field(default_factory=TurnCollection)
     pools: TurnCollection = Field(default_factory=TurnCollection)
-    todos: list[TodoItem] | None = None
+    todos: list[TodoItem] = Field(default_factory=list)
 
     def model_post_init(self, __context: Any) -> None:
         """Initializes instance-specific configurations after the model is created."""

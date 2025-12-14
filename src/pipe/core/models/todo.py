@@ -1,7 +1,8 @@
-from pydantic import BaseModel, model_validator
+from pipe.core.models.base import CamelCaseModel
+from pydantic import model_validator
 
 
-class TodoItem(BaseModel):
+class TodoItem(CamelCaseModel):
     title: str
     description: str = ""
     checked: bool = False

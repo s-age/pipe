@@ -1,17 +1,32 @@
 """Session start action."""
 
+from flask import Request
+from pipe.web.action_responses import SessionStartResponse
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests.sessions.start_session import StartSessionRequest
 
 
 class SessionStartAction(BaseAction):
-    body_model = StartSessionRequest  # Legacy pattern: no path params
+    request_model = StartSessionRequest
 
-    def execute(self) -> dict[str, str]:
+    def __init__(
+        self,
+        validated_request: StartSessionRequest | None = None,
+        params: dict | None = None,
+        request_data: Request | None = None,
+        **kwargs,
+    ):
+        super().__init__(params, request_data, **kwargs)
+        self.validated_request = validated_request
+
+    def execute(self) -> SessionStartResponse:
+        if not self.validated_request:
+            raise ValueError("Request is required")
+
         from pipe.core.agents.takt_agent import TaktAgent
         from pipe.web.service_container import get_session_service
 
-        request_data = StartSessionRequest(**self.request_data.get_json())
+        request_data = self.validated_request
 
         session = get_session_service().create_new_session(
             purpose=request_data.purpose,
@@ -43,4 +58,4 @@ class SessionStartAction(BaseAction):
             procedure=request_data.procedure,
         )
 
-        return {"session_id": session_id}
+        return SessionStartResponse(session_id=session_id)

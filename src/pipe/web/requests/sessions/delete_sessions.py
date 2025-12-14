@@ -3,17 +3,11 @@ Pydantic model for validating the request body of the delete sessions API endpoi
 """
 
 from pipe.web.requests.base_request import BaseRequest
-from pipe.web.requests.common import normalize_camel_case_keys
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import field_validator
 
 
-class DeleteSessionsRequest(BaseModel):
+class DeleteSessionsRequest(BaseRequest):
     session_ids: list[str]
-
-    @model_validator(mode="before")
-    @classmethod
-    def normalize_keys(cls, data: dict | list) -> dict | list:
-        return normalize_camel_case_keys(data)
 
 
 class DeleteBackupRequest(BaseRequest):
@@ -25,11 +19,6 @@ class DeleteBackupRequest(BaseRequest):
 
     session_ids: list[str] | None = None
     file_paths: list[str] | None = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def normalize_keys(cls, data: dict | list) -> dict | list:
-        return normalize_camel_case_keys(data)
 
     @field_validator("session_ids", "file_paths", mode="after")
     @classmethod

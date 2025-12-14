@@ -4,6 +4,12 @@ Handles all /api/v1/session_management/* endpoints.
 """
 
 from flask import Blueprint, jsonify, request
+from pipe.web.actions.session_management import (
+    SessionsDeleteAction,
+    SessionsDeleteBackupAction,
+    SessionsListBackupAction,
+    SessionsMoveToBackup,
+)
 from pipe.web.dispatcher import dispatch_action
 
 session_management_bp = Blueprint("session_management", __name__, url_prefix="/api/v1")
@@ -14,8 +20,15 @@ session_management_bp = Blueprint("session_management", __name__, url_prefix="/a
 )
 def session_management_archives():
     """List, create, or delete session archives."""
+    if request.method == "POST":
+        action_class = SessionsMoveToBackup
+    elif request.method == "DELETE":
+        action_class = SessionsDeleteBackupAction
+    else:  # GET
+        action_class = SessionsListBackupAction
+
     response_data, status_code = dispatch_action(
-        action="session_management/archives", params={}, request_data=request
+        action=action_class, params={}, request_data=request
     )
     return jsonify(response_data), status_code
 
@@ -24,6 +37,6 @@ def session_management_archives():
 def delete_sessions():
     """Delete multiple sessions."""
     response_data, status_code = dispatch_action(
-        action="session_management/sessions", params={}, request_data=request
+        action=SessionsDeleteAction, params={}, request_data=request
     )
     return jsonify(response_data), status_code

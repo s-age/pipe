@@ -1,39 +1,32 @@
 """Search sessions action."""
 
+from flask import Request
+from pipe.web.action_responses import SearchSessionsResponse
 from pipe.web.actions.base_action import BaseAction
+from pipe.web.requests.search_sessions import SearchSessionsRequest
 
 
 class SearchSessionsAction(BaseAction):
-    """Action that searches session files for a query and returns session_id/title."""
+    request_model = SearchSessionsRequest
 
-    body_model = None  # Will validate manually with SearchSessionsRequest
+    def __init__(
+        self,
+        validated_request: SearchSessionsRequest | None = None,
+        params: dict | None = None,
+        request_data: Request | None = None,
+        **kwargs,
+    ):
+        super().__init__(params, request_data, **kwargs)
+        self.validated_request = validated_request
 
-    def execute(self) -> dict[str, list[dict[str, str]]]:
-        # Lazy import app-level objects to avoid circular imports
-        from pipe.web.service_container import get_session_service
+    def execute(self) -> SearchSessionsResponse:
+        from pipe.web.service_container import get_search_sessions_service
 
-        request_json = {}
-        if self.request_data and self.request_data.is_json:
-            try:
-                request_json = self.request_data.get_json(force=True)
-            except Exception:
-                request_json = {}
+        if not self.validated_request:
+            raise ValueError("Request is required")
 
-        # Validate request shape using a pydantic request model
-        from pipe.web.requests.search_sessions import SearchSessionsRequest
+        request = self.validated_request
 
-        req = SearchSessionsRequest(**(request_json or {}))
+        results = get_search_sessions_service().search(request.query)
 
-        query = req.query.strip()
-
-        sessions_dir = get_session_service().repository.sessions_dir
-
-        # Delegate the search logic to the service layer for reusability
-        from pipe.core.services.search_sessions_service import (
-            SearchSessionsService,
-        )
-
-        svc = SearchSessionsService(sessions_dir)
-        matches = svc.search(query)
-
-        return {"results": matches}
+        return SearchSessionsResponse(results=results)

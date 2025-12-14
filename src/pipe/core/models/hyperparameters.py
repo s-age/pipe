@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field
+from pipe.core.models.base import CamelCaseModel
 
 
-class Hyperparameters(BaseModel):
+class Hyperparameters(CamelCaseModel):
     temperature: float | None = None
-    top_p: float | None = Field(None, alias="top_p")
-    top_k: float | None = Field(None, alias="top_k")
+    top_p: float | None = None
+    top_k: float | None = None

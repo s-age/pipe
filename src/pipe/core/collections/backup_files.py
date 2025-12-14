@@ -8,11 +8,11 @@ import json
 import os
 from typing import Any
 
+from pipe.core.models.base import CamelCaseModel
 from pipe.core.repositories.session_repository import SessionRepository
-from pydantic import BaseModel
 
 
-class SessionSummary(BaseModel):
+class SessionSummary(CamelCaseModel):
     session_id: str
     file_path: str
     purpose: str | None

@@ -65,7 +65,7 @@ class TestDeleteTodosTool(unittest.TestCase):
 
         # Verify that the todos were actually deleted from the session object
         session_after = self.session_service.get_session(self.session_id)
-        self.assertIsNone(session_after.todos)
+        self.assertEqual(session_after.todos, [])
 
     def test_delete_todos_no_session_service(self):
         """

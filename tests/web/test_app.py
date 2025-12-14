@@ -30,11 +30,16 @@ class TestAppApi(unittest.TestCase):
         self.mock_session_tree_service = MagicMock()
         self.mock_session_workflow_service = MagicMock()
         self.mock_session_optimization_service = MagicMock()
+        self.mock_session_management_service = MagicMock()
 
         # The patch needs to target the service container getter
         self.patcher = patch(
             "pipe.web.service_container.get_session_service",
             return_value=self.mock_session_service,
+        )
+        self.management_patcher = patch(
+            "pipe.web.service_container.get_session_management_service",
+            return_value=self.mock_session_management_service,
         )
         self.reference_patcher = patch(
             "pipe.web.service_container.get_session_reference_service",
@@ -65,6 +70,7 @@ class TestAppApi(unittest.TestCase):
             return_value=self.mock_session_optimization_service,
         )
         self.patcher.start()
+        self.management_patcher.start()
         self.reference_patcher.start()
         self.turn_patcher.start()
         self.meta_patcher.start()
@@ -75,6 +81,7 @@ class TestAppApi(unittest.TestCase):
 
     def tearDown(self):
         self.patcher.stop()
+        self.management_patcher.stop()
         self.reference_patcher.stop()
         self.turn_patcher.stop()
         self.meta_patcher.stop()
@@ -161,34 +168,46 @@ class TestAppApi(unittest.TestCase):
     def test_get_session_tree_api_v1(self):
         """Tests the v1 API endpoint for getting session tree."""
         mock_tree_data = {
-            "sessions": {"session1": {"purpose": "Test 1"}},
-            "sessionTree": {},  # camelCase for API response
+            "sessions": {"session1": {"purpose": "Test 1", "session_id": "session1"}},
+            "session_tree": [],
         }
-        self.mock_session_tree_service.get_session_tree.return_value = {
-            "sessions": {"session1": {"purpose": "Test 1"}},
-            "session_tree": {},  # snake_case from service
-        }
+        self.mock_session_tree_service.get_session_tree.return_value = mock_tree_data
+
         response = self.client.get("/api/v1/session_tree")
         self.assertEqual(response.status_code, 200)
         response_json = response.get_json()
         self.assertIn("data", response_json)
         data = response_json["data"]
         self.assertIn("sessions", data)
-        self.assertEqual(data, mock_tree_data)
+        # Expected response is camelCase
+        expected_data = {
+            "sessions": {
+                "session1": {
+                    "purpose": "Test 1",
+                    "sessionId": "session1",
+                    "createdAt": None,
+                    "lastUpdatedAt": None,
+                }
+            },
+            "sessionTree": [],
+        }
+        self.assertEqual(data, expected_data)
 
     def test_get_session_api_success(self):
         """Tests successfully getting a single session via API."""
         session_id = "test_id"
-        mock_session = MagicMock(spec=Session)
-        mock_session.to_dict.return_value = {"id": session_id, "purpose": "Details"}
-        self.mock_session_service.get_session.return_value = mock_session
+        # Use real Session object to support Pydantic serialization
+        session = Session(
+            session_id=session_id, created_at="2025-01-01T00:00:00Z", purpose="Details"
+        )
+        self.mock_session_service.get_session.return_value = session
 
         response = self.client.get(f"/api/v1/session/{session_id}")
         self.assertEqual(response.status_code, 200)
         response_json = response.get_json()
         self.assertIn("data", response_json)
         data = response_json["data"]
-        self.assertEqual(data["id"], session_id)
+        self.assertEqual(data["sessionId"], session_id)
         self.assertEqual(data["purpose"], "Details")
 
     def test_get_session_api_not_found(self):
@@ -202,7 +221,9 @@ class TestAppApi(unittest.TestCase):
         session_id = "test_id_to_delete"
         response = self.client.delete(f"/api/v1/session/{session_id}")
         self.assertEqual(response.status_code, 200)
-        self.mock_session_service.delete_session.assert_called_once_with(session_id)
+        self.mock_session_management_service.delete_sessions.assert_called_once_with(
+            [session_id]
+        )
 
     @patch("pipe.core.agents.takt_agent.TaktAgent.run_existing_session")
     def test_create_new_session_api_success(self, mock_run_existing_session):
@@ -422,11 +443,13 @@ class TestAppApi(unittest.TestCase):
 
     def test_get_session_turns_api(self):
         """Tests getting session turns via API."""
-        mock_turn = MagicMock()
-        mock_turn.model_dump.return_value = {"instruction": "test"}
-        mock_session = MagicMock()
-        mock_session.turns = [mock_turn]
-        self.mock_session_service.get_session.return_value = mock_session
+        from pipe.core.models.turn import UserTaskTurn
+
+        turn = UserTaskTurn(
+            type="user_task", instruction="test", timestamp="2025-01-01T00:00:00Z"
+        )
+        # Configure the turn service mock
+        self.mock_session_turn_service.get_turns.return_value = [turn]
 
         response = self.client.get("/api/v1/session/sid/turns?since=0")
         self.assertEqual(response.status_code, 200)

@@ -14,6 +14,7 @@ from pipe.core.services.file_indexer_service import FileIndexerService
 from pipe.core.services.procedure_service import ProcedureService
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.role_service import RoleService
+from pipe.core.services.search_sessions_service import SearchSessionsService
 from pipe.core.services.session_management_service import SessionManagementService
 from pipe.core.services.session_meta_service import SessionMetaService
 from pipe.core.services.session_optimization_service import SessionOptimizationService
@@ -123,6 +124,11 @@ class ServiceFactory:
         """Creates a SessionTodoService with its dependencies."""
         repository = SessionRepository(self.project_root, self.settings)
         return SessionTodoService(repository)
+
+    def create_search_sessions_service(self) -> SearchSessionsService:
+        """Creates a SearchSessionsService with its dependencies."""
+        sessions_path = os.path.join(self.project_root, self.settings.sessions_path)
+        return SearchSessionsService(sessions_path)
 
     def create_verification_service(self):
         """Creates a VerificationService with its dependencies."""

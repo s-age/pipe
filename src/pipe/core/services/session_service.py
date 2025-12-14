@@ -8,11 +8,11 @@ import sys
 import zoneinfo
 from typing import TYPE_CHECKING, Any
 
-from pipe.core.models.session_index import SessionIndex
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.artifact import Artifact
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session
+from pipe.core.models.session_index import SessionIndex
 from pipe.core.models.settings import Settings
 from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.utils.datetime import get_current_timestamp

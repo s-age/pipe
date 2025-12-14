@@ -30,40 +30,54 @@ class TestSessionService(unittest.TestCase):
         }
         self.settings = Settings(**settings_data)
 
+        from datetime import datetime
+
+        from pipe.core.models.session_index import SessionIndex, SessionIndexEntry
+
         # In-memory session storage for testing
         self.sessions: dict = {}
+        self.session_index_entries: dict[str, SessionIndexEntry] = {}
 
         # Create mock repository BEFORE service creation
         self.mock_repository = Mock(spec=SessionRepository)
 
         def save_session(session):
             self.sessions[session.session_id] = session
+            # Also update the mock index entry
+            self.session_index_entries[session.session_id] = SessionIndexEntry(
+                created_at=session.created_at,
+                last_updated_at=datetime.now(
+                    self.session_service.timezone_obj
+                ).isoformat(),
+                purpose=session.purpose,
+            )
             return session
 
         def find_session(session_id):
             return self.sessions.get(session_id)
 
-        def get_index():
-            return {
-                "sessions": {
-                    sid: s.model_dump(exclude_none=True)
-                    for sid, s in self.sessions.items()
-                }
-            }
+        # New mock for load_index
+        def load_index_mock():
+            return SessionIndex(sessions=self.session_index_entries)
 
         def delete_session(session_id):
             if session_id in self.sessions:
                 del self.sessions[session_id]
-            # Also remove children
+            if session_id in self.session_index_entries:
+                del self.session_index_entries[session_id]
+            # Also remove children from both stores
             children_to_delete = [
                 sid for sid in self.sessions if sid.startswith(f"{session_id}/")
             ]
             for sid in children_to_delete:
-                del self.sessions[sid]
+                if sid in self.sessions:
+                    del self.sessions[sid]
+                if sid in self.session_index_entries:
+                    del self.session_index_entries[sid]
 
         self.mock_repository.save.side_effect = save_session
         self.mock_repository.find.side_effect = find_session
-        self.mock_repository.get_index.side_effect = get_index
+        self.mock_repository.load_index.side_effect = load_index_mock
         self.mock_repository.delete.side_effect = delete_session
         self.mock_repository.backup.return_value = None  # No-op for tests
 
@@ -110,8 +124,8 @@ class TestSessionService(unittest.TestCase):
         self.assertEqual(fetched_session.purpose, "Purpose")
 
         collection = self.session_service.list_sessions()
-        self.assertEqual(len(collection), 1)
-        self.assertIn(session_id, collection)
+        self.assertEqual(len(collection.sessions), 1)
+        self.assertIn(session_id, collection.sessions)
 
     def test_create_session_with_parent(self):
         """Tests creating a child session with a parent."""
@@ -125,7 +139,7 @@ class TestSessionService(unittest.TestCase):
         self.assertTrue(child_id.startswith(f"{parent_id}/"))
 
         collection = self.session_service.list_sessions()
-        self.assertEqual(len(collection), 2)
+        self.assertEqual(len(collection.sessions), 2)
 
     def test_fork_session_success(self):
         """Tests the successful forking of a session."""
@@ -235,7 +249,7 @@ class TestSessionService(unittest.TestCase):
         self.session_service.delete_session(parent_id)
 
         collection = self.session_service.list_sessions()
-        self.assertEqual(len(collection), 0)
+        self.assertEqual(len(collection.sessions), 0)
         self.assertIsNone(self.session_service.get_session(parent_id))
         self.assertIsNone(self.session_service.get_session(child_id))
 

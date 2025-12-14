@@ -5,7 +5,6 @@ This service is responsible for constructing hierarchical views of sessions,
 handling parent-child relationships, and providing tree-based queries.
 """
 
-from pipe.core.models.session_index import SessionIndex
 from pipe.core.models.settings import Settings
 from pipe.core.repositories.session_repository import SessionRepository
 

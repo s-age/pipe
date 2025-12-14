@@ -10,6 +10,7 @@ import os
 import shutil
 import sys
 import zoneinfo
+from collections.abc import Callable
 
 from pipe.core.models.session import Session
 from pipe.core.models.session_index import SessionIndex, SessionIndexEntry
@@ -55,7 +56,7 @@ class SessionRepository(FileRepository):
 
         self._initialize_dirs()
 
-    def _initialize_dirs(self):
+    def _initialize_dirs(self) -> None:
         os.makedirs(self.sessions_dir, exist_ok=True)
         os.makedirs(self.backups_dir, exist_ok=True)
 
@@ -104,7 +105,7 @@ class SessionRepository(FileRepository):
         final_path = os.path.join(self.sessions_dir, *safe_path_parts)
         return f"{final_path}.json"
 
-    def save(self, session: Session):
+    def save(self, session: Session) -> None:
         """
         Saves a session to its file and updates the main index.
 
@@ -194,7 +195,7 @@ class SessionRepository(FileRepository):
 
         return SessionIndex(sessions=sessions)
 
-    def get_index(self) -> dict:
+    def get_index(self) -> dict[str, dict[str, str]]:
         """Reads and returns the raw session index data (deprecated).
 
         Use load_index() instead for type-safe access.
@@ -279,7 +280,7 @@ class SessionRepository(FileRepository):
         # Return true if file existed and deleted
         return session_deleted
 
-    def backup(self, session: Session):
+    def backup(self, session: Session) -> None:
         """Creates a timestamped backup of the session file."""
         session_path = self._get_path_for_id(session.session_id)
         if not os.path.exists(session_path):
@@ -322,7 +323,7 @@ class SessionRepository(FileRepository):
         except Exception:
             return False
 
-    def delete_backup(self, session_id: str):
+    def delete_backup(self, session_id: str) -> None:
         """Deletes a backup session file."""
         # Find the backup file for the session_id
         backups_dir = self.backups_dir
@@ -345,3 +346,82 @@ class SessionRepository(FileRepository):
                             )
                             raise
                 break
+
+    def _atomic_update(
+        self, session_id: str, update_fn: Callable[[Session], None]
+    ) -> Session:
+        """
+        Performs atomic partial update of a session.
+
+        This method implements the Atomic Update pattern:
+        1. Lock session file
+        2. Read and validate session
+        3. Apply modifications via callback
+        4. Serialize and write back
+        5. Update index metadata
+
+        Args:
+            session_id: ID of the session to update
+            update_fn: Callback function that modifies the session in-place
+                      Signature: (Session) -> None
+
+        Returns:
+            The updated Session instance
+
+        Raises:
+            FileNotFoundError: If the session does not exist
+            TimeoutError: If lock acquisition times out
+
+        Example:
+            def update_refs(session: Session):
+                session.references.clear()
+                session.references.append(new_ref)
+
+            updated = repo._atomic_update("session-123", update_refs)
+        """
+        session_path = self._get_path_for_id(session_id)
+        lock_path = f"{session_path}.lock"
+
+        with file_lock(lock_path):
+            # 1. Read
+            data = self._read_json(session_path)
+            if data is None:
+                raise FileNotFoundError(f"Session {session_id} not found")
+
+            # 2. Validate
+            session = Session.model_validate(data)
+
+            # 3. Modify
+            update_fn(session)
+
+            # 4. Serialize & Save
+            self._write_json(session_path, session.model_dump(mode="json"))
+
+        # 5. Update index metadata (outside session lock)
+        self._update_index_metadata(session_id)
+
+        return session
+
+    def _update_index_metadata(self, session_id: str) -> None:
+        """
+        Updates the last_updated_at timestamp in index.json.
+
+        This method is called after a session file has been modified.
+        It only updates the timestamp, not other metadata fields.
+
+        Note:
+            This method assumes the session file lock has already been released.
+            It acquires only the index lock.
+
+        Args:
+            session_id: ID of the session whose metadata should be updated
+        """
+        with file_lock(self.index_lock_path):
+            index = self.load_index()
+
+            if session_id in index.sessions:
+                index.sessions[session_id].last_updated_at = get_current_timestamp(
+                    self.timezone_obj
+                )
+
+                self._write_json(self.index_path, index.model_dump(mode="json"))

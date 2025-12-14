@@ -1,5 +1,5 @@
-from pydantic import Field
 from pipe.core.models.base import CamelCaseModel
+from pydantic import Field
 
 
 class Hyperparameters(CamelCaseModel):

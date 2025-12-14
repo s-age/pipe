@@ -6,6 +6,7 @@ from pipe.core.agents.gemini_api import call_gemini_api
 from pipe.core.models.turn import (
     ModelResponseTurn,
 )
+from pipe.core.repositories.streaming_repository import StreamingRepository
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.session_turn_service import SessionTurnService
@@ -166,6 +167,11 @@ def run_stream(
 
         session_meta_service = SessionMetaService(session_service.repository)
         session_meta_service.update_token_count(session_id, token_count)
+
+    # Cleanup streaming.log after model response is complete
+    sessions_dir = os.path.join(session_service.project_root, "sessions")
+    streaming_repo = StreamingRepository(sessions_dir)
+    streaming_repo.cleanup(session_id)
 
     # Return final data
     yield ("end", model_response_text, token_count, intermediate_turns)

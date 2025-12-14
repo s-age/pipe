@@ -47,8 +47,14 @@ if not TYPE_CHECKING:
     from pipe.core.factories.service_factory import ServiceFactory  # noqa: E402
     from pipe.core.models.settings import Settings  # noqa: E402
 
+from pipe.core.repositories.streaming_repository import (  # noqa: E402
+    StreamingRepository,
+)
 from pipe.core.utils.datetime import get_current_timestamp  # noqa: E402
-from pipe.core.utils.file import append_to_text_file, read_yaml_file  # noqa: E402
+from pipe.core.utils.file import (  # noqa: E402
+    append_to_text_file,
+    read_yaml_file,
+)
 
 # --- Global Paths ---
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -271,6 +277,9 @@ def execute_tool(tool_name, arguments):
     project_root = BASE_DIR
     session_id = get_latest_session_id()
 
+    # Initialize StreamingRepository for logging tool calls
+    streaming_repo = StreamingRepository(SESSIONS_DIR)
+
     # Log the start of the tool call to the pool
     if session_id:
         try:
@@ -295,6 +304,17 @@ def execute_tool(tool_name, arguments):
             # these turns back in the correct final order:
             # user_task -> function_calling -> tool_response -> model_response.
             session_turn_service.add_to_pool(session_id, function_calling_turn)
+
+            # Log to streaming.log in NDJSON format
+            tool_log_data = {
+                "type": "function_calling",
+                "tool_name": tool_name,
+                "arguments": arguments,
+                "timestamp": get_current_timestamp(session_service.timezone_obj),
+            }
+            streaming_repo.append(
+                session_id, json.dumps(tool_log_data, ensure_ascii=False)
+            )
         except Exception:
             # Avoid crashing the server if logging fails
             pass
@@ -368,6 +388,17 @@ def execute_tool(tool_name, arguments):
                 # the complete tool interaction sequence is staged correctly before
                 # being merged by the dispatcher.
                 session_turn_service.add_to_pool(session_id, tool_response_turn)
+
+                # Log to streaming.log in NDJSON format
+                tool_response_log_data = {
+                    "type": "tool_response",
+                    "tool_name": tool_name,
+                    "response": formatted_response,
+                    "timestamp": get_current_timestamp(session_service.timezone_obj),
+                }
+                streaming_repo.append(
+                    session_id, json.dumps(tool_response_log_data, ensure_ascii=False)
+                )
             except Exception:
                 # Avoid crashing the server if logging fails
                 pass

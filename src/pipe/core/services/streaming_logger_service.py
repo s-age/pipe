@@ -62,6 +62,24 @@ class StreamingLoggerService:
         """
         self._write_log("MODEL_CHUNK", chunk)
 
+    def log_raw_chunk(self, chunk_data: dict[str, Any]) -> None:
+        """
+        Log raw chunk data in NDJSON format including usageMetadata.
+
+        Args:
+            chunk_data: Complete chunk dictionary from the model
+
+        Note:
+        - Used for logging complete chunk data with usageMetadata
+        - Logged in NDJSON format for machine parsing
+        """
+        try:
+            chunk_json = json.dumps(chunk_data, ensure_ascii=False)
+            self._write_log("RAW_CHUNK", chunk_json)
+        except (TypeError, ValueError) as e:
+            logger.warning(f"Failed to serialize raw chunk: {e}")
+            self._write_log("RAW_CHUNK", "<serialization failed>")
+
     def log_tool_call(self, tool_name: str, args: dict[str, Any]) -> None:
         """
         Log a tool invocation.

@@ -46,8 +46,7 @@ class SessionIndex(CamelCaseModel):
 
     sessions: dict[str, SessionIndexEntry] = Field(default_factory=dict)
     version: str = Field(
-        default="1.0",
-        description="Schema version for future migrations"
+        default="1.0", description="Schema version for future migrations"
     )
 
     model_config = ConfigDict(

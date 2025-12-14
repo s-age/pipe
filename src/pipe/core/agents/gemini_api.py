@@ -6,6 +6,7 @@
 
 import importlib.util
 import inspect
+import json
 import logging
 import os
 from typing import TYPE_CHECKING, Union, get_args, get_type_hints
@@ -160,6 +161,8 @@ def call_gemini_api(session_service: "SessionService", prompt_service: "PromptSe
     # is the most reliable way to pass the current session context.
     os.environ["PIPE_SESSION_ID"] = session_data.session_id
 
+    sessions_dir = os.path.join(project_root, "sessions")
+
     token_service = TokenService(settings=settings)
 
     # 1. Build the Prompt model using the service
@@ -245,11 +248,52 @@ def call_gemini_api(session_service: "SessionService", prompt_service: "PromptSe
 
     client = genai.Client()
 
+    # Open streaming log file for raw chunk logging
+    from datetime import datetime
+
+    from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
+
+    log_file_path = os.path.join(
+        sessions_dir, f"{session_data.session_id}.streaming.log"
+    )
+    raw_chunk_repo = StreamingLogRepository(log_file_path)
+
+    # Check if log file already exists (opened by dispatcher)
+    try:
+        if not raw_chunk_repo.file_handle:
+            # File not open, so we need to open it in append mode
+            raw_chunk_repo.file_handle = open(log_file_path, "a", encoding="utf-8")
+    except Exception:
+        pass
+
     try:
         stream = client.models.generate_content_stream(
             contents=api_contents_string, config=config, model=token_service.model_name
         )
-        yield from stream
+        for chunk in stream:
+            # Log the complete chunk data including usageMetadata in NDJSON format
+            try:
+                # Convert chunk to dictionary to capture all information
+                if hasattr(chunk, "to_dict"):
+                    chunk_dict = chunk.to_dict()  # type: ignore[attr-defined]
+                else:
+                    chunk_dict = {"raw": str(chunk)}
+                raw_chunk_repo.write_log_line(
+                    "RAW_CHUNK",
+                    json.dumps(chunk_dict, ensure_ascii=False, default=str),
+                    datetime.now(),
+                )
+            except Exception:
+                # Fallback to string representation if serialization fails
+                try:
+                    raw_chunk_repo.write_log_line(
+                        "RAW_CHUNK",
+                        json.dumps({"raw": str(chunk)}, ensure_ascii=False),
+                        datetime.now(),
+                    )
+                except Exception:
+                    pass
+            yield chunk
     except Exception as e:
         raise RuntimeError(f"Error during Gemini API execution: {e}")
 

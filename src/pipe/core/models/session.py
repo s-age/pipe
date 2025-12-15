@@ -106,6 +106,7 @@ class SessionInputData(TypedDict, total=False):
     roles: list[str]
     multi_step_reasoning_enabled: bool
     token_count: int
+    cached_content_token_count: int
     hyperparameters: HyperparametersInput | None
     references: list[ReferenceInput]
     artifacts: list[str]
@@ -203,6 +204,7 @@ class Session(CamelCaseModel):
     roles: list[str] = []
     multi_step_reasoning_enabled: bool = False
     token_count: int = 0
+    cached_content_token_count: int = 0  # From last API response usage_metadata
     hyperparameters: Hyperparameters | None = None
     references: ReferenceCollection = Field(default_factory=ReferenceCollection)
     artifacts: list[str] = []

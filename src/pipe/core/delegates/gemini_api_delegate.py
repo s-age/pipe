@@ -22,8 +22,10 @@ def run_stream(
     """Streaming version for web UI."""
     model_response_text = ""
     token_count = 0
+    prompt_token_count_for_cache = 0  # Track prompt tokens for cache decisions
     intermediate_turns = []
     tool_call_count = 0
+    first_cached_content_token_count = None  # Track first response's cache count
 
     settings = session_service.settings
     max_tool_calls = settings.max_tool_calls
@@ -42,6 +44,24 @@ def run_stream(
         if reloaded_session:
             session_service.current_session = reloaded_session
             session_data = session_service.current_session
+
+        # Update session with latest token counts BEFORE calling API
+        # This ensures cache decisions are made with fresh data from previous response
+        # Skip on first iteration (no previous response yet)
+        # Use prompt_token_count (not total) for cache decisions
+        if prompt_token_count_for_cache > 0:
+            from pipe.core.services.session_meta_service import SessionMetaService
+
+            session_meta_service = SessionMetaService(session_service.repository)
+            session_meta_service.update_token_count(
+                session_id, prompt_token_count_for_cache
+            )
+
+            # Reload session after token count update
+            reloaded_session = session_service.get_session(session_id)
+            if reloaded_session:
+                session_service.current_session = reloaded_session
+                session_data = session_service.current_session
 
         stream = call_gemini_api(session_service, prompt_service)
 
@@ -78,10 +98,36 @@ def run_stream(
 
         response = final_response
         token_count = 0
+        prompt_token_count_for_cache = 0
         if response.usage_metadata:
             prompt_tokens = response.usage_metadata.prompt_token_count or 0
             candidate_tokens = response.usage_metadata.candidates_token_count or 0
             token_count = prompt_tokens + candidate_tokens
+            prompt_token_count_for_cache = prompt_tokens  # For cache decision
+
+            # Capture cached_content_token_count from the first response only
+            if (
+                first_cached_content_token_count is None
+                and response.usage_metadata.cached_content_token_count is not None
+            ):
+                first_cached_content_token_count = (
+                    response.usage_metadata.cached_content_token_count
+                )
+
+                # Update session with first response's cached count immediately
+                # so subsequent iterations in this loop can use it for cache decisions
+                from pipe.core.services.session_meta_service import SessionMetaService
+
+                session_meta_service = SessionMetaService(session_service.repository)
+                session_meta_service.update_cached_content_token_count(
+                    session_id, first_cached_content_token_count
+                )
+
+                # Reload session after cache count update
+                reloaded_session = session_service.get_session(session_id)
+                if reloaded_session:
+                    session_service.current_session = reloaded_session
+                    session_data = session_service.current_session
 
         if not response.candidates:
             yield "API Error: No candidates in response."
@@ -161,12 +207,20 @@ def run_stream(
     )
     intermediate_turns.append(final_model_turn)
 
-    # Update token count
-    if token_count > 0:
+    # Update token count and cached content token count
+    if prompt_token_count_for_cache > 0:
         from pipe.core.services.session_meta_service import SessionMetaService
 
         session_meta_service = SessionMetaService(session_service.repository)
-        session_meta_service.update_token_count(session_id, token_count)
+        session_meta_service.update_token_count(
+            session_id, prompt_token_count_for_cache
+        )
+
+        # Update cached_content_token_count from first API response only
+        if first_cached_content_token_count is not None:
+            session_meta_service.update_cached_content_token_count(
+                session_id, first_cached_content_token_count
+            )
 
     # Cleanup streaming.log after model response is complete
     sessions_dir = os.path.join(session_service.project_root, "sessions")

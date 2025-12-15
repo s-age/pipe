@@ -72,3 +72,17 @@ class SessionMetaService:
         if session:
             session.token_count = token_count
             self.repository.save(session)
+
+    def update_cached_content_token_count(
+        self, session_id: str, cached_content_token_count: int
+    ):
+        """Update the cached content token count from API response.
+
+        Args:
+            session_id: Session ID to update
+            cached_content_token_count: From usage_metadata.cached_content_token_count
+        """
+        session = self.repository.find(session_id)
+        if session:
+            session.cached_content_token_count = cached_content_token_count
+            self.repository.save(session)

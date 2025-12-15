@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+from pipe.core.models.results.session_tree_result import SessionTreeResult
 from pipe.core.models.role import RoleOption
 from pipe.core.models.session import Session
 from pipe.web.app import create_app
@@ -48,14 +49,14 @@ class TestBffApi(unittest.TestCase):
         mock_get_settings.return_value = mock_settings
 
         # Mock SessionTreeAction dependencies
-        mock_tree_data = {
-            "sessions": {
+        mock_tree_result = SessionTreeResult(
+            sessions={
                 "session1": {"session_id": "session1", "purpose": "Test 1"},
                 "session2": {"session_id": "session2", "purpose": "Test 2"},
             },
-            "session_tree": [],
-        }
-        self.mock_session_tree_service.get_session_tree.return_value = mock_tree_data
+            session_tree=[],
+        )
+        self.mock_session_tree_service.get_session_tree.return_value = mock_tree_result
 
         # Mock SessionGetAction dependencies - need session for validation too
         mock_session = Session(

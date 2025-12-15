@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+from pipe.core.models.results.session_tree_result import SessionTreeResult
 from pipe.web.app import create_app
 
 
@@ -24,11 +25,11 @@ class TestSessionTreeApi(unittest.TestCase):
 
     def test_get_session_tree_api_v1(self):
         """Tests the v1 API endpoint for getting session tree."""
-        mock_tree_data = {
-            "sessions": {"session1": {"purpose": "Test 1", "session_id": "session1"}},
-            "session_tree": [],
-        }
-        self.mock_session_tree_service.get_session_tree.return_value = mock_tree_data
+        mock_tree_result = SessionTreeResult(
+            sessions={"session1": {"purpose": "Test 1", "session_id": "session1"}},
+            session_tree=[],
+        )
+        self.mock_session_tree_service.get_session_tree.return_value = mock_tree_result
 
         response = self.client.get("/api/v1/session_tree")
         self.assertEqual(response.status_code, 200)

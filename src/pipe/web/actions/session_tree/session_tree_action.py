@@ -15,7 +15,7 @@ class SessionTreeAction(BaseAction):
         """
         from pipe.web.service_container import get_session_tree_service
 
-        tree_data = get_session_tree_service().get_session_tree()
+        tree_result = get_session_tree_service().get_session_tree()
 
-        # Convert the dictionary from service to Pydantic model
-        return SessionTreeResponse(**tree_data)
+        # Convert SessionTreeResult to SessionTreeResponse using model_dump
+        return SessionTreeResponse(**tree_result.model_dump())

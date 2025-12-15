@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 import google.genai as genai
 from google.genai import types
+from pipe.core.models.cache_registry import CacheRegistry, CacheRegistryEntry
 
 
 class GeminiCacheService:
@@ -76,18 +77,17 @@ class GeminiCacheService:
         cache_registry = self._load_registry()
 
         # Check for existing cache in registry
-        cached_info = cache_registry.get(content_hash)
+        cached_entry = cache_registry.entries.get(content_hash)
         cache_name = None
 
-        if cached_info:
-            cache_name = cached_info.get("name")
-            expire_time_str = cached_info.get("expire_time")
+        if cached_entry:
+            cache_name = cached_entry.name
+            expire_time_str = cached_entry.expire_time
 
             # Check local expiration time
-            if expire_time_str:
-                expire_time = datetime.fromisoformat(expire_time_str)
-                if datetime.now() > expire_time:
-                    cache_name = None  # Expired locally
+            expire_time = datetime.fromisoformat(expire_time_str)
+            if datetime.now() > expire_time:
+                cache_name = None  # Expired locally
 
             # Verify cache still exists on API server
             if cache_name:
@@ -104,31 +104,32 @@ class GeminiCacheService:
 
         return cache_name
 
-    def _load_registry(self) -> dict:
+    def _load_registry(self) -> CacheRegistry:
         """
         Load the local cache registry from disk.
 
         Returns:
-            Dictionary mapping content hashes to cache metadata
+            CacheRegistry model with cache entries
         """
         if os.path.exists(self.registry_path):
             try:
                 with open(self.registry_path, encoding="utf-8") as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    return CacheRegistry.from_dict(data)
             except Exception:
                 pass
-        return {}
+        return CacheRegistry()
 
-    def _save_registry(self, cache_registry: dict) -> None:
+    def _save_registry(self, cache_registry: CacheRegistry) -> None:
         """
         Save the cache registry to disk.
 
         Args:
-            cache_registry: Dictionary to save
+            cache_registry: CacheRegistry model to save
         """
         os.makedirs(os.path.dirname(self.registry_path), exist_ok=True)
         with open(self.registry_path, "w", encoding="utf-8") as f:
-            json.dump(cache_registry, f, indent=2)
+            json.dump(cache_registry.to_dict(), f, indent=2)
 
     def _verify_cache_exists(self, client: genai.Client, cache_name: str) -> bool:
         """
@@ -154,7 +155,7 @@ class GeminiCacheService:
         model_name: str,
         tools: list[types.Tool],
         content_hash: str,
-        cache_registry: dict,
+        cache_registry: CacheRegistry,
     ) -> str | None:
         """
         Create a new cache on the API server and update local registry.
@@ -184,10 +185,10 @@ class GeminiCacheService:
 
             # Update local registry with conservative expiration (55 minutes)
             expire_time = datetime.now() + timedelta(minutes=55)
-            cache_registry[content_hash] = {
-                "name": cache_name,
-                "expire_time": expire_time.isoformat(),
-            }
+            cache_registry.entries[content_hash] = CacheRegistryEntry(
+                name=cache_name,
+                expire_time=expire_time.isoformat(),
+            )
 
             self._save_registry(cache_registry)
             return cache_name

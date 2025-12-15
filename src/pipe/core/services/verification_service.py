@@ -4,6 +4,11 @@ import subprocess
 import traceback
 from typing import TYPE_CHECKING
 
+from pipe.core.models.results.verification_result import (
+    VerificationError,
+    VerificationOutput,
+    VerificationResult,
+)
 from pipe.core.models.turn import CompressedHistoryTurn
 from pipe.core.utils.datetime import get_current_timestamp
 
@@ -35,19 +40,22 @@ class VerificationService:
         start_turn: int,
         end_turn: int,
         summary_text: str,
-    ) -> dict:
+    ) -> VerificationOutput:
         """
         Verifies a summary by creating a new temporary session for a sub-agent,
         and returns the verification status and the ID of the temporary session.
 
-        Returns:            Dictionary containing verification result
+        Returns:
+            VerificationResult on success, VerificationError on failure
         """
         verifier_session_id = None
         try:
             # === Step 1: Prepare the data for the verifier agent ===
             original_session_data = self.session_service.get_session(session_id)
             if not original_session_data:
-                return {"error": f"Session with ID {session_id} not found."}
+                return VerificationError(
+                    error=f"Session with ID {session_id} not found."
+                )
 
             original_turns = original_session_data.turns
             temp_turns = list(original_turns)
@@ -66,12 +74,12 @@ class VerificationService:
                 and 0 <= end_index < len(temp_turns)
                 and start_index <= end_index
             ):
-                return {
-                    "error": (
+                return VerificationError(
+                    error=(
                         "Turn indices are out of range for creating "
                         "verification context."
                     )
-                }
+                )
 
             del temp_turns[start_index : end_index + 1]
             temp_turns.insert(start_index, summary_turn)
@@ -159,7 +167,7 @@ class VerificationService:
                         f"{traceback.format_exc()}"
                     )
 
-                return {"error": error_detail}
+                return VerificationError(error=error_detail)
 
             # === Step 4: Get the response from verifier session ===
             verifier_session_data = self.session_service.get_session(
@@ -178,13 +186,13 @@ class VerificationService:
                 turn_count = (
                     len(verifier_session_data.turns) if verifier_session_data else 0
                 )
-                return {
-                    "error": (
+                return VerificationError(
+                    error=(
                         f"No model_response found in verifier session "
                         f"{verifier_session_id}. "
                         f"Total turns: {turn_count}"
                     )
-                }
+                )
 
             # === Step 5: Process result and construct the final turn content ===
             status = "rejected"
@@ -206,28 +214,27 @@ class VerificationService:
                 )
 
             # === Step 6: Return the result and the verifier session ID ===
-            result = {
-                "verification_status": status,
-                "verifier_session_id": verifier_session_id,
-                "message": (
+            return VerificationResult(
+                verification_status=status,  # type: ignore[arg-type]
+                verifier_session_id=verifier_session_id,
+                message=(
                     f"Verification completed. Status: {status}. "
                     "Please follow the instruction in 'next_action'."
                 ),
-                "verifier_response": final_turn_content,
-                "next_action": (
+                verifier_response=final_turn_content,
+                next_action=(
                     "STOP NOW. DO NOT EXECUTE COMPRESSION. "
                     "Report this result to the user and WAIT for their confirmation."
                 ),
-            }
-            return result
+            )
 
         except Exception as e:
-            return {
-                "error": (
+            return VerificationError(
+                error=(
                     "An unexpected error occurred during summary verification: "
                     f"{e}\n{traceback.format_exc()}"
                 )
-            }
+            )
         finally:
             # Clean up the verifier session
             if verifier_session_id:

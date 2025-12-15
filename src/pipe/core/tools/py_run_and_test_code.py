@@ -6,12 +6,16 @@ After code changes, this tool runs the code or executes tests to verify its beha
 import os
 import subprocess
 
+from pipe.core.models.results.py_run_and_test_code_result import (
+    PyRunAndTestCodeResult,
+)
+
 
 def py_run_and_test_code(
     file_path: str,
     function_name: str | None = None,
     test_case_name: str | None = None,
-) -> dict:
+) -> PyRunAndTestCodeResult:
     """
     Executes or tests the specified Python file and returns the results.
     """
@@ -36,21 +40,21 @@ def py_run_and_test_code(
 
     try:
         result = subprocess.run(command, capture_output=True, text=True, check=True)
-        return {
-            "stdout": result.stdout,
-            "stderr": result.stderr,
-            "exit_code": result.returncode,
-            "message": "Code execution or testing completed successfully.",
-        }
+        return PyRunAndTestCodeResult(
+            stdout=result.stdout,
+            stderr=result.stderr,
+            exit_code=result.returncode,
+            message="Code execution or testing completed successfully.",
+        )
     except subprocess.CalledProcessError as e:
-        return {
-            "stdout": e.stdout,
-            "stderr": e.stderr,
-            "exit_code": e.returncode,
-            "message": "An error occurred during code execution or testing.",
-        }
+        return PyRunAndTestCodeResult(
+            stdout=e.stdout,
+            stderr=e.stderr,
+            exit_code=e.returncode,
+            message="An error occurred during code execution or testing.",
+        )
     except FileNotFoundError:
-        return {
-            "error": "Specified file or command not found.",
-            "message": "Please check the file path.",
-        }
+        return PyRunAndTestCodeResult(
+            error="Specified file or command not found.",
+            message="Please check the file path.",
+        )

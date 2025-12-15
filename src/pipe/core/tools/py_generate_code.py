@@ -1,13 +1,14 @@
-import ast
-import os
-
-from jinja2 import Environment, FileSystemLoader
-
 """
 Tool for generating new Python code snippets.
 Proposes and generates new functions, classes, or code snippets
 based on existing codebase and requirements.
 """
+
+import ast
+import os
+
+from jinja2 import Environment, FileSystemLoader
+from pipe.core.models.results.py_generate_code_result import PyGenerateCodeResult
 
 
 def _parse_code_for_patterns(file_paths: list[str]) -> dict:
@@ -52,7 +53,7 @@ def py_generate_code(
     dependencies: list[str] | None = None,
     methods: list[dict] | None = None,
     context_file_paths: list[str] | None = None,
-) -> dict:
+) -> PyGenerateCodeResult:
     """
     Generates a new Python code snippet based on the provided instruction and context.
     """
@@ -85,7 +86,7 @@ def py_generate_code(
     try:
         template = env.get_template(template_name)
     except Exception as e:
-        return {"error": f"Template loading error: {e}"}
+        return PyGenerateCodeResult(error=f"Template loading error: {e}")
 
     # Extract patterns from context files if provided
     extracted_patterns = {}
@@ -107,4 +108,4 @@ def py_generate_code(
 
     generated_code = template.render(template_context)
 
-    return {"generated_code": generated_code}
+    return PyGenerateCodeResult(generated_code=generated_code)

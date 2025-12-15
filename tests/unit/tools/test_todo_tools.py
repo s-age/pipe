@@ -74,8 +74,8 @@ class TestTodoTools(unittest.TestCase):
             todos, session_service=self.session_service, session_id=self.session_id
         )
 
-        self.assertIn("message", result)
-        self.assertIn("successfully updated", result["message"])
+        self.assertIsNotNone(result.message)
+        self.assertIn("successfully updated", result.message)
 
         # Verify
         session = self.session_service.get_session(self.session_id)

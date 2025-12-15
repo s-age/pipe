@@ -70,7 +70,7 @@ class TestEditSessionTurn(unittest.TestCase):
             session_id=self.session_id, turn=1, new_content=new_instruction
         )
 
-        self.assertIn("Successfully edited turn 1", result["message"])
+        self.assertIn("Successfully edited turn 1", result.message)
 
         # Verify change
         with open(self.session_file) as f:
@@ -98,7 +98,7 @@ class TestEditSessionTurn(unittest.TestCase):
             session_id=self.session_id, turn=2, new_content=new_content
         )
 
-        self.assertIn("Successfully edited turn 2", result["message"])
+        self.assertIn("Successfully edited turn 2", result.message)
 
         # Verify change
         with open(self.session_file) as f:
@@ -119,8 +119,8 @@ class TestEditSessionTurn(unittest.TestCase):
         result = edit_session_turn(
             session_id=self.session_id, turn=99, new_content="Fail"
         )
-        self.assertIn("error", result)
-        self.assertIn("not found", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("not found", result.error)
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_edit_via_env_var(self, mock_get_settings):
@@ -137,7 +137,7 @@ class TestEditSessionTurn(unittest.TestCase):
         new_instruction = "Env var instruction"
         result = edit_session_turn(turn=1, new_content=new_instruction)
 
-        self.assertIn("Successfully edited turn 1", result["message"])
+        self.assertIn("Successfully edited turn 1", result.message)
 
         with open(self.session_file) as f:
             data = json.load(f)

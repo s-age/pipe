@@ -60,17 +60,17 @@ class TestEditTodosTool(unittest.TestCase):
             session_id=self.session_id,
         )
 
-        self.assertIn("message", result)
-        self.assertNotIn("error", result)
-        self.assertIn("successfully updated", result["message"])
-        self.assertIn("current_todos", result)
+        self.assertIsNotNone(result.message)
+        self.assertIsNone(result.error)
+        self.assertIn("successfully updated", result.message)
+        self.assertIsNotNone(result.current_todos)
 
         # Verify that the returned todos match the new todos
-        self.assertEqual(len(result["current_todos"]), 2)
-        self.assertEqual(result["current_todos"][0]["title"], "Task 1")
-        self.assertTrue(result["current_todos"][0]["checked"])
-        self.assertEqual(result["current_todos"][1]["title"], "Task 3")
-        self.assertFalse(result["current_todos"][1]["checked"])
+        self.assertEqual(len(result.current_todos), 2)
+        self.assertEqual(result.current_todos[0]["title"], "Task 1")
+        self.assertTrue(result.current_todos[0]["checked"])
+        self.assertEqual(result.current_todos[1]["title"], "Task 3")
+        self.assertFalse(result.current_todos[1]["checked"])
 
         # Optional: Verify actual session state (though tool's return should be
         # sufficient)
@@ -86,8 +86,8 @@ class TestEditTodosTool(unittest.TestCase):
         Tests that an error is returned if session_service is not provided.
         """
         result = edit_todos(todos=[], session_id=self.session_id)
-        self.assertIn("error", result)
-        self.assertEqual(result["error"], "This tool requires a session_service.")
+        self.assertIsNotNone(result.error)
+        self.assertEqual(result.error, "This tool requires a session_service.")
 
     def test_edit_todos_failure(self):
         """
@@ -121,9 +121,9 @@ class TestEditTodosTool(unittest.TestCase):
             mock_todo_service.update_todos.assert_called_once_with(
                 self.session_id, []
             )  # Ensure update_todos was called on the mock service
-            self.assertIn("error", result)
+            self.assertIsNotNone(result.error)
             self.assertEqual(
-                result["error"], f"Failed to update todos in session: {error_message}"
+                result.error, f"Failed to update todos in session: {error_message}"
             )
 
 

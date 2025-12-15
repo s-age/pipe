@@ -1,25 +1,11 @@
 import json
 import os
 import subprocess
-from typing import Any, TypedDict
 
-
-class SimilarCodeMatch(TypedDict):
-    """A similar code match result."""
-
-    file: str
-    symbol: str
-    similarity: float
-    snippet: str
-
-
-class SimilarCodeResult(TypedDict, total=False):
-    """Result from finding similar code."""
-
-    base_snippet: str
-    base_type_definitions: dict[str, Any]  # TS type system is complex (5-2)
-    matches: list[SimilarCodeMatch]
-    error: str
+from pipe.core.models.results.ts_find_similar_code_result import (
+    SimilarCodeMatch,
+    TSFindSimilarCodeResult,
+)
 
 
 def ts_find_similar_code(
@@ -27,7 +13,7 @@ def ts_find_similar_code(
     symbol_name: str,
     search_directory: str,
     max_results: int = 3,
-) -> SimilarCodeResult:
+) -> TSFindSimilarCodeResult:
     """
     Finds similar TypeScript code snippets based on a given symbol in a base file.
     It uses ts-morph via ts_analyzer.ts to extract code snippets and then compares them.
@@ -36,16 +22,16 @@ def ts_find_similar_code(
     if "node_modules" in os.path.normpath(
         base_file_path
     ) or "node_modules" in os.path.normpath(search_directory):
-        return {
-            "error": (
-                "Operation on files/directories within 'node_modules' is not allowed."
-            )
-        }
+        return TSFindSimilarCodeResult(
+            error="Operation on files/directories within 'node_modules' is not allowed."
+        )
 
     if not os.path.exists(base_file_path):
-        return {"error": f"Base file not found: {base_file_path}"}
+        return TSFindSimilarCodeResult(error=f"Base file not found: {base_file_path}")
     if not os.path.isdir(search_directory):
-        return {"error": f"Search directory not found: {search_directory}"}
+        return TSFindSimilarCodeResult(
+            error=f"Search directory not found: {search_directory}"
+        )
 
     base_file_path = os.path.abspath(base_file_path)
     search_directory = os.path.abspath(search_directory)
@@ -80,10 +66,10 @@ def ts_find_similar_code(
         )
 
         if process.returncode != 0:
-            return {
-                "error": process.stderr.strip()
+            return TSFindSimilarCodeResult(
+                error=process.stderr.strip()
                 or f"ts_analyzer.ts exited with code {process.returncode}"
-            }
+            )
 
         # ts_analyzer.tsからのstderr出力はデバッグ情報として扱う
         if process.stderr.strip():
@@ -92,16 +78,24 @@ def ts_find_similar_code(
         try:
             output = json.loads(process.stdout)
             if "error" in output:
-                return {"error": output["error"]}
+                return TSFindSimilarCodeResult(error=output["error"])
             else:
-                return output
+                # Convert dict matches to SimilarCodeMatch instances
+                matches = None
+                if "matches" in output:
+                    matches = [SimilarCodeMatch(**match) for match in output["matches"]]
+                return TSFindSimilarCodeResult(
+                    base_snippet=output.get("base_snippet"),
+                    base_type_definitions=output.get("base_type_definitions"),
+                    matches=matches,
+                )
         except json.JSONDecodeError:
-            return {
-                "error": (
+            return TSFindSimilarCodeResult(
+                error=(
                     f"Failed to parse JSON output from ts_analyzer.ts: "
                     f"{process.stdout.strip()}"
                 )
-            }
+            )
 
     except Exception as e:
-        return {"error": f"An unexpected error occurred: {e}"}
+        return TSFindSimilarCodeResult(error=f"An unexpected error occurred: {e}")

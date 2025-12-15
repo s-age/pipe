@@ -1,12 +1,17 @@
 import os
 import subprocess
 
+from pipe.core.models.results.ts_checker_result import (
+    CommandCheckResult,
+    TSCheckerResult,
+)
+
 
 def ts_checker(
     project_root: str | None = None,
     lint_command: str = "npm run lint",
     build_command: str = "npm run build",
-) -> dict:
+) -> TSCheckerResult:
     """Runs TypeScript lint and build checks and reports any errors or warnings.
 
     Args:
@@ -33,9 +38,9 @@ def ts_checker(
                 break
             project_root = parent
 
-    results = {}
+    results: dict[str, CommandCheckResult] = {}
 
-    def _run_command(command_str, command_name):
+    def _run_command(command_str: str, command_name: str) -> None:
         try:
             process = subprocess.run(
                 command_str,
@@ -59,17 +64,13 @@ def ts_checker(
                     errors.append(line.strip())
                 elif "warning" in line.lower():
                     warnings.append(line.strip())
-            results[command_name] = {
-                "errors": errors,
-                "warnings": warnings,
-            }
+            results[command_name] = CommandCheckResult(errors=errors, warnings=warnings)
         except Exception as e:
-            results[command_name] = {
-                "errors": [f"Tool execution error: {e}"],
-                "warnings": [],
-            }
+            results[command_name] = CommandCheckResult(
+                errors=[f"Tool execution error: {e}"], warnings=[]
+            )
 
     _run_command(lint_command, "Lint")
     _run_command(build_command, "Build")
 
-    return results
+    return TSCheckerResult(lint=results.get("Lint"), build=results.get("Build"))

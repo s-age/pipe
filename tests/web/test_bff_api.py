@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-import pytest
 from pipe.core.models.role import RoleOption
 from pipe.core.models.session import Session
 from pipe.web.app import create_app
@@ -32,10 +31,6 @@ class TestBffApi(unittest.TestCase):
         self.patcher.stop()
         self.tree_patcher.stop()
 
-    @pytest.mark.skip(
-        reason="BFF endpoint needs refactoring: Actions called from "
-        "controllers don't have validated_request initialized"
-    )
     @patch("pipe.web.service_container.get_role_service")
     @patch("pipe.web.service_container.get_settings")
     def test_get_session_dashboard_api_success(
@@ -55,16 +50,19 @@ class TestBffApi(unittest.TestCase):
         # Mock SessionTreeAction dependencies
         mock_tree_data = {
             "sessions": {
-                "session1": {"purpose": "Test 1"},
-                "session2": {"purpose": "Test 2"},
+                "session1": {"session_id": "session1", "purpose": "Test 1"},
+                "session2": {"session_id": "session2", "purpose": "Test 2"},
             },
-            "session_tree": {},
+            "session_tree": [],
         }
-        self.mock_session_service.get_session_tree.return_value = mock_tree_data
+        self.mock_session_tree_service.get_session_tree.return_value = mock_tree_data
 
         # Mock SessionGetAction dependencies - need session for validation too
-        mock_session = MagicMock(spec=Session)
-        mock_session.to_dict.return_value = {"id": session_id, "purpose": "Details"}
+        mock_session = Session(
+            session_id=session_id,
+            created_at="2025-01-01T00:00:00+00:00",
+            purpose="Details",
+        )
         self.mock_session_service.get_session.return_value = mock_session
 
         # Mock GetRolesAction dependencies
@@ -87,6 +85,6 @@ class TestBffApi(unittest.TestCase):
         self.assertIn("currentSession", data)
         self.assertIn("settings", data)
 
-        self.assertEqual(len(data["sessionTree"]["sessions"]), 2)
+        self.assertEqual(len(data["sessions"]), 2)
         self.assertEqual(data["currentSession"]["purpose"], "Details")
         self.assertIsInstance(data["settings"], dict)

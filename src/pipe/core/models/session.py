@@ -255,23 +255,6 @@ class Session(CamelCaseModel):
         }
         cls.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
 
-    def to_dict(self) -> dict:
-        """Returns a dictionary representation of the session suitable for templates."""
-        return {
-            "session_id": self.session_id,
-            "created_at": self.created_at,
-            "purpose": self.purpose,
-            "background": self.background,
-            "roles": self.roles,
-            "multi_step_reasoning_enabled": self.multi_step_reasoning_enabled,
-            "token_count": self.token_count,
-            "hyperparameters": (
-                self.hyperparameters.model_dump() if self.hyperparameters else None
-            ),
-            "references": [r.model_dump() for r in self.references],
-            "artifacts": self.artifacts,
-            "procedure": self.procedure,
-            "turns": [t.model_dump() for t in self.turns],
-            "pools": [p.model_dump() for p in self.pools],
-            "todos": [t.model_dump() for t in self.todos] if self.todos else [],
-        }
+    def to_api_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation for API responses."""
+        return self.model_dump(by_alias=True, exclude_none=False)

@@ -350,6 +350,10 @@ def execute_tool(tool_name, arguments):
 
         result = tool_function(**final_args)
 
+        # Convert Pydantic models to dict
+        if hasattr(result, "model_dump"):
+            result = result.model_dump()
+
         # Log the end of the tool call to the pool
         if session_id:
             try:

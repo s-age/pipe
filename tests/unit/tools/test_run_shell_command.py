@@ -26,9 +26,10 @@ class TestRunShellCommandTool(unittest.TestCase):
 
         result = run_shell_command(command="echo 'hello'")
 
-        self.assertEqual(result["stdout"], "Success output")
-        self.assertEqual(result["exit_code"], 0)
-        self.assertEqual(result["error"], "(none)")
+        self.assertEqual(result.stdout, "Success output")
+        self.assertEqual(result.stderr, "(empty)")
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.error, "(none)")
 
     @patch("subprocess.run")
     def test_run_shell_command_failure(self, mock_subprocess_run):
@@ -40,33 +41,33 @@ class TestRunShellCommandTool(unittest.TestCase):
 
         result = run_shell_command(command="ls non_existent_dir")
 
-        self.assertEqual(result["stderr"], "Error output")
-        self.assertEqual(result["exit_code"], 1)
-        self.assertIn("Command failed", result["error"])
+        self.assertEqual(result.stderr, "Error output")
+        self.assertEqual(result.exit_code, 1)
+        self.assertIn("Command failed with exit code 1", result.error)
 
     def test_directory_does_not_exist(self):
         result = run_shell_command(command="ls", directory="non_existent_dir")
-        self.assertIn("error", result)
-        self.assertIn("Directory does not exist", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("Directory does not exist", result.error)
 
     def test_directory_outside_project_root(self):
         result = run_shell_command(command="ls", directory="/etc")
-        self.assertIn("error", result)
+        self.assertIsNotNone(result.error)
         self.assertIn(
-            "Running commands outside project root is not allowed", result["error"]
+            "Running commands outside project root is not allowed", result.error
         )
 
     @patch("subprocess.run", side_effect=FileNotFoundError)
     def test_command_not_found(self, mock_subprocess_run):
         result = run_shell_command(command="non_existent_command")
-        self.assertIn("error", result)
-        self.assertIn("Command not found", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("Command not found", result.error)
 
     @patch("subprocess.run", side_effect=Exception("Test exception"))
     def test_general_exception(self, mock_subprocess_run):
         result = run_shell_command(command="some_command")
-        self.assertIn("error", result)
-        self.assertIn("Error inside run_shell_command tool", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("Error inside run_shell_command tool", result.error)
 
     @patch("subprocess.run")
     @patch("pipe.core.tools.run_shell_command.os.path.abspath")

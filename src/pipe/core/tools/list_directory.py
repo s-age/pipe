@@ -2,13 +2,7 @@ import fnmatch
 import os
 from typing import TypedDict
 
-
-class DirectoryListResult(TypedDict, total=False):
-    """Result from listing a directory."""
-
-    files: list[str]
-    directories: list[str]
-    error: str
+from pipe.core.models.results.list_directory_result import ListDirectoryResult
 
 
 class FileFilteringOptions(TypedDict, total=False):
@@ -22,7 +16,7 @@ def list_directory(
     path: str,
     file_filtering_options: FileFilteringOptions | None = None,
     ignore: list[str] | None = None,
-) -> DirectoryListResult:
+) -> ListDirectoryResult:
     """
     Lists the names of files and subdirectories directly within a specified directory.
     """
@@ -30,9 +24,9 @@ def list_directory(
         target_path = os.path.abspath(path)
 
         if not os.path.exists(target_path):
-            return {"error": f"Path does not exist: {path}"}
+            return ListDirectoryResult(error=f"Path does not exist: {path}")
         if not os.path.isdir(target_path):
-            return {"error": f"Path is not a directory: {path}"}
+            return ListDirectoryResult(error=f"Path is not a directory: {path}")
 
         all_entries = os.listdir(target_path)
         files = []
@@ -51,6 +45,6 @@ def list_directory(
             elif os.path.isdir(entry_path):
                 directories.append(entry)
 
-        return {"files": sorted(files), "directories": sorted(directories)}
+        return ListDirectoryResult(files=sorted(files), directories=sorted(directories))
     except Exception as e:
-        return {"error": f"Failed to list directory {path}: {str(e)}"}
+        return ListDirectoryResult(error=f"Failed to list directory {path}: {str(e)}")

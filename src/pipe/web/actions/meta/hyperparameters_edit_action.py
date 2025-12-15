@@ -27,5 +27,5 @@ class HyperparametersEditAction(BaseAction):
 
         return {
             "message": f"Session {request.session_id} hyperparameters updated.",
-            "session": session.to_dict(),
+            "session": session.to_api_dict(),
         }

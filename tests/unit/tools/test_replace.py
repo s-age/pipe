@@ -29,9 +29,11 @@ class TestReplaceTool(unittest.TestCase):
             old_string="world",
             new_string="Python",
         )
-        self.assertEqual(result["status"], "success")
-        self.assertIn("Text replaced successfully", result["message"])
-        self.assertIn("diff", result["message"])
+        self.assertEqual(result.status, "success")
+        self.assertIn("Text replaced successfully", result.message)
+        self.assertIsNotNone(result.diff)
+
+        # Verify file content
         with open(self.file_path) as f:
             content = f.read()
         self.assertEqual(content, "Hello Python, this is a test.\nHello again!")
@@ -43,8 +45,8 @@ class TestReplaceTool(unittest.TestCase):
             old_string="nonexistent",
             new_string="...",
         )
-        self.assertEqual(result["status"], "failed")
-        self.assertIn("Old string not found", result["message"])
+        self.assertEqual(result.status, "failed")
+        self.assertIn("Old string not found", result.message)
 
     def test_file_not_found(self):
         result = replace(
@@ -53,22 +55,24 @@ class TestReplaceTool(unittest.TestCase):
             old_string="a",
             new_string="b",
         )
-        self.assertIn("error", result)
-        self.assertIn("File not found", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("File not found", result.error)
 
     def test_path_is_directory(self):
         result = replace(
             file_path=self.test_path, instruction="...", old_string="a", new_string="b"
         )
-        self.assertIn("error", result)
-        self.assertIn("Path is not a file", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("Path is not a file", result.error)
 
     def test_path_outside_project_root(self):
         result = replace(
             file_path="/etc/passwd", instruction="...", old_string="a", new_string="b"
         )
-        self.assertIn("error", result)
-        self.assertIn("Modifying files outside project root", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn(
+            "Modifying files outside project root is not allowed", result.error
+        )
 
     def test_blocked_path(self):
         # Create a fake .git directory to test protection
@@ -80,16 +84,16 @@ class TestReplaceTool(unittest.TestCase):
             old_string="a",
             new_string="b",
         )
-        self.assertIn("error", result)
-        self.assertIn("sensitive path", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("Operation on sensitive path", result.error)
 
     @patch("builtins.open", side_effect=OSError("Test I/O error"))
     def test_general_exception(self, mock_open):
         result = replace(
             file_path=self.file_path, instruction="...", old_string="a", new_string="b"
         )
-        self.assertIn("error", result)
-        self.assertIn("Failed to replace text", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("Failed to replace text", result.error)
 
 
 if __name__ == "__main__":

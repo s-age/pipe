@@ -2,10 +2,12 @@ import glob as std_glob
 import os
 import subprocess
 
+from pipe.core.models.results.glob_result import GlobResult
+
 
 def glob(
     pattern: str, path: str | None = None, recursive: bool | None = True
-) -> dict[str, str]:
+) -> GlobResult:
     """
     Efficiently finds files matching specific glob patterns, respecting .gitignore.
     """
@@ -42,6 +44,6 @@ def glob(
         matched_files.sort(reverse=True)  # Sort by name descending as a default
 
         content_string = "\n".join(matched_files)
-        return {"content": content_string}
+        return GlobResult(content=content_string)
     except Exception as e:
-        return {"content": f"Error inside glob tool: {str(e)}"}
+        return GlobResult(error=f"Error inside glob tool: {str(e)}")

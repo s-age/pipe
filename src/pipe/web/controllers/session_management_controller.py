@@ -1,9 +1,12 @@
-from typing import Any
-
 from flask import Request
 from pipe.web.actions import SessionTreeAction
 from pipe.web.actions.session_management import SessionsListBackupAction
 from pipe.web.exceptions import HttpException
+from pipe.web.responses import ApiResponse
+from pipe.web.responses.session_management_responses import (
+    ArchiveSession,
+    DashboardResponse,
+)
 
 
 class SessionManagementController:
@@ -18,7 +21,7 @@ class SessionManagementController:
 
     def get_dashboard(
         self, request_data: Request | None = None
-    ) -> tuple[dict[str, Any], int]:
+    ) -> tuple[ApiResponse[DashboardResponse] | ApiResponse, int]:
         """
         Get session management dashboard with session tree
         and archived sessions.
@@ -41,28 +44,30 @@ class SessionManagementController:
             for item in sessions_list:
                 session_data = item.session_data or {}
                 archives.append(
-                    {
-                        "session_id": item.session_id or "",
-                        "file_path": item.file_path or "",
-                        "purpose": session_data.get("purpose", ""),
-                        "background": session_data.get("background", ""),
-                        "roles": session_data.get("roles", []),
-                        "procedure": session_data.get("procedure", ""),
-                        "artifacts": session_data.get("artifacts", []),
-                        "multi_step_reasoning_enabled": session_data.get(
+                    ArchiveSession(
+                        session_id=item.session_id or "",
+                        file_path=item.file_path or "",
+                        purpose=session_data.get("purpose", ""),
+                        background=session_data.get("background", ""),
+                        roles=session_data.get("roles", []),
+                        procedure=session_data.get("procedure", ""),
+                        artifacts=session_data.get("artifacts", []),
+                        multi_step_reasoning_enabled=session_data.get(
                             "multi_step_reasoning_enabled", False
                         ),
-                        "token_count": session_data.get("token_count", 0),
-                        "last_updated_at": session_data.get("last_updated", ""),
-                        "deleted_at": item.deleted_at or "",
-                    }
+                        token_count=session_data.get("token_count", 0),
+                        last_updated_at=session_data.get("last_updated", ""),
+                        deleted_at=item.deleted_at or "",
+                    )
                 )
 
-            return {
-                "session_tree": tree_response.session_tree,
-                "archives": archives,
-            }, 200
+            response_data = DashboardResponse(
+                session_tree=tree_response.session_tree,
+                archives=archives,
+            )
+
+            return ApiResponse(success=True, data=response_data), 200
         except HttpException as e:
-            return {"success": False, "message": e.message}, e.status_code
+            return ApiResponse(success=False, message=e.message), e.status_code
         except Exception as e:
-            return {"success": False, "message": str(e)}, 500
+            return ApiResponse(success=False, message=str(e)), 500

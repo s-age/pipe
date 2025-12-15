@@ -65,11 +65,11 @@ class TestReadFile(unittest.TestCase):
 
         result = read_file(absolute_path=self.dummy_file_path)
 
-        if "error" in result:
-            self.fail(f"read_file returned error: {result['error']}")
+        if result.error:
+            self.fail(f"read_file returned error: {result.error}")
 
-        self.assertIn("message", result)
-        self.assertIn("added or updated", result["message"])
+        self.assertIsNotNone(result.message)
+        self.assertIn("added or updated", result.message)
 
         # Verify the session file
         with open(self.session_file) as f:
@@ -87,12 +87,12 @@ class TestReadFile(unittest.TestCase):
             del os.environ["PIPE_SESSION_ID"]
 
         result = read_file(absolute_path=self.dummy_file_path)
-        self.assertIn("content", result)
-        self.assertEqual(result["content"], "dummy content")
-        self.assertNotIn("error", result)
+        self.assertIsNotNone(result.content)
+        self.assertEqual(result.content, "dummy content")
+        self.assertIsNone(result.error)
 
     def test_read_file_not_found(self):
         os.environ["PIPE_SESSION_ID"] = self.session_id
         result = read_file(absolute_path="non_existent_file.txt")
-        self.assertIn("error", result)
-        self.assertIn("File not found", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("File not found", result.error)

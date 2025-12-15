@@ -4,6 +4,7 @@ from pipe.core.models.file_search import LsEntry
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.procedure import ProcedureOption
 from pipe.core.models.role import RoleOption
+from pipe.core.models.search_result import SessionSearchResult
 from pipe.core.models.turn import Turn
 from pydantic import ConfigDict
 
@@ -68,13 +69,8 @@ class ProceduresResponse(CamelCaseModel):
     procedures: list[ProcedureOption]
 
 
-class SearchSessionResult(CamelCaseModel):
-    session_id: str
-    title: str
-
-
 class SearchSessionsResponse(CamelCaseModel):
-    results: list[SearchSessionResult]
+    results: list[SessionSearchResult]
 
 
 class SessionTurnsResponse(CamelCaseModel):

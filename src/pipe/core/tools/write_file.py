@@ -1,10 +1,12 @@
 import difflib
 import os
 
+from pipe.core.models.results.write_file_result import WriteFileResult
+
 
 def write_file(
     file_path: str, content: str, project_root: str | None = None
-) -> dict[str, str]:
+) -> WriteFileResult:
     """
     Writes content to a specified file.
     """
@@ -34,15 +36,17 @@ def write_file(
             if target_path == blocked_path or target_path.startswith(
                 blocked_path + os.sep
             ):
-                return {
-                    "error": f"Operation on sensitive path {file_path} is not allowed."
-                }
+                return WriteFileResult(
+                    status="error",
+                    error=f"Operation on sensitive path {file_path} is not allowed.",
+                )
 
         # Ensure the target path is within the project root
         if not target_path.startswith(project_root + os.sep):
-            return {
-                "error": f"Writing outside project root is not allowed: {file_path}"
-            }
+            return WriteFileResult(
+                status="error",
+                error=f"Writing outside project root is not allowed: {file_path}",
+            )
 
         # Create parent directories if they don't exist
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
@@ -55,7 +59,7 @@ def write_file(
         with open(target_path, "w", encoding="utf-8") as f:
             f.write(content)
 
-        diff = ""
+        diff = None
         if original_content:
             diff_lines = difflib.unified_diff(
                 original_content.splitlines(keepends=True),
@@ -70,6 +74,8 @@ def write_file(
         if diff:
             message += f"\n\nDiff:\n```diff\n{diff}\n```"
 
-        return {"status": "success", "message": message}
+        return WriteFileResult(status="success", message=message, diff=diff)
     except Exception as e:
-        return {"error": f"Failed to write file {file_path}: {str(e)}"}
+        return WriteFileResult(
+            status="error", error=f"Failed to write file {file_path}: {str(e)}"
+        )

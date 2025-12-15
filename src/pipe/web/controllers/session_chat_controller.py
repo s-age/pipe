@@ -1,5 +1,3 @@
-from typing import Any
-
 from flask import Request
 from pipe.web.actions import (
     SessionGetAction,
@@ -8,6 +6,8 @@ from pipe.web.actions import (
 )
 from pipe.web.exceptions import HttpException
 from pipe.web.requests.sessions.get_session import GetSessionRequest
+from pipe.web.responses import ApiResponse
+from pipe.web.responses.session_chat_responses import ChatContextResponse
 
 
 class SessionChatController:
@@ -22,7 +22,7 @@ class SessionChatController:
 
     def get_chat_context(
         self, session_id: str | None, request_data: Request | None = None
-    ) -> tuple[dict[str, Any], int]:
+    ) -> tuple[ApiResponse[ChatContextResponse] | ApiResponse, int]:
         """
         Get chat interface context including session tree, settings,
         and current session if specified.
@@ -37,12 +37,7 @@ class SessionChatController:
             settings_action = SettingsGetAction(params={}, request_data=request_data)
             settings_data = settings_action.execute()
 
-            response = {
-                "sessions": tree_response.sessions,
-                "session_tree": tree_response.session_tree,
-                "settings": settings_data.settings,
-            }
-
+            current_session = None
             if session_id:
                 try:
                     # Create validated request for the action
@@ -52,14 +47,21 @@ class SessionChatController:
                         request_data=request_data,
                         validated_request=validated_request,
                     )
-                    session_data = session_action.execute()
-                    response["current_session"] = session_data
+                    current_session = session_action.execute()
                 except HttpException:
                     # Session not found, but still return tree and settings
-                    response["current_session"] = None
+                    pass
 
-            return response, 200
+            response_data = ChatContextResponse(
+                sessions=tree_response.sessions,
+                session_tree=tree_response.session_tree,
+                settings=settings_data.settings,
+                current_session=current_session,
+            )
+
+            return ApiResponse(success=True, data=response_data), 200
+
         except HttpException as e:
-            return {"success": False, "message": e.message}, e.status_code
+            return ApiResponse(success=False, message=e.message), e.status_code
         except Exception as e:
-            return {"success": False, "message": str(e)}, 500
+            return ApiResponse(success=False, message=str(e)), 500

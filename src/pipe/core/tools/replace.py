@@ -1,10 +1,12 @@
 import difflib
 import os
 
+from pipe.core.models.results.replace_result import ReplaceResult
+
 
 def replace(
     file_path: str, instruction: str, old_string: str, new_string: str
-) -> dict[str, str]:
+) -> ReplaceResult:
     """
     Replaces text within a file.
     """
@@ -26,22 +28,26 @@ def replace(
 
         for blocked_path in BLOCKED_PATHS:
             if target_path == blocked_path or target_path.startswith(blocked_path):
-                return {
-                    "error": f"Operation on sensitive path {file_path} is not allowed."
-                }
+                return ReplaceResult(
+                    status="error",
+                    error=f"Operation on sensitive path {file_path} is not allowed.",
+                )
 
         if not target_path.startswith(project_root):
-            return {
-                "error": (
+            return ReplaceResult(
+                status="error",
+                error=(
                     "Modifying files outside project root is not allowed: "
                     f"{file_path}"
-                )
-            }
+                ),
+            )
 
         if not os.path.exists(target_path):
-            return {"error": f"File not found: {file_path}"}
+            return ReplaceResult(status="error", error=f"File not found: {file_path}")
         if not os.path.isfile(target_path):
-            return {"error": f"Path is not a file: {file_path}"}
+            return ReplaceResult(
+                status="error", error=f"Path is not a file: {file_path}"
+            )
 
         # Read content
         with open(target_path, encoding="utf-8") as f:
@@ -49,10 +55,10 @@ def replace(
 
         # Perform simple string replacement (first occurrence only)
         if old_string not in original_content:
-            return {
-                "status": "failed",
-                "message": f"Old string not found in file: {file_path}",
-            }
+            return ReplaceResult(
+                status="failed",
+                message=f"Old string not found in file: {file_path}",
+            )
 
         new_content = original_content.replace(old_string, new_string, 1)
 
@@ -60,7 +66,7 @@ def replace(
         with open(target_path, "w", encoding="utf-8") as f:
             f.write(new_content)
 
-        diff = ""
+        diff = None
         if original_content != new_content:
             diff_lines = difflib.unified_diff(
                 original_content.splitlines(keepends=True),
@@ -75,6 +81,9 @@ def replace(
         if diff:
             message += f"\n\nDiff:\n```diff\n{diff}\n```"
 
-        return {"status": "success", "message": message}
+        return ReplaceResult(status="success", message=message, diff=diff)
     except Exception as e:
-        return {"error": f"Failed to replace text in file {file_path}: {str(e)}"}
+        return ReplaceResult(
+            status="error",
+            error=f"Failed to replace text in file {file_path}: {str(e)}",
+        )

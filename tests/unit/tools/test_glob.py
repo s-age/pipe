@@ -34,12 +34,10 @@ class TestGlobTool(unittest.TestCase):
 
         result = glob(pattern="*.txt", path=self.test_path)
 
-        self.assertIn("content", result)
-        content = result["content"].split("\n")
-
-        self.assertIn(self.file1, content)
-        self.assertIn(self.ignored_file, content)
-        self.assertNotIn(self.file2, content)
+        self.assertIsNotNone(result.content)
+        self.assertIn("file1.txt", result.content)
+        self.assertIn("ignored.txt", result.content)
+        self.assertIsNone(result.error)
 
     @patch("subprocess.run")
     def test_glob_with_gitignore(self, mock_subprocess_run):
@@ -48,11 +46,10 @@ class TestGlobTool(unittest.TestCase):
 
         result = glob(pattern="*.txt", path=self.test_path)
 
-        self.assertIn("content", result)
-        content = result["content"]
-
-        self.assertIn(self.file1, content)
-        self.assertNotIn("ignored.txt", content)
+        self.assertIsNotNone(result.content)
+        self.assertIn("file1.txt", result.content)
+        self.assertNotIn("ignored.txt", result.content)
+        self.assertIsNone(result.error)
 
     @patch("subprocess.run")
     def test_glob_git_command_fails(self, mock_subprocess_run):
@@ -61,21 +58,17 @@ class TestGlobTool(unittest.TestCase):
 
         result = glob(pattern="*.txt", path=self.test_path)
 
-        self.assertIn("content", result)
-        content = result["content"].split("\n")
-
-        # Should return all files as if git wasn't there
-        self.assertIn(self.file1, content)
-        self.assertIn(self.ignored_file, content)
+        self.assertIsNotNone(result.content)
+        self.assertIn("file1.txt", result.content)
+        self.assertIn("ignored.txt", result.content)
+        self.assertIsNone(result.error)
 
     @patch("subprocess.run", side_effect=Exception("Test subprocess error"))
     def test_glob_general_exception(self, mock_subprocess_run):
         """Tests that a general exception is caught and an error message is returned."""
         result = glob(pattern="*")
-        self.assertIn("content", result)
-        self.assertIn(
-            "Error inside glob tool: Test subprocess error", result["content"]
-        )
+        self.assertIsNotNone(result.error)
+        self.assertIn("Test subprocess error", result.error)
 
 
 if __name__ == "__main__":

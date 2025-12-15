@@ -6,6 +6,8 @@ or extracting code blocks.
 
 import dataclasses
 
+from pipe.core.models.results.py_refactor_code_result import PyRefactorCodeResult
+
 
 @dataclasses.dataclass(kw_only=True)
 class PyRefactorCodeArgs:
@@ -43,7 +45,7 @@ class PyRefactorCodeArgs:
     """
 
 
-def py_refactor_code(args: PyRefactorCodeArgs) -> dict:
+def py_refactor_code(args: PyRefactorCodeArgs) -> PyRefactorCodeResult:
     """
     Performs automatic refactoring on the specified Python file.
     """
@@ -71,4 +73,4 @@ def py_refactor_code(args: PyRefactorCodeArgs) -> dict:
             f"'{args.refactoring_type}'."
         )
 
-    return {"message": message}
+    return PyRefactorCodeResult(message=message)

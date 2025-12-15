@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import httpx  # Import the library to use its specific exception
+from pipe.core.models.results.web_fetch_result import WebFetchResult
 from pipe.core.tools.web_fetch import web_fetch
 
 
@@ -26,10 +27,11 @@ class TestWebFetchTool(unittest.TestCase):
         result = web_fetch(prompt)
 
         # Assertions
-        self.assertIn("message", result)
-        self.assertNotIn("error", result)
-        self.assertIn("Successfully fetched and parsed content", result["message"])
-        self.assertIn("Test Page", result["message"])
+        self.assertIsInstance(result, WebFetchResult)
+        self.assertIsNotNone(result.message)
+        self.assertIsNone(result.error)
+        self.assertIn("Successfully fetched and parsed content", result.message)
+        self.assertIn("Test Page", result.message)
         mock_context_manager.__enter__.return_value.get.assert_called_once_with(
             "https://example.com/test", timeout=10.0
         )
@@ -41,8 +43,10 @@ class TestWebFetchTool(unittest.TestCase):
         prompt = "Please summarize the content of the attached document."
         result = web_fetch(prompt)
 
-        self.assertIn("error", result)
-        self.assertEqual(result["error"], "No URLs found in the prompt.")
+        self.assertIsInstance(result, WebFetchResult)
+        self.assertIsNone(result.message)
+        self.assertIsNotNone(result.error)
+        self.assertEqual(result.error, "No URLs found in the prompt.")
 
     @patch("pipe.core.tools.web_fetch.httpx.Client")
     def test_web_fetch_http_error(self, mock_client):
@@ -73,11 +77,13 @@ class TestWebFetchTool(unittest.TestCase):
         prompt = "Get data from http://example.com/notfound"
         result = web_fetch(prompt)
 
-        self.assertIn("message", result)
+        self.assertIsInstance(result, WebFetchResult)
+        self.assertIsNotNone(result.message)
+        self.assertIsNone(result.error)
         self.assertIn(
-            "--- Error fetching http://example.com/notfound ---", result["message"]
+            "--- Error fetching http://example.com/notfound ---", result.message
         )
-        self.assertIn("HTTP Error: 404 Not Found", result["message"])
+        self.assertIn("HTTP Error: 404 Not Found", result.message)
 
 
 if __name__ == "__main__":

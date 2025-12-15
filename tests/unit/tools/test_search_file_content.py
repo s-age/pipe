@@ -3,6 +3,9 @@ import shutil
 import tempfile
 import unittest
 
+from pipe.core.models.results.search_file_content_result import (
+    SearchFileContentResult,
+)
 from pipe.core.tools.search_file_content import search_file_content
 
 
@@ -31,14 +34,14 @@ class TestSearchFileContentTool(unittest.TestCase):
         """
         result = search_file_content(path=self.test_dir, pattern="hello")
 
-        self.assertIn("content", result)
-        self.assertIsInstance(result["content"], list)
-        self.assertEqual(len(result["content"]), 3)
+        self.assertIsInstance(result, SearchFileContentResult)
+        self.assertIsInstance(result.content, list)
+        self.assertEqual(len(result.content), 3)
 
         # Check content of the results
-        content = result["content"]
+        content = result.content
         assert isinstance(content, list)
-        found_paths = {r["file_path"] for r in content}
+        found_paths = {r.file_path for r in content}
         expected_paths = {
             os.path.relpath(self.file1_path, self.test_dir),
             os.path.relpath(self.file2_path, self.test_dir),
@@ -51,27 +54,27 @@ class TestSearchFileContentTool(unittest.TestCase):
             (
                 m
                 for m in content
-                if m["file_path"] == os.path.relpath(self.file1_path, self.test_dir)
+                if m.file_path == os.path.relpath(self.file1_path, self.test_dir)
             ),
             None,
         )
         self.assertIsNotNone(hello_world_match)
         assert hello_world_match is not None
-        self.assertEqual(hello_world_match["line_number"], 1)
-        self.assertEqual(hello_world_match["line_content"], "hello world")
+        self.assertEqual(hello_world_match.line_number, 1)
+        self.assertEqual(hello_world_match.line_content, "hello world")
 
         def_hello_match = next(
             (
                 m
                 for m in content
-                if m["file_path"] == os.path.relpath(self.file2_path, self.test_dir)
-                and m["line_number"] == 2
+                if m.file_path == os.path.relpath(self.file2_path, self.test_dir)
+                and m.line_number == 2
             ),
             None,
         )
         self.assertIsNotNone(def_hello_match)
         assert def_hello_match is not None
-        self.assertEqual(def_hello_match["line_content"], "def hello():")
+        self.assertEqual(def_hello_match.line_content, "def hello():")
 
     def test_search_file_content_with_include_glob(self):
         """
@@ -82,13 +85,13 @@ class TestSearchFileContentTool(unittest.TestCase):
             path=self.test_dir, pattern="hello", include="*.txt"
         )
 
-        self.assertIn("content", result)
-        self.assertIsInstance(result["content"], list)
-        content = result["content"]
+        self.assertIsInstance(result, SearchFileContentResult)
+        self.assertIsInstance(result.content, list)
+        content = result.content
         assert isinstance(content, list)
         self.assertEqual(len(content), 1)
         self.assertEqual(
-            content[0]["file_path"],
+            content[0].file_path,
             os.path.relpath(self.file1_path, self.test_dir),
         )
 
@@ -98,8 +101,9 @@ class TestSearchFileContentTool(unittest.TestCase):
         """
         result = search_file_content(path=self.test_dir, pattern="non_existent_pattern")
 
-        self.assertIn("content", result)
-        self.assertEqual(result["content"], "No matches found.")
+        self.assertIsInstance(result, SearchFileContentResult)
+        self.assertIsInstance(result.content, str)
+        self.assertEqual(result.content, "No matches found.")
 
 
 if __name__ == "__main__":

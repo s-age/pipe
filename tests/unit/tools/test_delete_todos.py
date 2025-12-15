@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from pipe.core.factories.service_factory import ServiceFactory
+from pipe.core.models.results.delete_todos_result import DeleteTodosResult
 from pipe.core.models.settings import Settings
 from pipe.core.models.todo import TodoItem
 from pipe.core.tools.delete_todos import delete_todos
@@ -58,10 +59,11 @@ class TestDeleteTodosTool(unittest.TestCase):
             session_service=self.session_service, session_id=self.session_id
         )
 
-        self.assertIn("message", result)
-        self.assertNotIn("error", result)
-        self.assertIn("current_todos", result)
-        self.assertEqual(result["current_todos"], [])
+        self.assertIsInstance(result, DeleteTodosResult)
+        self.assertIsNotNone(result.message)
+        self.assertIsNone(result.error)
+        self.assertIsNotNone(result.current_todos)
+        self.assertEqual(result.current_todos, [])
 
         # Verify that the todos were actually deleted from the session object
         session_after = self.session_service.get_session(self.session_id)
@@ -72,8 +74,10 @@ class TestDeleteTodosTool(unittest.TestCase):
         Tests that an error is returned if session_service is not provided.
         """
         result = delete_todos(session_id=self.session_id)
-        self.assertIn("error", result)
-        self.assertEqual(result["error"], "This tool requires a session_service.")
+        self.assertIsInstance(result, DeleteTodosResult)
+        self.assertIsNone(result.message)
+        self.assertIsNotNone(result.error)
+        self.assertEqual(result.error, "This tool requires a session_service.")
 
     def test_delete_todos_failure(self):
         """
@@ -103,9 +107,11 @@ class TestDeleteTodosTool(unittest.TestCase):
             mock_todo_service.delete_todos.assert_called_once_with(
                 self.session_id
             )  # Ensure delete_todos was called on the mock service
-            self.assertIn("error", result)
+            self.assertIsInstance(result, DeleteTodosResult)
+            self.assertIsNone(result.message)
+            self.assertIsNotNone(result.error)
             self.assertEqual(
-                result["error"], f"Failed to delete todos from session: {error_message}"
+                result.error, f"Failed to delete todos from session: {error_message}"
             )
 
 

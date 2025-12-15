@@ -6,6 +6,7 @@ import warnings
 
 import yaml
 from pipe.core.factories.service_factory import ServiceFactory
+from pipe.core.models.results.delete_todos_result import DeleteTodosResult
 from pipe.core.models.settings import Settings
 from pipe.core.models.todo import TodoItem
 from pipe.core.tools.delete_todos import delete_todos
@@ -97,8 +98,9 @@ class TestTodoTools(unittest.TestCase):
             session_service=self.session_service, session_id=self.session_id
         )
 
-        self.assertIn("message", result)
-        self.assertIn("successfully deleted", result["message"])
+        self.assertIsInstance(result, DeleteTodosResult)
+        self.assertIsNotNone(result.message)
+        self.assertIn("successfully deleted", result.message)
 
         # Verify
         session = self.session_service.get_session(self.session_id)

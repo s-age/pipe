@@ -2,9 +2,10 @@ import re
 
 import httpx
 from bs4 import BeautifulSoup
+from pipe.core.models.results.web_fetch_result import WebFetchResult
 
 
-def web_fetch(prompt: str) -> dict[str, str]:
+def web_fetch(prompt: str) -> WebFetchResult:
     """
     Processes content from URLs embedded in a prompt.
     """
@@ -15,7 +16,7 @@ def web_fetch(prompt: str) -> dict[str, str]:
     )
 
     if not urls:
-        return {"error": "No URLs found in the prompt."}
+        return WebFetchResult(error="No URLs found in the prompt.")
 
     all_content = []
     # Use a single client for all requests
@@ -60,4 +61,4 @@ def web_fetch(prompt: str) -> dict[str, str]:
                     f"--- Error fetching {url} ---\nAn unexpected error occurred: {e}"
                 )
 
-    return {"message": "\n\n".join(all_content)}
+    return WebFetchResult(message="\n\n".join(all_content))

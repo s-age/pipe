@@ -95,7 +95,7 @@ def get_session_turns(session_id):
     return jsonify(response_data), status_code
 
 
-@session_bp.route("/compress", methods=["POST"])
+@session_bp.route("/session/compress", methods=["POST"])
 def create_compressor_session():
     """Create a compressor session."""
     response_data, status_code = dispatch_action(
@@ -104,7 +104,7 @@ def create_compressor_session():
     return jsonify(response_data), status_code
 
 
-@session_bp.route("/compress/<path:session_id>/approve", methods=["POST"])
+@session_bp.route("/session/compress/<path:session_id>/approve", methods=["POST"])
 def approve_compressor_session(session_id):
     """Approve compressor session."""
     response_data, status_code = dispatch_action(
@@ -115,7 +115,7 @@ def approve_compressor_session(session_id):
     return jsonify(response_data), status_code
 
 
-@session_bp.route("/compress/<path:session_id>/deny", methods=["POST"])
+@session_bp.route("/session/compress/<path:session_id>/deny", methods=["POST"])
 def deny_compressor_session(session_id):
     """Deny compressor session."""
     response_data, status_code = dispatch_action(

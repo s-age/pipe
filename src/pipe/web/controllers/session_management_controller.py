@@ -43,6 +43,7 @@ class SessionManagementController:
                 archives.append(
                     {
                         "session_id": item.session_id or "",
+                        "file_path": item.file_path or "",
                         "purpose": session_data.get("purpose", ""),
                         "background": session_data.get("background", ""),
                         "roles": session_data.get("roles", []),

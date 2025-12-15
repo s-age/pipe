@@ -16,13 +16,11 @@ type UseSessionManagementActions = {
 type Properties = {
   actions: UseSessionManagementActions
   navigate: (path: string) => void
-  archivedSessions?: SessionOverview[]
 }
 
 export const useSessionManagementHandlers = ({
   actions,
-  navigate,
-  archivedSessions = []
+  navigate
 }: Properties): {
   currentTab: 'sessions' | 'archives'
   setCurrentTab: (tab: 'sessions' | 'archives') => void
@@ -33,11 +31,12 @@ export const useSessionManagementHandlers = ({
     isSelected: boolean
   ) => void
   handleBulkArchive: () => Promise<void>
-  handleBulkDeleteArchived: (archivedSessions: SessionOverview[]) => Promise<void>
+  handleBulkDeleteArchived: () => Promise<void>
   handleBulkAction: () => Promise<void>
   handleCancel: () => void
 } => {
   const [currentTab, setCurrentTab] = useState<'sessions' | 'archives'>('sessions')
+  // Store filePaths for archives, sessionIds for regular sessions
   const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([])
 
   const handleSelectSession = useCallback<
@@ -57,7 +56,12 @@ export const useSessionManagementHandlers = ({
       const ids: string[] = []
       const collectIds = (sessions: SessionOverview[] | SessionTreeNode[]): void => {
         sessions.forEach((session) => {
-          ids.push(session.sessionId)
+          // For archives, use filePath as unique identifier
+          if ('filePath' in session && session.filePath) {
+            ids.push(session.filePath)
+          } else {
+            ids.push(session.sessionId)
+          }
           if ('children' in session && session.children) {
             collectIds(session.children)
           }
@@ -81,31 +85,19 @@ export const useSessionManagementHandlers = ({
     }
   }, [actions, selectedSessionIds])
 
-  const handleBulkDeleteArchived = useCallback(
-    async (archivedSessions: SessionOverview[]): Promise<void> => {
-      if (selectedSessionIds.length === 0) return
-      try {
-        // For archived sessions, use filePath (backup-specific unique identifier)
-        // if available, otherwise fall back to sessionIds
-        const filePaths = selectedSessionIds
-          .map((sessionId) => {
-            const session = archivedSessions.find((s) => s.sessionId === sessionId)
-
-            return session?.filePath
-          })
-          .filter((filePath): filePath is string => !!filePath)
-
-        await actions.deleteArchivedSessions({
-          filePaths: filePaths.length > 0 ? filePaths : undefined,
-          sessionIds: filePaths.length === 0 ? selectedSessionIds : undefined
-        })
-        setSelectedSessionIds([])
-      } catch {
-        // Error handled in actions
-      }
-    },
-    [actions, selectedSessionIds]
-  )
+  const handleBulkDeleteArchived = useCallback(async (): Promise<void> => {
+    if (selectedSessionIds.length === 0) return
+    try {
+      // selectedSessionIds now contains filePaths for archives
+      // Pass them directly to the delete action
+      await actions.deleteArchivedSessions({
+        filePaths: selectedSessionIds
+      })
+      setSelectedSessionIds([])
+    } catch {
+      // Error handled in actions
+    }
+  }, [actions, selectedSessionIds])
 
   const handleSetCurrentTab = useCallback((tab: 'sessions' | 'archives') => {
     setCurrentTab(tab)
@@ -116,9 +108,9 @@ export const useSessionManagementHandlers = ({
     if (currentTab === 'sessions') {
       await handleBulkArchive()
     } else {
-      await handleBulkDeleteArchived(archivedSessions)
+      await handleBulkDeleteArchived()
     }
-  }, [currentTab, handleBulkArchive, handleBulkDeleteArchived, archivedSessions])
+  }, [currentTab, handleBulkArchive, handleBulkDeleteArchived])
 
   const handleCancel = useCallback((): void => {
     navigate('/')

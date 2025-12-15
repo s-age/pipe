@@ -18,23 +18,23 @@ from pipe.core.domains.session_optimization import (
     parse_doctor_result,
     parse_therapist_diagnosis,
 )
+from pipe.core.models.base import CamelCaseModel
 from pipe.core.models.turn import CompressedHistoryTurn
 from pipe.core.utils.datetime import get_current_timestamp
-from pydantic import BaseModel
 
 
-class TherapistResult(BaseModel):
+class TherapistResult(CamelCaseModel):
     session_id: str
     diagnosis: DiagnosisData
 
 
-class CompressorResult(BaseModel):
+class CompressorResult(CamelCaseModel):
     session_id: str
     summary: str
     verifier_session_id: str
 
 
-class DoctorResultResponse(BaseModel):
+class DoctorResultResponse(CamelCaseModel):
     session_id: str
     result: DoctorResult
 

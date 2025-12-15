@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import TextIO
+from typing import TextIO, cast
 
 
 class StreamingLogRepository:
@@ -29,18 +29,24 @@ class StreamingLogRepository:
         self.log_file_path = log_file_path
         self.file_handle: TextIO | None = None
 
-    def open(self) -> None:
+    def open(self, mode: str = "w") -> None:
         """
-        Open the log file in write mode, creating parent directories if needed.
+        Open the log file in specified mode, creating parent directories if needed.
+
+        Args:
+            mode: File open mode ("w" for write/overwrite, "a" for append)
 
         Note:
-        - Creates a new file, overwriting if it exists
+        - "w" mode: Creates a new file, overwriting if it exists
+        - "a" mode: Appends to existing file, creates if doesn't exist
         - Parent directories are created automatically
         """
         log_path = Path(self.log_file_path)
         log_path.parent.mkdir(parents=True, exist_ok=True)
 
-        self.file_handle = open(self.log_file_path, "w", encoding="utf-8")
+        self.file_handle = cast(
+            TextIO, open(self.log_file_path, mode, encoding="utf-8")
+        )
 
     def write_log_line(self, log_type: str, content: str, timestamp: datetime) -> None:
         """

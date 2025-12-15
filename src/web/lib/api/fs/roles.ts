@@ -11,5 +11,6 @@ type RolesResponse = {
 
 export const getRoles = async (): Promise<RoleOption[]> => {
   const response = await client.get<RolesResponse>('/fs/roles')
+
   return response.roles
 }

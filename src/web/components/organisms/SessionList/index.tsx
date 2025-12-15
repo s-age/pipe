@@ -31,6 +31,8 @@ type Properties = {
   ) => void
   onSelectSession: (sessionId: string, isSelected: boolean) => void
   updateLabel?: string
+  /** Use filePath instead of sessionId for archives to handle multiple versions */
+  useFilePath?: boolean
 }
 
 export const SessionList = ({
@@ -38,7 +40,8 @@ export const SessionList = ({
   selectedSessionIds,
   onSelectAll,
   onSelectSession,
-  updateLabel = 'Updated At'
+  updateLabel = 'Updated At',
+  useFilePath = false
 }: Properties): JSX.Element => {
   const getAllSessionIds = (
     sessions: SessionOverview[] | SessionTreeNode[]
@@ -46,7 +49,16 @@ export const SessionList = ({
     const ids: string[] = []
     const collectIds = (items: SessionOverview[] | SessionTreeNode[]): void => {
       items.forEach((item) => {
-        ids.push(item.sessionId)
+        // For archives with filePath, use filePath as unique identifier
+        if (useFilePath && 'filePath' in item && item.filePath) {
+          ids.push(item.filePath)
+        } else if ('overview' in item) {
+          // For tree nodes, use sessionId
+          ids.push(item.sessionId)
+        } else {
+          // For flat sessions, use sessionId
+          ids.push(item.sessionId)
+        }
         if ('children' in item && item.children) {
           collectIds(item.children)
         }
@@ -79,15 +91,21 @@ export const SessionList = ({
       // Flat list: render as before
       const flatSessions = sessions as SessionOverview[]
 
-      return flatSessions.map((session) => (
-        <SessionItem
-          key={session.sessionId}
-          session={session}
-          isSelected={selectedSessionIds.includes(session.sessionId)}
-          onSelect={onSelectSession}
-          updateLabel={updateLabel}
-        />
-      ))
+      return flatSessions.map((session) => {
+        const itemId =
+          useFilePath && session.filePath ? session.filePath : session.sessionId
+
+        return (
+          <SessionItem
+            key={itemId}
+            session={session}
+            isSelected={selectedSessionIds.includes(itemId)}
+            onSelect={onSelectSession}
+            updateLabel={updateLabel}
+            useFilePath={useFilePath}
+          />
+        )
+      })
     }
   }
 

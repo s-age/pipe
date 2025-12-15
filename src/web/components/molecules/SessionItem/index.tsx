@@ -14,15 +14,22 @@ type Properties = {
   isSelected: boolean
   onSelect: (sessionId: string, isSelected: boolean) => void
   updateLabel?: string
+  useFilePath?: boolean
 }
 
 export const SessionItem = ({
   session,
   isSelected,
   onSelect,
-  updateLabel = 'Updated At'
+  updateLabel = 'Updated At',
+  useFilePath = false
 }: Properties): JSX.Element => {
   const sessionId = session.sessionId || 'unknown'
+  // Use filePath as identifier for archives to handle multiple versions
+  const itemId =
+    useFilePath && 'filePath' in session && session.filePath
+      ? session.filePath
+      : sessionId
   const sessionName =
     'purpose' in session
       ? session.purpose
@@ -55,13 +62,13 @@ export const SessionItem = ({
 
   const shortHash = sessionId.slice(0, 7)
 
-  const { handleSelect } = useSessionItemHandlers(sessionId, isSelected, onSelect)
+  const { handleSelect } = useSessionItemHandlers(itemId, isSelected, onSelect)
 
   return (
     <div className={sessionItem}>
       <label className={label}>
         <Checkbox
-          id={`session-${sessionId}`}
+          id={`session-${itemId}`}
           className={checkbox}
           checked={isSelected}
           onChange={handleSelect}

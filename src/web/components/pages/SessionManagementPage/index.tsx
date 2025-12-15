@@ -25,8 +25,7 @@ export const SessionManagementPage = (): JSX.Element => {
   const actions = useSessionManagementActions({ storeActions })
   const handlers = useSessionManagementHandlers({
     actions,
-    navigate,
-    archivedSessions: state.archivedSessions
+    navigate
   })
   useSessionManagementLifecycle({ storeActions })
 
@@ -65,6 +64,7 @@ export const SessionManagementPage = (): JSX.Element => {
             onSelectAll={handleSelectAll}
             onSelectSession={handleSelectSession}
             updateLabel={currentTab === 'archives' ? 'Deleted At' : 'Updated At'}
+            useFilePath={currentTab === 'archives'}
           />
         </div>
         <div className={buttonBar}>

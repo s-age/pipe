@@ -95,6 +95,10 @@ def create_app(
     assets_dir = os.path.join(project_root, "assets")
 
     app = Flask(__name__, template_folder=template_dir, static_folder=assets_dir)
+
+    # Configure JSON encoding to support non-ASCII characters
+    app.config["JSON_AS_ASCII"] = False
+
     CORS(
         app,
         resources={

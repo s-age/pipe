@@ -2,11 +2,12 @@ import json
 import os
 
 from pipe.cli.mcp_server import execute_tool
-from pipe.core.agents.gemini_api import call_gemini_api
 from pipe.core.models.turn import (
     ModelResponseTurn,
 )
+from pipe.core.models.unified_chunk import MetadataChunk, TextChunk, ToolCallChunk
 from pipe.core.repositories.streaming_repository import StreamingRepository
+from pipe.core.services.gemini_client_service import GeminiClientService
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.session_turn_service import SessionTurnService
@@ -63,59 +64,48 @@ def run_stream(
                 session_service.current_session = reloaded_session
                 session_data = session_service.current_session
 
-        stream = call_gemini_api(session_service, prompt_service)
+        # Use GeminiClientService with unified Pydantic chunk format
+        gemini_client = GeminiClientService(session_service)
+        stream = gemini_client.stream_content(prompt_service)
 
-        response_chunks = []
         full_text_parts = []
-        for chunk in stream:
-            # Correctly iterate through parts to find text for streaming
-            if (
-                chunk.candidates
-                and chunk.candidates[0].content
-                and chunk.candidates[0].content.parts
-            ):
-                for part in chunk.candidates[0].content.parts:
-                    if part.text:
-                        yield part.text
-                        full_text_parts.append(part.text)
-            response_chunks.append(chunk)
+        usage_metadata = None
+        tool_call_chunk = None
 
-        if not response_chunks:
+        for unified_chunk in stream:
+            if isinstance(unified_chunk, TextChunk):
+                # Stream text content to user
+                yield unified_chunk.content
+                full_text_parts.append(unified_chunk.content)
+
+            elif isinstance(unified_chunk, ToolCallChunk):
+                # Store tool call for processing
+                tool_call_chunk = unified_chunk
+
+            elif isinstance(unified_chunk, MetadataChunk):
+                # Store usage metadata
+                usage_metadata = unified_chunk.usage
+
+        if not usage_metadata and not full_text_parts and not tool_call_chunk:
             yield "API Error: Model stream was empty."
             model_response_text = "API Error: Model stream was empty."
             break
 
-        final_response = response_chunks[-1]
-        full_text = "".join(full_text_parts)
-        if (
-            final_response.candidates
-            and final_response.candidates[0].content
-            and final_response.candidates[0].content.parts
-        ):
-            # This is to ensure the final response object has the complete text,
-            # though the primary text source is now full_text_parts.
-            final_response.candidates[0].content.parts[0].text = full_text
-
-        response = final_response
+        # Extract token counts from metadata
         token_count = 0
         prompt_token_count_for_cache = 0
-        if response.usage_metadata:
-            prompt_tokens = response.usage_metadata.prompt_token_count or 0
-            candidate_tokens = response.usage_metadata.candidates_token_count or 0
+        if usage_metadata:
+            prompt_tokens = usage_metadata.prompt_token_count or 0
+            candidate_tokens = usage_metadata.candidates_token_count or 0
             token_count = prompt_tokens + candidate_tokens
-            prompt_token_count_for_cache = prompt_tokens  # For cache decision
+            prompt_token_count_for_cache = prompt_tokens
 
             # Capture cached_content_token_count from the first response only
-            if (
-                first_cached_content_token_count is None
-                and response.usage_metadata.cached_content_token_count is not None
-            ):
-                first_cached_content_token_count = (
-                    response.usage_metadata.cached_content_token_count
-                )
+            cached_count = usage_metadata.cached_content_token_count
+            if first_cached_content_token_count is None and cached_count is not None:
+                first_cached_content_token_count = cached_count
 
                 # Update session with first response's cached count immediately
-                # so subsequent iterations in this loop can use it for cache decisions
                 from pipe.core.services.session_meta_service import SessionMetaService
 
                 session_meta_service = SessionMetaService(session_service.repository)
@@ -129,22 +119,19 @@ def run_stream(
                     session_service.current_session = reloaded_session
                     session_data = session_service.current_session
 
-        if not response.candidates:
-            yield "API Error: No candidates in response."
-            model_response_text = "API Error: No candidates in response."
-            break
-
+        # Check if we have a tool call
         function_call = None
-        try:
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, "function_call") and part.function_call:
-                    function_call = part.function_call
-                    break
-        except (IndexError, AttributeError):
-            function_call = None
+        if tool_call_chunk:
+            # Create a simple object to mimic the old function_call structure
+            class FunctionCall:
+                def __init__(self, name, args):
+                    self.name = name
+                    self.args = args
+
+            function_call = FunctionCall(tool_call_chunk.name, tool_call_chunk.args)
 
         if not function_call:
-            model_response_text = full_text
+            model_response_text = "".join(full_text_parts)
             break
 
         tool_call_count += 1

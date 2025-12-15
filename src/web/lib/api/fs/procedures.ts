@@ -11,5 +11,6 @@ type ProceduresResponse = {
 
 export const getProcedures = async (): Promise<ProcedureOption[]> => {
   const response = await client.get<ProceduresResponse>('/fs/procedures')
+
   return response.procedures
 }

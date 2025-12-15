@@ -6,16 +6,16 @@ from pipe.web.requests import ApplyDoctorRequest
 
 
 class ApplyDoctorModificationsAction(BaseAction):
-    body_model = ApplyDoctorRequest  # Legacy pattern: no path params
+    request_model = ApplyDoctorRequest
 
-    def execute(self) -> tuple[DoctorResultResponse, int]:
+    def execute(self) -> DoctorResultResponse:
         """Apply doctor modifications and return result."""
         from pipe.web.service_container import get_session_workflow_service
 
-        request_data = ApplyDoctorRequest(**self.request_data.get_json())
+        request = self.validated_request
 
         result = get_session_workflow_service().run_takt_for_doctor(
-            request_data.session_id, request_data.modifications
+            request.session_id, request.modifications
         )
 
-        return result, 200
+        return result

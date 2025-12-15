@@ -1,6 +1,6 @@
 """Create therapist session action."""
 
-from pipe.web.action_responses import SessionStartResponse
+from pipe.core.services.session_optimization_service import TherapistResult
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests.therapist_requests import CreateTherapistRequest
 
@@ -8,13 +8,11 @@ from pipe.web.requests.therapist_requests import CreateTherapistRequest
 class CreateTherapistSessionAction(BaseAction):
     request_model = CreateTherapistRequest
 
-    def execute(self) -> SessionStartResponse:
-        from pipe.web.service_container import get_therapist_service
+    def execute(self) -> TherapistResult:
+        from pipe.web.service_container import get_session_optimization_service
 
         request = self.validated_request
 
-        session_id = get_therapist_service().create_therapist_session(
-            request.session_id
-        )
+        result = get_session_optimization_service().run_therapist(request.session_id)
 
-        return SessionStartResponse(session_id=session_id)
+        return result

@@ -1,4 +1,3 @@
-import { marked } from 'marked'
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
@@ -14,6 +13,8 @@ import type { Turn } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
+import { EditingContent } from './EditingContent'
+import { ModelResponseContent } from './ModelResponseContent'
 import {
   turnHeader,
   turnHeaderInfo,
@@ -21,14 +22,6 @@ import {
   turnTimestamp,
   turnHeaderControls,
   turnContent,
-  rawMarkdown,
-  renderedMarkdown,
-  toolResponseContent,
-  statusSuccess,
-  statusError,
-  editablePre,
-  editTextArea,
-  editButtonContainer,
   editButtonIcon,
   turnWrapper,
   userTaskAligned,
@@ -38,6 +31,8 @@ import {
   deleteButtonIcon,
   copyButtonIcon
 } from './style.css'
+import { ToolResponseContent } from './ToolResponseContent'
+import { UserTaskContent } from './UserTaskContent'
 
 type TurnProperties = {
   turn: Turn
@@ -131,78 +126,41 @@ const Component = ({
   }
 
   const renderTurnContent = (): JSX.Element | null => {
-    let markdownContent = ''
-    let statusClass = ''
-
     if (isEditing) {
       return (
-        <div className={turnContent}>
-          <textarea
-            className={editTextArea}
-            value={editedContent}
-            onChange={onEditedChange}
-          />
-          <div className={editButtonContainer}>
-            <Button kind="primary" size="default" onClick={onSaveEdit}>
-              Save
-            </Button>
-            <Button kind="secondary" size="default" onClick={onCancelEdit}>
-              Cancel
-            </Button>
-          </div>
-        </div>
+        <EditingContent
+          editedContent={editedContent}
+          onEditedChange={onEditedChange}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
+        />
       )
     }
 
     switch (turn.type) {
       case 'user_task':
-        return <pre className={editablePre}>{turn.instruction || ''}</pre>
+        return <UserTaskContent instruction={turn.instruction || ''} />
+
       case 'model_response':
       case 'compressed_history':
-        markdownContent = turn.content || ''
-
         return (
-          <div className={turnContent}>
-            {turn.type === 'compressed_history' && (
-              <p>
-                <strong>
-                  <em>-- History Compressed --</em>
-                </strong>
-              </p>
-            )}
-            <div className={rawMarkdown}>{markdownContent}</div>
-            {!isStreaming && (
-              <div
-                className={`${renderedMarkdown} markdown-body`}
-                dangerouslySetInnerHTML={{
-                  __html: marked.parse(markdownContent.trim())
-                }}
-              />
-            )}
-          </div>
+          <ModelResponseContent
+            content={turn.content || ''}
+            isCompressed={turn.type === 'compressed_history'}
+            isStreaming={isStreaming}
+          />
         )
+
       case 'function_calling':
         return (
           <pre className={turnContent}>{JSON.stringify(turn.response, null, 2)}</pre>
         )
+
       case 'tool_response':
         if (!turn.response) return null
-        // Treat any status starting with 'succe' (e.g., 'success', 'succeeded') as success
-        statusClass =
-          typeof turn.response.status === 'string' &&
-          turn.response.status.toLowerCase().startsWith('succe')
-            ? statusSuccess
-            : statusError
 
-        return (
-          <div className={toolResponseContent}>
-            <strong>Status: </strong>
-            <span className={statusClass}>{turn.response.status}</span>
-            {turn.response.message !== undefined && turn.response.message !== null && (
-              <pre>{JSON.stringify(turn.response.message, null, 2)}</pre>
-            )}
-          </div>
-        )
+        return <ToolResponseContent response={turn.response} />
+
       default:
         return <pre className={turnContent}>{JSON.stringify(turn, null, 2)}</pre>
     }

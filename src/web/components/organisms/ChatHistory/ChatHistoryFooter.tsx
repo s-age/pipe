@@ -9,7 +9,7 @@ type ChatHistoryFooterProperties = {
   onSendInstruction: (instruction: string) => Promise<void>
   isStreaming: boolean
   tokenCount?: number
-  contextLimit?: number
+  contextLimit: number
   onRefresh?: () => Promise<void>
 }
 

@@ -9,6 +9,7 @@ import type {
 
 import { useSessionListHandlers } from './hooks/useSessionListHandlers'
 import { useSessionListLifecycle } from './hooks/useSessionListLifecycle'
+import { SessionListNode } from './SessionListNode'
 import {
   sessionList,
   header,
@@ -17,9 +18,7 @@ import {
   headerContent,
   headerSubject,
   headerShortHash,
-  headerUpdatedAt,
-  sessionNode,
-  sessionChildren
+  headerUpdatedAt
 } from './style.css'
 
 type Properties = {
@@ -86,7 +85,15 @@ export const SessionList = ({
       // Hierarchical nodes: render recursively
       const treeNodes = sessions as SessionTreeNode[]
 
-      return treeNodes.map((node) => renderNode(node))
+      return treeNodes.map((node) => (
+        <SessionListNode
+          key={node.sessionId}
+          node={node}
+          selectedSessionIds={selectedSessionIds}
+          onSelectSession={onSelectSession}
+          updateLabel={updateLabel}
+        />
+      ))
     } else {
       // Flat list: render as before
       const flatSessions = sessions as SessionOverview[]
@@ -107,39 +114,6 @@ export const SessionList = ({
         )
       })
     }
-  }
-
-  const renderNode = (node: SessionTreeNode): React.ReactElement => {
-    const overview = node.overview || {}
-    const sessionObject: SessionOverview = {
-      sessionId: node.sessionId,
-      purpose: (overview.purpose as string) || '',
-      background: (overview.background as string) || '',
-      roles: (overview.roles as string[]) || [],
-      procedure: (overview.procedure as string) || '',
-      artifacts: (overview.artifacts as string[]) || [],
-      multiStepReasoningEnabled: !!overview.multiStepReasoningEnabled,
-      tokenCount: (overview.tokenCount as number) || 0,
-      lastUpdatedAt: (overview.lastUpdatedAt as string) || '',
-      deletedAt: (overview.deletedAt as string) || ''
-    }
-
-    let childrenElements: React.ReactElement[] | null = null
-    if (node.children && node.children.length > 0) {
-      childrenElements = node.children.map((child) => renderNode(child))
-    }
-
-    return (
-      <div key={node.sessionId} className={sessionNode}>
-        <SessionItem
-          session={sessionObject}
-          isSelected={selectedSessionIds.includes(node.sessionId)}
-          onSelect={onSelectSession}
-          updateLabel={updateLabel}
-        />
-        {childrenElements && <div className={sessionChildren}>{childrenElements}</div>}
-      </div>
-    )
   }
 
   return (

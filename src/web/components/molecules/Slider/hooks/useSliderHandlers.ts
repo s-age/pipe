@@ -40,7 +40,7 @@ export type UseSliderReturn = {
   thumbCx: number
 }
 
-export const useSlider = ({
+export const useSliderHandlers = ({
   min = 0,
   max = 100,
   step: _step = 1,

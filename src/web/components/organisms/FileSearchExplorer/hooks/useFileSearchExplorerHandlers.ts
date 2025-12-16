@@ -1,5 +1,5 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { BrowseResponse } from '@/lib/api/fs/browse'
 
@@ -58,11 +58,11 @@ export const useFileSearchExplorerHandlers = (
     inputReference: inputReference || { current: null },
     suggestionListReference: suggestionListReference || { current: null },
     setSuggestions,
-    setSelectedIndex
+    setSelectedIndex,
+    selectedValues
   })
 
-  // Create a Set of existing values for efficient lookup
-  const existingValues = useMemo(() => new Set(selectedValues), [selectedValues])
+  const { existingValues } = lifecycle
 
   // Filter out already selected values from suggestions
   const filterExistingValues = useCallback(

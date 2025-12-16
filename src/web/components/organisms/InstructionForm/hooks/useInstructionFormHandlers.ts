@@ -27,20 +27,25 @@ export const useInstructionFormHandlers = ({
   const methods = useFormContext()
   const { register, handleSubmit, reset } = methods
 
-  const submit = handleSubmit(async (data: { instruction?: string }) => {
-    const instruction = (data as { instruction?: string }).instruction ?? ''
-    if (!instruction.trim() || !currentSessionId) return
+  const submit = useCallback(async () => {
+    await handleSubmit(async (data: { instruction?: string }) => {
+      const instruction = data.instruction ?? ''
+      if (!instruction.trim() || !currentSessionId) return
 
-    await onSendInstruction(instruction)
-    reset({ instruction: '' })
-  })
+      await onSendInstruction(instruction)
+      reset({ instruction: '' })
+    })()
+  }, [currentSessionId, onSendInstruction, handleSubmit, reset])
 
-  const onTextAreaKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>): void => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault()
-      void submit()
-    }
-  }
+  const onTextAreaKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault()
+        void submit()
+      }
+    },
+    [submit]
+  )
 
   const onStopClick = useCallback(async (): Promise<void> => {
     if (!currentSessionId) return

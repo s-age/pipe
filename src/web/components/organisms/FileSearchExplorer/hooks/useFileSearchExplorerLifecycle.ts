@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 type Item = {
   label: string
@@ -12,6 +12,7 @@ type UseFileSearchExplorerLifecycleProperties = {
   suggestionListReference: React.RefObject<HTMLUListElement | null>
   setSuggestions: (suggestions: Item[]) => void
   setSelectedIndex: (index: number) => void
+  selectedValues: string[]
   // ... cache management state/setters
 }
 
@@ -20,11 +21,15 @@ export const useFileSearchExplorerLifecycle = ({
   inputReference,
   suggestionListReference,
   setSuggestions,
-  setSelectedIndex
+  setSelectedIndex,
+  selectedValues
 }: UseFileSearchExplorerLifecycleProperties): {
   debouncedQuery: string
+  existingValues: Set<string>
 } => {
   const [debouncedQuery, setDebouncedQuery] = useState<string>(query)
+
+  const existingValues = useMemo(() => new Set(selectedValues), [selectedValues])
 
   // Debounce processing
   useEffect((): (() => void) => {
@@ -59,6 +64,7 @@ export const useFileSearchExplorerLifecycle = ({
   }, [inputReference, suggestionListReference, setSuggestions, setSelectedIndex])
 
   return {
-    debouncedQuery
+    debouncedQuery,
+    existingValues
   }
 }

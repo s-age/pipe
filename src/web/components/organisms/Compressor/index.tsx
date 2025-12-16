@@ -22,10 +22,6 @@ export const Compressor = ({
   const maxTurn = sessionDetail?.turns?.length ?? 0
   const effectiveMax = maxTurn
 
-  const { mergedDefaultValues } = useCompressorLifecycle({
-    effectiveMax
-  })
-
   const {
     summary,
     error,
@@ -35,7 +31,6 @@ export const Compressor = ({
     compressorSessionId,
     handleStartChange,
     handleEndChange,
-    endOptions,
     handleDeny,
     setSummary,
     setError,
@@ -43,6 +38,11 @@ export const Compressor = ({
     setCompressorSessionId
   } = useCompressorHandlers({
     effectiveMax
+  })
+
+  const { mergedDefaultValues, endOptions } = useCompressorLifecycle({
+    effectiveMax,
+    startLocal
   })
 
   return (

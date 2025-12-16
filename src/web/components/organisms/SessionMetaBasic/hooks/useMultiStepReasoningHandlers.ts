@@ -24,6 +24,7 @@ export const useMultiStepReasoningHandlers = ({
 
       const checked = event.target.checked
 
+      // Intentionally not awaiting - errors are handled in Actions layer
       void updateMultiStepReasoning(currentSessionId, {
         multiStepReasoningEnabled: checked
       })

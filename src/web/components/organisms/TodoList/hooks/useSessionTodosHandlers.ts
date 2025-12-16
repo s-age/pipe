@@ -34,6 +34,7 @@ export const useSessionTodosHandlers = ({
   const handleUpdateTodo = useCallback(
     async (todos: Todo[]) => {
       if (!sessionDetail.sessionId) return
+      // Intentionally not awaiting - errors are handled in Actions layer
       void updateTodos(sessionDetail.sessionId, todos)
     },
     [sessionDetail, updateTodos]
@@ -44,6 +45,7 @@ export const useSessionTodosHandlers = ({
     if (!window.confirm('Are you sure you want to delete all todos for this session?'))
       return
 
+    // Intentionally not awaiting - errors are handled in Actions layer
     void deleteAllTodos(sessionDetail.sessionId)
   }, [sessionDetail, deleteAllTodos])
 
@@ -54,6 +56,7 @@ export const useSessionTodosHandlers = ({
         const todo = todos[index]
         if (todo) {
           const isChecked = !todo.checked
+          // Intentionally not awaiting - errors are handled in Actions layer
           void handleUpdateTodo(
             todos.map((t, i) => (i === index ? { ...t, checked: isChecked } : t))
           )

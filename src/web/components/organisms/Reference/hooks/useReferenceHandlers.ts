@@ -47,6 +47,7 @@ export const useReferenceHandlers = (
     async (_event: React.MouseEvent<HTMLButtonElement>) => {
       if (!currentSessionId) return
 
+      // Intentionally not awaiting - errors are handled in Actions layer
       void handleUpdateReferencePersist(
         currentSessionId,
         referenceIndex,
@@ -67,6 +68,7 @@ export const useReferenceHandlers = (
   const handleToggleDisabled = useCallback(async () => {
     if (!currentSessionId) return
 
+    // Intentionally not awaiting - errors are handled in Actions layer
     void handleToggleReferenceDisabled(currentSessionId, referenceIndex)
 
     updateReferences((reference) => ({ ...reference, disabled: !reference.disabled }))
@@ -93,6 +95,7 @@ export const useReferenceHandlers = (
         newTtl = currentTtl - 1
       }
 
+      // Intentionally not awaiting - errors are handled in Actions layer
       void handleUpdateReferenceTtl(currentSessionId, referenceIndex, newTtl)
 
       updateReferences((reference) => ({ ...reference, ttl: newTtl }))
@@ -111,6 +114,7 @@ export const useReferenceHandlers = (
   )
 
   const handleToggle = useCallback(() => {
+    // Intentionally not awaiting - errors are handled in Actions layer
     void handleToggleDisabled()
   }, [handleToggleDisabled])
 

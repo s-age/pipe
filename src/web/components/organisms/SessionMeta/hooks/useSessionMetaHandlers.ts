@@ -28,7 +28,11 @@ export const useSessionMetaHandlers = ({
 
       // Note: SessionMetaFormInputs and EditSessionMetaRequest have compatible shapes
       // roles, artifacts, procedure, hyperparameters are already in the correct format
-      void handleMetaSave(sessionDetail.sessionId, data as unknown as EditSessionMetaRequest)
+      // Intentionally not awaiting - errors are handled in Actions layer
+      void handleMetaSave(
+        sessionDetail.sessionId,
+        data as unknown as EditSessionMetaRequest
+      )
     },
     [sessionDetail.sessionId, handleMetaSave]
   )
@@ -38,6 +42,7 @@ export const useSessionMetaHandlers = ({
   const wrappedSubmit = useCallback(
     async (data: SessionMetaFormInputs) => {
       setIsSubmitting(true)
+      // Intentionally not awaiting - errors are handled in Actions layer
       void onSubmit(data)
       setIsSubmitting(false)
     },
@@ -49,6 +54,7 @@ export const useSessionMetaHandlers = ({
       // Type guard: verify handleSubmit exists and call it
       const submitHandler = formContext.handleSubmit(onSubmit as never)
       if (typeof submitHandler === 'function') {
+        // Intentionally not awaiting - errors are handled in Actions layer
         void submitHandler()
       }
     }

@@ -32,6 +32,7 @@ export const useChatHistoryHandlers = ({
 
   const handleDeleteSession = useCallback(
     async (sessionId: string): Promise<void> => {
+      // Intentionally not awaiting - errors are handled in Actions layer
       void deleteSessionAction(sessionId)
       location.href = '/'
     },
@@ -44,6 +45,7 @@ export const useChatHistoryHandlers = ({
     const sessionIdAtShow = currentSessionId
 
     const handleConfirm = async (): Promise<void> => {
+      // Intentionally not awaiting - errors are handled in Actions layer
       void handleDeleteSession(sessionIdAtShow)
       if (modalIdReference.current !== null) {
         hide(modalIdReference.current)

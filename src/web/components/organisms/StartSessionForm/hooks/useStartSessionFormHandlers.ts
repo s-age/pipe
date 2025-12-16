@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 
 import { useOptionalFormContext } from '@/components/organisms/Form'
+import { addToast } from '@/stores/useToastStore'
 
 import { useStartSessionFormActions } from './useStartSessionFormActions'
 import type { StartSessionFormInputs } from '../schema'
@@ -28,10 +29,12 @@ export const useStartSessionFormHandlers = (): {
     },
     [startSessionAction]
   )
-  const onFormError = useCallback((errors: unknown): void => {
-    // If we have access to form context, print current values so we can inspect hyperparameters
-    // eslint-disable-next-line no-console
-    console.error('StartSession form validation errors:', errors)
+  const onFormError = useCallback((_errors: unknown): void => {
+    addToast({
+      status: 'failure',
+      title: 'Form validation failed',
+      description: 'Please check all required fields'
+    })
   }, [])
 
   const handleCreateClick = useCallback(async (): Promise<void> => {

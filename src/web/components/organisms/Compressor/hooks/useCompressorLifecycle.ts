@@ -4,15 +4,18 @@ import type { CompressorFormInputs } from '../schema'
 
 type UseCompressorLifecycleProperties = {
   effectiveMax: number
+  startLocal: number
 }
 
 type UseCompressorLifecycleReturn = {
   defaultValues: CompressorFormInputs
   mergedDefaultValues: Record<string, unknown>
+  endOptions: number[]
 }
 
 export const useCompressorLifecycle = ({
-  effectiveMax
+  effectiveMax,
+  startLocal
 }: UseCompressorLifecycleProperties): UseCompressorLifecycleReturn => {
   const defaultValues = useMemo<CompressorFormInputs>(
     () => ({
@@ -43,8 +46,19 @@ export const useCompressorLifecycle = ({
     }
   }, [defaultValues, effectiveMax])
 
+  const endOptions = useMemo(() => {
+    const minEnd = startLocal + 1
+    const maxEnd = effectiveMax
+
+    return Array.from(
+      { length: Math.max(0, maxEnd - minEnd + 1) },
+      (_, i) => minEnd + i
+    )
+  }, [startLocal, effectiveMax])
+
   return {
     defaultValues,
-    mergedDefaultValues
+    mergedDefaultValues,
+    endOptions
   }
 }

@@ -87,11 +87,10 @@ class TestReadManyFiles(unittest.TestCase):
 
     def test_read_many_files_success(self):
         result = read_many_files(paths=["**/*.txt"])
+        self.assertIsNotNone(result.data.files)
+        self.assertEqual(len(result.data.files), 2)
 
-        self.assertIsNotNone(result.files, f"Result did not contain files: {result}")
-        self.assertEqual(len(result.files), 2)
-
-        file_contents = {f.path: f.content for f in result.files}
+        file_contents = {f.path: f.content for f in result.data.files}
         abs_file1 = os.path.abspath(self.file1)
         abs_file2 = os.path.abspath(self.file2)
 
@@ -99,7 +98,7 @@ class TestReadManyFiles(unittest.TestCase):
         self.assertEqual(file_contents[abs_file1], "content1")
         self.assertIn(abs_file2, file_contents)
         self.assertEqual(file_contents[abs_file2], "content2")
-        self.assertIn("Added 2 files", result.message)
+        self.assertIn("Added 2 files", result.data.message)
 
         # Verify session file
         with open(self.session_file) as f:
@@ -123,11 +122,10 @@ class TestReadManyFiles(unittest.TestCase):
 
     def test_read_many_files_exclude(self):
         result = read_many_files(paths=["**/*.txt", "*.log"], exclude=["**/subdir/**"])
+        self.assertIsNotNone(result.data.files)
+        self.assertEqual(len(result.data.files), 1)  # Only file1 should be included
 
-        self.assertIsNotNone(result.files, f"Result did not contain files: {result}")
-        self.assertEqual(len(result.files), 1)  # Only file1 should be included
-
-        file_contents = {f.path: f.content for f in result.files}
+        file_contents = {f.path: f.content for f in result.data.files}
         abs_file1 = os.path.abspath(self.file1)
         abs_file2 = os.path.abspath(self.file2)
 
@@ -136,12 +134,10 @@ class TestReadManyFiles(unittest.TestCase):
         self.assertNotIn(abs_file2, file_contents)  # file2 should be excluded
 
         # Verify message
-        self.assertIsNotNone(
-            result.message, f"Result did not contain message: {result}"
-        )
+        self.assertIsNotNone(result.data.message)
         # The message will still indicate files added to references because
         # PIPE_SESSION_ID is set
-        self.assertIn("Added 1 files", result.message)
+        self.assertIn("Added 1 files", result.data.message)
 
         with open(self.session_file) as f:
             data = json.load(f)
@@ -166,10 +162,9 @@ class TestReadManyFiles(unittest.TestCase):
 
         result = read_many_files(paths=["**/*.txt"])
 
-        # Assert files content is returned
-        self.assertIsNotNone(result.files, f"Result did not contain files: {result}")
-        self.assertEqual(len(result.files), 2)
-        file_contents = {f.path: f.content for f in result.files}
+        self.assertIsNotNone(result.data.files)
+        self.assertEqual(len(result.data.files), 2)
+        file_contents = {f.path: f.content for f in result.data.files}
         abs_file1 = os.path.abspath(self.file1)
         abs_file2 = os.path.abspath(self.file2)
 
@@ -185,19 +180,20 @@ class TestReadManyFiles(unittest.TestCase):
         self.assertEqual(len(references), 0)
 
         # Assert message indicates no active session
-        self.assertIsNotNone(result.message)
+        self.assertIsNotNone(result.data.message)
         self.assertIn(
-            "No active session. Files were not added to references.", result.message
+            "No active session. Files were not added to references.",
+            result.data.message,
         )
 
     def test_read_many_files_no_match(self):
         result = read_many_files(paths=["**/*.xyz"])  # A pattern that won't match
         # any files
 
-        self.assertIsNotNone(result.files, f"Result did not contain files: {result}")
-        self.assertEqual(len(result.files), 0)
-        self.assertIsNotNone(result.message)
-        self.assertEqual(result.message, "No files found matching the criteria.")
+        self.assertIsNotNone(result.data.files)
+        self.assertEqual(len(result.data.files), 0)
+        self.assertIsNotNone(result.data.message)
+        self.assertEqual(result.data.message, "No files found matching the criteria.")
 
     def test_read_many_files_max_limit_exceeded(self):
         # Default max_files is 5. We have 2 .txt files.
@@ -210,5 +206,5 @@ class TestReadManyFiles(unittest.TestCase):
         # Test with a higher limit that should pass
         result_pass = read_many_files(paths=["**/*.txt"], max_files=2)
         self.assertIsNone(result_pass.error)
-        self.assertIsNotNone(result_pass.files)
-        self.assertEqual(len(result_pass.files), 2)
+        self.assertIsNotNone(result_pass.data.files)
+        self.assertEqual(len(result_pass.data.files), 2)

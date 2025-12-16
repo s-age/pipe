@@ -2,11 +2,12 @@ import difflib
 import os
 
 from pipe.core.models.results.write_file_result import WriteFileResult
+from pipe.core.models.tool_result import ToolResult
 
 
 def write_file(
     file_path: str, content: str, project_root: str | None = None
-) -> WriteFileResult:
+) -> ToolResult[WriteFileResult]:
     """
     Writes content to a specified file.
     """
@@ -36,16 +37,14 @@ def write_file(
             if target_path == blocked_path or target_path.startswith(
                 blocked_path + os.sep
             ):
-                return WriteFileResult(
-                    status="error",
-                    error=f"Operation on sensitive path {file_path} is not allowed.",
+                return ToolResult(
+                    error=f"Operation on sensitive path {file_path} is not allowed."
                 )
 
         # Ensure the target path is within the project root
         if not target_path.startswith(project_root + os.sep):
-            return WriteFileResult(
-                status="error",
-                error=f"Writing outside project root is not allowed: {file_path}",
+            return ToolResult(
+                error=f"Writing outside project root is not allowed: {file_path}"
             )
 
         # Create parent directories if they don't exist
@@ -74,8 +73,7 @@ def write_file(
         if diff:
             message += f"\n\nDiff:\n```diff\n{diff}\n```"
 
-        return WriteFileResult(status="success", message=message, diff=diff)
+        result = WriteFileResult(status="success", message=message, diff=diff)
+        return ToolResult(data=result)
     except Exception as e:
-        return WriteFileResult(
-            status="error", error=f"Failed to write file {file_path}: {str(e)}"
-        )
+        return ToolResult(error=f"Failed to write file {file_path}: {str(e)}")

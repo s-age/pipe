@@ -3,6 +3,7 @@ import os
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.models.results.read_file_result import ReadFileResult
+from pipe.core.models.tool_result import ToolResult
 
 
 # session_manager and session_id are dynamically passed by the tool executor
@@ -12,7 +13,7 @@ def read_file(
     offset: float | None = None,
     session_service=None,
     session_id=None,
-) -> ReadFileResult:
+) -> ToolResult[ReadFileResult]:
     """
     Reads and returns the content of a specified file.
     If a session_id is provided, it also adds the file to the session's reference list.
@@ -20,9 +21,9 @@ def read_file(
     abs_path = os.path.abspath(absolute_path)
 
     if not os.path.exists(abs_path):
-        return ReadFileResult(error=f"File not found: {abs_path}")
+        return ToolResult(error=f"File not found: {abs_path}")
     if not os.path.isfile(abs_path):
-        return ReadFileResult(error=f"Path is not a file: {abs_path}")
+        return ToolResult(error=f"Path is not a file: {abs_path}")
 
     session_message = ""
     # Resolve session_id from env if not provided
@@ -73,18 +74,17 @@ def read_file(
 
         content = "".join(lines_slice)
 
-        return ReadFileResult(
+        result = ReadFileResult(
             content=content, message=session_message if session_message else None
         )
+        return ToolResult(data=result)
     except UnicodeDecodeError:
-        return ReadFileResult(
+        return ToolResult(
             error=(f"Cannot decode file {abs_path} as text. It might be a binary file.")
         )
     except Exception as e:
         # If session_message exists, combine it with the file read error
         if session_message:
-            return ReadFileResult(
-                error=f"{session_message} Also, failed to read file: {e}"
-            )
+            return ToolResult(error=f"{session_message} Also, failed to read file: {e}")
         else:
-            return ReadFileResult(error=f"Failed to read file: {e}")
+            return ToolResult(error=f"Failed to read file: {e}")

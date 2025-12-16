@@ -8,6 +8,7 @@ from pipe.core.models.results.read_many_files_result import (
     FileContent,
     ReadManyFilesResult,
 )
+from pipe.core.models.tool_result import ToolResult
 
 
 # session_service and session_id are dynamically passed by the tool executor
@@ -20,7 +21,7 @@ def read_many_files(
     max_files: int = 5,  # New parameter for limiting file count
     session_service=None,  # Deprecated, kept for interface compatibility
     session_id=None,
-) -> ReadManyFilesResult:
+) -> ToolResult[ReadManyFilesResult]:
     """
     Resolves file paths based on glob patterns and adds them to the session's
     reference list.
@@ -108,16 +109,17 @@ def read_many_files(
                 resolved_files.append(os.path.abspath(filepath))
 
         if not resolved_files:
-            return ReadManyFilesResult(
+            result = ReadManyFilesResult(
                 files=[], message="No files found matching the criteria."
             )
+            return ToolResult(data=result)
 
         # Remove duplicates
         unique_files = sorted(list(set(resolved_files)))
 
         # Validate against max_files limit
         if len(unique_files) > max_files:
-            return ReadManyFilesResult(
+            return ToolResult(
                 error=(
                     f"Too many files found ({len(unique_files)}). "
                     f"Maximum allowed is {max_files}. "
@@ -157,16 +159,17 @@ def read_many_files(
                     FileContent(path=fpath, error=f"Failed to read file: {e}")
                 )
 
-        return ReadManyFilesResult(
+        result = ReadManyFilesResult(
             files=file_contents,
             message=session_message if session_message else None,
         )
+        return ToolResult(data=result)
 
     except Exception as e:
         # If session_message exists, combine it with the file read error
         if session_message:
-            return ReadManyFilesResult(
+            return ToolResult(
                 error=f"{session_message} Also, failed to process files: {e}"
             )
         else:
-            return ReadManyFilesResult(error=f"Error in read_many_files tool: {str(e)}")
+            return ToolResult(error=f"Error in read_many_files tool: {str(e)}")

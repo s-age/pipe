@@ -2,6 +2,8 @@ import ast
 import os
 from typing import TypedDict
 
+from pipe.core.models.tool_result import ToolResult
+
 
 class TypeHintsResult(TypedDict, total=False):
     """Result from extracting type hints."""
@@ -10,12 +12,12 @@ class TypeHintsResult(TypedDict, total=False):
     error: str
 
 
-def py_get_type_hints(file_path: str, symbol_name: str) -> TypeHintsResult:
+def py_get_type_hints(file_path: str, symbol_name: str) -> ToolResult[TypeHintsResult]:
     """
     指定されたPythonファイル内の関数またはクラスのタイプヒントを抽出する。
     """
     if not os.path.exists(file_path):
-        return {"error": f"File not found: {file_path}"}
+        return ToolResult(error=f"File not found: {file_path}")
 
     with open(file_path, encoding="utf-8") as f:
         source_code = f.read()
@@ -40,8 +42,8 @@ def py_get_type_hints(file_path: str, symbol_name: str) -> TypeHintsResult:
             break
 
     if not type_hints:
-        return {
-            "error": f"Type hints for symbol '{symbol_name}' not found in {file_path}"
-        }
+        return ToolResult(
+            error=f"Type hints for symbol '{symbol_name}' not found in {file_path}"
+        )
 
-    return {"type_hints": type_hints}
+    return ToolResult(data={"type_hints": type_hints})

@@ -26,10 +26,10 @@ class TestRunShellCommandTool(unittest.TestCase):
 
         result = run_shell_command(command="echo 'hello'")
 
-        self.assertEqual(result.stdout, "Success output")
-        self.assertEqual(result.stderr, "(empty)")
-        self.assertEqual(result.exit_code, 0)
-        self.assertEqual(result.error, "(none)")
+        self.assertEqual(result.data.stdout, "Success output")
+        self.assertEqual(result.data.stderr, "(empty)")
+        self.assertEqual(result.data.exit_code, 0)
+        self.assertEqual(result.data.error, "(none)")
 
     @patch("subprocess.run")
     def test_run_shell_command_failure(self, mock_subprocess_run):
@@ -41,9 +41,9 @@ class TestRunShellCommandTool(unittest.TestCase):
 
         result = run_shell_command(command="ls non_existent_dir")
 
-        self.assertEqual(result.stderr, "Error output")
-        self.assertEqual(result.exit_code, 1)
-        self.assertIn("Command failed with exit code 1", result.error)
+        self.assertEqual(result.data.stderr, "Error output")
+        self.assertEqual(result.data.exit_code, 1)
+        self.assertIn("Command failed with exit code 1", result.data.error)
 
     def test_directory_does_not_exist(self):
         result = run_shell_command(command="ls", directory="non_existent_dir")

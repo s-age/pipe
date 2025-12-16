@@ -2,6 +2,8 @@ import os
 import subprocess
 from typing import TypedDict
 
+from pipe.core.models.tool_result import ToolResult
+
 
 class CodeSnippetResult(TypedDict, total=False):
     """Result from extracting code snippet."""
@@ -10,21 +12,23 @@ class CodeSnippetResult(TypedDict, total=False):
     error: str
 
 
-def ts_get_code_snippet(file_path: str, symbol_name: str) -> CodeSnippetResult:
+def ts_get_code_snippet(
+    file_path: str, symbol_name: str
+) -> ToolResult[CodeSnippetResult]:
     """
     Extracts a code snippet for a specific symbol from the given TypeScript file
     using ts-morph for full AST analysis.
     """
     if "node_modules" in os.path.normpath(file_path):
-        return {
-            "error": (
+        return ToolResult(
+            error=(
                 f"Operation on files within 'node_modules' is not allowed: "
                 f"{file_path}"
             )
-        }
+        )
 
     if not os.path.exists(file_path):
-        return {"error": f"File not found: {file_path}"}
+        return ToolResult(error=f"File not found: {file_path}")
 
     file_path = os.path.abspath(file_path)
 
@@ -54,11 +58,11 @@ def ts_get_code_snippet(file_path: str, symbol_name: str) -> CodeSnippetResult:
 
         snippet = process.stdout.strip()
         if snippet:
-            return {"snippet": snippet}
+            return ToolResult(data={"snippet": snippet})
         else:
-            return {"error": "No code snippet found."}
+            return ToolResult(error="No code snippet found.")
 
     except subprocess.CalledProcessError as e:
-        return {"error": f"ts_analyzer.ts failed: {e.stderr.strip()}"}
+        return ToolResult(error=f"ts_analyzer.ts failed: {e.stderr.strip()}")
     except Exception as e:
-        return {"error": f"An unexpected error occurred: {e}"}
+        return ToolResult(error=f"An unexpected error occurred: {e}")

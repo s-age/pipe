@@ -6,13 +6,14 @@ from pipe.core.models.results.search_file_content_result import (
     FileMatchItem,
     SearchFileContentResult,
 )
+from pipe.core.models.tool_result import ToolResult
 
 
 def search_file_content(
     pattern: str,
     include: str | None = None,
     path: str | None = None,
-) -> SearchFileContentResult:
+) -> ToolResult[SearchFileContentResult]:
     try:
         compiled_pattern = re.compile(pattern)
         project_root = os.getcwd()
@@ -22,9 +23,14 @@ def search_file_content(
             search_path = os.path.abspath(os.path.join(project_root, search_path))
 
         if not os.path.isdir(search_path):
-            return SearchFileContentResult(
+            result = SearchFileContentResult(
                 content=f"Error: Search path '{path}' is not a directory."
             )
+            # This is technically a tool logic error, not a successful search with
+            # 0 results. But the content field handles error messages in the
+            # original design. We will follow the new pattern: if it's an error,
+            # use ToolResult.error.
+            return ToolResult(error=f"Error: Search path '{path}' is not a directory.")
 
         # Use glob to find files, filtered by include pattern if provided
         if include:
@@ -60,15 +66,13 @@ def search_file_content(
                     )
 
         if not matches:
-            return SearchFileContentResult(content="No matches found.")
+            result = SearchFileContentResult(content="No matches found.")
+            return ToolResult(data=result)
 
-        return SearchFileContentResult(content=matches)
+        result = SearchFileContentResult(content=matches)
+        return ToolResult(data=result)
 
     except re.error as e:
-        return SearchFileContentResult(
-            content=f"Error: Invalid regex pattern: {str(e)}"
-        )
+        return ToolResult(error=f"Error: Invalid regex pattern: {str(e)}")
     except Exception as e:
-        return SearchFileContentResult(
-            content=f"Error inside search_file_content tool: {str(e)}"
-        )
+        return ToolResult(error=f"Error inside search_file_content tool: {str(e)}")

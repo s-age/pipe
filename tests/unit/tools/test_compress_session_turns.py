@@ -110,8 +110,8 @@ class TestCompressSessionTurns(unittest.TestCase):
         if result.error:
             print(f"Test failed with error: {result.error}")
 
-        self.assertIsNotNone(result.message)
-        self.assertIn("Successfully compressed", result.message)
+        self.assertIsNotNone(result.data.message)
+        self.assertIn("Successfully compressed", result.data.message)
 
         # Verify the file content
         with open(self.session_file) as f:

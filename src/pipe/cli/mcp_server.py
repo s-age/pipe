@@ -22,15 +22,15 @@ import importlib.util
 import inspect
 import json
 import os
+import select
 import sys
 import traceback
 import warnings
 from functools import lru_cache
 from typing import TYPE_CHECKING, Union, get_args, get_type_hints
 
-if TYPE_CHECKING:
-    from pipe.core.factories.service_factory import ServiceFactory
-    from pipe.core.models.settings import Settings
+# Add src directory to Python path BEFORE local imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 
 # Suppress Pydantic warnings early, before importing any pydantic models
 warnings.filterwarnings("ignore", message=".*is not a Python type.*\n")
@@ -38,23 +38,15 @@ warnings.filterwarnings("ignore", message="Field name .* shadows an attribute")
 
 from pydantic import BaseModel  # noqa: E402
 
-# Add src directory to Python path BEFORE local imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
-
-import select  # noqa: E402
-
-if not TYPE_CHECKING:
-    from pipe.core.factories.service_factory import ServiceFactory  # noqa: E402
-    from pipe.core.models.settings import Settings  # noqa: E402
+if TYPE_CHECKING:
+    from pipe.core.factories.service_factory import ServiceFactory
+    from pipe.core.models.settings import Settings
 
 from pipe.core.repositories.streaming_repository import (  # noqa: E402
     StreamingRepository,
 )
 from pipe.core.utils.datetime import get_current_timestamp  # noqa: E402
-from pipe.core.utils.file import (  # noqa: E402
-    append_to_text_file,
-    read_yaml_file,
-)
+from pipe.core.utils.file import append_to_text_file, read_yaml_file  # noqa: E402
 
 # --- Global Paths ---
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -198,6 +190,12 @@ def get_tool_definitions():
                 elif origin_type in (dict, dict):
                     properties[name] = {"type": "object", "properties": {}}
                 elif inspect.isclass(param_type) and issubclass(param_type, BaseModel):
+                    # Special handling for ToolResult: unwrap the generic type 'T'
+                    # if possible, or just skip detailed schema for the wrapper itself
+                    # to keep the client schema clean.
+                    # For now, we rely on the tool function signature to define the
+                    # input, so the return type schema (ToolResult) doesn't impact
+                    # input validation.
                     properties[name] = param_type.model_json_schema()
                 else:
                     mapped_type = type_mapping.get(param_type, "string")
@@ -294,15 +292,6 @@ def execute_tool(tool_name, arguments):
                 timestamp=get_current_timestamp(session_service.timezone_obj),
             )
             # Add the function_calling turn to the temporary pool.
-            # Storing tool-related turns (function_calling, tool_response) in the
-            # pool is crucial. If we were to write them directly to the main
-            # 'turns' list, they would be recorded *before* the final
-            # model_response, creating an incorrect sequence like:
-            # user_task -> function_calling -> tool_response -> user_task ->
-            # model_response.
-            # pool acts as a staging area, allowing the dispatcher to merge
-            # these turns back in the correct final order:
-            # user_task -> function_calling -> tool_response -> model_response.
             session_turn_service.add_to_pool(session_id, function_calling_turn)
 
             # Log to streaming.log in NDJSON format
@@ -358,9 +347,36 @@ def execute_tool(tool_name, arguments):
         if session_id:
             try:
                 # Format the response similarly to takt
-                if (
+                formatted_response = {}
+
+                # Check for ToolResult structure (keys: 'data', 'error')
+                if isinstance(result, dict) and "data" in result and "error" in result:
+                    if result["error"] is not None:
+                        formatted_response = {
+                            "status": "failed",
+                            "message": result["error"],
+                        }
+                    else:
+                        # Unwrap 'data' for success case
+                        # Use 'data' content directly
+                        data_content = result["data"]
+                        if isinstance(data_content, dict):
+                            formatted_response = data_content.copy()
+                            formatted_response["status"] = "succeeded"
+                            if "message" not in formatted_response:
+                                # Fallback message if specific message not in data
+                                formatted_response["message"] = str(data_content)
+                        else:
+                            formatted_response = {
+                                "status": "succeeded",
+                                "message": str(data_content),
+                            }
+
+                # Legacy Error Check (keys: 'error')
+                elif (
                     isinstance(result, dict)
                     and "error" in result
+                    and result["error"] is not None
                     and result["error"] != "(none)"
                 ):
                     formatted_response = {
@@ -387,10 +403,6 @@ def execute_tool(tool_name, arguments):
                     response=formatted_response,
                     timestamp=get_current_timestamp(session_service.timezone_obj),
                 )
-                # Add the tool_response turn to the temporary pool.
-                # This follows the same logic as the function_calling turn, ensuring
-                # the complete tool interaction sequence is staged correctly before
-                # being merged by the dispatcher.
                 session_turn_service.add_to_pool(session_id, tool_response_turn)
 
                 # Log to streaming.log in NDJSON format
@@ -541,37 +553,64 @@ def main():
                 try:
                     tool_result = execute_tool(tool_name, arguments)
 
-                    # Check if tool result indicates an error
-                    if isinstance(tool_result, dict) and "error" in tool_result:
-                        error_message = tool_result.get(
-                            "error", "Tool execution failed."
-                        )
-                        # Return MCP-compliant error response
+                    # --- Result Handling Logic ---
+                    final_result = None
+                    is_error = False
+
+                    # 1. Check for ToolResult structure (wrapper)
+                    if (
+                        isinstance(tool_result, dict)
+                        and "data" in tool_result
+                        and "error" in tool_result
+                    ):
+                        if tool_result["error"] is not None:
+                            is_error = True
+                            final_result = {"error": tool_result["error"]}
+                        else:
+                            # Unwrap 'data'
+                            final_result = tool_result["data"]
+                            if isinstance(final_result, dict):
+                                final_result = final_result.copy()
+                                final_result["status"] = "succeeded"
+
+                    # 2. Legacy Error Check
+                    elif isinstance(tool_result, dict) and "error" in tool_result:
+                        # Only treat as error if value is NOT None
+                        if tool_result["error"] is not None:
+                            is_error = True
+                            error_message = tool_result.get(
+                                "error", "Tool execution failed."
+                            )
+                            final_result = {"error": error_message}
+                        else:
+                            # If error is None, it's a success (even in legacy structure
+                            # if it happens)
+                            final_result = tool_result
+                            final_result["status"] = "succeeded"
+
+                    else:
+                        # 3. Success (Direct result)
+                        final_result = tool_result
+                        if isinstance(final_result, dict):
+                            final_result["status"] = "succeeded"
+
+                    if is_error:
                         response = {
                             "jsonrpc": "2.0",
                             "id": req_id,
                             "result": format_mcp_tool_result(
-                                {"error": error_message}, is_error=True
+                                final_result, is_error=True
                             ),
                         }
                     else:
-                        # Return MCP-compliant success response
-                        # If tool_result is already a dictionary, return it directly
-                        # to preserve its structured nature. Otherwise, format as text.
-                        if isinstance(tool_result, dict):
-                            tool_result_with_status = tool_result.copy()
-                            tool_result_with_status["status"] = "succeeded"
-                            final_result = tool_result_with_status
-                        else:
-                            final_result = format_mcp_tool_result(
-                                tool_result, is_error=False
-                            )
-
                         response = {
                             "jsonrpc": "2.0",
                             "id": req_id,
-                            "result": final_result,
+                            "result": format_mcp_tool_result(
+                                final_result, is_error=False
+                            ),
                         }
+
                 except Exception as e:
                     # Return MCP-compliant error response for exceptions
                     response = {
@@ -589,7 +628,11 @@ def main():
                 try:
                     tool_result = execute_tool(tool_name, arguments)
 
-                    if isinstance(tool_result, dict) and "error" in tool_result:
+                    if (
+                        isinstance(tool_result, dict)
+                        and "error" in tool_result
+                        and tool_result["error"] is not None
+                    ):
                         error_message = tool_result.get(
                             "error", "Tool execution failed."
                         )
@@ -604,6 +647,14 @@ def main():
                             },
                         }
                     else:
+                        # Unwrap data if it is a ToolResult
+                        if (
+                            isinstance(tool_result, dict)
+                            and "data" in tool_result
+                            and "error" in tool_result
+                        ):
+                            tool_result = tool_result["data"]
+
                         response = {
                             "jsonrpc": "2.0",
                             "id": req_id,

@@ -175,9 +175,12 @@ class GeminiCacheService:
             # Create cache with 1 hour TTL
             cached_obj = client.caches.create(
                 model=model_name,
-                config={
+                config={  # type: ignore[arg-type]
                     "system_instruction": static_content,
-                    "tools": tools,  # type: ignore[typeddict-item]
+                    # Convert Tool objects to dict for compatibility
+                    "tools": [
+                        tool.model_dump() for tool in tools
+                    ],  # type: ignore[misc]
                     "ttl": "3600s",  # 1 hour
                 },
             )

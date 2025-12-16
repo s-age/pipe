@@ -101,7 +101,7 @@ def tool_optional(optional_param: Union[str, None] = None):
 
 @patch("pipe.cli.mcp_server.os.path.exists")
 @patch("pipe.cli.mcp_server.importlib.util")
-@patch("pipe.cli.mcp_server.ServiceFactory")
+@patch("pipe.core.factories.service_factory.ServiceFactory")
 @patch("pipe.core.utils.file.read_yaml_file")
 @patch("pipe.cli.mcp_server.get_latest_session_id")
 @patch("pipe.cli.mcp_server.get_services")
@@ -312,9 +312,8 @@ class TestMainLoop(unittest.TestCase):
         response = json.loads(output)
 
         self.assertEqual(response["id"], "2")
-        # With the new logic, result is the dict itself (plus status)
-        self.assertEqual(response["result"]["status"], "succeeded")
-        self.assertEqual(response["result"]["data"], "success")
+        self.assertFalse(response["result"]["isError"])
+        self.assertIn("success", response["result"]["content"][0]["text"])
 
     def test_method_not_found(
         self,

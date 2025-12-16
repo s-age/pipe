@@ -29,9 +29,9 @@ class TestReplaceTool(unittest.TestCase):
             old_string="world",
             new_string="Python",
         )
-        self.assertEqual(result.status, "success")
-        self.assertIn("Text replaced successfully", result.message)
-        self.assertIsNotNone(result.diff)
+        self.assertEqual(result.data.status, "success")
+        self.assertIn("Text replaced successfully", result.data.message)
+        self.assertIsNotNone(result.data.diff)
 
         # Verify file content
         with open(self.file_path) as f:
@@ -45,8 +45,9 @@ class TestReplaceTool(unittest.TestCase):
             old_string="nonexistent",
             new_string="...",
         )
-        self.assertEqual(result.status, "failed")
-        self.assertIn("Old string not found", result.message)
+        self.assertIsNone(result.data)
+        self.assertIsNotNone(result.error)
+        self.assertIn("Old string not found", result.error)
 
     def test_file_not_found(self):
         result = replace(

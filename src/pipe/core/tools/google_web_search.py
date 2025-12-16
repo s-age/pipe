@@ -3,6 +3,8 @@ import subprocess
 import sys
 from typing import TypedDict
 
+from pipe.core.models.tool_result import ToolResult
+
 
 class WebSearchResult(TypedDict, total=False):
     """Result from web search."""
@@ -11,13 +13,13 @@ class WebSearchResult(TypedDict, total=False):
     error: str
 
 
-def google_web_search(query: str) -> WebSearchResult:
+def google_web_search(query: str) -> ToolResult[WebSearchResult]:
     """
     Performs a web search using Google Search and returns the results by
     executing a search agent.
     """
     if not query:
-        return {"error": "google_web_search called without a query."}
+        return ToolResult(error="google_web_search called without a query.")
 
     try:
         project_root = os.path.abspath(
@@ -34,8 +36,8 @@ def google_web_search(query: str) -> WebSearchResult:
         if process.stderr:
             print(f"Search agent stderr: {process.stderr}", file=sys.stderr)
 
-        return {"content": process.stdout.strip()}
+        return ToolResult(data={"content": process.stdout.strip()})
     except subprocess.CalledProcessError as e:
-        return {"error": f"Failed to execute search agent: {e.stderr.strip()}"}
+        return ToolResult(error=f"Failed to execute search agent: {e.stderr.strip()}")
     except Exception as e:
-        return {"error": f"Failed to execute search agent: {e}"}
+        return ToolResult(error=f"Failed to execute search agent: {e}")

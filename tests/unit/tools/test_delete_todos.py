@@ -59,11 +59,11 @@ class TestDeleteTodosTool(unittest.TestCase):
             session_service=self.session_service, session_id=self.session_id
         )
 
-        self.assertIsInstance(result, DeleteTodosResult)
-        self.assertIsNotNone(result.message)
-        self.assertIsNone(result.error)
-        self.assertIsNotNone(result.current_todos)
-        self.assertEqual(result.current_todos, [])
+        self.assertIsInstance(result.data, DeleteTodosResult)
+        self.assertIsNotNone(result.data.message)
+        self.assertIsNone(result.data.error)
+        self.assertIsNotNone(result.data.current_todos)
+        self.assertEqual(result.data.current_todos, [])
 
         # Verify that the todos were actually deleted from the session object
         session_after = self.session_service.get_session(self.session_id)
@@ -74,8 +74,7 @@ class TestDeleteTodosTool(unittest.TestCase):
         Tests that an error is returned if session_service is not provided.
         """
         result = delete_todos(session_id=self.session_id)
-        self.assertIsInstance(result, DeleteTodosResult)
-        self.assertIsNone(result.message)
+        self.assertIsNone(result.data)  # ToolResult.data is None on error
         self.assertIsNotNone(result.error)
         self.assertEqual(result.error, "This tool requires a session_service.")
 
@@ -107,8 +106,7 @@ class TestDeleteTodosTool(unittest.TestCase):
             mock_todo_service.delete_todos.assert_called_once_with(
                 self.session_id
             )  # Ensure delete_todos was called on the mock service
-            self.assertIsInstance(result, DeleteTodosResult)
-            self.assertIsNone(result.message)
+            self.assertIsNone(result.data)  # ToolResult.data is None on error
             self.assertIsNotNone(result.error)
             self.assertEqual(
                 result.error, f"Failed to delete todos from session: {error_message}"

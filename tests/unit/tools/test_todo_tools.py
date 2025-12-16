@@ -74,8 +74,8 @@ class TestTodoTools(unittest.TestCase):
             todos, session_service=self.session_service, session_id=self.session_id
         )
 
-        self.assertIsNotNone(result.message)
-        self.assertIn("successfully updated", result.message)
+        self.assertIsNotNone(result.data.message)
+        self.assertIn("successfully updated", result.data.message)
 
         # Verify
         session = self.session_service.get_session(self.session_id)
@@ -98,9 +98,9 @@ class TestTodoTools(unittest.TestCase):
             session_service=self.session_service, session_id=self.session_id
         )
 
-        self.assertIsInstance(result, DeleteTodosResult)
-        self.assertIsNotNone(result.message)
-        self.assertIn("successfully deleted", result.message)
+        self.assertIsInstance(result.data, DeleteTodosResult)
+        self.assertIsNotNone(result.data.message)
+        self.assertIn("successfully deleted", result.data.message)
 
         # Verify
         session = self.session_service.get_session(self.session_id)

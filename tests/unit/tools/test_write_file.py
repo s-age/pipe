@@ -27,7 +27,7 @@ class TestWriteFileTool(unittest.TestCase):
             project_root=self.test_dir,
         )
 
-        self.assertIsNotNone(result.message)
+        self.assertIsNotNone(result.data.message)
         self.assertIsNone(result.error)
         self.assertTrue(os.path.exists(new_file_path))
 
@@ -53,7 +53,7 @@ class TestWriteFileTool(unittest.TestCase):
             project_root=self.test_dir,
         )
 
-        self.assertIsNotNone(result.message)
+        self.assertIsNotNone(result.data.message)
 
         with open(existing_file_path) as f:
             content_read = f.read()

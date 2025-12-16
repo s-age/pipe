@@ -3,6 +3,7 @@ import os
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.models.results.edit_session_turn_result import EditSessionTurnResult
+from pipe.core.models.tool_result import ToolResult
 
 
 def edit_session_turn(
@@ -10,7 +11,7 @@ def edit_session_turn(
     new_content: str,
     session_service=None,
     session_id: str | None = None,
-) -> EditSessionTurnResult:
+) -> ToolResult[EditSessionTurnResult]:
     """
     Edits the content of a specified turn in a target session's history.
     This action is irreversible and automatically creates a backup.
@@ -26,7 +27,7 @@ def edit_session_turn(
     target_session_id = session_id or os.environ.get("PIPE_SESSION_ID")
 
     if not target_session_id:
-        return EditSessionTurnResult(
+        return ToolResult(
             error=(
                 "This tool requires a session_id "
                 "(provided via argument or PIPE_SESSION_ID)."
@@ -34,7 +35,7 @@ def edit_session_turn(
         )
 
     if turn < 1:
-        return EditSessionTurnResult(error="Turn number must be 1 or greater.")
+        return ToolResult(error="Turn number must be 1 or greater.")
 
     try:
         project_root = os.getcwd()
@@ -53,7 +54,7 @@ def edit_session_turn(
 
         session = repository.find(target_session_id)
         if not session or index >= len(session.turns):
-            return EditSessionTurnResult(
+            return ToolResult(
                 error=f"Turn {turn} not found in session {target_session_id}"
             )
 
@@ -64,9 +65,7 @@ def edit_session_turn(
         elif target_turn.type == "model_response":
             update_data = {"content": new_content}
         else:
-            return EditSessionTurnResult(
-                error=f"Cannot edit turn of type {target_turn.type}"
-            )
+            return ToolResult(error=f"Cannot edit turn of type {target_turn.type}")
 
         # Create backup before editing
         repository.backup(session)
@@ -74,10 +73,11 @@ def edit_session_turn(
         # Perform the edit
         turn_service.edit_turn(target_session_id, index, update_data)
 
-        return EditSessionTurnResult(
+        result = EditSessionTurnResult(
             message=f"Successfully edited turn {turn} in session {target_session_id}."
         )
+        return ToolResult(data=result)
     except Exception as e:
-        return EditSessionTurnResult(
+        return ToolResult(
             error=f"Failed to edit turn in session {target_session_id}: {e}"
         )

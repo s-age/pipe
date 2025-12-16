@@ -5,13 +5,14 @@ from pipe.core.models.results.ts_checker_result import (
     CommandCheckResult,
     TSCheckerResult,
 )
+from pipe.core.models.tool_result import ToolResult
 
 
 def ts_checker(
     project_root: str | None = None,
     lint_command: str = "npm run lint",
     build_command: str = "npm run build",
-) -> TSCheckerResult:
+) -> ToolResult[TSCheckerResult]:
     """Runs TypeScript lint and build checks and reports any errors or warnings.
 
     Args:
@@ -73,4 +74,5 @@ def ts_checker(
     _run_command(lint_command, "Lint")
     _run_command(build_command, "Build")
 
-    return TSCheckerResult(lint=results.get("Lint"), build=results.get("Build"))
+    result = TSCheckerResult(lint=results.get("Lint"), build=results.get("Build"))
+    return ToolResult(data=result)

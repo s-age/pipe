@@ -3,6 +3,8 @@ import os
 import subprocess
 from typing import Any, TypedDict
 
+from pipe.core.models.tool_result import ToolResult
+
 
 class TypeDefinitionsResult(TypedDict, total=False):
     """Result from extracting TypeScript type definitions."""
@@ -11,21 +13,23 @@ class TypeDefinitionsResult(TypedDict, total=False):
     error: str
 
 
-def ts_get_type_definitions(file_path: str, symbol_name: str) -> TypeDefinitionsResult:
+def ts_get_type_definitions(
+    file_path: str, symbol_name: str
+) -> ToolResult[TypeDefinitionsResult]:
     """
     Extracts type definitions for a function, class, or variable within the
     specified TypeScript file using ts-morph for full AST analysis.
     """
     if "node_modules" in os.path.normpath(file_path):
-        return {
-            "error": (
+        return ToolResult(
+            error=(
                 f"Operation on files within 'node_modules' is not allowed: "
                 f"{file_path}"
             )
-        }
+        )
 
     if not os.path.exists(file_path):
-        return {"error": f"File not found: {file_path}"}
+        return ToolResult(error=f"File not found: {file_path}")
 
     file_path = os.path.abspath(file_path)
 
@@ -55,18 +59,18 @@ def ts_get_type_definitions(file_path: str, symbol_name: str) -> TypeDefinitions
 
         output = json.loads(process.stdout)
         if "error" in output:
-            return {"error": output["error"]}
+            return ToolResult(error=output["error"])
         else:
-            return {"type_definitions": output}
+            return ToolResult(data={"type_definitions": output})
 
     except subprocess.CalledProcessError as e:
-        return {"error": f"ts_analyzer.ts failed: {e.stderr.strip()}"}
+        return ToolResult(error=f"ts_analyzer.ts failed: {e.stderr.strip()}")
     except json.JSONDecodeError:
-        return {
-            "error": (
+        return ToolResult(
+            error=(
                 f"Failed to parse JSON output from ts_analyzer.ts: "
                 f"{process.stdout.strip()}"
             )
-        }
+        )
     except Exception as e:
-        return {"error": f"An unexpected error occurred: {e}"}
+        return ToolResult(error=f"An unexpected error occurred: {e}")

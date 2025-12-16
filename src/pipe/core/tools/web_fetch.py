@@ -3,11 +3,14 @@ import re
 import httpx
 from bs4 import BeautifulSoup
 from pipe.core.models.results.web_fetch_result import WebFetchResult
+from pipe.core.models.tool_result import ToolResult
 
 
-def web_fetch(prompt: str) -> WebFetchResult:
+def web_fetch(prompt: str) -> ToolResult[WebFetchResult]:
     """
-    Processes content from URLs embedded in a prompt.
+    Processes content from URL(s), including local and private network addresses
+    (e.g., localhost), embedded in a prompt. Include up to 20 URLs and instructions
+    (e.g., summarize, extract specific data) directly in the 'prompt' parameter.
     """
     # Find all URLs in the prompt using a more robust regex
     urls = re.findall(
@@ -16,7 +19,7 @@ def web_fetch(prompt: str) -> WebFetchResult:
     )
 
     if not urls:
-        return WebFetchResult(error="No URLs found in the prompt.")
+        return ToolResult(error="No URLs found in the prompt.")
 
     all_content = []
     # Use a single client for all requests
@@ -61,4 +64,5 @@ def web_fetch(prompt: str) -> WebFetchResult:
                     f"--- Error fetching {url} ---\nAn unexpected error occurred: {e}"
                 )
 
-    return WebFetchResult(message="\n\n".join(all_content))
+    result = WebFetchResult(message="\n\n".join(all_content))
+    return ToolResult(data=result)

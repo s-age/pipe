@@ -9,9 +9,10 @@ from pipe.core.models.results.py_auto_format_code_result import (
     FormatterToolResult,
     PyAutoFormatCodeResult,
 )
+from pipe.core.models.tool_result import ToolResult
 
 
-def py_auto_format_code(file_path: str) -> PyAutoFormatCodeResult:
+def py_auto_format_code(file_path: str) -> ToolResult[PyAutoFormatCodeResult]:
     """
     Automatically formats the specified Python file using Black, isort, and Ruff.
     """
@@ -138,7 +139,8 @@ def py_auto_format_code(file_path: str) -> PyAutoFormatCodeResult:
             )
         )
 
-    return PyAutoFormatCodeResult(
+    result = PyAutoFormatCodeResult(
         formatting_results=results,
         message="Automatic code formatting attempt completed.",
     )
+    return ToolResult(data=result)

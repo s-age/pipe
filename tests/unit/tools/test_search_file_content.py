@@ -34,12 +34,12 @@ class TestSearchFileContentTool(unittest.TestCase):
         """
         result = search_file_content(path=self.test_dir, pattern="hello")
 
-        self.assertIsInstance(result, SearchFileContentResult)
-        self.assertIsInstance(result.content, list)
-        self.assertEqual(len(result.content), 3)
+        self.assertIsInstance(result.data, SearchFileContentResult)
+        self.assertIsInstance(result.data.content, list)
+        self.assertEqual(len(result.data.content), 3)
 
         # Check content of the results
-        content = result.content
+        content = result.data.content
         assert isinstance(content, list)
         found_paths = {r.file_path for r in content}
         expected_paths = {
@@ -85,9 +85,9 @@ class TestSearchFileContentTool(unittest.TestCase):
             path=self.test_dir, pattern="hello", include="*.txt"
         )
 
-        self.assertIsInstance(result, SearchFileContentResult)
-        self.assertIsInstance(result.content, list)
-        content = result.content
+        self.assertIsInstance(result.data, SearchFileContentResult)
+        self.assertIsInstance(result.data.content, list)
+        content = result.data.content
         assert isinstance(content, list)
         self.assertEqual(len(content), 1)
         self.assertEqual(
@@ -101,9 +101,9 @@ class TestSearchFileContentTool(unittest.TestCase):
         """
         result = search_file_content(path=self.test_dir, pattern="non_existent_pattern")
 
-        self.assertIsInstance(result, SearchFileContentResult)
-        self.assertIsInstance(result.content, str)
-        self.assertEqual(result.content, "No matches found.")
+        self.assertIsInstance(result.data, SearchFileContentResult)
+        self.assertIsInstance(result.data.content, str)
+        self.assertEqual(result.data.content, "No matches found.")
 
 
 if __name__ == "__main__":

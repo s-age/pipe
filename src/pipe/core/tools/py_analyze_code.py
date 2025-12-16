@@ -2,6 +2,8 @@ import ast
 import os
 from typing import TypedDict
 
+from pipe.core.models.tool_result import ToolResult
+
 
 class SymbolInfo(TypedDict, total=False):
     """Information about a code symbol."""
@@ -21,12 +23,12 @@ class AnalyzeCodeResult(TypedDict, total=False):
     error: str
 
 
-def py_analyze_code(file_path: str) -> AnalyzeCodeResult:
+def py_analyze_code(file_path: str) -> ToolResult[AnalyzeCodeResult]:
     """
     Analyzes the AST of the given Python file for symbol information.
     """
     if not os.path.exists(file_path):
-        return {"error": f"File not found: {file_path}"}
+        return ToolResult(error=f"File not found: {file_path}")
 
     with open(file_path, encoding="utf-8") as f:
         source_code = f.read()
@@ -65,4 +67,4 @@ def py_analyze_code(file_path: str) -> AnalyzeCodeResult:
                     }
                     symbols["variables"].append(var_info)
 
-    return symbols
+    return ToolResult(data=symbols)

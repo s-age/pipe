@@ -69,8 +69,7 @@ class TestEditSessionTurn(unittest.TestCase):
         result = edit_session_turn(
             session_id=self.session_id, turn=1, new_content=new_instruction
         )
-
-        self.assertIn("Successfully edited turn 1", result.message)
+        self.assertIn("Successfully edited turn 1", result.data.message)
 
         # Verify change
         with open(self.session_file) as f:
@@ -98,7 +97,7 @@ class TestEditSessionTurn(unittest.TestCase):
             session_id=self.session_id, turn=2, new_content=new_content
         )
 
-        self.assertIn("Successfully edited turn 2", result.message)
+        self.assertIn("Successfully edited turn 2", result.data.message)
 
         # Verify change
         with open(self.session_file) as f:
@@ -137,7 +136,7 @@ class TestEditSessionTurn(unittest.TestCase):
         new_instruction = "Env var instruction"
         result = edit_session_turn(turn=1, new_content=new_instruction)
 
-        self.assertIn("Successfully edited turn 1", result.message)
+        self.assertIn("Successfully edited turn 1", result.data.message)
 
         with open(self.session_file) as f:
             data = json.load(f)

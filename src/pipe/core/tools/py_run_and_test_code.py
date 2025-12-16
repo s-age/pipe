@@ -9,13 +9,14 @@ import subprocess
 from pipe.core.models.results.py_run_and_test_code_result import (
     PyRunAndTestCodeResult,
 )
+from pipe.core.models.tool_result import ToolResult
 
 
 def py_run_and_test_code(
     file_path: str,
     function_name: str | None = None,
     test_case_name: str | None = None,
-) -> PyRunAndTestCodeResult:
+) -> ToolResult[PyRunAndTestCodeResult]:
     """
     Executes or tests the specified Python file and returns the results.
     """
@@ -39,22 +40,25 @@ def py_run_and_test_code(
         command = ["python", file_path]
 
     try:
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
-        return PyRunAndTestCodeResult(
-            stdout=result.stdout,
-            stderr=result.stderr,
-            exit_code=result.returncode,
+        result_process = subprocess.run(
+            command, capture_output=True, text=True, check=True
+        )
+        result = PyRunAndTestCodeResult(
+            stdout=result_process.stdout,
+            stderr=result_process.stderr,
+            exit_code=result_process.returncode,
             message="Code execution or testing completed successfully.",
         )
+        return ToolResult(data=result)
     except subprocess.CalledProcessError as e:
-        return PyRunAndTestCodeResult(
+        result = PyRunAndTestCodeResult(
             stdout=e.stdout,
             stderr=e.stderr,
             exit_code=e.returncode,
             message="An error occurred during code execution or testing.",
         )
+        return ToolResult(data=result)  # Execution failure, but tool ran successfully
     except FileNotFoundError:
-        return PyRunAndTestCodeResult(
+        return ToolResult(
             error="Specified file or command not found.",
-            message="Please check the file path.",
         )

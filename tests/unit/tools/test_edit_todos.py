@@ -60,17 +60,17 @@ class TestEditTodosTool(unittest.TestCase):
             session_id=self.session_id,
         )
 
-        self.assertIsNotNone(result.message)
-        self.assertIsNone(result.error)
-        self.assertIn("successfully updated", result.message)
-        self.assertIsNotNone(result.current_todos)
+        self.assertIsNotNone(result.data.message)
+        self.assertIsNone(result.data.error)
+        self.assertIn("successfully updated", result.data.message)
+        self.assertIsNotNone(result.data.current_todos)
 
         # Verify that the returned todos match the new todos
-        self.assertEqual(len(result.current_todos), 2)
-        self.assertEqual(result.current_todos[0]["title"], "Task 1")
-        self.assertTrue(result.current_todos[0]["checked"])
-        self.assertEqual(result.current_todos[1]["title"], "Task 3")
-        self.assertFalse(result.current_todos[1]["checked"])
+        self.assertEqual(len(result.data.current_todos), 2)
+        self.assertEqual(result.data.current_todos[0]["title"], "Task 1")
+        self.assertTrue(result.data.current_todos[0]["checked"])
+        self.assertEqual(result.data.current_todos[1]["title"], "Task 3")
+        self.assertFalse(result.data.current_todos[1]["checked"])
 
         # Optional: Verify actual session state (though tool's return should be
         # sufficient)

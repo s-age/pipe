@@ -3,6 +3,8 @@ import os
 import subprocess
 from typing import TypedDict
 
+from pipe.core.models.tool_result import ToolResult
+
 
 class TSReference(TypedDict):
     """A reference to a TypeScript symbol."""
@@ -22,21 +24,23 @@ class TSReferencesResult(TypedDict, total=False):
     error: str
 
 
-def ts_get_references(file_path: str, symbol_name: str) -> TSReferencesResult:
+def ts_get_references(
+    file_path: str, symbol_name: str
+) -> ToolResult[TSReferencesResult]:
     """
     Searches for references to a specific symbol within the given TypeScript file
     using ts-morph for full AST analysis.
     """
     if "node_modules" in os.path.normpath(file_path):
-        return {
-            "error": (
+        return ToolResult(
+            error=(
                 f"Operation on files within 'node_modules' is not allowed: "
                 f"{file_path}"
             )
-        }
+        )
 
     if not os.path.exists(file_path):
-        return {"error": f"File not found: {file_path}"}
+        return ToolResult(error=f"File not found: {file_path}")
 
     file_path = os.path.abspath(file_path)
 
@@ -70,22 +74,23 @@ def ts_get_references(file_path: str, symbol_name: str) -> TSReferencesResult:
 
         output = json.loads(process.stdout)
         if "error" in output:
-            return {"error": output["error"]}
+            return ToolResult(error=output["error"])
         else:
-            return {
+            result = {
                 "references": output,
                 "symbol_name": symbol_name,
                 "reference_count": len(output) if output else 0,
             }
+            return ToolResult(data=result)
 
     except subprocess.CalledProcessError as e:
-        return {"error": f"ts_analyzer.ts failed: {e.stderr.strip()}"}
+        return ToolResult(error=f"ts_analyzer.ts failed: {e.stderr.strip()}")
     except json.JSONDecodeError:
-        return {
-            "error": (
+        return ToolResult(
+            error=(
                 f"Failed to parse JSON output from ts_analyzer.ts: "
                 f"{process.stdout.strip()}"
             )
-        }
+        )
     except Exception as e:
-        return {"error": f"An unexpected error occurred: {e}"}
+        return ToolResult(error=f"An unexpected error occurred: {e}")

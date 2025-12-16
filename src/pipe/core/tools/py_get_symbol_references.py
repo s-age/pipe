@@ -2,6 +2,8 @@ import ast
 import os
 from typing import TypedDict
 
+from pipe.core.models.tool_result import ToolResult
+
 
 class SymbolReference(TypedDict):
     """A reference to a symbol in code."""
@@ -21,12 +23,12 @@ class SymbolReferencesResult(TypedDict, total=False):
 
 def py_get_symbol_references(
     file_path: str, symbol_name: str
-) -> SymbolReferencesResult:
+) -> ToolResult[SymbolReferencesResult]:
     """
     Searches for references to a specific symbol within the given Python file.
     """
     if not os.path.exists(file_path):
-        return {"error": f"File not found: {file_path}"}
+        return ToolResult(error=f"File not found: {file_path}")
 
     with open(file_path, encoding="utf-8") as f:
         source_code = f.read()
@@ -60,7 +62,7 @@ def py_get_symbol_references(
             break
 
     if not symbol_found:
-        return {"error": f"Symbol '{symbol_name}' not found in {file_path}"}
+        return ToolResult(error=f"Symbol '{symbol_name}' not found in {file_path}")
 
     # Search for references outside the symbol's definition range.
     lines = source_code.splitlines()
@@ -76,8 +78,9 @@ def py_get_symbol_references(
             # TODO: Implement more accurate AST-based reference counting.
             references.append({"lineno": current_lineno, "line_content": line.strip()})
 
-    return {
+    result = {
         "symbol_name": symbol_name,
         "references": references,
         "reference_count": len(references),
     }
+    return ToolResult(data=result)

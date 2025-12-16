@@ -78,10 +78,10 @@ class TestGetSession(unittest.TestCase):
 
         result = get_session(session_id=self.test_session_id)
 
-        self.assertEqual(result.session_id, self.test_session_id)
-        self.assertEqual(result.turns_count, 2)
-        self.assertIn("User: Hello", result.turns[0])
-        self.assertIn("Assistant: Hi there!", result.turns[1])
+        self.assertEqual(result.data.session_id, self.test_session_id)
+        self.assertEqual(result.data.turns_count, 2)
+        self.assertIn("User: Hello", result.data.turns[0])
+        self.assertIn("Assistant: Hi there!", result.data.turns[1])
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_get_session_ignores_env_var(self, mock_get_settings):

@@ -3,11 +3,12 @@ import os
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.results.edit_todos_result import EditTodosResult
 from pipe.core.models.todo import TodoItem
+from pipe.core.models.tool_result import ToolResult
 
 
 def edit_todos(
     todos: list[TodoItem], session_service=None, session_id=None
-) -> EditTodosResult:
+) -> ToolResult[EditTodosResult]:
     """
     Edits the list of TODO items directly within the session data.
 
@@ -16,11 +17,11 @@ def edit_todos(
     {"title": "test2", "description": "", "checked": False}])
     """
     if not session_service:
-        return EditTodosResult(error="This tool requires a session_service.")
+        return ToolResult(error="This tool requires a session_service.")
 
     target_session_id = session_id or os.environ.get("PIPE_SESSION_ID")
     if not target_session_id:
-        return EditTodosResult(error="No session_id provided.")
+        return ToolResult(error="No session_id provided.")
 
     try:
         factory = ServiceFactory(session_service.project_root, session_service.settings)
@@ -31,14 +32,13 @@ def edit_todos(
         # todos attribute
         updated_session = session_service.get_session(target_session_id)
         if not updated_session:
-            return EditTodosResult(
-                error=f"Session with ID {target_session_id} not found."
-            )
+            return ToolResult(error=f"Session with ID {target_session_id} not found.")
         updated_todos = updated_session.todos
 
-        return EditTodosResult(
+        result = EditTodosResult(
             message=f"Todos successfully updated in session {target_session_id}.",
             current_todos=[todo.model_dump() for todo in updated_todos],
         )
+        return ToolResult(data=result)
     except Exception as e:
-        return EditTodosResult(error=f"Failed to update todos in session: {e}")
+        return ToolResult(error=f"Failed to update todos in session: {e}")

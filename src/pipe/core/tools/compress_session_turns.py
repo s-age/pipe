@@ -5,6 +5,7 @@ from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.models.results.compress_session_turns_result import (
     CompressSessionTurnsResult,
 )
+from pipe.core.models.tool_result import ToolResult
 
 
 def compress_session_turns(
@@ -13,26 +14,22 @@ def compress_session_turns(
     end_turn: int,
     summary: str,
     session_service=None,
-) -> CompressSessionTurnsResult:
+) -> ToolResult[CompressSessionTurnsResult]:
     """
     Compresses a specified range of turns in a target session's history with a summary.
     This action is irreversible and automatically creates a backup.
     """
     # Input Validation
     if not session_id:
-        return CompressSessionTurnsResult(error="session_id is required.")
+        return ToolResult(error="session_id is required.")
     if not (isinstance(start_turn, int) and start_turn > 0):
-        return CompressSessionTurnsResult(
-            error="start_turn must be a positive integer."
-        )
+        return ToolResult(error="start_turn must be a positive integer.")
     if not (isinstance(end_turn, int) and end_turn > 0):
-        return CompressSessionTurnsResult(error="end_turn must be a positive integer.")
+        return ToolResult(error="end_turn must be a positive integer.")
     if start_turn > end_turn:
-        return CompressSessionTurnsResult(
-            error="start_turn cannot be greater than end_turn."
-        )
+        return ToolResult(error="start_turn cannot be greater than end_turn.")
     if not summary:
-        return CompressSessionTurnsResult(error="Summary cannot be empty.")
+        return ToolResult(error="Summary cannot be empty.")
 
     try:
         # Initialize ServiceFactory and get SessionOptimizationService
@@ -57,7 +54,7 @@ def compress_session_turns(
         updated_session = session_service.get_session(session_id)
         current_turn_count = len(updated_session.turns) if updated_session else 0
 
-        return CompressSessionTurnsResult(
+        result = CompressSessionTurnsResult(
             message=(
                 f"Successfully compressed turns {start_turn}-{end_turn} in session "
                 f"{session_id} with a summary. "
@@ -65,7 +62,8 @@ def compress_session_turns(
             ),
             current_turn_count=current_turn_count,
         )
+        return ToolResult(data=result)
     except Exception as e:
-        return CompressSessionTurnsResult(
+        return ToolResult(
             error=f"Failed to compress turns in session {session_id}: {e}"
         )

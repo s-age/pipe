@@ -34,9 +34,9 @@ class TestGlobTool(unittest.TestCase):
 
         result = glob(pattern="*.txt", path=self.test_path)
 
-        self.assertIsNotNone(result.content)
-        self.assertIn("file1.txt", result.content)
-        self.assertIn("ignored.txt", result.content)
+        self.assertIsNotNone(result.data.content)
+        self.assertIn("file1.txt", result.data.content)
+        self.assertIn("ignored.txt", result.data.content)
         self.assertIsNone(result.error)
 
     @patch("subprocess.run")
@@ -46,9 +46,9 @@ class TestGlobTool(unittest.TestCase):
 
         result = glob(pattern="*.txt", path=self.test_path)
 
-        self.assertIsNotNone(result.content)
-        self.assertIn("file1.txt", result.content)
-        self.assertNotIn("ignored.txt", result.content)
+        self.assertIsNotNone(result.data.content)
+        self.assertIn("file1.txt", result.data.content)
+        self.assertNotIn("ignored.txt", result.data.content)
         self.assertIsNone(result.error)
 
     @patch("subprocess.run")
@@ -58,9 +58,9 @@ class TestGlobTool(unittest.TestCase):
 
         result = glob(pattern="*.txt", path=self.test_path)
 
-        self.assertIsNotNone(result.content)
-        self.assertIn("file1.txt", result.content)
-        self.assertIn("ignored.txt", result.content)
+        self.assertIsNotNone(result.data.content)
+        self.assertIn("file1.txt", result.data.content)
+        self.assertIn("ignored.txt", result.data.content)
         self.assertIsNone(result.error)
 
     @patch("subprocess.run", side_effect=Exception("Test subprocess error"))

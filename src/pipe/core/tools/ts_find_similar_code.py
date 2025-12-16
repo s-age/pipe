@@ -6,6 +6,7 @@ from pipe.core.models.results.ts_find_similar_code_result import (
     SimilarCodeMatch,
     TSFindSimilarCodeResult,
 )
+from pipe.core.models.tool_result import ToolResult
 
 
 def ts_find_similar_code(
@@ -13,7 +14,7 @@ def ts_find_similar_code(
     symbol_name: str,
     search_directory: str,
     max_results: int = 3,
-) -> TSFindSimilarCodeResult:
+) -> ToolResult[TSFindSimilarCodeResult]:
     """
     Finds similar TypeScript code snippets based on a given symbol in a base file.
     It uses ts-morph via ts_analyzer.ts to extract code snippets and then compares them.
@@ -22,16 +23,14 @@ def ts_find_similar_code(
     if "node_modules" in os.path.normpath(
         base_file_path
     ) or "node_modules" in os.path.normpath(search_directory):
-        return TSFindSimilarCodeResult(
+        return ToolResult(
             error="Operation on files/directories within 'node_modules' is not allowed."
         )
 
     if not os.path.exists(base_file_path):
-        return TSFindSimilarCodeResult(error=f"Base file not found: {base_file_path}")
+        return ToolResult(error=f"Base file not found: {base_file_path}")
     if not os.path.isdir(search_directory):
-        return TSFindSimilarCodeResult(
-            error=f"Search directory not found: {search_directory}"
-        )
+        return ToolResult(error=f"Search directory not found: {search_directory}")
 
     base_file_path = os.path.abspath(base_file_path)
     search_directory = os.path.abspath(search_directory)
@@ -66,7 +65,7 @@ def ts_find_similar_code(
         )
 
         if process.returncode != 0:
-            return TSFindSimilarCodeResult(
+            return ToolResult(
                 error=process.stderr.strip()
                 or f"ts_analyzer.ts exited with code {process.returncode}"
             )
@@ -78,19 +77,20 @@ def ts_find_similar_code(
         try:
             output = json.loads(process.stdout)
             if "error" in output:
-                return TSFindSimilarCodeResult(error=output["error"])
+                return ToolResult(error=output["error"])
             else:
                 # Convert dict matches to SimilarCodeMatch instances
                 matches = None
                 if "matches" in output:
                     matches = [SimilarCodeMatch(**match) for match in output["matches"]]
-                return TSFindSimilarCodeResult(
+                result = TSFindSimilarCodeResult(
                     base_snippet=output.get("base_snippet"),
                     base_type_definitions=output.get("base_type_definitions"),
                     matches=matches,
                 )
+                return ToolResult(data=result)
         except json.JSONDecodeError:
-            return TSFindSimilarCodeResult(
+            return ToolResult(
                 error=(
                     f"Failed to parse JSON output from ts_analyzer.ts: "
                     f"{process.stdout.strip()}"
@@ -98,4 +98,4 @@ def ts_find_similar_code(
             )
 
     except Exception as e:
-        return TSFindSimilarCodeResult(error=f"An unexpected error occurred: {e}")
+        return ToolResult(error=f"An unexpected error occurred: {e}")

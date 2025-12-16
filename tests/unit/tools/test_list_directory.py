@@ -30,11 +30,11 @@ class TestListDirectoryTool(unittest.TestCase):
         """
         result = list_directory(path=self.test_dir)
 
-        self.assertIsNotNone(result.files)
-        self.assertIsNotNone(result.directories)
-        self.assertIn("file1.txt", result.files)
-        self.assertIn("file2.py", result.files)
-        self.assertIn("subdir", result.directories)
+        self.assertIsNotNone(result.data.files)
+        self.assertIsNotNone(result.data.directories)
+        self.assertIn("file1.txt", result.data.files)
+        self.assertIn("file2.py", result.data.files)
+        self.assertIn("subdir", result.data.directories)
         self.assertIsNone(result.error)
 
     def test_list_directory_applies_ignore_patterns(self):
@@ -43,11 +43,11 @@ class TestListDirectoryTool(unittest.TestCase):
         """
         result = list_directory(path=self.test_dir, ignore=["*.txt", "subdir"])
 
-        self.assertIsNotNone(result.files)
-        self.assertIsNotNone(result.directories)
-        self.assertIn("file2.py", result.files)
-        self.assertNotIn("file1.txt", result.files)
-        self.assertNotIn("subdir", result.directories)
+        self.assertIsNotNone(result.data.files)
+        self.assertIsNotNone(result.data.directories)
+        self.assertIn("file2.py", result.data.files)
+        self.assertNotIn("file1.txt", result.data.files)
+        self.assertNotIn("subdir", result.data.directories)
         self.assertIsNone(result.error)
 
 

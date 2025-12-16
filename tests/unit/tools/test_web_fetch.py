@@ -27,11 +27,11 @@ class TestWebFetchTool(unittest.TestCase):
         result = web_fetch(prompt)
 
         # Assertions
-        self.assertIsInstance(result, WebFetchResult)
-        self.assertIsNotNone(result.message)
+        self.assertIsInstance(result.data, WebFetchResult)
+        self.assertIsNotNone(result.data.message)
         self.assertIsNone(result.error)
-        self.assertIn("Successfully fetched and parsed content", result.message)
-        self.assertIn("Test Page", result.message)
+        self.assertIn("Successfully fetched and parsed content", result.data.message)
+        self.assertIn("Test Page", result.data.message)
         mock_context_manager.__enter__.return_value.get.assert_called_once_with(
             "https://example.com/test", timeout=10.0
         )
@@ -43,8 +43,7 @@ class TestWebFetchTool(unittest.TestCase):
         prompt = "Please summarize the content of the attached document."
         result = web_fetch(prompt)
 
-        self.assertIsInstance(result, WebFetchResult)
-        self.assertIsNone(result.message)
+        self.assertIsNone(result.data)  # ToolResult.data is None on error
         self.assertIsNotNone(result.error)
         self.assertEqual(result.error, "No URLs found in the prompt.")
 
@@ -77,13 +76,13 @@ class TestWebFetchTool(unittest.TestCase):
         prompt = "Get data from http://example.com/notfound"
         result = web_fetch(prompt)
 
-        self.assertIsInstance(result, WebFetchResult)
-        self.assertIsNotNone(result.message)
+        self.assertIsInstance(result.data, WebFetchResult)
+        self.assertIsNotNone(result.data.message)
         self.assertIsNone(result.error)
         self.assertIn(
-            "--- Error fetching http://example.com/notfound ---", result.message
+            "--- Error fetching http://example.com/notfound ---", result.data.message
         )
-        self.assertIn("HTTP Error: 404 Not Found", result.message)
+        self.assertIn("HTTP Error: 404 Not Found", result.data.message)
 
 
 if __name__ == "__main__":

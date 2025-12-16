@@ -6,6 +6,8 @@ env/
 venv/
 ENV/
 .gemini/
+.claude/
+.mcp.json
 .coverage
 .processes/
 .DS_Store

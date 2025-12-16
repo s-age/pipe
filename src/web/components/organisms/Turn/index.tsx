@@ -8,7 +8,6 @@ import { IconFork } from '@/components/atoms/IconFork'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import { useTurnActions } from '@/components/organisms/Turn/hooks/useTurnActions'
 import { useTurnHandlers } from '@/components/organisms/Turn/hooks/useTurnHandlers'
-import { useTurnLifecycle } from '@/components/organisms/Turn/hooks/useTurnLifecycle'
 import type { Turn } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
@@ -76,22 +75,12 @@ export const TurnComponent = ({
   onDelete: propertyOnDelete,
   onSaveEdit: propertyOnSaveEdit
 }: TurnProperties): JSX.Element => {
-  const {
-    isEditing: lifecycleIsEditing,
-    editedContent: lifecycleEditedContent,
-    setIsEditing,
-    setEditedContent
-  } = useTurnLifecycle({ turn })
-
   const { deleteTurnAction, editTurnAction, forkSessionAction } = useTurnActions()
 
   const handlers = useTurnHandlers({
     turn,
     index,
     sessionId: sessionId || '',
-    editedContent: lifecycleEditedContent,
-    setIsEditing,
-    setEditedContent,
     onRefresh: onRefresh || (async (): Promise<void> => {}),
     refreshSessionsInStore: refreshSessionsInStore || ((): void => {}),
     deleteTurnAction,
@@ -99,8 +88,8 @@ export const TurnComponent = ({
     forkSessionAction
   })
 
-  const isEditing = sessionId ? lifecycleIsEditing : propertyIsEditing
-  const editedContent = sessionId ? lifecycleEditedContent : propertyEditedContent
+  const isEditing = sessionId ? handlers.isEditing : propertyIsEditing
+  const editedContent = sessionId ? handlers.editedContent : propertyEditedContent
   const onCopy = handlers?.handleCopy ?? propertyOnCopy
   const onEditedChange = handlers?.handleEditedChange ?? propertyOnEditedChange
   const onCancelEdit = handlers?.handleCancelEdit ?? propertyOnCancelEdit

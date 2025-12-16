@@ -1,38 +1,32 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 import type { ToastItem as ToastItemType } from '@/stores/useAppStore'
 
-const ANIM_DURATION = 180
-
-export const useToastItemLifecycle = (
-  item: ToastItemType,
-  removeToast: (id: string) => void
-): {
+type UseToastItemLifecycleProperties = {
+  item: ToastItemType
   hovering: boolean
   exiting: boolean
-  handleMouseEnter: () => void
-  handleMouseLeave: () => void
-  handleClose: () => void
-  statusClass: 'statusSuccess' | 'statusFailure' | 'statusWarning'
-} => {
+  onExit: () => void
+}
+
+export const useToastItemLifecycle = ({
+  item,
+  hovering,
+  exiting,
+  onExit
+}: UseToastItemLifecycleProperties): void => {
   const autoTimerReference = useRef<number | null>(null)
-  const finishTimerReference = useRef<number | null>(null)
   const startAtReference = useRef<number | null>(null)
   const remainingReference = useRef<number | null>(item.duration ?? null)
-  const [hovering, setHovering] = useState(false)
-  const [exiting, setExiting] = useState(false)
 
+  // Timer management effect
   useEffect(() => {
     remainingReference.current = item.duration ?? null
 
     const startTimer = (ms: number): void => {
       startAtReference.current = Date.now()
       autoTimerReference.current = window.setTimeout(() => {
-        setExiting(true)
-        finishTimerReference.current = window.setTimeout(
-          () => removeToast(item.id),
-          ANIM_DURATION
-        )
+        onExit()
       }, ms)
     }
 
@@ -43,13 +37,10 @@ export const useToastItemLifecycle = (
         clearTimeout(autoTimerReference.current)
         autoTimerReference.current = null
       }
-      if (finishTimerReference.current) {
-        clearTimeout(finishTimerReference.current)
-        finishTimerReference.current = null
-      }
     }
-  }, [item.duration, item.id, removeToast])
+  }, [item.duration, item.id, onExit])
 
+  // Hover effect
   useEffect(() => {
     if (hovering) {
       if (autoTimerReference.current && startAtReference.current) {
@@ -69,46 +60,10 @@ export const useToastItemLifecycle = (
       ) {
         startAtReference.current = Date.now()
         autoTimerReference.current = window.setTimeout(() => {
-          setExiting(true)
-          finishTimerReference.current = window.setTimeout(
-            () => removeToast(item.id),
-            ANIM_DURATION
-          )
+          onExit()
         }, remainingReference.current)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hovering, exiting])
-
-  const handleClose = useCallback((): void => {
-    if (exiting) return
-    if (autoTimerReference.current) {
-      clearTimeout(autoTimerReference.current)
-      autoTimerReference.current = null
-    }
-    setExiting(true)
-    finishTimerReference.current = window.setTimeout(
-      () => removeToast(item.id),
-      ANIM_DURATION
-    )
-  }, [exiting, item.id, removeToast])
-
-  const handleMouseEnter = useCallback(() => setHovering(true), [])
-  const handleMouseLeave = useCallback(() => setHovering(false), [])
-
-  const statusClass =
-    item.status === 'success'
-      ? 'statusSuccess'
-      : item.status === 'failure'
-        ? 'statusFailure'
-        : 'statusWarning'
-
-  return {
-    hovering,
-    exiting,
-    handleMouseEnter,
-    handleMouseLeave,
-    handleClose,
-    statusClass
-  }
 }

@@ -17,7 +17,7 @@ import {
   checkbox
 } from './style.css'
 import { IconSearch } from '../../atoms/IconSearch'
-import { useSelectUI } from '../Select/hooks/useSelectLifecycle'
+import { useSelectLifecycle } from '../Select/hooks/useSelectLifecycle'
 
 type MultipleSelectProperties = {
   name: string
@@ -78,7 +78,7 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     setQuery
   })
 
-  const { rootReference } = useSelectUI({
+  const { rootReference } = useSelectLifecycle({
     isOpen,
     close: () => setIsOpen(false),
     clearHighlight: () => setHighlightedIndex(-1)

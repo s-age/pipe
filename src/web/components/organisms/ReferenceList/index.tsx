@@ -10,7 +10,6 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { ReferenceComponent } from '../Reference'
 import { useReferenceListHandlers } from './hooks/useReferenceListHandlers'
-import { useReferenceListLifecycle } from './hooks/useReferenceListLifecycle'
 import { referenceSummary } from './style.css'
 import { referencesList, noItemsMessage } from './style.css'
 
@@ -28,14 +27,13 @@ export const ReferenceList = ({
   const formContext = useOptionalFormContext()
   const errors = formContext?.formState?.errors?.references
 
-  const { handleReferencesChange, references, existsValue } = useReferenceListHandlers(
-    sessionDetail,
-    formContext
-  )
-
-  const { accordionOpen, setAccordionOpen } = useReferenceListLifecycle(
-    sessionDetail.sessionId
-  )
+  const {
+    handleReferencesChange,
+    references,
+    existsValue,
+    accordionOpen,
+    setAccordionOpen
+  } = useReferenceListHandlers(sessionDetail, formContext)
 
   return (
     <MetaItem>

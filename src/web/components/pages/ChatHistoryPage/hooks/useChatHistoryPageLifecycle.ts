@@ -8,15 +8,15 @@ import { addToast } from '@/stores/useToastStore'
 import type { SessionPair } from '@/types/session'
 import { isSessionPair } from '@/types/session'
 
-type UseSessionLoaderProperties = {
+type UseChatHistoryPageLifecycleProperties = {
   state: State
   actions: Actions
 }
 
-export const useSessionLoader = ({
+export const useChatHistoryPageLifecycle = ({
   state,
   actions
-}: UseSessionLoaderProperties): void => {
+}: UseChatHistoryPageLifecycleProperties): void => {
   const {
     sessionTree: { currentSessionId }
   } = state

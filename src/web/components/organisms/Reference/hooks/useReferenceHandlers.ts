@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { Reference } from '@/types/reference'
@@ -9,14 +9,21 @@ export const useReferenceHandlers = (
   currentSessionId: string | null,
   reference: Reference,
   referenceIndex: number,
-  setLocalReference: React.Dispatch<React.SetStateAction<Reference>>,
   refreshSessions: () => Promise<void>
 ): {
+  localReference: Reference
+  setLocalReference: React.Dispatch<React.SetStateAction<Reference>>
   handlePersistToggle: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
   handleTtlAction: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
   handleToggleDisabled: () => Promise<void>
   handleToggle: () => void
 } => {
+  const [localReference, setLocalReference] = useState(reference)
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setLocalReference(reference)
+  }, [reference])
   const formContext = useOptionalFormContext()
   const {
     handleUpdateReferencePersist,
@@ -108,6 +115,8 @@ export const useReferenceHandlers = (
   }, [handleToggleDisabled])
 
   return {
+    localReference,
+    setLocalReference,
     handlePersistToggle,
     handleTtlAction,
     handleToggleDisabled,

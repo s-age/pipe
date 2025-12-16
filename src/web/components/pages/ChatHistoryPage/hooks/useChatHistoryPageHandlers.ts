@@ -2,7 +2,7 @@ import type { State, Actions } from '@/stores/useChatHistoryStore'
 import { useSessionStore } from '@/stores/useChatHistoryStore'
 
 import { useChatHistoryPageActions } from './useChatHistoryPageActions'
-import { useSessionLoader } from './useChatHistoryPageLifecycle'
+import { useChatHistoryPageLifecycle } from './useChatHistoryPageLifecycle'
 
 type UseChatHistoryPageHandlersReturn = {
   sessions: State['sessionTree']['sessions']
@@ -26,7 +26,7 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
 
   const { onRefresh } = useChatHistoryPageActions({ currentSessionId, refreshSessions })
 
-  useSessionLoader({ state, actions })
+  useChatHistoryPageLifecycle({ state, actions })
 
   const expertMode = (settings.expertMode as boolean) ?? true
 

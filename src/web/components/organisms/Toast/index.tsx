@@ -5,7 +5,7 @@ import type { ToastItem } from '@/stores/useToastStore'
 
 import { useToast } from './hooks/useToast'
 import { useToastHandlers } from './hooks/useToastHandlers'
-import { useToastItemLifecycle } from './hooks/useToastItemLifecycle'
+import { useToastItemHandlers } from './hooks/useToastItemHandlers'
 import * as styles from './style.css'
 
 type Position =
@@ -40,7 +40,7 @@ const ToastItem = ({
   removeToast: (id: string) => void
 }): JSX.Element => {
   const { handleMouseEnter, handleMouseLeave, handleClose, exiting, statusClass } =
-    useToastItemLifecycle(item, removeToast)
+    useToastItemHandlers({ item, removeToast })
 
   const statusClassName =
     statusClass === 'statusSuccess'

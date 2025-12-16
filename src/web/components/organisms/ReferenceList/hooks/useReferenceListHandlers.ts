@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -7,17 +7,36 @@ import type { Reference } from '@/types/reference'
 
 import { useReferenceListActions } from './useReferenceListActions'
 
+const STORAGE_KEY = 'referenceListAccordionOpen'
+
 export const useReferenceListHandlers = (
   sessionDetail: SessionDetail,
   formContext: UseFormReturn | undefined
 ): {
   references: Reference[]
   existsValue: string[]
+  accordionOpen: boolean
+  setAccordionOpen: (open: boolean) => void
   handleReferencesChange: (values: string[]) => void
 } => {
   const [references, setReferences] = useState<Reference[]>(
     sessionDetail.references || []
   )
+  const [accordionOpen, setAccordionOpen] = useState(() => {
+    // Load from localStorage on initial mount
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_KEY)
+
+      return stored === 'true'
+    }
+
+    return false
+  })
+
+  // Persist accordion state to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, String(accordionOpen))
+  }, [accordionOpen])
   const { handleUpdateReference } = useReferenceListActions(
     sessionDetail.sessionId || null
   )
@@ -67,6 +86,8 @@ export const useReferenceListHandlers = (
   return {
     references,
     existsValue,
+    accordionOpen,
+    setAccordionOpen,
     handleReferencesChange
   }
 }

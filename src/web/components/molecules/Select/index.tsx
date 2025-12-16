@@ -4,7 +4,7 @@ import type { UseFormRegister } from 'react-hook-form'
 import { useSelect } from './hooks/useSelect'
 import type { SelectOption } from './hooks/useSelect'
 import { useSelectHandlers } from './hooks/useSelectHandlers'
-import { useSelectUI } from './hooks/useSelectLifecycle'
+import { useSelectLifecycle } from './hooks/useSelectLifecycle'
 import {
   selectStyle,
   trigger,
@@ -73,7 +73,7 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     setQuery
   })
 
-  const { rootReference } = useSelectUI({
+  const { rootReference } = useSelectLifecycle({
     isOpen,
     close: () => setIsOpen(false),
     clearHighlight: () => setHighlightedIndex(-1)

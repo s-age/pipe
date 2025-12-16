@@ -1,22 +1,28 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { useMultiStepReasoningActions } from './useMultiStepReasoningActions'
 
 type UseMultiStepReasoningHandlersProperties = {
   currentSessionId: string | null
   multiStepReasoningEnabled: boolean
-  setLocalEnabled: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const useMultiStepReasoningHandlers = ({
   currentSessionId,
-  multiStepReasoningEnabled,
-  setLocalEnabled
+  multiStepReasoningEnabled
 }: UseMultiStepReasoningHandlersProperties): {
+  localEnabled: boolean
+  setLocalEnabled: React.Dispatch<React.SetStateAction<boolean>>
   handleMultiStepReasoningChange: (
     event: React.ChangeEvent<HTMLInputElement>
   ) => Promise<void>
 } => {
+  const [localEnabled, setLocalEnabled] = useState(multiStepReasoningEnabled)
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setLocalEnabled(multiStepReasoningEnabled)
+  }, [multiStepReasoningEnabled])
   const { updateMultiStepReasoning } = useMultiStepReasoningActions()
 
   const handleMultiStepReasoningChange = useCallback(
@@ -48,5 +54,5 @@ export const useMultiStepReasoningHandlers = ({
     ]
   )
 
-  return { handleMultiStepReasoningChange }
+  return { localEnabled, setLocalEnabled, handleMultiStepReasoningChange }
 }

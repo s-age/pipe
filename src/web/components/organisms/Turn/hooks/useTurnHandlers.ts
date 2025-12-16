@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react'
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import { useModal } from '@/components/organisms/Modal'
 import { getSession } from '@/lib/api/session/getSession'
@@ -14,9 +14,6 @@ type UseTurnHandlersProperties = {
   turn: Turn
   index: number
   sessionId: string
-  editedContent: string
-  setIsEditing: (isEditing: boolean) => void
-  setEditedContent: (editedContent: string) => void
   onRefresh: () => Promise<void>
   refreshSessionsInStore: (
     sessionDetail: SessionDetail,
@@ -36,15 +33,16 @@ export const useTurnHandlers = ({
   turn,
   index,
   sessionId,
-  editedContent,
-  setIsEditing,
-  setEditedContent,
   onRefresh,
   refreshSessionsInStore,
   deleteTurnAction,
   editTurnAction,
   forkSessionAction
 }: UseTurnHandlersProperties): {
+  isEditing: boolean
+  editedContent: string
+  setIsEditing: (isEditing: boolean) => void
+  setEditedContent: (editedContent: string) => void
   handleCopy: () => Promise<void>
   handleEditedChange: (event: ChangeEvent<HTMLTextAreaElement>) => void
   handleCancelEdit: () => void
@@ -53,6 +51,27 @@ export const useTurnHandlers = ({
   handleDelete: () => void
   handleSaveEdit: () => void
 } => {
+  const [isEditing, setIsEditing] = useState<boolean>(false)
+  const [editedContent, setEditedContent] = useState<string>(() => {
+    if (turn.type === 'user_task') {
+      return turn.instruction
+    }
+    if (turn.type === 'model_response' || turn.type === 'compressed_history') {
+      return turn.content
+    }
+    if (turn.type === 'function_calling') {
+      return turn.response
+    }
+    if (turn.type === 'tool_response') {
+      if (typeof turn.response.message === 'string') {
+        return turn.response.message
+      }
+
+      return JSON.stringify(turn.response.message, null, 2)
+    }
+
+    return ''
+  })
   const { show, hide } = useModal()
 
   const modalIdReference = useRef<number | null>(null)
@@ -187,6 +206,10 @@ export const useTurnHandlers = ({
   ])
 
   return {
+    isEditing,
+    editedContent,
+    setIsEditing,
+    setEditedContent,
     handleCopy,
     handleEditedChange,
     handleCancelEdit,

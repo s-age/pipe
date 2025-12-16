@@ -7,7 +7,6 @@ import { Tooltip } from '@/components/organisms/Tooltip'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceHandlers } from './hooks/useReferenceHandlers'
-import { useReferenceLifecycle } from './hooks/useReferenceLifecycle'
 import {
   referenceItem,
   referenceLabel,
@@ -33,15 +32,8 @@ export const ReferenceComponent = ({
   currentSessionId,
   refreshSessions
 }: ReferenceProperties): JSX.Element => {
-  const { localReference, setLocalReference } = useReferenceLifecycle(reference)
-
-  const { handlePersistToggle, handleTtlAction, handleToggle } = useReferenceHandlers(
-    currentSessionId,
-    localReference,
-    index,
-    setLocalReference,
-    refreshSessions
-  )
+  const { localReference, handlePersistToggle, handleTtlAction, handleToggle } =
+    useReferenceHandlers(currentSessionId, reference, index, refreshSessions)
 
   const ttl = localReference.ttl !== null ? localReference.ttl : 3
 

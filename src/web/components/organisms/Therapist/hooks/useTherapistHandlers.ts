@@ -6,7 +6,7 @@ import { useToastStore } from '@/stores/useToastStore'
 import type { Diagnosis } from '../types'
 
 type TherapistActions = {
-  diagnoseSession: (sessionId: string) => Promise<Diagnosis>
+  diagnoseSession: (sessionId: string) => Promise<Diagnosis | void>
 }
 
 type TherapistHandlers = {
@@ -58,11 +58,13 @@ export const useTherapistHandlers = (
     setError(null)
     try {
       const result = await actions.diagnoseSession(sessionId)
-      setDiagnosis(result)
-      // Reset selections when new diagnosis is loaded
-      setSelectedDeletions([])
-      setSelectedEdits([])
-      setSelectedCompressions([])
+      if (result) {
+        setDiagnosis(result)
+        // Reset selections when new diagnosis is loaded
+        setSelectedDeletions([])
+        setSelectedEdits([])
+        setSelectedCompressions([])
+      }
     } catch (error_) {
       setError((error_ as Error).message)
     } finally {

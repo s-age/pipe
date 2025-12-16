@@ -5,11 +5,11 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 import { addToast } from '@/stores/useToastStore'
 
 export type UseSessionItemActionsReturn = {
-  loadSession: (sessionId: string) => Promise<SessionDetail>
+  loadSession: (sessionId: string) => Promise<SessionDetail | void>
 }
 
 export const useSessionItemActions = (): UseSessionItemActionsReturn => {
-  const loadSession = useCallback(async (sessionId: string): Promise<SessionDetail> => {
+  const loadSession = useCallback(async (sessionId: string): Promise<SessionDetail | void> => {
     try {
       const sessionDetail = await getSession(sessionId)
 
@@ -19,7 +19,6 @@ export const useSessionItemActions = (): UseSessionItemActionsReturn => {
         status: 'failure',
         title: (error as Error).message || 'Failed to load session data.'
       })
-      throw error
     }
   }, [])
 

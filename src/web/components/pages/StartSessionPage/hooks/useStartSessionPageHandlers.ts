@@ -12,7 +12,7 @@ export const useStartSessionPageHandlers = (): {
   const handleSubmit = useCallback(
     async (data: StartSessionRequest): Promise<void> => {
       const result = await createSession(data)
-      if (result.sessionId) {
+      if (result?.sessionId) {
         window.location.href = `/session/${result.sessionId}`
       }
     },

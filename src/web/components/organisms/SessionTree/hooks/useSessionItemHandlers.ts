@@ -28,7 +28,7 @@ export const useSessionItemHandlers = ({
       }
 
       const sessionDetail = await loadSession(session.sessionId)
-      selectSession(session.sessionId, sessionDetail)
+      selectSession(session.sessionId, sessionDetail || null)
       navigate(`/session/${session.sessionId}`, { replace: true })
     },
     [selectSession, session.sessionId, loadSession, navigate]

@@ -7,15 +7,15 @@ export type UseInstructionFormActionsReturn = {
   sendInstructionAction: (
     sessionId: string,
     instruction: string
-  ) => Promise<{ message: string }>
+  ) => Promise<{ message: string } | void>
 }
 
 export const useInstructionFormActions = (): UseInstructionFormActionsReturn => {
   const sendInstructionAction = useCallback(
-    async (sessionId: string, instruction: string): Promise<{ message: string }> => {
+    async (sessionId: string, instruction: string): Promise<{ message: string } | void> => {
       if (!sessionId) {
         addToast({ status: 'failure', title: 'Session ID is missing.' })
-        throw new Error('Session ID is missing.')
+        return
       }
       try {
         const result = await sendInstruction(sessionId, instruction)
@@ -27,7 +27,6 @@ export const useInstructionFormActions = (): UseInstructionFormActionsReturn => 
           status: 'failure',
           title: (error as Error).message || 'Failed to send instruction.'
         })
-        throw error
       }
     },
     []

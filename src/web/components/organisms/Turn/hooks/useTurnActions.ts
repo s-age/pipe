@@ -28,7 +28,6 @@ export const useTurnActions = (): UseTurnActionsReturn => {
           status: 'failure',
           title: (error as Error).message || 'Failed to delete turn.'
         })
-        throw error
       }
     },
     []
@@ -45,7 +44,6 @@ export const useTurnActions = (): UseTurnActionsReturn => {
           status: 'failure',
           title: (error as Error).message || 'Failed to fork session.'
         })
-        throw error
       }
     },
     []
@@ -72,7 +70,6 @@ export const useTurnActions = (): UseTurnActionsReturn => {
           status: 'failure',
           title: (error as Error).message || 'Failed to update turn.'
         })
-        throw error
       }
     },
     []

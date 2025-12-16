@@ -28,7 +28,7 @@ export const useSessionOverviewHandlers = ({
       }
 
       const sessionDetail = await loadSession(session.sessionId)
-      selectSession(session.sessionId, sessionDetail)
+      selectSession(session.sessionId, sessionDetail || null)
       // Use react-router navigation so router params update reliably.
       navigate(`/session/${session.sessionId}`, { replace: true })
     },

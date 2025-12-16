@@ -6,11 +6,11 @@ import { addToast } from '@/stores/useToastStore'
 import type { Diagnosis } from '../types'
 
 type TherapistActions = {
-  diagnoseSession: (sessionId: string) => Promise<Diagnosis>
+  diagnoseSession: (sessionId: string) => Promise<Diagnosis | void>
 }
 
 export const useTherapistActions = (): TherapistActions => {
-  const diagnoseSession = useCallback(async (sessionId: string): Promise<Diagnosis> => {
+  const diagnoseSession = useCallback(async (sessionId: string): Promise<Diagnosis | void> => {
     try {
       const result = await createTherapistSession({ sessionId: sessionId })
       addToast({ status: 'success', title: 'Diagnosis completed successfully' })
@@ -22,7 +22,6 @@ export const useTherapistActions = (): TherapistActions => {
         title: 'Diagnosis failed',
         description: (error as Error).message
       })
-      throw error
     }
   }, [])
 

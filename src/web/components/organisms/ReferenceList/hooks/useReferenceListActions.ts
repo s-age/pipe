@@ -33,7 +33,6 @@ export const useReferenceListActions = (
           status: 'failure',
           title: (error as Error).message || 'Failed to add reference.'
         })
-        throw error
       }
     },
     [currentSessionId]

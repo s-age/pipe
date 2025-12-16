@@ -22,7 +22,9 @@ export const useStartSessionFormHandlers = (): {
   const onFormSubmit = useCallback(
     async (data: StartSessionFormInputs): Promise<void> => {
       const result = await startSessionAction(data)
-      window.location.href = `/session/${result.sessionId}`
+      if (result?.sessionId) {
+        window.location.href = `/session/${result.sessionId}`
+      }
     },
     [startSessionAction]
   )

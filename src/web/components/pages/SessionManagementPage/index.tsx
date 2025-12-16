@@ -6,11 +6,8 @@ import { Heading } from '@/components/atoms/Heading'
 import { AppLayout } from '@/components/layouts/AppLayout'
 import { Tabs } from '@/components/molecules/Tabs'
 import { SessionList } from '@/components/organisms/SessionList'
-import { useSessionStore } from '@/stores/useChatHistoryStore'
 
-import { useSessionManagementActions } from './hooks/useSessionManagementActions'
 import { useSessionManagementHandlers } from './hooks/useSessionManagementHandlers'
-import { useSessionManagementLifecycle } from './hooks/useSessionManagementLifecycle'
 import {
   pageContent,
   scrollableContainer,
@@ -21,15 +18,9 @@ import {
 
 export const SessionManagementPage = (): JSX.Element => {
   const navigate = useNavigate()
-  const { state, actions: storeActions } = useSessionStore()
-  const actions = useSessionManagementActions({ storeActions })
-  const handlers = useSessionManagementHandlers({
-    actions,
-    navigate
-  })
-  useSessionManagementLifecycle({ storeActions })
 
   const {
+    state,
     currentTab,
     setCurrentTab,
     selectedSessionIds,
@@ -37,7 +28,7 @@ export const SessionManagementPage = (): JSX.Element => {
     handleSelectSession,
     handleBulkAction,
     handleCancel
-  } = handlers
+  } = useSessionManagementHandlers({ navigate })
 
   const currentSessions =
     currentTab === 'sessions' ? state.sessionTree.sessions : state.archivedSessions

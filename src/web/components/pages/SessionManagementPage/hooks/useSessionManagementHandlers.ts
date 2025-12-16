@@ -4,24 +4,14 @@ import type {
   SessionOverview,
   SessionTreeNode
 } from '@/lib/api/sessionTree/getSessionTree'
+import type { State } from '@/stores/useChatHistoryStore'
+import { useSessionStore } from '@/stores/useChatHistoryStore'
 
-type UseSessionManagementActions = {
-  archiveSessions: (sessionIds: string[]) => Promise<void>
-  deleteArchivedSessions: (parameters: {
-    sessionIds?: string[]
-    filePaths?: string[]
-  }) => Promise<void>
-}
+import { useSessionManagementActions } from './useSessionManagementActions'
+import { useSessionManagementLifecycle } from './useSessionManagementLifecycle'
 
-type Properties = {
-  actions: UseSessionManagementActions
-  navigate: (path: string) => void
-}
-
-export const useSessionManagementHandlers = ({
-  actions,
-  navigate
-}: Properties): {
+type UseSessionManagementHandlersReturn = {
+  state: State
   currentTab: 'sessions' | 'archives'
   setCurrentTab: (tab: 'sessions' | 'archives') => void
   selectedSessionIds: string[]
@@ -30,13 +20,28 @@ export const useSessionManagementHandlers = ({
     sessions: SessionOverview[] | SessionTreeNode[],
     isSelected: boolean
   ) => void
-  handleBulkArchive: () => Promise<void>
-  handleBulkDeleteArchived: () => Promise<void>
   handleBulkAction: () => Promise<void>
   handleCancel: () => void
-} => {
+}
+
+type Properties = {
+  navigate: (path: string) => void
+}
+
+export const useSessionManagementHandlers = ({
+  navigate
+}: Properties): UseSessionManagementHandlersReturn => {
+  // 1. Store initialization
+  const { state, actions: storeActions } = useSessionStore()
+
+  // 2. Actions hook
+  const actions = useSessionManagementActions({ storeActions })
+
+  // 3. Lifecycle hook
+  useSessionManagementLifecycle({ storeActions })
+
+  // 4. Local state and handlers
   const [currentTab, setCurrentTab] = useState<'sessions' | 'archives'>('sessions')
-  // Store filePaths for archives, sessionIds for regular sessions
   const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([])
 
   const handleSelectSession = useCallback<
@@ -116,14 +121,14 @@ export const useSessionManagementHandlers = ({
     navigate('/')
   }, [navigate])
 
+  // 5. Return unified interface
   return {
+    state,
     currentTab,
     setCurrentTab: handleSetCurrentTab,
     selectedSessionIds,
     handleSelectSession,
     handleSelectAll,
-    handleBulkArchive,
-    handleBulkDeleteArchived,
     handleBulkAction,
     handleCancel
   }

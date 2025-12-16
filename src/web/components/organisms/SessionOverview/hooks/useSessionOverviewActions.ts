@@ -9,18 +9,21 @@ export type UseSessionOverviewActionsReturn = {
 }
 
 export const useSessionOverviewActions = (): UseSessionOverviewActionsReturn => {
-  const loadSession = useCallback(async (sessionId: string): Promise<SessionDetail | void> => {
-    try {
-      const sessionDetail = await getSession(sessionId)
+  const loadSession = useCallback(
+    async (sessionId: string): Promise<SessionDetail | void> => {
+      try {
+        const sessionDetail = await getSession(sessionId)
 
-      return sessionDetail
-    } catch (error: unknown) {
-      addToast({
-        status: 'failure',
-        title: (error as Error).message || 'Failed to load session data.'
-      })
-    }
-  }, [])
+        return sessionDetail
+      } catch (error: unknown) {
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to load session data.'
+        })
+      }
+    },
+    []
+  )
 
   return { loadSession }
 }

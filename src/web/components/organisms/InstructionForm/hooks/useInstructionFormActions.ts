@@ -12,9 +12,13 @@ export type UseInstructionFormActionsReturn = {
 
 export const useInstructionFormActions = (): UseInstructionFormActionsReturn => {
   const sendInstructionAction = useCallback(
-    async (sessionId: string, instruction: string): Promise<{ message: string } | void> => {
+    async (
+      sessionId: string,
+      instruction: string
+    ): Promise<{ message: string } | void> => {
       if (!sessionId) {
         addToast({ status: 'failure', title: 'Session ID is missing.' })
+
         return
       }
       try {

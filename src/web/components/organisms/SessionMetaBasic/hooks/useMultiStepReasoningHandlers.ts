@@ -1,8 +1,7 @@
 import { useCallback } from 'react'
 
+import { useMultiStepReasoningActions } from '@/components/organisms/MultiStepReasoning/hooks/useMultiStepReasoningActions'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-
-import { useMultiStepReasoningActions } from './useMultiStepReasoningActions'
 
 type UseMultiStepReasoningHandlersProperties = {
   currentSessionId: string | null

@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 import { editSessionMeta } from '@/lib/api/meta/editSessionMeta'
 import type { EditSessionMetaRequest } from '@/lib/api/meta/editSessionMeta'
 import { addToast } from '@/stores/useToastStore'
@@ -11,21 +13,21 @@ export const useSessionMetaActions = ({
 }: UseSessionMetaActionsProperties): {
   handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
 } => {
-  const handleMetaSave = async (
-    id: string,
-    meta: EditSessionMetaRequest
-  ): Promise<void> => {
-    try {
-      await editSessionMeta(id, meta)
-      addToast({ status: 'success', title: 'Session metadata saved' })
-      await onRefresh()
-    } catch (error: unknown) {
-      addToast({
-        status: 'failure',
-        title: (error as Error).message || 'Failed to save session meta.'
-      })
-    }
-  }
+  const handleMetaSave = useCallback(
+    async (id: string, meta: EditSessionMetaRequest): Promise<void> => {
+      try {
+        await editSessionMeta(id, meta)
+        addToast({ status: 'success', title: 'Session metadata saved' })
+        await onRefresh()
+      } catch (error: unknown) {
+        addToast({
+          status: 'failure',
+          title: (error as Error).message || 'Failed to save session meta.'
+        })
+      }
+    },
+    [onRefresh]
+  )
 
   return { handleMetaSave }
 }

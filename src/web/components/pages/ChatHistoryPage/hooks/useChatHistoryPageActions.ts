@@ -43,7 +43,10 @@ export const useChatHistoryPageActions = ({
             refreshSessions(data.currentSession ?? null, normalized)
           } else {
             // Keep hierarchical nodes intact so the UI can render a tree.
-            refreshSessions(data.currentSession ?? null, sessionTree as SessionTreeNode[])
+            refreshSessions(
+              data.currentSession ?? null,
+              sessionTree as SessionTreeNode[]
+            )
           }
         } else {
           // No sessions returned: ensure session detail is updated but don't touch sessions

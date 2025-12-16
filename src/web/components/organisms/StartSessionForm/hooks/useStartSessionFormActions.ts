@@ -6,7 +6,9 @@ import { addToast } from '@/stores/useToastStore'
 import type { StartSessionFormInputs } from '../schema'
 
 export type UseStartSessionFormActionsReturn = {
-  startSessionAction: (data: StartSessionFormInputs) => Promise<{ sessionId: string } | void>
+  startSessionAction: (
+    data: StartSessionFormInputs
+  ) => Promise<{ sessionId: string } | void>
 }
 
 export const useStartSessionFormActions = (): UseStartSessionFormActionsReturn => {

@@ -49,7 +49,6 @@ export const useReferenceListActions = (
               isDirectory: entry.isDir
             })
           )
-          addToast({ status: 'success', title: 'Root suggestions loaded successfully' })
 
           return rootEntries
         }
@@ -75,10 +74,6 @@ export const useReferenceListActions = (
               isDirectory: entry.isDir
             })
           )
-          addToast({
-            status: 'success',
-            title: 'Sub-directory suggestions loaded successfully'
-          })
 
           return entries
         }

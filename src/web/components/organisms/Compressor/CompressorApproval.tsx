@@ -1,9 +1,8 @@
-import { useCallback } from 'react'
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 
-import { useCompressorActions } from './hooks/useCompressorActions'
+import { useCompressorApprovalHandlers } from './hooks/useCompressorApprovalHandlers'
 import * as styles from './style.css'
 
 export type CompressorApprovalProperties = {
@@ -33,18 +32,13 @@ export const CompressorApproval = ({
   setCompressorSessionId,
   onRefresh
 }: CompressorApprovalProperties): JSX.Element => {
-  const actions = useCompressorActions()
-
-  const handleApprove = useCallback(async (): Promise<void> => {
-    if (!compressorSessionId) return
-
-    setIsSubmitting(true)
-    await actions.approveCompression(compressorSessionId)
-    await onRefresh()
-    setSummary('')
-    setCompressorSessionId(null)
-    setIsSubmitting(false)
-  }, [actions, compressorSessionId, onRefresh, setSummary, setCompressorSessionId, setIsSubmitting])
+  const { handleApprove } = useCompressorApprovalHandlers({
+    compressorSessionId,
+    onRefresh,
+    setSummary,
+    setCompressorSessionId,
+    setIsSubmitting
+  })
 
   return (
     <div className={styles.form}>

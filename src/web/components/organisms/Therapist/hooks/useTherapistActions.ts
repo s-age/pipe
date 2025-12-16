@@ -10,20 +10,23 @@ type TherapistActions = {
 }
 
 export const useTherapistActions = (): TherapistActions => {
-  const diagnoseSession = useCallback(async (sessionId: string): Promise<Diagnosis | void> => {
-    try {
-      const result = await createTherapistSession({ sessionId: sessionId })
-      addToast({ status: 'success', title: 'Diagnosis completed successfully' })
+  const diagnoseSession = useCallback(
+    async (sessionId: string): Promise<Diagnosis | void> => {
+      try {
+        const result = await createTherapistSession({ sessionId: sessionId })
+        addToast({ status: 'success', title: 'Diagnosis completed successfully' })
 
-      return result.diagnosis
-    } catch (error) {
-      addToast({
-        status: 'failure',
-        title: 'Diagnosis failed',
-        description: (error as Error).message
-      })
-    }
-  }, [])
+        return result.diagnosis
+      } catch (error) {
+        addToast({
+          status: 'failure',
+          title: 'Diagnosis failed',
+          description: (error as Error).message
+        })
+      }
+    },
+    []
+  )
 
   return {
     diagnoseSession

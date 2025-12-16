@@ -21,13 +21,7 @@ export const useReferenceActions = (
   handleToggleReferenceDisabled: (sessionId: string, index: number) => Promise<void>
 } => {
   const handleUpdateReferencePersist = useCallback(
-    async (
-      sessionId: string | null,
-      index: number,
-      persist: boolean
-    ): Promise<void> => {
-      if (!sessionId) return
-
+    async (sessionId: string, index: number, persist: boolean): Promise<void> => {
       try {
         await editReferencePersist(sessionId, index, persist)
         addToast({
@@ -47,9 +41,7 @@ export const useReferenceActions = (
   )
 
   const handleUpdateReferenceTtl = useCallback(
-    async (sessionId: string | null, index: number, ttl: number): Promise<void> => {
-      if (!sessionId) return
-
+    async (sessionId: string, index: number, ttl: number): Promise<void> => {
       try {
         await editReferenceTtl(sessionId, index, ttl)
         addToast({ status: 'success', title: 'Reference TTL updated successfully' })
@@ -65,9 +57,7 @@ export const useReferenceActions = (
   )
 
   const handleToggleReferenceDisabled = useCallback(
-    async (sessionId: string | null, index: number): Promise<void> => {
-      if (!sessionId) return
-
+    async (sessionId: string, index: number): Promise<void> => {
       try {
         await toggleReferenceDisabled(sessionId, index)
         addToast({

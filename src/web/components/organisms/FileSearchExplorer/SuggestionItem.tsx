@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { useSuggestionItem } from './hooks/useSuggestionItem'
+import { useSuggestionItemHandlers } from './hooks/useSuggestionItemHandlers'
 import { suggestionItem, selectedSuggestionItem } from './style.css'
 
 export type SuggestionItemProperties = {
@@ -12,7 +12,7 @@ export type SuggestionItemProperties = {
 export const SuggestionItem = React.memo(
   React.forwardRef<HTMLLIElement, SuggestionItemProperties>(
     ({ suggestion, onClick, isSelected = false }, reference) => {
-      const { elementReference, handleClick } = useSuggestionItem(
+      const { elementReference, handleClick } = useSuggestionItemHandlers(
         suggestion,
         onClick,
         isSelected,

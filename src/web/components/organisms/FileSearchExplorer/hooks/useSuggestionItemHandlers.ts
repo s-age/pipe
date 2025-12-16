@@ -6,7 +6,7 @@ export type SuggestionItemProperties = {
   isSelected?: boolean
 }
 
-export const useSuggestionItem = (
+export const useSuggestionItemHandlers = (
   suggestion: SuggestionItemProperties['suggestion'],
   onClick: SuggestionItemProperties['onClick'],
   isSelected: boolean = false,

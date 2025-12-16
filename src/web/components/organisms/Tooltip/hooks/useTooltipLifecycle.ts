@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-type UseTooltipPortalProperties = {
+type UseTooltipLifecycleProperties = {
   isVisible: boolean
   placement: 'top' | 'bottom' | 'left' | 'right'
   targetRect: DOMRect | null
@@ -8,13 +8,13 @@ type UseTooltipPortalProperties = {
   offsetCross?: number | null
 }
 
-export const useTooltipPortal = ({
+export const useTooltipLifecycle = ({
   isVisible,
   placement,
   targetRect,
   offsetMain,
   offsetCross
-}: UseTooltipPortalProperties): React.RefObject<HTMLDivElement | null> => {
+}: UseTooltipLifecycleProperties): React.RefObject<HTMLDivElement | null> => {
   const elementReference = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {

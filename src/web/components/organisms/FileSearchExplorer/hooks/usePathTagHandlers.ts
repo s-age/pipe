@@ -5,7 +5,7 @@ type UsePathTagProperties = {
   onDelete: (index: number) => void
 }
 
-export const usePathTag = ({
+export const usePathTagHandlers = ({
   index,
   onDelete
 }: UsePathTagProperties): {

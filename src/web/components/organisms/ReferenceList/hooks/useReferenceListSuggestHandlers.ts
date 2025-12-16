@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Reference } from '@/types/reference'
 
-export const useReferenceListSuggest = (
+export const useReferenceListSuggestHandlers = (
   actions: {
     loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
     loadSubDirectorySuggestions: (

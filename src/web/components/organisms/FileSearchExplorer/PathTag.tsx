@@ -1,7 +1,7 @@
 import type { JSX } from 'react'
 import React from 'react'
 
-import { usePathTag } from './hooks/usePathTag'
+import { usePathTagHandlers } from './hooks/usePathTagHandlers'
 import { pathTag, pathTagDeleteButton } from './style.css'
 
 type PathTagProperties = {
@@ -12,7 +12,7 @@ type PathTagProperties = {
 
 export const PathTag = React.memo(
   ({ path, index, onDelete }: PathTagProperties): JSX.Element => {
-    const { handleClick, handleKeyDown } = usePathTag({ index, onDelete })
+    const { handleClick, handleKeyDown } = usePathTagHandlers({ index, onDelete })
 
     return (
       <span

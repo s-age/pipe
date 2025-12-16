@@ -1,10 +1,14 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+
+import type { FormMethods } from '@/components/organisms/Form'
 
 import type { CompressorFormInputs } from '../schema'
 
 type UseCompressorLifecycleProperties = {
   effectiveMax: number
   startLocal: number
+  endLocal: number
+  formContext: FormMethods<CompressorFormInputs> | undefined
 }
 
 type UseCompressorLifecycleReturn = {
@@ -15,8 +19,17 @@ type UseCompressorLifecycleReturn = {
 
 export const useCompressorLifecycle = ({
   effectiveMax,
-  startLocal
+  startLocal,
+  endLocal,
+  formContext
 }: UseCompressorLifecycleProperties): UseCompressorLifecycleReturn => {
+  // Synchronize local state to React Hook Form values
+  useEffect(() => {
+    if (formContext) {
+      formContext.setValue('startTurn', startLocal)
+      formContext.setValue('endTurn', endLocal)
+    }
+  }, [formContext, startLocal, endLocal])
   const defaultValues = useMemo<CompressorFormInputs>(
     () => ({
       policy:

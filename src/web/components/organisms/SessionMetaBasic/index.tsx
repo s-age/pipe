@@ -12,7 +12,7 @@ import { RolesSelect } from '@/components/organisms/RolesSelect'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useSessionMetaBasicHandlers } from './hooks/useSessionMetaBasicHandlers'
-import { useSessionMetaBasicSync } from './hooks/useSessionMetaBasicSync'
+import { useSessionMetaBasicLifecycle } from './hooks/useSessionMetaBasicLifecycle'
 import { inputFullWidth } from './style.css'
 
 type SessionMetaBasicProperties = {
@@ -32,7 +32,7 @@ export const SessionMetaBasic = ({
 
   const { handleRolesChange } = useSessionMetaBasicHandlers({ setValue })
 
-  useSessionMetaBasicSync(sessionDetail, formContext, isSubmitting)
+  useSessionMetaBasicLifecycle(sessionDetail, formContext, isSubmitting)
 
   return (
     <>

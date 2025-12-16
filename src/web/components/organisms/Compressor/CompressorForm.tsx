@@ -7,7 +7,6 @@ import { TextArea } from '@/components/molecules/TextArea'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
 import { useCompressorFormLogic } from './hooks/useCompressorFormLogic'
-import { useCompressorSync } from './hooks/useCompressorSync'
 import type { CompressorFormInputs } from './schema'
 import * as styles from './style.css'
 import { renderTurnOptions } from './TurnOptions'
@@ -59,13 +58,6 @@ export const CompressorForm = ({
     compressorSessionId,
     setCompressorSessionId,
     onRefresh
-  })
-
-  // Sync local state to RHF
-  useCompressorSync({
-    formContext,
-    startLocal,
-    endLocal
   })
 
   return (

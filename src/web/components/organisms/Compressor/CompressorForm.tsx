@@ -1,5 +1,4 @@
 import type { JSX } from 'react'
-import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
 import { Button } from '@/components/atoms/Button'
 import { Fieldset } from '@/components/molecules/Fieldset'
@@ -75,27 +74,13 @@ export const CompressorForm = ({
       <div className={styles.form}>
         <div className={styles.previewBox}>
           <Fieldset legend="Compression Policy" className={styles.fieldsetContainer}>
-            <TextArea
-              name="policy"
-              rows={4}
-              placeholder="Compression policy"
-              register={
-                formContext?.register as unknown as UseFormRegister<FieldValues>
-              }
-            />
+            <TextArea name="policy" rows={4} placeholder="Compression policy" />
           </Fieldset>
           <Fieldset
             legend="Target length (tokens)"
             className={styles.fieldsetContainer}
           >
-            <InputText
-              name="targetLength"
-              type="number"
-              placeholder="1000"
-              register={
-                formContext?.register as unknown as UseFormRegister<FieldValues>
-              }
-            />
+            <InputText name="targetLength" type="number" placeholder="1000" />
           </Fieldset>
           <Fieldset legend="Range" className={styles.fieldsetContainer}>
             <div className={styles.field}>

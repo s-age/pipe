@@ -1,4 +1,4 @@
-import React from 'react'
+import type { JSX } from 'react'
 
 import { Label } from '@/components/atoms/Label'
 import { Fieldset } from '@/components/molecules/Fieldset'
@@ -21,7 +21,7 @@ type HyperParametersProperties = {
 
 export const HyperParameters = ({
   sessionDetail
-}: HyperParametersProperties): React.JSX.Element => {
+}: HyperParametersProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
   const errors = formContext?.formState?.errors
   const {
@@ -43,7 +43,11 @@ export const HyperParameters = ({
     <MetaItem>
       <Fieldset
         legend="Hyperparameters"
-        error={errors?.hyperparameters as unknown as React.ReactNode}
+        error={
+          errors?.hyperparameters?.message
+            ? String(errors.hyperparameters.message)
+            : undefined
+        }
       >
         <p className={note}>
           Hyperparameters are fixed for GeminiAPI, but left to the model&apos;s

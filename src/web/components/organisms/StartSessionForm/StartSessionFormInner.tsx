@@ -1,4 +1,3 @@
-import React from 'react'
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
@@ -59,7 +58,11 @@ export const StartSessionFormInner = ({
           <Fieldset
             legend={<MetaLabel required={true}>First Instruction:</MetaLabel>}
             className={fieldsetContainer}
-            error={errors?.instruction as unknown as React.ReactNode}
+            error={
+              errors?.instruction?.message
+                ? String(errors.instruction.message)
+                : undefined
+            }
           >
             {(ids) => (
               <TextArea
@@ -75,7 +78,7 @@ export const StartSessionFormInner = ({
         <Fieldset
           legend={<MetaLabel>Parent Session:</MetaLabel>}
           className={fieldsetContainer}
-          error={errors?.parent as unknown as React.ReactNode}
+          error={errors?.parent?.message ? String(errors.parent.message) : undefined}
         >
           <Select
             name="parent"

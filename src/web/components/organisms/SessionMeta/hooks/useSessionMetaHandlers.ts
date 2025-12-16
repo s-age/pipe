@@ -26,8 +26,9 @@ export const useSessionMetaHandlers = ({
     (data: SessionMetaFormInputs) => {
       if (!sessionDetail.sessionId) return
 
-      // roles, artifacts, references, procedure はすべて既に正しい形式なので変換不要
-      void handleMetaSave(sessionDetail.sessionId, data as EditSessionMetaRequest)
+      // Note: SessionMetaFormInputs and EditSessionMetaRequest have compatible shapes
+      // roles, artifacts, procedure, hyperparameters are already in the correct format
+      void handleMetaSave(sessionDetail.sessionId, data as unknown as EditSessionMetaRequest)
     },
     [sessionDetail.sessionId, handleMetaSave]
   )
@@ -44,7 +45,13 @@ export const useSessionMetaHandlers = ({
   )
 
   const handleSaveClick = useCallback(() => {
-    void formContext?.handleSubmit(onSubmit as never)()
+    if (formContext?.handleSubmit) {
+      // Type guard: verify handleSubmit exists and call it
+      const submitHandler = formContext.handleSubmit(onSubmit as never)
+      if (typeof submitHandler === 'function') {
+        void submitHandler()
+      }
+    }
   }, [formContext, onSubmit])
 
   return { onSubmit: wrappedSubmit, isSubmitting, handleSaveClick }

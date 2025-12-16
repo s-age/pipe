@@ -44,8 +44,25 @@ export const useTooltip = (
     }
 
     if (data.id === idReference.current) {
-      setPlacement((data.placement as TooltipPlacement) ?? 'top')
-      setTargetRect((data.rect as DOMRect) ?? null)
+      // Type guard: verify placement is valid
+      const validPlacement = data.placement ?? 'top'
+      if (
+        validPlacement === 'top' ||
+        validPlacement === 'bottom' ||
+        validPlacement === 'left' ||
+        validPlacement === 'right'
+      ) {
+        setPlacement(validPlacement)
+      } else {
+        setPlacement('top')
+      }
+
+      // Type guard: verify rect is DOMRect
+      if (data.rect instanceof DOMRect) {
+        setTargetRect(data.rect)
+      } else {
+        setTargetRect(null)
+      }
       setIsVisible(true)
     } else {
       setIsVisible(false)
@@ -66,7 +83,11 @@ export const useTooltip = (
 
       const { content, offsetMain, offsetCross, placement } = options ?? {}
 
-      const element = event.currentTarget as HTMLElement
+      const element = event.currentTarget
+
+      // Type guard: verify element is HTMLElement
+      if (!(element instanceof HTMLElement)) return
+
       const rect = element.getBoundingClientRect()
       const vw = window.innerWidth
       const vh = window.innerHeight
@@ -88,8 +109,16 @@ export const useTooltip = (
             ? 'bottom'
             : 'top'
 
-      const chosenPlacement: TooltipPlacement =
-        (placement as TooltipPlacement) ?? computedPlacement
+      // Type guard: verify placement is valid
+      let chosenPlacement: TooltipPlacement = computedPlacement
+      if (
+        placement === 'top' ||
+        placement === 'bottom' ||
+        placement === 'left' ||
+        placement === 'right'
+      ) {
+        chosenPlacement = placement
+      }
 
       // Emit show to the tooltip store; include optional offsets/content
       showTooltip({

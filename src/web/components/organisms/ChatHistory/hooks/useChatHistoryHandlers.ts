@@ -58,7 +58,7 @@ export const useChatHistoryHandlers = ({
       }
     }
 
-    modalIdReference.current = show(
+    const modalId = show(
       React.createElement(ConfirmModal, {
         title: 'Delete Session',
         message:
@@ -68,7 +68,12 @@ export const useChatHistoryHandlers = ({
         confirmText: 'Delete',
         cancelText: 'Cancel'
       })
-    ) as unknown as number
+    )
+
+    // Type guard: verify modalId is number
+    if (typeof modalId === 'number') {
+      modalIdReference.current = modalId
+    }
   }, [currentSessionId, handleDeleteSession, show, hide])
 
   return {

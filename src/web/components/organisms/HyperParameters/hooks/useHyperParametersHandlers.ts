@@ -92,11 +92,8 @@ export const useHyperParametersHandlers = ({
       if (!sessionDetail.sessionId) return
       const newTemperature = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { temperature: newTemperature }
-      try {
-        await updateHyperparameters(sessionDetail.sessionId, payload)
-      } finally {
-        isInteractingReference.current = false
-      }
+      await updateHyperparameters(sessionDetail.sessionId, payload)
+      isInteractingReference.current = false
     },
     [sessionDetail, updateHyperparameters]
   )
@@ -110,11 +107,8 @@ export const useHyperParametersHandlers = ({
       if (!sessionDetail.sessionId) return
       const newTopP = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { topP: newTopP }
-      try {
-        await updateHyperparameters(sessionDetail.sessionId, payload)
-      } finally {
-        isInteractingReference.current = false
-      }
+      await updateHyperparameters(sessionDetail.sessionId, payload)
+      isInteractingReference.current = false
     },
     [sessionDetail, updateHyperparameters]
   )
@@ -128,11 +122,8 @@ export const useHyperParametersHandlers = ({
       if (!sessionDetail.sessionId) return
       const newTopK = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { topK: newTopK }
-      try {
-        await updateHyperparameters(sessionDetail.sessionId, payload)
-      } finally {
-        isInteractingReference.current = false
-      }
+      await updateHyperparameters(sessionDetail.sessionId, payload)
+      isInteractingReference.current = false
     },
     [sessionDetail, updateHyperparameters]
   )

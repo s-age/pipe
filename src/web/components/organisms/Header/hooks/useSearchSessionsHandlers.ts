@@ -28,7 +28,7 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
-  const timeoutIdReference = useRef<ReturnType<typeof window.setTimeout> | null>(null)
+  const timeoutIdReference = useRef<number | null>(null)
 
   const fetchResults = useCallback(
     async (q: string) => {
@@ -55,14 +55,12 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
     // NOTE: casting because TS lib types for setTimeout may differ between DOM and Node.
     // This is safe in browser runtime.
 
-    timeoutIdReference.current = window.setTimeout(
-      () => fetchResults(query),
-      250
-    ) as unknown as ReturnType<typeof setTimeout>
+    timeoutIdReference.current = window.setTimeout(() => fetchResults(query), 250)
 
     return (): void => {
-      if (timeoutIdReference.current)
-        window.clearTimeout(timeoutIdReference.current as unknown as number)
+      if (timeoutIdReference.current) {
+        window.clearTimeout(timeoutIdReference.current)
+      }
     }
   }, [query, fetchResults])
 
@@ -93,7 +91,12 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
 
   const handleResultPointerDown = useCallback(
     (event: MouseEvent<HTMLDivElement>): void => {
-      const id = (event.currentTarget as HTMLElement).dataset.sessionId
+      const target = event.currentTarget
+
+      // Type guard: verify target is HTMLElement
+      if (!(target instanceof HTMLElement)) return
+
+      const id = target.dataset.sessionId
       if (id) handleSelect(id)
     },
     [handleSelect]
@@ -101,7 +104,12 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
 
   const handleResultKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>): void => {
-      const id = (event.currentTarget as HTMLElement).dataset.sessionId
+      const target = event.currentTarget
+
+      // Type guard: verify target is HTMLElement
+      if (!(target instanceof HTMLElement)) return
+
+      const id = target.dataset.sessionId
       if (!id) return
       if (event.key === 'Enter' || event.key === ' ') handleSelect(id)
     },

@@ -81,7 +81,10 @@ export const useSlider = ({
       const v = Number(event.target.value)
       // call react-hook-form onChange if present (it expects the native event)
       try {
-        registerProperties?.onChange?.(event as unknown as Event)
+        // Type guard: verify nativeEvent exists
+        if (event.nativeEvent) {
+          registerProperties?.onChange?.(event.nativeEvent)
+        }
       } catch {
         // ignore
       }

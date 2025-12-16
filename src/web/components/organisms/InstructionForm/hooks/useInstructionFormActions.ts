@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 
 import { sendInstruction } from '@/lib/api/session/sendInstruction'
+import { stopSession as stopSessionApi } from '@/lib/api/session/stopSession'
 import { addToast } from '@/stores/useToastStore'
 
 export type UseInstructionFormActionsReturn = {
@@ -8,6 +9,7 @@ export type UseInstructionFormActionsReturn = {
     sessionId: string,
     instruction: string
   ) => Promise<{ message: string } | void>
+  stopSession: (sessionId: string) => Promise<void>
 }
 
 export const useInstructionFormActions = (): UseInstructionFormActionsReturn => {
@@ -36,5 +38,21 @@ export const useInstructionFormActions = (): UseInstructionFormActionsReturn => 
     []
   )
 
-  return { sendInstructionAction }
+  const stopSession = useCallback(async (sessionId: string): Promise<void> => {
+    try {
+      await stopSessionApi(sessionId)
+      addToast({
+        status: 'success',
+        title: 'Session stopped'
+      })
+    } catch (error) {
+      addToast({
+        status: 'failure',
+        title: 'Failed to stop session',
+        description: error instanceof Error ? error.message : undefined
+      })
+    }
+  }, [])
+
+  return { sendInstructionAction, stopSession }
 }

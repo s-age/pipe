@@ -80,8 +80,12 @@ export const useSelectHandlers = ({
   )
 
   const handleKeyDown = useCallback(
-    (event: ReactKeyboardEvent) =>
-      handleKeyDownNative(event.nativeEvent as KeyboardEvent),
+    (event: ReactKeyboardEvent) => {
+      // Type guard: verify nativeEvent is KeyboardEvent
+      if (event.nativeEvent instanceof KeyboardEvent) {
+        handleKeyDownNative(event.nativeEvent)
+      }
+    },
     [handleKeyDownNative]
   )
 
@@ -92,8 +96,13 @@ export const useSelectHandlers = ({
 
   const handleOptionClick = useCallback(
     (event: ReactMouseEvent<HTMLLIElement>) => {
+      const target = event.currentTarget
+
+      // Type guard: verify target is HTMLElement
+      if (!(target instanceof HTMLElement)) return
+
       // Prefer using the dataset index (reliable mapping to filteredOptions)
-      const indexString = (event.currentTarget as HTMLElement).dataset.index
+      const indexString = target.dataset.index
       if (indexString) {
         const i = Number(indexString)
         const opt = filteredOptions[i]
@@ -105,7 +114,7 @@ export const useSelectHandlers = ({
       }
 
       // Fallback: map by internal id or value
-      const v = (event.currentTarget as HTMLElement).dataset.value
+      const v = target.dataset.value
 
       // fallback mapping (diagnostics removed)
       if (v === undefined) return
@@ -119,7 +128,12 @@ export const useSelectHandlers = ({
 
   const handleMouseEnter = useCallback(
     (event: ReactMouseEvent<HTMLLIElement>) => {
-      const index_ = (event.currentTarget as HTMLElement).dataset.index
+      const target = event.currentTarget
+
+      // Type guard: verify target is HTMLElement
+      if (!(target instanceof HTMLElement)) return
+
+      const index_ = target.dataset.index
       if (index_) setHighlightedIndex(Number(index_))
     },
     [setHighlightedIndex]

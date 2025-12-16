@@ -138,23 +138,20 @@ export const useTurnHandlers = ({
 
   const handleConfirmDelete = useCallback(async (): Promise<void> => {
     if (modalIdReference.current !== null) {
-      try {
-        await deleteTurnAction(sessionId, index)
-        await onRefresh()
-        const fetchedSessionDetailResponse = await getSession(sessionId)
-        const fetchedSessionTree = await getSessionTree()
-        const newSessions = fetchedSessionTree.sessions.map(
-          ([id, session]: [string, SessionOverview]) => ({
-            ...session,
-            sessionId: id
-          })
-        )
-        refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
-      } finally {
-        // Always hide modal, even if there's an error
-        hide(modalIdReference.current)
-        modalIdReference.current = null
-      }
+      await deleteTurnAction(sessionId, index)
+      await onRefresh()
+      const fetchedSessionDetailResponse = await getSession(sessionId)
+      const fetchedSessionTree = await getSessionTree()
+      const newSessions = fetchedSessionTree.sessions.map(
+        ([id, session]: [string, SessionOverview]) => ({
+          ...session,
+          sessionId: id
+        })
+      )
+      refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
+
+      hide(modalIdReference.current)
+      modalIdReference.current = null
     }
   }, [deleteTurnAction, sessionId, index, onRefresh, refreshSessionsInStore, hide])
 
@@ -178,22 +175,19 @@ export const useTurnHandlers = ({
   }, [show, handleConfirmDelete, handleCancelDelete])
 
   const handleSaveEdit = useCallback(async (): Promise<void> => {
-    try {
-      await editTurnAction(sessionId, index, editedContent, turn)
-      await onRefresh()
-      const fetchedSessionDetailResponse = await getSession(sessionId)
-      const fetchedSessionTree = await getSessionTree()
-      const newSessions = fetchedSessionTree.sessions.map(
-        ([id, session]: [string, SessionOverview]) => ({
-          ...session,
-          sessionId: id
-        })
-      )
-      refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
-    } finally {
-      // Always exit edit mode, even if there's an error
-      setIsEditing(false)
-    }
+    await editTurnAction(sessionId, index, editedContent, turn)
+    await onRefresh()
+    const fetchedSessionDetailResponse = await getSession(sessionId)
+    const fetchedSessionTree = await getSessionTree()
+    const newSessions = fetchedSessionTree.sessions.map(
+      ([id, session]: [string, SessionOverview]) => ({
+        ...session,
+        sessionId: id
+      })
+    )
+    refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
+
+    setIsEditing(false)
   }, [
     editTurnAction,
     sessionId,

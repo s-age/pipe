@@ -31,27 +31,14 @@ export const useMultiStepReasoningHandlers = ({
 
       const checked = event.target.checked
 
-      // Capture previous value so we can revert on error
-      const previous = multiStepReasoningEnabled
-
       // Update local state for immediate UI feedback
       setLocalEnabled(checked)
 
-      try {
-        await updateMultiStepReasoning(currentSessionId, {
-          multiStepReasoningEnabled: checked
-        })
-      } catch {
-        // On error, revert local state to the previous value
-        setLocalEnabled(previous)
-      }
+      await updateMultiStepReasoning(currentSessionId, {
+        multiStepReasoningEnabled: checked
+      })
     },
-    [
-      currentSessionId,
-      multiStepReasoningEnabled,
-      updateMultiStepReasoning,
-      setLocalEnabled
-    ]
+    [currentSessionId, updateMultiStepReasoning, setLocalEnabled]
   )
 
   return { localEnabled, setLocalEnabled, handleMultiStepReasoningChange }

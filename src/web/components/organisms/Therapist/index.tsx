@@ -5,7 +5,6 @@ import { IconReload } from '@/components/atoms/IconReload'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
-import { useTherapistActions } from './hooks/useTherapistActions'
 import { useTherapistHandlers } from './hooks/useTherapistHandlers'
 import * as styles from './style.css'
 import { TherapistForm } from './TherapistForm'
@@ -23,10 +22,8 @@ export const Therapist = ({
   const sessionId = sessionDetail?.sessionId ?? ''
   const turnsCount = sessionDetail?.turns?.length ?? 0
 
-  const actions = useTherapistActions()
   const {
     diagnosis,
-    error,
     isSubmitting,
     selectedDeletions,
     selectedEdits,
@@ -35,7 +32,7 @@ export const Therapist = ({
     handleDeletionChange,
     handleEditChange,
     handleApply
-  } = useTherapistHandlers(actions, sessionId, onRefresh)
+  } = useTherapistHandlers(sessionId, onRefresh)
 
   return (
     <div className={styles.wrapper}>
@@ -62,7 +59,6 @@ export const Therapist = ({
           sessionId={sessionId}
           turnsCount={turnsCount}
           isSubmitting={isSubmitting}
-          error={error}
           handleDiagnose={handleDiagnose}
           onRefresh={onRefresh}
         />

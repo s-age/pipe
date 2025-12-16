@@ -1,17 +1,10 @@
 import { useCallback, useState } from 'react'
 
-import { applyDoctorModifications } from '@/lib/api/therapist/applyDoctorModifications'
-import { useToastStore } from '@/stores/useToastStore'
-
 import type { Diagnosis } from '../types'
-
-type TherapistActions = {
-  diagnoseSession: (sessionId: string) => Promise<Diagnosis | void>
-}
+import { useTherapistActions } from './useTherapistActions'
 
 type TherapistHandlers = {
   diagnosis: Diagnosis | null
-  error: string | null
   isSubmitting: boolean
   selectedDeletions: number[]
   selectedEdits: { turn: number; newContent: string }[]
@@ -33,12 +26,12 @@ type TherapistHandlers = {
 }
 
 export const useTherapistHandlers = (
-  actions: TherapistActions,
   sessionId: string,
   onRefresh: () => Promise<void>
 ): TherapistHandlers => {
+  const { diagnoseSession, applyModifications } = useTherapistActions()
+
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedDeletions, setSelectedDeletions] = useState<number[]>([])
   const [selectedEdits, setSelectedEdits] = useState<
@@ -48,29 +41,20 @@ export const useTherapistHandlers = (
     { start: number; end: number; reason: string }[]
   >([])
 
-  const { addToast } = useToastStore()
-
   const handleDiagnose = useCallback(async (): Promise<void> => {
-    // Clear previous diagnosis immediately so UI reflects that a new
-    // diagnosis run has started (prevents user confusion when nothing appears).
     setDiagnosis(null)
     setIsSubmitting(true)
-    setError(null)
-    try {
-      const result = await actions.diagnoseSession(sessionId)
-      if (result) {
-        setDiagnosis(result)
-        // Reset selections when new diagnosis is loaded
-        setSelectedDeletions([])
-        setSelectedEdits([])
-        setSelectedCompressions([])
-      }
-    } catch (error_) {
-      setError((error_ as Error).message)
-    } finally {
-      setIsSubmitting(false)
+
+    const result = await diagnoseSession(sessionId)
+    if (result) {
+      setDiagnosis(result)
+      setSelectedDeletions([])
+      setSelectedEdits([])
+      setSelectedCompressions([])
     }
-  }, [actions, sessionId])
+
+    setIsSubmitting(false)
+  }, [diagnoseSession, sessionId])
 
   const handleApplyModifications = useCallback(
     async (modifications: {
@@ -79,41 +63,15 @@ export const useTherapistHandlers = (
       compressions?: { start: number; end: number; reason: string }[]
     }): Promise<void> => {
       setIsSubmitting(true)
-      setError(null)
-      try {
-        const result = await applyDoctorModifications({
-          sessionId: sessionId,
-          modifications
-        })
 
-        if (result.result.status === 'Succeeded') {
-          addToast({
-            status: 'success',
-            title: 'Modifications applied successfully'
-          })
+      await applyModifications(sessionId, modifications)
 
-          setDiagnosis(null)
+      setDiagnosis(null)
+      await onRefresh()
 
-          // Refresh the session after modifications
-          onRefresh()
-        } else if (result.result.status === 'Failed') {
-          addToast({
-            status: 'failure',
-            title: 'Failed to apply modifications',
-            description: result.result.reason || 'Unknown error'
-          })
-        }
-      } catch (error_) {
-        setError((error_ as Error).message)
-        addToast({
-          status: 'failure',
-          title: 'Failed to apply modifications'
-        })
-      } finally {
-        setIsSubmitting(false)
-      }
+      setIsSubmitting(false)
     },
-    [sessionId, addToast, onRefresh]
+    [sessionId, applyModifications, onRefresh]
   )
 
   const handleDeletionChange = useCallback<
@@ -161,7 +119,6 @@ export const useTherapistHandlers = (
 
   return {
     diagnosis,
-    error,
     isSubmitting,
     selectedDeletions,
     selectedEdits,

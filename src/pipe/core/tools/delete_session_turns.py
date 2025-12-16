@@ -2,11 +2,14 @@ import os
 
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
+from pipe.core.models.results.delete_session_turns_result import (
+    DeleteSessionTurnsResult,
+)
 
 
 def delete_session_turns(
     session_id: str, turns: list[int], session_service=None
-) -> dict[str, str]:
+) -> DeleteSessionTurnsResult:
     """
     Deletes specified turns from a target session's history.
     This action is irreversible and automatically creates a backup.
@@ -30,10 +33,10 @@ def delete_session_turns(
 
         turn_service.delete_turns(session_id, indices)
 
-        return {
-            "message": (
-                f"Successfully deleted turns {turns} from session {session_id}."
-            )
-        }
+        return DeleteSessionTurnsResult(
+            message=f"Successfully deleted turns {turns} from session {session_id}."
+        )
     except Exception as e:
-        return {"error": f"Failed to delete turns from session {session_id}: {e}"}
+        return DeleteSessionTurnsResult(
+            error=f"Failed to delete turns from session {session_id}: {e}"
+        )

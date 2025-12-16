@@ -4,6 +4,10 @@ import os
 
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
+from pipe.core.models.results.read_many_files_result import (
+    FileContent,
+    ReadManyFilesResult,
+)
 
 
 # session_service and session_id are dynamically passed by the tool executor
@@ -16,7 +20,7 @@ def read_many_files(
     max_files: int = 5,  # New parameter for limiting file count
     session_service=None,  # Deprecated, kept for interface compatibility
     session_id=None,
-) -> dict[str, str | list[dict[str, str]]]:
+) -> ReadManyFilesResult:
     """
     Resolves file paths based on glob patterns and adds them to the session's
     reference list.
@@ -104,20 +108,22 @@ def read_many_files(
                 resolved_files.append(os.path.abspath(filepath))
 
         if not resolved_files:
-            return {"files": [], "message": "No files found matching the criteria."}
+            return ReadManyFilesResult(
+                files=[], message="No files found matching the criteria."
+            )
 
         # Remove duplicates
         unique_files = sorted(list(set(resolved_files)))
 
         # Validate against max_files limit
         if len(unique_files) > max_files:
-            return {
-                "error": (
+            return ReadManyFilesResult(
+                error=(
                     f"Too many files found ({len(unique_files)}). "
                     f"Maximum allowed is {max_files}. "
                     "Please refine your patterns or increase the 'max_files' limit."
                 )
-            }
+            )
 
         if session_id:
             if unique_files:  # Only add references if there are files
@@ -136,29 +142,31 @@ def read_many_files(
             try:
                 with open(fpath, encoding="utf-8") as f:
                     content = f.read()
-                file_contents.append({"path": fpath, "content": content})
+                file_contents.append(FileContent(path=fpath, content=content))
             except UnicodeDecodeError:
                 file_contents.append(
-                    {
-                        "path": fpath,
-                        "error": (
+                    FileContent(
+                        path=fpath,
+                        error=(
                             "Cannot decode file as text. It might be a binary file."
                         ),
-                    }
+                    )
                 )
             except Exception as e:
                 file_contents.append(
-                    {"path": fpath, "error": f"Failed to read file: {e}"}
+                    FileContent(path=fpath, error=f"Failed to read file: {e}")
                 )
 
-        result: dict[str, str | list[dict[str, str]]] = {"files": file_contents}
-        if session_message:
-            result["message"] = session_message
-        return result
+        return ReadManyFilesResult(
+            files=file_contents,
+            message=session_message if session_message else None,
+        )
 
     except Exception as e:
         # If session_message exists, combine it with the file read error
         if session_message:
-            return {"error": f"{session_message} Also, failed to process files: {e}"}
+            return ReadManyFilesResult(
+                error=f"{session_message} Also, failed to process files: {e}"
+            )
         else:
-            return {"error": f"Error in read_many_files tool: {str(e)}"}
+            return ReadManyFilesResult(error=f"Error in read_many_files tool: {str(e)}")

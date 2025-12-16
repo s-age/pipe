@@ -76,13 +76,12 @@ class TestGetSession(unittest.TestCase):
         )
         mock_get_settings.return_value = mock_settings
 
-        result_json = get_session(session_id=self.test_session_id)
-        result = json.loads(result_json)
+        result = get_session(session_id=self.test_session_id)
 
-        self.assertEqual(result["session_id"], self.test_session_id)
-        self.assertEqual(result["turns_count"], 2)
-        self.assertIn("User: Hello", result["turns"][0])
-        self.assertIn("Assistant: Hi there!", result["turns"][1])
+        self.assertEqual(result.session_id, self.test_session_id)
+        self.assertEqual(result.turns_count, 2)
+        self.assertIn("User: Hello", result.turns[0])
+        self.assertIn("Assistant: Hi there!", result.turns[1])
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_get_session_ignores_env_var(self, mock_get_settings):
@@ -107,12 +106,11 @@ class TestGetSession(unittest.TestCase):
 
         os.environ["PIPE_SESSION_ID"] = self.test_session_id
 
-        result_json = get_session()
-        result = json.loads(result_json)
+        result = get_session()
 
         # Should return error even if env var is set
-        self.assertIn("error", result)
-        self.assertEqual(result["error"], "session_id is required.")
+        self.assertIsNotNone(result.error)
+        self.assertEqual(result.error, "session_id is required.")
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_get_session_not_found(self, mock_get_settings):
@@ -131,15 +129,13 @@ class TestGetSession(unittest.TestCase):
         )
         mock_get_settings.return_value = mock_settings
 
-        result_json = get_session(session_id="non_existent")
-        result = json.loads(result_json)
+        result = get_session(session_id="non_existent")
 
-        self.assertIn("error", result)
-        self.assertIn("not found", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("not found", result.error)
 
     def test_get_session_no_id_no_env(self):
-        result_json = get_session()
-        result = json.loads(result_json)
+        result = get_session()
 
-        self.assertIn("error", result)
-        self.assertEqual(result["error"], "session_id is required.")
+        self.assertIsNotNone(result.error)
+        self.assertEqual(result.error, "session_id is required.")

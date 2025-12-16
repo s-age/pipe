@@ -66,7 +66,7 @@ class TestDeleteSessionTurns(unittest.TestCase):
         # Delete turn 2 (index 1)
         result = delete_session_turns(session_id=self.test_session_id, turns=[2])
 
-        self.assertIn("Successfully deleted", result.get("message", ""))
+        self.assertIn("Successfully deleted", result.message)
 
         # Verify deletion
         with open(self.session_file) as f:

@@ -99,16 +99,16 @@ def test_get_l2_prefetched_data(setup_repository):
     repo = setup_repository
 
     # Get L2 data for dir1
-    prefetched_data = repo.get_l2_prefetched_data(["dir1"], TEST_BASE_PATH)
-    assert "dir1" in prefetched_data
-    assert len(prefetched_data["dir1"]) == 2  # file2.py, subdir1
-    assert any(c.name == "file2.py" for c in prefetched_data["dir1"])
-    assert any(c.name == "subdir1" for c in prefetched_data["dir1"])
+    prefetch_result = repo.get_l2_prefetched_data(["dir1"], TEST_BASE_PATH)
+    assert "dir1" in prefetch_result.data
+    assert len(prefetch_result.data["dir1"]) == 2  # file2.py, subdir1
+    assert any(c.name == "file2.py" for c in prefetch_result.data["dir1"])
+    assert any(c.name == "subdir1" for c in prefetch_result.data["dir1"])
 
     # Get L2 data for dir2 (ignored.log is ignored)
-    prefetched_data = repo.get_l2_prefetched_data(["dir2"], TEST_BASE_PATH)
-    assert "dir2" in prefetched_data
-    assert len(prefetched_data["dir2"]) == 0  # Because ignored.log is ignored
+    prefetch_result = repo.get_l2_prefetched_data(["dir2"], TEST_BASE_PATH)
+    assert "dir2" in prefetch_result.data
+    assert len(prefetch_result.data["dir2"]) == 0  # Because ignored.log is ignored
 
 
 def test_get_ls_data(setup_repository):

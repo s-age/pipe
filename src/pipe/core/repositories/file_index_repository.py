@@ -3,7 +3,7 @@ import logging
 import os
 
 from pathspec import PathSpec
-from pipe.core.models.file_search import Level1Candidate, LsEntry
+from pipe.core.models.file_search import Level1Candidate, LsEntry, PrefetchResult
 from whoosh.fields import BOOLEAN, ID, NUMERIC, TEXT, Schema
 from whoosh.index import create_in, open_dir
 from whoosh.qparser import OrGroup, QueryParser
@@ -177,7 +177,7 @@ class FileIndexRepository:
 
     def get_l2_prefetched_data(
         self, parent_dir_names: list[str], current_base_path: str
-    ) -> dict[str, list[Level1Candidate]]:
+    ) -> PrefetchResult:
         ix = open_dir(self.index_dir)
         searcher = ix.searcher()
         prefetched_data = {}
@@ -203,7 +203,7 @@ class FileIndexRepository:
                 )
             prefetched_data[dir_name] = l2_candidates
         searcher.close()
-        return prefetched_data
+        return PrefetchResult(data=prefetched_data)
 
     def get_ls_data(self, full_path: str) -> list[LsEntry]:
         if not os.path.exists(self.index_dir):

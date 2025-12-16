@@ -42,13 +42,13 @@ class FileIndexerService:
 
         l1_dir_names = [c.name for c in level_1_candidates if c.is_dir]
 
-        level_2_prefetched = self.repository.get_l2_prefetched_data(
+        prefetch_result = self.repository.get_l2_prefetched_data(
             l1_dir_names, current_parent_path
         )
 
         return SearchL2Response(
             level_1_candidates=level_1_candidates,
-            level_2_prefetched=level_2_prefetched,
+            level_2_prefetched=prefetch_result.data,
         )
 
     def get_ls_data(self, final_path_list: list[str]) -> list[LsEntry]:

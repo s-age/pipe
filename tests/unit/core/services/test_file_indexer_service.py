@@ -5,6 +5,7 @@ import pytest
 from pipe.core.models.file_search import (  # noqa: F401
     Level1Candidate,
     LsEntry,
+    PrefetchResult,
     SearchL2Response,
 )
 from pipe.core.services.file_indexer_service import FileIndexerService
@@ -34,12 +35,14 @@ def test_search_l2_data_root_path(file_indexer_service, mock_repository):
         Level1Candidate(name="dir1", is_dir=True, path_segment="dir1"),
         Level1Candidate(name="file1.txt", is_dir=False, path_segment="file1.txt"),
     ]
-    mock_repository.get_l2_prefetched_data.return_value = {
-        "dir1": [
-            Level1Candidate(name="subdir1", is_dir=True, path_segment="subdir1"),
-            Level1Candidate(name="file2.py", is_dir=False, path_segment="file2.py"),
-        ]
-    }
+    mock_repository.get_l2_prefetched_data.return_value = PrefetchResult(
+        data={
+            "dir1": [
+                Level1Candidate(name="subdir1", is_dir=True, path_segment="subdir1"),
+                Level1Candidate(name="file2.py", is_dir=False, path_segment="file2.py"),
+            ]
+        }
+    )
 
     response = file_indexer_service.search_l2_data([], "test")
 
@@ -56,11 +59,13 @@ def test_search_l2_data_nested_path(file_indexer_service, mock_repository):
     mock_repository.search_l1_candidates.return_value = [
         Level1Candidate(name="subdir1", is_dir=True, path_segment="subdir1")
     ]
-    mock_repository.get_l2_prefetched_data.return_value = {
-        "subdir1": [
-            Level1Candidate(name="file3.md", is_dir=False, path_segment="file3.md")
-        ]
-    }
+    mock_repository.get_l2_prefetched_data.return_value = PrefetchResult(
+        data={
+            "subdir1": [
+                Level1Candidate(name="file3.md", is_dir=False, path_segment="file3.md")
+            ]
+        }
+    )
 
     current_path = ["dir1"]
     expected_parent_path = os.path.join(TEST_BASE_PATH, "dir1")

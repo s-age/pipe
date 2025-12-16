@@ -205,9 +205,7 @@ class TestReadManyFiles(unittest.TestCase):
         result = read_many_files(paths=["**/*.txt"], max_files=1)
 
         self.assertIsNotNone(result.error)
-        self.assertIn(
-            "Too many files found (2). Maximum allowed is 1.", result.error
-        )
+        self.assertIn("Too many files found (2). Maximum allowed is 1.", result.error)
 
         # Test with a higher limit that should pass
         result_pass = read_many_files(paths=["**/*.txt"], max_files=2)

@@ -87,3 +87,13 @@ class LsResponse(CamelCaseModel):
     entries: list[LsEntry] = Field(
         ..., description="List of content for the specified path"
     )
+
+
+class PrefetchResult(CamelCaseModel):
+    """
+    Result of prefetching Level 2 candidate data.
+    """
+
+    data: dict[str, list[Level1Candidate]] = Field(
+        ..., description="Mapping of directory names to their Level 1 candidates"
+    )

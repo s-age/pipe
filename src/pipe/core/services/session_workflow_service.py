@@ -12,7 +12,10 @@ from pipe.core.domains.session import fork_session
 from pipe.core.domains.session_optimization import SessionModifications
 from pipe.core.models.settings import Settings
 from pipe.core.repositories.session_repository import SessionRepository
-from pipe.core.services.session_optimization_service import DoctorResultResponse
+from pipe.core.services.session_optimization_service import (
+    DoctorResultResponse,
+    TherapistResult,
+)
 
 
 class SessionWorkflowService:
@@ -80,7 +83,7 @@ class SessionWorkflowService:
 
         return new_session.session_id
 
-    def run_takt_for_therapist(self, session_id: str) -> dict[str, str]:
+    def run_takt_for_therapist(self, session_id: str) -> TherapistResult:
         """Create therapist session and run initial takt command.
 
         This workflow initiates a therapeutic optimization process for a session.
@@ -89,7 +92,7 @@ class SessionWorkflowService:
             session_id: ID of the session to optimize
 
         Returns:
-            Dictionary with workflow result information
+            TherapistResult with workflow result information
 
         Delegates to SessionOptimizationService.
         """

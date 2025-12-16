@@ -195,15 +195,6 @@ class SessionRepository(FileRepository):
 
         return SessionIndex(sessions=sessions)
 
-    def get_index(self) -> dict[str, dict[str, str]]:
-        """Reads and returns the raw session index data (deprecated).
-
-        Use load_index() instead for type-safe access.
-        """
-        return self._locked_read_json(
-            self.index_lock_path, self.index_path, default_data={"sessions": {}}
-        )
-
     def delete(self, session_id: str) -> bool:
         """
         Deletes a session file and its entry from the index.

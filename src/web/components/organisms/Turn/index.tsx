@@ -58,7 +58,7 @@ type TurnProperties = {
   onSaveEdit?: () => void
 }
 
-const Component = ({
+export const TurnComponent = ({
   turn,
   index,
   expertMode,
@@ -228,8 +228,3 @@ const Component = ({
     </div>
   )
 }
-
-// Export a named Turn component for consistency with the project's export rules
-export const TurnComponent = Component
-
-// Default export removed — use named export `TurnComponent`

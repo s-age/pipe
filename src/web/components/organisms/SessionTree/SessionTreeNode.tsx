@@ -78,7 +78,7 @@ export const SessionTreeNode = ({
   return (
     <li
       key={node.sessionId}
-      className={`${sessionListItem} ${depthClass}`}
+      className={clsx(sessionListItem, depthClass)}
       ref={setSessionReference(node.sessionId)}
     >
       <a

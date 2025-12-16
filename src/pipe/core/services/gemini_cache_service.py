@@ -178,9 +178,7 @@ class GeminiCacheService:
                 config={  # type: ignore[arg-type]
                     "system_instruction": static_content,
                     # Convert Tool objects to dict for compatibility
-                    "tools": [
-                        tool.model_dump() for tool in tools
-                    ],  # type: ignore[misc]
+                    "tools": [tool.model_dump() for tool in tools],  # type: ignore[misc]
                     "ttl": "3600s",  # 1 hour
                 },
             )

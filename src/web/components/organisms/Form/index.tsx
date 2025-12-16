@@ -2,21 +2,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { ReactNode } from 'react'
 import React from 'react'
 import { useForm } from 'react-hook-form'
-import type {
-  UseFormProps,
-  FieldValues,
-  Resolver,
-  RegisterOptions,
-  UseFormRegisterReturn,
-  Path,
-  UseFormReturn
-} from 'react-hook-form'
+import type { UseFormProps, FieldValues, Resolver } from 'react-hook-form'
 import type { ZodTypeAny } from 'zod'
 
 import { FormContext } from './FormContext'
 import type { FormMethods } from './FormContext'
 import { useFormHandlers } from './hooks/useFormHandlers'
 import { useFormLifecycle } from './hooks/useFormLifecycle'
+import { useFormMethodsPatcher } from './hooks/useFormMethodsPatcher'
 import { formStyle } from './style.css'
 
 export { useFormContext, useOptionalFormContext } from './FormContext'
@@ -61,39 +54,8 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
 
   const { handleFormSubmit } = useFormHandlers()
 
-  // Patch the methods to allow central interception of field changes.
-  // This wraps `register` so callers don't need to change how they use the
-  // hook, but `onChange` can be observed/augmented here.
-  const patchedMethods = ((): FormMethods<TFieldValues> => {
-    // Keep original methods reference
-    const originalMethods = methods as UseFormReturn<TFieldValues>
-
-    const register = (
-      name: Path<TFieldValues>,
-      options?: RegisterOptions<TFieldValues>
-    ): UseFormRegisterReturn => {
-      const wrappedOnChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        // Central trap point for all field onChange events.
-        // Place logging, analytics, or additional handling here.
-        // Example: console.debug('Form field changed', name, event)
-        try {
-          options?.onChange?.(event)
-        } catch (error) {
-          // swallow errors from user-provided handlers to avoid breaking flow
-          // but surface debug info in development
-          // eslint-disable-next-line no-console
-          if (process.env.NODE_ENV !== 'production') console.error(error)
-        }
-      }
-
-      return originalMethods.register(name, {
-        ...options,
-        onChange: wrappedOnChange
-      })
-    }
-
-    return { ...(methods as object), register } as FormMethods<TFieldValues>
-  })()
+  // Patch the methods to allow central interception of field changes
+  const patchedMethods = useFormMethodsPatcher(methods)
 
   return (
     <FormContext.Provider value={patchedMethods as FormMethods<FieldValues>}>

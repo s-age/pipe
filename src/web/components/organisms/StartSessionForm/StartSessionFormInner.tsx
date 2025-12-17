@@ -1,4 +1,5 @@
 import type { JSX } from 'react'
+import { useWatch } from 'react-hook-form'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
@@ -24,6 +25,7 @@ import {
   primaryButton,
   secondaryButton
 } from './style.css'
+import { MultiStepReasoning } from '../MultiStepReasoning'
 
 type StartSessionFormInnerProperties = {
   sessionDetail: SessionDetail
@@ -44,6 +46,14 @@ export const StartSessionFormInner = ({
   const formContext = useOptionalFormContext()
   const register = formContext?.register
   const errors = formContext?.formState?.errors
+  const control = formContext?.control
+
+  // Watch the multiStepReasoningEnabled field from the form
+  const multiStepReasoningEnabled = useWatch({
+    control,
+    name: 'multiStepReasoningEnabled',
+    defaultValue: false
+  })
 
   // Debug exposure removed.
 
@@ -91,6 +101,11 @@ export const StartSessionFormInner = ({
         <ReferenceList sessionDetail={sessionDetail} refreshSessions={dummyHandler} />
 
         <HyperParameters sessionDetail={sessionDetail} />
+
+        <MultiStepReasoning
+          multiStepReasoningEnabled={multiStepReasoningEnabled}
+          currentSessionId=""
+        />
 
         <div className={buttonBar}>
           <Button

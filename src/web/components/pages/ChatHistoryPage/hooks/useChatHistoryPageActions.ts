@@ -52,11 +52,6 @@ export const useChatHistoryPageActions = ({
           // No sessions returned: ensure session detail is updated but don't touch sessions
           refreshSessions(data.currentSession ?? null)
         }
-
-        addToast({
-          status: 'success',
-          title: 'Sessions refreshed successfully'
-        })
       } catch (error: unknown) {
         addToast({
           status: 'failure',

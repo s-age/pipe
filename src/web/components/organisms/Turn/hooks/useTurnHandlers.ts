@@ -110,10 +110,14 @@ export const useTurnHandlers = ({
   const handleStartEdit = useCallback((): void => setIsEditing(true), [setIsEditing])
 
   const handleConfirmFork = useCallback(async (): Promise<void> => {
-    if (modalIdReference.current !== null) {
-      await forkSessionAction(sessionId, index)
-      hide(modalIdReference.current)
-      modalIdReference.current = null
+    const currentModalId = modalIdReference.current
+    if (currentModalId !== null) {
+      try {
+        await forkSessionAction(sessionId, index)
+      } finally {
+        hide(currentModalId)
+        modalIdReference.current = null
+      }
     }
   }, [forkSessionAction, sessionId, index, hide])
 
@@ -137,21 +141,24 @@ export const useTurnHandlers = ({
   }, [show, handleConfirmFork, handleCancelFork])
 
   const handleConfirmDelete = useCallback(async (): Promise<void> => {
-    if (modalIdReference.current !== null) {
-      await deleteTurnAction(sessionId, index)
-      await onRefresh()
-      const fetchedSessionDetailResponse = await getSession(sessionId)
-      const fetchedSessionTree = await getSessionTree()
-      const newSessions = fetchedSessionTree.sessions.map(
-        ([id, session]: [string, SessionOverview]) => ({
-          ...session,
-          sessionId: id
-        })
-      )
-      refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
-
-      hide(modalIdReference.current)
-      modalIdReference.current = null
+    const currentModalId = modalIdReference.current
+    if (currentModalId !== null) {
+      try {
+        await deleteTurnAction(sessionId, index)
+        await onRefresh()
+        const fetchedSessionDetailResponse = await getSession(sessionId)
+        const fetchedSessionTree = await getSessionTree()
+        const newSessions = fetchedSessionTree.sessions.map(
+          ([id, session]: [string, SessionOverview]) => ({
+            ...session,
+            sessionId: id
+          })
+        )
+        refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
+      } finally {
+        hide(currentModalId)
+        modalIdReference.current = null
+      }
     }
   }, [deleteTurnAction, sessionId, index, onRefresh, refreshSessionsInStore, hide])
 
@@ -175,19 +182,21 @@ export const useTurnHandlers = ({
   }, [show, handleConfirmDelete, handleCancelDelete])
 
   const handleSaveEdit = useCallback(async (): Promise<void> => {
-    await editTurnAction(sessionId, index, editedContent, turn)
-    await onRefresh()
-    const fetchedSessionDetailResponse = await getSession(sessionId)
-    const fetchedSessionTree = await getSessionTree()
-    const newSessions = fetchedSessionTree.sessions.map(
-      ([id, session]: [string, SessionOverview]) => ({
-        ...session,
-        sessionId: id
-      })
-    )
-    refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
-
-    setIsEditing(false)
+    try {
+      await editTurnAction(sessionId, index, editedContent, turn)
+      await onRefresh()
+      const fetchedSessionDetailResponse = await getSession(sessionId)
+      const fetchedSessionTree = await getSessionTree()
+      const newSessions = fetchedSessionTree.sessions.map(
+        ([id, session]: [string, SessionOverview]) => ({
+          ...session,
+          sessionId: id
+        })
+      )
+      refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
+    } finally {
+      setIsEditing(false)
+    }
   }, [
     editTurnAction,
     sessionId,

@@ -43,6 +43,13 @@ class SessionManagementController:
             archives = []
             for item in sessions_list:
                 session_data = item.session_data or {}
+                # Handle null multi_step_reasoning_enabled (convert to False)
+                multi_step_reasoning = session_data.get(
+                    "multi_step_reasoning_enabled", False
+                )
+                if multi_step_reasoning is None:
+                    multi_step_reasoning = False
+
                 archives.append(
                     ArchiveSession(
                         session_id=item.session_id or "",
@@ -52,9 +59,7 @@ class SessionManagementController:
                         roles=session_data.get("roles", []),
                         procedure=session_data.get("procedure", ""),
                         artifacts=session_data.get("artifacts", []),
-                        multi_step_reasoning_enabled=session_data.get(
-                            "multi_step_reasoning_enabled", False
-                        ),
+                        multi_step_reasoning_enabled=multi_step_reasoning,
                         token_count=session_data.get("token_count", 0),
                         last_updated_at=session_data.get("last_updated", ""),
                         deleted_at=item.deleted_at or "",

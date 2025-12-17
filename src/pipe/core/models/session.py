@@ -143,6 +143,11 @@ class Session(CamelCaseModel):
     @model_validator(mode="before")
     @classmethod
     def _preprocess_data(cls, data: SessionInputData) -> SessionInputData:
+        # Preprocess multi_step_reasoning_enabled (convert null to False)
+        if "multi_step_reasoning_enabled" in data:
+            if data["multi_step_reasoning_enabled"] is None:
+                data["multi_step_reasoning_enabled"] = False
+
         # Preprocess todos
         if "todos" in data:
             if data["todos"] is None:

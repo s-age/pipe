@@ -23,7 +23,11 @@ export const MultiStepReasoning = ({
 
   return (
     <MetaItem>
-      <InputCheckbox checked={localEnabled} onChange={handleMultiStepReasoningChange}>
+      <InputCheckbox
+        name="multiStepReasoningEnabled"
+        checked={localEnabled}
+        onChange={handleMultiStepReasoningChange}
+      >
         <strong className={multiStepLabel}>Multi-step Reasoning</strong>
       </InputCheckbox>
     </MetaItem>

@@ -32,6 +32,8 @@ class TestMetaApi(unittest.TestCase):
 
     def test_edit_session_meta_api_success(self):
         """Tests successfully editing session metadata via API."""
+        from pipe.core.models.session import SessionMetaUpdate
+
         session_id = "sid"
         payload = {"purpose": "New Purpose"}
 
@@ -42,6 +44,8 @@ class TestMetaApi(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.mock_session_meta_service.edit_session_meta.assert_called_once_with(
-            session_id, payload
-        )
+        # Verify that edit_session_meta was called with SessionMetaUpdate model
+        call_args = self.mock_session_meta_service.edit_session_meta.call_args
+        self.assertEqual(call_args[0][0], session_id)
+        self.assertIsInstance(call_args[0][1], SessionMetaUpdate)
+        self.assertEqual(call_args[0][1].purpose, "New Purpose")

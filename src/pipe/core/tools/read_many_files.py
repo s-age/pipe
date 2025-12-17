@@ -2,6 +2,7 @@ import fnmatch
 import os
 import sys
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.models.results.read_many_files_result import (
@@ -9,7 +10,6 @@ from pipe.core.models.results.read_many_files_result import (
     ReadManyFilesResult,
 )
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
 from pipe.core.utils.path import get_project_root
 
 
@@ -46,7 +46,7 @@ def read_many_files(
 
     project_root = get_project_root()
 
-    repo = FileSystemRepository(project_root)
+    repo = FileRepositoryFactory.create()
 
     # If reference_service is not provided (not injected), try to create it
     if session_id and not reference_service:

@@ -1,8 +1,7 @@
 import subprocess
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
-from pipe.core.utils.path import get_project_root
 from pydantic import BaseModel
 
 
@@ -40,9 +39,8 @@ def py_checker(project_root: str) -> ToolResult[PyCheckerResult]:
         and any errors encountered.
     """
     try:
-        # Use FileSystemRepository for consistent security checks
-        allowed_root = get_project_root()
-        repo = FileSystemRepository(allowed_root)
+        # Create repository (auto-loads project_root and settings)
+        repo = FileRepositoryFactory.create()
 
         # Validate and get absolute path
         if not repo.exists(project_root):
@@ -115,9 +113,7 @@ def py_checker(project_root: str) -> ToolResult[PyCheckerResult]:
             return ToolResult(error=f"Error running mypy: {str(e)}")
 
         # Overall success
-        ruff_check_success = (
-            results.ruff_check.success if results.ruff_check else False
-        )
+        ruff_check_success = results.ruff_check.success if results.ruff_check else False
         ruff_format_success = (
             results.ruff_format.success if results.ruff_format else False
         )

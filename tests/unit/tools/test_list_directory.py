@@ -11,10 +11,18 @@ class TestListDirectoryTool(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
 
-        # Patch get_project_root
-        self.patcher = patch("pipe.core.tools.list_directory.get_project_root")
-        self.mock_get_project_root = self.patcher.start()
-        self.mock_get_project_root.return_value = self.test_dir
+        # Patch FileRepositoryFactory.create to use test directory
+        self.patcher = patch(
+            "pipe.core.tools.list_directory.FileRepositoryFactory.create"
+        )
+        self.mock_factory = self.patcher.start()
+
+        # Import after patching to get the real repository classes
+        from pipe.core.repositories.sandbox_file_repository import (
+            SandboxFileRepository,
+        )
+
+        self.mock_factory.return_value = SandboxFileRepository(self.test_dir)
 
         # Create dummy files and directories
         with open(os.path.join(self.test_dir, "file1.txt"), "w") as f:

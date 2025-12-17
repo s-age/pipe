@@ -1,7 +1,6 @@
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.results.list_directory_result import ListDirectoryResult
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
-from pipe.core.utils.path import get_project_root
 
 
 def list_directory(
@@ -12,8 +11,7 @@ def list_directory(
     Lists the names of files and subdirectories directly within a specified directory.
     """
     try:
-        project_root = get_project_root()
-        repo = FileSystemRepository(project_root)
+        repo = FileRepositoryFactory.create()
 
         files, directories = repo.list_directory(path, ignore=ignore)
 

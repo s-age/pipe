@@ -1,10 +1,9 @@
 import difflib
 import os
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.results.write_file_result import WriteFileResult
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
-from pipe.core.utils.path import get_project_root
 
 
 def write_file(
@@ -14,12 +13,12 @@ def write_file(
     Writes content to a specified file.
     """
     try:
+        # Normalize project_root if provided
         if project_root:
             project_root = os.path.abspath(project_root)
-        else:
-            project_root = get_project_root()
 
-        repo = FileSystemRepository(project_root)
+        # Create repository (auto-loads project_root and settings)
+        repo = FileRepositoryFactory.create(project_root)
 
         original_content = ""
         if repo.exists(file_path) and repo.is_file(file_path):

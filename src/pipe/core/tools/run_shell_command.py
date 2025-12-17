@@ -1,8 +1,8 @@
 import subprocess
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.results.run_shell_command_result import RunShellCommandResult
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
 from pipe.core.utils.path import get_project_root
 
 
@@ -14,7 +14,7 @@ def run_shell_command(
     try:
         # Get project root and create repository
         project_root = get_project_root()
-        repo = FileSystemRepository(project_root)
+        repo = FileRepositoryFactory.create()
 
         # Determine the directory to run the command in
         if directory:

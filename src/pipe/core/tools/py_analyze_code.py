@@ -1,8 +1,7 @@
 import ast
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
-from pipe.core.utils.path import get_project_root
 from pydantic import BaseModel, Field
 
 
@@ -29,8 +28,7 @@ def py_analyze_code(file_path: str) -> ToolResult[AnalyzeCodeResult]:
     Analyzes the AST of the given Python file for symbol information.
     """
     try:
-        project_root = get_project_root()
-        repo = FileSystemRepository(project_root)
+        repo = FileRepositoryFactory.create()
 
         # セキュリティチェック付きで存在確認
         if not repo.exists(file_path):

@@ -14,10 +14,16 @@ class TestReplaceTool(unittest.TestCase):
         with open(self.file_path, "w") as f:
             f.write("Hello world, this is a test.\nHello again!")
 
-        # Patch get_project_root
-        self.patcher = patch("pipe.core.tools.replace.get_project_root")
-        self.mock_get_project_root = self.patcher.start()
-        self.mock_get_project_root.return_value = self.test_path
+        # Patch FileRepositoryFactory.create to use test directory
+        self.patcher = patch("pipe.core.tools.replace.FileRepositoryFactory.create")
+        self.mock_factory = self.patcher.start()
+
+        # Import after patching to get the real repository classes
+        from pipe.core.repositories.sandbox_file_repository import (
+            SandboxFileRepository,
+        )
+
+        self.mock_factory.return_value = SandboxFileRepository(self.test_path)
 
     def tearDown(self):
         self.patcher.stop()
@@ -72,8 +78,8 @@ class TestReplaceTool(unittest.TestCase):
             file_path="/etc/passwd", instruction="...", old_string="a", new_string="b"
         )
         self.assertIsNotNone(result.error)
-        # FileSystemRepository.exists returns False for paths outside project root
-        self.assertIn("File not found", result.error)
+        # SandboxFileRepository raises error for paths outside project root
+        self.assertIn("not allowed", result.error)
 
     def test_blocked_path(self):
         # Create a fake .git directory to test protection

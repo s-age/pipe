@@ -1,8 +1,8 @@
 import os
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.results.glob_result import GlobResult
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
 from pipe.core.utils.path import get_project_root
 
 
@@ -14,7 +14,7 @@ def glob(
     """
     try:
         project_root = get_project_root()
-        repo = FileSystemRepository(project_root)
+        repo = FileRepositoryFactory.create()
 
         search_path = path if path else project_root
 

@@ -1,10 +1,10 @@
 import os
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.models.results.read_file_result import ReadFileResult
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
 from pipe.core.utils.path import get_project_root
 
 
@@ -30,9 +30,9 @@ def read_file(
         session_id: Session ID for reference management (injected by tool executor)
         reference_service: Reference service instance (injected by tool executor)
     """
+    # Create repository (auto-loads project_root and settings)
+    repo = FileRepositoryFactory.create()
     project_root = get_project_root()
-
-    repo = FileSystemRepository(project_root)
 
     if not repo.exists(absolute_path):
         return ToolResult(error=f"File not found: {absolute_path}")

@@ -1,8 +1,7 @@
 import ast
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
-from pipe.core.utils.path import get_project_root
 from pydantic import BaseModel
 
 
@@ -20,8 +19,7 @@ def py_get_code_snippet(
     指定されたファイルから特定のシンボルのコードスニペットを抽出する。
     """
     try:
-        project_root = get_project_root()
-        repo = FileSystemRepository(project_root)
+        repo = FileRepositoryFactory.create()
 
         # セキュリティチェック付きで存在確認
         if not repo.exists(file_path):

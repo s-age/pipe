@@ -33,6 +33,7 @@ class Settings(CamelCaseModel):
     reference_ttl: int = 3
     tool_response_expiration: int = 3
     timezone: str = "UTC"
+    enable_sandbox: bool = True
 
     def to_api_dict(self) -> dict:
         """Convert settings to API-friendly dictionary format.

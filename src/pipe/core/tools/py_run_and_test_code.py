@@ -7,12 +7,11 @@ import os
 import subprocess
 import tempfile
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.results.py_run_and_test_code_result import (
     PyRunAndTestCodeResult,
 )
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
-from pipe.core.utils.path import get_project_root
 
 
 def py_run_and_test_code(
@@ -25,8 +24,8 @@ def py_run_and_test_code(
     """
     # file_path のセキュリティチェック
     try:
-        project_root = get_project_root()
-        repo = FileSystemRepository(project_root)
+        # Create repository (auto-loads project_root and settings)
+        repo = FileRepositoryFactory.create()
 
         # ファイルの存在確認とセキュリティチェック
         if not repo.exists(file_path):

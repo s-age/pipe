@@ -1,9 +1,8 @@
 import difflib
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.results.replace_result import ReplaceResult
 from pipe.core.models.tool_result import ToolResult
-from pipe.core.repositories.filesystem_repository import FileSystemRepository
-from pipe.core.utils.path import get_project_root
 
 
 def replace(
@@ -13,8 +12,8 @@ def replace(
     Replaces text within a file.
     """
     try:
-        project_root = get_project_root()
-        repo = FileSystemRepository(project_root)
+        # Create repository (auto-loads project_root and settings)
+        repo = FileRepositoryFactory.create()
 
         if not repo.exists(file_path):
             return ToolResult(error=f"File not found: {file_path}")

@@ -230,4 +230,3 @@ class Session(CamelCaseModel):
         # Configure the reference collection with the instance-specific TTL
         if self.references:
             self.references.default_ttl = self._reference_ttl
-

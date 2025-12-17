@@ -4,6 +4,7 @@ import subprocess
 from typing import TypedDict
 
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.utils.path import get_project_root
 
 
 class TSReference(TypedDict):
@@ -52,9 +53,7 @@ def ts_get_references(
         script_path = os.path.abspath(script_path)
 
         # Calculate project_root internally
-        project_root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..")
-        )
+        project_root = get_project_root()
 
         command = [
             "npx",

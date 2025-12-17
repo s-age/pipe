@@ -3,10 +3,10 @@ import sys
 from typing import TYPE_CHECKING
 
 from pipe.core.models.reference import Reference
-from pipe.core.utils.file import read_text_file
 
 if TYPE_CHECKING:
     from pipe.core.collections.references import ReferenceCollection
+    from pipe.core.repositories.resource_repository import ResourceRepository
 
 
 def add_reference(
@@ -51,22 +51,10 @@ def toggle_reference_disabled(references_collection: "ReferenceCollection", path
     references_collection.sort_by_ttl()
 
 
-def decrement_all_references_ttl(references_collection: "ReferenceCollection"):
-    for ref in references_collection:
-        if not ref.disabled and not ref.persist:
-            current_ttl = (
-                ref.ttl if ref.ttl is not None else references_collection.default_ttl
-            )
-            current_ttl -= 1
-            ref.ttl = current_ttl
-            if current_ttl <= 0:
-                ref.disabled = True
-                ref.ttl = 0
-    references_collection.sort_by_ttl()
-
-
 def get_references_for_prompt(
-    references_collection: "ReferenceCollection", project_root: str
+    references_collection: "ReferenceCollection",
+    resource_repository: "ResourceRepository",
+    project_root: str,
 ):
     abs_project_root = os.path.abspath(project_root)
     for ref in references_collection.data:
@@ -82,7 +70,7 @@ def get_references_for_prompt(
                         file=sys.stderr,
                     )
                     continue
-                content = read_text_file(full_path)
+                content = resource_repository.read_text(full_path, project_root)
                 if content is not None:
                     yield {"path": ref.path, "content": content}
                 else:
@@ -91,6 +79,11 @@ def get_references_for_prompt(
                         f"{full_path}",
                         file=sys.stderr,
                     )
+            except (FileNotFoundError, ValueError) as e:
+                print(
+                    f"Warning: Could not process reference file {ref.path}: {e}",
+                    file=sys.stderr,
+                )
             except Exception as e:
                 print(
                     f"Warning: Could not process reference file {ref.path}: {e}",
@@ -98,13 +91,13 @@ def get_references_for_prompt(
                 )
 
 
-def decrement_all_references_ttl_with_persist(
+def decrement_all_references_ttl(
     references_collection: "ReferenceCollection",
 ):
     """Decrement TTL for all non-disabled, non-persisted references.
 
     Sets disabled=True and ttl=0 when TTL reaches 0 or below.
-    This version respects the persist flag (unlike decrement_all_references_ttl).
+    Respects the persist flag, not decrementing persisted references.
     """
     for ref in references_collection:
         if not ref.disabled and not ref.persist:
@@ -116,3 +109,4 @@ def decrement_all_references_ttl_with_persist(
             if current_ttl <= 0:
                 ref.disabled = True
                 ref.ttl = 0
+    references_collection.sort_by_ttl()

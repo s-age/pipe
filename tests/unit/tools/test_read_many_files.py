@@ -98,7 +98,6 @@ class TestReadManyFiles(unittest.TestCase):
         self.assertEqual(file_contents[abs_file1], "content1")
         self.assertIn(abs_file2, file_contents)
         self.assertEqual(file_contents[abs_file2], "content2")
-        self.assertIn("Added 2 files", result.data.message)
 
         # Verify session file
         with open(self.session_file) as f:
@@ -132,12 +131,6 @@ class TestReadManyFiles(unittest.TestCase):
         self.assertIn(abs_file1, file_contents)
         self.assertEqual(file_contents[abs_file1], "content1")
         self.assertNotIn(abs_file2, file_contents)  # file2 should be excluded
-
-        # Verify message
-        self.assertIsNotNone(result.data.message)
-        # The message will still indicate files added to references because
-        # PIPE_SESSION_ID is set
-        self.assertIn("Added 1 files", result.data.message)
 
         with open(self.session_file) as f:
             data = json.load(f)
@@ -179,12 +172,8 @@ class TestReadManyFiles(unittest.TestCase):
         references = data.get("references", [])
         self.assertEqual(len(references), 0)
 
-        # Assert message indicates no active session
-        self.assertIsNotNone(result.data.message)
-        self.assertIn(
-            "No active session. Files were not added to references.",
-            result.data.message,
-        )
+        # When no session ID is provided, no message should be present
+        self.assertIsNone(result.data.message)
 
     def test_read_many_files_no_match(self):
         result = read_many_files(paths=["**/*.xyz"])  # A pattern that won't match
@@ -192,19 +181,27 @@ class TestReadManyFiles(unittest.TestCase):
 
         self.assertIsNotNone(result.data.files)
         self.assertEqual(len(result.data.files), 0)
-        self.assertIsNotNone(result.data.message)
         self.assertEqual(result.data.message, "No files found matching the criteria.")
 
     def test_read_many_files_max_limit_exceeded(self):
-        # Default max_files is 5. We have 2 .txt files.
-        # Set max_files to 1, expecting it to fail.
+        # Default max_files is 20. We have 2 .txt files.
+        # Set max_files to 1, expecting it to truncate to 1 file with a warning.
         result = read_many_files(paths=["**/*.txt"], max_files=1)
 
-        self.assertIsNotNone(result.error)
-        self.assertIn("Too many files found (2). Maximum allowed is 1.", result.error)
+        # Should succeed but truncate
+        self.assertIsNone(result.error)
+        self.assertIsNotNone(result.data.files)
+        self.assertEqual(len(result.data.files), 1)
 
-        # Test with a higher limit that should pass
+        # Should have a truncation warning message
+        self.assertIsNotNone(result.data.message)
+        self.assertIn("Found 2 files but showing only the first 1", result.data.message)
+
+        # Test with a higher limit that includes all files (no truncation)
         result_pass = read_many_files(paths=["**/*.txt"], max_files=2)
         self.assertIsNone(result_pass.error)
         self.assertIsNotNone(result_pass.data.files)
         self.assertEqual(len(result_pass.data.files), 2)
+        # No truncation warning
+        if result_pass.data.message:
+            self.assertNotIn("Found", result_pass.data.message)

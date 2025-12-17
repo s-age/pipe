@@ -7,6 +7,7 @@ from pipe.core.models.results.ts_find_similar_code_result import (
     TSFindSimilarCodeResult,
 )
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.utils.path import get_project_root
 
 
 def ts_find_similar_code(
@@ -36,9 +37,7 @@ def ts_find_similar_code(
     search_directory = os.path.abspath(search_directory)
 
     # Calculate project_root internally
-    project_root = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..")
-    )
+    project_root = get_project_root()
 
     try:
         # Call ts_analyzer.ts with the new find_similar_code action

@@ -90,11 +90,13 @@ class PromptFactory:
         )
 
         # 3. Build Roles
-        roles = PromptRoles.build(session.roles, self.project_root)
+        roles = PromptRoles.build(session.roles, self.resource_repository)
 
         # 4. Build File References
         references_with_content = list(
-            get_references_for_prompt(session.references, self.project_root)
+            get_references_for_prompt(
+                session.references, self.resource_repository, self.project_root
+            )
         )
         prompt_references = [
             PromptFileReference(**ref) for ref in references_with_content

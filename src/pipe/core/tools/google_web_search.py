@@ -4,6 +4,7 @@ import sys
 from typing import TypedDict
 
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.utils.path import get_project_root
 
 
 class WebSearchResult(TypedDict, total=False):
@@ -22,9 +23,7 @@ def google_web_search(query: str) -> ToolResult[WebSearchResult]:
         return ToolResult(error="google_web_search called without a query.")
 
     try:
-        project_root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
-        )
+        project_root = get_project_root()
         src_path = os.path.join(project_root, "src")
         agent_path = os.path.join(src_path, "pipe", "core", "agents", "search_agent.py")
         command = f'PYTHONPATH={src_path} {sys.executable} {agent_path} "{query}"'

@@ -3,6 +3,7 @@ import subprocess
 
 from pipe.core.models.results.run_shell_command_result import RunShellCommandResult
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.utils.path import get_project_root
 
 
 def run_shell_command(
@@ -12,7 +13,7 @@ def run_shell_command(
 ) -> ToolResult[RunShellCommandResult]:
     try:
         # Determine the directory to run the command in
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        project_root = get_project_root()
         if directory:
             target_directory = os.path.abspath(directory)
             if not os.path.isdir(target_directory):

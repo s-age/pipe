@@ -8,6 +8,7 @@ from flask_cors import CORS
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.utils.file import read_text_file
+from pipe.core.utils.path import get_project_root
 from pipe.web.controllers import (
     SessionChatController,
     SessionManagementController,
@@ -83,11 +84,8 @@ def create_app(
     Returns:
         The configured Flask application.
     """
-    # Correctly determine the project root, which is three levels up from the
-    # current script
-    project_root = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..")
-    )
+    # Correctly determine the project root
+    project_root = get_project_root()
 
     # Define paths for templates and static assets relative to the corrected
     # project root
@@ -267,9 +265,7 @@ if __name__ == "__main__":
     # Create application with index initialization
     app = create_app(init_index=True)
 
-    project_root = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..")
-    )
+    project_root = get_project_root()
     project_root_for_check = os.path.dirname(os.path.abspath(__file__))
     if check_and_show_warning(project_root_for_check):
         app.run(host="0.0.0.0", port=5001, debug=False)

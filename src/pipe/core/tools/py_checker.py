@@ -3,6 +3,7 @@ import subprocess
 from typing import TypedDict
 
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.utils.path import get_project_root
 
 
 class CheckStepResult(TypedDict):
@@ -40,9 +41,7 @@ def py_checker(project_root: str) -> ToolResult[PyCheckerResult]:
     """
     try:
         # Safety check: ensure project_root is within the allowed project root
-        allowed_root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
-        )
+        allowed_root = get_project_root()
         abs_project_root = os.path.abspath(project_root)
         if not abs_project_root.startswith(allowed_root):
             return ToolResult(

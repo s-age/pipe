@@ -27,7 +27,7 @@ import sys
 import traceback
 import warnings
 from functools import lru_cache
-from typing import TYPE_CHECKING, Union, get_args, get_type_hints
+from typing import Union, get_args, get_type_hints
 
 # Add src directory to Python path BEFORE local imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
@@ -36,20 +36,21 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src"
 warnings.filterwarnings("ignore", message=".*is not a Python type.*\n")
 warnings.filterwarnings("ignore", message="Field name .* shadows an attribute")
 
-from pydantic import BaseModel  # noqa: E402
-
-if TYPE_CHECKING:
-    from pipe.core.factories.service_factory import ServiceFactory
-    from pipe.core.models.settings import Settings
-
+from pipe.core.factories.service_factory import ServiceFactory  # noqa: E402
+from pipe.core.models.settings import Settings  # noqa: E402
+from pipe.core.repositories.settings_repository import (  # noqa: E402
+    SettingsRepository,
+)
 from pipe.core.repositories.streaming_repository import (  # noqa: E402
     StreamingRepository,
 )
 from pipe.core.utils.datetime import get_current_timestamp  # noqa: E402
-from pipe.core.utils.file import append_to_text_file, read_yaml_file  # noqa: E402
+from pipe.core.utils.file import append_to_text_file  # noqa: E402
+from pipe.core.utils.path import get_project_root  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
 
 # --- Global Paths ---
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+BASE_DIR = get_project_root()
 TOOLS_DIR = os.path.join(BASE_DIR, "src", "pipe", "core", "tools")
 SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
 
@@ -64,13 +65,14 @@ def initialize_services():
     """
     Initialize global services once to avoid repeated file I/O and object creation.
     This significantly improves performance for tool execution.
+
+    Uses SettingsRepository for efficient settings loading with caching.
     """
     global _SETTINGS, _SERVICE_FACTORY, _SESSION_SERVICE, _SESSION_TURN_SERVICE
     if _SETTINGS is None:
         project_root = BASE_DIR
-        config_path = os.path.join(project_root, "setting.yml")
-        settings_dict = read_yaml_file(config_path)
-        _SETTINGS = Settings(**settings_dict)
+        settings_repo = SettingsRepository(project_root)
+        _SETTINGS = settings_repo.load()
         _SERVICE_FACTORY = ServiceFactory(project_root, _SETTINGS)
         _SESSION_SERVICE = _SERVICE_FACTORY.create_session_service()
         _SESSION_TURN_SERVICE = _SERVICE_FACTORY.create_session_turn_service()

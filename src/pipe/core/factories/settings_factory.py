@@ -1,24 +1,31 @@
-import os
-
 from pipe.core.models.settings import Settings
-from pipe.core.utils.file import read_yaml_file
+from pipe.core.repositories.settings_repository import SettingsRepository
 
 
 class SettingsFactory:
-    """Factory for creating Settings instances."""
+    """
+    Factory for creating Settings instances.
+
+    Note: This factory now uses SettingsRepository internally. For new code,
+    consider using SettingsRepository directly for better testability and
+    more control over caching behavior.
+    """
 
     @staticmethod
     def get_settings(project_root: str) -> Settings:
         """
         Loads the settings from the configuration file.
         Prioritizes 'setting.yml' over 'setting.default.yml'.
+
+        Args:
+            project_root: The root directory of the project.
+
+        Returns:
+            A validated Settings model instance.
+
+        Note:
+            This method now delegates to SettingsRepository. Results are cached
+            within the repository instance created for this call.
         """
-        config_path = os.path.join(project_root, "setting.yml")
-        if not os.path.exists(config_path):
-            config_path = os.path.join(project_root, "setting.default.yml")
-
-        if not os.path.exists(config_path):
-            raise FileNotFoundError("Could not find setting.yml or setting.default.yml")
-
-        config_data = read_yaml_file(config_path)
-        return Settings(**config_data)
+        repository = SettingsRepository(project_root=project_root)
+        return repository.load()

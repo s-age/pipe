@@ -6,6 +6,7 @@ import google.genai as genai
 from google.genai import types
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_yaml_file
+from pipe.core.utils.path import get_project_root
 
 # Suppress specific UserWarning from pydantic
 warnings.filterwarnings(
@@ -54,9 +55,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     query = sys.argv[1]
-    project_root = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
-    )
+    project_root = get_project_root()
 
     settings_dict = read_yaml_file(os.path.join(project_root, "setting.yml"))
     settings = Settings(**settings_dict)

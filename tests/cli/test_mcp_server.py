@@ -235,7 +235,7 @@ class TestExecuteTool(unittest.TestCase):
             execute_tool("../../bad", {})
 
 
-@patch("pipe.cli.mcp_server.read_yaml_file")
+@patch("pipe.cli.mcp_server.SettingsRepository")
 @patch("pipe.cli.mcp_server.get_tool_definitions")
 @patch("pipe.cli.mcp_server.execute_tool")
 @patch("pipe.cli.mcp_server.select.select")
@@ -249,7 +249,7 @@ class TestMainLoop(unittest.TestCase):
         mock_select,
         mock_execute,
         mock_get_defs,
-        mock_read_yaml,
+        mock_settings_repo,
     ):
         """Tests handling of a standard 'initialize' request."""
         mock_get_defs.return_value = [{"name": "test_tool"}]
@@ -281,19 +281,15 @@ class TestMainLoop(unittest.TestCase):
         mock_select,
         mock_execute,
         mock_get_defs,
-        mock_read_yaml,
+        mock_settings_repo,
     ):
         """Tests handling of a 'tools/call' request."""
         mock_execute.return_value = {"data": "success"}
-        mock_read_yaml.return_value = {
-            "timezone": "UTC",
-            "api_mode": "gemini-cli",
-            "parameters": {
-                "temperature": {"value": 0.1, "description": "t"},
-                "top_p": {"value": 0.2, "description": "p"},
-                "top_k": {"value": 10, "description": "k"},
-            },
-        }
+        # Mock the SettingsRepository to return a Settings mock
+        mock_repo_instance = MagicMock()
+        mock_settings = MagicMock()
+        mock_repo_instance.load.return_value = mock_settings
+        mock_settings_repo.return_value = mock_repo_instance
         request = {
             "jsonrpc": "2.0",
             "id": "2",
@@ -322,7 +318,7 @@ class TestMainLoop(unittest.TestCase):
         mock_select,
         mock_execute,
         mock_get_defs,
-        mock_read_yaml,
+        mock_settings_repo,
     ):
         """Tests the response for an unknown method."""
         request = {"jsonrpc": "2.0", "id": "3", "method": "foo/bar"}

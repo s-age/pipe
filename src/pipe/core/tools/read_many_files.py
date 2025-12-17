@@ -18,7 +18,7 @@ def read_many_files(
     include: list[str] | None = None,
     recursive: bool = True,
     useDefaultExcludes: bool = True,
-    max_files: int = 5,  # New parameter for limiting file count
+    max_files: int = 20,  # Maximum number of files to read
     session_service=None,  # Deprecated, kept for interface compatibility
     session_id=None,
 ) -> ToolResult[ReadManyFilesResult]:
@@ -32,22 +32,17 @@ def read_many_files(
     project_root = os.getcwd()
 
     # If no session ID is provided, skip reference management
+    reference_service = None
     if session_id:
-        # Load settings
+        # Try to load settings and create reference service
         try:
             settings = SettingsFactory.get_settings(project_root)
-        except Exception as e:
-            # If loading settings fails, log and proceed without reference service
-            session_id = None  # Effectively disable reference management
-            session_message = (
-                f"Warning: Failed to load settings for reference management: {e}"
-            )
-        else:
             factory = ServiceFactory(project_root, settings)
             reference_service = factory.create_session_reference_service()
-            session_message = ""
-    else:
-        session_message = "No active session. Files were not added to references."
+        except Exception:
+            # If any setup fails, proceed without reference management (silently)
+            session_id = None
+            reference_service = None
 
     try:
         resolved_files = []
@@ -117,27 +112,20 @@ def read_many_files(
         # Remove duplicates
         unique_files = sorted(list(set(resolved_files)))
 
-        # Validate against max_files limit
+        # Handle max_files limit: truncate if exceeded
+        truncated = False
+        total_found = len(unique_files)
         if len(unique_files) > max_files:
-            return ToolResult(
-                error=(
-                    f"Too many files found ({len(unique_files)}). "
-                    f"Maximum allowed is {max_files}. "
-                    "Please refine your patterns or increase the 'max_files' limit."
-                )
-            )
+            truncated = True
+            unique_files = unique_files[:max_files]
 
-        if session_id:
+        if session_id and reference_service:
             if unique_files:  # Only add references if there are files
-                reference_service.add_multiple_references(session_id, unique_files)
-                if (
-                    not session_message
-                ):  # Overwrite if already set by non-active session
-                    session_message = (
-                        f"Added {len(unique_files)} files to the session references."
-                    )
-            elif not session_message:  # If no files and no prior session message
-                session_message = "No files found to add to references."
+                try:
+                    reference_service.add_multiple_references(session_id, unique_files)
+                except Exception:
+                    # If adding references fails, continue silently
+                    pass
 
         file_contents = []
         for fpath in unique_files:
@@ -159,17 +147,19 @@ def read_many_files(
                     FileContent(path=fpath, error=f"Failed to read file: {e}")
                 )
 
+        # Add truncation warning if applicable
+        message = None
+        if truncated:
+            message = (
+                f"Found {total_found} files but showing only the first {max_files}. "
+                f"Use a more specific pattern or increase 'max_files' to see more."
+            )
+
         result = ReadManyFilesResult(
             files=file_contents,
-            message=session_message if session_message else None,
+            message=message,
         )
         return ToolResult(data=result)
 
     except Exception as e:
-        # If session_message exists, combine it with the file read error
-        if session_message:
-            return ToolResult(
-                error=f"{session_message} Also, failed to process files: {e}"
-            )
-        else:
-            return ToolResult(error=f"Error in read_many_files tool: {str(e)}")
+        return ToolResult(error=f"Error in read_many_files tool: {str(e)}")

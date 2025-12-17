@@ -36,30 +36,23 @@ class ReferenceCollection(UserList):
             reverse=True,
         )
 
-    def get_for_prompt(self, project_root: str):
+    def get_for_prompt(self, resource_repository, project_root: str):
         """Get references with content for prompt generation.
 
         This delegates to the domain function for file I/O operations.
         """
         from pipe.core.domains.references import get_references_for_prompt
 
-        return get_references_for_prompt(self, project_root)
+        return get_references_for_prompt(self, resource_repository, project_root)
 
     def decrement_all_ttl(self):
         """Decrement TTL for all non-disabled references.
 
-        This is a backward-compatibility wrapper. Consider using
-        domains.references.decrement_all_references_ttl() instead.
+        This delegates to the domain function for business logic.
         """
-        for ref in self.data:
-            if not ref.disabled:
-                current_ttl = ref.ttl if ref.ttl is not None else self.default_ttl
-                current_ttl -= 1
-                ref.ttl = current_ttl
-                if current_ttl <= 0:
-                    ref.disabled = True
-                    ref.ttl = 0
-        self._sort_by_ttl()
+        from pipe.core.domains.references import decrement_all_references_ttl
+
+        decrement_all_references_ttl(self)
 
     def sort_by_ttl(self):
         """Sort references by TTL (public method for backward compatibility)."""

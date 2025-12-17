@@ -9,6 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 from pipe.core.models.settings import Settings
 from pipe.core.repositories.file_index_repository import FileIndexRepository
 from pipe.core.repositories.procedure_repository import ProcedureRepository
+from pipe.core.repositories.resource_repository import ResourceRepository
 from pipe.core.repositories.role_repository import RoleRepository
 from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.file_indexer_service import FileIndexerService
@@ -58,7 +59,8 @@ class ServiceFactory:
 
     def create_prompt_service(self) -> PromptService:
         """Creates a PromptService with its dependencies."""
-        return PromptService(self.project_root, self.jinja_env)
+        resource_repository = ResourceRepository(self.project_root)
+        return PromptService(self.project_root, self.jinja_env, resource_repository)
 
     def create_file_indexer_service(self) -> FileIndexerService:
         """Creates a FileIndexerService with its dependencies."""

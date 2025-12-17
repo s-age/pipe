@@ -55,7 +55,7 @@ class TestEditTodosTool(unittest.TestCase):
             TodoItem(title="Task 3", checked=False),
         ]
         result = edit_todos(
-            todos=[t.model_dump() for t in new_todos],
+            todos=new_todos,
             session_service=self.session_service,
             session_id=self.session_id,
         )
@@ -67,10 +67,10 @@ class TestEditTodosTool(unittest.TestCase):
 
         # Verify that the returned todos match the new todos
         self.assertEqual(len(result.data.current_todos), 2)
-        self.assertEqual(result.data.current_todos[0]["title"], "Task 1")
-        self.assertTrue(result.data.current_todos[0]["checked"])
-        self.assertEqual(result.data.current_todos[1]["title"], "Task 3")
-        self.assertFalse(result.data.current_todos[1]["checked"])
+        self.assertEqual(result.data.current_todos[0].title, "Task 1")
+        self.assertTrue(result.data.current_todos[0].checked)
+        self.assertEqual(result.data.current_todos[1].title, "Task 3")
+        self.assertFalse(result.data.current_todos[1].checked)
 
         # Optional: Verify actual session state (though tool's return should be
         # sufficient)

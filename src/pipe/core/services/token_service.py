@@ -5,9 +5,12 @@ in the runtime environment, TokenService will fall back to a noop client
 and provide rough token estimations.
 """
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from pipe.core.models.settings import Settings
+
+if TYPE_CHECKING:
+    from google.genai import Client as GenaiClient
 
 
 class TokenService:
@@ -26,8 +29,8 @@ class TokenService:
         self.model_name = settings.model
         self.limit = settings.context_limit
 
-        # Acceptable per checklist 5-3: Opaque Third-Party Object (google.genai.Client)
-        self.client: Any | None = None
+        # Using TYPE_CHECKING import for type hint to avoid runtime dependency
+        self.client: GenaiClient | None = None
 
         # Import `google.genai` lazily so importing this module doesn't
         # raise ModuleNotFoundError in environments where the package

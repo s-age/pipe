@@ -37,7 +37,7 @@ def edit_todos(
 
         result = EditTodosResult(
             message=f"Todos successfully updated in session {target_session_id}.",
-            current_todos=[todo.model_dump() for todo in updated_todos],
+            current_todos=updated_todos,
         )
         return ToolResult(data=result)
     except Exception as e:

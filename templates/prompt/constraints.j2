@@ -1,26 +1,26 @@
 {% macro render_constraints_macro(data) %}{
-  "description": {{ data.description | tojson }},
+  "description": "Constraints and configuration for the current session",
   "language": {{ data.language | tojson }},
   "processing_config": {
-    "description": {{ data.processing_config.description | tojson }},
+    "description": "Processing configuration settings",
     "multi_step_reasoning_active": {{ data.processing_config.multi_step_reasoning_active | tojson }}
   }{% if data.hyperparameters %},
   "hyperparameters": {
-    "description": {{ data.hyperparameters.description | tojson }},
+    "description": "Model hyperparameters for generation",
     "temperature": {
-      "type": {{ data.hyperparameters.temperature.type | tojson }},
-      "value": {{ data.hyperparameters.temperature.value | tojson }},
-      "description": {{ data.hyperparameters.temperature.description | tojson }}
+      "type": "float",
+      "value": {{ data.hyperparameters.temperature | tojson }},
+      "description": "Controls randomness in output generation (0.0-2.0)"
     },
     "top_p": {
-      "type": {{ data.hyperparameters.top_p.type | tojson }},
-      "value": {{ data.hyperparameters.top_p.value | tojson }},
-      "description": {{ data.hyperparameters.top_p.description | tojson }}
+      "type": "float",
+      "value": {{ data.hyperparameters.top_p | tojson }},
+      "description": "Nucleus sampling threshold (0.0-1.0)"
     },
     "top_k": {
-      "type": {{ data.hyperparameters.top_k.type | tojson }},
-      "value": {{ data.hyperparameters.top_k.value | tojson }},
-      "description": {{ data.hyperparameters.top_k.description | tojson }}
+      "type": "int",
+      "value": {{ data.hyperparameters.top_k | tojson }},
+      "description": "Number of top tokens to consider"
     }
   }{% endif %}
 }{% endmacro %}

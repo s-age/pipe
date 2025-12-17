@@ -3,32 +3,32 @@
 Separates business logic from data structures (models).
 """
 
-from typing import Any
-
 from pipe.core.models.hyperparameters import Hyperparameters
 
 
 def merge_hyperparameters(
-    existing: Hyperparameters | None, new_params: dict[str, Any]
+    existing: Hyperparameters | None, new_params: Hyperparameters
 ) -> Hyperparameters:
     """Merge new hyperparameter values with existing ones.
 
     Args:
         existing: Current Hyperparameters or None
-        new_params: Dictionary with hyperparameter updates (partial allowed)
+        new_params: Hyperparameters with updates (fields can be None for no change)
 
     Returns:
         New Hyperparameters instance with merged values
     """
     if existing:
-        # Merge new values with existing hyperparameters
-        merged = {
-            "temperature": new_params.get("temperature", existing.temperature),
-            "top_p": new_params.get("top_p", existing.top_p),
-            "top_k": new_params.get("top_k", existing.top_k),
-        }
+        # Merge: use new value if provided, otherwise keep existing
+        return Hyperparameters(
+            temperature=(
+                new_params.temperature
+                if new_params.temperature is not None
+                else existing.temperature
+            ),
+            top_p=new_params.top_p if new_params.top_p is not None else existing.top_p,
+            top_k=new_params.top_k if new_params.top_k is not None else existing.top_k,
+        )
     else:
         # No existing hyperparameters, use new values directly
-        merged = new_params
-
-    return Hyperparameters(**merged)
+        return new_params

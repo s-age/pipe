@@ -34,7 +34,7 @@ def delete_todos(
 
         result = DeleteTodosResult(
             message=f"Todos successfully deleted from session {target_session_id}.",
-            current_todos=[todo.model_dump() for todo in updated_todos],
+            current_todos=updated_todos,
         )
         return ToolResult(data=result)
     except Exception as e:

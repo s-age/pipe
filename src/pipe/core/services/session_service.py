@@ -6,7 +6,7 @@ import hashlib
 import json
 import sys
 import zoneinfo
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.artifact import Artifact
@@ -134,7 +134,7 @@ class SessionService:
         roles: list[str],
         multi_step_reasoning_enabled: bool = False,
         token_count: int = 0,
-        hyperparameters: dict[str, Any] | None = None,
+        hyperparameters: Hyperparameters | None = None,
         parent_id: str | None = None,
         artifacts: list[str] | None = None,
         procedure: str | None = None,
@@ -200,7 +200,7 @@ class SessionService:
         roles: list[str],
         multi_step_reasoning_enabled: bool = False,
         token_count: int = 0,
-        hyperparameters: dict[str, Any] | None = None,
+        hyperparameters: Hyperparameters | None = None,
         parent_id: str | None = None,
         artifacts: list[Artifact] | None = None,  # Changed type to list[Artifact]
         procedure: str | None = None,

@@ -1,8 +1,9 @@
 """Result model for edit_todos tool."""
 
-from typing import Any
+from __future__ import annotations
 
 from pipe.core.models.base import CamelCaseModel
+from pipe.core.models.todo import TodoItem
 from pydantic import Field
 
 
@@ -12,7 +13,7 @@ class EditTodosResult(CamelCaseModel):
     message: str | None = Field(
         default=None, description="Success message after updating todos"
     )
-    current_todos: list[dict[str, Any]] | None = Field(
+    current_todos: list[TodoItem] | None = Field(
         default=None, description="Current list of todos after update"
     )
     error: str | None = Field(

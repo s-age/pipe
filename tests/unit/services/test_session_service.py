@@ -165,9 +165,13 @@ class TestSessionService(unittest.TestCase):
 
     def test_edit_session_meta(self):
         """Tests editing a session's metadata."""
+        from pipe.core.models.session import SessionMetaUpdate
+
         session = self.session_service.create_new_session("Original", "BG", [])
         session_id = session.session_id
-        new_meta = {"purpose": "Updated Purpose", "background": "Updated BG"}
+        new_meta = SessionMetaUpdate(
+            purpose="Updated Purpose", background="Updated BG"
+        )
         self.meta_service.edit_session_meta(session_id, new_meta)
 
         fetched_session = self.session_service.get_session(session_id)

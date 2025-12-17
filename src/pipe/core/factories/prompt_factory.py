@@ -59,10 +59,8 @@ class PromptFactory:
         """
         from pipe.core.domains.references import get_references_for_prompt
         from pipe.core.domains.todos import get_todos_for_prompt
-        from pipe.core.models.prompts.constraints import (
-            PromptConstraints,
-            PromptHyperparameters,
-        )
+        from pipe.core.models.hyperparameters import Hyperparameters
+        from pipe.core.models.prompts.constraints import PromptConstraints
         from pipe.core.models.prompts.conversation_history import (
             PromptConversationHistory,
         )
@@ -73,23 +71,22 @@ class PromptFactory:
         from pipe.core.models.prompts.todo import PromptTodo
         from pipe.core.utils.datetime import get_current_timestamp
 
-        # 1. Build Hyperparameters
-        merged_params = settings.parameters.model_dump()
+        # 1. Merge hyperparameters from settings defaults and session overrides
+        merged_hyperparameters: Hyperparameters | None = None
         if session.hyperparameters:
-            if session.hyperparameters.temperature is not None:
-                merged_params["temperature"]["value"] = (
-                    session.hyperparameters.temperature
-                )
-            if session.hyperparameters.top_p is not None:
-                merged_params["top_p"]["value"] = session.hyperparameters.top_p
-            if session.hyperparameters.top_k is not None:
-                merged_params["top_k"]["value"] = session.hyperparameters.top_k
-
-        hyperparameters = PromptHyperparameters.from_merged_params(merged_params)
+            # Session has custom hyperparameters, use them
+            merged_hyperparameters = session.hyperparameters
+        else:
+            # Use default values from settings
+            merged_hyperparameters = Hyperparameters(
+                temperature=settings.parameters.temperature.value,
+                top_p=settings.parameters.top_p.value,
+                top_k=settings.parameters.top_k.value,
+            )
 
         # 2. Build Constraints
         constraints = PromptConstraints.build(
-            settings, hyperparameters, session.multi_step_reasoning_enabled
+            settings, merged_hyperparameters, session.multi_step_reasoning_enabled
         )
 
         # 3. Build Roles

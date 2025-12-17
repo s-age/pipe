@@ -1,8 +1,7 @@
 """Service for managing session metadata."""
 
-from typing import Any
-
 from pipe.core.domains.hyperparameters import merge_hyperparameters
+from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session, SessionMetaUpdate
 from pipe.core.repositories.session_repository import SessionRepository
 
@@ -13,22 +12,16 @@ class SessionMetaService:
     def __init__(self, repository: SessionRepository):
         self.repository = repository
 
-    def edit_session_meta(
-        self, session_id: str, update_data: SessionMetaUpdate | dict[str, Any]
-    ):
+    def edit_session_meta(self, session_id: str, update_data: SessionMetaUpdate):
         """Edit session metadata with type-safe updates.
 
         Args:
             session_id: Session ID to edit
-            update_data: SessionMetaUpdate model or dict (for backward compatibility)
+            update_data: SessionMetaUpdate model
         """
         session = self.repository.find(session_id)
         if not session:
             return
-
-        # Convert dict to SessionMetaUpdate for validation
-        if isinstance(update_data, dict):
-            update_data = SessionMetaUpdate(**update_data)
 
         self.repository.backup(session)
 
@@ -41,13 +34,13 @@ class SessionMetaService:
         self.repository.save(session)
 
     def update_hyperparameters(
-        self, session_id: str, new_params: dict[str, Any]
+        self, session_id: str, new_params: Hyperparameters
     ) -> Session:
         """Update session hyperparameters with partial updates.
 
         Args:
             session_id: Session ID to update
-            new_params: Dictionary with hyperparameter updates (partial allowed)
+            new_params: Hyperparameters with updates (fields can be None for no change)
 
         Returns:
             Updated Session object

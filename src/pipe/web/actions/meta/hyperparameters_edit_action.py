@@ -17,12 +17,18 @@ class HyperparametersEditAction(BaseAction):
     request_model = EditHyperparametersRequest
 
     def execute(self) -> SessionWithMessage:
+        from pipe.core.models.hyperparameters import Hyperparameters
         from pipe.web.service_container import get_session_meta_service
 
         request = self.validated_request
-        new_values = request.model_dump(exclude_unset=True, exclude={"session_id"})
+        # Convert validated request to Hyperparameters model
+        new_hyperparameters = Hyperparameters(
+            temperature=request.temperature,
+            top_p=request.top_p,
+            top_k=request.top_k,
+        )
         session = get_session_meta_service().update_hyperparameters(
-            request.session_id, new_values
+            request.session_id, new_hyperparameters
         )
 
         return {

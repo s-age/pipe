@@ -3,61 +3,70 @@ from typing import TYPE_CHECKING
 from pipe.core.models.base import CamelCaseModel
 
 if TYPE_CHECKING:
+    from pipe.core.models.hyperparameters import Hyperparameters
     from pipe.core.models.settings import Settings
 
 
-class PromptHyperparameter(CamelCaseModel):
-    type: str
-    value: float
-    description: str
-
-
 class PromptHyperparameters(CamelCaseModel):
-    description: str
-    temperature: PromptHyperparameter
-    top_p: PromptHyperparameter
-    top_k: PromptHyperparameter
+    """Simplified hyperparameters for prompt rendering.
+
+    Only contains the numeric values. Type and description are handled
+    directly in the template (constraints.j2).
+    """
+
+    temperature: float | None
+    top_p: float | None
+    top_k: float | None
 
     @classmethod
-    def from_merged_params(cls, merged_params: dict) -> "PromptHyperparameters":
-        """
-        Creates a PromptHyperparameters instance from a merged parameters dictionary.
-        """
+    def from_hyperparameters(
+        cls, hyperparameters: "Hyperparameters"
+    ) -> "PromptHyperparameters":
+        """Creates a PromptHyperparameters instance from Hyperparameters model."""
         return cls(
-            description="Hyperparameter settings for the model.",
-            temperature=PromptHyperparameter(
-                type="number", **merged_params["temperature"]
-            ),
-            top_p=PromptHyperparameter(type="number", **merged_params["top_p"]),
-            top_k=PromptHyperparameter(type="number", **merged_params["top_k"]),
+            temperature=hyperparameters.temperature,
+            top_p=hyperparameters.top_p,
+            top_k=hyperparameters.top_k,
         )
 
 
 class PromptProcessingConfig(CamelCaseModel):
-    description: str
+    """Processing configuration for prompt rendering.
+
+    Description is handled directly in the template (constraints.j2).
+    """
+
     multi_step_reasoning_active: bool
 
 
 class PromptConstraints(CamelCaseModel):
-    description: str
+    """Constraints for prompt rendering.
+
+    Description is handled directly in the template (constraints.j2).
+    """
+
     language: str
     processing_config: PromptProcessingConfig
-    hyperparameters: PromptHyperparameters
+    hyperparameters: PromptHyperparameters | None = None
 
     @classmethod
     def build(
         cls,
         settings: "Settings",
-        hyperparameters: PromptHyperparameters,
+        hyperparameters: "Hyperparameters | None",
         multi_step_reasoning_enabled: bool,
     ) -> "PromptConstraints":
         """Builds the PromptConstraints component."""
+        prompt_hyperparameters = None
+        if hyperparameters:
+            prompt_hyperparameters = PromptHyperparameters.from_hyperparameters(
+                hyperparameters
+            )
+
         return cls(
-            description="Constraints for the model.",
             language=settings.language,
             processing_config=PromptProcessingConfig(
-                description="Configuration for processing.",
                 multi_step_reasoning_active=multi_step_reasoning_enabled,
             ),
-            hyperparameters=hyperparameters,
+            hyperparameters=prompt_hyperparameters,
         )

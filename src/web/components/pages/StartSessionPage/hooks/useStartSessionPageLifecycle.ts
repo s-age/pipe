@@ -5,8 +5,7 @@ import { getStartSession } from '@/lib/api/bff/getStartSession'
 import type { SessionTreeNode } from '@/lib/api/sessionTree/getSessionTree'
 import type { Option } from '@/types/option'
 import type { Settings } from '@/types/settings'
-
-import { normalizeSessionTreeToOptions } from './normalizeSessionTree'
+import { normalizeSessionTreeToOptions } from '@/utils/normalizeSessionTreeToOptions'
 
 type UseStartSessionPageLifecycleResult = {
   parentOptions: Option[]

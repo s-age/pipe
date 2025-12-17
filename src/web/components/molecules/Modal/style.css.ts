@@ -1,8 +1,7 @@
 import { style } from '@vanilla-extract/css'
 
+import { colors } from '@/styles/colors.css'
 import { zIndex } from '@/styles/zIndex.css'
-
-import { colors } from '../../../styles/colors.css'
 
 export const overlay = style({
   display: 'flex',

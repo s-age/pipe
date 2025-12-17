@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react'
 
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
-import { useModal } from '@/components/organisms/Modal'
+import { useModal } from '@/components/organisms/ModalManager'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 

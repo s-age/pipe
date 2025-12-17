@@ -1,8 +1,5 @@
-import React from 'react'
+import type React from 'react'
 import { useSyncExternalStore } from 'react'
-import type { JSX } from 'react'
-
-import { ModalManager } from '@/components/organisms/Modal'
 
 export type ConfirmDescriptor = {
   type: 'confirm'
@@ -83,14 +80,3 @@ export const useModalStore = (): {
     clearModals
   }
 }
-
-export const ModalProvider = ({
-  children
-}: {
-  children: React.ReactNode
-}): JSX.Element => (
-  <>
-    {children}
-    <ModalManager />
-  </>
-)

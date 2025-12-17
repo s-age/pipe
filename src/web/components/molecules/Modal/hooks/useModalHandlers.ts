@@ -1,28 +1,22 @@
 import { useCallback, useEffect } from 'react'
 
-// Module-level modal root creation. Keep it at module scope so it's created
-// once when the module is imported (avoids reading refs during render).
-const MODAL_ROOT_ID = 'modal-root'
-
-let modalRoot =
-  typeof document !== 'undefined'
-    ? (document.getElementById(MODAL_ROOT_ID) as HTMLElement | null)
-    : null
-if (typeof document !== 'undefined' && !modalRoot) {
-  modalRoot = document.createElement('div')
-  modalRoot.id = MODAL_ROOT_ID
-  document.body.appendChild(modalRoot)
-}
-
-export const getModalRoot = (): HTMLElement | null => modalRoot
-
+/**
+ * useModalHandlers
+ *
+ * Handles Modal UI events (Overlay click, Escape key).
+ * Pattern: Handlers (with internal Lifecycle for small component - per hooks.md:28)
+ *
+ * @param isOpen - Whether modal is currently open
+ * @param onClose - Callback to close modal (injected by parent)
+ */
 export const useModalHandlers = (
-  open: boolean,
+  isOpen: boolean,
   onClose?: () => void
 ): {
   onOverlayMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void
   onContentMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void
 } => {
+  // Handler: Close on overlay click
   const onOverlayMouseDown = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
       if (event.target === event.currentTarget) onClose?.()
@@ -30,6 +24,7 @@ export const useModalHandlers = (
     [onClose]
   )
 
+  // Handler: Prevent propagation on content click
   const onContentMouseDown = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
       event.stopPropagation()
@@ -37,15 +32,16 @@ export const useModalHandlers = (
     []
   )
 
+  // Lifecycle: Escape key listener (internal effect, acceptable per hooks.md:28)
   useEffect(() => {
-    if (!open) return
+    if (!isOpen) return
     const onKey = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') onClose?.()
     }
     document.addEventListener('keydown', onKey)
 
     return (): void => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [isOpen, onClose])
 
   return { onOverlayMouseDown, onContentMouseDown }
 }

@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react'
 import { useCallback, useRef, useState } from 'react'
 
-import { useModal } from '@/components/organisms/Modal'
+import { useModal } from '@/components/organisms/ModalManager'
 import { getSession } from '@/lib/api/session/getSession'
 import type { Turn } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'

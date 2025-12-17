@@ -1,8 +1,8 @@
-import os
 import subprocess
 
 from pipe.core.models.results.run_shell_command_result import RunShellCommandResult
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.repositories.filesystem_repository import FileSystemRepository
 from pipe.core.utils.path import get_project_root
 
 
@@ -12,20 +12,20 @@ def run_shell_command(
     directory: str | None = None,
 ) -> ToolResult[RunShellCommandResult]:
     try:
-        # Determine the directory to run the command in
+        # Get project root and create repository
         project_root = get_project_root()
+        repo = FileSystemRepository(project_root)
+
+        # Determine the directory to run the command in
         if directory:
-            target_directory = os.path.abspath(directory)
-            if not os.path.isdir(target_directory):
+            # Validate directory using repository
+            if not repo.exists(directory):
                 return ToolResult(error=f"Directory does not exist: {directory}")
-            if not target_directory.startswith(project_root):
-                return ToolResult(
-                    error=(
-                        "Running commands outside project root is not allowed: "
-                        f"{directory}"
-                    )
-                )
-            cwd = target_directory
+            if not repo.is_dir(directory):
+                return ToolResult(error=f"Path is not a directory: {directory}")
+
+            # Get validated absolute path
+            cwd = repo.get_absolute_path(directory)
         else:
             cwd = project_root
 
@@ -56,6 +56,9 @@ def run_shell_command(
         )
         return ToolResult(data=result)
 
+    except ValueError as e:
+        # FileSystemRepository validation errors
+        return ToolResult(error=f"Invalid directory: {e}")
     except FileNotFoundError:
         return ToolResult(error=f"Command not found: {command.split()[0]}")
     except Exception as e:

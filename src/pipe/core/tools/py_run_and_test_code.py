@@ -5,11 +5,14 @@ After code changes, this tool runs the code or executes tests to verify its beha
 
 import os
 import subprocess
+import tempfile
 
 from pipe.core.models.results.py_run_and_test_code_result import (
     PyRunAndTestCodeResult,
 )
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.repositories.filesystem_repository import FileSystemRepository
+from pipe.core.utils.path import get_project_root
 
 
 def py_run_and_test_code(
@@ -20,26 +23,48 @@ def py_run_and_test_code(
     """
     Executes or tests the specified Python file and returns the results.
     """
+    # file_path のセキュリティチェック
+    try:
+        project_root = get_project_root()
+        repo = FileSystemRepository(project_root)
+
+        # ファイルの存在確認とセキュリティチェック
+        if not repo.exists(file_path):
+            return ToolResult(error=f"File not found: {file_path}")
+        if not repo.is_file(file_path):
+            return ToolResult(error=f"Path is not a file: {file_path}")
+
+        # 検証済みの絶対パスを取得
+        abs_file_path = repo.get_absolute_path(file_path)
+    except ValueError as e:
+        return ToolResult(error=f"Invalid file path: {e}")
+
     command = []
-    if test_case_name:
-        # Use pytest to run a specific test case
-        command = ["pytest", file_path, "-k", test_case_name]
-    elif function_name:
-        # Create and run a simple script to execute a specific function
-        # This is a simplified approach; a more robust implementation might be needed.
-        module_name = os.path.basename(file_path).replace(".py", "")
-        temp_script_content = (
-            f"from {module_name} import {function_name}\n{function_name}()\n"
-        )
-        temp_script_path = "/tmp/temp_exec_script.py"
-        with open(temp_script_path, "w") as f:
-            f.write(temp_script_content)
-        command = ["python", temp_script_path]
-    else:
-        # Execute the entire file
-        command = ["python", file_path]
+    temp_script = None
 
     try:
+        if test_case_name:
+            # Use pytest to run a specific test case
+            command = ["pytest", abs_file_path, "-k", test_case_name]
+        elif function_name:
+            # Create and run a temporary script to execute a specific function
+            module_name = os.path.basename(abs_file_path).replace(".py", "")
+            temp_script_content = (
+                f"from {module_name} import {function_name}\n{function_name}()\n"
+            )
+
+            # Use tempfile for cross-platform compatibility and security
+            temp_script = tempfile.NamedTemporaryFile(
+                mode="w", suffix=".py", delete=False, encoding="utf-8"
+            )
+            temp_script.write(temp_script_content)
+            temp_script.close()
+
+            command = ["python", temp_script.name]
+        else:
+            # Execute the entire file
+            command = ["python", abs_file_path]
+
         result_process = subprocess.run(
             command, capture_output=True, text=True, check=True
         )
@@ -62,3 +87,10 @@ def py_run_and_test_code(
         return ToolResult(
             error="Specified file or command not found.",
         )
+    finally:
+        # Clean up temporary file
+        if temp_script and os.path.exists(temp_script.name):
+            try:
+                os.unlink(temp_script.name)
+            except Exception:
+                pass  # Ignore cleanup errors

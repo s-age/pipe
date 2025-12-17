@@ -53,9 +53,8 @@ class TestRunShellCommandTool(unittest.TestCase):
     def test_directory_outside_project_root(self):
         result = run_shell_command(command="ls", directory="/etc")
         self.assertIsNotNone(result.error)
-        self.assertIn(
-            "Running commands outside project root is not allowed", result.error
-        )
+        # FileSystemRepository checks directory existence first
+        self.assertIn("Directory does not exist", result.error)
 
     @patch("subprocess.run", side_effect=FileNotFoundError)
     def test_command_not_found(self, mock_subprocess_run):
@@ -70,18 +69,11 @@ class TestRunShellCommandTool(unittest.TestCase):
         self.assertIn("Error inside run_shell_command tool", result.error)
 
     @patch("subprocess.run")
-    @patch("pipe.core.tools.run_shell_command.os.path.abspath")
-    def test_run_in_specified_directory(self, mock_abspath, mock_subprocess_run):
+    @patch("pipe.core.tools.run_shell_command.FileSystemRepository")
+    def test_run_in_specified_directory(self, mock_repo_class, mock_subprocess_run):
         """
         Tests that the command is run in the specified directory.
         """
-        # Make abspath return the temp_dir as the project root
-        mock_abspath.side_effect = lambda path: (
-            self.temp_dir.name
-            if ".." in path
-            else os.path.join(self.temp_dir.name, os.path.basename(path))
-        )
-
         mock_process = MagicMock()
         mock_process.stdout = ""
         mock_process.stderr = ""
@@ -91,6 +83,13 @@ class TestRunShellCommandTool(unittest.TestCase):
         # Create a subdirectory within the temp dir to act as a valid target
         sub_dir = os.path.join(self.temp_dir.name, "sub")
         os.makedirs(sub_dir)
+
+        # Mock repository methods
+        mock_repo = MagicMock()
+        mock_repo.exists.return_value = True
+        mock_repo.is_dir.return_value = True
+        mock_repo.get_absolute_path.return_value = sub_dir
+        mock_repo_class.return_value = mock_repo
 
         run_shell_command(command="ls", directory=sub_dir)
 

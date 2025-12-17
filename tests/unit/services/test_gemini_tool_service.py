@@ -49,11 +49,9 @@ class TestGeminiToolService(unittest.TestCase):
 
     def test_map_parameter_to_schema_optional_str(self):
         """Test mapping an optional string parameter."""
-        from typing import Optional
-
-        param_type = Optional[str]  # noqa: UP007
+        param_type = str | None
         schema, is_required = self.service._map_parameter_to_schema(
-            "optional_query", param_type, inspect.Parameter.empty
+            "optional_query", param_type, None
         )
         self.assertEqual(schema["type"], "string")
         self.assertFalse(is_required)

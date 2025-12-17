@@ -34,5 +34,5 @@ class MultiStepReasoningEditAction(BaseAction):
 
         return {
             "message": f"Session {request.session_id} multi-step reasoning updated.",
-            "session": session.to_api_dict(),
+            "session": session.model_dump(by_alias=True, exclude_none=False),
         }

@@ -86,7 +86,7 @@ class TestReferenceCollection(unittest.TestCase):
         self.assertEqual(paths, expected_order)
 
     @patch(
-        "pipe.core.collections.references.read_text_file", return_value="file content"
+        "pipe.core.domains.references.read_text_file", return_value="file content"
     )
     def test_get_for_prompt(self, mock_read):
         rel_path = os.path.relpath(self.file1_path, self.project_root.name)
@@ -114,7 +114,7 @@ class TestReferenceCollection(unittest.TestCase):
             )
             self.assertEqual(mock_stderr.getvalue(), expected_warning)
 
-    @patch("pipe.core.collections.references.read_text_file", return_value=None)
+    @patch("pipe.core.domains.references.read_text_file", return_value=None)
     def test_get_for_prompt_skips_unreadable_file(self, mock_read):
         """
         Tests that get_for_prompt skips files that return None from read_text_file.
@@ -135,7 +135,7 @@ class TestReferenceCollection(unittest.TestCase):
             self.assertEqual(mock_stderr.getvalue(), expected_warning)
 
     @patch(
-        "pipe.core.collections.references.read_text_file",
+        "pipe.core.domains.references.read_text_file",
         side_effect=Exception("Test error"),
     )
     def test_get_for_prompt_handles_exception(self, mock_read):

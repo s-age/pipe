@@ -231,30 +231,3 @@ class Session(CamelCaseModel):
         if self.references:
             self.references.default_ttl = self._reference_ttl
 
-    @classmethod
-    def setup(
-        cls,
-        sessions_dir: str,
-        backups_dir: str,
-        settings: Settings,
-    ):
-        """Injects necessary configurations into the Session class from settings."""
-        cls.sessions_dir = sessions_dir
-        cls.backups_dir = backups_dir
-        try:
-            cls.timezone_obj = zoneinfo.ZoneInfo(settings.timezone)
-        except zoneinfo.ZoneInfoNotFoundError:
-            cls.timezone_obj = zoneinfo.ZoneInfo("UTC")
-
-        cls.reference_ttl = settings.reference_ttl
-
-        default_hyperparameters_dict = {
-            "temperature": settings.parameters.temperature.value,
-            "top_p": settings.parameters.top_p.value,
-            "top_k": settings.parameters.top_k.value,
-        }
-        cls.default_hyperparameters = Hyperparameters(**default_hyperparameters_dict)
-
-    def to_api_dict(self) -> dict[str, Any]:
-        """Return a dictionary representation for API responses."""
-        return self.model_dump(by_alias=True, exclude_none=False)

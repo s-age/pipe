@@ -1,11 +1,8 @@
-import os
-import sys
 from collections import UserList
 from collections.abc import Callable
 from typing import Any
 
 from pipe.core.models.reference import Reference
-from pipe.core.utils.file import read_text_file
 from pydantic_core import core_schema
 
 
@@ -14,12 +11,12 @@ class ReferenceCollection(UserList):
         initialized_data = data if data is not None else []
         super().__init__(initialized_data)
         self.default_ttl = default_ttl
-        self.sort_by_ttl()
+        self._sort_by_ttl()
 
     def add(self, path: str):
         if not any(ref.path == path for ref in self.data):
             self.data.append(Reference(path=path, disabled=False, ttl=self.default_ttl))
-            self.sort_by_ttl()
+            self._sort_by_ttl()
 
     def update_ttl(self, path: str, new_ttl: int):
         for ref in self.data:
@@ -27,9 +24,33 @@ class ReferenceCollection(UserList):
                 ref.ttl = new_ttl
                 ref.disabled = new_ttl <= 0
                 break
-        self.sort_by_ttl()
+        self._sort_by_ttl()
+
+    def _sort_by_ttl(self):
+        """Internal method to maintain sort order after mutations."""
+        self.data.sort(
+            key=lambda ref: (
+                not ref.disabled,
+                ref.ttl if ref.ttl is not None else self.default_ttl,
+            ),
+            reverse=True,
+        )
+
+    def get_for_prompt(self, project_root: str):
+        """Get references with content for prompt generation.
+
+        This delegates to the domain function for file I/O operations.
+        """
+        from pipe.core.domains.references import get_references_for_prompt
+
+        return get_references_for_prompt(self, project_root)
 
     def decrement_all_ttl(self):
+        """Decrement TTL for all non-disabled references.
+
+        This is a backward-compatibility wrapper. Consider using
+        domains.references.decrement_all_references_ttl() instead.
+        """
         for ref in self.data:
             if not ref.disabled:
                 current_ttl = ref.ttl if ref.ttl is not None else self.default_ttl
@@ -38,48 +59,11 @@ class ReferenceCollection(UserList):
                 if current_ttl <= 0:
                     ref.disabled = True
                     ref.ttl = 0
-        self.sort_by_ttl()
-
-    def get_for_prompt(self, project_root: str):
-        abs_project_root = os.path.abspath(project_root)
-        for ref in self.data:
-            if not ref.disabled:
-                try:
-                    full_path = os.path.abspath(
-                        os.path.join(abs_project_root, ref.path)
-                    )
-                    if os.path.commonpath([abs_project_root]) != os.path.commonpath(
-                        [abs_project_root, full_path]
-                    ):
-                        print(
-                            f"Warning: Reference path '{ref.path}' is outside the "
-                            "project root. Skipping.",
-                            file=sys.stderr,
-                        )
-                        continue
-                    content = read_text_file(full_path)
-                    if content is not None:
-                        yield {"path": ref.path, "content": content}
-                    else:
-                        print(
-                            "Warning: Reference file not found or could not be read: "
-                            f"{full_path}",
-                            file=sys.stderr,
-                        )
-                except Exception as e:
-                    print(
-                        f"Warning: Could not process reference file {ref.path}: {e}",
-                        file=sys.stderr,
-                    )
+        self._sort_by_ttl()
 
     def sort_by_ttl(self):
-        self.data.sort(
-            key=lambda ref: (
-                not ref.disabled,
-                ref.ttl if ref.ttl is not None else self.default_ttl,
-            ),
-            reverse=True,
-        )
+        """Sort references by TTL (public method for backward compatibility)."""
+        self._sort_by_ttl()
 
     def update_ttl_by_index(self, index: int, new_ttl: int):
         """Update TTL of a reference by index with validation.
@@ -97,7 +81,7 @@ class ReferenceCollection(UserList):
             )
         self.data[index].ttl = new_ttl
         self.data[index].disabled = new_ttl <= 0
-        self.sort_by_ttl()
+        self._sort_by_ttl()
 
     def update_persist_by_index(self, index: int, persist: bool):
         """Update persist state of a reference by index with validation.
@@ -114,7 +98,7 @@ class ReferenceCollection(UserList):
                 f"Reference index {index} out of range (0-{len(self.data)-1})."
             )
         self.data[index].persist = persist
-        self.sort_by_ttl()
+        self._sort_by_ttl()
 
     def toggle_disabled_by_index(self, index: int) -> bool:
         """Toggle disabled state of a reference by index with validation.
@@ -133,7 +117,7 @@ class ReferenceCollection(UserList):
                 f"Reference index {index} out of range (0-{len(self.data)-1})."
             )
         self.data[index].disabled = not self.data[index].disabled
-        self.sort_by_ttl()
+        self._sort_by_ttl()
         return self.data[index].disabled
 
     @classmethod

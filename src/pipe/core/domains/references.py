@@ -19,7 +19,7 @@ def add_reference(
         references_collection.data.append(
             Reference(path=path, disabled=False, ttl=default_ttl, persist=persist)
         )
-        sort_references_by_ttl(references_collection)
+        references_collection.sort_by_ttl()
 
 
 def update_reference_ttl(
@@ -30,7 +30,7 @@ def update_reference_ttl(
             ref.ttl = new_ttl
             ref.disabled = new_ttl <= 0
             break
-    sort_references_by_ttl(references_collection)
+    references_collection.sort_by_ttl()
 
 
 def update_reference_persist(
@@ -40,7 +40,7 @@ def update_reference_persist(
         if ref.path == path:
             ref.persist = new_persist_state
             break
-    sort_references_by_ttl(references_collection)
+    references_collection.sort_by_ttl()
 
 
 def toggle_reference_disabled(references_collection: "ReferenceCollection", path: str):
@@ -48,7 +48,7 @@ def toggle_reference_disabled(references_collection: "ReferenceCollection", path
         if ref.path == path:
             ref.disabled = not ref.disabled
             break
-    sort_references_by_ttl(references_collection)
+    references_collection.sort_by_ttl()
 
 
 def decrement_all_references_ttl(references_collection: "ReferenceCollection"):
@@ -62,7 +62,7 @@ def decrement_all_references_ttl(references_collection: "ReferenceCollection"):
             if current_ttl <= 0:
                 ref.disabled = True
                 ref.ttl = 0
-    sort_references_by_ttl(references_collection)
+    references_collection.sort_by_ttl()
 
 
 def get_references_for_prompt(
@@ -98,11 +98,21 @@ def get_references_for_prompt(
                 )
 
 
-def sort_references_by_ttl(references_collection: "ReferenceCollection"):
-    references_collection.sort(
-        key=lambda ref: (
-            not ref.disabled,
-            ref.ttl if ref.ttl is not None else references_collection.default_ttl,
-        ),
-        reverse=True,
-    )
+def decrement_all_references_ttl_with_persist(
+    references_collection: "ReferenceCollection",
+):
+    """Decrement TTL for all non-disabled, non-persisted references.
+
+    Sets disabled=True and ttl=0 when TTL reaches 0 or below.
+    This version respects the persist flag (unlike decrement_all_references_ttl).
+    """
+    for ref in references_collection:
+        if not ref.disabled and not ref.persist:
+            current_ttl = (
+                ref.ttl if ref.ttl is not None else references_collection.default_ttl
+            )
+            current_ttl -= 1
+            ref.ttl = current_ttl
+            if current_ttl <= 0:
+                ref.disabled = True
+                ref.ttl = 0

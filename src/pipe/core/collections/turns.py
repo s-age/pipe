@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 
 from pipe.core.models.turn import (
     ModelResponseTurnUpdate,
-    ToolResponseTurn,
     Turn,
     UserTaskTurnUpdate,
 )
@@ -120,16 +119,19 @@ class TurnCollection(list[Turn]):
         self.extend(other)
 
     def get_turns_for_prompt(self, tool_response_limit: int = 3) -> Iterator[Turn]:
-        """
-        Yields turns for prompt generation, applying filtering rules.
-        - Only the last N 'tool_response' turns from the history are included.
-        """
-        tool_response_count = 0
+        """Get turns for prompt generation, delegating to domain function.
 
-        # Iterate in reverse to easily count the last N tool_responses
-        for turn in reversed(self):
-            if isinstance(turn, ToolResponseTurn):
-                tool_response_count += 1
-                if tool_response_count > tool_response_limit:
-                    continue
-            yield turn
+        This is a backward-compatibility wrapper. Consider using
+        domains.turns.get_turns_for_prompt() instead.
+
+        Args:
+            tool_response_limit: Maximum number of tool_response turns to include
+
+        Yields:
+            Turn objects suitable for prompt generation
+        """
+        from pipe.core.domains.turns import (
+            get_turns_for_prompt as domain_get_turns_for_prompt,
+        )
+
+        return domain_get_turns_for_prompt(self, tool_response_limit)

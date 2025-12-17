@@ -14,12 +14,13 @@ class TestReplaceTool(unittest.TestCase):
         with open(self.file_path, "w") as f:
             f.write("Hello world, this is a test.\nHello again!")
 
-        # Patch os.getcwd to return the temp dir, simulating it as the project root
-        self.getcwd_patcher = patch("os.getcwd", return_value=self.test_path)
-        self.mock_getcwd = self.getcwd_patcher.start()
+        # Patch get_project_root
+        self.patcher = patch("pipe.core.tools.replace.get_project_root")
+        self.mock_get_project_root = self.patcher.start()
+        self.mock_get_project_root.return_value = self.test_path
 
     def tearDown(self):
-        self.getcwd_patcher.stop()
+        self.patcher.stop()
         self.temp_dir.cleanup()
 
     def test_replace_success(self):
@@ -71,22 +72,28 @@ class TestReplaceTool(unittest.TestCase):
             file_path="/etc/passwd", instruction="...", old_string="a", new_string="b"
         )
         self.assertIsNotNone(result.error)
-        self.assertIn(
-            "Modifying files outside project root is not allowed", result.error
-        )
+        # FileSystemRepository.exists returns False for paths outside project root
+        self.assertIn("File not found", result.error)
 
     def test_blocked_path(self):
         # Create a fake .git directory to test protection
         git_dir = os.path.join(self.test_path, ".git")
         os.makedirs(git_dir)
+        # We need the file to exist for replace to attempt reading it
+        config_path = os.path.join(git_dir, "config")
+        with open(config_path, "w") as f:
+            f.write("config_a")
+
         result = replace(
-            file_path=os.path.join(git_dir, "config"),
+            file_path=config_path,
             instruction="...",
             old_string="a",
             new_string="b",
         )
         self.assertIsNotNone(result.error)
-        self.assertIn("Operation on sensitive path", result.error)
+        # FileSystemRepository throws "Access denied: Writing to ... is not allowed"
+        # checking for "Access denied" or "not allowed" covers it
+        self.assertIn("not allowed", result.error)
 
     @patch("builtins.open", side_effect=OSError("Test I/O error"))
     def test_general_exception(self, mock_open):

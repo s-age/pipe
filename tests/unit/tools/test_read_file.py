@@ -41,10 +41,10 @@ class TestReadFile(unittest.TestCase):
             del os.environ["PIPE_SESSION_ID"]
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
-    @patch("pipe.core.tools.read_file.os.getcwd")
-    def test_read_file_success(self, mock_getcwd, mock_get_settings):
-        # Mock os.getcwd to return the test dir
-        mock_getcwd.return_value = self.test_dir
+    @patch("pipe.core.tools.read_file.get_project_root")
+    def test_read_file_success(self, mock_get_project_root, mock_get_settings):
+        # Mock get_project_root to return the test dir
+        mock_get_project_root.return_value = self.test_dir
 
         # Mock settings to point to our temp sessions dir
         from pipe.core.models.settings import Settings
@@ -82,17 +82,29 @@ class TestReadFile(unittest.TestCase):
         self.assertEqual(os.path.normpath(ref["path"]), expected_path)
         self.assertEqual(ref["ttl"], 3)
 
-    def test_read_file_no_session(self):
+    @patch("pipe.core.tools.read_file.get_project_root")
+    def test_read_file_no_session(self, mock_get_project_root):
+        mock_get_project_root.return_value = self.test_dir
         if "PIPE_SESSION_ID" in os.environ:
             del os.environ["PIPE_SESSION_ID"]
 
         result = read_file(absolute_path=self.dummy_file_path)
+        if result.error:
+            self.fail(f"read_file returned error: {result.error}")
         self.assertIsNotNone(result.data.content)
         self.assertEqual(result.data.content, "dummy content")
         self.assertIsNone(result.error)
 
-    def test_read_file_not_found(self):
-        os.environ["PIPE_SESSION_ID"] = self.session_id
-        result = read_file(absolute_path="non_existent_file.txt")
-        self.assertIsNotNone(result.error)
-        self.assertIn("File not found", result.error)
+        @patch("pipe.core.tools.read_file.get_project_root")
+        def test_read_file_not_found(self, mock_get_project_root):
+            mock_get_project_root.return_value = self.test_dir
+
+            os.environ["PIPE_SESSION_ID"] = self.session_id
+
+            result = read_file(
+                absolute_path=os.path.join(self.test_dir, "non_existent_file.txt")
+            )
+
+            self.assertIsNotNone(result.error)
+
+            self.assertIn("File not found", result.error)

@@ -4,26 +4,43 @@ from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.models.results.read_file_result import ReadFileResult
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.repositories.filesystem_repository import FileSystemRepository
+from pipe.core.utils.path import get_project_root
 
 
-# session_manager and session_id are dynamically passed by the tool executor
+# session_service, session_id, and reference_service are dynamically passed by
+# the tool executor
 def read_file(
     absolute_path: str,
-    limit: float | None = None,
-    offset: float | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
     session_service=None,
     session_id=None,
+    reference_service=None,
 ) -> ToolResult[ReadFileResult]:
     """
     Reads and returns the content of a specified file.
     If a session_id is provided, it also adds the file to the session's reference list.
-    """
-    abs_path = os.path.abspath(absolute_path)
 
-    if not os.path.exists(abs_path):
-        return ToolResult(error=f"File not found: {abs_path}")
-    if not os.path.isfile(abs_path):
-        return ToolResult(error=f"Path is not a file: {abs_path}")
+    Args:
+        absolute_path: Path to the file to read
+        limit: Maximum number of lines to read (optional)
+        offset: Number of lines to skip from the start (optional)
+        session_service: Session service instance (injected by tool executor)
+        session_id: Session ID for reference management (injected by tool executor)
+        reference_service: Reference service instance (injected by tool executor)
+    """
+    project_root = get_project_root()
+
+    repo = FileSystemRepository(project_root)
+
+    if not repo.exists(absolute_path):
+        return ToolResult(error=f"File not found: {absolute_path}")
+    if not repo.is_file(absolute_path):
+        return ToolResult(error=f"Path is not a file: {absolute_path}")
+
+    # Use repository to get validated absolute path
+    abs_path = repo.get_absolute_path(absolute_path)
 
     session_message = ""
     # Resolve session_id from env if not provided
@@ -32,7 +49,6 @@ def read_file(
 
     if session_id:
         try:
-            project_root = os.getcwd()
             settings = SettingsFactory.get_settings(project_root)
             factory = ServiceFactory(project_root, settings)
             reference_service = factory.create_session_reference_service()
@@ -58,21 +74,9 @@ def read_file(
 
     # Always read the file content
     try:
-        with open(abs_path, encoding="utf-8") as f:
-            lines = f.readlines()
-
-        if offset is not None:
-            start = int(offset)
-        else:
-            start = 0
-
-        if limit is not None:
-            end = start + int(limit)
-            lines_slice = lines[start:end]
-        else:
-            lines_slice = lines[start:]
-
-        content = "".join(lines_slice)
+        content = repo.read_text(
+            absolute_path, limit=limit, offset=offset if offset is not None else 0
+        )
 
         result = ReadFileResult(
             content=content, message=session_message if session_message else None

@@ -1,8 +1,9 @@
 import difflib
-import os
 
 from pipe.core.models.results.replace_result import ReplaceResult
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.repositories.filesystem_repository import FileSystemRepository
+from pipe.core.utils.path import get_project_root
 
 
 def replace(
@@ -12,43 +13,16 @@ def replace(
     Replaces text within a file.
     """
     try:
-        target_path = os.path.abspath(file_path)
-        project_root = os.path.abspath(os.getcwd())
+        project_root = get_project_root()
+        repo = FileSystemRepository(project_root)
 
-        # Filesystem Safety Check (similar to write_file)
-        BLOCKED_PATHS = [
-            os.path.join(project_root, ".git"),
-            os.path.join(project_root, ".env"),
-            os.path.join(project_root, "setting.yml"),
-            os.path.join(project_root, "__pycache__"),
-            os.path.join(project_root, "roles"),
-            os.path.join(project_root, "rules"),
-            os.path.join(project_root, "sessions"),
-            os.path.join(project_root, "venv"),
-        ]
-
-        for blocked_path in BLOCKED_PATHS:
-            if target_path == blocked_path or target_path.startswith(blocked_path):
-                return ToolResult(
-                    error=f"Operation on sensitive path {file_path} is not allowed."
-                )
-
-        if not target_path.startswith(project_root):
-            return ToolResult(
-                error=(
-                    "Modifying files outside project root is not allowed: "
-                    f"{file_path}"
-                )
-            )
-
-        if not os.path.exists(target_path):
+        if not repo.exists(file_path):
             return ToolResult(error=f"File not found: {file_path}")
-        if not os.path.isfile(target_path):
+        if not repo.is_file(file_path):
             return ToolResult(error=f"Path is not a file: {file_path}")
 
         # Read content
-        with open(target_path, encoding="utf-8") as f:
-            original_content = f.read()
+        original_content = repo.read_text(file_path)
 
         # Perform simple string replacement (first occurrence only)
         if old_string not in original_content:
@@ -59,8 +33,7 @@ def replace(
         new_content = original_content.replace(old_string, new_string, 1)
 
         # Write back modified content
-        with open(target_path, "w", encoding="utf-8") as f:
-            f.write(new_content)
+        repo.write_text(file_path, new_content)
 
         diff = None
         if original_content != new_content:

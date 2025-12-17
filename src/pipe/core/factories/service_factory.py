@@ -8,6 +8,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from pipe.core.models.settings import Settings
 from pipe.core.repositories.file_index_repository import FileIndexRepository
+from pipe.core.repositories.filesystem_repository import FileSystemRepository
 from pipe.core.repositories.procedure_repository import ProcedureRepository
 from pipe.core.repositories.resource_repository import ResourceRepository
 from pipe.core.repositories.role_repository import RoleRepository
@@ -66,6 +67,10 @@ class ServiceFactory:
         """Creates a FileIndexerService with its dependencies."""
         repository = FileIndexRepository(base_path=self.project_root)
         return FileIndexerService(repository)
+
+    def create_filesystem_repository(self) -> FileSystemRepository:
+        """Creates a FileSystemRepository."""
+        return FileSystemRepository(self.project_root)
 
     def create_session_management_service(self) -> SessionManagementService:
         """Creates a SessionManagementService with its dependencies."""

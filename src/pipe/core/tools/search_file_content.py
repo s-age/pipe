@@ -1,4 +1,3 @@
-import glob as std_glob
 import os
 import re
 
@@ -7,6 +6,8 @@ from pipe.core.models.results.search_file_content_result import (
     SearchFileContentResult,
 )
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.repositories.filesystem_repository import FileSystemRepository
+from pipe.core.utils.path import get_project_root
 
 
 def search_file_content(
@@ -16,54 +17,60 @@ def search_file_content(
 ) -> ToolResult[SearchFileContentResult]:
     try:
         compiled_pattern = re.compile(pattern)
-        project_root = os.getcwd()
+        project_root = get_project_root()
+        repo = FileSystemRepository(project_root)
 
         search_path = path if path else project_root
-        if not os.path.isabs(search_path):
-            search_path = os.path.abspath(os.path.join(project_root, search_path))
 
-        if not os.path.isdir(search_path):
-            result = SearchFileContentResult(
-                content=f"Error: Search path '{path}' is not a directory."
-            )
-            # This is technically a tool logic error, not a successful search with
-            # 0 results. But the content field handles error messages in the
-            # original design. We will follow the new pattern: if it's an error,
-            # use ToolResult.error.
+        # repo verifies existence and directory
+        if not repo.exists(search_path):
+            return ToolResult(error=f"Error: Search path '{path}' not found.")
+        if not repo.is_dir(search_path):
             return ToolResult(error=f"Error: Search path '{path}' is not a directory.")
 
-        # Use glob to find files, filtered by include pattern if provided
-        if include:
-            glob_pattern = os.path.join(search_path, include)
-        else:
-            glob_pattern = os.path.join(search_path, "**/*")
+        # Use repo.glob
+        glob_pattern = include if include else "**/*"
+
+        # repo.glob returns absolute paths
+        # Output relative paths (to search_path) to match original behavior
 
         matches = []
-        for filepath_str in std_glob.glob(glob_pattern, recursive=True):
-            filepath = filepath_str
-            if os.path.isfile(filepath):
-                try:
-                    with open(filepath, encoding="utf-8") as f:
-                        for line_num, line in enumerate(f, 1):
-                            if compiled_pattern.search(line):
-                                matches.append(
-                                    FileMatchItem(
-                                        file_path=os.path.relpath(
-                                            filepath, search_path
-                                        ),
-                                        line_number=line_num,
-                                        line_content=line.strip(),
-                                    )
-                                )
-                except UnicodeDecodeError:
-                    # Skip binary files or files with encoding issues
-                    continue
-                except Exception as file_e:
-                    matches.append(
-                        FileMatchItem(
-                            error=f"Error reading file {filepath}: {str(file_e)}"
+        # Use recursive=True default matching original logic.
+        # We respect gitignore here to avoid searching in ignored files like
+        # node_modules, .git, build artifacts, etc.
+        files = repo.glob(
+            glob_pattern,
+            search_path=search_path,
+            recursive=True,
+            respect_gitignore=True,
+        )
+
+        for filepath in files:
+            try:
+                # read_text reads whole file. fine for now.
+                content = repo.read_text(filepath)
+
+                for line_num, line in enumerate(content.splitlines(), 1):
+                    if compiled_pattern.search(line):
+                        matches.append(
+                            FileMatchItem(
+                                file_path=os.path.relpath(
+                                    filepath,
+                                    search_path
+                                    if os.path.isabs(search_path)
+                                    else os.path.abspath(search_path),
+                                ),
+                                line_number=line_num,
+                                line_content=line.strip(),
+                            )
                         )
-                    )
+            except UnicodeDecodeError:
+                # Skip binary files
+                continue
+            except Exception as file_e:
+                matches.append(
+                    FileMatchItem(error=f"Error reading file {filepath}: {str(file_e)}")
+                )
 
         if not matches:
             result = SearchFileContentResult(content="No matches found.")

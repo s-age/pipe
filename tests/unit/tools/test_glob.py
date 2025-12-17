@@ -12,6 +12,11 @@ class TestGlobTool(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.test_path = self.temp_dir.name
 
+        # Patch get_project_root
+        self.patcher = patch("pipe.core.tools.glob.get_project_root")
+        self.mock_get_project_root = self.patcher.start()
+        self.mock_get_project_root.return_value = self.test_path
+
         # Create some files for testing
         self.file1 = os.path.join(self.test_path, "file1.txt")
         self.file2 = os.path.join(self.test_path, "file2.log")
@@ -25,6 +30,7 @@ class TestGlobTool(unittest.TestCase):
             f.write("ignored")
 
     def tearDown(self):
+        self.patcher.stop()
         self.temp_dir.cleanup()
 
     @patch("subprocess.run")
@@ -66,7 +72,7 @@ class TestGlobTool(unittest.TestCase):
     @patch("subprocess.run", side_effect=Exception("Test subprocess error"))
     def test_glob_general_exception(self, mock_subprocess_run):
         """Tests that a general exception is caught and an error message is returned."""
-        result = glob(pattern="*")
+        result = glob(pattern="*", path=self.test_path)
         self.assertIsNotNone(result.error)
         self.assertIn("Test subprocess error", result.error)
 

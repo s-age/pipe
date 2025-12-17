@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from pipe.core.tools.list_directory import list_directory
 
@@ -9,6 +10,11 @@ from pipe.core.tools.list_directory import list_directory
 class TestListDirectoryTool(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
+
+        # Patch get_project_root
+        self.patcher = patch("pipe.core.tools.list_directory.get_project_root")
+        self.mock_get_project_root = self.patcher.start()
+        self.mock_get_project_root.return_value = self.test_dir
 
         # Create dummy files and directories
         with open(os.path.join(self.test_dir, "file1.txt"), "w") as f:
@@ -22,6 +28,7 @@ class TestListDirectoryTool(unittest.TestCase):
             f.write("c")
 
     def tearDown(self):
+        self.patcher.stop()
         shutil.rmtree(self.test_dir)
 
     def test_list_directory_lists_all(self):

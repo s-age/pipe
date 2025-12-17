@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from pipe.core.models.results.search_file_content_result import (
     SearchFileContentResult,
@@ -12,6 +13,11 @@ from pipe.core.tools.search_file_content import search_file_content
 class TestSearchFileContentTool(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
+
+        # Patch get_project_root
+        self.patcher = patch("pipe.core.tools.search_file_content.get_project_root")
+        self.mock_get_project_root = self.patcher.start()
+        self.mock_get_project_root.return_value = self.test_dir
 
         # Create dummy files with content to search
         self.file1_path = os.path.join(self.test_dir, "file1.txt")
@@ -26,6 +32,7 @@ class TestSearchFileContentTool(unittest.TestCase):
             f.write("    print('hello')\n")
 
     def tearDown(self):
+        self.patcher.stop()
         shutil.rmtree(self.test_dir)
 
     def test_search_file_content_finds_pattern(self):

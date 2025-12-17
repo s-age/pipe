@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import unittest
+import unittest.mock
 import warnings
 
 from pipe.core.tools.read_many_files import read_many_files
@@ -18,6 +19,13 @@ class TestReadManyFiles(unittest.TestCase):
         self.test_dir = tempfile.mkdtemp(prefix="pipe_test_read_many_files_")
 
         os.chdir(self.test_dir)
+
+        # Patch get_project_root to return the test directory
+        self.patcher = unittest.mock.patch(
+            "pipe.core.tools.read_many_files.get_project_root"
+        )
+        self.mock_get_project_root = self.patcher.start()
+        self.mock_get_project_root.return_value = self.test_dir
 
         # Create setting.yml
         self.settings_data = {
@@ -79,20 +87,25 @@ class TestReadManyFiles(unittest.TestCase):
             f.write("log")
 
     def tearDown(self):
+        self.patcher.stop()
         os.chdir(self.original_cwd)
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
         if "PIPE_SESSION_ID" in os.environ:
             del os.environ["PIPE_SESSION_ID"]
 
+    def _normalize_paths(self, file_contents):
+        return {os.path.realpath(k): v for k, v in file_contents.items()}
+
     def test_read_many_files_success(self):
         result = read_many_files(paths=["**/*.txt"])
         self.assertIsNotNone(result.data.files)
         self.assertEqual(len(result.data.files), 2)
-
-        file_contents = {f.path: f.content for f in result.data.files}
-        abs_file1 = os.path.abspath(self.file1)
-        abs_file2 = os.path.abspath(self.file2)
+        file_contents = self._normalize_paths(
+            {f.path: f.content for f in result.data.files}
+        )
+        abs_file1 = os.path.realpath(os.path.abspath(self.file1))
+        abs_file2 = os.path.realpath(os.path.abspath(self.file2))
 
         self.assertIn(abs_file1, file_contents)
         self.assertEqual(file_contents[abs_file1], "content1")
@@ -106,14 +119,11 @@ class TestReadManyFiles(unittest.TestCase):
         references = data.get("references", [])
         self.assertEqual(len(references), 2)
 
-        abs_file1 = os.path.abspath(self.file1)
-        abs_file2 = os.path.abspath(self.file2)
-
         found_file1 = any(
-            ref["path"] == self.file1 or ref["path"] == abs_file1 for ref in references
+            os.path.realpath(ref["path"]) == abs_file1 for ref in references
         )
         found_file2 = any(
-            ref["path"] == self.file2 or ref["path"] == abs_file2 for ref in references
+            os.path.realpath(ref["path"]) == abs_file2 for ref in references
         )
 
         self.assertTrue(found_file1)
@@ -124,9 +134,11 @@ class TestReadManyFiles(unittest.TestCase):
         self.assertIsNotNone(result.data.files)
         self.assertEqual(len(result.data.files), 1)  # Only file1 should be included
 
-        file_contents = {f.path: f.content for f in result.data.files}
-        abs_file1 = os.path.abspath(self.file1)
-        abs_file2 = os.path.abspath(self.file2)
+        file_contents = self._normalize_paths(
+            {f.path: f.content for f in result.data.files}
+        )
+        abs_file1 = os.path.realpath(os.path.abspath(self.file1))
+        abs_file2 = os.path.realpath(os.path.abspath(self.file2))
 
         self.assertIn(abs_file1, file_contents)
         self.assertEqual(file_contents[abs_file1], "content1")
@@ -138,13 +150,13 @@ class TestReadManyFiles(unittest.TestCase):
 
         # Check that file2 is NOT in paths (in references)
         found_file2_in_refs = any(
-            ref["path"] == self.file2 or ref["path"] == abs_file2 for ref in references
+            os.path.realpath(ref["path"]) == abs_file2 for ref in references
         )
         self.assertFalse(found_file2_in_refs)
 
         # Check that file1 IS in paths (in references)
         found_file1_in_refs = any(
-            ref["path"] == self.file1 or ref["path"] == abs_file1 for ref in references
+            os.path.realpath(ref["path"]) == abs_file1 for ref in references
         )
         self.assertTrue(found_file1_in_refs)
 
@@ -157,9 +169,11 @@ class TestReadManyFiles(unittest.TestCase):
 
         self.assertIsNotNone(result.data.files)
         self.assertEqual(len(result.data.files), 2)
-        file_contents = {f.path: f.content for f in result.data.files}
-        abs_file1 = os.path.abspath(self.file1)
-        abs_file2 = os.path.abspath(self.file2)
+        file_contents = self._normalize_paths(
+            {f.path: f.content for f in result.data.files}
+        )
+        abs_file1 = os.path.realpath(os.path.abspath(self.file1))
+        abs_file2 = os.path.realpath(os.path.abspath(self.file2))
 
         self.assertIn(abs_file1, file_contents)
         self.assertEqual(file_contents[abs_file1], "content1")

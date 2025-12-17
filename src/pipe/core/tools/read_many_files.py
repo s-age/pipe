@@ -1,6 +1,6 @@
 import fnmatch
-import glob as std_glob
 import os
+import sys
 
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.factories.settings_factory import SettingsFactory
@@ -9,9 +9,12 @@ from pipe.core.models.results.read_many_files_result import (
     ReadManyFilesResult,
 )
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.repositories.filesystem_repository import FileSystemRepository
+from pipe.core.utils.path import get_project_root
 
 
-# session_service and session_id are dynamically passed by the tool executor
+# session_service, session_id, and reference_service are dynamically passed by
+# the tool executor
 def read_many_files(
     paths: list[str],
     exclude: list[str] | None = None,
@@ -21,28 +24,40 @@ def read_many_files(
     max_files: int = 20,  # Maximum number of files to read
     session_service=None,  # Deprecated, kept for interface compatibility
     session_id=None,
+    reference_service=None,
 ) -> ToolResult[ReadManyFilesResult]:
     """
     Resolves file paths based on glob patterns and adds them to the session's
     reference list.
+
+    Args:
+        paths: List of file paths or glob patterns
+        exclude: Patterns to exclude from results
+        include: Patterns to include in results
+        recursive: Whether to search recursively
+        useDefaultExcludes: Whether to use default exclusion patterns
+        max_files: Maximum number of files to read
+        session_service: Session service instance (deprecated, kept for compatibility)
+        session_id: Session ID for reference management (injected by tool executor)
+        reference_service: Reference service instance (injected by tool executor)
     """
     if not session_id:
         session_id = os.environ.get("PIPE_SESSION_ID")
 
-    project_root = os.getcwd()
+    project_root = get_project_root()
 
-    # If no session ID is provided, skip reference management
-    reference_service = None
-    if session_id:
-        # Try to load settings and create reference service
+    repo = FileSystemRepository(project_root)
+
+    # If reference_service is not provided (not injected), try to create it
+    if session_id and not reference_service:
         try:
             settings = SettingsFactory.get_settings(project_root)
             factory = ServiceFactory(project_root, settings)
             reference_service = factory.create_session_reference_service()
-        except Exception:
-            # If any setup fails, proceed without reference management (silently)
-            session_id = None
-            reference_service = None
+        except Exception as e:
+            print(f"Warning: Failed to setup reference service: {e}", file=sys.stderr)
+            # If creation fails, we can't track references
+            pass
 
     try:
         resolved_files = []
@@ -68,16 +83,20 @@ def read_many_files(
 
         for pattern_or_path in paths:
             # Handle directory paths
-            if os.path.isdir(os.path.join(project_root, pattern_or_path)):
-                pattern_to_glob = os.path.join(project_root, pattern_or_path, "**/*")
+            # Check if it is a directory using repo
+            if repo.is_dir(pattern_or_path):
+                pattern_to_glob = os.path.join(pattern_or_path, "**/*")
             else:
-                pattern_to_glob = os.path.join(project_root, pattern_or_path)
+                pattern_to_glob = pattern_or_path
 
-            for filepath_str in std_glob.glob(pattern_to_glob, recursive=recursive):
-                filepath = filepath_str
-
-                if not os.path.isfile(filepath):
-                    continue
+            # Use repo.glob without gitignore to allow manual filtering below
+            for filepath in repo.glob(
+                pattern_to_glob,
+                search_path=project_root,
+                recursive=recursive,
+                respect_gitignore=False,
+            ):
+                # repo.glob returns absolute paths and verifies they exist and are files
 
                 is_excluded = False
                 basename = os.path.basename(filepath)
@@ -101,7 +120,7 @@ def read_many_files(
                     if not is_included:
                         continue
 
-                resolved_files.append(os.path.abspath(filepath))
+                resolved_files.append(filepath)
 
         if not resolved_files:
             result = ReadManyFilesResult(
@@ -130,8 +149,7 @@ def read_many_files(
         file_contents = []
         for fpath in unique_files:
             try:
-                with open(fpath, encoding="utf-8") as f:
-                    content = f.read()
+                content = repo.read_text(fpath)
                 file_contents.append(FileContent(path=fpath, content=content))
             except UnicodeDecodeError:
                 file_contents.append(

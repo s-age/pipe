@@ -27,6 +27,13 @@ class TestReadManyFiles(unittest.TestCase):
         self.mock_get_project_root = self.patcher.start()
         self.mock_get_project_root.return_value = self.test_dir
 
+        # Also patch get_project_root in SettingsRepository
+        self.patcher2 = unittest.mock.patch(
+            "pipe.core.repositories.settings_repository.get_project_root"
+        )
+        self.mock_get_project_root2 = self.patcher2.start()
+        self.mock_get_project_root2.return_value = self.test_dir
+
         # Create setting.yml
         self.settings_data = {
             "model": "gemini-2.5-flash",
@@ -88,6 +95,7 @@ class TestReadManyFiles(unittest.TestCase):
 
     def tearDown(self):
         self.patcher.stop()
+        self.patcher2.stop()
         os.chdir(self.original_cwd)
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)

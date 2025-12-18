@@ -5,6 +5,7 @@ import warnings
 from unittest.mock import patch
 
 from pipe.core.tools.compress_session_turns import compress_session_turns
+from tests.helpers.settings_factory import create_test_settings
 
 # Ignore Pydantic warnings about 'Operation' class from google-genai
 warnings.filterwarnings(
@@ -87,15 +88,8 @@ class TestCompressSessionTurns(unittest.TestCase):
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_compress_turns_success(self, mock_get_settings):
         # Setup mocks
-        from pipe.core.models.settings import Settings
-
-        mock_settings = Settings(
+        mock_settings = create_test_settings(
             sessions_path=self.tmp_dir,
-            parameters={
-                "temperature": {"value": 0.5, "description": "d"},
-                "top_p": {"value": 0.9, "description": "d"},
-                "top_k": {"value": 40, "description": "d"},
-            },
         )
         mock_get_settings.return_value = mock_settings
 

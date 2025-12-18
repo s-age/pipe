@@ -12,20 +12,18 @@ class SettingsFactory:
     """
 
     @staticmethod
-    def get_settings(project_root: str) -> Settings:
+    def get_settings() -> Settings:
         """
         Loads the settings from the configuration file.
         Prioritizes 'setting.yml' over 'setting.default.yml'.
-
-        Args:
-            project_root: The root directory of the project.
 
         Returns:
             A validated Settings model instance.
 
         Note:
-            This method now delegates to SettingsRepository. Results are cached
-            within the repository instance created for this call.
+            This method now delegates to SettingsRepository. The project root
+            is automatically detected using get_project_root(). Results are
+            cached within the repository instance created for this call.
         """
-        repository = SettingsRepository(project_root=project_root)
+        repository = SettingsRepository()
         return repository.load()

@@ -51,7 +51,7 @@ def read_many_files(
     # If reference_service is not provided (not injected), try to create it
     if session_id and not reference_service:
         try:
-            settings = SettingsFactory.get_settings(project_root)
+            settings = SettingsFactory.get_settings()
             factory = ServiceFactory(project_root, settings)
             reference_service = factory.create_session_reference_service()
         except Exception as e:

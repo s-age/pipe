@@ -136,7 +136,8 @@ class PromptFactory:
         from pipe.core.domains.gemini_cache import GeminiCache
 
         gemini_cache = GeminiCache(
-            tool_response_limit=settings.tool_response_expiration
+            tool_response_limit=settings.tool_response_expiration,
+            cache_update_threshold=settings.model.cache_update_threshold,
         )
         cached_history, buffered_history = gemini_cache.split_history(
             history_turns_for_prompt,

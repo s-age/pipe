@@ -106,6 +106,7 @@ class SettingsInfo(CamelCaseModel):
     model: str
     search_model: str
     context_limit: int
+    cache_update_threshold: int
     api_mode: str
     language: str
     yolo: bool

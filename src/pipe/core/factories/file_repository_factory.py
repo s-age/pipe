@@ -39,7 +39,7 @@ class FileRepositoryFactory:
         # Auto-load settings if enable_sandbox is not explicitly provided
         if enable_sandbox is None:
             try:
-                settings = SettingsFactory.get_settings(project_root)
+                settings = SettingsFactory.get_settings()
                 enable_sandbox = settings.enable_sandbox
             except (FileNotFoundError, ValueError):
                 # Settings not found (e.g., tests), default to sandbox

@@ -128,7 +128,8 @@ class GeminiClientService:
 
         # 7. Determine cache strategy and prepare content
         gemini_cache = GeminiCache(
-            tool_response_limit=self.settings.tool_response_expiration
+            tool_response_limit=self.settings.tool_response_expiration,
+            cache_update_threshold=self.settings.model.cache_update_threshold,
         )
         cached_content_name, content_to_send = self._prepare_cache_and_content(
             client=client,
@@ -292,7 +293,7 @@ class GeminiClientService:
                 cache_msg = (
                     f"Cache decision: NO CACHE (below threshold). "
                     f"Current prompt_tokens={session_data.token_count}, "
-                    f"Threshold={gemini_cache.CACHE_UPDATE_THRESHOLD}. "
+                    f"Threshold={gemini_cache.cache_update_threshold}. "
                     f"Sending static + dynamic content"
                 )
                 streaming_log_repo.write_log_line(
@@ -307,7 +308,7 @@ class GeminiClientService:
                     f"Current cached_tokens={session_data.cached_content_token_count}, "
                     f"Current prompt_tokens={session_data.token_count}, "
                     f"Buffered tokens={buffered_tokens}, "
-                    f"Threshold={gemini_cache.CACHE_UPDATE_THRESHOLD}"
+                    f"Threshold={gemini_cache.cache_update_threshold}"
                 )
                 streaming_log_repo.write_log_line(
                     "CACHE_DECISION", cache_msg, datetime.now()

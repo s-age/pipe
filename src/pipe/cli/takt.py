@@ -144,7 +144,7 @@ def main():
         sys.exit(1)
 
     load_dotenv()
-    settings = SettingsFactory.get_settings(project_root)
+    settings = SettingsFactory.get_settings()
 
     parsed_args, parser = _parse_arguments()
     args = TaktArgs.from_parsed_args(parsed_args)

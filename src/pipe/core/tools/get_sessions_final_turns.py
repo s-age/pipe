@@ -59,7 +59,7 @@ def get_sessions_final_turns(
         project_root = get_project_root()
 
     # Initialize repository
-    settings = SettingsFactory.get_settings(project_root)
+    settings = SettingsFactory.get_settings()
     repository = SessionRepository(project_root, settings)
 
     results: list[dict[str, str | dict[str, str] | None]] = []

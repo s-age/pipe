@@ -18,25 +18,28 @@ class GeminiCache:
     Manages the context caching strategy for Gemini API.
 
     Strategy (simplified using cached_content_token_count from API):
-    - Always create cache when buffered content >= CACHE_UPDATE_THRESHOLD
+    - Always create cache when buffered content >= cache_update_threshold
     - Minimum cache size: 1,024 tokens (2.5 Flash) / 4,096 tokens (2.5 Pro)
+    - If cache_update_threshold is -1, caching is disabled
 
     The cache is split into:
     - cached_history: Older turns that are cached (static in API requests)
     - buffered_history: Recent turns that accumulate until next cache threshold
     """
 
-    # Cache update threshold in tokens
-    CACHE_UPDATE_THRESHOLD = 20000  # Update cache every 20K tokens
-
-    def __init__(self, tool_response_limit: int = 3):
+    def __init__(
+        self, tool_response_limit: int = 3, cache_update_threshold: int = 20000
+    ):
         """
         Initialize GeminiCache.
 
         Args:
             tool_response_limit: Maximum tool responses to include per turn
+            cache_update_threshold: Token threshold for cache updates.
+                                   Set to -1 to disable caching.
         """
         self.tool_response_limit = tool_response_limit
+        self.cache_update_threshold = cache_update_threshold
 
     def split_history(
         self,
@@ -159,6 +162,9 @@ class GeminiCache:
             buffered_token_count: Number of tokens not yet cached
 
         Returns:
-            True if buffered tokens exceed threshold
+            True if buffered tokens exceed threshold, False if caching is disabled
         """
-        return buffered_token_count >= self.CACHE_UPDATE_THRESHOLD
+        # Disable caching if threshold is -1
+        if self.cache_update_threshold < 0:
+            return False
+        return buffered_token_count >= self.cache_update_threshold

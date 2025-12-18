@@ -26,8 +26,8 @@ class TokenService:
         Args:
             settings: The Settings model instance.
         """
-        self.model_name = settings.model
-        self.limit = settings.context_limit
+        self.model_name = settings.model.name
+        self.limit = settings.model.context_limit
 
         # Using TYPE_CHECKING import for type hint to avoid runtime dependency
         self.client: GenaiClient | None = None

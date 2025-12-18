@@ -6,6 +6,7 @@ import warnings
 from unittest.mock import patch
 
 from pipe.core.tools.delete_session_turns import delete_session_turns
+from tests.helpers.settings_factory import create_test_settings
 
 
 class TestDeleteSessionTurns(unittest.TestCase):
@@ -50,16 +51,8 @@ class TestDeleteSessionTurns(unittest.TestCase):
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_delete_turns_success(self, mock_get_settings):
         # Mock settings
-        from pipe.core.models.settings import Settings
-
-        mock_settings = Settings(
+        mock_settings = create_test_settings(
             sessions_path=self.tmp_dir,
-            parameters={
-                "temperature": {"value": 0.5, "description": "desc"},
-                "top_p": {"value": 0.9, "description": "desc"},
-                "top_k": {"value": 40, "description": "desc"},
-            },
-            timezone="UTC",
         )
         mock_get_settings.return_value = mock_settings
 

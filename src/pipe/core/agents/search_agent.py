@@ -17,7 +17,9 @@ warnings.filterwarnings(
 def call_gemini_api_with_grounding(
     settings: Settings, instruction: str, project_root: str
 ) -> types.GenerateContentResponse:
-    model_name = settings.search_model
+    if not settings.search_model:
+        raise ValueError("'search_model' not found in setting.yml")
+    model_name = settings.search_model.name
     if not model_name:
         raise ValueError("'search_model' not found in setting.yml")
 

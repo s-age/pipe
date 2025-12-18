@@ -21,28 +21,21 @@ class SettingsRepository(FileRepository):
     - Loads settings from setting.yml or setting.default.yml
     - Provides caching to avoid repeated file I/O
     - Validates settings using the Settings Pydantic model
-    - Automatically determines project_root if not provided
+    - Automatically determines project_root using get_project_root()
 
     Usage:
-        # With explicit project_root
-        repo = SettingsRepository(project_root="/path/to/project")
-        settings = repo.load()
-
-        # With automatic project_root detection
         repo = SettingsRepository()
         settings = repo.load()
     """
 
-    def __init__(self, project_root: str | None = None):
+    def __init__(self):
         """
         Initialize the settings repository.
 
-        Args:
-            project_root: The root directory of the project. If None, it will be
-                automatically detected using get_project_root().
+        The project root is automatically detected using get_project_root().
         """
         super().__init__()
-        self.project_root = project_root or get_project_root()
+        self.project_root = get_project_root()
         self._cache: Settings | None = None
 
     def load(self, use_cache: bool = True) -> Settings:

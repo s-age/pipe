@@ -7,6 +7,7 @@ import warnings
 from unittest.mock import patch
 
 from pipe.core.tools.read_file import read_file
+from tests.helpers.settings_factory import create_test_settings
 
 
 class TestReadFile(unittest.TestCase):
@@ -47,16 +48,9 @@ class TestReadFile(unittest.TestCase):
         mock_get_project_root.return_value = self.test_dir
 
         # Mock settings to point to our temp sessions dir
-        from pipe.core.models.settings import Settings
-
-        mock_settings = Settings(
+        mock_settings = create_test_settings(
             sessions_path=self.sessions_dir,
-            parameters={
-                "temperature": {"value": 0.5, "description": "d"},
-                "top_p": {"value": 0.5, "description": "d"},
-                "top_k": {"value": 40, "description": "d"},
-            },
-            model="gemini-2.0-flash-exp",
+            model_name="gemini-2.0-flash-exp",
         )
         mock_get_settings.return_value = mock_settings
 

@@ -120,7 +120,7 @@ def create_app(
             pass
 
     # Load settings
-    settings = SettingsFactory.get_settings(project_root)
+    settings = SettingsFactory.get_settings()
 
     tz_name = settings.timezone
     try:

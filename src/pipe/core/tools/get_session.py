@@ -22,7 +22,7 @@ def get_session(
     if not session_service:
         project_root = os.getcwd()
         try:
-            settings = SettingsFactory.get_settings(project_root)
+            settings = SettingsFactory.get_settings()
         except Exception as e:
             return ToolResult(error=f"Failed to load settings: {e}")
 

@@ -6,6 +6,7 @@ import warnings
 from unittest.mock import patch
 
 from pipe.core.tools.get_session import get_session
+from tests.helpers.settings_factory import create_test_settings
 
 
 class TestGetSession(unittest.TestCase):
@@ -61,18 +62,8 @@ class TestGetSession(unittest.TestCase):
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_get_session_by_id(self, mock_get_settings):
-        from pipe.core.models.settings import Settings
-
-        mock_settings = Settings(
-            api_key="dummy",
-            timezone="UTC",
-            language="en",
+        mock_settings = create_test_settings(
             sessions_path=self.tmp_dir,
-            parameters={
-                "temperature": {"value": 0.5, "description": "Temp"},
-                "top_p": {"value": 0.9, "description": "Top P"},
-                "top_k": {"value": 40, "description": "Top K"},
-            },
         )
         mock_get_settings.return_value = mock_settings
 
@@ -89,18 +80,8 @@ class TestGetSession(unittest.TestCase):
         Tests that get_session requires explicit session_id and ignores environment
         variable.
         """
-        from pipe.core.models.settings import Settings
-
-        mock_settings = Settings(
-            api_key="dummy",
-            timezone="UTC",
-            language="en",
+        mock_settings = create_test_settings(
             sessions_path=self.tmp_dir,
-            parameters={
-                "temperature": {"value": 0.5, "description": "Temp"},
-                "top_p": {"value": 0.9, "description": "Top P"},
-                "top_k": {"value": 40, "description": "Top K"},
-            },
         )
         mock_get_settings.return_value = mock_settings
 
@@ -114,18 +95,8 @@ class TestGetSession(unittest.TestCase):
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_get_session_not_found(self, mock_get_settings):
-        from pipe.core.models.settings import Settings
-
-        mock_settings = Settings(
-            api_key="dummy",
-            timezone="UTC",
-            language="en",
+        mock_settings = create_test_settings(
             sessions_path=self.tmp_dir,
-            parameters={
-                "temperature": {"value": 0.5, "description": "Temp"},
-                "top_p": {"value": 0.9, "description": "Top P"},
-                "top_k": {"value": 40, "description": "Top K"},
-            },
         )
         mock_get_settings.return_value = mock_settings
 

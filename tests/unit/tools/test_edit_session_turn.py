@@ -6,9 +6,9 @@ import warnings
 from unittest.mock import patch
 
 from pipe.core.models.session import Session
-from pipe.core.models.settings import Settings
 from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
 from pipe.core.tools.edit_session_turn import edit_session_turn
+from tests.helpers.settings_factory import create_test_settings
 
 
 class TestEditSessionTurn(unittest.TestCase):
@@ -56,14 +56,8 @@ class TestEditSessionTurn(unittest.TestCase):
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_edit_user_task_turn(self, mock_get_settings):
-        mock_get_settings.return_value = Settings(
+        mock_get_settings.return_value = create_test_settings(
             sessions_path=self.sessions_dir,
-            timezone="UTC",
-            parameters={
-                "temperature": {"value": 0.5, "description": "Test temperature"},
-                "top_p": {"value": 0.9, "description": "Test top_p"},
-                "top_k": {"value": 40, "description": "Test top_k"},
-            },
         )
         new_instruction = "Updated instruction"
         result = edit_session_turn(
@@ -83,14 +77,8 @@ class TestEditSessionTurn(unittest.TestCase):
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_edit_model_response_turn(self, mock_get_settings):
-        mock_get_settings.return_value = Settings(
+        mock_get_settings.return_value = create_test_settings(
             sessions_path=self.sessions_dir,
-            timezone="UTC",
-            parameters={
-                "temperature": {"value": 0.5, "description": "Test temperature"},
-                "top_p": {"value": 0.9, "description": "Test top_p"},
-                "top_k": {"value": 40, "description": "Test top_k"},
-            },
         )
         new_content = "Updated content"
         result = edit_session_turn(
@@ -106,14 +94,8 @@ class TestEditSessionTurn(unittest.TestCase):
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_edit_invalid_turn_index(self, mock_get_settings):
-        mock_get_settings.return_value = Settings(
+        mock_get_settings.return_value = create_test_settings(
             sessions_path=self.sessions_dir,
-            timezone="UTC",
-            parameters={
-                "temperature": {"value": 0.5, "description": "Test temperature"},
-                "top_p": {"value": 0.9, "description": "Test top_p"},
-                "top_k": {"value": 40, "description": "Test top_k"},
-            },
         )
         result = edit_session_turn(
             session_id=self.session_id, turn=99, new_content="Fail"
@@ -123,14 +105,8 @@ class TestEditSessionTurn(unittest.TestCase):
 
     @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     def test_edit_via_env_var(self, mock_get_settings):
-        mock_get_settings.return_value = Settings(
+        mock_get_settings.return_value = create_test_settings(
             sessions_path=self.sessions_dir,
-            timezone="UTC",
-            parameters={
-                "temperature": {"value": 0.5, "description": "Test temperature"},
-                "top_p": {"value": 0.9, "description": "Test top_p"},
-                "top_k": {"value": 40, "description": "Test top_k"},
-            },
         )
         os.environ["PIPE_SESSION_ID"] = self.session_id
         new_instruction = "Env var instruction"

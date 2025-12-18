@@ -36,7 +36,7 @@ def compress_session_turns(
         project_root = os.getcwd()
 
         # Load settings
-        settings = SettingsFactory.get_settings(project_root)
+        settings = SettingsFactory.get_settings()
 
         service_factory = ServiceFactory(project_root, settings)
         optimization_service = service_factory.create_session_optimization_service()

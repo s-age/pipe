@@ -49,7 +49,7 @@ def read_file(
 
     if session_id:
         try:
-            settings = SettingsFactory.get_settings(project_root)
+            settings = SettingsFactory.get_settings()
             factory = ServiceFactory(project_root, settings)
             reference_service = factory.create_session_reference_service()
 

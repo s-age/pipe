@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.factories.service_factory import ServiceFactory
-from pipe.core.models.settings import Settings
 from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
+from tests.helpers.settings_factory import create_test_settings
 
 
 class TestSessionCollectionExtensions(unittest.TestCase):
@@ -22,18 +22,10 @@ class TestSessionCollectionExtensions(unittest.TestCase):
         self.timezone_obj = zoneinfo.ZoneInfo(self.timezone_name)
 
         # Setup settings
-        settings_data = {
-            "api_mode": "gemini-cli",
-            "model": "gemini-2.0-flash-exp",
-            "expert_mode": False,
-            "timezone": "UTC",
-            "parameters": {
-                "temperature": {"value": 0.5, "description": "t"},
-                "top_p": {"value": 0.9, "description": "p"},
-                "top_k": {"value": 40, "description": "k"},
-            },
-        }
-        self.settings = Settings(**settings_data)
+        self.settings = create_test_settings(
+            model_name="gemini-2.0-flash-exp",
+            api_mode="gemini-cli",
+        )
         self.service_factory = ServiceFactory(self.temp_dir, self.settings)
         self.session_service = self.service_factory.create_session_service()
         self.turn_service = self.service_factory.create_session_turn_service()

@@ -41,7 +41,7 @@ def edit_session_turn(
         project_root = os.getcwd()
 
         # Load settings
-        settings = SettingsFactory.get_settings(project_root)
+        settings = SettingsFactory.get_settings()
 
         factory = ServiceFactory(project_root, settings)
         turn_service = factory.create_session_turn_service()

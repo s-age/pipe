@@ -33,7 +33,7 @@ def call_gemini_cli(
     settings = session_service.settings
     project_root = session_service.project_root
 
-    model_name = settings.model
+    model_name = settings.model.name
     if not model_name:
         raise ValueError("'model' not found in settings")
 

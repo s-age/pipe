@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from pipe.cli.takt import main
 from pipe.core.models.args import TaktArgs
-from pipe.core.models.settings import Settings
+from tests.helpers.settings_factory import create_test_settings
 
 
 class TestTaktMain(unittest.TestCase):
@@ -35,15 +35,9 @@ class TestTaktMain(unittest.TestCase):
         mock_parse_arguments.return_value = (mock_args, mock_parser)
 
         # Mock settings
-        mock_get_settings.return_value = Settings(
-            model="default-model",
+        mock_get_settings.return_value = create_test_settings(
+            model_name="default-model",
             api_mode="gemini-api",  # This should be overridden
-            timezone="UTC",
-            parameters={
-                "temperature": {"value": 0.5, "description": "temp"},
-                "top_p": {"value": 0.9, "description": "p"},
-                "top_k": {"value": 40, "description": "k"},
-            },
         )
 
         # Run the main function
@@ -93,15 +87,8 @@ class TestTaktMain(unittest.TestCase):
         mock_parse_arguments.return_value = (mock_args, mock_parser)
 
         # Mock settings
-        mock_get_settings.return_value = Settings(
-            model="default-model",
-            api_mode="gemini-api",
-            timezone="UTC",
-            parameters={
-                "temperature": {"value": 0.5, "description": "temp"},
-                "top_p": {"value": 0.9, "description": "p"},
-                "top_k": {"value": 40, "description": "k"},
-            },
+        mock_get_settings.return_value = create_test_settings(
+            model_name="default-model",
         )
 
         # Run the main function

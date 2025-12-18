@@ -368,7 +368,6 @@ def execute_tool(tool_name, arguments):
                     isinstance(result, dict)
                     and "error" in result
                     and result["error"] is not None
-                    and result["error"] != "(none)"
                 ):
                     formatted_response = {
                         "status": "failed",

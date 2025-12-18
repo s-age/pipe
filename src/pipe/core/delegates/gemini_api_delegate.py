@@ -167,7 +167,7 @@ def run_stream(
         if (
             isinstance(tool_result, dict)
             and "error" in tool_result
-            and tool_result["error"] != "(none)"
+            and tool_result["error"] is not None
         ):
             formatted_response = {"status": "failed", "message": tool_result["error"]}
         else:

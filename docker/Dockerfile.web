@@ -43,8 +43,15 @@ RUN apt-get update && \
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/dist/web /app/assets
 
+# Copy entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Expose port
 EXPOSE 5001
+
+# Set entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Command to run the app
 CMD ["flask", "run", "--host=0.0.0.0", "--port=5001"]

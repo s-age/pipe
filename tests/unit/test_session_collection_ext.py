@@ -9,6 +9,7 @@ from unittest.mock import patch
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
+
 from tests.helpers.settings_factory import create_test_settings
 
 

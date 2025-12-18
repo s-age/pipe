@@ -8,6 +8,7 @@ from unittest.mock import patch
 from pipe.core.models.session import Session
 from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
 from pipe.core.tools.edit_session_turn import edit_session_turn
+
 from tests.helpers.settings_factory import create_test_settings
 
 

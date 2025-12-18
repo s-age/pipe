@@ -7,6 +7,7 @@ import warnings
 from unittest.mock import patch
 
 from pipe.core.tools.read_file import read_file
+
 from tests.helpers.settings_factory import create_test_settings
 
 

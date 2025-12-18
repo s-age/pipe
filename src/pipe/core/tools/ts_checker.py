@@ -22,22 +22,26 @@ def ts_checker(
         build_command: The command to run for building. Defaults to "npm run build".
     """
     if project_root is None:
-        # Auto-detect project root by finding the directory containing
-        # pyproject.toml or package.json
+        # Auto-detect project root by finding the project root directory
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = current_dir
+        search_dir = current_dir
         for _ in range(5):  # Go up to 5 levels
-            if os.path.exists(os.path.join(project_root, "src", "web", "package.json")):
-                project_root = os.path.join(project_root, "src", "web")
+            if os.path.exists(os.path.join(search_dir, "pyproject.toml")):
+                project_root = search_dir
                 break
-            if os.path.exists(
-                os.path.join(project_root, "pyproject.toml")
-            ) or os.path.exists(os.path.join(project_root, "package.json")):
+            parent = os.path.dirname(search_dir)
+            if parent == search_dir:
                 break
-            parent = os.path.dirname(project_root)
-            if parent == project_root:
-                break
-            project_root = parent
+            search_dir = parent
+
+        # If pyproject.toml not found, use current directory
+        if project_root is None:
+            project_root = current_dir
+
+    # Check if src/web exists and use it as the working directory
+    web_dir = os.path.join(project_root, "src", "web")
+    if os.path.exists(os.path.join(web_dir, "package.json")):
+        project_root = web_dir
 
     results: dict[str, CommandCheckResult] = {}
 

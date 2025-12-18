@@ -13,14 +13,28 @@ from pipe.core.utils.path import get_project_root
 def ts_find_similar_code(
     base_file_path: str,
     symbol_name: str,
-    search_directory: str,
+    search_directory: str | None = None,
     max_results: int = 3,
 ) -> ToolResult[TSFindSimilarCodeResult]:
     """
     Finds similar TypeScript code snippets based on a given symbol in a base file.
     It uses ts-morph via ts_analyzer.ts to extract code snippets and then compares them.
     Also includes the type definitions of the base symbol.
+
+    Args:
+        base_file_path: The absolute path to the base file containing the symbol.
+        symbol_name: The name of the symbol to find similar code for.
+        search_directory: The directory to search for similar code.
+            Defaults to src/web in the project root.
+        max_results: Maximum number of similar code results to return. Defaults to 3.
     """
+    # Calculate project_root internally
+    project_root = get_project_root()
+
+    # Default search_directory to src/web
+    if search_directory is None:
+        search_directory = os.path.join(project_root, "src", "web")
+
     if "node_modules" in os.path.normpath(
         base_file_path
     ) or "node_modules" in os.path.normpath(search_directory):
@@ -35,9 +49,6 @@ def ts_find_similar_code(
 
     base_file_path = os.path.abspath(base_file_path)
     search_directory = os.path.abspath(search_directory)
-
-    # Calculate project_root internally
-    project_root = get_project_root()
 
     try:
         # Call ts_analyzer.ts with the new find_similar_code action
@@ -75,19 +86,37 @@ def ts_find_similar_code(
 
         try:
             output = json.loads(process.stdout)
+
+            # Handle case where output is a list instead of a dict
+            if isinstance(output, list):
+                return ToolResult(
+                    error=(
+                        f"Unexpected output format from ts_analyzer.ts (got list): "
+                        f"{process.stdout.strip()}"
+                    )
+                )
+
+            if not isinstance(output, dict):
+                return ToolResult(
+                    error=(
+                        f"Unexpected output type from ts_analyzer.ts: "
+                        f"{type(output).__name__}"
+                    )
+                )
+
             if "error" in output:
                 return ToolResult(error=output["error"])
-            else:
-                # Convert dict matches to SimilarCodeMatch instances
-                matches = None
-                if "matches" in output:
-                    matches = [SimilarCodeMatch(**match) for match in output["matches"]]
-                result = TSFindSimilarCodeResult(
-                    base_snippet=output.get("base_snippet"),
-                    base_type_definitions=output.get("base_type_definitions"),
-                    matches=matches,
-                )
-                return ToolResult(data=result)
+
+            # Convert dict matches to SimilarCodeMatch instances
+            matches = None
+            if "matches" in output:
+                matches = [SimilarCodeMatch(**match) for match in output["matches"]]
+            result = TSFindSimilarCodeResult(
+                base_snippet=output.get("base_snippet"),
+                base_type_definitions=output.get("base_type_definitions"),
+                matches=matches,
+            )
+            return ToolResult(data=result)
         except json.JSONDecodeError:
             return ToolResult(
                 error=(

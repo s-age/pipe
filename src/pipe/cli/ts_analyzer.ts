@@ -214,17 +214,46 @@ const getCodeSnippet = (filePath: string, symbolName: string, project: Project):
     return declaration.getText();
   }
 
-  // Try to find a variable declaration, including default exports
-  const variableDeclarations = sourceFile.getVariableDeclarations();
-  for (const variableDecl of variableDeclarations) {
-    if (variableDecl.getName() === symbolName) {
-      const initializer = variableDecl.getInitializer();
-      if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
-        // For arrow function components, return the entire variable statement
-        return variableDecl.getParent().getText();
-      }
+  // Try to find a top-level variable declaration
+  const topLevelVariableDecl = sourceFile.getVariableDeclaration(symbolName);
+  if (topLevelVariableDecl) {
+    const initializer = topLevelVariableDecl.getInitializer();
+    if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
+      // For arrow function components, return the entire variable statement
+      return topLevelVariableDecl.getParent().getText();
+    }
+    // Handle useCallback, useMemo, etc.
+    if (initializer && initializer.getKind() === SyntaxKind.CallExpression) {
+      return topLevelVariableDecl.getText();
+    }
 
+    return topLevelVariableDecl.getText();
+  }
+
+  // Search all variable declarations (including nested ones)
+  const allVariableDeclarations = sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration);
+  for (const variableDecl of allVariableDeclarations) {
+    if (variableDecl.getName() === symbolName) {
       return variableDecl.getText();
+    }
+  }
+
+  // Search for the symbol in all identifiers (for properties, object literals, etc.)
+  const allIdentifiers = sourceFile.getDescendantsOfKind(SyntaxKind.Identifier);
+  for (const identifier of allIdentifiers) {
+    if (identifier.getText() === symbolName) {
+      // Check if it's a property assignment or object literal property
+      const parent = identifier.getParent();
+      if (parent) {
+        const parentKind = parent.getKind();
+        if (
+          parentKind === SyntaxKind.PropertyAssignment ||
+          parentKind === SyntaxKind.PropertyDeclaration ||
+          parentKind === SyntaxKind.MethodDeclaration
+        ) {
+          return parent.getText();
+        }
+      }
     }
   }
 
@@ -375,6 +404,436 @@ const findSimilarCode = (
   return similarCodes.slice(0, maxResults);
 };
 
+const analyzeFile = (filePath: string, project: Project): any => {
+  const sourceFile = project.addSourceFileAtPath(filePath);
+  const result: any = {
+    file_path: filePath,
+    imports: [],
+    exports: [],
+    classes: [],
+    interfaces: [],
+    type_aliases: [],
+    functions: [],
+    variables: [],
+  };
+
+  // Extract imports
+  sourceFile.getImportDeclarations().forEach((importDecl) => {
+    const moduleSpecifier = importDecl.getModuleSpecifierValue();
+    const namedImports = importDecl.getNamedImports().map((ni) => ni.getName());
+    const defaultImport = importDecl.getDefaultImport()?.getText();
+    const namespaceImport = importDecl.getNamespaceImport()?.getText();
+
+    result.imports.push({
+      module: moduleSpecifier,
+      named_imports: namedImports,
+      default_import: defaultImport || null,
+      namespace_import: namespaceImport || null,
+      lineno: importDecl.getStartLineNumber(),
+    });
+  });
+
+  // Extract exports
+  sourceFile.getExportDeclarations().forEach((exportDecl) => {
+    const moduleSpecifier = exportDecl.getModuleSpecifierValue();
+    const namedExports = exportDecl.getNamedExports().map((ne) => ne.getName());
+
+    result.exports.push({
+      module: moduleSpecifier || null,
+      named_exports: namedExports,
+      lineno: exportDecl.getStartLineNumber(),
+      is_re_export: !!moduleSpecifier,
+    });
+  });
+
+  // Extract classes
+  sourceFile.getClasses().forEach((cls) => {
+    const classInfo: any = {
+      name: cls.getName(),
+      lineno: cls.getStartLineNumber(),
+      end_lineno: cls.getEndLineNumber(),
+      is_exported: cls.isExported(),
+      is_default_export: cls.isDefaultExport(),
+      base_classes: cls.getBaseTypes().map((t) => t.getText()),
+      properties: [],
+      methods: [],
+    };
+
+    // Extract properties
+    cls.getProperties().forEach((prop: PropertyDeclaration) => {
+      classInfo.properties.push({
+        name: prop.getName(),
+        lineno: prop.getStartLineNumber(),
+        end_lineno: prop.getEndLineNumber(),
+        type_hint: prop.getType().getText(),
+        is_static: prop.isStatic(),
+        is_readonly: prop.isReadonly(),
+        is_optional: prop.hasQuestionToken(),
+      });
+    });
+
+    // Extract methods
+    cls.getMethods().forEach((method: MethodDeclaration) => {
+      const parameters = method.getParameters().map((p: ParameterDeclaration) => ({
+        name: p.getName(),
+        type: p.getType().getText(),
+        is_optional: p.hasQuestionToken(),
+      }));
+
+      classInfo.methods.push({
+        name: method.getName(),
+        lineno: method.getStartLineNumber(),
+        end_lineno: method.getEndLineNumber(),
+        signature: method.getText().split("{")[0].trim(),
+        parameters: parameters.map((p) => `${p.name}${p.is_optional ? "?" : ""}: ${p.type}`),
+        return_type: method.getReturnType().getText(),
+        is_static: method.isStatic(),
+        is_async: method.isAsync(),
+      });
+    });
+
+    result.classes.push(classInfo);
+  });
+
+  // Extract interfaces
+  sourceFile.getInterfaces().forEach((iface) => {
+    const interfaceInfo: any = {
+      name: iface.getName(),
+      lineno: iface.getStartLineNumber(),
+      end_lineno: iface.getEndLineNumber(),
+      is_exported: iface.isExported(),
+      is_default_export: iface.isDefaultExport(),
+      properties: [],
+      extends: iface.getExtends().map((e) => e.getText()),
+    };
+
+    iface.getProperties().forEach((prop: PropertySignature) => {
+      interfaceInfo.properties.push({
+        name: prop.getName(),
+        lineno: prop.getStartLineNumber(),
+        end_lineno: prop.getEndLineNumber(),
+        type_hint: prop.getType().getText(),
+        is_optional: prop.hasQuestionToken(),
+      });
+    });
+
+    result.interfaces.push(interfaceInfo);
+  });
+
+  // Extract type aliases
+  sourceFile.getTypeAliases().forEach((typeAlias) => {
+    result.type_aliases.push({
+      name: typeAlias.getName(),
+      lineno: typeAlias.getStartLineNumber(),
+      end_lineno: typeAlias.getEndLineNumber(),
+      is_exported: typeAlias.isExported(),
+      is_default_export: typeAlias.isDefaultExport(),
+      definition: typeAlias.getTypeNode()?.getText() || "",
+    });
+  });
+
+  // Extract functions
+  sourceFile.getFunctions().forEach((func) => {
+    const parameters = func.getParameters().map((p: ParameterDeclaration) => ({
+      name: p.getName(),
+      type: p.getType().getText(),
+      is_optional: p.hasQuestionToken(),
+    }));
+
+    result.functions.push({
+      name: func.getName(),
+      lineno: func.getStartLineNumber(),
+      end_lineno: func.getEndLineNumber(),
+      is_exported: func.isExported(),
+      is_default_export: func.isDefaultExport(),
+      signature: func.getText().split("{")[0].trim(),
+      parameters: parameters.map((p) => `${p.name}${p.is_optional ? "?" : ""}: ${p.type}`),
+      return_type: func.getReturnType().getText(),
+      is_async: func.isAsync(),
+    });
+  });
+
+  // Extract top-level variables (including arrow functions)
+  sourceFile.getVariableDeclarations().forEach((varDecl) => {
+    const initializer = varDecl.getInitializer();
+    const variableStatement = varDecl.getVariableStatement();
+
+    // Get declaration type (const, let, var)
+    const declarationKind = variableStatement?.getDeclarationKind() || "unknown";
+
+    const varInfo: any = {
+      name: varDecl.getName(),
+      lineno: varDecl.getStartLineNumber(),
+      end_lineno: varDecl.getEndLineNumber(),
+      type_hint: varDecl.getType().getText(),
+      is_exported: variableStatement?.isExported() || false,
+      declaration_type: declarationKind, // const, let, or var
+    };
+
+    // Check if it's an arrow function
+    if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
+      const arrowFunc = initializer as ArrowFunction;
+      const parameters = arrowFunc.getParameters().map((p: ParameterDeclaration) => ({
+        name: p.getName(),
+        type: p.getType().getText(),
+        is_optional: p.hasQuestionToken(),
+      }));
+
+      varInfo.is_arrow_function = true;
+      varInfo.parameters = parameters.map((p) => `${p.name}${p.is_optional ? "?" : ""}: ${p.type}`);
+      varInfo.return_type = arrowFunc.getReturnType().getText();
+    }
+
+    result.variables.push(varInfo);
+  });
+
+  return result;
+};
+
+const buildDependencyTree = (
+  filePath: string,
+  project: Project,
+  maxDepth: number = 3,
+  visited: Set<string> = new Set()
+): any => {
+  const absPath = path.resolve(filePath);
+
+  // Circular dependency detection
+  if (visited.has(absPath)) {
+    return {
+      file_path: filePath,
+      circular: true,
+    };
+  }
+
+  visited.add(absPath);
+
+  const sourceFile = project.addSourceFileAtPath(absPath);
+  const result: any = {
+    file_path: filePath,
+    components: [],
+    hooks: [],
+    actions: [],
+    types: [],
+    utils: [],
+    circular: false,
+  };
+
+  if (maxDepth === 0) {
+    result.max_depth_reached = true;
+    return result;
+  }
+
+  // Extract JSX elements (components used)
+  const jsxElements = sourceFile.getDescendantsOfKind(SyntaxKind.JsxOpeningElement);
+  const jsxSelfClosing = sourceFile.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement);
+
+  const componentNames = new Set<string>();
+  [...jsxElements, ...jsxSelfClosing].forEach((element) => {
+    const tagName = element.getTagNameNode().getText();
+    // Skip HTML elements (lowercase)
+    if (tagName[0] === tagName[0].toUpperCase()) {
+      componentNames.add(tagName);
+    }
+  });
+
+  // Map component names to their import sources
+  const imports = sourceFile.getImportDeclarations();
+  const importMap = new Map<string, string>();
+
+  imports.forEach((importDecl) => {
+    const moduleSpecifier = importDecl.getModuleSpecifierValue();
+    const defaultImport = importDecl.getDefaultImport()?.getText();
+    const namedImports = importDecl.getNamedImports().map((ni) => ni.getName());
+
+    if (defaultImport) {
+      importMap.set(defaultImport, moduleSpecifier);
+    }
+    namedImports.forEach((name) => {
+      importMap.set(name, moduleSpecifier);
+    });
+  });
+
+  // Resolve component dependencies
+  componentNames.forEach((compName) => {
+    const source = importMap.get(compName);
+    if (source && !source.startsWith("react")) {
+      const resolvedPath = resolveModulePath(absPath, source);
+      if (resolvedPath) {
+        const childTree = buildDependencyTree(resolvedPath, project, maxDepth - 1, new Set(visited));
+        result.components.push({
+          name: compName,
+          source: source,
+          dependencies: childTree,
+        });
+      } else {
+        result.components.push({
+          name: compName,
+          source: source,
+          dependencies: null,
+        });
+      }
+    }
+  });
+
+  // Extract hook calls (use* pattern)
+  const callExpressions = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
+  const hookCalls = new Set<string>();
+
+  callExpressions.forEach((call) => {
+    const expression = call.getExpression();
+    const text = expression.getText();
+    if (text.startsWith("use") && text[3] === text[3].toUpperCase()) {
+      hookCalls.add(text);
+    }
+  });
+
+  // Resolve hook dependencies
+  hookCalls.forEach((hookName) => {
+    const source = importMap.get(hookName);
+    if (source) {
+      const resolvedPath = resolveModulePath(absPath, source);
+      if (resolvedPath) {
+        const childTree = buildDependencyTree(resolvedPath, project, maxDepth - 1, new Set(visited));
+        result.hooks.push({
+          name: hookName,
+          source: source,
+          dependencies: childTree,
+        });
+      } else {
+        result.hooks.push({
+          name: hookName,
+          source: source,
+          dependencies: null,
+        });
+      }
+    }
+  });
+
+  // Extract function calls that might be actions/utils
+  callExpressions.forEach((call) => {
+    const expression = call.getExpression();
+    const text = expression.getText();
+
+    // Skip built-ins, hooks, and component calls
+    if (
+      !text.startsWith("use") &&
+      text[0] === text[0].toLowerCase() &&
+      !["console", "JSON", "Math", "Date", "Object", "Array"].some((builtin) => text.startsWith(builtin))
+    ) {
+      const source = importMap.get(text);
+      if (source) {
+        const category = source.includes("/api/") || text.includes("fetch") || text.includes("delete") ? "actions" : "utils";
+
+        const resolvedPath = resolveModulePath(absPath, source);
+        if (resolvedPath && maxDepth > 1) {
+          const childTree = buildDependencyTree(resolvedPath, project, maxDepth - 1, new Set(visited));
+          result[category].push({
+            name: text,
+            source: source,
+            dependencies: childTree,
+          });
+        } else {
+          result[category].push({
+            name: text,
+            source: source,
+            dependencies: null,
+          });
+        }
+      }
+    }
+  });
+
+  // Extract type imports
+  imports.forEach((importDecl) => {
+    const moduleSpecifier = importDecl.getModuleSpecifierValue();
+    if (moduleSpecifier.includes("/types/") || moduleSpecifier.endsWith(".types")) {
+      const namedImports = importDecl.getNamedImports().map((ni) => ni.getName());
+      namedImports.forEach((name) => {
+        result.types.push({
+          name: name,
+          source: moduleSpecifier,
+        });
+      });
+    }
+  });
+
+  return result;
+};
+
+const resolveModulePath = (fromFile: string, moduleSpecifier: string): string | null => {
+  try {
+    // Handle relative imports
+    if (moduleSpecifier.startsWith(".")) {
+      const dir = path.dirname(fromFile);
+      const resolved = path.resolve(dir, moduleSpecifier);
+
+      // Try with extensions
+      for (const ext of [".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx"]) {
+        const candidate = resolved + ext;
+        if (fs.existsSync(candidate)) {
+          return candidate;
+        }
+      }
+    }
+
+    // Handle path aliases (@/)
+    if (moduleSpecifier.startsWith("@/")) {
+      const relativePath = moduleSpecifier.substring(2);
+      const webRoot = path.join(projectRoot, "src", "web");
+      const resolved = path.join(webRoot, relativePath);
+
+      for (const ext of [".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx"]) {
+        const candidate = resolved + ext;
+        if (fs.existsSync(candidate)) {
+          return candidate;
+        }
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const analyzeDirectory = (dirPath: string, project: Project, maxFiles: number = 100): any => {
+  const files: string[] = [];
+
+  // Only get files from the specified directory, not recursively
+  const entries = fs.readdirSync(dirPath);
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry);
+    const stat = fs.statSync(fullPath);
+    if (stat.isFile() && (entry.endsWith(".ts") || entry.endsWith(".tsx")) && !entry.endsWith(".d.ts")) {
+      files.push(fullPath);
+    }
+  }
+
+  if (files.length > maxFiles) {
+    return {
+      error: `Too many files (${files.length}). Maximum allowed: ${maxFiles}. Please specify a more specific path.`,
+    };
+  }
+
+  const result: any = {
+    total_files: files.length,
+    files: [],
+  };
+
+  for (const file of files) {
+    try {
+      const fileResult = analyzeFile(file, project);
+      result.files.push(fileResult);
+    } catch (error) {
+      // Skip files that fail to analyze
+      continue;
+    }
+  }
+
+  return result;
+};
+
 const main = async (): Promise<void> => {
   const project = new Project({
     tsConfigFilePath: path.join(projectRoot, "src", "web", "tsconfig.json"),
@@ -385,25 +844,36 @@ const main = async (): Promise<void> => {
   const filePath = arguments_[1];
   const symbolName = arguments_[2];
   const searchDirectory = arguments_[3];
-  const maxResults = arguments_[4] ? parseInt(arguments_[4], 10) : 3;
+  const maxResults = arguments_[4] ? parseInt(arguments_[4], 10) : 100;
 
-  if (!filePath || !symbolName || !action) {
-    console.log(JSON.stringify({ error: "Missing required arguments: filePath, symbolName, or action." }, null, 2));
-    process.exit(1);
+  // analyze_file, analyze_directory, and dependency_tree don't require symbolName
+  if (action !== "analyze_file" && action !== "analyze_directory" && action !== "dependency_tree") {
+    if (!filePath || !symbolName || !action) {
+      console.log(JSON.stringify({ error: "Missing required arguments: filePath, symbolName, or action." }, null, 2));
+      process.exit(1);
+    }
+  } else {
+    if (!filePath || !action) {
+      console.log(JSON.stringify({ error: "Missing required arguments: filePath or action." }, null, 2));
+      process.exit(1);
+    }
   }
 
-  if (!path.isAbsolute(filePath)) {
+  if (action !== "analyze_directory" && !path.isAbsolute(filePath)) {
     console.log(JSON.stringify({ error: `File path must be absolute: ${filePath}` }, null, 2));
     process.exit(1);
   }
 
-  // project.addSourceFilesFromTsConfig(path.join(projectRoot, 'src', 'web', 'tsconfig.json'), {
-  //     tsConfigFilePath: path.join(projectRoot, 'src', 'web', 'tsconfig.json'),
-  //     basePath: path.join(projectRoot, 'src', 'web')
-  // });
-
-  if (!project.getSourceFile(filePath)) {
-    project.addSourceFileAtPath(filePath);
+  // For analyze_file, analyze_directory, and dependency_tree, add source files first
+  if (action === "analyze_file" || action === "analyze_directory" || action === "dependency_tree") {
+    // No need to check if file exists for analyze_directory
+    if (action === "analyze_file" && !project.getSourceFile(filePath)) {
+      project.addSourceFileAtPath(filePath);
+    }
+  } else {
+    if (!project.getSourceFile(filePath)) {
+      project.addSourceFileAtPath(filePath);
+    }
   }
 
   process.stderr.write(`DEBUG: Number of source files in project: ${project.getSourceFiles().length}\n`);
@@ -411,6 +881,18 @@ const main = async (): Promise<void> => {
   let result = null;
   try {
     switch (action) {
+      case "analyze_file":
+        result = analyzeFile(filePath, project);
+        break;
+      case "analyze_directory":
+        result = analyzeDirectory(filePath, project, maxResults);
+        break;
+      case "dependency_tree":
+        {
+          const maxDepth = maxResults; // Reuse maxResults parameter for maxDepth
+          result = buildDependencyTree(filePath, project, maxDepth);
+        }
+        break;
       case "get_type_definitions":
         result = getTypeDefinitions(filePath, symbolName, project);
         break;
@@ -439,7 +921,20 @@ const main = async (): Promise<void> => {
           );
           process.exit(1);
         }
-        result = findSimilarCode(filePath, symbolName, searchDirectory, maxResults, project);
+        {
+          const baseInfo = getSnippetAndTypeDefinitions(filePath, symbolName, project);
+          const matches = findSimilarCode(filePath, symbolName, searchDirectory, maxResults, project);
+          result = {
+            base_snippet: baseInfo.snippet,
+            base_type_definitions: baseInfo.typeDefinitions,
+            matches: matches.map((match: any) => ({
+              file: match.filePath,
+              symbol: match.symbolName,
+              similarity: match.similarity,
+              snippet: match.snippet,
+            })),
+          };
+        }
         break;
       default:
         process.exit(1);

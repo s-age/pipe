@@ -1,0 +1,18 @@
+{
+  "status": "success",
+  "total_tasks": 1,
+  "completed_tasks": 1,
+  "child_session_ids": [],
+  "results": [
+    {
+      "task_index": 0,
+      "task_type": "agent",
+      "exit_code": 0,
+      "started_at": "2025-12-18T11:36:23.745887+00:00",
+      "completed_at": "2025-12-18T11:36:41.111387+00:00",
+      "duration_seconds": 17.36554765701294,
+      "output_preview": "[CREATED_SESSION:de144b4c8f107a422a779d897bc39ef18299ccc5c1f7f59a7e323f39656a04ac/360453a418d016116a065e9c1f65188bf5e99e438fc6a5d4d0b4487e22ae5a36]\n{\"session_id\": \"de144b4c8f107a422a779d897bc39ef18299ccc5c1f7f59a7e323f39656a04ac/360453a418d016116a065e9c1f65188bf5e99e438fc6a5d4d0b4487e22ae5a36\", \"response\": \"川崎の明日、12月19日(金)の天気は、晴れ時々くもりでしょう。\\n予想最高気温は11℃、最低気温は4℃です。降水確率は午前中が10%、午後が20%となっています。\\n沿岸部では夜に雨が降る可能性もありますので、お帰りの際に折りたたみ傘があると安心です。日中は日差しがあっても空気が冷たく感じられるため、暖かくしてお過ごしください。\", \"token_count\": 8362}\n"
+    }
+  ],
+  "timestamp": "2025-12-18T11:36:41.112705+00:00"
+}

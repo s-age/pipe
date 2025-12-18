@@ -81,22 +81,13 @@ def tool_optional(optional_param: Union[str, None] = None):
         self.assertEqual(session_id, "session_from_env")
         mock_getenv.assert_called_once_with("PIPE_SESSION_ID")
 
-    @patch("pipe.cli.mcp_server.os.path.getmtime")
-    @patch("pipe.cli.mcp_server.os.listdir")
     @patch("pipe.cli.mcp_server.os.getenv")
-    def test_get_latest_session_id_from_fs(
-        self, mock_getenv, mock_listdir, mock_getmtime
-    ):
-        """Tests getting the most recent session ID from the filesystem."""
+    def test_get_latest_session_id_no_env(self, mock_getenv):
+        """Tests that None is returned when environment variable is not set."""
         mock_getenv.return_value = None  # Ensure env var is not set
-        mock_listdir.return_value = ["session1.json", "session2.json"]
-        # Mock getmtime to make session2 the most recent
-        mock_getmtime.side_effect = lambda f: 2 if "session2" in f else 1
-
-        with patch("pipe.cli.mcp_server.SESSIONS_DIR", self.test_dir):
-            session_id = get_latest_session_id()
-
-        self.assertEqual(session_id, "session2")
+        session_id = get_latest_session_id()
+        self.assertIsNone(session_id)
+        mock_getenv.assert_called_once_with("PIPE_SESSION_ID")
 
 
 @patch("pipe.cli.mcp_server.os.path.exists")

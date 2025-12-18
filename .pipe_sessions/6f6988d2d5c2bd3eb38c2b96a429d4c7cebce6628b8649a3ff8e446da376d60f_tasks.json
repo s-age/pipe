@@ -1,0 +1,12 @@
+{
+  "parent_session_id": "6f6988d2d5c2bd3eb38c2b96a429d4c7cebce6628b8649a3ff8e446da376d60f",
+  "child_session_id": null,
+  "purpose": "川崎の天気予報の取得",
+  "background": "ユーザーからの依頼で川崎の天気予報をサブエージェントに問い合わせます。",
+  "tasks": [
+    {
+      "instruction": "明日、川崎の天気はどうなりますか？",
+      "type": "agent"
+    }
+  ]
+}

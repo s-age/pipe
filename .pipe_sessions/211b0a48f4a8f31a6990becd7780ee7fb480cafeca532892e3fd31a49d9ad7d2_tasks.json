@@ -1,0 +1,12 @@
+{
+  "parent_session_id": "211b0a48f4a8f31a6990becd7780ee7fb480cafeca532892e3fd31a49d9ad7d2",
+  "child_session_id": null,
+  "purpose": "天気予報",
+  "background": "天気予報",
+  "tasks": [
+    {
+      "instruction": "明日の川崎の天気を教えて",
+      "type": "agent"
+    }
+  ]
+}

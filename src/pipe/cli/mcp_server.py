@@ -227,28 +227,17 @@ def get_tool_definitions():
 # --- Tool Execution ---
 def get_latest_session_id():
     """
-    Scans the sessions directory and returns the most recently modified session ID.
-    PRIORITY: Checks for a session ID in the environment variable
-    'PIPE_SESSION_ID' first.
-    """
-    # 1. Get session ID from environment variable (passed from Gemini-CLI)
-    session_id_from_env = os.getenv("PIPE_SESSION_ID")
-    if session_id_from_env:
-        return session_id_from_env
+    Gets the session ID from the PIPE_SESSION_ID environment variable.
 
-    # 2. If not in environment variable, get latest session ID using traditional logic
-    try:
-        files = [
-            os.path.join(SESSIONS_DIR, f)
-            for f in os.listdir(SESSIONS_DIR)
-            if f.endswith(".json")
-        ]
-        if not files:
-            return None
-        latest_file = max(files, key=os.path.getmtime)
-        return os.path.splitext(os.path.basename(latest_file))[0]
-    except FileNotFoundError:
-        return None
+    Returns:
+        Session ID if PIPE_SESSION_ID is set, None otherwise.
+
+    Note:
+        Previously this function had a fallback to scan the sessions directory,
+        but that was removed as it could cause unintended side effects by
+        targeting the wrong session.
+    """
+    return os.getenv("PIPE_SESSION_ID")
 
 
 def execute_tool(tool_name, arguments):

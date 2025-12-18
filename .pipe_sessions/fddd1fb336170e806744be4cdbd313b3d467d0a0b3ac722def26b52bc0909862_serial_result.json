@@ -1,0 +1,20 @@
+{
+  "status": "success",
+  "total_tasks": 1,
+  "completed_tasks": 1,
+  "child_session_ids": [
+    "fddd1fb336170e806744be4cdbd313b3d467d0a0b3ac722def26b52bc0909862/c91855626ca08c55bb72e573b1d29ba95db7e6abe68b39c5a15a9d21941b4a43"
+  ],
+  "results": [
+    {
+      "task_index": 0,
+      "task_type": "agent",
+      "exit_code": 0,
+      "started_at": "2025-12-18T11:42:25.730609+00:00",
+      "completed_at": "2025-12-18T11:42:41.607015+00:00",
+      "duration_seconds": 15.876457929611206,
+      "output_preview": "[CREATED_SESSION:fddd1fb336170e806744be4cdbd313b3d467d0a0b3ac722def26b52bc0909862/c91855626ca08c55bb72e573b1d29ba95db7e6abe68b39c5a15a9d21941b4a43]\n{\"session_id\": \"fddd1fb336170e806744be4cdbd313b3d467d0a0b3ac722def26b52bc0909862/c91855626ca08c55bb72e573b1d29ba95db7e6abe68b39c5a15a9d21941b4a43\", \"response\": \"川崎の明日、12月19日（金）の天気は、日中は晴れ間があり、時々雲が出るでしょう。\\n\\n降水確率は20%です。\\n\\n予想される気温は、最低が3℃から6℃、最高が11℃から15℃となる見込みです。\\n\\n湿度は59%から61%程度でしょう。\\n\\n日中は日差しがあっても空気は冷たく感じられるため、暖かい服装でお過ごしください。沿岸部では夜に雨が降る可能性があるので、お帰りの際に備えて折りたたみ傘があると安心です。\", \"token_count\": 8890}\n"
+    }
+  ],
+  "timestamp": "2025-12-18T11:42:41.608158+00:00"
+}

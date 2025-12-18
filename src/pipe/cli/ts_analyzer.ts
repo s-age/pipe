@@ -834,6 +834,326 @@ const analyzeDirectory = (dirPath: string, project: Project, maxFiles: number = 
   return result;
 };
 
+const analyzeConditions = (filePath: string, functionName: string | null, project: Project): any => {
+  const sourceFile = project.addSourceFileAtPath(filePath);
+  const result: any = {
+    file_path: filePath,
+    functions: [],
+  };
+
+  const builtins = new Set([
+    "console", "parseInt", "parseFloat", "isNaN", "isFinite", "decodeURI", "decodeURIComponent",
+    "encodeURI", "encodeURIComponent", "eval", "setTimeout", "setInterval", "clearTimeout",
+    "clearInterval", "Promise", "Array", "Object", "String", "Number", "Boolean", "Date",
+    "Math", "JSON", "RegExp", "Error", "Map", "Set", "WeakMap", "WeakSet", "Symbol",
+  ]);
+
+  const isBuiltin = (name: string): boolean => {
+    const baseName = name.split(".").pop() || name;
+    return builtins.has(baseName);
+  };
+
+  const analyzeFunction = (
+    func: any,
+    name: string,
+    isArrowFunction: boolean = false
+  ): any => {
+    const branches: any[] = [];
+    const mockCandidates: any[] = [];
+    let complexity = 1;
+
+    const parameters = func.getParameters().map((p: ParameterDeclaration) => {
+      const paramName = p.getName();
+      const paramType = p.getType().getText();
+      const isOptional = p.hasQuestionToken();
+      return `${paramName}${isOptional ? "?" : ""}: ${paramType}`;
+    });
+
+    const processNode = (node: Node): void => {
+      // If statements
+      if (node.getKind() === SyntaxKind.IfStatement) {
+        const ifStmt = node as any;
+        const condition = ifStmt.getExpression().getText();
+
+        branches.push({
+          type: "if",
+          lineno: ifStmt.getStartLineNumber(),
+          end_lineno: ifStmt.getEndLineNumber(),
+          condition_code: condition,
+        });
+        complexity++;
+
+        // Process else if and else
+        let current = ifStmt;
+        while (current.getElseStatement()) {
+          const elseStmt = current.getElseStatement();
+          if (elseStmt.getKind() === SyntaxKind.IfStatement) {
+            const elseIfCondition = elseStmt.getExpression().getText();
+            branches.push({
+              type: "else_if",
+              lineno: elseStmt.getStartLineNumber(),
+              end_lineno: elseStmt.getEndLineNumber(),
+              condition_code: elseIfCondition,
+            });
+            complexity++;
+            current = elseStmt;
+          } else {
+            branches.push({
+              type: "else",
+              lineno: elseStmt.getStartLineNumber(),
+              end_lineno: elseStmt.getEndLineNumber(),
+              condition_code: null,
+            });
+            break;
+          }
+        }
+      }
+
+      // For statements
+      if (node.getKind() === SyntaxKind.ForStatement) {
+        const forStmt = node as any;
+        const initializer = forStmt.getInitializer()?.getText() || "";
+        const condition = forStmt.getCondition()?.getText() || "";
+        const incrementor = forStmt.getIncrementor()?.getText() || "";
+        const conditionCode = `${initializer}; ${condition}; ${incrementor}`;
+
+        branches.push({
+          type: "for",
+          lineno: forStmt.getStartLineNumber(),
+          end_lineno: forStmt.getEndLineNumber(),
+          condition_code: conditionCode,
+        });
+        complexity++;
+      }
+
+      // For-of and For-in statements
+      if (node.getKind() === SyntaxKind.ForOfStatement || node.getKind() === SyntaxKind.ForInStatement) {
+        const forStmt = node as any;
+        const initializer = forStmt.getInitializer().getText();
+        const expression = forStmt.getExpression().getText();
+        const conditionCode = `${initializer} of ${expression}`;
+
+        branches.push({
+          type: "for",
+          lineno: forStmt.getStartLineNumber(),
+          end_lineno: forStmt.getEndLineNumber(),
+          condition_code: conditionCode,
+        });
+        complexity++;
+      }
+
+      // While statements
+      if (node.getKind() === SyntaxKind.WhileStatement) {
+        const whileStmt = node as any;
+        const condition = whileStmt.getExpression().getText();
+
+        branches.push({
+          type: "while",
+          lineno: whileStmt.getStartLineNumber(),
+          end_lineno: whileStmt.getEndLineNumber(),
+          condition_code: condition,
+        });
+        complexity++;
+      }
+
+      // Do-while statements
+      if (node.getKind() === SyntaxKind.DoStatement) {
+        const doStmt = node as any;
+        const condition = doStmt.getExpression().getText();
+
+        branches.push({
+          type: "do_while",
+          lineno: doStmt.getStartLineNumber(),
+          end_lineno: doStmt.getEndLineNumber(),
+          condition_code: condition,
+        });
+        complexity++;
+      }
+
+      // Try-catch statements
+      if (node.getKind() === SyntaxKind.TryStatement) {
+        const tryStmt = node as any;
+
+        branches.push({
+          type: "try",
+          lineno: tryStmt.getStartLineNumber(),
+          end_lineno: tryStmt.getTryBlock().getEndLineNumber(),
+          condition_code: null,
+        });
+
+        const catchClause = tryStmt.getCatchClause();
+        if (catchClause) {
+          const variableDecl = catchClause.getVariableDeclaration();
+          const catchVar = variableDecl ? variableDecl.getName() : "error";
+
+          branches.push({
+            type: "catch",
+            lineno: catchClause.getStartLineNumber(),
+            end_lineno: catchClause.getEndLineNumber(),
+            condition_code: catchVar,
+          });
+          complexity++;
+        }
+
+        const finallyBlock = tryStmt.getFinallyBlock();
+        if (finallyBlock) {
+          branches.push({
+            type: "finally",
+            lineno: finallyBlock.getStartLineNumber(),
+            end_lineno: finallyBlock.getEndLineNumber(),
+            condition_code: null,
+          });
+        }
+      }
+
+      // Switch statements
+      if (node.getKind() === SyntaxKind.SwitchStatement) {
+        const switchStmt = node as any;
+        const expression = switchStmt.getExpression().getText();
+
+        branches.push({
+          type: "switch",
+          lineno: switchStmt.getStartLineNumber(),
+          end_lineno: switchStmt.getEndLineNumber(),
+          condition_code: expression,
+        });
+
+        const caseBlock = switchStmt.getCaseBlock();
+        if (caseBlock) {
+          caseBlock.getClauses().forEach((clause: any) => {
+            if (clause.getKind() === SyntaxKind.CaseClause) {
+              const caseExpression = clause.getExpression().getText();
+              branches.push({
+                type: "case",
+                lineno: clause.getStartLineNumber(),
+                end_lineno: clause.getEndLineNumber(),
+                condition_code: caseExpression,
+              });
+              complexity++;
+            } else if (clause.getKind() === SyntaxKind.DefaultClause) {
+              branches.push({
+                type: "case",
+                lineno: clause.getStartLineNumber(),
+                end_lineno: clause.getEndLineNumber(),
+                condition_code: "default",
+              });
+            }
+          });
+        }
+      }
+
+      // Ternary/Conditional expressions
+      if (node.getKind() === SyntaxKind.ConditionalExpression) {
+        const ternary = node as any;
+        const condition = ternary.getCondition().getText();
+
+        branches.push({
+          type: "ternary",
+          lineno: ternary.getStartLineNumber(),
+          end_lineno: ternary.getEndLineNumber(),
+          condition_code: condition,
+        });
+        complexity++;
+      }
+
+      // Call expressions (for mock candidates)
+      if (node.getKind() === SyntaxKind.CallExpression) {
+        const callExpr = node as any;
+        const expression = callExpr.getExpression();
+        let funcName = "";
+        let isMethodCall = false;
+
+        if (expression.getKind() === SyntaxKind.PropertyAccessExpression) {
+          // e.g., this.repo.save, obj.method
+          funcName = expression.getText();
+          const expressionText = expression.getExpression().getText();
+          isMethodCall = expressionText === "this" || expressionText.startsWith("this.");
+        } else if (expression.getKind() === SyntaxKind.Identifier) {
+          // e.g., myFunc()
+          funcName = expression.getText();
+          isMethodCall = false;
+        }
+
+        if (funcName && !isBuiltin(funcName)) {
+          mockCandidates.push({
+            name: funcName,
+            lineno: callExpr.getStartLineNumber(),
+            end_lineno: callExpr.getEndLineNumber(),
+            is_method_call: isMethodCall,
+          });
+        }
+      }
+
+      // Recursively process children (but don't descend into nested functions)
+      node.forEachChild((child) => {
+        if (
+          child.getKind() !== SyntaxKind.FunctionDeclaration &&
+          child.getKind() !== SyntaxKind.FunctionExpression &&
+          child.getKind() !== SyntaxKind.ArrowFunction &&
+          child.getKind() !== SyntaxKind.MethodDeclaration
+        ) {
+          processNode(child);
+        }
+      });
+    };
+
+    // Process function body
+    const body = func.getBody();
+    if (body) {
+      body.forEachChild((child: Node) => {
+        processNode(child);
+      });
+    }
+
+    return {
+      name,
+      lineno: func.getStartLineNumber(),
+      end_lineno: func.getEndLineNumber(),
+      parameters,
+      branches,
+      mock_candidates: mockCandidates,
+      cyclomatic_complexity: complexity,
+      is_async: func.isAsync ? func.isAsync() : false,
+      is_arrow_function: isArrowFunction,
+    };
+  };
+
+  // Process top-level functions
+  sourceFile.getFunctions().forEach((func) => {
+    const name = func.getName();
+    if (functionName && name !== functionName) {
+      return;
+    }
+    result.functions.push(analyzeFunction(func, name || "anonymous", false));
+  });
+
+  // Process arrow functions in variables
+  sourceFile.getVariableDeclarations().forEach((varDecl) => {
+    const name = varDecl.getName();
+    if (functionName && name !== functionName) {
+      return;
+    }
+
+    const initializer = varDecl.getInitializer();
+    if (initializer && initializer.getKind() === SyntaxKind.ArrowFunction) {
+      result.functions.push(analyzeFunction(initializer, name, true));
+    }
+  });
+
+  // Process class methods
+  sourceFile.getClasses().forEach((cls) => {
+    cls.getMethods().forEach((method: MethodDeclaration) => {
+      const name = method.getName();
+      if (functionName && name !== functionName) {
+        return;
+      }
+      result.functions.push(analyzeFunction(method, name, false));
+    });
+  });
+
+  return result;
+};
+
 const main = async (): Promise<void> => {
   const project = new Project({
     tsConfigFilePath: path.join(projectRoot, "src", "web", "tsconfig.json"),
@@ -846,8 +1166,8 @@ const main = async (): Promise<void> => {
   const searchDirectory = arguments_[3];
   const maxResults = arguments_[4] ? parseInt(arguments_[4], 10) : 100;
 
-  // analyze_file, analyze_directory, and dependency_tree don't require symbolName
-  if (action !== "analyze_file" && action !== "analyze_directory" && action !== "dependency_tree") {
+  // analyze_file, analyze_directory, dependency_tree, and analyze_conditions don't require symbolName
+  if (action !== "analyze_file" && action !== "analyze_directory" && action !== "dependency_tree" && action !== "analyze_conditions") {
     if (!filePath || !symbolName || !action) {
       console.log(JSON.stringify({ error: "Missing required arguments: filePath, symbolName, or action." }, null, 2));
       process.exit(1);
@@ -864,10 +1184,10 @@ const main = async (): Promise<void> => {
     process.exit(1);
   }
 
-  // For analyze_file, analyze_directory, and dependency_tree, add source files first
-  if (action === "analyze_file" || action === "analyze_directory" || action === "dependency_tree") {
+  // For analyze_file, analyze_directory, dependency_tree, and analyze_conditions, add source files first
+  if (action === "analyze_file" || action === "analyze_directory" || action === "dependency_tree" || action === "analyze_conditions") {
     // No need to check if file exists for analyze_directory
-    if (action === "analyze_file" && !project.getSourceFile(filePath)) {
+    if ((action === "analyze_file" || action === "analyze_conditions") && !project.getSourceFile(filePath)) {
       project.addSourceFileAtPath(filePath);
     }
   } else {
@@ -891,6 +1211,12 @@ const main = async (): Promise<void> => {
         {
           const maxDepth = maxResults; // Reuse maxResults parameter for maxDepth
           result = buildDependencyTree(filePath, project, maxDepth);
+        }
+        break;
+      case "analyze_conditions":
+        {
+          const functionName = symbolName || null;
+          result = analyzeConditions(filePath, functionName, project);
         }
         break;
       case "get_type_definitions":

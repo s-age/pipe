@@ -223,9 +223,7 @@ def format_dependency_tree(tree: DependencyTreeResult, indent: str = "") -> str:
             lines.append(f"{indent}│  {prefix} {action.name} ({action.source})")
             if action.dependencies and not action.dependencies.circular:
                 child_indent = indent + ("   " if is_last else "│  ")
-                child_tree = format_dependency_tree(
-                    action.dependencies, child_indent
-                )
+                child_tree = format_dependency_tree(action.dependencies, child_indent)
                 child_lines = child_tree.split("\n")[1:]
                 lines.extend(child_lines)
 

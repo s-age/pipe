@@ -194,9 +194,7 @@ def _build_dependency_tree(
     return result
 
 
-def _resolve_import_path(
-    current_file: str, module_name: str, level: int
-) -> str | None:
+def _resolve_import_path(current_file: str, module_name: str, level: int) -> str | None:
     """Resolve a Python import to an actual file path."""
     current_path = Path(current_file).resolve().parent
 

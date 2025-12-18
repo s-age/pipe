@@ -190,9 +190,7 @@ def _extract_class_info(node: ast.ClassDef) -> ClassInfo:
     )
 
 
-def _analyze_single_file(
-    file_path: str, source_code: str
-) -> FileAnalysisResult | None:
+def _analyze_single_file(file_path: str, source_code: str) -> FileAnalysisResult | None:
     """Analyze a single Python file and return its symbols."""
     try:
         tree = ast.parse(source_code)
@@ -219,9 +217,7 @@ def _analyze_single_file(
         return None
 
 
-def py_analyze_code(
-    path: str, max_files: int = 100
-) -> ToolResult[AnalyzeCodeResult]:
+def py_analyze_code(path: str, max_files: int = 100) -> ToolResult[AnalyzeCodeResult]:
     """
     Analyzes Python file(s) for symbol information.
 

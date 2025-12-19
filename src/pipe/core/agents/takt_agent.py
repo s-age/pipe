@@ -10,17 +10,21 @@ import re
 import subprocess
 import sys
 
+from pipe.core.models.settings import Settings
+
 
 class TaktAgent:
     """Agent for executing takt CLI commands."""
 
-    def __init__(self, project_root: str):
+    def __init__(self, project_root: str, settings: Settings):
         """Initialize the agent.
 
         Args:
             project_root: Path to the project root directory
+            settings: Settings object for timezone configuration
         """
         self.project_root = project_root
+        self.settings = settings
 
     def run_new_session(
         self,
@@ -137,7 +141,7 @@ class TaktAgent:
         """
         from pipe.core.services.process_manager_service import ProcessManagerService
 
-        process_manager = ProcessManagerService(self.project_root)
+        process_manager = ProcessManagerService(self.project_root, self.settings)
 
         # Check for concurrent execution
         if process_manager.is_running(session_id):
@@ -174,14 +178,21 @@ class TaktAgent:
         if extra_env:
             env.update(extra_env)
 
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            check=True,
-            encoding="utf-8",
-            env=env,
-        )
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                check=True,
+                encoding="utf-8",
+                env=env,
+            )
+        except subprocess.CalledProcessError as e:
+            # Include stderr in error message for debugging
+            error_msg = f"takt command failed with exit code {e.returncode}"
+            if e.stderr:
+                error_msg += f"\nStderr: {e.stderr}"
+            raise RuntimeError(error_msg) from e
 
         return result.stdout, result.stderr
 
@@ -214,7 +225,7 @@ class TaktAgent:
         """
         from pipe.core.services.process_manager_service import ProcessManagerService
 
-        process_manager = ProcessManagerService(self.project_root)
+        process_manager = ProcessManagerService(self.project_root, self.settings)
 
         # Check for concurrent execution
         if process_manager.is_running(session_id):
@@ -358,13 +369,14 @@ class TaktAgent:
         )
 
 
-def create_takt_agent(project_root: str) -> TaktAgent:
+def create_takt_agent(project_root: str, settings: Settings) -> TaktAgent:
     """Factory function to create TaktAgent.
 
     Args:
         project_root: Path to the project root directory
+        settings: Settings object for timezone configuration
 
     Returns:
         Configured TaktAgent instance
     """
-    return TaktAgent(project_root)
+    return TaktAgent(project_root, settings)

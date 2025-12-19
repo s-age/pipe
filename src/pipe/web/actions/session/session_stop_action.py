@@ -34,7 +34,9 @@ class SessionStopAction(BaseAction):
         session_id = request.session_id
 
         # Initialize services
-        process_manager = ProcessManagerService(session_service.project_root)
+        process_manager = ProcessManagerService(
+            session_service.project_root, session_service.settings
+        )
         service_factory = ServiceFactory(
             session_service.project_root, session_service.settings
         )

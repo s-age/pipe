@@ -6,6 +6,7 @@ Provides type-safe container for querying backup files.
 
 import json
 import os
+from datetime import datetime
 from typing import Any
 
 from pipe.core.models.base import CamelCaseModel
@@ -55,8 +56,6 @@ class BackupFiles:
                                 # Format: {hash}-{datetime}.json
                                 # Example: hash-2025-12-04T075555.140300+0900.json
                                 try:
-                                    from datetime import datetime
-
                                     name_without_ext = filename.replace(".json", "")
                                     # Split by first '-' to separate hash from datetime
                                     parts = name_without_ext.split("-", 1)

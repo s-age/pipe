@@ -109,7 +109,7 @@ class ServiceFactory:
 
             session_service = self.create_session_service()
             repository = SessionRepository(self.project_root, self.settings)
-            takt_agent = TaktAgent(self.project_root)
+            takt_agent = TaktAgent(self.project_root, self.settings)
             self._session_optimization_service_instance = SessionOptimizationService(
                 self.project_root, takt_agent, repository
             )
@@ -151,7 +151,7 @@ class ServiceFactory:
 
         session_service = self.create_session_service()
         turn_service = self.create_session_turn_service()
-        takt_agent = TaktAgent(self.project_root)
+        takt_agent = TaktAgent(self.project_root, self.settings)
 
         return VerificationService(session_service, turn_service, takt_agent)
 
@@ -159,5 +159,7 @@ class ServiceFactory:
         self, session_id: str
     ) -> StreamingLoggerService:
         """Creates a StreamingLoggerService with its dependencies."""
-        repository = StreamingLogRepository(self.project_root, session_id)
+        repository = StreamingLogRepository(
+            self.project_root, session_id, self.settings
+        )
         return StreamingLoggerService(repository, self.settings)

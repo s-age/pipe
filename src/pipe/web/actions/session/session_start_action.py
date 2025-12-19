@@ -41,7 +41,7 @@ class SessionStartAction(BaseAction):
         session_id = session.session_id
 
         session_service = get_session_service()
-        takt_agent = TaktAgent(session_service.project_root)
+        takt_agent = TaktAgent(session_service.project_root, session_service.settings)
 
         # Run instruction on the newly created session
         takt_agent.run_existing_session(

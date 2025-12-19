@@ -5,11 +5,13 @@ import logging
 import os
 import signal
 import time
-from datetime import UTC
+import zoneinfo
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import psutil
+from pipe.core.models.settings import Settings
+from pipe.core.utils.datetime import get_current_timestamp
 
 if TYPE_CHECKING:
     from pipe.core.models.process_info import ProcessInfo
@@ -34,15 +36,24 @@ class ProcessManagerService:
     - No file locking needed - each session has its own file
     """
 
-    def __init__(self, project_root: str):
+    def __init__(self, project_root: str, settings: Settings):
         """
         Initialize the process manager.
 
         Args:
             project_root: Root directory of the project
+            settings: Settings object for timezone configuration
         """
+        self.project_root = project_root
         self.processes_dir = os.path.join(project_root, ".processes")
         Path(self.processes_dir).mkdir(parents=True, exist_ok=True)
+
+        # Convert timezone string to ZoneInfo object
+        try:
+            self.timezone = zoneinfo.ZoneInfo(settings.timezone)
+        except zoneinfo.ZoneInfoNotFoundError:
+            # Fallback to UTC if timezone not found
+            self.timezone = zoneinfo.ZoneInfo("UTC")
 
     def _sanitize_session_id(self, session_id: str) -> str:
         """
@@ -130,9 +141,7 @@ class ProcessManagerService:
             except Exception as e:
                 logger.warning(f"Failed to delete process file for {session_id}: {e}")
 
-    def register_process(
-        self, session_id: str, pid: int, instruction: str
-    ) -> None:
+    def register_process(self, session_id: str, pid: int, instruction: str) -> None:
         """
         Register a new process for a session.
 
@@ -144,8 +153,6 @@ class ProcessManagerService:
         Raises:
             RuntimeError: If session is already running
         """
-        from datetime import datetime
-
         from pipe.core.models.process_info import ProcessInfo
 
         # Check if session is already running
@@ -164,7 +171,7 @@ class ProcessManagerService:
         process_info = ProcessInfo(
             session_id=session_id,
             pid=pid,
-            started_at=datetime.now(UTC).isoformat(),
+            started_at=get_current_timestamp(self.timezone),
             instruction=instruction,
         )
         self._write_process_file(session_id, process_info.model_dump())

@@ -315,6 +315,9 @@ class ArchiveRepository(FileRepository):
                 return None
 
             datetime_str = parts[1]
+            # Parse the datetime string using strptime and convert to ISO format
+            # This operation is specific to extracting from filename format,
+            # so using datetime.strptime directly is appropriate here
             dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H%M%S.%f%z")
             return dt.isoformat()
         except (ValueError, IndexError):

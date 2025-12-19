@@ -1,9 +1,13 @@
 """Repository for streaming log file operations."""
 
 import os
+import zoneinfo
 from datetime import datetime
 from pathlib import Path
 from typing import TextIO, cast
+
+from pipe.core.models.settings import Settings
+from pipe.core.utils.datetime import get_current_datetime
 
 
 class StreamingLogRepository:
@@ -21,18 +25,26 @@ class StreamingLogRepository:
     - Business logic for log formatting should be in StreamingLoggerService
     """
 
-    def __init__(self, project_root: str, session_id: str):
+    def __init__(self, project_root: str, session_id: str, settings: Settings):
         """
         Initialize the streaming log repository.
 
         Args:
             project_root: Root directory of the project
             session_id: Session identifier for which to manage logs
+            settings: Settings object for timezone configuration
         """
         self.project_root = project_root
         self.session_id = session_id
         self.log_file_path = self._build_log_file_path()
         self.file_handle: TextIO | None = None
+
+        # Convert timezone string to ZoneInfo object
+        try:
+            self.timezone = zoneinfo.ZoneInfo(settings.timezone)
+        except zoneinfo.ZoneInfoNotFoundError:
+            # Fallback to UTC if timezone not found
+            self.timezone = zoneinfo.ZoneInfo("UTC")
 
     def _build_log_file_path(self) -> str:
         """
@@ -126,13 +138,14 @@ class StreamingLogRepository:
 
     @staticmethod
     def cleanup_old_logs(
-        project_root: str, max_age_minutes: int = 30
+        project_root: str, settings: Settings, max_age_minutes: int = 30
     ) -> None:
         """
         Clean up streaming log files older than max_age_minutes.
 
         Args:
             project_root: Root directory of the project
+            settings: Settings object for timezone configuration
             max_age_minutes: Maximum age of logs in minutes before deletion.
                 Defaults to 30.
 
@@ -144,7 +157,13 @@ class StreamingLogRepository:
         if not os.path.exists(streaming_dir):
             return
 
-        current_time = datetime.now().timestamp()
+        # Convert timezone string to ZoneInfo object
+        try:
+            timezone = zoneinfo.ZoneInfo(settings.timezone)
+        except zoneinfo.ZoneInfoNotFoundError:
+            timezone = zoneinfo.ZoneInfo("UTC")
+
+        current_time = get_current_datetime(timezone).timestamp()
         max_age_seconds = max_age_minutes * 60
 
         try:

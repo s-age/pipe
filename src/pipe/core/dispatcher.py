@@ -39,22 +39,25 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     # 1. Concurrent execution check
     from pipe.core.services.process_manager_service import ProcessManagerService
 
-    process_manager = ProcessManagerService(session_service.project_root)
+    process_manager = ProcessManagerService(
+        session_service.project_root, session_service.settings
+    )
     if process_manager.is_running(session_id):
         raise RuntimeError(f"Session {session_id} is already running")
 
     # 2. Register process
-    process_manager.register_process(
-        session_id, os.getpid(), args.instruction
-    )
+    process_manager.register_process(session_id, os.getpid(), args.instruction)
 
     # 3. Start streaming logger
     logger = service_factory.create_streaming_logger_service(session_id)
-    logger.start_logging(args.instruction)
+    logger.open()
 
     # 4. Clean up old streaming logs
     from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
-    StreamingLogRepository.cleanup_old_logs(session_service.project_root)
+
+    StreamingLogRepository.cleanup_old_logs(
+        session_service.project_root, session_service.settings
+    )
 
     # For stream-json, also output to stdout
     stream_to_stdout = args.output_format == "stream-json"

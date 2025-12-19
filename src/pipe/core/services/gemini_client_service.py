@@ -4,8 +4,7 @@ import json
 import os
 import zoneinfo
 from collections.abc import Generator
-from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import google.genai as genai
 from google.genai import types
@@ -22,10 +21,25 @@ from pipe.core.repositories.streaming_log_repository import StreamingLogReposito
 from pipe.core.services.gemini_cache_service import GeminiCacheService
 from pipe.core.services.gemini_tool_service import GeminiToolService
 from pipe.core.services.token_service import TokenService
+from pipe.core.utils.datetime import get_current_datetime
 
 if TYPE_CHECKING:
     from pipe.core.services.prompt_service import PromptService
     from pipe.core.services.session_service import SessionService
+
+
+class LogUsageInfo(TypedDict):
+    prompt_tokens: int | None
+    candidates_tokens: int | None
+    total_tokens: int | None
+    cached_content_tokens: int | None
+
+
+class LogInfo(TypedDict):
+    has_candidates: bool
+    finish_reason: str | None
+    text_content: str
+    usage: LogUsageInfo | None
 
 
 class GeminiClientService:
@@ -57,7 +71,7 @@ class GeminiClientService:
 
         # Initialize sub-services
         self.tool_service = GeminiToolService()
-        self.cache_service = GeminiCacheService(self.project_root)
+        self.cache_service = GeminiCacheService(self.project_root, self.settings)
         self.token_service = TokenService(settings=self.settings)
 
         # Convert timezone string to ZoneInfo object
@@ -262,7 +276,7 @@ class GeminiClientService:
 
         # Setup logging repository for cache decisions
         streaming_log_repo = StreamingLogRepository(
-            self.project_root, session_data.session_id
+            self.project_root, session_data.session_id, self.settings
         )
         streaming_log_repo.open(mode="a")
 
@@ -279,7 +293,7 @@ class GeminiClientService:
                     f"Buffered tokens={buffered_tokens}"
                 )
                 streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, datetime.now(self.timezone)
+                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
                 )
 
                 cached_content_name = self.cache_service.get_cached_content(
@@ -298,7 +312,7 @@ class GeminiClientService:
                     f"Sending static + dynamic content"
                 )
                 streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, datetime.now(self.timezone)
+                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
                 )
                 content_to_send = static_content + "\n" + dynamic_content
 
@@ -312,7 +326,7 @@ class GeminiClientService:
                     f"Threshold={gemini_cache.cache_update_threshold}"
                 )
                 streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, datetime.now(self.timezone)
+                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
                 )
 
                 if static_content:
@@ -396,7 +410,7 @@ class GeminiClientService:
             RuntimeError: If API call fails
         """
         raw_chunk_repo = StreamingLogRepository(
-            self.project_root, session_data.session_id
+            self.project_root, session_data.session_id, self.settings
         )
         raw_chunk_repo.open(mode="a")
 
@@ -408,26 +422,49 @@ class GeminiClientService:
             )
 
             for chunk in stream:
-                # Log raw chunk
+                # Log raw chunk (extract text and usage, skip binary fields)
                 try:
-                    if hasattr(chunk, "to_dict"):
-                        chunk_dict = chunk.to_dict()  # type: ignore[attr-defined]
-                    else:
-                        chunk_dict = {"raw": str(chunk)}
+                    log_info: LogInfo = {
+                        "has_candidates": bool(chunk.candidates),
+                        "finish_reason": None,
+                        "text_content": "",
+                        "usage": None,
+                    }
+
+                    if chunk.candidates:
+                        candidate = chunk.candidates[0]
+                        log_info["finish_reason"] = (
+                            str(candidate.finish_reason)
+                            if candidate.finish_reason
+                            else None
+                        )
+
+                        if candidate.content and candidate.content.parts:
+                            for part in candidate.content.parts:
+                                if part.text:
+                                    log_info["text_content"] = part.text
+                                    break
+
+                    if chunk.usage_metadata:
+                        log_usage: LogUsageInfo = {
+                            "prompt_tokens": chunk.usage_metadata.prompt_token_count,
+                            "candidates_tokens": (
+                                chunk.usage_metadata.candidates_token_count
+                            ),
+                            "total_tokens": chunk.usage_metadata.total_token_count,
+                            "cached_content_tokens": (
+                                chunk.usage_metadata.cached_content_token_count
+                            ),
+                        }
+                        log_info["usage"] = log_usage
+
                     raw_chunk_repo.write_log_line(
                         "RAW_CHUNK",
-                        json.dumps(chunk_dict, ensure_ascii=False, default=str),
-                        datetime.now(self.timezone),
+                        json.dumps(log_info, ensure_ascii=False),
+                        get_current_datetime(self.timezone),
                     )
                 except Exception:
-                    try:
-                        raw_chunk_repo.write_log_line(
-                            "RAW_CHUNK",
-                            json.dumps({"raw": str(chunk)}, ensure_ascii=False),
-                            datetime.now(self.timezone),
-                        )
-                    except Exception:
-                        pass
+                    pass
 
                 # Convert Gemini chunk to unified format
                 unified_chunks = self._convert_chunk_to_unified_format(chunk)

@@ -3,11 +3,14 @@
 import hashlib
 import json
 import os
+import zoneinfo
 from datetime import datetime, timedelta
 
 import google.genai as genai
 from google.genai import types
 from pipe.core.models.cache_registry import CacheRegistry, CacheRegistryEntry
+from pipe.core.models.settings import Settings
+from pipe.core.utils.datetime import get_current_datetime
 
 
 class GeminiCacheService:
@@ -25,17 +28,25 @@ class GeminiCacheService:
         to minimize API calls for cache existence checks.
     """
 
-    def __init__(self, project_root: str):
+    def __init__(self, project_root: str, settings: Settings):
         """
         Initialize the cache service.
 
         Args:
             project_root: Root directory of the project
+            settings: Settings object for timezone configuration
         """
         self.project_root = project_root
         self.registry_path = os.path.join(
             project_root, "sessions", ".cache_registry.json"
         )
+
+        # Convert timezone string to ZoneInfo object
+        try:
+            self.timezone = zoneinfo.ZoneInfo(settings.timezone)
+        except zoneinfo.ZoneInfoNotFoundError:
+            # Fallback to UTC if timezone not found
+            self.timezone = zoneinfo.ZoneInfo("UTC")
 
     def get_cached_content(
         self,
@@ -86,7 +97,7 @@ class GeminiCacheService:
 
             # Check local expiration time
             expire_time = datetime.fromisoformat(expire_time_str)
-            if datetime.now() > expire_time:
+            if get_current_datetime(self.timezone) > expire_time:
                 cache_name = None  # Expired locally
 
             # Verify cache still exists on API server
@@ -185,7 +196,7 @@ class GeminiCacheService:
             cache_name = cached_obj.name
 
             # Update local registry with conservative expiration (55 minutes)
-            expire_time = datetime.now() + timedelta(minutes=55)
+            expire_time = get_current_datetime(self.timezone) + timedelta(minutes=55)
             cache_registry.entries[content_hash] = CacheRegistryEntry(
                 name=cache_name,
                 expire_time=expire_time.isoformat(),

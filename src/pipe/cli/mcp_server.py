@@ -71,7 +71,7 @@ def initialize_services():
     global _SETTINGS, _SERVICE_FACTORY, _SESSION_SERVICE, _SESSION_TURN_SERVICE
     if _SETTINGS is None:
         project_root = BASE_DIR
-        settings_repo = SettingsRepository(project_root)
+        settings_repo = SettingsRepository()
         _SETTINGS = settings_repo.load()
         _SERVICE_FACTORY = ServiceFactory(project_root, _SETTINGS)
         _SESSION_SERVICE = _SERVICE_FACTORY.create_session_service()

@@ -131,7 +131,7 @@ class ProcessManagerService:
                 logger.warning(f"Failed to delete process file for {session_id}: {e}")
 
     def register_process(
-        self, session_id: str, pid: int, instruction: str, log_file: str
+        self, session_id: str, pid: int, instruction: str
     ) -> None:
         """
         Register a new process for a session.
@@ -140,7 +140,6 @@ class ProcessManagerService:
             session_id: Session identifier
             pid: Process ID
             instruction: User instruction that started this process
-            log_file: Path to the streaming log file
 
         Raises:
             RuntimeError: If session is already running
@@ -167,7 +166,6 @@ class ProcessManagerService:
             pid=pid,
             started_at=datetime.now(UTC).isoformat(),
             instruction=instruction,
-            log_file=log_file,
         )
         self._write_process_file(session_id, process_info.model_dump())
 

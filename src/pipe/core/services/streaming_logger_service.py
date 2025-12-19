@@ -2,8 +2,11 @@
 
 import json
 import logging
+import zoneinfo
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
+
+from pipe.core.models.settings import Settings
 
 if TYPE_CHECKING:
     from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
@@ -26,14 +29,21 @@ class StreamingLoggerService:
     - Delegates actual file I/O to StreamingLogRepository
     """
 
-    def __init__(self, repository: "StreamingLogRepository"):
+    def __init__(self, repository: "StreamingLogRepository", settings: Settings):
         """
         Initialize the streaming logger service.
 
         Args:
             repository: StreamingLogRepository for file operations
+            settings: Settings object for timezone configuration
         """
         self.repository = repository
+        # Convert timezone string to ZoneInfo object
+        try:
+            self.timezone = zoneinfo.ZoneInfo(settings.timezone)
+        except zoneinfo.ZoneInfoNotFoundError:
+            # Fallback to UTC if timezone not found
+            self.timezone = zoneinfo.ZoneInfo("UTC")
 
     def start_logging(self, instruction: str) -> None:
         """
@@ -161,10 +171,10 @@ class StreamingLoggerService:
             content: Content of the log entry
 
         Note:
-        - Automatically adds current timestamp
+        - Automatically adds current timestamp with timezone
         - Delegates to repository for actual file I/O
         """
-        timestamp = datetime.now()
+        timestamp = datetime.now(self.timezone)
         try:
             self.repository.write_log_line(log_type, content, timestamp)
         except Exception as e:

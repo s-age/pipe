@@ -2,6 +2,7 @@
 
 import json
 import os
+import zoneinfo
 from collections.abc import Generator
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -59,6 +60,13 @@ class GeminiClientService:
         self.cache_service = GeminiCacheService(self.project_root)
         self.token_service = TokenService(settings=self.settings)
 
+        # Convert timezone string to ZoneInfo object
+        try:
+            self.timezone = zoneinfo.ZoneInfo(self.settings.timezone)
+        except zoneinfo.ZoneInfoNotFoundError:
+            # Fallback to UTC if timezone not found
+            self.timezone = zoneinfo.ZoneInfo("UTC")
+
     def stream_content(
         self, prompt_service: "PromptService"
     ) -> Generator[UnifiedChunk, None, None]:
@@ -95,8 +103,6 @@ class GeminiClientService:
 
         # Set session ID in environment for tools to access
         os.environ["PIPE_SESSION_ID"] = session_data.session_id
-
-        sessions_dir = os.path.join(self.project_root, "sessions")
 
         # 1. Build prompt model
         prompt_model = prompt_service.build_prompt(self.session_service)
@@ -138,7 +144,6 @@ class GeminiClientService:
             static_content=static_content,
             dynamic_content=dynamic_content,
             converted_tools=converted_tools,
-            sessions_dir=sessions_dir,
         )
 
         # 8. Build generation config
@@ -154,7 +159,6 @@ class GeminiClientService:
             content_to_send=content_to_send,
             config=config,
             session_data=session_data,
-            sessions_dir=sessions_dir,
         )
 
     def _render_prompt_templates(
@@ -232,7 +236,6 @@ class GeminiClientService:
         static_content: str,
         dynamic_content: str,
         converted_tools: list[types.Tool],
-        sessions_dir: str,
     ) -> tuple[str | None, str]:
         """
         Determine cache strategy and prepare content to send.
@@ -244,7 +247,6 @@ class GeminiClientService:
             static_content: Static prompt content
             dynamic_content: Dynamic prompt content
             converted_tools: Converted tool definitions
-            sessions_dir: Sessions directory path
 
         Returns:
             Tuple of (cached_content_name, content_to_send)
@@ -259,10 +261,9 @@ class GeminiClientService:
         should_cache = gemini_cache.should_update_cache(buffered_tokens)
 
         # Setup logging repository for cache decisions
-        log_file_path = os.path.join(
-            sessions_dir, f"{session_data.session_id}.streaming.log"
+        streaming_log_repo = StreamingLogRepository(
+            self.project_root, session_data.session_id
         )
-        streaming_log_repo = StreamingLogRepository(log_file_path)
         streaming_log_repo.open(mode="a")
 
         cached_content_name = None
@@ -278,7 +279,7 @@ class GeminiClientService:
                     f"Buffered tokens={buffered_tokens}"
                 )
                 streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, datetime.now()
+                    "CACHE_DECISION", cache_msg, datetime.now(self.timezone)
                 )
 
                 cached_content_name = self.cache_service.get_cached_content(
@@ -297,7 +298,7 @@ class GeminiClientService:
                     f"Sending static + dynamic content"
                 )
                 streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, datetime.now()
+                    "CACHE_DECISION", cache_msg, datetime.now(self.timezone)
                 )
                 content_to_send = static_content + "\n" + dynamic_content
 
@@ -311,7 +312,7 @@ class GeminiClientService:
                     f"Threshold={gemini_cache.cache_update_threshold}"
                 )
                 streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, datetime.now()
+                    "CACHE_DECISION", cache_msg, datetime.now(self.timezone)
                 )
 
                 if static_content:
@@ -378,7 +379,6 @@ class GeminiClientService:
         content_to_send: str,
         config: types.GenerateContentConfig,
         session_data,
-        sessions_dir: str,
     ) -> Generator[UnifiedChunk, None, None]:
         """
         Execute streaming API call with chunk logging and unified format conversion.
@@ -388,7 +388,6 @@ class GeminiClientService:
             content_to_send: Prompt content to send
             config: Generation configuration
             session_data: Current session data
-            sessions_dir: Sessions directory path
 
         Yields:
             Unified Pydantic chunk models (model-agnostic format)
@@ -396,10 +395,9 @@ class GeminiClientService:
         Raises:
             RuntimeError: If API call fails
         """
-        log_file_path = os.path.join(
-            sessions_dir, f"{session_data.session_id}.streaming.log"
+        raw_chunk_repo = StreamingLogRepository(
+            self.project_root, session_data.session_id
         )
-        raw_chunk_repo = StreamingLogRepository(log_file_path)
         raw_chunk_repo.open(mode="a")
 
         try:
@@ -419,14 +417,14 @@ class GeminiClientService:
                     raw_chunk_repo.write_log_line(
                         "RAW_CHUNK",
                         json.dumps(chunk_dict, ensure_ascii=False, default=str),
-                        datetime.now(),
+                        datetime.now(self.timezone),
                     )
                 except Exception:
                     try:
                         raw_chunk_repo.write_log_line(
                             "RAW_CHUNK",
                             json.dumps({"raw": str(chunk)}, ensure_ascii=False),
-                            datetime.now(),
+                            datetime.now(self.timezone),
                         )
                     except Exception:
                         pass

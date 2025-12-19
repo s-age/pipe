@@ -13,6 +13,7 @@ from pipe.core.repositories.procedure_repository import ProcedureRepository
 from pipe.core.repositories.resource_repository import ResourceRepository
 from pipe.core.repositories.role_repository import RoleRepository
 from pipe.core.repositories.session_repository import SessionRepository
+from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
 from pipe.core.services.file_indexer_service import FileIndexerService
 from pipe.core.services.procedure_service import ProcedureService
 from pipe.core.services.prompt_service import PromptService
@@ -27,6 +28,7 @@ from pipe.core.services.session_todo_service import SessionTodoService
 from pipe.core.services.session_tree_service import SessionTreeService
 from pipe.core.services.session_turn_service import SessionTurnService
 from pipe.core.services.session_workflow_service import SessionWorkflowService
+from pipe.core.services.streaming_logger_service import StreamingLoggerService
 
 
 class ServiceFactory:
@@ -152,3 +154,10 @@ class ServiceFactory:
         takt_agent = TaktAgent(self.project_root)
 
         return VerificationService(session_service, turn_service, takt_agent)
+
+    def create_streaming_logger_service(
+        self, session_id: str
+    ) -> StreamingLoggerService:
+        """Creates a StreamingLoggerService with its dependencies."""
+        repository = StreamingLogRepository(self.project_root, session_id)
+        return StreamingLoggerService(repository, self.settings)

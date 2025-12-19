@@ -24,7 +24,3 @@ class ProcessInfo(CamelCaseModel):
     instruction: str = Field(
         ..., description="User instruction that initiated this process"
     )
-    log_file: str = Field(
-        ...,
-        description="Absolute path to the streaming log file for this process",
-    )

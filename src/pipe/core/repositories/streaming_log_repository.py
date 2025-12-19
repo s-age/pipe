@@ -1,5 +1,6 @@
 """Repository for streaming log file operations."""
 
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import TextIO, cast
@@ -13,21 +14,39 @@ class StreamingLogRepository:
     - Open/close log files
     - Write timestamped log entries
     - Ensure proper file flushing for real-time log access
+    - Manage log file paths and cleanup
 
     Note:
     - This is a repository (persistence layer), not a service
     - Business logic for log formatting should be in StreamingLoggerService
     """
 
-    def __init__(self, log_file_path: str):
+    def __init__(self, project_root: str, session_id: str):
         """
         Initialize the streaming log repository.
 
         Args:
-            log_file_path: Absolute path to the log file
+            project_root: Root directory of the project
+            session_id: Session identifier for which to manage logs
         """
-        self.log_file_path = log_file_path
+        self.project_root = project_root
+        self.session_id = session_id
+        self.log_file_path = self._build_log_file_path()
         self.file_handle: TextIO | None = None
+
+    def _build_log_file_path(self) -> str:
+        """
+        Build the log file path from project root and session ID.
+
+        Returns:
+            Absolute path to the streaming log file
+        """
+        return os.path.join(
+            self.project_root,
+            "sessions",
+            "streaming",
+            f"{self.session_id}.streaming.log",
+        )
 
     def open(self, mode: str = "w") -> None:
         """
@@ -104,3 +123,47 @@ class StreamingLogRepository:
             exc_tb: Exception traceback if an error occurred
         """
         self.close()
+
+    @staticmethod
+    def cleanup_old_logs(
+        project_root: str, max_age_minutes: int = 30
+    ) -> None:
+        """
+        Clean up streaming log files older than max_age_minutes.
+
+        Args:
+            project_root: Root directory of the project
+            max_age_minutes: Maximum age of logs in minutes before deletion.
+                Defaults to 30.
+
+        Note:
+        - Removes log files older than max_age_minutes from sessions/streaming/
+        - Silently handles errors to avoid disrupting operations
+        """
+        streaming_dir = os.path.join(project_root, "sessions", "streaming")
+        if not os.path.exists(streaming_dir):
+            return
+
+        current_time = datetime.now().timestamp()
+        max_age_seconds = max_age_minutes * 60
+
+        try:
+            for log_file in os.listdir(streaming_dir):
+                if not log_file.endswith(".streaming.log"):
+                    continue
+
+                log_file_path = os.path.join(streaming_dir, log_file)
+                try:
+                    file_mtime = os.path.getmtime(log_file_path)
+                    age_seconds = current_time - file_mtime
+
+                    if age_seconds > max_age_seconds:
+                        try:
+                            os.remove(log_file_path)
+                        except OSError:
+                            pass
+                except OSError:
+                    pass
+
+        except OSError:
+            pass

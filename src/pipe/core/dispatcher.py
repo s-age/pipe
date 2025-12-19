@@ -44,20 +44,17 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         raise RuntimeError(f"Session {session_id} is already running")
 
     # 2. Register process
-    log_file = os.path.join(
-        session_service.project_root, "sessions", f"{session_id}.streaming.log"
-    )
     process_manager.register_process(
-        session_id, os.getpid(), args.instruction, log_file
+        session_id, os.getpid(), args.instruction
     )
 
     # 3. Start streaming logger
-    from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
-    from pipe.core.services.streaming_logger_service import StreamingLoggerService
-
-    logger_repository = StreamingLogRepository(log_file)
-    logger = StreamingLoggerService(logger_repository)
+    logger = service_factory.create_streaming_logger_service(session_id)
     logger.start_logging(args.instruction)
+
+    # 4. Clean up old streaming logs
+    from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
+    StreamingLogRepository.cleanup_old_logs(session_service.project_root)
 
     # For stream-json, also output to stdout
     stream_to_stdout = args.output_format == "stream-json"
@@ -115,11 +112,11 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         reference_service.decrement_all_references_ttl_in_session(session_id)
         turn_service.expire_old_tool_responses(session_id)
 
-        # 4. Start transaction (add user_instruction to pools)
+        # 5. Start transaction (add user_instruction to pools)
         turn_service.start_transaction(session_id, args.instruction)
         logger.log_event({"type": "transaction", "action": "start"})
 
-        # 5. Execute agent
+        # 6. Execute agent
         AgentClass = get_agent_class(api_mode)
         agent_instance = AgentClass()
 
@@ -153,7 +150,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
                 args, session_service, prompt_service
             )
 
-        # 6. Add all turns to transaction (temporary storage in pools)
+        # 7. Add all turns to transaction (temporary storage in pools)
         for turn in turns_to_save:
             turn_service.add_to_transaction(session_id, turn)
             # Log chunks for streaming visibility (truncate if too long)
@@ -173,19 +170,19 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
                         flush=True,
                     )
 
-        # 7. Commit transaction (merge pools into turns for persistence)
+        # 8. Commit transaction (merge pools into turns for persistence)
         turn_service.commit_transaction(session_id)
         logger.log_event({"type": "transaction", "action": "commit"})
 
-        # 8. Update token count
+        # 9. Update token count
         if token_count is not None:
             meta_service.update_token_count(session_id, token_count)
 
-        # 9. Cleanup
+        # 10. Cleanup
         logger.close()
         process_manager.cleanup_process(session_id)
 
-        # 10. Output
+        # 11. Output
         if args.output_format == "json":
             output = {
                 "session_id": session_id,

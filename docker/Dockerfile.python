@@ -10,7 +10,7 @@ ENV PATH="/root/.local/bin:$PATH"
 WORKDIR /app
 
 # Copy pyproject.toml and poetry.lock (if exists)
-COPY pyproject.toml ./
+COPY pyproject.toml poetry.lock* ./
 
 # Configure poetry: do not create virtual environment
 RUN poetry config virtualenvs.create false

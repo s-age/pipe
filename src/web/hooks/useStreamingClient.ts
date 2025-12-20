@@ -95,6 +95,11 @@ export const useStreamingClient = (): UseStreamingClientReturn => {
                 accumContent += data.content
                 setStreamedText(accumContent)
               }
+
+              if (data.type === 'complete') {
+                done = true
+                break
+              }
             } catch {
               // Parse error within stream is considered minor, usually ignored or logged
               // We could set a warning, but for now we continue

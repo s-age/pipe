@@ -4,9 +4,6 @@
 {% from "current_task.j2" import render_current_task_macro %}
 {% from "conversation_history.j2" import render_conversation_history_macro %}
 {
-  {% if session.buffered_history %}
-  "buffered_conversation": {{ render_conversation_history_macro(session.buffered_history) }},
-  {% endif %}
   {% if session.file_references %}
   "file_references": {{ render_file_references_macro(session.file_references) }},
   {% endif %}
@@ -16,6 +13,5 @@
   {% if session.todos %}
   "todos": {{ render_todos_macro(session.todos) }},
   {% endif %}
-  "current_task": {{ render_current_task_macro(session.current_task) }},
   "current_datetime": "{{ session.current_datetime }}"
 }

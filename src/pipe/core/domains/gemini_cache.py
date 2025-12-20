@@ -84,11 +84,18 @@ class GeminiCache:
         should_update_cache = self.should_update_cache(buffered_tokens)
 
         if should_update_cache:
-            # Cache all history
-            cached_turns = all_turns
-            buffered_turns = None
+            # Cache history but keep the last turn buffered for thought signature
+            if len(all_turns) > 0:
+                cached_turns = all_turns[:-1]
+                buffered_turns = all_turns[-1:]
+            else:
+                cached_turns = None
+                buffered_turns = None
+
             logging.info(
-                f"Cache decision: Caching all {len(all_turns)} turns. "
+                f"Cache decision: Caching "
+                f"{len(cached_turns) if cached_turns else 0} turns. "
+                f"Buffering last turn for thought signature. "
                 f"Prompt tokens: {prompt_token_count}, "
                 f"Previous cache: {cached_content_token_count}"
             )
@@ -101,6 +108,10 @@ class GeminiCache:
                 else 0
             )
             cache_boundary_index = int(len(all_turns) * cache_ratio)
+
+            # Ensure we never cache the last turn (thought signature requirement)
+            if cache_boundary_index >= len(all_turns):
+                cache_boundary_index = len(all_turns) - 1
 
             if cache_boundary_index > 0:
                 cached_turns = all_turns[:cache_boundary_index]

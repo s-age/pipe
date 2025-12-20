@@ -151,6 +151,13 @@ class SessionTurnService:
             ):
                 self.repository.save(session)
 
+    def update_raw_response(self, session_id: str, raw_response: str | None):
+        """Updates the raw_response field of the session."""
+        session = self.repository.find(session_id)
+        if session:
+            session.raw_response = raw_response
+            self.repository.save(session)
+
     # ========== Transaction Methods ==========
 
     def start_transaction(self, session_id: str, instruction: str):

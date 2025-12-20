@@ -194,6 +194,11 @@ def run_stream(
     )
     intermediate_turns.append(final_model_turn)
 
+    if gemini_client.last_raw_response:
+        session_turn_service.update_raw_response(
+            session_id, gemini_client.last_raw_response
+        )
+
     # Update token count and cached content token count
     if prompt_token_count_for_cache > 0:
         from pipe.core.services.session_meta_service import SessionMetaService

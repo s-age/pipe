@@ -196,6 +196,7 @@ class PromptFactory:
                 if session.multi_step_reasoning_enabled
                 else None
             ),
+            "raw_response": session.raw_response,
         }
 
         return Prompt(**prompt_data)

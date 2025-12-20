@@ -1,5 +1,6 @@
 """Service for Gemini API client operations."""
 
+import base64
 import json
 import os
 import zoneinfo
@@ -73,6 +74,7 @@ class GeminiClientService:
         self.tool_service = GeminiToolService()
         self.cache_service = GeminiCacheService(self.project_root, self.settings)
         self.token_service = TokenService(settings=self.settings)
+        self.last_raw_response: str | None = None
 
         # Convert timezone string to ZoneInfo object
         try:
@@ -127,10 +129,29 @@ class GeminiClientService:
             prompt_service, context
         )
 
-        # 3. Load tools
+        # 3. Prepare Buffered History as Content objects
+        buffered_contents: list[types.Content] = []
+        if prompt_model.buffered_history and prompt_model.buffered_history.turns:
+            turns = prompt_model.buffered_history.turns
+            for i, turn in enumerate(turns):
+                # Only pass raw_response to the LAST turn if it's a model response
+                is_last = i == len(turns) - 1
+                raw_resp = prompt_model.raw_response if is_last else None
+                content_obj = self._convert_turn_to_content(turn, raw_resp)
+                buffered_contents.append(content_obj)
+
+        # 4. Prepare Current Task Content
+        current_task_content = None
+        if prompt_model.current_task and prompt_model.current_task.instruction.strip():
+            current_task_content = types.Content(
+                role="user",
+                parts=[types.Part(text=prompt_model.current_task.instruction)],
+            )
+
+        # 5. Load tools
         loaded_tools_data = self.tool_service.load_tools(self.project_root)
 
-        # 4. Check token limits
+        # 6. Check token limits
         full_text = (static_content or "") + dynamic_content
         token_count = self.token_service.count_tokens(
             full_text, tools=loaded_tools_data
@@ -140,13 +161,13 @@ class GeminiClientService:
         if not is_within_limit:
             raise ValueError("Prompt exceeds context window limit. Aborting.")
 
-        # 5. Convert tools to Gemini types
+        # 7. Convert tools to Gemini types
         converted_tools = self._convert_tools(loaded_tools_data)
 
-        # 6. Initialize API client
+        # 8. Initialize API client
         client = genai.Client()
 
-        # 7. Determine cache strategy and prepare content
+        # 9. Determine cache strategy and prepare content
         gemini_cache = GeminiCache(
             tool_response_limit=self.settings.tool_response_expiration,
             cache_update_threshold=self.settings.model.cache_update_threshold,
@@ -158,16 +179,18 @@ class GeminiClientService:
             static_content=static_content,
             dynamic_content=dynamic_content,
             converted_tools=converted_tools,
+            buffered_history_contents=buffered_contents,
+            current_task_content=current_task_content,
         )
 
-        # 8. Build generation config
+        # 10. Build generation config
         config = self._build_generation_config(
             session_data=session_data,
             cached_content_name=cached_content_name,
             converted_tools=converted_tools,
         )
 
-        # 9. Execute streaming call with logging
+        # 11. Execute streaming call with logging
         yield from self._execute_streaming_call(
             client=client,
             content_to_send=content_to_send,
@@ -250,7 +273,9 @@ class GeminiClientService:
         static_content: str,
         dynamic_content: str,
         converted_tools: list[types.Tool],
-    ) -> tuple[str | None, str]:
+        buffered_history_contents: list[types.Content],
+        current_task_content: types.Content | None,
+    ) -> tuple[str | None, list[types.Content | str]]:
         """
         Determine cache strategy and prepare content to send.
 
@@ -261,9 +286,11 @@ class GeminiClientService:
             static_content: Static prompt content
             dynamic_content: Dynamic prompt content
             converted_tools: Converted tool definitions
+            buffered_history_contents: List of buffered turns as Content objects
+            current_task_content: Content object for the current task (optional)
 
         Returns:
-            Tuple of (cached_content_name, content_to_send)
+            Tuple of (cached_content_name, content_list_to_send)
         """
         # Calculate buffered tokens (not yet cached)
         buffered_tokens = (
@@ -281,7 +308,7 @@ class GeminiClientService:
         streaming_log_repo.open(mode="a")
 
         cached_content_name = None
-        content_to_send = dynamic_content
+        content_to_send: list[types.Content | str] = []
 
         try:
             if should_cache and static_content:
@@ -314,7 +341,8 @@ class GeminiClientService:
                 streaming_log_repo.write_log_line(
                     "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
                 )
-                content_to_send = static_content + "\n" + dynamic_content
+                if static_content:
+                    content_to_send.append(static_content)
 
             else:
                 # Use existing cache
@@ -338,10 +366,17 @@ class GeminiClientService:
                             converted_tools,
                         )
                     except Exception:
-                        content_to_send = static_content + "\n" + dynamic_content
+                        # Fallback if cache retrieval fails
+                        content_to_send.append(static_content)
 
         finally:
             streaming_log_repo.close()
+
+        # Order: Dynamic (Context) -> Buffered History -> Current Task
+        content_to_send.append(dynamic_content)
+        content_to_send.extend(buffered_history_contents)
+        if current_task_content:
+            content_to_send.append(current_task_content)
 
         return cached_content_name, content_to_send
 
@@ -390,7 +425,7 @@ class GeminiClientService:
     def _execute_streaming_call(
         self,
         client: genai.Client,
-        content_to_send: str,
+        content_to_send: list[types.Content | str] | str,
         config: types.GenerateContentConfig,
         session_data,
     ) -> Generator[UnifiedChunk, None, None]:
@@ -414,6 +449,8 @@ class GeminiClientService:
         )
         raw_chunk_repo.open(mode="a")
 
+        collected_chunks = []
+
         try:
             stream = client.models.generate_content_stream(
                 contents=content_to_send,
@@ -422,6 +459,8 @@ class GeminiClientService:
             )
 
             for chunk in stream:
+                collected_chunks.append(chunk)
+
                 # Log raw chunk (extract text and usage, skip binary fields)
                 try:
                     log_info: LogInfo = {
@@ -470,6 +509,37 @@ class GeminiClientService:
                 unified_chunks = self._convert_chunk_to_unified_format(chunk)
                 yield from unified_chunks
 
+            # After stream completes, try to extract thought signature and save
+            # raw response
+            target_chunk = None
+            if collected_chunks:
+                # Prioritize finding chunk with thought_signature
+                for c in collected_chunks:
+                    if (
+                        c.candidates
+                        and c.candidates[0].content
+                        and c.candidates[0].content.parts
+                    ):
+                        for p in c.candidates[0].content.parts:
+                            if p.thought_signature:
+                                target_chunk = c
+                                break
+                    if target_chunk:
+                        break
+
+                # Fallback to last chunk if no signature found (to keep usage metadata)
+                if not target_chunk:
+                    target_chunk = collected_chunks[-1]
+
+                if target_chunk:
+                    # Persist serialized chunk to session object (in memory)
+                    # The SessionService will persist this to disk when saving
+                    # the session
+                    try:
+                        self.last_raw_response = target_chunk.model_dump_json()
+                    except Exception:
+                        pass
+
         except Exception as e:
             raise RuntimeError(f"Error during Gemini API execution: {e}")
         finally:
@@ -489,25 +559,21 @@ class GeminiClientService:
         """
         unified_chunks: list[UnifiedChunk] = []
 
-        # Safely extract candidates
-        if not chunk.candidates or len(chunk.candidates) == 0:
-            return unified_chunks
-
-        candidate = chunk.candidates[0]
-        if not candidate.content or not candidate.content.parts:
-            return unified_chunks
-
-        # Extract text content and tool calls
-        for part in candidate.content.parts:
-            if part.text:
-                unified_chunks.append(TextChunk(content=part.text))
-            elif hasattr(part, "function_call") and part.function_call:
-                unified_chunks.append(
-                    ToolCallChunk(
-                        name=part.function_call.name,
-                        args=dict(part.function_call.args or {}),
-                    )
-                )
+        # Extract candidates if present
+        if chunk.candidates and len(chunk.candidates) > 0:
+            candidate = chunk.candidates[0]
+            if candidate.content and candidate.content.parts:
+                # Extract text content and tool calls
+                for part in candidate.content.parts:
+                    if part.text:
+                        unified_chunks.append(TextChunk(content=part.text))
+                    elif hasattr(part, "function_call") and part.function_call:
+                        unified_chunks.append(
+                            ToolCallChunk(
+                                name=part.function_call.name,
+                                args=dict(part.function_call.args or {}),
+                            )
+                        )
 
         # Extract usage metadata (typically on final chunk)
         if chunk.usage_metadata:
@@ -523,3 +589,66 @@ class GeminiClientService:
             )
 
         return unified_chunks
+
+    def _restore_thought_signature(
+        self, raw_response_json: str
+    ) -> types.Content | None:
+        """Restores content with thought signature from raw response JSON."""
+        try:
+            # Pydantic automatic validation
+            response = types.GenerateContentResponse.model_validate_json(
+                raw_response_json
+            )
+            if not response.candidates or not response.candidates[0].content:
+                return None
+
+            content = response.candidates[0].content
+
+            # Manual base64 decode for thought_signature
+            if content.parts:
+                for part in content.parts:
+                    if part.thought_signature:
+                        if isinstance(part.thought_signature, str):
+                            part.thought_signature = base64.b64decode(
+                                part.thought_signature
+                            )
+            return content
+        except Exception:
+            return None
+
+    def _convert_turn_to_content(
+        self, turn, raw_response: str | None = None
+    ) -> types.Content:
+        """Converts a Turn model to a Gemini Content object."""
+        role = "user"
+        parts = []
+
+        # Determine role and basic text content
+        if hasattr(turn, "type"):
+            if turn.type == "user_task":
+                role = "user"
+                parts.append(types.Part(text=turn.instruction))
+            elif turn.type == "model_response":
+                role = "model"
+                # If this is the latest model turn and we have a raw response,
+                # try to restore signature
+                if raw_response:
+                    restored = self._restore_thought_signature(raw_response)
+                    if restored:
+                        return restored
+
+                parts.append(types.Part(text=turn.content))
+            elif turn.type == "function_calling":
+                role = "model"
+                # Simplistic text representation for now
+                parts.append(types.Part(text=f"Function Call: {turn.response}"))
+            elif turn.type == "tool_response":
+                role = "user"
+                # Simplistic representation
+                parts.append(
+                    types.Part(
+                        text=f"Tool Response ({turn.name}): {turn.response}"
+                    )
+                )
+
+        return types.Content(role=role, parts=parts)

@@ -44,6 +44,7 @@ class Prompt(CamelCaseModel):
     artifacts: list[Artifact] | None = None  # Changed type to list[Artifact]
     procedure: str | None = None
     procedure_content: str | None = None
+    raw_response: str | None = None
 
     @classmethod
     def from_session(

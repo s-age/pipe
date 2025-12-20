@@ -114,6 +114,7 @@ class SessionInputData(TypedDict, total=False):
     turns: list[TurnInputType]
     pools: list[TurnInputType]
     todos: list[TodoItemInput | str]
+    raw_response: str | None
 
 
 class SessionMetaUpdate(CamelCaseModel):
@@ -217,6 +218,7 @@ class Session(CamelCaseModel):
     turns: TurnCollection = Field(default_factory=TurnCollection)
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: list[TodoItem] = Field(default_factory=list)
+    raw_response: str | None = None
 
     def model_post_init(self, __context: Any) -> None:
         """Initializes instance-specific configurations after the model is created.

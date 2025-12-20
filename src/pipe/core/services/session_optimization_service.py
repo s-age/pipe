@@ -95,15 +95,19 @@ class SessionOptimizationService:
             session_id, policy, target_length, start_turn, end_turn
         )
 
+        # Embed compression parameters in background for later retrieval
+        background = (
+            f"Responsible for compressing conversation history and creating "
+            f"summaries based on the specified policy and target length. "
+            f"Target session: {session_id}, turns {start_turn}-{end_turn}"
+        )
+
         compressor_session_id, _, _ = self.takt_agent.run_new_session(
             purpose=(
                 "Act as a compression agent to summarize the target session "
                 "according to the specified request"
             ),
-            background=(
-                "Responsible for compressing conversation history and creating "
-                "summaries based on the specified policy and target length"
-            ),
+            background=background,
             roles="roles/compressor.md",
             instruction=instruction,
         )
@@ -139,11 +143,85 @@ class SessionOptimizationService:
         Args:
             compressor_session_id: The compressor session ID
         """
-        approval_instruction = (
-            "The user has approved the compression. "
-            "Proceed with replacing the session turns using the "
-            "compress_session_turns tool."
+        # Retrieve the compressor session to extract original parameters
+        compressor_session = self.repository.find(compressor_session_id)
+        if not compressor_session or not compressor_session.turns:
+            raise ValueError(
+                f"Compressor session {compressor_session_id} not found or has no turns"
+            )
+
+        # Extract parameters from the session's background field
+        import re
+
+        if not compressor_session.background:
+            raise ValueError(
+                f"No background found in compressor session {compressor_session_id}"
+            )
+
+        # Parse the background to extract session_id, start_turn, end_turn
+        # Format: "... Target session: {session_id}, turns {start_turn}-{end_turn}"
+        match = re.search(
+            r"Target session: (\S+), turns (\d+)-(\d+)",
+            compressor_session.background,
         )
+        if not match:
+            raise ValueError(
+                f"Could not parse compression parameters from background: "
+                f"{compressor_session.background}"
+            )
+
+        target_session_id = match.group(1)
+        start_turn = int(match.group(2))
+        end_turn = int(match.group(3))
+
+        # Extract the summary from the last model_response
+        last_model_response = None
+        for turn in reversed(compressor_session.turns):
+            if turn.type == "model_response":
+                last_model_response = turn
+                break
+
+        if not last_model_response:
+            raise ValueError(
+                f"No model_response found in compressor session {compressor_session_id}"
+            )
+
+        from pipe.core.domains.session_optimization import (
+            extract_summary_from_compressor_response,
+        )
+
+        summary, _ = extract_summary_from_compressor_response(
+            last_model_response.content
+        )
+
+        if not summary or summary.startswith("Rejected:"):
+            raise ValueError(
+                f"Cannot approve: summary was not approved or is empty: {summary}"
+            )
+
+        # Extract clean summary text (remove "Approved: " prefix if present)
+        clean_summary = summary.replace("Approved: ", "").strip()
+
+        # Escape the summary for use in tool call parameter
+        # Replace double quotes with escaped quotes and handle newlines
+        escaped_summary = clean_summary.replace('"', '\\"').replace("\n", "\\n")
+
+        # Build detailed approval instruction with exact tool call
+        # (using 1-based turn numbers)
+        approval_instruction = f"""The user has approved the compression.
+
+**Execute this exact tool call:**
+```
+compress_session_turns(
+    session_id="{target_session_id}",
+    start_turn={start_turn},
+    end_turn={end_turn},
+    summary_text="{escaped_summary}"
+)
+```
+
+After executing the tool call successfully, report completion and stop.
+"""
 
         self.takt_agent.run_existing_session(
             compressor_session_id, approval_instruction

@@ -55,16 +55,46 @@ def build_compressor_instruction(
         session_id: Target session ID to compress
         policy: Compression policy
         target_length: Target length after compression
-        start_turn: Start turn index
-        end_turn: End turn index
+        start_turn: Start turn index (1-based, converted to 0-based internally)
+        end_turn: End turn index (1-based, converted to 0-based internally)
 
     Returns:
         Instruction string for the compressor agent
     """
-    return (
-        f"Compress session {session_id} from turn {start_turn} to {end_turn} "
-        f"with policy '{policy}' and target length {target_length} tokens"
-    )
+    return f"""Compress session {session_id} from turn {start_turn} to {end_turn} \
+with policy '{policy}' and target length {target_length} tokens.
+
+**Execute the following steps in order:**
+
+**Step 1: Retrieve the target session**
+Call the get_session tool with this exact parameter:
+```
+get_session(session_id="{session_id}")
+```
+
+**Step 2: Generate summary**
+Based on the session data (turns {start_turn} to {end_turn}), create a summary \
+following the policy '{policy}' with target length {target_length} tokens.
+
+**Step 3: Verify the summary**
+Call the verify_summary tool with these exact parameters:
+```
+verify_summary(
+    session_id="{session_id}",
+    start_turn={start_turn},
+    end_turn={end_turn},
+    summary_text="<YOUR GENERATED SUMMARY HERE>"
+)
+```
+
+**Step 4: Report the result and STOP**
+Use the output format specified in your role definition.
+Output the verification result and wait for user approval.
+
+**CRITICAL: DO NOT call compress_session_turns in this session.**
+That tool will only be called after the user explicitly approves the summary \
+in a separate instruction.
+"""
 
 
 def build_therapist_instruction(session_id: str, turns_count: int) -> str:

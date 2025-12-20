@@ -98,7 +98,7 @@ class TestCompressSessionTurns(unittest.TestCase):
             session_id=self.test_session_id,
             start_turn=2,
             end_turn=4,
-            summary="Summarized turns 2-4",
+            summary_text="Summarized turns 2-4",
         )
 
         # If result has error, print it

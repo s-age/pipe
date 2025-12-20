@@ -12,12 +12,18 @@ def compress_session_turns(
     session_id: str,
     start_turn: int,
     end_turn: int,
-    summary: str,
+    summary_text: str,
     session_service=None,
 ) -> ToolResult[CompressSessionTurnsResult]:
     """
     Compresses a specified range of turns in a target session's history with a summary.
     This action is irreversible and automatically creates a backup.
+
+    Args:
+        session_id: Target session ID
+        start_turn: Start turn number (1-based)
+        end_turn: End turn number (1-based)
+        summary_text: Summary to replace the turn range
     """
     # Input Validation
     if not session_id:
@@ -28,8 +34,8 @@ def compress_session_turns(
         return ToolResult(error="end_turn must be a positive integer.")
     if start_turn > end_turn:
         return ToolResult(error="start_turn cannot be greater than end_turn.")
-    if not summary:
-        return ToolResult(error="Summary cannot be empty.")
+    if not summary_text:
+        return ToolResult(error="summary_text cannot be empty.")
 
     try:
         # Initialize ServiceFactory and get SessionOptimizationService
@@ -46,7 +52,7 @@ def compress_session_turns(
         end_index = end_turn - 1
 
         optimization_service.replace_turn_range_with_summary(
-            session_id, summary, start_index, end_index
+            session_id, summary_text, start_index, end_index
         )
 
         # Reload session to get updated turn count

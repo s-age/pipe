@@ -12,8 +12,9 @@ class VerificationResult(BaseModel):
         description="Verification status"
     )
     verifier_session_id: str = Field(description="ID of the verifier session")
-    message: str = Field(description="Status message")
+    message: str | None = Field(default=None, description="Status message")
     verifier_response: str = Field(description="Response from verifier agent")
+
     next_action: str = Field(description="Instructions for next action")
 
     model_config = ConfigDict(frozen=True)

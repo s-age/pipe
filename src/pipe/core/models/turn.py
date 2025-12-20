@@ -13,7 +13,7 @@ class TurnResponse(CamelCaseModel):
         from_attributes=True,
     )  # Allow extra fields for flexibility
     status: str
-    message: str
+    message: str | None = None
 
 
 class UserTaskTurnUpdate(CamelCaseModel):

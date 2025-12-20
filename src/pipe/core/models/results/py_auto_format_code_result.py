@@ -14,7 +14,9 @@ class FormatterToolResult(CamelCaseModel):
     error: str | None = Field(
         default=None, description="Error message if tool not found"
     )
-    message: str = Field(description="Status message describing the result")
+    message: str | None = Field(
+        default=None, description="Status message describing the result"
+    )
 
 
 class PyAutoFormatCodeResult(CamelCaseModel):
@@ -23,4 +25,4 @@ class PyAutoFormatCodeResult(CamelCaseModel):
     formatting_results: list[FormatterToolResult] = Field(
         description="Results from each formatting tool execution"
     )
-    message: str = Field(description="Overall status message")
+    message: str | None = Field(default=None, description="Overall status message")

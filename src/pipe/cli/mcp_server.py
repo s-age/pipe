@@ -354,9 +354,6 @@ def execute_tool(tool_name, arguments):
                         if isinstance(data_content, dict):
                             formatted_response = data_content.copy()
                             formatted_response["status"] = "succeeded"
-                            if "message" not in formatted_response:
-                                # Fallback message if specific message not in data
-                                formatted_response["message"] = str(data_content)
                         else:
                             formatted_response = {
                                 "status": "succeeded",
@@ -377,8 +374,6 @@ def execute_tool(tool_name, arguments):
                     if isinstance(result, dict):
                         formatted_response = result.copy()
                         formatted_response["status"] = "succeeded"
-                        if "message" not in formatted_response:
-                            formatted_response["message"] = str(result)
                     else:
                         formatted_response = {
                             "status": "succeeded",

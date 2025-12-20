@@ -43,7 +43,9 @@ class ModelResponseTurnUpdate(CamelCaseModel):
     model_config = ConfigDict(extra="forbid")
 
     content: str | None = None
+    thought: str | None = None
     timestamp: str | None = None
+    raw_response: str | None = None
 
 
 class UserTaskTurn(CamelCaseModel):
@@ -55,13 +57,16 @@ class UserTaskTurn(CamelCaseModel):
 class ModelResponseTurn(CamelCaseModel):
     type: Literal["model_response"]
     content: str
+    thought: str | None = None
     timestamp: str
+    raw_response: str | None = None
 
 
 class FunctionCallingTurn(CamelCaseModel):
     type: Literal["function_calling"]
     response: str
     timestamp: str
+    raw_response: str | None = None
 
 
 class ToolResponseTurn(CamelCaseModel):

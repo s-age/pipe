@@ -24,7 +24,7 @@ class GeminiApiAgent(BaseAgent):
         args: TaktArgs,
         session_service: "SessionService",
         prompt_service: "PromptService",
-    ) -> tuple[str, int | None, list]:
+    ) -> tuple[str, int | None, list, str | None]:
         """Execute the Gemini API agent.
 
         This wraps the streaming call and returns the final result
@@ -36,7 +36,7 @@ class GeminiApiAgent(BaseAgent):
             prompt_service: Service for prompt building
 
         Returns:
-            Tuple of (response_text, token_count, turns_to_save)
+            Tuple of (response_text, token_count, turns_to_save, thought_text)
         """
         # Import here to avoid circular dependency
         from pipe.core.delegates import gemini_api_delegate
@@ -51,9 +51,15 @@ class GeminiApiAgent(BaseAgent):
             )
         )
         # The last yielded item contains the final result
-        _, model_response_text, token_count, turns_to_save = stream_results[-1]
+        (
+            _,
+            model_response_text,
+            token_count,
+            turns_to_save,
+            model_response_thought,
+        ) = stream_results[-1]
 
-        return model_response_text, token_count, turns_to_save
+        return model_response_text, token_count, turns_to_save, model_response_thought
 
     def run_stream(
         self,

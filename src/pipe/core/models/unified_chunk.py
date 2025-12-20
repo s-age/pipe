@@ -2,17 +2,19 @@
 
 from typing import Any, Literal
 
+from pipe.core.models.base import CamelCaseModel
 from pydantic import BaseModel, Field
 
 
-class TextChunk(BaseModel):
-    """Text content chunk from model response."""
+class TextChunk(CamelCaseModel):
+    """Chunk containing model-generated text."""
 
-    type: Literal["text"] = "text"
-    content: str = Field(..., description="Text content from the model")
+    type: str = "text"
+    content: str
+    is_thought: bool = False
 
 
-class ToolCallChunk(BaseModel):
+class ToolCallChunk(CamelCaseModel):
     """Tool call request chunk from model response."""
 
     type: Literal["tool_call"] = "tool_call"

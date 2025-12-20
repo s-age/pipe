@@ -254,7 +254,7 @@ class GeminiCliAgent(BaseAgent):
         args: TaktArgs,
         session_service: "SessionService",
         prompt_service: "PromptService",
-    ) -> tuple[str, int | None, list]:
+    ) -> tuple[str, int | None, list, str | None]:
         """Execute the Gemini CLI agent.
 
         Args:
@@ -263,7 +263,7 @@ class GeminiCliAgent(BaseAgent):
             prompt_service: Service for prompt building
 
         Returns:
-            Tuple of (response_text, token_count, turns_to_save)
+            Tuple of (response_text, token_count, turns_to_save, thought_text)
         """
         # Import here to avoid circular dependency
         from pipe.core.delegates import gemini_cli_delegate
@@ -296,4 +296,4 @@ class GeminiCliAgent(BaseAgent):
         )
         turns_to_save = [final_turn]
 
-        return model_response_text, token_count, turns_to_save
+        return model_response_text, token_count, turns_to_save, None

@@ -25,7 +25,7 @@ class BaseAgent(ABC):
         args: TaktArgs,
         session_service: "SessionService",
         prompt_service: "PromptService",
-    ) -> tuple[str, int | None, list]:
+    ) -> tuple[str, int | None, list, str | None]:
         """Execute the agent and return results.
 
         Args:
@@ -34,6 +34,6 @@ class BaseAgent(ABC):
             prompt_service: Service for prompt building
 
         Returns:
-            Tuple of (response_text, token_count, turns_to_save)
+            Tuple of (response_text, token_count, turns_to_save, thought_text)
         """
         pass

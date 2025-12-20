@@ -22,6 +22,7 @@ def run_stream(
 ):
     """Streaming version for web UI."""
     model_response_text = ""
+    model_response_thought = ""
     token_count = 0
     prompt_token_count_for_cache = 0  # Track prompt tokens for cache decisions
     intermediate_turns = []
@@ -69,6 +70,7 @@ def run_stream(
         stream = gemini_client.stream_content(prompt_service)
 
         full_text_parts = []
+        thought_parts = []
         usage_metadata = None
         tool_call_chunk = None
 
@@ -76,7 +78,10 @@ def run_stream(
             if isinstance(unified_chunk, TextChunk):
                 # Stream text content to user
                 yield unified_chunk.content
-                full_text_parts.append(unified_chunk.content)
+                if unified_chunk.is_thought:
+                    thought_parts.append(unified_chunk.content)
+                else:
+                    full_text_parts.append(unified_chunk.content)
 
             elif isinstance(unified_chunk, ToolCallChunk):
                 # Store tool call for processing
@@ -90,6 +95,10 @@ def run_stream(
             yield "API Error: Model stream was empty."
             model_response_text = "API Error: Model stream was empty."
             break
+
+        # Accumulate thought and text
+        model_response_thought = "".join(thought_parts)
+        model_response_text = "".join(full_text_parts)
 
         # Extract token counts from metadata
         token_count = 0
@@ -131,7 +140,7 @@ def run_stream(
             function_call = FunctionCall(tool_call_chunk.name, tool_call_chunk.args)
 
         if not function_call:
-            model_response_text = "".join(full_text_parts)
+            # Final text response already set
             break
 
         tool_call_count += 1
@@ -155,6 +164,20 @@ def run_stream(
 
         try:
             tool_result = execute_tool(function_call.name, dict(function_call.args))
+
+            # Update the FunctionCallingTurn in the pool with raw_response
+            # (contains thought signature)
+            if gemini_client.last_raw_response:
+                # Reload session to get the pool updated by execute_tool
+                session = session_service.repository.find(session_id)
+                if session and session.pools:
+                    # Find the last FunctionCallingTurn in the pool
+                    for turn in reversed(session.pools):
+                        if turn.type == "function_calling":
+                            turn.raw_response = gemini_client.last_raw_response
+                            session_service.repository.save(session)
+                            break
+
         except Exception as e:
             tool_result = {"error": str(e)}
 
@@ -190,14 +213,11 @@ def run_stream(
     final_model_turn = ModelResponseTurn(
         type="model_response",
         content=model_response_text,
+        thought=model_response_thought if model_response_thought else None,
         timestamp=get_current_timestamp(timezone_obj),
+        raw_response=gemini_client.last_raw_response,
     )
     intermediate_turns.append(final_model_turn)
-
-    if gemini_client.last_raw_response:
-        session_turn_service.update_raw_response(
-            session_id, gemini_client.last_raw_response
-        )
 
     # Update token count and cached content token count
     if prompt_token_count_for_cache > 0:
@@ -220,4 +240,10 @@ def run_stream(
     streaming_repo.cleanup(session_id)
 
     # Return final data
-    yield ("end", model_response_text, token_count, intermediate_turns)
+    yield (
+        "end",
+        model_response_text,
+        token_count,
+        intermediate_turns,
+        model_response_thought,
+    )

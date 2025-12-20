@@ -125,6 +125,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
 
         # Use streaming mode for stream-json output format
         used_stream_mode = False
+        model_response_thought = ""
         if stream_to_stdout and hasattr(agent_instance, "run_stream"):
             # Stream mode: yield chunks in real-time
             used_stream_mode = True
@@ -137,7 +138,13 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
             ):
                 # Check if this is the final tuple (ends with "end")
                 if isinstance(stream_item, tuple) and stream_item[0] == "end":
-                    _, model_response_text, token_count, turns_to_save = stream_item
+                    (
+                        _,
+                        model_response_text,
+                        token_count,
+                        turns_to_save,
+                        model_response_thought,
+                    ) = stream_item
                 else:
                     # Intermediate string chunk - output to stdout
                     print(
@@ -149,9 +156,16 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
                     )
         else:
             # Non-streaming mode: get complete response
-            model_response_text, token_count, turns_to_save = agent_instance.run(
-                args, session_service, prompt_service
-            )
+            result = agent_instance.run(args, session_service, prompt_service)
+            if len(result) == 4:
+                (
+                    model_response_text,
+                    token_count,
+                    turns_to_save,
+                    model_response_thought,
+                ) = result
+            else:
+                model_response_text, token_count, turns_to_save = result
 
         # 7. Add all turns to transaction (temporary storage in pools)
         for turn in turns_to_save:
@@ -192,6 +206,8 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
                 "response": model_response_text,
                 "token_count": token_count,
             }
+            if model_response_thought:
+                output["thought"] = model_response_thought
             print(json.dumps(output, ensure_ascii=False))
         elif args.output_format == "stream-json":
             # Send completion event (without response text, already streamed)
@@ -200,6 +216,8 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
                 "session_id": session_id,
                 "token_count": token_count,
             }
+            if model_response_thought:
+                output["thought"] = model_response_thought
             print(json.dumps(output, ensure_ascii=False), flush=True)
         elif args.output_format == "text":
             print(model_response_text)

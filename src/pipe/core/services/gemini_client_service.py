@@ -1,6 +1,5 @@
 """Service for Gemini API client operations."""
 
-import base64
 import json
 import os
 import zoneinfo
@@ -40,6 +39,7 @@ class LogInfo(TypedDict):
     has_candidates: bool
     finish_reason: str | None
     text_content: str
+    thought_content: str | None
     usage: LogUsageInfo | None
 
 
@@ -133,11 +133,10 @@ class GeminiClientService:
         buffered_contents: list[types.Content] = []
         if prompt_model.buffered_history and prompt_model.buffered_history.turns:
             turns = prompt_model.buffered_history.turns
+
             for i, turn in enumerate(turns):
-                # Only pass raw_response to the LAST turn if it's a model response
-                is_last = i == len(turns) - 1
-                raw_resp = prompt_model.raw_response if is_last else None
-                content_obj = self._convert_turn_to_content(turn, raw_resp)
+                # Use the turn's own raw_response if available
+                content_obj = self._convert_turn_to_content(turn)
                 buffered_contents.append(content_obj)
 
         # 4. Prepare Current Task Content
@@ -467,6 +466,7 @@ class GeminiClientService:
                         "has_candidates": bool(chunk.candidates),
                         "finish_reason": None,
                         "text_content": "",
+                        "thought_content": None,
                         "usage": None,
                     }
 
@@ -481,8 +481,12 @@ class GeminiClientService:
                         if candidate.content and candidate.content.parts:
                             for part in candidate.content.parts:
                                 if part.text is not None:
-                                    log_info["text_content"] = part.text
-                                    break
+                                    if hasattr(part, "thought") and part.thought:
+                                        # Accumulate thoughts as text
+                                        curr = log_info["thought_content"] or ""
+                                        log_info["thought_content"] = curr + part.text
+                                    else:
+                                        log_info["text_content"] += part.text
 
                     if chunk.usage_metadata:
                         log_usage: LogUsageInfo = {
@@ -509,32 +513,22 @@ class GeminiClientService:
                 unified_chunks = self._convert_chunk_to_unified_format(chunk)
                 yield from unified_chunks
 
-            # After stream completes, try to extract thought signature and save
-            # raw response
-            target_chunk = None
+            # After stream completes, save the last chunk as raw_response
+            # The last chunk typically contains the final state or usage metadata
+            # We want the chunk that has the most complete content
             if collected_chunks:
-                # Prioritize finding chunk with thought_signature
-                for c in collected_chunks:
-                    if (
-                        c.candidates
-                        and c.candidates[0].content
-                        and c.candidates[0].content.parts
-                    ):
-                        for p in c.candidates[0].content.parts:
-                            if p.thought_signature:
-                                target_chunk = c
-                                break
-                    if target_chunk:
+                # Search backwards for the last chunk with candidates
+                target_chunk = None
+                for chunk in reversed(collected_chunks):
+                    if chunk.candidates:
+                        target_chunk = chunk
                         break
 
-                # Fallback to last chunk if no signature found (to keep usage metadata)
+                # Fallback to the absolute last chunk if none have candidates
                 if not target_chunk:
                     target_chunk = collected_chunks[-1]
 
                 if target_chunk:
-                    # Persist serialized chunk to session object (in memory)
-                    # The SessionService will persist this to disk when saving
-                    # the session
                     try:
                         self.last_raw_response = target_chunk.model_dump_json()
                     except Exception:
@@ -566,7 +560,10 @@ class GeminiClientService:
                 # Extract text content and tool calls
                 for part in candidate.content.parts:
                     if part.text is not None:
-                        unified_chunks.append(TextChunk(content=part.text))
+                        is_thought = bool(getattr(part, "thought", False))
+                        unified_chunks.append(
+                            TextChunk(content=part.text, is_thought=is_thought)
+                        )
                     elif hasattr(part, "function_call") and part.function_call:
                         unified_chunks.append(
                             ToolCallChunk(
@@ -595,24 +592,13 @@ class GeminiClientService:
     ) -> types.Content | None:
         """Restores content with thought signature from raw response JSON."""
         try:
-            # Pydantic automatic validation
+            # Restore the full response object to preserve structure
             response = types.GenerateContentResponse.model_validate_json(
                 raw_response_json
             )
-            if not response.candidates or not response.candidates[0].content:
-                return None
-
-            content = response.candidates[0].content
-
-            # Manual base64 decode for thought_signature
-            if content.parts:
-                for part in content.parts:
-                    if part.thought_signature:
-                        if isinstance(part.thought_signature, str):
-                            part.thought_signature = base64.b64decode(
-                                part.thought_signature
-                            )
-            return content
+            if response.candidates and response.candidates[0].content:
+                return response.candidates[0].content
+            return None
         except Exception:
             return None
 
@@ -625,21 +611,30 @@ class GeminiClientService:
 
         # Determine role and basic text content
         if hasattr(turn, "type"):
+            # Check for turn-specific raw_response (preferred)
+            turn_raw_response = getattr(turn, "raw_response", None)
+            target_raw_response = turn_raw_response or raw_response
+
             if turn.type == "user_task":
                 role = "user"
                 parts.append(types.Part(text=turn.instruction))
             elif turn.type == "model_response":
                 role = "model"
-                # If this is the latest model turn and we have a raw response,
-                # try to restore signature
-                if raw_response:
-                    restored = self._restore_thought_signature(raw_response)
+                # If we have a raw response, try to restore signature
+                if target_raw_response:
+                    restored = self._restore_thought_signature(target_raw_response)
                     if restored:
                         return restored
 
                 parts.append(types.Part(text=turn.content))
             elif turn.type == "function_calling":
                 role = "model"
+                # If we have a raw response, try to restore signature
+                if target_raw_response:
+                    restored = self._restore_thought_signature(target_raw_response)
+                    if restored:
+                        return restored
+
                 # Simplistic text representation for now
                 parts.append(types.Part(text=f"Function Call: {turn.response}"))
             elif turn.type == "tool_response":

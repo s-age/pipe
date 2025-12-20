@@ -2,16 +2,16 @@
 # Each model has specific context_limit and cache_update_threshold settings
 # cache_update_threshold: Set to -1 to disable explicit caching
 model_configs:
+  - name: gemini-3-flash-preview
+    context_limit: 700000
+    cache_update_threshold: 50000
+  - name: gemini-3-pro-preview
+    context_limit: 700000
+    cache_update_threshold: 25000
   - name: gemini-2.5-flash
     context_limit: 700000
     cache_update_threshold: 50000
   - name: gemini-2.5-pro
-    context_limit: 700000
-    cache_update_threshold: 25000
-  - name: gemini-1.5-flash
-    context_limit: 700000
-    cache_update_threshold: -1
-  - name: gemini-1.5-pro
     context_limit: 700000
     cache_update_threshold: 25000
 

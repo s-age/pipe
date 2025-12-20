@@ -46,6 +46,9 @@ def search_file_content(
         )
 
         for filepath in files:
+            if not repo.is_file(filepath):
+                continue
+
             try:
                 # read_text reads whole file. fine for now.
                 content = repo.read_text(filepath)

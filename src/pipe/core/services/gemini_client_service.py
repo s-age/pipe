@@ -480,7 +480,7 @@ class GeminiClientService:
 
                         if candidate.content and candidate.content.parts:
                             for part in candidate.content.parts:
-                                if part.text:
+                                if part.text is not None:
                                     log_info["text_content"] = part.text
                                     break
 
@@ -565,7 +565,7 @@ class GeminiClientService:
             if candidate.content and candidate.content.parts:
                 # Extract text content and tool calls
                 for part in candidate.content.parts:
-                    if part.text:
+                    if part.text is not None:
                         unified_chunks.append(TextChunk(content=part.text))
                     elif hasattr(part, "function_call") and part.function_call:
                         unified_chunks.append(
@@ -646,9 +646,7 @@ class GeminiClientService:
                 role = "user"
                 # Simplistic representation
                 parts.append(
-                    types.Part(
-                        text=f"Tool Response ({turn.name}): {turn.response}"
-                    )
+                    types.Part(text=f"Tool Response ({turn.name}): {turn.response}")
                 )
 
         return types.Content(role=role, parts=parts)

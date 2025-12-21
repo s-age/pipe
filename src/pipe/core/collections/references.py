@@ -1,9 +1,12 @@
+import logging
 from collections import UserList
 from collections.abc import Callable
 from typing import Any
 
 from pipe.core.models.reference import Reference
 from pydantic_core import core_schema
+
+logger = logging.getLogger(__name__)
 
 
 class ReferenceCollection(UserList):
@@ -39,11 +42,37 @@ class ReferenceCollection(UserList):
     def get_for_prompt(self, resource_repository, project_root: str):
         """Get references with content for prompt generation.
 
-        This delegates to the domain function for file I/O operations.
+        DEPRECATED: This method should be replaced with direct factory usage.
+        References should be processed in the factory layer, not in collections.
         """
-        from pipe.core.domains.references import get_references_for_prompt
+        import os
 
-        return get_references_for_prompt(self, resource_repository, project_root)
+        from pipe.core.domains.references import get_active_references
+
+        active_refs = get_active_references(self)
+        for ref in active_refs:
+            try:
+                full_path = os.path.abspath(os.path.join(project_root, ref.path))
+                if os.path.commonpath([project_root]) != os.path.commonpath(
+                    [project_root, full_path]
+                ):
+                    logger.warning(
+                        f"Reference path '{ref.path}' is outside the project root. "
+                        "Skipping."
+                    )
+                    continue
+
+                content = resource_repository.read_text(full_path, project_root)
+                if content is not None:
+                    yield {"path": ref.path, "content": content}
+                else:
+                    logger.warning(
+                        f"Reference file not found or could not be read: {full_path}"
+                    )
+            except (FileNotFoundError, ValueError) as e:
+                logger.warning(f"Could not process reference file {ref.path}: {e}")
+            except Exception as e:
+                logger.warning(f"Could not process reference file {ref.path}: {e}")
 
     def decrement_all_ttl(self):
         """Decrement TTL for all non-disabled references.

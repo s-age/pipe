@@ -1,12 +1,9 @@
-import os
-import sys
 from typing import TYPE_CHECKING
 
 from pipe.core.models.reference import Reference
 
 if TYPE_CHECKING:
     from pipe.core.collections.references import ReferenceCollection
-    from pipe.core.repositories.resource_repository import ResourceRepository
 
 
 def add_reference(
@@ -51,44 +48,21 @@ def toggle_reference_disabled(references_collection: "ReferenceCollection", path
     references_collection.sort_by_ttl()
 
 
-def get_references_for_prompt(
+def get_active_references(
     references_collection: "ReferenceCollection",
-    resource_repository: "ResourceRepository",
-    project_root: str,
-):
-    abs_project_root = os.path.abspath(project_root)
-    for ref in references_collection.data:
-        if not ref.disabled:
-            try:
-                full_path = os.path.abspath(os.path.join(abs_project_root, ref.path))
-                if os.path.commonpath([abs_project_root]) != os.path.commonpath(
-                    [abs_project_root, full_path]
-                ):
-                    print(
-                        f"Warning: Reference path '{ref.path}' is outside the "
-                        "project root. Skipping.",
-                        file=sys.stderr,
-                    )
-                    continue
-                content = resource_repository.read_text(full_path, project_root)
-                if content is not None:
-                    yield {"path": ref.path, "content": content}
-                else:
-                    print(
-                        "Warning: Reference file not found or could not be read: "
-                        f"{full_path}",
-                        file=sys.stderr,
-                    )
-            except (FileNotFoundError, ValueError) as e:
-                print(
-                    f"Warning: Could not process reference file {ref.path}: {e}",
-                    file=sys.stderr,
-                )
-            except Exception as e:
-                print(
-                    f"Warning: Could not process reference file {ref.path}: {e}",
-                    file=sys.stderr,
-                )
+) -> list[Reference]:
+    """Get all active (non-disabled) references from the collection.
+
+    This is a pure function that filters references without performing I/O.
+    The caller (Service layer) is responsible for reading file contents.
+
+    Args:
+        references_collection: Collection of references
+
+    Returns:
+        List of active Reference objects
+    """
+    return [ref for ref in references_collection.data if not ref.disabled]
 
 
 def decrement_all_references_ttl(

@@ -11,9 +11,7 @@ from typing import Any
 from pipe.core.utils.datetime import get_current_timestamp
 
 
-def migrate_session_data(
-    data: dict[str, Any], timezone_obj: Any
-) -> dict[str, Any]:
+def migrate_session_data(data: dict[str, Any], timezone_obj: Any) -> dict[str, Any]:
     """
     Migrate legacy Session data format to current format.
 
@@ -30,9 +28,7 @@ def migrate_session_data(
         Migrated session data dictionary ready for Pydantic validation
     """
     # Migration 1: Set default created_at if missing
-    session_creation_time = data.get(
-        "created_at", get_current_timestamp(timezone_obj)
-    )
+    session_creation_time = data.get("created_at", get_current_timestamp(timezone_obj))
 
     # Migration 2 & 3: Migrate turns and pools
     for turn_list_key in ["turns", "pools"]:

@@ -7,9 +7,6 @@ These operations create shadow sessions to analyze and optimize target sessions.
 
 from pipe.core.agents.takt_agent import TaktAgent
 from pipe.core.domains.session_optimization import (
-    DiagnosisData,
-    DoctorResult,
-    SessionModifications,
     build_compressor_instruction,
     build_doctor_instruction,
     build_therapist_instruction,
@@ -19,6 +16,11 @@ from pipe.core.domains.session_optimization import (
     parse_therapist_diagnosis,
 )
 from pipe.core.models.base import CamelCaseModel
+from pipe.core.models.session_optimization import (
+    DiagnosisData,
+    DoctorResult,
+    SessionModifications,
+)
 from pipe.core.models.turn import CompressedHistoryTurn
 from pipe.core.utils.datetime import get_current_timestamp
 

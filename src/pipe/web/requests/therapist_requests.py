@@ -1,4 +1,4 @@
-from pipe.core.domains.session_optimization import SessionModifications
+from pipe.core.models.session_optimization import SessionModifications
 from pipe.web.requests.base_request import BaseRequest
 from pydantic import Field
 

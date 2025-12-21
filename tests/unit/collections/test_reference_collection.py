@@ -109,16 +109,16 @@ class TestReferenceCollection(unittest.TestCase):
 
         mock_repo = MagicMock()
 
-        with patch("sys.stderr", new_callable=StringIO) as mock_stderr:
+        with patch("pipe.core.collections.references.logger") as mock_logger:
             prompt_data = list(
                 collection.get_for_prompt(mock_repo, self.project_root.name)
             )
             self.assertEqual(len(prompt_data), 0)
             expected_warning = (
-                f"Warning: Reference path '{dangerous_path}' is outside the "
-                "project root. Skipping.\n"
+                f"Reference path '{dangerous_path}' is outside the "
+                "project root. Skipping."
             )
-            self.assertEqual(mock_stderr.getvalue(), expected_warning)
+            mock_logger.warning.assert_called_once_with(expected_warning)
 
     def test_get_for_prompt_skips_unreadable_file(self):
         """
@@ -131,7 +131,7 @@ class TestReferenceCollection(unittest.TestCase):
         mock_repo = MagicMock()
         mock_repo.read_text.return_value = None
 
-        with patch("sys.stderr", new_callable=StringIO) as mock_stderr:
+        with patch("pipe.core.collections.references.logger") as mock_logger:
             prompt_data = list(
                 collection.get_for_prompt(mock_repo, self.project_root.name)
             )
@@ -140,9 +140,9 @@ class TestReferenceCollection(unittest.TestCase):
                 os.path.join(self.project_root.name, "unreadable.txt")
             )
             expected_warning = (
-                f"Warning: Reference file not found or could not be read: {full_path}\n"
+                f"Reference file not found or could not be read: {full_path}"
             )
-            self.assertEqual(mock_stderr.getvalue(), expected_warning)
+            mock_logger.warning.assert_called_once_with(expected_warning)
 
     def test_get_for_prompt_handles_exception(self):
         """
@@ -153,15 +153,13 @@ class TestReferenceCollection(unittest.TestCase):
         mock_repo = MagicMock()
         mock_repo.read_text.side_effect = Exception("Test error")
 
-        with patch("sys.stderr", new_callable=StringIO) as mock_stderr:
+        with patch("pipe.core.collections.references.logger") as mock_logger:
             prompt_data = list(
                 collection.get_for_prompt(mock_repo, self.project_root.name)
             )
             self.assertEqual(len(prompt_data), 0)
-            expected_warning = (
-                "Warning: Could not process reference file error.txt: Test error\n"
-            )
-            self.assertEqual(mock_stderr.getvalue(), expected_warning)
+            expected_warning = "Could not process reference file error.txt: Test error"
+            mock_logger.warning.assert_called_once_with(expected_warning)
 
     def test_pydantic_json_schema(self):
         """

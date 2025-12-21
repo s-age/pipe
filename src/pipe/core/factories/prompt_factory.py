@@ -5,8 +5,8 @@ Encapsulates the logic for building a Prompt from a Session,
 keeping the Prompt model itself as a pure data structure.
 """
 
+import logging
 import os
-import sys
 import zoneinfo
 
 from pipe.core.models.artifact import Artifact
@@ -18,6 +18,8 @@ from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import UserTaskTurn
 from pipe.core.repositories.resource_repository import ResourceRepository
+
+logger = logging.getLogger(__name__)
 
 
 class PromptFactory:
@@ -60,7 +62,6 @@ class PromptFactory:
         Returns:
             A fully constructed Prompt object
         """
-        from pipe.core.domains.references import get_references_for_prompt
         from pipe.core.domains.todos import get_todos_for_prompt
         from pipe.core.models.hyperparameters import Hyperparameters
         from pipe.core.models.prompts.current_task import PromptCurrentTask
@@ -91,14 +92,38 @@ class PromptFactory:
         roles = self._build_roles(session.roles)
 
         # 4. Build File References
-        references_with_content = list(
-            get_references_for_prompt(
-                session.references, self.resource_repository, self.project_root
-            )
-        )
-        prompt_references = [
-            PromptFileReference(**ref) for ref in references_with_content
-        ]
+        from pipe.core.domains.references import get_active_references
+
+        active_refs = get_active_references(session.references)
+        prompt_references = []
+        for ref in active_refs:
+            try:
+                full_path = os.path.abspath(os.path.join(self.project_root, ref.path))
+                # Validate path is within project root
+                if os.path.commonpath([self.project_root]) != os.path.commonpath(
+                    [self.project_root, full_path]
+                ):
+                    logger.warning(
+                        f"Reference path '{ref.path}' is outside the project root. "
+                        "Skipping."
+                    )
+                    continue
+
+                content = self.resource_repository.read_text(
+                    full_path, self.project_root
+                )
+                if content is not None:
+                    prompt_references.append(
+                        PromptFileReference(path=ref.path, content=content)
+                    )
+                else:
+                    logger.warning(
+                        f"Reference file not found or could not be read: {full_path}"
+                    )
+            except (FileNotFoundError, ValueError) as e:
+                logger.warning(f"Could not process reference file {ref.path}: {e}")
+            except Exception as e:
+                logger.warning(f"Could not process reference file {ref.path}: {e}")
 
         # 5. Build Todos
         prompt_todos = [
@@ -299,8 +324,5 @@ class PromptFactory:
             full_path = os.path.join(self.project_root, procedure_path)
             return self.resource_repository.read_text(full_path, self.project_root)
         except (FileNotFoundError, ValueError):
-            print(
-                f"Warning: Procedure file not found: {procedure_path}",
-                file=sys.stderr,
-            )
+            logger.warning(f"Procedure file not found: {procedure_path}")
             return f"Error: Procedure file not found at {procedure_path}"

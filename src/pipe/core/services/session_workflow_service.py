@@ -9,7 +9,7 @@ import sys
 import zoneinfo
 
 from pipe.core.domains.session import fork_session
-from pipe.core.domains.session_optimization import SessionModifications
+from pipe.core.models.session_optimization import SessionModifications
 from pipe.core.models.settings import Settings
 from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_optimization_service import (

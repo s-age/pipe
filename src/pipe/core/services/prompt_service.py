@@ -2,10 +2,11 @@
 Service responsible for constructing the prompt object from session data.
 """
 
+import os
 from typing import TYPE_CHECKING
 
 from jinja2 import Environment
-from pipe.core.domains.artifacts import process_artifacts_for_session
+from pipe.core.domains.artifacts import build_artifacts_from_data
 from pipe.core.factories.prompt_factory import PromptFactory
 from pipe.core.models.prompt import Prompt
 from pipe.core.repositories.resource_repository import ResourceRepository
@@ -39,13 +40,25 @@ class PromptService:
         if not current_session:
             raise ValueError("Cannot build prompt without a current session.")
 
-        processed_artifacts = (
-            process_artifacts_for_session(
-                current_session.artifacts, self.resource_repository, self.project_root
-            )
-            if current_session.artifacts
-            else None
-        )
+        processed_artifacts = None
+        if current_session.artifacts:
+            # Read artifact contents in Service layer
+            artifacts_with_contents = []
+            for artifact_path in current_session.artifacts:
+                full_path = os.path.abspath(
+                    os.path.join(self.project_root, artifact_path)
+                )
+                contents = None
+                if self.resource_repository.exists(
+                    full_path, allowed_root=self.project_root
+                ):
+                    contents = self.resource_repository.read_text(
+                        full_path, allowed_root=self.project_root
+                    )
+                artifacts_with_contents.append((artifact_path, contents))
+
+            # Use pure domain function for transformation
+            processed_artifacts = build_artifacts_from_data(artifacts_with_contents)
 
         return self.prompt_factory.create(
             session=current_session,

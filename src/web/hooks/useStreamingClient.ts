@@ -5,6 +5,18 @@ import { streamInstruction } from '@/lib/api/session/streamInstruction'
 import { createUserTaskTurn } from '@/lib/turns/turnFactory'
 import type { SSEEvent } from '@/types/chat'
 
+/**
+ * useStreamingClient hook
+ *
+ * Handles streaming responses from both Gemini API and gemini-cli backends.
+ * Converts different event formats into a unified text stream format that
+ * can be parsed by useChatStreamParser.
+ *
+ * Supported formats:
+ * - Gemini API: start, instruction, chunk, complete, error
+ * - gemini-cli: init, message, tool_use, tool_result
+ */
+
 type UseStreamingClientReturn = {
   streamedText: string
   isLoading: boolean
@@ -85,6 +97,7 @@ export const useStreamingClient = (): UseStreamingClientReturn => {
             try {
               const data = JSON.parse(jsonString) as SSEEvent
 
+              // Handle Gemini API format (existing)
               if (data.type === 'instruction' && data.content) {
                 setInstructionTurn(
                   createUserTaskTurn(data.content, new Date().toISOString())
@@ -99,6 +112,49 @@ export const useStreamingClient = (): UseStreamingClientReturn => {
               if (data.type === 'complete') {
                 done = true
                 break
+              }
+
+              // Handle gemini-cli format (new)
+              // 'init' event starts a new session
+              if (data.type === 'init') {
+                // Session initialized, we can track session_id if needed
+                // Currently just continue
+              }
+
+              // 'message' event contains the actual content
+              if (data.type === 'message' && data.content) {
+                // Parse the JSON content from the message
+                try {
+                  const messageContent = JSON.parse(data.content)
+
+                  // Extract instruction if present
+                  if (messageContent.current_task?.instruction) {
+                    setInstructionTurn(
+                      createUserTaskTurn(
+                        messageContent.current_task.instruction,
+                        data.timestamp
+                      )
+                    )
+                  }
+                } catch {
+                  // If content is not JSON, treat it as plain text
+                  accumContent += data.content
+                  setStreamedText(accumContent)
+                }
+              }
+
+              // 'tool_use' event indicates a tool is being called
+              if (data.type === 'tool_use') {
+                const toolCall = `\`\`\`\nTool call: ${data.tool_name}\nParameters: ${JSON.stringify(data.parameters, null, 2)}\n\`\`\``
+                accumContent += toolCall + '\n\n'
+                setStreamedText(accumContent)
+              }
+
+              // 'tool_result' event contains the tool execution result
+              if (data.type === 'tool_result') {
+                const toolResult = `\`\`\`\nTool status: ${data.status}\n${data.output || data.message || ''}\n\`\`\``
+                accumContent += toolResult + '\n\n'
+                setStreamedText(accumContent)
               }
             } catch {
               // Parse error within stream is considered minor, usually ignored or logged

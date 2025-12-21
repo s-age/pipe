@@ -15,12 +15,12 @@ model_configs:
     context_limit: 700000
     cache_update_threshold: 25000
 
+# API mode: 'gemini-api' for direct API calls, 'gemini-cli' for CLI interaction.
+api_mode: gemini-api
+
 # Default model to use (must exist in model_configs)
 model: gemini-2.5-flash
 search_model: gemini-2.5-flash
-
-# API mode: 'gemini-api' for direct API calls, 'gemini-cli' for CLI interaction.
-api_mode: gemini-api
 
 # Max tool calls to prevent infinite loops
 max_tool_calls: 10

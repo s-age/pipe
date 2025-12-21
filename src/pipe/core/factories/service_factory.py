@@ -46,7 +46,17 @@ class ServiceFactory:
     def _create_jinja_environment(self) -> Environment:
         template_path = os.path.join(self.project_root, "templates", "prompt")
         loader = FileSystemLoader(template_path)
-        return Environment(loader=loader, autoescape=False)
+        env = Environment(loader=loader, autoescape=False)
+
+        # Add custom filter to serialize Pydantic models to dict for JSON serialization
+        def pydantic_dump(obj):
+            """Convert Pydantic model to dict using model_dump()."""
+            if hasattr(obj, "model_dump"):
+                return obj.model_dump()
+            return obj
+
+        env.filters["pydantic_dump"] = pydantic_dump
+        return env
 
     def create_session_service(self) -> SessionService:
         """Creates a SessionService with its dependencies."""

@@ -60,6 +60,9 @@ def call_gemini_cli(
         env["PYTHONUNBUFFERED"] = "1"
         if session_service.current_session_id:
             env["PIPE_SESSION_ID"] = session_service.current_session_id
+        # Pass GOOGLE_API_KEY as GEMINI_API_KEY for gemini-cli
+        if "GOOGLE_API_KEY" in os.environ:
+            env["GEMINI_API_KEY"] = os.environ["GOOGLE_API_KEY"]
 
         process = subprocess.Popen(
             command,
@@ -79,6 +82,9 @@ def call_gemini_cli(
 
         full_response = ""
         assistant_content = ""
+        tool_calls = []  # Store tool_use events
+        tool_results = []  # Store tool_result events
+
         while True:
             if not process.stdout:
                 break
@@ -91,6 +97,12 @@ def call_gemini_cli(
                 data = json.loads(line.strip())
                 if data.get("type") == "message" and data.get("role") == "assistant":
                     assistant_content += data.get("content", "")
+                elif data.get("type") == "tool_use":
+                    # Store tool call for later processing
+                    tool_calls.append(data)
+                elif data.get("type") == "tool_result":
+                    # Store tool result for later processing
+                    tool_results.append(data)
             except json.JSONDecodeError:
                 pass
 
@@ -100,6 +112,90 @@ def call_gemini_cli(
         return_code = process.wait()
         if return_code != 0:
             raise RuntimeError(f"Error during gemini-cli execution: {stderr_output}")
+
+        # Save tool calls and results to session pool
+        # Only save if pools is empty (standard tools)
+        # Skip if mcp_server already saved (pipe_tools)
+        if tool_calls or tool_results:
+            from pipe.core.models.turn import (
+                FunctionCallingTurn,
+                ToolResponseTurn,
+                TurnResponse,
+            )
+            from pipe.core.utils.datetime import get_current_timestamp
+
+            session_id = session_service.current_session_id
+
+            # Reload session to check if mcp_server.py added tools to pools
+            session = session_service.repository.find(session_id)
+            if session:
+                # Only add to pools if it's empty (standard tools)
+                # If pools has data, mcp_server.py recorded pipe_tools
+                if len(session.pools) == 0:
+                    for tool_call in tool_calls:
+                        # Create FunctionCallingTurn
+                        tool_name = tool_call.get("tool_name", "")
+                        parameters = tool_call.get("parameters", {})
+                        # Format as function call string
+                        params_json = json.dumps(
+                            parameters, ensure_ascii=False
+                        )
+                        response_str = f"{tool_name}({params_json})"
+                        timestamp = tool_call.get(
+                            "timestamp",
+                            get_current_timestamp(
+                                session_service.timezone_obj
+                            ),
+                        )
+                        turn = FunctionCallingTurn(
+                            type="function_calling",
+                            response=response_str,
+                            timestamp=timestamp,
+                        )
+                        session.pools.append(turn)
+
+                    for tool_result in tool_results:
+                        # Create ToolResponseTurn
+                        # Extract tool name from tool_id
+                        tool_name = tool_result.get("tool_id", "").split(
+                            "-"
+                        )[0]
+                        status = tool_result.get("status", "failed")
+                        output = tool_result.get("output", "")
+                        error = tool_result.get("error")
+
+                        # Create TurnResponse
+                        if status == "success":
+                            response = TurnResponse(
+                                status="succeeded",
+                                message=output,
+                            )
+                        else:
+                            if isinstance(error, dict):
+                                error_msg = error.get("message", "")
+                            else:
+                                error_msg = str(error)
+                            response = TurnResponse(
+                                status="failed",
+                                message=error_msg,
+                            )
+
+                        timestamp = tool_result.get(
+                            "timestamp",
+                            get_current_timestamp(
+                                session_service.timezone_obj
+                            ),
+                        )
+                        turn = ToolResponseTurn(
+                            type="tool_response",
+                            name=tool_name,
+                            response=response,
+                            timestamp=timestamp,
+                        )
+                        session.pools.append(turn)
+
+                    # Save updated session
+                    session_service.repository.save(session)
 
         # For stream-json, parse the final result if possible
         try:
@@ -111,12 +207,24 @@ def call_gemini_cli(
                         return {
                             "response": assistant_content,
                             "stats": result.get("stats"),
+                            "tool_calls": tool_calls,
+                            "tool_results": tool_results,
                         }
                 except json.JSONDecodeError:
                     continue
-            return {"response": assistant_content, "stats": None}
+            return {
+                "response": assistant_content,
+                "stats": None,
+                "tool_calls": tool_calls,
+                "tool_results": tool_results,
+            }
         except json.JSONDecodeError:
-            return {"response": assistant_content, "stats": None}
+            return {
+                "response": assistant_content,
+                "stats": None,
+                "tool_calls": tool_calls,
+                "tool_results": tool_results,
+            }
     else:
         # Original logic for json and text
         # Avoid passing a very large prompt as a single argv element (can hit
@@ -134,6 +242,9 @@ def call_gemini_cli(
         # as it is essential for tools to access session-specific data.
         if session_service.current_session_id:
             env["PIPE_SESSION_ID"] = session_service.current_session_id
+        # Pass GOOGLE_API_KEY as GEMINI_API_KEY for gemini-cli
+        if "GOOGLE_API_KEY" in os.environ:
+            env["GEMINI_API_KEY"] = os.environ["GOOGLE_API_KEY"]
 
         try:
             # First attempt: stream prompt via stdin (using '-' with -p)

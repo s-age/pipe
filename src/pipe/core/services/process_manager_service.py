@@ -1,20 +1,12 @@
 """Service for managing session process lifecycle."""
 
-import json
 import logging
 import os
 import signal
 import time
-import zoneinfo
-from pathlib import Path
-from typing import TYPE_CHECKING
 
 import psutil
-from pipe.core.models.settings import Settings
-from pipe.core.utils.datetime import get_current_timestamp
-
-if TYPE_CHECKING:
-    from pipe.core.models.process_info import ProcessInfo
+from pipe.core.repositories.process_file_repository import ProcessFileRepository
 
 logger = logging.getLogger(__name__)
 
@@ -32,168 +24,58 @@ class ProcessManagerService:
 
     Note:
     - Uses psutil for reliable process existence checking
-    - Stores individual process files in .processes directory
-    - No file locking needed - each session has its own file
+    - Delegates file I/O to ProcessFileRepository
+    - Stores only PID in simple .pid files
     """
 
-    def __init__(self, project_root: str, settings: Settings):
+    def __init__(self, project_root: str):
         """
         Initialize the process manager.
 
         Args:
             project_root: Root directory of the project
-            settings: Settings object for timezone configuration
         """
         self.project_root = project_root
-        self.processes_dir = os.path.join(project_root, ".processes")
-        Path(self.processes_dir).mkdir(parents=True, exist_ok=True)
+        processes_dir = os.path.join(project_root, ".processes")
+        self.repository = ProcessFileRepository(processes_dir)
 
-        # Convert timezone string to ZoneInfo object
-        try:
-            self.timezone = zoneinfo.ZoneInfo(settings.timezone)
-        except zoneinfo.ZoneInfoNotFoundError:
-            # Fallback to UTC if timezone not found
-            self.timezone = zoneinfo.ZoneInfo("UTC")
-
-    def _sanitize_session_id(self, session_id: str) -> str:
-        """
-        Sanitize session_id to be filesystem-safe.
-
-        Args:
-            session_id: Original session identifier (may contain / for subagents)
-
-        Returns:
-            Filesystem-safe session identifier
-        """
-        return session_id.replace("/", "_").replace("\\", "_")
-
-    def _get_process_file_path(self, session_id: str) -> str:
-        """
-        Get the path to the process file for a session.
-
-        Args:
-            session_id: Session identifier
-
-        Returns:
-            Path to the process info file
-        """
-        safe_session_id = self._sanitize_session_id(session_id)
-        return os.path.join(self.processes_dir, f"{safe_session_id}.json")
-
-    def _read_process_file(self, session_id: str) -> dict | None:
-        """
-        Read the process file for a session.
-
-        Args:
-            session_id: Session identifier
-
-        Returns:
-            Process info dict if found, None otherwise
-        """
-        process_file = self._get_process_file_path(session_id)
-        if not os.path.exists(process_file):
-            return None
-
-        try:
-            with open(process_file, encoding="utf-8") as f:
-                return json.load(f)
-        except (OSError, json.JSONDecodeError) as e:
-            logger.warning(
-                f"Failed to read process file for {session_id}: {e}. "
-                "Treating as missing."
-            )
-            return None
-
-    def _write_process_file(self, session_id: str, data: dict) -> None:
-        """
-        Write the process file for a session atomically.
-
-        Args:
-            session_id: Session identifier
-            data: Process info data to write
-
-        Note:
-        - Uses temp file + rename for atomic writes
-        """
-        process_file = self._get_process_file_path(session_id)
-        temp_path = f"{process_file}.tmp"
-        try:
-            with open(temp_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-            os.rename(temp_path, process_file)
-        except Exception as e:
-            logger.error(f"Failed to write process file for {session_id}: {e}")
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-            raise
-
-    def _delete_process_file(self, session_id: str) -> None:
-        """
-        Delete the process file for a session.
-
-        Args:
-            session_id: Session identifier
-        """
-        process_file = self._get_process_file_path(session_id)
-        if os.path.exists(process_file):
-            try:
-                os.remove(process_file)
-            except Exception as e:
-                logger.warning(f"Failed to delete process file for {session_id}: {e}")
-
-    def register_process(self, session_id: str, pid: int, instruction: str) -> None:
+    def register_process(self, session_id: str, pid: int) -> None:
         """
         Register a new process for a session.
 
         Args:
             session_id: Session identifier
             pid: Process ID
-            instruction: User instruction that started this process
 
         Raises:
             RuntimeError: If session is already running
         """
-        from pipe.core.models.process_info import ProcessInfo
-
         # Check if session is already running
-        existing_data = self._read_process_file(session_id)
-        if existing_data:
-            existing_pid = existing_data["pid"]
+        existing_pid = self.repository.read_pid(session_id)
+        if existing_pid is not None:
             if psutil.pid_exists(existing_pid):
                 raise RuntimeError(
                     f"Session {session_id} is already running (PID: {existing_pid})"
                 )
             # Process no longer exists, clean it up
             logger.info(f"Cleaning up stale process file for session {session_id}")
-            self._delete_process_file(session_id)
+            self.repository.delete_pid_file(session_id)
 
         # Register new process
-        process_info = ProcessInfo(
-            session_id=session_id,
-            pid=pid,
-            started_at=get_current_timestamp(self.timezone),
-            instruction=instruction,
-        )
-        self._write_process_file(session_id, process_info.model_dump())
-
+        self.repository.write_pid(session_id, pid)
         logger.info(f"Registered process {pid} for session {session_id}")
 
-    def get_process(self, session_id: str) -> "ProcessInfo | None":
+    def get_pid(self, session_id: str) -> int | None:
         """
-        Get process information for a session.
+        Get process ID for a session.
 
         Args:
             session_id: Session identifier
 
         Returns:
-            ProcessInfo if found, None otherwise
+            PID if found, None otherwise
         """
-        from pipe.core.models.process_info import ProcessInfo
-
-        process_data = self._read_process_file(session_id)
-        if process_data:
-            return ProcessInfo(**process_data)
-        return None
+        return self.repository.read_pid(session_id)
 
     def is_running(self, session_id: str) -> bool:
         """
@@ -209,17 +91,16 @@ class ProcessManagerService:
         - Uses psutil.pid_exists() for reliable checking
         - Automatically cleans up stale files
         """
-        process_data = self._read_process_file(session_id)
-        if not process_data:
+        pid = self.repository.read_pid(session_id)
+        if pid is None:
             return False
 
-        pid = process_data["pid"]
         if psutil.pid_exists(pid):
             return True
 
         # Process no longer exists, clean it up
         logger.info(f"Auto-cleaning stale process file for session {session_id}")
-        self._delete_process_file(session_id)
+        self.repository.delete_pid_file(session_id)
         return False
 
     def kill_process(self, session_id: str) -> bool:
@@ -237,12 +118,11 @@ class ProcessManagerService:
         - Falls back to forceful kill (SIGKILL) after 3 seconds
         - Does not remove from index (use cleanup_process for that)
         """
-        process_info = self.get_process(session_id)
-        if not process_info:
+        pid = self.get_pid(session_id)
+        if pid is None:
             logger.warning(f"No process found for session {session_id}")
             return False
 
-        pid = process_info.pid
         if not psutil.pid_exists(pid):
             logger.warning(f"Process {pid} for session {session_id} no longer exists")
             return False
@@ -286,7 +166,7 @@ class ProcessManagerService:
         - Safe to call even if process file doesn't exist
         - Should be called after process completion or termination
         """
-        self._delete_process_file(session_id)
+        self.repository.delete_pid_file(session_id)
         logger.info(f"Cleaned up process file for session {session_id}")
 
     def cleanup_stale_processes(self) -> None:
@@ -297,20 +177,12 @@ class ProcessManagerService:
         - Stale = process ID no longer exists in the system
         - Can be called periodically for maintenance
         """
-        if not os.path.exists(self.processes_dir):
-            return
-
         stale_count = 0
-        for filename in os.listdir(self.processes_dir):
-            if not filename.endswith(".json"):
-                continue
-
-            session_id = filename[:-5]  # Remove .json extension
-            process_data = self._read_process_file(session_id)
-
-            if process_data and not psutil.pid_exists(process_data["pid"]):
+        for session_id in self.repository.list_all_session_ids():
+            pid = self.repository.read_pid(session_id)
+            if pid is not None and not psutil.pid_exists(pid):
                 logger.info(f"Removing stale process file for session {session_id}")
-                self._delete_process_file(session_id)
+                self.repository.delete_pid_file(session_id)
                 stale_count += 1
 
         if stale_count > 0:

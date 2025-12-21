@@ -34,7 +34,6 @@ class StopSessionRequest(BaseRequest):
     @model_validator(mode="after")
     def validate_session_running(self):
         """Validate that the session exists and is currently running."""
-        from pipe.core.factories.settings_factory import SettingsFactory
         from pipe.core.services.process_manager_service import ProcessManagerService
         from pipe.web.service_container import get_session_service
 
@@ -45,8 +44,7 @@ class StopSessionRequest(BaseRequest):
             raise NotFoundError(f"Session '{self.session_id}' not found.")
 
         # Check if process is running
-        settings = SettingsFactory.get_settings()
-        process_manager = ProcessManagerService(session_service.project_root, settings)
+        process_manager = ProcessManagerService(session_service.project_root)
         if not process_manager.is_running(self.session_id):
             raise BadRequestError(
                 f"Session '{self.session_id}' is not currently running."

@@ -49,7 +49,7 @@ class SessionInstructionService:
             - Streams output as JSON events
         """
         session_id = session.session_id
-        process_manager = ProcessManagerService(self.project_root, self.settings)
+        process_manager = ProcessManagerService(self.project_root)
 
         # Check if session is already running
         if process_manager.is_running(session_id):

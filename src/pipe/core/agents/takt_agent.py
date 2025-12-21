@@ -141,7 +141,7 @@ class TaktAgent:
         """
         from pipe.core.services.process_manager_service import ProcessManagerService
 
-        process_manager = ProcessManagerService(self.project_root, self.settings)
+        process_manager = ProcessManagerService(self.project_root)
 
         # Check for concurrent execution
         if process_manager.is_running(session_id):
@@ -225,7 +225,7 @@ class TaktAgent:
         """
         from pipe.core.services.process_manager_service import ProcessManagerService
 
-        process_manager = ProcessManagerService(self.project_root, self.settings)
+        process_manager = ProcessManagerService(self.project_root)
 
         # Check for concurrent execution
         if process_manager.is_running(session_id):
@@ -265,7 +265,7 @@ class TaktAgent:
 
         # Register process immediately after starting
         try:
-            process_manager.register_process(session_id, process.pid, instruction)
+            process_manager.register_process(session_id, process.pid)
         except Exception as e:
             # If registration fails, kill the process
             process.terminate()

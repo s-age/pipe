@@ -140,7 +140,7 @@ class SessionWorkflowService:
         settings = SettingsFactory.get_settings()
 
         # Initialize services
-        process_manager = ProcessManagerService(project_root, settings)
+        process_manager = ProcessManagerService(project_root)
         service_factory = ServiceFactory(project_root, settings)
         turn_service = service_factory.create_session_turn_service()
 

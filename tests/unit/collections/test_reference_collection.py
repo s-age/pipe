@@ -1,7 +1,6 @@
 import os
 import tempfile
 import unittest
-from io import StringIO
 from unittest.mock import MagicMock, patch
 
 from pipe.core.collections.references import ReferenceCollection

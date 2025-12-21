@@ -39,14 +39,12 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     # 1. Concurrent execution check
     from pipe.core.services.process_manager_service import ProcessManagerService
 
-    process_manager = ProcessManagerService(
-        session_service.project_root, session_service.settings
-    )
+    process_manager = ProcessManagerService(session_service.project_root)
     if process_manager.is_running(session_id):
         raise RuntimeError(f"Session {session_id} is already running")
 
     # 2. Register process
-    process_manager.register_process(session_id, os.getpid(), args.instruction)
+    process_manager.register_process(session_id, os.getpid())
 
     # 3. Start streaming logger
     logger = service_factory.create_streaming_logger_service(session_id)

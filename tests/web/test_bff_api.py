@@ -25,12 +25,32 @@ class TestBffApi(unittest.TestCase):
             "pipe.web.service_container.get_session_tree_service",
             return_value=self.mock_session_tree_service,
         )
+
+        # Mock DI container for action dependency injection
+        self.di_container_patcher = patch("pipe.web.dispatcher._container")
+
         self.patcher.start()
         self.tree_patcher.start()
+
+        mock_container = self.di_container_patcher.start()
+        if mock_container:
+            # Mock container.get() to return mocked services
+            from pipe.core.services.session_service import SessionService
+            from pipe.core.services.session_tree_service import SessionTreeService
+
+            def mock_get(service_type):
+                service_map = {
+                    SessionService: self.mock_session_service,
+                    SessionTreeService: self.mock_session_tree_service,
+                }
+                return service_map.get(service_type)
+
+            mock_container.get = mock_get
 
     def tearDown(self):
         self.patcher.stop()
         self.tree_patcher.stop()
+        self.di_container_patcher.stop()
 
     @patch("pipe.web.service_container.get_role_service")
     @patch("pipe.web.service_container.get_settings")

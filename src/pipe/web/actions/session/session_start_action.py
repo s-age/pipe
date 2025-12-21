@@ -1,34 +1,41 @@
 """Session start action."""
 
-from flask import Request
+from pipe.core.agents.takt_agent import TaktAgent
+from pipe.core.services.session_service import SessionService
 from pipe.web.action_responses import SessionStartResponse
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests.sessions.start_session import StartSessionRequest
 
 
 class SessionStartAction(BaseAction):
+    """Start a new session and execute an initial instruction.
+
+    This action delegates session creation to SessionService and
+    instruction execution to TaktAgent, following the DI pattern.
+    """
+
     request_model = StartSessionRequest
 
     def __init__(
         self,
+        session_service: SessionService,
+        takt_agent: TaktAgent,
         validated_request: StartSessionRequest | None = None,
-        params: dict | None = None,
-        request_data: Request | None = None,
         **kwargs,
     ):
-        super().__init__(params, request_data, **kwargs)
+        super().__init__(**kwargs)
+        self.session_service = session_service
+        self.takt_agent = takt_agent
         self.validated_request = validated_request
 
     def execute(self) -> SessionStartResponse:
         if not self.validated_request:
             raise ValueError("Request is required")
 
-        from pipe.core.agents.takt_agent import TaktAgent
-        from pipe.web.service_container import get_session_service
-
         request_data = self.validated_request
 
-        session = get_session_service().create_new_session(
+        # Create new session via service
+        session = self.session_service.create_new_session(
             purpose=request_data.purpose,
             background=request_data.background,
             roles=request_data.roles,
@@ -40,11 +47,8 @@ class SessionStartAction(BaseAction):
         )
         session_id = session.session_id
 
-        session_service = get_session_service()
-        takt_agent = TaktAgent(session_service.project_root, session_service.settings)
-
-        # Run instruction on the newly created session
-        takt_agent.run_existing_session(
+        # Run instruction on the newly created session via TaktAgent
+        self.takt_agent.run_existing_session(
             session_id=session_id,
             instruction=request_data.instruction,
             output_format="stream-json",

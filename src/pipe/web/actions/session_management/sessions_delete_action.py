@@ -2,10 +2,9 @@
 
 from typing import TypedDict
 
-from flask import Request
+from pipe.core.services.session_management_service import SessionManagementService
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests.sessions.delete_sessions import DeleteSessionsRequest
-from pipe.web.service_container import get_session_management_service
 
 
 class BulkOperationResult(TypedDict):
@@ -17,22 +16,22 @@ class BulkOperationResult(TypedDict):
 
 
 class SessionsDeleteAction(BaseAction):
-    """
-    Action to bulk delete multiple sessions.
+    """Bulk delete multiple sessions.
 
-    Deletes multiple sessions and returns the count of successfully deleted sessions.
+    This action uses constructor injection for SessionManagementService,
+    following the DI pattern.
     """
 
     request_model = DeleteSessionsRequest
 
     def __init__(
         self,
+        session_management_service: SessionManagementService,
         validated_request: DeleteSessionsRequest | None = None,
-        params: dict | None = None,
-        request_data: Request | None = None,
         **kwargs,
     ):
-        super().__init__(params, request_data, **kwargs)
+        super().__init__(**kwargs)
+        self.session_management_service = session_management_service
         self.validated_request = validated_request
 
     def execute(self) -> BulkOperationResult:
@@ -42,7 +41,7 @@ class SessionsDeleteAction(BaseAction):
         request_data = self.validated_request
 
         # Delete sessions via service
-        deleted_count = get_session_management_service().delete_sessions(
+        deleted_count = self.session_management_service.delete_sessions(
             request_data.session_ids
         )
 

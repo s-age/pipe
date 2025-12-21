@@ -30,6 +30,7 @@ from pipe.web.actions.session import (
     SessionGetAction,
     SessionInstructionAction,
     SessionStartAction,
+    SessionStopAction,
 )
 from pipe.web.actions.session_management import (
     SessionsDeleteAction,
@@ -58,6 +59,7 @@ __all__ = [
     "SessionStartAction",
     "SessionGetAction",
     "SessionDeleteAction",
+    "SessionStopAction",
     "SessionsDeleteAction",
     "SessionsMoveToBackup",
     "SessionsListBackupAction",

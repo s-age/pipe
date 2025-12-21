@@ -17,7 +17,9 @@ class TestSessionApi(unittest.TestCase):
         self.mock_session_service = MagicMock()
         self.mock_session_workflow_service = MagicMock()
         self.mock_session_management_service = MagicMock()
+        self.mock_takt_agent = MagicMock()
 
+        # Mock both service_container (for validators) and DI container (for actions)
         self.patcher = patch(
             "pipe.web.service_container.get_session_service",
             return_value=self.mock_session_service,
@@ -30,14 +32,38 @@ class TestSessionApi(unittest.TestCase):
             "pipe.web.service_container.get_session_management_service",
             return_value=self.mock_session_management_service,
         )
+
+        # Mock DI container for action dependency injection
+        self.di_container_patcher = patch("pipe.web.dispatcher._container")
+
         self.patcher.start()
         self.workflow_patcher.start()
         self.management_patcher.start()
+
+        mock_container = self.di_container_patcher.start()
+        if mock_container:
+            # Mock container.get() to return mocked services
+            from pipe.core.services.session_service import SessionService
+            from pipe.core.services.session_workflow_service import SessionWorkflowService
+            from pipe.core.services.session_management_service import SessionManagementService
+            from pipe.core.agents.takt_agent import TaktAgent
+
+            def mock_get(service_type):
+                service_map = {
+                    SessionService: self.mock_session_service,
+                    SessionWorkflowService: self.mock_session_workflow_service,
+                    SessionManagementService: self.mock_session_management_service,
+                    TaktAgent: self.mock_takt_agent,
+                }
+                return service_map.get(service_type)
+
+            mock_container.get = mock_get
 
     def tearDown(self):
         self.patcher.stop()
         self.workflow_patcher.stop()
         self.management_patcher.stop()
+        self.di_container_patcher.stop()
 
     def test_get_session_api_success(self):
         """Tests successfully getting a single session via API."""

@@ -20,6 +20,7 @@ from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.role_service import RoleService
 from pipe.core.services.search_sessions_service import SearchSessionsService
 from pipe.core.services.session_artifact_service import SessionArtifactService
+from pipe.core.services.session_instruction_service import SessionInstructionService
 from pipe.core.services.session_management_service import SessionManagementService
 from pipe.core.services.session_meta_service import SessionMetaService
 from pipe.core.services.session_optimization_service import SessionOptimizationService
@@ -179,3 +180,13 @@ class ServiceFactory:
             self.project_root, session_id, self.settings
         )
         return StreamingLoggerService(repository, self.settings)
+
+    def create_takt_agent(self):
+        """Creates a TaktAgent with its dependencies."""
+        from pipe.core.agents.takt_agent import TaktAgent
+
+        return TaktAgent(self.project_root, self.settings)
+
+    def create_session_instruction_service(self) -> SessionInstructionService:
+        """Creates a SessionInstructionService with its dependencies."""
+        return SessionInstructionService(self.project_root, self.settings)

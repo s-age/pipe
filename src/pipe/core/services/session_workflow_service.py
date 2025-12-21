@@ -115,3 +115,49 @@ class SessionWorkflowService:
         Delegates to SessionOptimizationService.
         """
         return self.optimization_service.run_doctor(session_id, modifications)
+
+    def stop_session(self, session_id: str, project_root: str) -> None:
+        """Stop a running session by killing its process and rolling back transaction.
+
+        This workflow consolidates all session stop logic:
+        1. Kill the process (SIGTERM -> SIGKILL if needed)
+        2. Rollback transaction (discard changes in pools)
+        3. Cleanup process information
+
+        Args:
+            session_id: ID of the session to stop
+            project_root: Path to the project root directory
+        """
+        import logging
+
+        from pipe.core.factories.service_factory import ServiceFactory
+        from pipe.core.factories.settings_factory import SettingsFactory
+        from pipe.core.services.process_manager_service import ProcessManagerService
+
+        logger = logging.getLogger(__name__)
+
+        # Get settings from SettingsFactory
+        settings = SettingsFactory.get_settings()
+
+        # Initialize services
+        process_manager = ProcessManagerService(project_root, settings)
+        service_factory = ServiceFactory(project_root, settings)
+        turn_service = service_factory.create_session_turn_service()
+
+        # 1. Kill the process
+        logger.info(f"Attempting to kill process for session {session_id}")
+        kill_success = process_manager.kill_process(session_id)
+
+        if not kill_success:
+            logger.warning(
+                f"Failed to kill process for session {session_id}, "
+                "but continuing with cleanup"
+            )
+
+        # 2. Rollback transaction (discard all changes in pools)
+        logger.info(f"Rolling back transaction for session {session_id}")
+        turn_service.rollback_transaction(session_id)
+
+        # 3. Cleanup process information
+        logger.info(f"Cleaning up process information for session {session_id}")
+        process_manager.cleanup_process(session_id)

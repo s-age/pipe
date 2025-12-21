@@ -147,6 +147,8 @@ def create_app(
     search_sessions_service = service_factory.create_search_sessions_service()
     procedure_service = service_factory.create_procedure_service()
     role_service = service_factory.create_role_service()
+    takt_agent = service_factory.create_takt_agent()
+    session_instruction_service = service_factory.create_session_instruction_service()
 
     # BFF (Backend for Frontend) Controllers
     start_session_controller = StartSessionController(session_service, settings)
@@ -178,9 +180,17 @@ def create_app(
         project_root=project_root,
     )
 
-    # Initialize dispatcher
-    # Passed file_indexer_service to be registered in the internal DI container
-    init_dispatcher(file_indexer_service)
+    # Initialize dispatcher with all services for DI
+    init_dispatcher(
+        file_indexer_service=file_indexer_service,
+        session_service=session_service,
+        session_management_service=session_management_service,
+        session_artifact_service=session_artifact_service,
+        session_workflow_service=session_workflow_service,
+        search_sessions_service=search_sessions_service,
+        takt_agent=takt_agent,
+        session_instruction_service=session_instruction_service,
+    )
 
     # Register blueprints (like Laravel route groups with prefixes)
     app.register_blueprint(session_bp)  # /api/v1/session/*

@@ -9,6 +9,8 @@ in ApiResponse and handles streaming responses directly.
 
 from flask import Response
 from pipe.web.actions.base_action import BaseAction
+from pipe.web.binder import RequestBinder
+from pipe.web.dispatcher import get_dispatcher
 from pipe.web.exceptions import HttpException
 from pipe.web.request_context import RequestContext
 from pydantic import ValidationError
@@ -34,71 +36,57 @@ def dispatch_streaming_action(
         HttpException: For HTTP-specific errors (400, 404, 422, 500)
         Exception: For unexpected errors
     """
+    # Extract the Flask request
+    flask_request = None
+    if hasattr(request_data, "_request_data") and request_data._request_data:
+        flask_request = request_data._request_data
 
-    # Pre-validate with request_model if present (new pattern)
-    if hasattr(action_class, "request_model") and action_class.request_model:
-        try:
-            # Extract body from the underlying Flask request
-            body_data = None
-            flask_request = None
-            if hasattr(request_data, "_request_data") and request_data._request_data:
-                flask_request = request_data._request_data
-                if flask_request.is_json:
-                    body_data = flask_request.get_json(silent=True)
+    # Use the dispatcher's binder and factory for consistency
+    dispatcher = get_dispatcher()
+    binder = RequestBinder()
 
-            validated = action_class.request_model.create_with_path_params(
-                path_params=params, body_data=body_data
-            )
+    # 1. Bind & Validate Request
+    try:
+        validated_data = binder.bind(action_class, flask_request, params)
+    except ValidationError as e:
+        from pipe.web.exceptions import UnprocessableEntityError
 
-            # Create action WITH validated_request and request_context
-            action = action_class(
-                params=params,
-                request_data=flask_request,
-                request_context=request_data,
-                validated_request=validated,
-            )
-        except ValidationError as e:
-            from pipe.web.exceptions import UnprocessableEntityError
+        error_messages = [
+            f"{'.'.join(str(loc) for loc in err['loc'])}: {err['msg']}"
+            for err in e.errors()
+        ]
+        raise UnprocessableEntityError("; ".join(error_messages))
+    except Exception as e:
+        if isinstance(e, HttpException):
+            raise
+        from pipe.web.exceptions import InternalServerError
 
-            raise UnprocessableEntityError(str(e))
-    # Also support body_model for legacy actions
-    elif hasattr(action_class, "body_model") and action_class.body_model:
-        try:
-            # Extract body from the underlying Flask request
-            body_data = None
-            flask_request = None
-            if hasattr(request_data, "_request_data") and request_data._request_data:
-                flask_request = request_data._request_data
-                if flask_request.is_json:
-                    body_data = flask_request.get_json(silent=True)
+        raise InternalServerError(str(e))
 
-            validated = (
-                action_class.body_model(**body_data)
-                if body_data
-                else action_class.body_model()
-            )
+    # 2. Prepare Runtime Context
+    runtime_context = {
+        "params": params,
+        "request_data": flask_request,
+        "request_context": request_data,
+        "validated_request": validated_data,
+    }
 
-            # Create action WITH validated body and request_context
-            action = action_class(
-                params=params,
-                request_data=flask_request,
-                request_context=request_data,
-                validated_request=validated,
-            )
-        except ValidationError as e:
-            from pipe.web.exceptions import UnprocessableEntityError
+    # 3. Instantiate Action using GenericActionFactory (with DI)
+    try:
+        action = dispatcher.factory.create(action_class, runtime_context)
 
-            raise UnprocessableEntityError(str(e))
-    else:
-        # No validation model - create action normally
-        flask_request = None
-        if hasattr(request_data, "_request_data") and request_data._request_data:
-            flask_request = request_data._request_data
-        action = action_class(
-            params=params, request_data=flask_request, request_context=request_data
-        )
+        # Manual injection fallback for request_context (specific to streaming)
+        if hasattr(action, "request_context") and not getattr(
+            action, "request_context", None
+        ):
+            action.request_context = request_data  # type: ignore
 
-    # Execute the action - should return Flask Response
+    except Exception as e:
+        from pipe.web.exceptions import InternalServerError
+
+        raise InternalServerError(f"Failed to create action: {str(e)}")
+
+    # 4. Execute the action - should return Flask Response
     try:
         result = action.execute()
 

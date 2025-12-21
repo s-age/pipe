@@ -13,6 +13,7 @@ from pipe.web.actions import (
     SessionGetAction,
     SessionInstructionAction,
     SessionStartAction,
+    SessionStopAction,
     SessionTurnsGetAction,
 )
 from pipe.web.actions.therapist import ApplyDoctorModificationsAction
@@ -82,6 +83,17 @@ def send_instruction(session_id):
             jsonify(ApiResponse(success=False, message=str(e)).model_dump()),
             500,
         )
+
+
+@session_bp.route("/session/<path:session_id>/stop", methods=["POST"])
+def stop_session(session_id):
+    """Stop a running session."""
+    response_data, status_code = dispatch_action(
+        action=SessionStopAction,
+        params={"session_id": session_id},
+        request_data=request,
+    )
+    return jsonify(response_data), status_code
 
 
 @session_bp.route("/session/<path:session_id>/turns", methods=["GET"])

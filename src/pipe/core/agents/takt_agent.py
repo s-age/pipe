@@ -264,13 +264,8 @@ class TaktAgent:
         )
 
         # Register process immediately after starting
-        log_file = os.path.join(
-            self.project_root, "sessions", f"{session_id}.streaming.log"
-        )
         try:
-            process_manager.register_process(
-                session_id, process.pid, instruction, log_file
-            )
+            process_manager.register_process(session_id, process.pid, instruction)
         except Exception as e:
             # If registration fails, kill the process
             process.terminate()

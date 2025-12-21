@@ -4,8 +4,8 @@ from pipe.web.actions import (
     SessionTreeAction,
     SettingsGetAction,
 )
+from pipe.web.dispatcher import dispatch_action
 from pipe.web.exceptions import HttpException
-from pipe.web.requests.sessions.get_session import GetSessionRequest
 from pipe.web.responses import ApiResponse
 from pipe.web.responses.session_chat_responses import ChatContextResponse
 
@@ -40,14 +40,14 @@ class SessionChatController:
             current_session = None
             if session_id:
                 try:
-                    # Create validated request for the action
-                    validated_request = GetSessionRequest(session_id=session_id)
-                    session_action = SessionGetAction(
+                    # Use dispatch_action to leverage DI container
+                    response_data, status_code = dispatch_action(
+                        action=SessionGetAction,
                         params={"session_id": session_id},
                         request_data=request_data,
-                        validated_request=validated_request,
                     )
-                    current_session = session_action.execute()
+                    if status_code == 200:
+                        current_session = response_data.get("data")
                 except HttpException:
                     # Session not found, but still return tree and settings
                     pass

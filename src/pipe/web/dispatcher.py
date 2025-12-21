@@ -3,10 +3,17 @@
 from typing import Any
 
 from flask import Request, Response
+from pipe.core.agents.takt_agent import TaktAgent
 from pipe.core.container import DependencyContainer
 
 # No longer importing specific fs actions for registration
 from pipe.core.services.file_indexer_service import FileIndexerService
+from pipe.core.services.search_sessions_service import SearchSessionsService
+from pipe.core.services.session_artifact_service import SessionArtifactService
+from pipe.core.services.session_instruction_service import SessionInstructionService
+from pipe.core.services.session_management_service import SessionManagementService
+from pipe.core.services.session_service import SessionService
+from pipe.core.services.session_workflow_service import SessionWorkflowService
 from pipe.web.binder import RequestBinder
 from pipe.web.factory import GenericActionFactory
 from pipe.web.responses import ApiResponse
@@ -177,18 +184,39 @@ def get_dispatcher() -> ActionDispatcher:
 
 def init_dispatcher(
     file_indexer_service: FileIndexerService,
+    session_service: SessionService,
+    session_management_service: SessionManagementService,
+    session_artifact_service: SessionArtifactService,
+    session_workflow_service: SessionWorkflowService,
+    search_sessions_service: SearchSessionsService,
+    takt_agent: TaktAgent,
+    session_instruction_service: SessionInstructionService,
 ) -> ActionDispatcher:
     """Initialize the global dispatcher instance and DI container.
 
     Args:
-        file_indexer_service: Service to be registered in the container for injection.
+        file_indexer_service: FileIndexerService instance
+        session_service: SessionService instance
+        session_management_service: SessionManagementService instance
+        session_artifact_service: SessionArtifactService instance
+        session_workflow_service: SessionWorkflowService instance
+        search_sessions_service: SearchSessionsService instance
+        takt_agent: TaktAgent instance
+        session_instruction_service: SessionInstructionService instance
     """
     global _dispatcher, _container
 
     _container = DependencyContainer()
 
-    # Register Services
+    # Register Services for DI
     _container.register(FileIndexerService, file_indexer_service)
+    _container.register(SessionService, session_service)
+    _container.register(SessionManagementService, session_management_service)
+    _container.register(SessionArtifactService, session_artifact_service)
+    _container.register(SessionWorkflowService, session_workflow_service)
+    _container.register(SearchSessionsService, search_sessions_service)
+    _container.register(TaktAgent, takt_agent)
+    _container.register(SessionInstructionService, session_instruction_service)
 
     binder = RequestBinder()
     factory = GenericActionFactory(_container)

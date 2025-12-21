@@ -2,10 +2,9 @@
 
 from typing import TypedDict
 
-from flask import Request
+from pipe.core.services.session_management_service import SessionManagementService
 from pipe.web.actions.base_action import BaseAction
 from pipe.web.requests.sessions.delete_sessions import DeleteSessionsRequest
-from pipe.web.service_container import get_session_management_service
 
 
 class BulkMoveResult(TypedDict):
@@ -17,22 +16,22 @@ class BulkMoveResult(TypedDict):
 
 
 class SessionsMoveToBackup(BaseAction):
-    """
-    Action to bulk move multiple sessions to backup.
+    """Bulk move multiple sessions to backup.
 
-    Moves selected sessions from index.json and moves session files to backup directory.
+    This action uses constructor injection for SessionManagementService,
+    following the DI pattern.
     """
 
     request_model = DeleteSessionsRequest
 
     def __init__(
         self,
+        session_management_service: SessionManagementService,
         validated_request: DeleteSessionsRequest | None = None,
-        params: dict | None = None,
-        request_data: Request | None = None,
         **kwargs,
     ):
-        super().__init__(params, request_data, **kwargs)
+        super().__init__(**kwargs)
+        self.session_management_service = session_management_service
         self.validated_request = validated_request
 
     def execute(self) -> BulkMoveResult:
@@ -42,7 +41,7 @@ class SessionsMoveToBackup(BaseAction):
         request_data = self.validated_request
 
         # Move sessions to backup
-        moved_count = get_session_management_service().move_sessions_to_backup(
+        moved_count = self.session_management_service.move_sessions_to_backup(
             request_data.session_ids
         )
 

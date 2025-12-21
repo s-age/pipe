@@ -8,7 +8,10 @@ import { addToast } from '@/stores/useToastStore'
 
 export type UseTurnActionsReturn = {
   deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
-  forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
+  forkSessionAction: (
+    sessionId: string,
+    forkIndex: number
+  ) => Promise<string | undefined>
   editTurnAction: (
     sessionId: string,
     turnIndex: number,
@@ -34,16 +37,19 @@ export const useTurnActions = (): UseTurnActionsReturn => {
   )
 
   const forkSessionAction = useCallback(
-    async (sessionId: string, forkIndex: number): Promise<void> => {
+    async (sessionId: string, forkIndex: number): Promise<string | undefined> => {
       try {
         const response = await forkSession(sessionId, forkIndex)
         addToast({ status: 'success', title: 'Session forked successfully' })
-        window.location.href = `/session/${response.newSessionId}`
+
+        return response.newSessionId
       } catch (error: unknown) {
         addToast({
           status: 'failure',
           title: (error as Error).message || 'Failed to fork session.'
         })
+
+        return undefined
       }
     },
     []

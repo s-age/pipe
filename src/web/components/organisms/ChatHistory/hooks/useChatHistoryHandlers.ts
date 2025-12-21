@@ -21,11 +21,11 @@ export const useChatHistoryHandlers = ({
 }: UseChatHistoryHandlersProperties): {
   handleDeleteCurrentSession: () => void
   handleDeleteSession: (sessionId: string) => Promise<void>
+  handleRefreshSession: () => Promise<void>
 } => {
   const { show, hide } = useModal()
-  const { deleteSessionAction } = useChatHistoryActions({
-    currentSessionId,
-    refreshSessionsInStore
+  const { deleteSessionAction, refreshSession } = useChatHistoryActions({
+    currentSessionId
   })
 
   const modalIdReference = useRef<number | null>(null)
@@ -38,6 +38,13 @@ export const useChatHistoryHandlers = ({
     },
     [deleteSessionAction]
   )
+
+  const handleRefreshSession = useCallback(async (): Promise<void> => {
+    const result = await refreshSession()
+    if (result) {
+      refreshSessionsInStore(result.sessionDetail, result.sessions)
+    }
+  }, [refreshSession, refreshSessionsInStore])
 
   const handleDeleteCurrentSession = useCallback((): void => {
     if (!currentSessionId) return
@@ -80,6 +87,7 @@ export const useChatHistoryHandlers = ({
 
   return {
     handleDeleteCurrentSession,
-    handleDeleteSession
+    handleDeleteSession,
+    handleRefreshSession
   }
 }

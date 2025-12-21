@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { FormMethods } from '@/components/organisms/Form'
 import { useSessionTodosActions } from '@/components/organisms/TodoList/hooks/useSessionTodosActions'
-import type { SessionDetail } from '@/lib/api/session/getSession'
+import { getSession, type SessionDetail } from '@/lib/api/session/getSession'
 import type { Todo } from '@/types/todo'
 
 type UseSessionTodosProperties = {
@@ -25,19 +25,22 @@ export const useSessionTodosHandlers = ({
 } => {
   const register = useOptionalFormContext()?.register
 
-  const { updateTodos, deleteAllTodos } = useSessionTodosActions({
-    onSessionDetailUpdate
-  })
-
-  // NOTE: getSession is available if callers need to fetch a fresh session.
+  const { updateTodos, deleteAllTodos } = useSessionTodosActions()
 
   const handleUpdateTodo = useCallback(
     async (todos: Todo[]) => {
       if (!sessionDetail.sessionId) return
-      // Intentionally not awaiting - errors are handled in Actions layer
-      void updateTodos(sessionDetail.sessionId, todos)
+      await updateTodos(sessionDetail.sessionId, todos)
+
+      // Fetch fresh session detail to ensure UI is in sync
+      try {
+        const freshSessionDetail = await getSession(sessionDetail.sessionId)
+        onSessionDetailUpdate?.(freshSessionDetail)
+      } catch {
+        // Silently fail on refresh - the update was still successful
+      }
     },
-    [sessionDetail, updateTodos]
+    [sessionDetail, updateTodos, onSessionDetailUpdate]
   )
 
   const handleDeleteAllTodos = useCallback(async (): Promise<void> => {
@@ -45,9 +48,16 @@ export const useSessionTodosHandlers = ({
     if (!window.confirm('Are you sure you want to delete all todos for this session?'))
       return
 
-    // Intentionally not awaiting - errors are handled in Actions layer
-    void deleteAllTodos(sessionDetail.sessionId)
-  }, [sessionDetail, deleteAllTodos])
+    await deleteAllTodos(sessionDetail.sessionId)
+
+    // Fetch fresh session detail to ensure UI is in sync
+    try {
+      const freshSessionDetail = await getSession(sessionDetail.sessionId)
+      onSessionDetailUpdate?.(freshSessionDetail)
+    } catch {
+      // Silently fail on refresh - the delete was still successful
+    }
+  }, [sessionDetail, deleteAllTodos, onSessionDetailUpdate])
 
   const handleTodoCheckboxChange = useCallback(
     (index?: number) => {

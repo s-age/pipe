@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
@@ -170,7 +171,10 @@ export const TurnComponent = ({
 
   return (
     <div
-      className={`${turnWrapper} ${turn.type === 'user_task' ? userTaskAligned : otherTurnAligned}`}
+      className={clsx(
+        turnWrapper,
+        turn.type === 'user_task' ? userTaskAligned : otherTurnAligned
+      )}
     >
       <div className={turnContentBase} id={`turn-${index}`}>
         <div className={turnHeader}>

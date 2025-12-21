@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { useMultiStepReasoningActions } from './useMultiStepReasoningActions'
+import { useMultiStepReasoningLifecycle } from './useMultiStepReasoningLifecycle'
 
 type UseMultiStepReasoningHandlersProperties = {
   currentSessionId: string | null
@@ -19,10 +20,9 @@ export const useMultiStepReasoningHandlers = ({
 } => {
   const [localEnabled, setLocalEnabled] = useState(multiStepReasoningEnabled)
 
-  // Update local state when prop changes
-  useEffect(() => {
-    setLocalEnabled(multiStepReasoningEnabled)
-  }, [multiStepReasoningEnabled])
+  // Lifecycle: sync props to local state
+  useMultiStepReasoningLifecycle({ multiStepReasoningEnabled, setLocalEnabled })
+
   const { updateMultiStepReasoning } = useMultiStepReasoningActions()
 
   const handleMultiStepReasoningChange = useCallback(

@@ -4,13 +4,7 @@ import { editSessionMeta } from '@/lib/api/meta/editSessionMeta'
 import type { EditSessionMetaRequest } from '@/lib/api/meta/editSessionMeta'
 import { addToast } from '@/stores/useToastStore'
 
-type UseSessionMetaActionsProperties = {
-  onRefresh: () => Promise<void>
-}
-
-export const useSessionMetaActions = ({
-  onRefresh
-}: UseSessionMetaActionsProperties): {
+export const useSessionMetaActions = (): {
   handleMetaSave: (id: string, meta: EditSessionMetaRequest) => Promise<void>
 } => {
   const handleMetaSave = useCallback(
@@ -18,7 +12,6 @@ export const useSessionMetaActions = ({
       try {
         await editSessionMeta(id, meta)
         addToast({ status: 'success', title: 'Session metadata saved' })
-        await onRefresh()
       } catch (error: unknown) {
         addToast({
           status: 'failure',
@@ -26,7 +19,7 @@ export const useSessionMetaActions = ({
         })
       }
     },
-    [onRefresh]
+    []
   )
 
   return { handleMetaSave }

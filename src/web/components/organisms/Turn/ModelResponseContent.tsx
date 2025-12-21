@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import { marked } from 'marked'
 import type { JSX } from 'react'
 
@@ -25,7 +26,7 @@ export const ModelResponseContent = ({
     <div className={rawMarkdown}>{content}</div>
     {!isStreaming && (
       <div
-        className={`${renderedMarkdown} markdown-body`}
+        className={clsx(renderedMarkdown, 'markdown-body')}
         dangerouslySetInnerHTML={{ __html: marked.parse(content.trim()) }}
       />
     )}

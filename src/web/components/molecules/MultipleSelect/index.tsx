@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import { type SelectHTMLAttributes, type JSX } from 'react'
 
 import { useMultipleSelect } from './hooks/useMultipleSelect'
@@ -89,7 +90,7 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     .filter(Boolean)
 
   return (
-    <div ref={rootReference} className={`${className ?? selectStyle}`}>
+    <div ref={rootReference} className={clsx(selectStyle, className)}>
       {/* Hidden native select kept for form integrations (RHF / native form submit) */}
       <select
         {...rest}
@@ -161,9 +162,10 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
                 onClick={handleOptionClick}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className={
-                  highlightedIndex === index ? `${option} ${optionHighlighted}` : option
-                }
+                className={clsx(
+                  option,
+                  highlightedIndex === index && optionHighlighted
+                )}
                 data-value={opt.value}
                 data-index={String(index)}
               >

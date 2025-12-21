@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import { forwardRef } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -25,7 +26,10 @@ export const SessionItem = forwardRef<HTMLLIElement, SessionItemProperties>(
       <li key={session.sessionId} className={sessionListItem} ref={reference}>
         <a
           href={`/session/${session.sessionId}`}
-          className={`${sessionLink} ${session.sessionId === currentSessionId ? sessionLinkActive : ''}`.trim()}
+          className={clsx(
+            sessionLink,
+            session.sessionId === currentSessionId && sessionLinkActive
+          )}
           onClick={onClick}
         >
           {session.purpose}{' '}

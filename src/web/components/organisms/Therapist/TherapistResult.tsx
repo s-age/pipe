@@ -52,7 +52,7 @@ export const TherapistResult = ({
         <ul className={styles.list}>
           {diagnosis.deletions?.map((turn: number) => (
             <li key={turn}>
-              <label>
+              <label className={styles.checkboxLabel}>
                 <Checkbox onChange={handleDeletionChange(turn)} />
                 Turn {turn}: Suggested removal
               </label>
@@ -66,7 +66,7 @@ export const TherapistResult = ({
         <ul className={styles.list}>
           {diagnosis.edits?.map((edit) => (
             <li key={edit.turn}>
-              <label>
+              <label className={styles.checkboxLabel}>
                 <Checkbox onChange={handleEditChange(edit)} />
                 Turn {edit.turn}: {edit.newContent}
               </label>
@@ -80,7 +80,7 @@ export const TherapistResult = ({
         <ul className={styles.list}>
           {diagnosis.compressions?.map((comp) => (
             <li key={`${comp.start}-${comp.end}`}>
-              <label>
+              <label className={styles.checkboxLabel}>
                 Turns {comp.start}-{comp.end}: {comp.reason}
               </label>
             </li>

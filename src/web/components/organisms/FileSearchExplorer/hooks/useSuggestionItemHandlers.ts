@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
+
+import { useSuggestionItemLifecycle } from './useSuggestionItemLifecycle'
 
 export type SuggestionItemProperties = {
   suggestion: { label: string; value: string; path?: string }
@@ -18,14 +20,8 @@ export const useSuggestionItemHandlers = (
   const internalReference = useRef<HTMLLIElement>(null)
   const elementReference = reference || internalReference
 
-  useEffect(() => {
-    if (isSelected && elementReference.current) {
-      elementReference.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest'
-      })
-    }
-  }, [isSelected, elementReference])
+  // Lifecycle: scrollIntoView when selected
+  useSuggestionItemLifecycle({ isSelected, elementReference })
 
   const handleClick = useCallback((): void => {
     onClick(suggestion)

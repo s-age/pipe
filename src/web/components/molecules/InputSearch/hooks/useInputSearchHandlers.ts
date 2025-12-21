@@ -17,7 +17,7 @@ type Properties = {
   name?: string
 }
 
-export const useInputSearch = ({
+export const useInputSearchHandlers = ({
   value,
   onChange,
   onSubmit,

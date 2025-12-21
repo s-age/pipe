@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
 
+import { getArchivedSessions } from '@/lib/api/session_management/getArchivedSessions'
+import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 import type {
   SessionOverview,
   SessionTreeNode
@@ -35,7 +37,7 @@ export const useSessionManagementHandlers = ({
   const { state, actions: storeActions } = useSessionStore()
 
   // 2. Actions hook
-  const actions = useSessionManagementActions({ storeActions })
+  const actions = useSessionManagementActions()
 
   // 3. Lifecycle hook
   useSessionManagementLifecycle({ storeActions })
@@ -82,27 +84,33 @@ export const useSessionManagementHandlers = ({
 
   const handleBulkArchive = useCallback(async (): Promise<void> => {
     if (selectedSessionIds.length === 0) return
-    try {
-      await actions.archiveSessions(selectedSessionIds)
+    const success = await actions.archiveSessionsAction(selectedSessionIds)
+    if (success) {
+      // Refresh sessions after archiving
+      const sessionTree = await getSessionTree()
+      const sessions =
+        sessionTree.sessionTree ||
+        sessionTree.sessions.map(([_, overview]) => ({ ...overview, sessionId: _ }))
+      storeActions.setSessions(sessions)
+      // Refresh archived sessions
+      const archivedSessions = await getArchivedSessions()
+      storeActions.setArchivedSessions(archivedSessions)
       setSelectedSessionIds([])
-    } catch {
-      // Error handled in actions
     }
-  }, [actions, selectedSessionIds])
+  }, [actions, selectedSessionIds, storeActions])
 
   const handleBulkDeleteArchived = useCallback(async (): Promise<void> => {
     if (selectedSessionIds.length === 0) return
-    try {
-      // selectedSessionIds now contains filePaths for archives
-      // Pass them directly to the delete action
-      await actions.deleteArchivedSessions({
-        filePaths: selectedSessionIds
-      })
+    const success = await actions.deleteArchivedSessionsAction({
+      filePaths: selectedSessionIds
+    })
+    if (success) {
+      // Refresh archived sessions after deletion
+      const archivedSessions = await getArchivedSessions()
+      storeActions.setArchivedSessions(archivedSessions)
       setSelectedSessionIds([])
-    } catch {
-      // Error handled in actions
     }
-  }, [actions, selectedSessionIds])
+  }, [actions, selectedSessionIds, storeActions])
 
   const handleSetCurrentTab = useCallback((tab: 'sessions' | 'archives') => {
     setCurrentTab(tab)

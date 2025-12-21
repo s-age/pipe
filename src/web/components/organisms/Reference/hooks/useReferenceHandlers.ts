@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceActions } from './useReferenceActions'
+import { useReferenceLifecycle } from './useReferenceLifecycle'
 
 export const useReferenceHandlers = (
   currentSessionId: string | null,
@@ -20,16 +21,15 @@ export const useReferenceHandlers = (
 } => {
   const [localReference, setLocalReference] = useState(reference)
 
-  // Update local state when prop changes
-  useEffect(() => {
-    setLocalReference(reference)
-  }, [reference])
+  // Lifecycle: sync props to local state
+  useReferenceLifecycle({ reference, setLocalReference })
+
   const formContext = useOptionalFormContext()
   const {
     handleUpdateReferencePersist,
     handleUpdateReferenceTtl,
     handleToggleReferenceDisabled
-  } = useReferenceActions(refreshSessions)
+  } = useReferenceActions()
 
   const updateReferences = useCallback(
     (updater: (reference_: Reference) => Reference) => {
@@ -47,40 +47,43 @@ export const useReferenceHandlers = (
     async (_event: React.MouseEvent<HTMLButtonElement>) => {
       if (!currentSessionId) return
 
-      // Intentionally not awaiting - errors are handled in Actions layer
-      void handleUpdateReferencePersist(
+      // Update local state for immediate UI feedback
+      setLocalReference?.((previous) => ({ ...previous, persist: !previous.persist }))
+
+      await handleUpdateReferencePersist(
         currentSessionId,
         referenceIndex,
         !reference.persist
       )
-      // Update local state for immediate UI feedback
-      setLocalReference?.((previous) => ({ ...previous, persist: !previous.persist }))
+      await refreshSessions()
     },
     [
       reference,
       referenceIndex,
       currentSessionId,
       handleUpdateReferencePersist,
-      setLocalReference
+      setLocalReference,
+      refreshSessions
     ]
   )
 
   const handleToggleDisabled = useCallback(async () => {
     if (!currentSessionId) return
 
-    // Intentionally not awaiting - errors are handled in Actions layer
-    void handleToggleReferenceDisabled(currentSessionId, referenceIndex)
-
     updateReferences((reference) => ({ ...reference, disabled: !reference.disabled }))
 
     // Update local state for immediate UI feedback
     setLocalReference?.((previous) => ({ ...previous, disabled: !previous.disabled }))
+
+    await handleToggleReferenceDisabled(currentSessionId, referenceIndex)
+    await refreshSessions()
   }, [
     referenceIndex,
     currentSessionId,
     handleToggleReferenceDisabled,
     updateReferences,
-    setLocalReference
+    setLocalReference,
+    refreshSessions
   ])
 
   const handleTtlAction = useCallback(
@@ -95,13 +98,13 @@ export const useReferenceHandlers = (
         newTtl = currentTtl - 1
       }
 
-      // Intentionally not awaiting - errors are handled in Actions layer
-      void handleUpdateReferenceTtl(currentSessionId, referenceIndex, newTtl)
-
       updateReferences((reference) => ({ ...reference, ttl: newTtl }))
 
       // Update local state for immediate UI feedback
       setLocalReference?.((previous) => ({ ...previous, ttl: newTtl }))
+
+      await handleUpdateReferenceTtl(currentSessionId, referenceIndex, newTtl)
+      await refreshSessions()
     },
     [
       reference,
@@ -109,7 +112,8 @@ export const useReferenceHandlers = (
       currentSessionId,
       handleUpdateReferenceTtl,
       updateReferences,
-      setLocalReference
+      setLocalReference,
+      refreshSessions
     ]
   )
 

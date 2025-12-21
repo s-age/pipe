@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import { useTooltipStore, showTooltip, hideTooltip } from '@/stores/useTooltipStore'
+
+import { useTooltipStoreSubscription } from './useTooltipStoreSubscription'
 
 export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right'
 
 let nextTooltipId = 1
 
-export const useTooltip = (
+export const useTooltipHandlers = (
   content: string,
   forcedPlacement?: TooltipPlacement
 ): {
@@ -33,41 +35,14 @@ export const useTooltip = (
   const idReference = useRef<number | null>(null)
   const store = useTooltipStore()
 
-  useEffect(() => {
-    const data = store.active
-
-    if (!data) {
-      setIsVisible(false)
-      setTargetRect(null)
-
-      return
-    }
-
-    if (data.id === idReference.current) {
-      // Type guard: verify placement is valid
-      const validPlacement = data.placement ?? 'top'
-      if (
-        validPlacement === 'top' ||
-        validPlacement === 'bottom' ||
-        validPlacement === 'left' ||
-        validPlacement === 'right'
-      ) {
-        setPlacement(validPlacement)
-      } else {
-        setPlacement('top')
-      }
-
-      // Type guard: verify rect is DOMRect
-      if (data.rect instanceof DOMRect) {
-        setTargetRect(data.rect)
-      } else {
-        setTargetRect(null)
-      }
-      setIsVisible(true)
-    } else {
-      setIsVisible(false)
-    }
-  }, [store.active])
+  // Lifecycle: subscribe to tooltip store updates
+  useTooltipStoreSubscription({
+    idReference,
+    storeActive: store.active,
+    setIsVisible,
+    setPlacement,
+    setTargetRect
+  })
 
   const handleMouseEnter = useCallback(
     (

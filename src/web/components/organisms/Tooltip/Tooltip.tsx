@@ -1,7 +1,8 @@
+import { clsx } from 'clsx'
 import React from 'react'
 import type { JSX } from 'react'
 
-import { useTooltip } from './hooks/useTooltipHandlers'
+import { useTooltipHandlers } from './hooks/useTooltipHandlers'
 import { tooltipContainer } from './style.css'
 
 type TooltipProperties = {
@@ -22,11 +23,11 @@ export const Tooltip: ({
   placement,
   className = ''
 }) => {
-  const { onEnter, handleMouseLeave } = useTooltip(content, placement)
+  const { onEnter, handleMouseLeave } = useTooltipHandlers(content, placement)
 
   return (
     <div
-      className={`${tooltipContainer} ${className}`}
+      className={clsx(tooltipContainer, className)}
       onMouseEnter={onEnter}
       onMouseLeave={handleMouseLeave}
     >

@@ -19,7 +19,6 @@ export const useArtifactListActions = (): UseArtifactListActionsReturn => {
         toast.failure(
           `Failed to update artifacts: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
-        throw error
       }
     },
     [toast]

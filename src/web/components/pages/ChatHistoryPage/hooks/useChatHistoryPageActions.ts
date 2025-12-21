@@ -1,28 +1,31 @@
 import { useCallback } from 'react'
 
 import { getChatHistory } from '@/lib/api/bff/getChatHistory'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 import type {
   SessionOverview,
   SessionTreeNode
 } from '@/lib/api/sessionTree/getSessionTree'
-import type { Actions } from '@/stores/useChatHistoryStore'
 import { addToast } from '@/stores/useToastStore'
 import type { SessionNode, SessionPair } from '@/types/session'
 import { isSessionPair } from '@/types/session'
 
 type UseChatHistoryPageActionsProperties = {
   currentSessionId: string | null
-  refreshSessions: Actions['refreshSessions']
+}
+
+type ChatHistoryData = {
+  sessionDetail: SessionDetail | null
+  sessions?: SessionOverview[] | SessionTreeNode[]
 }
 
 export const useChatHistoryPageActions = ({
-  currentSessionId,
-  refreshSessions
+  currentSessionId
 }: UseChatHistoryPageActionsProperties): {
-  onRefresh: (sessionId?: string) => Promise<void>
+  fetchChatHistory: (sessionId?: string) => Promise<ChatHistoryData | undefined>
 } => {
-  const onRefresh = useCallback(
-    async (sessionId?: string): Promise<void> => {
+  const fetchChatHistory = useCallback(
+    async (sessionId?: string): Promise<ChatHistoryData | undefined> => {
       try {
         const idToUse = sessionId ?? currentSessionId
         const data = await getChatHistory(idToUse || undefined)
@@ -40,27 +43,35 @@ export const useChatHistoryPageActions = ({
 
           if (isSessionPair(first)) {
             const normalized = flattenPairs(sessionTree as SessionPair[])
-            refreshSessions(data.currentSession ?? null, normalized)
+
+            return {
+              sessionDetail: data.currentSession ?? null,
+              sessions: normalized
+            }
           } else {
             // Keep hierarchical nodes intact so the UI can render a tree.
-            refreshSessions(
-              data.currentSession ?? null,
-              sessionTree as SessionTreeNode[]
-            )
+            return {
+              sessionDetail: data.currentSession ?? null,
+              sessions: sessionTree as SessionTreeNode[]
+            }
           }
         } else {
           // No sessions returned: ensure session detail is updated but don't touch sessions
-          refreshSessions(data.currentSession ?? null)
+          return {
+            sessionDetail: data.currentSession ?? null
+          }
         }
       } catch (error: unknown) {
         addToast({
           status: 'failure',
           title: (error as Error).message || 'Failed to refresh sessions'
         })
+
+        return undefined
       }
     },
-    [currentSessionId, refreshSessions]
+    [currentSessionId]
   )
 
-  return { onRefresh }
+  return { fetchChatHistory }
 }

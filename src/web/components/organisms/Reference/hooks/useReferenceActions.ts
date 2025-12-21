@@ -5,9 +5,7 @@ import { editReferenceTtl } from '@/lib/api/meta/editReferenceTtl'
 import { toggleReferenceDisabled } from '@/lib/api/meta/toggleReferenceDisabled'
 import { addToast } from '@/stores/useToastStore'
 
-export const useReferenceActions = (
-  refreshSessions: () => Promise<void>
-): {
+export const useReferenceActions = (): {
   handleUpdateReferencePersist: (
     sessionId: string,
     index: number,
@@ -28,8 +26,6 @@ export const useReferenceActions = (
           status: 'success',
           title: 'Reference persist state updated successfully'
         })
-        // Prefer refreshSessions to allow parent to re-fetch canonical session state
-        await refreshSessions()
       } catch (error: unknown) {
         addToast({
           status: 'failure',
@@ -37,7 +33,7 @@ export const useReferenceActions = (
         })
       }
     },
-    [refreshSessions]
+    []
   )
 
   const handleUpdateReferenceTtl = useCallback(
@@ -45,7 +41,6 @@ export const useReferenceActions = (
       try {
         await editReferenceTtl(sessionId, index, ttl)
         addToast({ status: 'success', title: 'Reference TTL updated successfully' })
-        await refreshSessions()
       } catch (error: unknown) {
         addToast({
           status: 'failure',
@@ -53,7 +48,7 @@ export const useReferenceActions = (
         })
       }
     },
-    [refreshSessions]
+    []
   )
 
   const handleToggleReferenceDisabled = useCallback(
@@ -64,7 +59,6 @@ export const useReferenceActions = (
           status: 'success',
           title: 'Reference disabled state updated successfully'
         })
-        await refreshSessions()
       } catch (error: unknown) {
         addToast({
           status: 'failure',
@@ -73,7 +67,7 @@ export const useReferenceActions = (
         })
       }
     },
-    [refreshSessions]
+    []
   )
 
   return {

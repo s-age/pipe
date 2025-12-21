@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import { type JSX, type ReactNode } from 'react'
 
 import { useAccordion } from './hooks/useAccordion'
@@ -41,7 +42,7 @@ export const Accordion = ({
   })
 
   return (
-    <div className={`${accordionRoot} ${className ?? ''}`.trim()}>
+    <div className={clsx(accordionRoot, className)}>
       <div
         className={header}
         role="button"
@@ -55,10 +56,7 @@ export const Accordion = ({
           <div className={titleStyle}>{title}</div>
           {summary ? <div className={summaryStyle}>{summary}</div> : null}
         </div>
-        <div
-          aria-hidden={true}
-          className={`${chevron} ${open ? chevronOpen : ''}`.trim()}
-        >
+        <div aria-hidden={true} className={clsx(chevron, open && chevronOpen)}>
           ▸
         </div>
       </div>

@@ -7,7 +7,6 @@ import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 import { ChatHistoryBody } from './ChatHistoryBody'
 import { ChatHistoryFooter } from './ChatHistoryFooter'
 import { ChatHistoryHeader } from './ChatHistoryHeader'
-import { useChatHistoryActions } from './hooks/useChatHistoryActions'
 import { useChatHistoryHandlers } from './hooks/useChatHistoryHandlers'
 import { useChatStreaming } from './hooks/useChatStreaming'
 import { chatRoot } from './style.css'
@@ -44,12 +43,7 @@ export const ChatHistory = ({
     setSessionDetail: setSessionDetail
   })
 
-  const { handleDeleteCurrentSession } = useChatHistoryHandlers({
-    currentSessionId: sessionId,
-    refreshSessionsInStore
-  })
-
-  const { refreshSession } = useChatHistoryActions({
+  const { handleDeleteCurrentSession, handleRefreshSession } = useChatHistoryHandlers({
     currentSessionId: sessionId,
     refreshSessionsInStore
   })
@@ -70,7 +64,7 @@ export const ChatHistory = ({
         isStreaming={isStreaming}
         streamingTurns={streamingTurns}
         turnsListReference={turnsListReference}
-        onRefresh={refreshSession}
+        onRefresh={handleRefreshSession}
         refreshSessionsInStore={refreshSessionsInStore}
         scrollToBottom={scrollToBottom}
       />
@@ -80,7 +74,7 @@ export const ChatHistory = ({
         isStreaming={isStreaming}
         tokenCount={tokenCount}
         contextLimit={contextLimit}
-        onRefresh={refreshSession}
+        onRefresh={handleRefreshSession}
       />
     </div>
   )

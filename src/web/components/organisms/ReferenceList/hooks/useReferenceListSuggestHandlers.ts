@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 import type { Reference } from '@/types/reference'
+
+import { useReferenceListSuggestLifecycle } from './useReferenceListSuggestLifecycle'
 
 export const useReferenceListSuggestHandlers = (
   actions: {
@@ -41,25 +43,13 @@ export const useReferenceListSuggestHandlers = (
     [existingReferences]
   )
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent): void => {
-      if (
-        inputReference.current &&
-        suggestionListReference.current &&
-        !inputReference.current.contains(event.target as Node) &&
-        !suggestionListReference.current.contains(event.target as Node)
-      ) {
-        setSuggestions([])
-        setSelectedIndex(-1)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-
-    return (): void => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
+  // Lifecycle: click outside detection
+  useReferenceListSuggestLifecycle({
+    inputReference,
+    suggestionListReference,
+    setSuggestions,
+    setSelectedIndex
+  })
 
   const handleFocus = useCallback(async (): Promise<void> => {
     if (rootSuggestions.length === 0) {

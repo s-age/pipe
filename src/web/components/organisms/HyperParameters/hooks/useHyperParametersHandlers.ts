@@ -1,9 +1,10 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 import type { EditHyperparametersRequest } from '@/lib/api/meta/editHyperparameters'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useHyperParametersActions } from './useHyperParametersActions'
+import { useHyperParametersLifecycle } from './useHyperParametersLifecycle'
 
 type UseSessionHyperparametersProperties = {
   sessionDetail: SessionDetail
@@ -57,33 +58,15 @@ export const useHyperParametersHandlers = ({
     }))
   }
 
-  // Sync authoritative sessionDetail into local UI state before paint to
-  // avoid visual flicker. We use useEffect and a single state update
-  // so the linter's concern about cascading renders is mitigated.
   const isInteractingReference = useRef<boolean>(false)
 
-  useEffect(() => {
-    if (!sessionDetail) return
-    // If the user is actively interacting with the slider, don't overwrite
-    // their in-progress UI changes with the authoritative sessionDetail.
-    if (isInteractingReference.current) return
-
-    const incoming = {
-      temperature: sessionDetail.hyperparameters?.temperature ?? hpState.temperature,
-      topP: sessionDetail.hyperparameters?.topP ?? hpState.topP,
-      topK: sessionDetail.hyperparameters?.topK ?? hpState.topK
-    }
-
-    // Only update if any value actually differs.
-    if (
-      incoming.temperature !== hpState.temperature ||
-      incoming.topP !== hpState.topP ||
-      incoming.topK !== hpState.topK
-    ) {
-      setHpState(incoming)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionDetail])
+  // Lifecycle: sync sessionDetail props to local state
+  useHyperParametersLifecycle({
+    sessionDetail,
+    hpState,
+    setHpState,
+    isInteractingReference
+  })
 
   const { updateHyperparameters } = useHyperParametersActions()
 

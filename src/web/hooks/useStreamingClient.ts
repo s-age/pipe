@@ -145,7 +145,8 @@ export const useStreamingClient = (): UseStreamingClientReturn => {
 
               // 'tool_use' event indicates a tool is being called
               if (data.type === 'tool_use') {
-                const toolCall = `\`\`\`\nTool call: ${data.toolName}\nParameters: ${JSON.stringify(data.parameters, null, 2)}\n\`\`\``
+                // eslint-disable-next-line no-snake-case-properties/no-snake-case-properties
+                const toolCall = `\`\`\`\nTool call: ${data.tool_name}\nParameters: ${JSON.stringify(data.parameters, null, 2)}\n\`\`\``
                 accumContent += toolCall + '\n\n'
                 setStreamedText(accumContent)
               }

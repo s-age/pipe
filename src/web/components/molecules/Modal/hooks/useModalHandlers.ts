@@ -1,10 +1,12 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
+
+import { useModalLifecycle } from './useModalLifecycle'
 
 /**
  * useModalHandlers
  *
- * Handles Modal UI events (Overlay click, Escape key).
- * Pattern: Handlers (with internal Lifecycle for small component - per hooks.md:28)
+ * Handles Modal UI events (Overlay click).
+ * Pattern: Handlers (separated from Lifecycle per hooks.md)
  *
  * @param isOpen - Whether modal is currently open
  * @param onClose - Callback to close modal (injected by parent)
@@ -32,16 +34,8 @@ export const useModalHandlers = (
     []
   )
 
-  // Lifecycle: Escape key listener (internal effect, acceptable per hooks.md:28)
-  useEffect(() => {
-    if (!isOpen) return
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') onClose?.()
-    }
-    document.addEventListener('keydown', onKey)
-
-    return (): void => document.removeEventListener('keydown', onKey)
-  }, [isOpen, onClose])
+  // Lifecycle: Escape key listener
+  useModalLifecycle({ isOpen, onClose })
 
   return { onOverlayMouseDown, onContentMouseDown }
 }

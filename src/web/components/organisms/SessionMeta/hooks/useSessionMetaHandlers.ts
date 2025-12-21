@@ -16,25 +16,25 @@ export const useSessionMetaHandlers = ({
   onRefresh,
   formContext
 }: UseSessionMetaHandlersProperties): {
-  onSubmit: (data: SessionMetaFormInputs) => void
+  onSubmit: (data: SessionMetaFormInputs) => Promise<void>
   isSubmitting: boolean
   handleSaveClick: () => void
 } => {
-  const { handleMetaSave } = useSessionMetaActions({ onRefresh })
+  const { handleMetaSave } = useSessionMetaActions()
 
   const onSubmit = useCallback(
-    (data: SessionMetaFormInputs) => {
+    async (data: SessionMetaFormInputs) => {
       if (!sessionDetail.sessionId) return
 
       // Note: SessionMetaFormInputs and EditSessionMetaRequest have compatible shapes
       // roles, artifacts, procedure, hyperparameters are already in the correct format
-      // Intentionally not awaiting - errors are handled in Actions layer
-      void handleMetaSave(
+      await handleMetaSave(
         sessionDetail.sessionId,
         data as unknown as EditSessionMetaRequest
       )
+      await onRefresh()
     },
-    [sessionDetail.sessionId, handleMetaSave]
+    [sessionDetail.sessionId, handleMetaSave, onRefresh]
   )
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -42,8 +42,7 @@ export const useSessionMetaHandlers = ({
   const wrappedSubmit = useCallback(
     async (data: SessionMetaFormInputs) => {
       setIsSubmitting(true)
-      // Intentionally not awaiting - errors are handled in Actions layer
-      void onSubmit(data)
+      await onSubmit(data)
       setIsSubmitting(false)
     },
     [onSubmit]

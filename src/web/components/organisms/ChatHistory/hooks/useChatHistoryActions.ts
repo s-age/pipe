@@ -10,20 +10,17 @@ import { normalizeSessionTree } from '@/utils/normalizeSessionTree'
 
 type UseChatHistoryActionsProperties = {
   currentSessionId: string | null
-  refreshSessionsInStore: (
-    sessionDetail: SessionDetail,
-    sessions: SessionOverview[]
-  ) => void
 }
 
 type UseChatHistoryActionsReturn = {
   deleteSessionAction: (sessionId: string) => Promise<void>
-  refreshSession: () => Promise<void>
+  refreshSession: () => Promise<
+    { sessionDetail: SessionDetail; sessions: SessionOverview[] } | undefined
+  >
 }
 
 export const useChatHistoryActions = ({
-  currentSessionId,
-  refreshSessionsInStore
+  currentSessionId
 }: UseChatHistoryActionsProperties): UseChatHistoryActionsReturn => {
   // Session actions
   const deleteSessionAction = useCallback(async (sessionId: string): Promise<void> => {
@@ -38,21 +35,26 @@ export const useChatHistoryActions = ({
     }
   }, [])
 
-  const refreshSession = useCallback(async (): Promise<void> => {
-    if (!currentSessionId) return
+  const refreshSession = useCallback(async (): Promise<
+    { sessionDetail: SessionDetail; sessions: SessionOverview[] } | undefined
+  > => {
+    if (!currentSessionId) return undefined
 
     try {
       const fetchedSessionDetailResponse = await getSession(currentSessionId)
       const fetchedSessionTree = await getSessionTree()
       const newSessions = normalizeSessionTree(fetchedSessionTree)
-      refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
+
+      return { sessionDetail: fetchedSessionDetailResponse, sessions: newSessions }
     } catch (error: unknown) {
       addToast({
         status: 'failure',
         title: (error as Error).message || 'Failed to refresh session.'
       })
+
+      return undefined
     }
-  }, [currentSessionId, refreshSessionsInStore])
+  }, [currentSessionId])
 
   return {
     // Session actions

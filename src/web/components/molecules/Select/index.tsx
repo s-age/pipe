@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import type { SelectHTMLAttributes, JSX } from 'react'
 import type { UseFormRegister } from 'react-hook-form'
 
@@ -88,7 +89,7 @@ export const Select = (properties: SelectProperties): JSX.Element => {
   const displayLabel = selectedLabel ?? placeholder ?? ''
 
   return (
-    <div ref={rootReference} className={`${className ?? selectStyle}`}>
+    <div ref={rootReference} className={clsx(selectStyle, className)}>
       {/* Hidden native select kept for form integrations (RHF / native form submit) */}
       <select
         {...rest}
@@ -141,9 +142,10 @@ export const Select = (properties: SelectProperties): JSX.Element => {
                 onClick={handleOptionClick}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className={
-                  highlightedIndex === index ? `${option} ${optionHighlighted}` : option
-                }
+                className={clsx(
+                  option,
+                  highlightedIndex === index && optionHighlighted
+                )}
                 data-value={opt.id ?? opt.value}
                 data-index={String(index)}
               >

@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import type { JSX, RefObject } from 'react'
 
 import { Heading } from '@/components/atoms/Heading'
@@ -73,7 +74,7 @@ export const ChatHistoryBody = ({
   }
 
   return (
-    <div className={`${panel} ${panelBottomSpacing}`}>
+    <div className={clsx(panel, panelBottomSpacing)}>
       <section className={turnsListSection} ref={turnsListReference}>
         {sessionDetail.turns.map((turn: TurnType, i: number) => (
           <Turn

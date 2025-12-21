@@ -26,7 +26,10 @@ type UseTurnHandlersProperties = {
     new_content: string,
     turn: Turn
   ) => Promise<void>
-  forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
+  forkSessionAction: (
+    sessionId: string,
+    forkIndex: number
+  ) => Promise<string | undefined>
 }
 
 export const useTurnHandlers = ({
@@ -113,7 +116,10 @@ export const useTurnHandlers = ({
     const currentModalId = modalIdReference.current
     if (currentModalId !== null) {
       try {
-        await forkSessionAction(sessionId, index)
+        const newSessionId = await forkSessionAction(sessionId, index)
+        if (newSessionId) {
+          window.location.href = `/session/${newSessionId}`
+        }
       } finally {
         hide(currentModalId)
         modalIdReference.current = null

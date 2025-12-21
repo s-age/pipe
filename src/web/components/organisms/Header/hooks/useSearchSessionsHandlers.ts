@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { MouseEvent, KeyboardEvent, Dispatch, SetStateAction } from 'react'
 
 import { useSearchSessionsActions } from './useSearchSessionsActions'
+import { useSearchSessionsLifecycle } from './useSearchSessionsLifecycle'
 
 type SearchResult = {
   sessionId: string
@@ -28,7 +29,6 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
-  const timeoutIdReference = useRef<number | null>(null)
 
   const fetchResults = useCallback(
     async (q: string) => {
@@ -48,21 +48,8 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
     [executeSearch]
   )
 
-  useEffect(() => {
-    if (timeoutIdReference.current) window.clearTimeout(timeoutIdReference.current)
-
-    // setTimeout returns a platform-specific timer type; cast to the expected ReturnType
-    // NOTE: casting because TS lib types for setTimeout may differ between DOM and Node.
-    // This is safe in browser runtime.
-
-    timeoutIdReference.current = window.setTimeout(() => fetchResults(query), 250)
-
-    return (): void => {
-      if (timeoutIdReference.current) {
-        window.clearTimeout(timeoutIdReference.current)
-      }
-    }
-  }, [query, fetchResults])
+  // Lifecycle: debounced search
+  useSearchSessionsLifecycle({ query, fetchResults })
 
   const handleSubmit = useCallback(
     async (_value?: string) => {

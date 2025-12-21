@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 import type { State, Actions } from '@/stores/useChatHistoryStore'
 import { useSessionStore } from '@/stores/useChatHistoryStore'
 
@@ -24,7 +26,17 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
 
   const { selectSession, setSessionDetail, refreshSessions } = actions
 
-  const { onRefresh } = useChatHistoryPageActions({ currentSessionId, refreshSessions })
+  const { fetchChatHistory } = useChatHistoryPageActions({ currentSessionId })
+
+  const onRefresh = useCallback(
+    async (sessionId?: string): Promise<void> => {
+      const result = await fetchChatHistory(sessionId)
+      if (result) {
+        refreshSessions(result.sessionDetail, result.sessions)
+      }
+    },
+    [fetchChatHistory, refreshSessions]
+  )
 
   useChatHistoryPageLifecycle({ state, actions })
 

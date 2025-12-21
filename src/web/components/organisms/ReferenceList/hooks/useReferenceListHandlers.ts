@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceListActions } from './useReferenceListActions'
+import { useReferenceListLifecycle } from './useReferenceListLifecycle'
 
 const STORAGE_KEY = 'referenceListAccordionOpen'
 
@@ -32,10 +33,9 @@ export const useReferenceListHandlers = (
     return false
   })
 
-  // Persist accordion state to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, String(accordionOpen))
-  }, [accordionOpen])
+  // Lifecycle: persist accordion state to localStorage
+  useReferenceListLifecycle({ accordionOpen })
+
   const { handleUpdateReference } = useReferenceListActions(
     sessionDetail.sessionId || null
   )

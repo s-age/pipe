@@ -12,6 +12,7 @@ import sys
 import zoneinfo
 from collections.abc import Callable
 
+from pipe.core.domains.session_migration import migrate_session_data
 from pipe.core.models.session import Session
 from pipe.core.models.session_index import SessionIndex, SessionIndexEntry
 from pipe.core.models.settings import Settings
@@ -63,7 +64,7 @@ class SessionRepository(FileRepository):
     def find(self, session_id: str) -> Session | None:
         """Loads a single session from its JSON file.
 
-        Applies data migrations if necessary.
+        Applies data migrations via domain layer if necessary.
         """
         session_path = self._get_path_for_id(session_id)
         lock_path = f"{session_path}.lock"
@@ -76,23 +77,8 @@ class SessionRepository(FileRepository):
         except (FileNotFoundError, ValueError):
             return None
 
-        # --- Data Migration ---
-        session_creation_time = data.get(
-            "created_at", get_current_timestamp(self.timezone_obj)
-        )
-        for turn_list_key in ["turns", "pools"]:
-            if turn_list_key in data and isinstance(data[turn_list_key], list):
-                for turn_data in data[turn_list_key]:
-                    if not isinstance(turn_data, dict):
-                        continue
-                    if "timestamp" not in turn_data:
-                        turn_data["timestamp"] = session_creation_time
-                    if (
-                        turn_data.get("type") == "compressed_history"
-                        and "original_turns_range" not in turn_data
-                    ):
-                        turn_data["original_turns_range"] = [0, 0]
-        # --- End of Data Migration ---
+        # Apply data migrations via domain layer
+        data = migrate_session_data(data, self.timezone_obj)
 
         instance = Session.model_validate(data)
         return instance
@@ -378,6 +364,9 @@ class SessionRepository(FileRepository):
             data = self._read_json(session_path)
             if data is None:
                 raise FileNotFoundError(f"Session {session_id} not found")
+
+            # 1.5. Migrate
+            data = migrate_session_data(data, self.timezone_obj)
 
             # 2. Validate
             session = Session.model_validate(data)

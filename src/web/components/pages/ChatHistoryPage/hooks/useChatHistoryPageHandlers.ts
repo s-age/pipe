@@ -10,7 +10,7 @@ type UseChatHistoryPageHandlersReturn = {
   sessions: State['sessionTree']['sessions']
   sessionDetail: State['sessionDetail']
   expertMode: boolean
-  selectSession: Actions['selectSession']
+  handleSelectSession: (sessionId: string) => Promise<void>
   setSessionDetail: Actions['setSessionDetail']
   onRefresh: (sessionId?: string) => Promise<void>
   refreshSessionsInStore: Actions['refreshSessions']
@@ -38,6 +38,17 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
     [fetchChatHistory, refreshSessions]
   )
 
+  const handleSelectSession = useCallback(
+    async (sessionId: string): Promise<void> => {
+      // Update the current session ID in the store
+      selectSession(sessionId, null)
+
+      // Refresh to fetch the latest session metadata
+      await onRefresh(sessionId)
+    },
+    [selectSession, onRefresh]
+  )
+
   useChatHistoryPageLifecycle({ state, actions })
 
   const expertMode = (settings.expertMode as boolean) ?? true
@@ -46,7 +57,7 @@ export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn =
     sessions,
     sessionDetail,
     expertMode,
-    selectSession,
+    handleSelectSession,
     setSessionDetail,
     onRefresh,
     refreshSessionsInStore: refreshSessions

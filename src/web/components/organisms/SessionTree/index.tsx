@@ -1,6 +1,5 @@
 import type { JSX } from 'react'
 
-import type { SessionDetail } from '@/lib/api/session/getSession'
 import type {
   SessionOverview,
   SessionTreeNode as SessionTreeNodeType
@@ -17,14 +16,14 @@ type SessionTreeProperties = {
   // sessions may be a flat array of SessionOverview or hierarchical nodes
   sessions: SessionOverview[] | SessionTreeNodeType[]
   currentSessionId: string | null
-  selectSession: (id: string | null, detail: SessionDetail | null) => void
+  handleSelectSession: (sessionId: string) => Promise<void>
   onRefresh: () => Promise<void>
 }
 
 export const SessionTree = ({
   sessions,
   currentSessionId,
-  selectSession,
+  handleSelectSession,
   onRefresh
 }: SessionTreeProperties): JSX.Element => {
   const {
@@ -70,7 +69,7 @@ export const SessionTree = ({
                   key={session.sessionId}
                   session={session}
                   currentSessionId={currentSessionId || ''}
-                  selectSession={selectSession}
+                  handleSelectSession={handleSelectSession}
                   ref={setSessionReference(session.sessionId)}
                 />
               )

@@ -13,7 +13,7 @@ export const ChatHistoryPage = (): JSX.Element => {
     sessions,
     sessionDetail,
     expertMode,
-    selectSession,
+    handleSelectSession,
     setSessionDetail,
     onRefresh,
     refreshSessionsInStore
@@ -26,7 +26,7 @@ export const ChatHistoryPage = (): JSX.Element => {
           <SessionTree
             currentSessionId={sessionDetail?.sessionId ?? null}
             sessions={sessions}
-            selectSession={selectSession}
+            handleSelectSession={handleSelectSession}
             onRefresh={onRefresh}
           />
         </div>

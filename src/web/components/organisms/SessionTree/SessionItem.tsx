@@ -1,7 +1,6 @@
 import { clsx } from 'clsx'
 import { forwardRef } from 'react'
 
-import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 import { useSessionItemHandlers } from './hooks/useSessionItemHandlers'
@@ -15,12 +14,12 @@ import {
 type SessionItemProperties = {
   session: SessionOverview
   currentSessionId: string
-  selectSession: (id: string | null, detail: SessionDetail | null) => void
+  handleSelectSession: (sessionId: string) => Promise<void>
 }
 
 export const SessionItem = forwardRef<HTMLLIElement, SessionItemProperties>(
-  ({ session, currentSessionId, selectSession }, reference) => {
-    const { onClick } = useSessionItemHandlers({ session, selectSession })
+  ({ session, currentSessionId, handleSelectSession }, reference) => {
+    const { onClick } = useSessionItemHandlers({ session, handleSelectSession })
 
     return (
       <li key={session.sessionId} className={sessionListItem} ref={reference}>

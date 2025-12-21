@@ -27,5 +27,18 @@ export type SSEEvent =
   // gemini-cli format (new)
   | { type: 'init'; timestamp: string; session_id: string; model: string }
   | { type: 'message'; timestamp: string; role: string; content: string }
-  | { type: 'tool_use'; timestamp: string; tool_name: string; tool_id: string; parameters: Record<string, unknown> }
-  | { type: 'tool_result'; timestamp: string; tool_id: string; status: string; output?: string; message?: string }
+  | {
+      type: 'tool_use'
+      timestamp: string
+      tool_name: string
+      tool_id: string
+      parameters: Record<string, unknown>
+    }
+  | {
+      type: 'tool_result'
+      timestamp: string
+      tool_id: string
+      status: string
+      output?: string
+      message?: string
+    }

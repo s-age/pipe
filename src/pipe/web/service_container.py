@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from pipe.core.services.procedure_service import ProcedureService
     from pipe.core.services.role_service import RoleService
     from pipe.core.services.search_sessions_service import SearchSessionsService
+    from pipe.core.services.session_artifact_service import SessionArtifactService
     from pipe.core.services.session_management_service import SessionManagementService
     from pipe.core.services.session_meta_service import SessionMetaService
     from pipe.core.services.session_optimization_service import (
@@ -40,6 +41,7 @@ class ServiceContainer:
         self._session_workflow_service: SessionWorkflowService | None = None
         self._session_optimization_service: SessionOptimizationService | None = None
         self._session_reference_service: SessionReferenceService | None = None
+        self._session_artifact_service: SessionArtifactService | None = None
         self._session_turn_service: SessionTurnService | None = None
         self._session_meta_service: SessionMetaService | None = None
         self._session_todo_service: SessionTodoService | None = None
@@ -61,6 +63,7 @@ class ServiceContainer:
         session_workflow_service: "SessionWorkflowService",
         session_optimization_service: "SessionOptimizationService",
         session_reference_service: "SessionReferenceService",
+        session_artifact_service: "SessionArtifactService",
         session_turn_service: "SessionTurnService",
         session_meta_service: "SessionMetaService",
         session_todo_service: "SessionTodoService",
@@ -81,6 +84,7 @@ class ServiceContainer:
         self._session_workflow_service = session_workflow_service
         self._session_optimization_service = session_optimization_service
         self._session_reference_service = session_reference_service
+        self._session_artifact_service = session_artifact_service
         self._session_turn_service = session_turn_service
         self._session_meta_service = session_meta_service
         self._session_todo_service = session_todo_service
@@ -129,6 +133,12 @@ class ServiceContainer:
         if self._session_reference_service is None:
             raise RuntimeError("ServiceContainer not initialized")
         return self._session_reference_service
+
+    @property
+    def session_artifact_service(self) -> "SessionArtifactService":
+        if self._session_artifact_service is None:
+            raise RuntimeError("ServiceContainer not initialized")
+        return self._session_artifact_service
 
     @property
     def session_turn_service(self) -> "SessionTurnService":
@@ -240,6 +250,11 @@ def get_session_optimization_service() -> "SessionOptimizationService":
 def get_session_reference_service() -> "SessionReferenceService":
     """Get the session reference service from the container."""
     return _container.session_reference_service
+
+
+def get_session_artifact_service() -> "SessionArtifactService":
+    """Get the session artifact service from the container."""
+    return _container.session_artifact_service
 
 
 def get_session_turn_service() -> "SessionTurnService":

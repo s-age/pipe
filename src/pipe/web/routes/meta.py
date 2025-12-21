@@ -5,6 +5,7 @@ Handles all /api/v1/session/<session_id>/meta/* endpoints.
 
 from flask import Blueprint, jsonify, request
 from pipe.web.actions import (
+    ArtifactsEditAction,
     HyperparametersEditAction,
     MultiStepReasoningEditAction,
     ReferencePersistEditAction,
@@ -142,6 +143,17 @@ def edit_reference_ttl(session_id, reference_index):
     response_data, status_code = dispatch_action(
         action=ReferenceTtlEditAction,
         params={"session_id": session_id, "reference_index": reference_index},
+        request_data=request,
+    )
+    return jsonify(response_data), status_code
+
+
+@meta_bp.route("/artifacts", methods=["PATCH"])
+def edit_artifacts(session_id):
+    """Edit session artifacts."""
+    response_data, status_code = dispatch_action(
+        action=ArtifactsEditAction,
+        params={"session_id": session_id},
         request_data=request,
     )
     return jsonify(response_data), status_code

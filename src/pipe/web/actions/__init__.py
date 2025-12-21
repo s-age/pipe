@@ -1,3 +1,4 @@
+from pipe.web.actions.artifact import ArtifactsEditAction
 from pipe.web.actions.compress import (
     ApproveCompressorAction,
     CreateCompressorSessionAction,
@@ -74,6 +75,7 @@ __all__ = [
     "ReferencePersistEditAction",
     "ReferenceToggleDisabledAction",
     "ReferenceTtlEditAction",
+    "ArtifactsEditAction",
     "SettingsGetAction",
     "GetRolesAction",
     "LsAction",

@@ -650,6 +650,39 @@ paths:
         '500':
           description: Internal server error
 
+  /api/v1/session/{session_id}/artifacts:
+    patch:
+      summary: Edit session artifacts
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditArtifactsRequest'
+      responses:
+        '200':
+          description: Session artifacts updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
   /api/v1/session/{session_id}/hyperparameters:
     patch:
       summary: Edit only hyperparameters for a session (temperature, top_p/topP, top_k/topK)
@@ -1277,6 +1310,27 @@ components:
           default: false
       required:
         - path
+    Artifact:
+      type: object
+      properties:
+        path:
+          type: string
+          description: The file path of the artifact
+        contents:
+          type: string
+          nullable: true
+          description: The contents of the artifact file
+      required:
+        - path
+    EditArtifactsRequest:
+      type: object
+      properties:
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Artifact'
+      required:
+        - artifacts
     TodoItem:
       type: object
       properties:

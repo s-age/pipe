@@ -1,6 +1,5 @@
 import type { JSX, ReactNode } from 'react'
 
-import { ArtifactsSelector } from '@/components/molecules/ArtifactsSelector'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { InputText } from '@/components/molecules/InputText'
 import { MetaLabel } from '@/components/molecules/MetaItem'
@@ -92,8 +91,6 @@ export const SessionMetaBasic = ({
           <ProcedureSelect placeholder="Select procedure" />
         </Fieldset>
       </MetaItem>
-
-      <ArtifactsSelector />
     </>
   )
 }

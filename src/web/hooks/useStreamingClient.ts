@@ -128,10 +128,10 @@ export const useStreamingClient = (): UseStreamingClientReturn => {
                   const messageContent = JSON.parse(data.content)
 
                   // Extract instruction if present
-                  if (messageContent.current_task?.instruction) {
+                  if (messageContent.currentTask?.instruction) {
                     setInstructionTurn(
                       createUserTaskTurn(
-                        messageContent.current_task.instruction,
+                        messageContent.currentTask.instruction,
                         data.timestamp
                       )
                     )
@@ -145,7 +145,7 @@ export const useStreamingClient = (): UseStreamingClientReturn => {
 
               // 'tool_use' event indicates a tool is being called
               if (data.type === 'tool_use') {
-                const toolCall = `\`\`\`\nTool call: ${data.tool_name}\nParameters: ${JSON.stringify(data.parameters, null, 2)}\n\`\`\``
+                const toolCall = `\`\`\`\nTool call: ${data.toolName}\nParameters: ${JSON.stringify(data.parameters, null, 2)}\n\`\`\``
                 accumContent += toolCall + '\n\n'
                 setStreamedText(accumContent)
               }

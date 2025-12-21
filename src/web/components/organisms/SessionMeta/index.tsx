@@ -1,6 +1,7 @@
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
+import { ArtifactList } from '@/components/organisms/ArtifactList'
 import { Form, useOptionalFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
 import { MultiStepReasoning } from '@/components/organisms/MultiStepReasoning'
@@ -63,6 +64,8 @@ export const SessionMeta = ({
 
           <div className={sessionMetaView}>
             <ReferenceList sessionDetail={sessionDetail} refreshSessions={onRefresh} />
+
+            <ArtifactList sessionDetail={sessionDetail} refreshSessions={onRefresh} />
 
             <HyperParameters sessionDetail={sessionDetail} />
 

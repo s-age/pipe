@@ -139,6 +139,7 @@ def create_app(
     session_workflow_service = service_factory.create_session_workflow_service()
     session_optimization_service = service_factory.create_session_optimization_service()
     session_reference_service = service_factory.create_session_reference_service()
+    session_artifact_service = service_factory.create_session_artifact_service()
     session_turn_service = service_factory.create_session_turn_service()
     session_meta_service = service_factory.create_session_meta_service()
     session_todo_service = service_factory.create_session_todo_service()
@@ -162,6 +163,7 @@ def create_app(
         session_workflow_service=session_workflow_service,
         session_optimization_service=session_optimization_service,
         session_reference_service=session_reference_service,
+        session_artifact_service=session_artifact_service,
         session_turn_service=session_turn_service,
         session_meta_service=session_meta_service,
         session_todo_service=session_todo_service,

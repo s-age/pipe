@@ -7,6 +7,7 @@ import { Fieldset } from '@/components/molecules/Fieldset'
 import { MetaLabel } from '@/components/molecules/MetaItem'
 import { Select } from '@/components/molecules/Select'
 import { TextArea } from '@/components/molecules/TextArea'
+import { ArtifactList } from '@/components/organisms/ArtifactList'
 // form context is accessed inside handlers when needed
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
@@ -99,6 +100,8 @@ export const StartSessionFormInner = ({
         </Fieldset>
 
         <ReferenceList sessionDetail={sessionDetail} refreshSessions={dummyHandler} />
+
+        <ArtifactList sessionDetail={sessionDetail} refreshSessions={dummyHandler} />
 
         <HyperParameters sessionDetail={sessionDetail} />
 

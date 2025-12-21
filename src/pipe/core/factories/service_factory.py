@@ -19,6 +19,7 @@ from pipe.core.services.procedure_service import ProcedureService
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.role_service import RoleService
 from pipe.core.services.search_sessions_service import SearchSessionsService
+from pipe.core.services.session_artifact_service import SessionArtifactService
 from pipe.core.services.session_management_service import SessionManagementService
 from pipe.core.services.session_meta_service import SessionMetaService
 from pipe.core.services.session_optimization_service import SessionOptimizationService
@@ -133,6 +134,11 @@ class ServiceFactory:
         """Creates a SessionReferenceService with its dependencies."""
         repository = SessionRepository(self.project_root, self.settings)
         return SessionReferenceService(self.project_root, repository)
+
+    def create_session_artifact_service(self) -> SessionArtifactService:
+        """Creates a SessionArtifactService with its dependencies."""
+        repository = SessionRepository(self.project_root, self.settings)
+        return SessionArtifactService(self.project_root, repository)
 
     def create_session_turn_service(self) -> SessionTurnService:
         """Creates a SessionTurnService with its dependencies."""

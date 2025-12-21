@@ -26,6 +26,10 @@ class DependencyTreeResult(BaseModel):
     max_depth_reached: bool = False
 
 
+# Rebuild DependencyNode to resolve forward reference
+DependencyNode.model_rebuild()
+
+
 def py_dependency_tree(
     file_path: str, max_depth: int = 3
 ) -> ToolResult[DependencyTreeResult]:

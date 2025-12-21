@@ -137,15 +137,11 @@ def call_gemini_cli(
                         tool_name = tool_call.get("tool_name", "")
                         parameters = tool_call.get("parameters", {})
                         # Format as function call string
-                        params_json = json.dumps(
-                            parameters, ensure_ascii=False
-                        )
+                        params_json = json.dumps(parameters, ensure_ascii=False)
                         response_str = f"{tool_name}({params_json})"
                         timestamp = tool_call.get(
                             "timestamp",
-                            get_current_timestamp(
-                                session_service.timezone_obj
-                            ),
+                            get_current_timestamp(session_service.timezone_obj),
                         )
                         turn = FunctionCallingTurn(
                             type="function_calling",
@@ -157,9 +153,7 @@ def call_gemini_cli(
                     for tool_result in tool_results:
                         # Create ToolResponseTurn
                         # Extract tool name from tool_id
-                        tool_name = tool_result.get("tool_id", "").split(
-                            "-"
-                        )[0]
+                        tool_name = tool_result.get("tool_id", "").split("-")[0]
                         status = tool_result.get("status", "failed")
                         output = tool_result.get("output", "")
                         error = tool_result.get("error")
@@ -182,9 +176,7 @@ def call_gemini_cli(
 
                         timestamp = tool_result.get(
                             "timestamp",
-                            get_current_timestamp(
-                                session_service.timezone_obj
-                            ),
+                            get_current_timestamp(session_service.timezone_obj),
                         )
                         turn = ToolResponseTurn(
                             type="tool_response",

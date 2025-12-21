@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
+from pipe.core.models.base import CamelCaseModel
+from pydantic import Field
 
 
-class PromptFileReference(BaseModel):
+class PromptFileReference(CamelCaseModel):
     path: str = Field(..., alias="path")
     content: str

@@ -17,7 +17,7 @@ type Properties = {
   name?: string
 }
 
-export const useInputSearch = ({
+export const useInputSearchHandlers = ({
   value,
   onChange,
   onSubmit,
@@ -28,15 +28,33 @@ export const useInputSearch = ({
   handleChange: (event: ChangeEvent<HTMLInputElement>) => void
   registerProperties: Partial<UseFormRegisterReturn>
 } => {
-  const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined
+  const provider = useOptionalFormContext()
+
+  // Type guard: verify provider has FormMethods structure
+  const isFormMethods = (context: unknown): context is FormMethods<FieldValues> =>
+    context !== null &&
+    typeof context === 'object' &&
+    'register' in context &&
+    typeof context.register === 'function'
 
   const registerFunction: UseFormRegister<FieldValues> | undefined =
-    register ?? provider?.register
+    register ?? (isFormMethods(provider) ? provider.register : undefined)
 
   const registerProperties = useMemo<Partial<UseFormRegisterReturn>>(() => {
     if (typeof registerFunction === 'function' && name) {
       try {
-        return registerFunction(name) as UseFormRegisterReturn
+        const result = registerFunction(name)
+        // Type guard: verify result has UseFormRegisterReturn structure
+        if (
+          result &&
+          typeof result === 'object' &&
+          'name' in result &&
+          'onChange' in result
+        ) {
+          return result
+        }
+
+        return {}
       } catch {
         return {}
       }
@@ -48,7 +66,10 @@ export const useInputSearch = ({
   const handleSubmit = useCallback(
     (event: FormEvent): void => {
       event.preventDefault()
-      if (onSubmit) onSubmit((value ?? '') as string)
+      const submitValue = value ?? ''
+      if (onSubmit && typeof submitValue === 'string') {
+        onSubmit(submitValue)
+      }
     },
     [onSubmit, value]
   )

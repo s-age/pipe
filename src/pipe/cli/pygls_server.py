@@ -12,17 +12,31 @@ from lsprotocol.types import (
     Position,
     Range,
 )
-from pygls.server import LanguageServer
 
-# Add src directory to Python path BEFORE local imports
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-)
-
-# Import the custom tools
+# Pipe imports
 from pipe.core.tools.py_analyze_code import py_analyze_code
 from pipe.core.tools.py_get_symbol_references import py_get_symbol_references
 from pipe.core.tools.py_get_type_hints import py_get_type_hints
+from pygls.server import LanguageServer
+
+# Add project root to Python path BEFORE local imports
+# Need to do this inline since we can't import get_project_root yet
+_current_dir = os.path.abspath(os.getcwd())
+while True:
+    if os.path.exists(os.path.join(_current_dir, ".git")) or os.path.exists(
+        os.path.join(_current_dir, "pyproject.toml")
+    ):
+        sys.path.insert(0, _current_dir)
+        break
+    parent_dir = os.path.dirname(_current_dir)
+    if parent_dir == _current_dir:  # Reached filesystem root
+        # Fallback
+        sys.path.insert(
+            0,
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")),
+        )
+        break
+    _current_dir = parent_dir
 
 # Initialize the Language Server
 server = LanguageServer("pipe-pygls-server", "v0.1")

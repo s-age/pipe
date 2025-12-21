@@ -1,0 +1,20 @@
+"""Reference ttl edit action."""
+
+from pipe.web.action_responses import SuccessMessageResponse
+from pipe.web.actions.base_action import BaseAction
+from pipe.web.requests.sessions.edit_reference_ttl import EditReferenceTtlRequest
+
+
+class ReferenceTtlEditAction(BaseAction):
+    request_model = EditReferenceTtlRequest
+
+    def execute(self) -> SuccessMessageResponse:
+        from pipe.web.service_container import get_session_reference_service
+
+        request = self.validated_request
+
+        get_session_reference_service().update_reference_ttl_by_index(
+            request.session_id, request.reference_index, request.ttl
+        )
+
+        return SuccessMessageResponse(message="Reference TTL updated successfully")

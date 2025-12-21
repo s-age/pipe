@@ -1,9 +1,6 @@
-import os
-import sys
 from typing import TYPE_CHECKING
 
 from pipe.core.models.reference import Reference
-from pipe.core.utils.file import read_text_file
 
 if TYPE_CHECKING:
     from pipe.core.collections.references import ReferenceCollection
@@ -19,7 +16,7 @@ def add_reference(
         references_collection.data.append(
             Reference(path=path, disabled=False, ttl=default_ttl, persist=persist)
         )
-        sort_references_by_ttl(references_collection)
+        references_collection.sort_by_ttl()
 
 
 def update_reference_ttl(
@@ -30,7 +27,7 @@ def update_reference_ttl(
             ref.ttl = new_ttl
             ref.disabled = new_ttl <= 0
             break
-    sort_references_by_ttl(references_collection)
+    references_collection.sort_by_ttl()
 
 
 def update_reference_persist(
@@ -40,7 +37,7 @@ def update_reference_persist(
         if ref.path == path:
             ref.persist = new_persist_state
             break
-    sort_references_by_ttl(references_collection)
+    references_collection.sort_by_ttl()
 
 
 def toggle_reference_disabled(references_collection: "ReferenceCollection", path: str):
@@ -48,10 +45,34 @@ def toggle_reference_disabled(references_collection: "ReferenceCollection", path
         if ref.path == path:
             ref.disabled = not ref.disabled
             break
-    sort_references_by_ttl(references_collection)
+    references_collection.sort_by_ttl()
 
 
-def decrement_all_references_ttl(references_collection: "ReferenceCollection"):
+def get_active_references(
+    references_collection: "ReferenceCollection",
+) -> list[Reference]:
+    """Get all active (non-disabled) references from the collection.
+
+    This is a pure function that filters references without performing I/O.
+    The caller (Service layer) is responsible for reading file contents.
+
+    Args:
+        references_collection: Collection of references
+
+    Returns:
+        List of active Reference objects
+    """
+    return [ref for ref in references_collection.data if not ref.disabled]
+
+
+def decrement_all_references_ttl(
+    references_collection: "ReferenceCollection",
+):
+    """Decrement TTL for all non-disabled, non-persisted references.
+
+    Sets disabled=True and ttl=0 when TTL reaches 0 or below.
+    Respects the persist flag, not decrementing persisted references.
+    """
     for ref in references_collection:
         if not ref.disabled and not ref.persist:
             current_ttl = (
@@ -62,47 +83,4 @@ def decrement_all_references_ttl(references_collection: "ReferenceCollection"):
             if current_ttl <= 0:
                 ref.disabled = True
                 ref.ttl = 0
-    sort_references_by_ttl(references_collection)
-
-
-def get_references_for_prompt(
-    references_collection: "ReferenceCollection", project_root: str
-):
-    abs_project_root = os.path.abspath(project_root)
-    for ref in references_collection.data:
-        if not ref.disabled:
-            try:
-                full_path = os.path.abspath(os.path.join(abs_project_root, ref.path))
-                if os.path.commonpath([abs_project_root]) != os.path.commonpath(
-                    [abs_project_root, full_path]
-                ):
-                    print(
-                        f"Warning: Reference path '{ref.path}' is outside the "
-                        "project root. Skipping.",
-                        file=sys.stderr,
-                    )
-                    continue
-                content = read_text_file(full_path)
-                if content is not None:
-                    yield {"path": ref.path, "content": content}
-                else:
-                    print(
-                        "Warning: Reference file not found or could not be read: "
-                        f"{full_path}",
-                        file=sys.stderr,
-                    )
-            except Exception as e:
-                print(
-                    f"Warning: Could not process reference file {ref.path}: {e}",
-                    file=sys.stderr,
-                )
-
-
-def sort_references_by_ttl(references_collection: "ReferenceCollection"):
-    references_collection.sort(
-        key=lambda ref: (
-            not ref.disabled,
-            ref.ttl if ref.ttl is not None else references_collection.default_ttl,
-        ),
-        reverse=True,
-    )
+    references_collection.sort_by_ttl()

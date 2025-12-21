@@ -1,9 +1,10 @@
 """Pydantic request model for the search sessions endpoint."""
 
-from pydantic import BaseModel, field_validator
+from pipe.web.requests.base_request import BaseRequest
+from pydantic import field_validator
 
 
-class SearchSessionsRequest(BaseModel):
+class SearchSessionsRequest(BaseRequest):
     query: str
 
     @field_validator("query")

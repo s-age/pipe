@@ -30,21 +30,14 @@ class TestPromptModel(unittest.TestCase):
                 "definitions": ["You are a helpful assistant."],
             },
             "constraints": {
-                "description": "Constraints for the model",
                 "language": "en",
                 "processing_config": {
-                    "description": "Processing config",
                     "multi_step_reasoning_active": True,
                 },
                 "hyperparameters": {
-                    "description": "Hyperparameters",
-                    "temperature": {
-                        "type": "number",
-                        "value": 0.5,
-                        "description": "temp",
-                    },
-                    "top_p": {"type": "number", "value": 0.9, "description": "top_p"},
-                    "top_k": {"type": "number", "value": 40, "description": "top_k"},
+                    "temperature": 0.5,
+                    "top_p": 0.9,
+                    "top_k": 40.0,
                 },
             },
             "main_instruction": "Your main instruction is to be helpful.",
@@ -86,7 +79,7 @@ class TestPromptModel(unittest.TestCase):
         self.assertTrue(
             prompt.constraints.processing_config.multi_step_reasoning_active
         )
-        self.assertEqual(prompt.constraints.hyperparameters.top_k.value, 40)
+        self.assertEqual(prompt.constraints.hyperparameters.top_k, 40.0)
 
         self.assertIsInstance(prompt.conversation_history, PromptConversationHistory)
         self.assertEqual(len(prompt.conversation_history.turns), 1)

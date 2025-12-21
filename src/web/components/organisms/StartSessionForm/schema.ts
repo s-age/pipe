@@ -25,12 +25,12 @@ const todoSchema = object({
   title: string(),
   description: string().optional(),
   status: string(),
-  created_at: string().optional(),
-  updated_at: string().optional()
+  createdAt: string().optional(),
+  updatedAt: string().optional()
 })
 
 export const formSchema = object({
-  session_id: string(),
+  sessionId: string(),
   purpose: requiredString('Purpose'),
   background: requiredString('Background'),
   roles: array(string()).default([]),
@@ -39,11 +39,11 @@ export const formSchema = object({
   artifacts: array(string()).default([]),
   procedure: optionalString(),
   instruction: requiredString('First Instruction'),
-  multi_step_reasoning_enabled: boolean().default(false),
+  multiStepReasoningEnabled: boolean().default(false),
   hyperparameters: object({
     temperature: optionalNumber(0, 2).default(0.7),
-    top_p: optionalNumber(0, 1).default(0.9),
-    top_k: coerce.number().int().min(1).max(50).nullable().default(5)
+    topP: optionalNumber(0, 1).default(0.9),
+    topK: coerce.number().int().min(1).max(50).nullable().default(5)
   })
     .nullable()
     .default(null),

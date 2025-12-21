@@ -2,19 +2,43 @@
 Pydantic model for validating the request body of the edit turn API endpoint.
 """
 
-from typing import Any
+from typing import ClassVar
 
-from pydantic import BaseModel, field_validator
+from pipe.web.exceptions import BadRequestError, NotFoundError
+from pipe.web.requests.base_request import BaseRequest
+from pipe.web.requests.common import normalize_camel_case_keys
+from pydantic import field_validator, model_validator
 
 
-class EditTurnRequest(BaseModel):
+class EditTurnRequest(BaseRequest):
+    path_params: ClassVar[list[str]] = ["session_id", "turn_index"]
+
     """
     Request model for editing a turn.
     Accepts partial updates with either 'content' or 'instruction' fields.
     """
 
+    # Path parameters (from URL)
+    session_id: str
+    turn_index: int
+
+    # Body fields (optional)
     content: str | None = None
     instruction: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_keys(cls, data: dict | list) -> dict | list:
+        return normalize_camel_case_keys(data)
+
+    @field_validator("turn_index", mode="before")
+    @classmethod
+    def validate_turn_index_type(cls, v):
+        """Ensure turn_index is a valid integer."""
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            raise BadRequestError("turn_index must be an integer")
 
     @field_validator("content")
     @classmethod
@@ -38,7 +62,21 @@ class EditTurnRequest(BaseModel):
                 raise ValueError("Instruction cannot be empty or only whitespace")
         return value
 
-    def model_dump(self, **kwargs: Any) -> dict[str, Any]:
+    @model_validator(mode="after")
+    def validate_turn_exists(self):
+        """Validate that the session and turn exist."""
+        from pipe.web.service_container import get_session_service
+
+        session_data = get_session_service().get_session(self.session_id)
+        if not session_data:
+            raise NotFoundError("Session not found.")
+
+        if self.turn_index < 0 or self.turn_index >= len(session_data.turns):
+            raise BadRequestError("Turn index out of range.")
+
+        return self
+
+    def model_dump(self, **kwargs) -> dict:
         """Override to only include non-None fields in the output."""
         data = super().model_dump(**kwargs)
         return {k: v for k, v in data.items() if v is not None}

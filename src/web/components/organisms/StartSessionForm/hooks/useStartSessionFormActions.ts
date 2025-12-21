@@ -6,15 +6,17 @@ import { addToast } from '@/stores/useToastStore'
 import type { StartSessionFormInputs } from '../schema'
 
 export type UseStartSessionFormActionsReturn = {
-  startSessionAction: (data: StartSessionFormInputs) => Promise<{ session_id: string }>
+  startSessionAction: (
+    data: StartSessionFormInputs
+  ) => Promise<{ sessionId: string } | void>
 }
 
 export const useStartSessionFormActions = (): UseStartSessionFormActionsReturn => {
   const startSessionAction = useCallback(
-    async (data: StartSessionFormInputs): Promise<{ session_id: string }> => {
+    async (data: StartSessionFormInputs): Promise<{ sessionId: string } | void> => {
       try {
         const result = await startSession(data)
-        if (result.session_id) {
+        if (result.sessionId) {
           addToast({ status: 'success', title: 'Session created successfully' })
 
           return result
@@ -23,7 +25,6 @@ export const useStartSessionFormActions = (): UseStartSessionFormActionsReturn =
             status: 'failure',
             title: 'Failed to create session: No session ID returned.'
           })
-          throw new Error('Failed to create session: No session ID returned.')
         }
       } catch (error: unknown) {
         addToast({
@@ -31,7 +32,6 @@ export const useStartSessionFormActions = (): UseStartSessionFormActionsReturn =
           title:
             (error as Error).message || 'An error occurred during session creation.'
         })
-        throw error
       }
     },
     []

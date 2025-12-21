@@ -1,52 +1,46 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 import { useMultiStepReasoningActions } from './useMultiStepReasoningActions'
+import { useMultiStepReasoningLifecycle } from './useMultiStepReasoningLifecycle'
 
 type UseMultiStepReasoningHandlersProperties = {
   currentSessionId: string | null
   multiStepReasoningEnabled: boolean
-  setLocalEnabled: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const useMultiStepReasoningHandlers = ({
   currentSessionId,
-  multiStepReasoningEnabled,
-  setLocalEnabled
+  multiStepReasoningEnabled
 }: UseMultiStepReasoningHandlersProperties): {
+  localEnabled: boolean
+  setLocalEnabled: React.Dispatch<React.SetStateAction<boolean>>
   handleMultiStepReasoningChange: (
     event: React.ChangeEvent<HTMLInputElement>
   ) => Promise<void>
 } => {
+  const [localEnabled, setLocalEnabled] = useState(multiStepReasoningEnabled)
+
+  // Lifecycle: sync props to local state
+  useMultiStepReasoningLifecycle({ multiStepReasoningEnabled, setLocalEnabled })
+
   const { updateMultiStepReasoning } = useMultiStepReasoningActions()
 
   const handleMultiStepReasoningChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-      if (!currentSessionId) return
-
       const checked = event.target.checked
-
-      // Capture previous value so we can revert on error
-      const previous = multiStepReasoningEnabled
 
       // Update local state for immediate UI feedback
       setLocalEnabled(checked)
 
-      try {
+      // Only call API if we have a valid session ID
+      if (currentSessionId) {
         await updateMultiStepReasoning(currentSessionId, {
-          multi_step_reasoning_enabled: checked
+          multiStepReasoningEnabled: checked
         })
-      } catch {
-        // On error, revert local state to the previous value
-        setLocalEnabled(previous)
       }
     },
-    [
-      currentSessionId,
-      multiStepReasoningEnabled,
-      updateMultiStepReasoning,
-      setLocalEnabled
-    ]
+    [currentSessionId, updateMultiStepReasoning, setLocalEnabled]
   )
 
-  return { handleMultiStepReasoningChange }
+  return { localEnabled, setLocalEnabled, handleMultiStepReasoningChange }
 }

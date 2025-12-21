@@ -13,7 +13,7 @@ export const ChatHistoryPage = (): JSX.Element => {
     sessions,
     sessionDetail,
     expertMode,
-    selectSession,
+    handleSelectSession,
     setSessionDetail,
     onRefresh,
     refreshSessionsInStore
@@ -24,9 +24,9 @@ export const ChatHistoryPage = (): JSX.Element => {
       <div className={mainContent}>
         <div className={leftColumn}>
           <SessionTree
-            currentSessionId={sessionDetail?.session_id ?? null}
+            currentSessionId={sessionDetail?.sessionId ?? null}
             sessions={sessions}
-            selectSession={selectSession}
+            handleSelectSession={handleSelectSession}
             onRefresh={onRefresh}
           />
         </div>
@@ -41,7 +41,11 @@ export const ChatHistoryPage = (): JSX.Element => {
         </div>
 
         {sessionDetail && (
-          <SessionControl sessionDetail={sessionDetail} onRefresh={onRefresh} />
+          <SessionControl
+            sessionDetail={sessionDetail}
+            onRefresh={onRefresh}
+            onSessionDetailUpdate={setSessionDetail}
+          />
         )}
       </div>
     </AppLayout>

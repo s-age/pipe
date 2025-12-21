@@ -1,7 +1,5 @@
 import type { JSX, ReactNode } from 'react'
-import React from 'react'
 
-import { ArtifactsSelector } from '@/components/molecules/ArtifactsSelector'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { InputText } from '@/components/molecules/InputText'
 import { MetaLabel } from '@/components/molecules/MetaItem'
@@ -13,7 +11,7 @@ import { RolesSelect } from '@/components/organisms/RolesSelect'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useSessionMetaBasicHandlers } from './hooks/useSessionMetaBasicHandlers'
-import { useSessionMetaBasicSync } from './hooks/useSessionMetaBasicSync'
+import { useSessionMetaBasicLifecycle } from './hooks/useSessionMetaBasicLifecycle'
 import { inputFullWidth } from './style.css'
 
 type SessionMetaBasicProperties = {
@@ -33,14 +31,14 @@ export const SessionMetaBasic = ({
 
   const { handleRolesChange } = useSessionMetaBasicHandlers({ setValue })
 
-  useSessionMetaBasicSync(sessionDetail, formContext, isSubmitting)
+  useSessionMetaBasicLifecycle(sessionDetail, formContext, isSubmitting)
 
   return (
     <>
       <MetaItem>
         <Fieldset
           legend={<MetaLabel required={true}>Purpose:</MetaLabel>}
-          error={errors?.purpose as unknown as React.ReactNode}
+          error={errors?.purpose?.message ? String(errors.purpose.message) : undefined}
         >
           {(ids) => (
             <InputText
@@ -57,7 +55,9 @@ export const SessionMetaBasic = ({
       <MetaItem>
         <Fieldset
           legend={<MetaLabel required={true}>Background:</MetaLabel>}
-          error={errors?.background as unknown as React.ReactNode}
+          error={
+            errors?.background?.message ? String(errors.background.message) : undefined
+          }
         >
           {(ids) => (
             <TextArea
@@ -91,8 +91,6 @@ export const SessionMetaBasic = ({
           <ProcedureSelect placeholder="Select procedure" />
         </Fieldset>
       </MetaItem>
-
-      <ArtifactsSelector />
     </>
   )
 }

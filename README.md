@@ -77,7 +77,7 @@ We employ a **minimal yet powerful** CLI-driven approach, focusing on the one th
 
 #### 1. Total Context Control
 
-The prompt is reconstructed with a structured, self-describing **JSON Schema** for every call. This is inherently more token-efficient and understandable for an LLM. The entire history is transparent, saved in readable JSON session files. This ensures full **auditability** and gives the stateless LLM a persistent, and more importantly, **malleable** memory. You can retry, refine, edit, delete, and compress with surgical precision.
+The prompt is reconstructed with a structured format for every call. When using `gemini-cli`, this is a self-describing **JSON Schema**; when using `gemini-api`, it follows a **4-layer hybrid architecture** (combining text and Content objects) optimized for context caching and thought process continuity (see [docs/gemini-api-structure.md](docs/gemini-api-structure.md)). The entire history is transparent, saved in readable JSON session files. This ensures full **auditability** and gives the stateless LLM a persistent, and more importantly, **malleable** memory. You can retry, refine, edit, delete, and compress with surgical precision.
 
 #### 2. Uncompromising Extensibility
 
@@ -101,7 +101,7 @@ This Git-inspired approach ensures that session management feels natural to deve
 ## Features
 
 - **Session-Based History:** Each conversation is a self-contained session, stored in a single, human-readable JSON file.
-- **Structured JSON Prompting:** Builds a detailed, self-describing JSON object as the final prompt, providing meta-context to the model for improved clarity.
+- **Structured Prompting:** Builds a detailed, structured prompt with meta-context. For `gemini-cli`, this is a self-describing JSON object; for `gemini-api`, it uses a 4-layer hybrid architecture optimized for caching and thought continuity (see [docs/gemini-api-structure.md](docs/gemini-api-structure.md)).
 - **CLI-Driven Workflow:** A powerful command-line interface to start, continue, or compress sessions.
 - **Extensible Backend:** The execution agent is decoupled. You can choose between `gemini-api` (direct API calls) and `gemini-cli` (CLI tool) via the `api_mode` setting in `setting.yml`. The architecture allows for swapping in other execution agents as well.
 - **Configuration via YAML:** Configure model, context limits, and other settings in `setting.yml`.
@@ -135,6 +135,8 @@ This Git-inspired approach ensures that session management feels natural to deve
 See [docs/tools.md](docs/tools.md) for information on available tools and integrations.
 
 See [docs/extending.md](docs/extending.md) for information on extending the framework with new agents.
+
+See [docs/agent-registry.md](docs/agent-registry.md) for details on the agent registry pattern and how to add custom agents.
 
 ---
 

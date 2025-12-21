@@ -1,24 +1,19 @@
 import { useState, useCallback } from 'react'
 
+import { getArchivedSessions } from '@/lib/api/session_management/getArchivedSessions'
+import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
 import type {
   SessionOverview,
   SessionTreeNode
 } from '@/lib/api/sessionTree/getSessionTree'
+import type { State } from '@/stores/useChatHistoryStore'
+import { useSessionStore } from '@/stores/useChatHistoryStore'
 
-type UseSessionManagementActions = {
-  archiveSessions: (sessionIds: string[]) => Promise<void>
-  deleteArchivedSessions: (sessionIds: string[]) => Promise<void>
-}
+import { useSessionManagementActions } from './useSessionManagementActions'
+import { useSessionManagementLifecycle } from './useSessionManagementLifecycle'
 
-type Properties = {
-  actions: UseSessionManagementActions
-  navigate: (path: string) => void
-}
-
-export const useSessionManagementHandlers = ({
-  actions,
-  navigate
-}: Properties): {
+type UseSessionManagementHandlersReturn = {
+  state: State
   currentTab: 'sessions' | 'archives'
   setCurrentTab: (tab: 'sessions' | 'archives') => void
   selectedSessionIds: string[]
@@ -27,10 +22,27 @@ export const useSessionManagementHandlers = ({
     sessions: SessionOverview[] | SessionTreeNode[],
     isSelected: boolean
   ) => void
-  handleBulkArchive: () => Promise<void>
-  handleBulkDeleteArchived: () => Promise<void>
+  handleBulkAction: () => Promise<void>
   handleCancel: () => void
-} => {
+}
+
+type Properties = {
+  navigate: (path: string) => void
+}
+
+export const useSessionManagementHandlers = ({
+  navigate
+}: Properties): UseSessionManagementHandlersReturn => {
+  // 1. Store initialization
+  const { state, actions: storeActions } = useSessionStore()
+
+  // 2. Actions hook
+  const actions = useSessionManagementActions()
+
+  // 3. Lifecycle hook
+  useSessionManagementLifecycle({ storeActions })
+
+  // 4. Local state and handlers
   const [currentTab, setCurrentTab] = useState<'sessions' | 'archives'>('sessions')
   const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([])
 
@@ -51,7 +63,12 @@ export const useSessionManagementHandlers = ({
       const ids: string[] = []
       const collectIds = (sessions: SessionOverview[] | SessionTreeNode[]): void => {
         sessions.forEach((session) => {
-          ids.push(session.session_id)
+          // For archives, use filePath as unique identifier
+          if ('filePath' in session && session.filePath) {
+            ids.push(session.filePath)
+          } else {
+            ids.push(session.sessionId)
+          }
           if ('children' in session && session.children) {
             collectIds(session.children)
           }
@@ -67,41 +84,60 @@ export const useSessionManagementHandlers = ({
 
   const handleBulkArchive = useCallback(async (): Promise<void> => {
     if (selectedSessionIds.length === 0) return
-    try {
-      await actions.archiveSessions(selectedSessionIds)
+    const success = await actions.archiveSessionsAction(selectedSessionIds)
+    if (success) {
+      // Refresh sessions after archiving
+      const sessionTree = await getSessionTree()
+      const sessions =
+        sessionTree.sessionTree ||
+        sessionTree.sessions.map(([_, overview]) => ({ ...overview, sessionId: _ }))
+      storeActions.setSessions(sessions)
+      // Refresh archived sessions
+      const archivedSessions = await getArchivedSessions()
+      storeActions.setArchivedSessions(archivedSessions)
       setSelectedSessionIds([])
-    } catch {
-      // Error handled in actions
     }
-  }, [actions, selectedSessionIds])
+  }, [actions, selectedSessionIds, storeActions])
 
   const handleBulkDeleteArchived = useCallback(async (): Promise<void> => {
     if (selectedSessionIds.length === 0) return
-    try {
-      await actions.deleteArchivedSessions(selectedSessionIds)
+    const success = await actions.deleteArchivedSessionsAction({
+      filePaths: selectedSessionIds
+    })
+    if (success) {
+      // Refresh archived sessions after deletion
+      const archivedSessions = await getArchivedSessions()
+      storeActions.setArchivedSessions(archivedSessions)
       setSelectedSessionIds([])
-    } catch {
-      // Error handled in actions
     }
-  }, [actions, selectedSessionIds])
+  }, [actions, selectedSessionIds, storeActions])
 
   const handleSetCurrentTab = useCallback((tab: 'sessions' | 'archives') => {
     setCurrentTab(tab)
     setSelectedSessionIds([])
   }, [])
 
+  const handleBulkAction = useCallback(async (): Promise<void> => {
+    if (currentTab === 'sessions') {
+      await handleBulkArchive()
+    } else {
+      await handleBulkDeleteArchived()
+    }
+  }, [currentTab, handleBulkArchive, handleBulkDeleteArchived])
+
   const handleCancel = useCallback((): void => {
     navigate('/')
   }, [navigate])
 
+  // 5. Return unified interface
   return {
+    state,
     currentTab,
     setCurrentTab: handleSetCurrentTab,
     selectedSessionIds,
     handleSelectSession,
     handleSelectAll,
-    handleBulkArchive,
-    handleBulkDeleteArchived,
+    handleBulkAction,
     handleCancel
   }
 }

@@ -1,61 +1,32 @@
 import difflib
 import os
 
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
+from pipe.core.models.results.write_file_result import WriteFileResult
+from pipe.core.models.tool_result import ToolResult
+
 
 def write_file(
     file_path: str, content: str, project_root: str | None = None
-) -> dict[str, str]:
+) -> ToolResult[WriteFileResult]:
     """
     Writes content to a specified file.
     """
     try:
-        target_path = os.path.abspath(file_path)
-
+        # Normalize project_root if provided
         if project_root:
             project_root = os.path.abspath(project_root)
-        else:
-            project_root = os.path.abspath(os.getcwd())
 
-        # Filesystem Safety Check
-        BLOCKED_PATHS = [
-            os.path.join(project_root, ".git"),
-            os.path.join(project_root, ".env"),
-            os.path.join(project_root, "setting.yml"),
-            os.path.join(project_root, "__pycache__"),
-            os.path.join(project_root, "roles"),
-            os.path.join(project_root, "rules"),
-            os.path.join(project_root, "sessions"),
-            os.path.join(project_root, "venv"),
-            # Add other sensitive files/directories as needed
-        ]
-
-        # Ensure the target path is not a blocked path or within a blocked directory
-        for blocked_path in BLOCKED_PATHS:
-            if target_path == blocked_path or target_path.startswith(
-                blocked_path + os.sep
-            ):
-                return {
-                    "error": f"Operation on sensitive path {file_path} is not allowed."
-                }
-
-        # Ensure the target path is within the project root
-        if not target_path.startswith(project_root + os.sep):
-            return {
-                "error": f"Writing outside project root is not allowed: {file_path}"
-            }
-
-        # Create parent directories if they don't exist
-        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        # Create repository (auto-loads project_root and settings)
+        repo = FileRepositoryFactory.create(project_root)
 
         original_content = ""
-        if os.path.exists(target_path):
-            with open(target_path, encoding="utf-8") as f:
-                original_content = f.read()
+        if repo.exists(file_path) and repo.is_file(file_path):
+            original_content = repo.read_text(file_path)
 
-        with open(target_path, "w", encoding="utf-8") as f:
-            f.write(content)
+        repo.write_text(file_path, content)
 
-        diff = ""
+        diff = None
         if original_content:
             diff_lines = difflib.unified_diff(
                 original_content.splitlines(keepends=True),
@@ -70,6 +41,7 @@ def write_file(
         if diff:
             message += f"\n\nDiff:\n```diff\n{diff}\n```"
 
-        return {"status": "success", "message": message}
+        result = WriteFileResult(status="success", message=message, diff=diff)
+        return ToolResult(data=result)
     except Exception as e:
-        return {"error": f"Failed to write file {file_path}: {str(e)}"}
+        return ToolResult(error=f"Failed to write file {file_path}: {str(e)}")

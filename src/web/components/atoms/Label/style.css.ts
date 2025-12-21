@@ -4,7 +4,7 @@ import { colors } from '../../../styles/colors.css'
 
 export const labelStyle = style({
   display: 'block',
-  marginBottom: '5px',
+  marginBottom: '4px',
   fontSize: '14px',
   fontWeight: 'bold',
   color: colors.white

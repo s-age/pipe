@@ -6,7 +6,8 @@ import { InputText } from '@/components/molecules/InputText'
 import { TextArea } from '@/components/molecules/TextArea'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
-import { useCompressorActions } from './hooks/useCompressorActions'
+import { useCompressorFormLogic } from './hooks/useCompressorFormLogic'
+import type { CompressorFormInputs } from './schema'
 import * as styles from './style.css'
 import { renderTurnOptions } from './TurnOptions'
 
@@ -47,9 +48,9 @@ export const CompressorForm = ({
   setCompressorSessionId,
   onRefresh
 }: CompressorFormProperties): JSX.Element => {
-  const formContext = useOptionalFormContext()
+  const formContext = useOptionalFormContext<CompressorFormInputs>()
 
-  const { handleExecute } = useCompressorActions({
+  const { onExecuteClick } = useCompressorFormLogic({
     sessionId,
     setSummary,
     setError,
@@ -65,23 +66,13 @@ export const CompressorForm = ({
       <div className={styles.form}>
         <div className={styles.previewBox}>
           <Fieldset legend="Compression Policy" className={styles.fieldsetContainer}>
-            <TextArea
-              name="policy"
-              rows={4}
-              placeholder="Compression policy"
-              register={formContext?.register}
-            />
+            <TextArea name="policy" rows={4} placeholder="Compression policy" />
           </Fieldset>
           <Fieldset
             legend="Target length (tokens)"
             className={styles.fieldsetContainer}
           >
-            <InputText
-              name="targetLength"
-              type="number"
-              placeholder="1000"
-              register={formContext?.register}
-            />
+            <InputText name="targetLength" type="number" placeholder="1000" />
           </Fieldset>
           <Fieldset legend="Range" className={styles.fieldsetContainer}>
             <div className={styles.field}>
@@ -134,7 +125,7 @@ export const CompressorForm = ({
             size="default"
             type="button"
             disabled={isSubmitting}
-            onClick={handleExecute}
+            onClick={onExecuteClick}
             className={styles.executeButton}
           >
             {isSubmitting ? 'Compressing...' : 'Compress'}

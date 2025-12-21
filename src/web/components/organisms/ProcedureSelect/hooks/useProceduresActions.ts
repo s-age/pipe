@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { getProcedures, type ProcedureOption } from '@/lib/api/procedures/getProcedures'
+import { getProcedures, type ProcedureOption } from '@/lib/api/fs/procedures'
 import { addToast } from '@/stores/useToastStore'
 
 export type UseProceduresActionsReturn = {

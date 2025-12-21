@@ -3,14 +3,11 @@ import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
-import { Tabs } from '@/components/atoms/Tabs'
 import { AppLayout } from '@/components/layouts/AppLayout'
+import { Tabs } from '@/components/molecules/Tabs'
 import { SessionList } from '@/components/organisms/SessionList'
-import { useSessionStore } from '@/stores/useChatHistoryStore'
 
-import { useSessionManagementActions } from './hooks/useSessionManagementActions'
 import { useSessionManagementHandlers } from './hooks/useSessionManagementHandlers'
-import { useSessionManagementLifecycle } from './hooks/useSessionManagementLifecycle'
 import {
   pageContent,
   scrollableContainer,
@@ -21,26 +18,21 @@ import {
 
 export const SessionManagementPage = (): JSX.Element => {
   const navigate = useNavigate()
-  const { state, actions: storeActions } = useSessionStore()
-  const actions = useSessionManagementActions({ storeActions })
-  const handlers = useSessionManagementHandlers({ actions, navigate })
-  useSessionManagementLifecycle({ storeActions })
 
   const {
+    state,
     currentTab,
     setCurrentTab,
     selectedSessionIds,
     handleSelectAll,
     handleSelectSession,
-    handleBulkArchive,
-    handleBulkDeleteArchived,
+    handleBulkAction,
     handleCancel
-  } = handlers
+  } = useSessionManagementHandlers({ navigate })
 
   const currentSessions =
     currentTab === 'sessions' ? state.sessionTree.sessions : state.archivedSessions
-  const currentAction =
-    currentTab === 'sessions' ? handleBulkArchive : handleBulkDeleteArchived
+
   const buttonText =
     currentTab === 'sessions'
       ? 'Bulk Archive Selected Sessions'
@@ -63,6 +55,7 @@ export const SessionManagementPage = (): JSX.Element => {
             onSelectAll={handleSelectAll}
             onSelectSession={handleSelectSession}
             updateLabel={currentTab === 'archives' ? 'Deleted At' : 'Updated At'}
+            useFilePath={currentTab === 'archives'}
           />
         </div>
         <div className={buttonBar}>
@@ -71,7 +64,7 @@ export const SessionManagementPage = (): JSX.Element => {
           </Button>
           <Button
             className={primaryButton}
-            onClick={currentAction}
+            onClick={handleBulkAction}
             disabled={selectedSessionIds.length === 0}
           >
             {buttonText}

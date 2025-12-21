@@ -1,133 +1,146 @@
-import importlib
-import inspect
 import json
-import sys
+import os
 
-from pipe.core.agents.gemini_api import call_gemini_api
+from pipe.cli.mcp_server import execute_tool
 from pipe.core.models.turn import (
-    FunctionCallingTurn,
     ModelResponseTurn,
-    ToolResponseTurn,
 )
+from pipe.core.models.unified_chunk import MetadataChunk, TextChunk, ToolCallChunk
+from pipe.core.repositories.streaming_repository import StreamingRepository
+from pipe.core.services.gemini_client_service import GeminiClientService
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
+from pipe.core.services.session_turn_service import SessionTurnService
 from pipe.core.utils.datetime import get_current_timestamp
 
 
-def execute_tool_call(tool_call, session_service, session_id, settings, project_root):
-    """Dynamically imports and executes a tool function, passing context if needed."""
-    tool_name = tool_call.name
-    tool_args = dict(tool_call.args)
-
-    print(f"--- Attempting to execute tool: {tool_name} ---", file=sys.stderr)
-
-    try:
-        print(f"Importing module: pipe.core.tools.{tool_name}", file=sys.stderr)
-        tool_module = importlib.import_module(f"pipe.core.tools.{tool_name}")
-        importlib.reload(tool_module)
-        print("Module imported successfully.", file=sys.stderr)
-
-        tool_function = getattr(tool_module, tool_name)
-        print("Tool function retrieved.", file=sys.stderr)
-
-        sig = inspect.signature(tool_function)
-        params = sig.parameters
-
-        final_args = tool_args.copy()
-
-        if "session_service" in params:
-            final_args["session_service"] = session_service
-        if "session_id" in params and "session_id" not in tool_args:
-            final_args["session_id"] = session_id
-        if "settings" in params:
-            final_args["settings"] = settings
-        if "project_root" in params:
-            final_args["project_root"] = project_root
-
-        print(f"Executing tool with args: {final_args}", file=sys.stderr)
-        result = tool_function(**final_args)
-        print(f"Tool execution successful. Result: {result}", file=sys.stderr)
-        return result
-    except Exception as e:
-        import traceback
-
-        print(f"--- ERROR during tool execution: {tool_name} ---", file=sys.stderr)
-        print(traceback.format_exc(), file=sys.stderr)
-        print("-------------------------------------------------", file=sys.stderr)
-        return {"error": f"Failed to execute tool {tool_name}: {e}"}
-
-
-def run_stream(args, session_service: SessionService, prompt_service: PromptService):
+def run_stream(
+    args,
+    session_service: SessionService,
+    prompt_service: PromptService,
+    session_turn_service: SessionTurnService,
+):
     """Streaming version for web UI."""
     model_response_text = ""
+    model_response_thought = ""
     token_count = 0
+    prompt_token_count_for_cache = 0  # Track prompt tokens for cache decisions
     intermediate_turns = []
     tool_call_count = 0
+    first_cached_content_token_count = None  # Track first response's cache count
 
     settings = session_service.settings
     max_tool_calls = settings.max_tool_calls
     session_data = session_service.current_session
-    project_root = session_service.project_root
     session_id = session_service.current_session_id
     timezone_obj = session_service.timezone_obj
 
+    # Ensure PIPE_SESSION_ID is set for mcp_server
+    os.environ["PIPE_SESSION_ID"] = session_id
+
     while tool_call_count < max_tool_calls:
-        session_service.merge_pool_into_turns(session_id)
-        stream = call_gemini_api(session_service, prompt_service)
+        session_turn_service.merge_pool_into_turns(session_id)
 
-        response_chunks = []
+        # Reload session to ensure we have the latest turns and file changes
+        reloaded_session = session_service.get_session(session_id)
+        if reloaded_session:
+            session_service.current_session = reloaded_session
+            session_data = session_service.current_session
+
+        # Update session with latest token counts BEFORE calling API
+        # This ensures cache decisions are made with fresh data from previous response
+        # Skip on first iteration (no previous response yet)
+        # Use prompt_token_count (not total) for cache decisions
+        if prompt_token_count_for_cache > 0:
+            from pipe.core.services.session_meta_service import SessionMetaService
+
+            session_meta_service = SessionMetaService(session_service.repository)
+            session_meta_service.update_token_count(
+                session_id, prompt_token_count_for_cache
+            )
+
+            # Reload session after token count update
+            reloaded_session = session_service.get_session(session_id)
+            if reloaded_session:
+                session_service.current_session = reloaded_session
+                session_data = session_service.current_session
+
+        # Use GeminiClientService with unified Pydantic chunk format
+        gemini_client = GeminiClientService(session_service)
+        stream = gemini_client.stream_content(prompt_service)
+
         full_text_parts = []
-        for chunk in stream:
-            # Correctly iterate through parts to find text for streaming
-            if (
-                chunk.candidates
-                and chunk.candidates[0].content
-                and chunk.candidates[0].content.parts
-            ):
-                for part in chunk.candidates[0].content.parts:
-                    if part.text:
-                        yield part.text
-                        full_text_parts.append(part.text)
-            response_chunks.append(chunk)
+        thought_parts = []
+        usage_metadata = None
+        tool_call_chunk = None
 
-        if not response_chunks:
+        for unified_chunk in stream:
+            if isinstance(unified_chunk, TextChunk):
+                # Stream text content to user
+                yield unified_chunk.content
+                if unified_chunk.is_thought:
+                    thought_parts.append(unified_chunk.content)
+                else:
+                    full_text_parts.append(unified_chunk.content)
+
+            elif isinstance(unified_chunk, ToolCallChunk):
+                # Store tool call for processing
+                tool_call_chunk = unified_chunk
+
+            elif isinstance(unified_chunk, MetadataChunk):
+                # Store usage metadata
+                usage_metadata = unified_chunk.usage
+
+        if not usage_metadata and not full_text_parts and not tool_call_chunk:
             yield "API Error: Model stream was empty."
             model_response_text = "API Error: Model stream was empty."
             break
 
-        final_response = response_chunks[-1]
-        full_text = "".join(full_text_parts)
-        if (
-            final_response.candidates
-            and final_response.candidates[0].content
-            and final_response.candidates[0].content.parts
-        ):
-            # This is to ensure the final response object has the complete text,
-            # though the primary text source is now full_text_parts.
-            final_response.candidates[0].content.parts[0].text = full_text
+        # Accumulate thought and text
+        model_response_thought = "".join(thought_parts)
+        model_response_text = "".join(full_text_parts)
 
-        response = final_response
-        token_count = (
-            response.usage_metadata.prompt_token_count
-            + response.usage_metadata.candidates_token_count
-        )
+        # Extract token counts from metadata
+        token_count = 0
+        prompt_token_count_for_cache = 0
+        if usage_metadata:
+            prompt_tokens = usage_metadata.prompt_token_count or 0
+            candidate_tokens = usage_metadata.candidates_token_count or 0
+            token_count = prompt_tokens + candidate_tokens
+            prompt_token_count_for_cache = prompt_tokens
 
-        if not response.candidates:
-            yield "API Error: No candidates in response."
-            model_response_text = "API Error: No candidates in response."
-            break
+            # Capture cached_content_token_count from the first response only
+            cached_count = usage_metadata.cached_content_token_count
+            if first_cached_content_token_count is None and cached_count is not None:
+                first_cached_content_token_count = cached_count
 
+                # Update session with first response's cached count immediately
+                from pipe.core.services.session_meta_service import SessionMetaService
+
+                session_meta_service = SessionMetaService(session_service.repository)
+                session_meta_service.update_cached_content_token_count(
+                    session_id, first_cached_content_token_count
+                )
+
+                # Reload session after cache count update
+                reloaded_session = session_service.get_session(session_id)
+                if reloaded_session:
+                    session_service.current_session = reloaded_session
+                    session_data = session_service.current_session
+
+        # Check if we have a tool call
         function_call = None
-        try:
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, "function_call") and part.function_call:
-                    function_call = part.function_call
-                    break
-        except (IndexError, AttributeError):
-            function_call = None
+        if tool_call_chunk:
+            # Create a simple object to mimic the old function_call structure
+            class FunctionCall:
+                def __init__(self, name, args):
+                    self.name = name
+                    self.args = args
+
+            function_call = FunctionCall(tool_call_chunk.name, tool_call_chunk.args)
 
         if not function_call:
-            model_response_text = full_text
+            # Final text response already set
             break
 
         tool_call_count += 1
@@ -147,61 +160,90 @@ def run_stream(args, session_service: SessionService, prompt_service: PromptServ
         )
         yield tool_call_markdown
 
-        response_string = (
-            f"{function_call.name}("
-            f"{json.dumps(dict(function_call.args), ensure_ascii=False)})"
-        )
+        # Note: execute_tool from mcp_server handles adding FunctionCallingTurn to pool
 
-        model_turn = FunctionCallingTurn(
-            type="function_calling",
-            response=response_string,
-            timestamp=get_current_timestamp(timezone_obj),
-        )
+        try:
+            tool_result = execute_tool(function_call.name, dict(function_call.args))
 
-        tool_result = execute_tool_call(
-            function_call, session_service, session_id, settings, project_root
-        )
+            # Update the FunctionCallingTurn in the pool with raw_response
+            # (contains thought signature)
+            if gemini_client.last_raw_response:
+                # Reload session to get the pool updated by execute_tool
+                session = session_service.repository.find(session_id)
+                if session and session.pools:
+                    # Find the last FunctionCallingTurn in the pool
+                    for turn in reversed(session.pools):
+                        if turn.type == "function_calling":
+                            turn.raw_response = gemini_client.last_raw_response
+                            session_service.repository.save(session)
+                            break
+
+        except Exception as e:
+            tool_result = {"error": str(e)}
 
         reloaded_session = session_service.get_session(session_id)
         if reloaded_session:
             session_data.references = reloaded_session.references
+            session_data.todos = reloaded_session.todos
+            session_data.hyperparameters = reloaded_session.hyperparameters
 
         if (
             isinstance(tool_result, dict)
             and "error" in tool_result
-            and tool_result["error"] != "(none)"
+            and tool_result["error"] is not None
         ):
             formatted_response = {"status": "failed", "message": tool_result["error"]}
         else:
             # Handle different successful tool return formats
             if isinstance(tool_result, dict):
-                message_content = tool_result.get(
-                    "message", tool_result.get("content", tool_result)
-                )
+                formatted_response = tool_result.copy()
+                formatted_response["status"] = "succeeded"
+                if "message" not in formatted_response:
+                    formatted_response["message"] = formatted_response.get(
+                        "content", str(tool_result)
+                    )
             else:
-                message_content = tool_result
-            formatted_response = {"status": "succeeded", "message": message_content}
+                formatted_response = {"status": "succeeded", "message": tool_result}
 
         status_markdown = f"```\nTool status: {formatted_response['status']}\n```\n"
         yield status_markdown
 
-        tool_turn = ToolResponseTurn(
-            type="tool_response",
-            name=function_call.name,
-            response=formatted_response,
-            timestamp=get_current_timestamp(timezone_obj),
-        )
-        intermediate_turns.append(model_turn)
-        intermediate_turns.append(tool_turn)
-        session_data.turns.append(model_turn)
-        session_data.turns.append(tool_turn)
+        # Note: execute_tool from mcp_server handles adding ToolResponseTurn to pool
 
     final_model_turn = ModelResponseTurn(
         type="model_response",
         content=model_response_text,
+        thought=model_response_thought if model_response_thought else None,
         timestamp=get_current_timestamp(timezone_obj),
+        raw_response=gemini_client.last_raw_response,
     )
     intermediate_turns.append(final_model_turn)
 
+    # Update token count and cached content token count
+    if prompt_token_count_for_cache > 0:
+        from pipe.core.services.session_meta_service import SessionMetaService
+
+        session_meta_service = SessionMetaService(session_service.repository)
+        session_meta_service.update_token_count(
+            session_id, prompt_token_count_for_cache
+        )
+
+        # Update cached_content_token_count from first API response only
+        if first_cached_content_token_count is not None:
+            session_meta_service.update_cached_content_token_count(
+                session_id, first_cached_content_token_count
+            )
+
+    # Cleanup streaming.log after model response is complete
+    sessions_dir = os.path.join(session_service.project_root, "sessions")
+    streaming_repo = StreamingRepository(sessions_dir)
+    streaming_repo.cleanup(session_id)
+
     # Return final data
-    yield ("end", model_response_text, token_count, intermediate_turns)
+    yield (
+        "end",
+        model_response_text,
+        token_count,
+        intermediate_turns,
+        model_response_thought,
+    )

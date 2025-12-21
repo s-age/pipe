@@ -4,7 +4,6 @@ import { Button } from '@/components/atoms/Button'
 import { IconPaperPlane } from '@/components/atoms/IconPaperPlane'
 import { TextArea } from '@/components/molecules/TextArea'
 import { Form } from '@/components/organisms/Form'
-import { useSessionStore } from '@/stores/useChatHistoryStore'
 
 import { useInstructionFormHandlers } from './hooks/useInstructionFormHandlers'
 import { useInstructionFormLifecycle } from './hooks/useInstructionFormLifecycle'
@@ -20,7 +19,8 @@ type InstructionFormProperties = {
   onSendInstruction: (instruction: string) => Promise<void>
   isStreaming: boolean
   tokenCount?: number
-  contextLimit?: number
+  contextLimit: number
+  onRefresh?: () => Promise<void>
 }
 
 export const InstructionForm = ({
@@ -28,24 +28,24 @@ export const InstructionForm = ({
   onSendInstruction,
   isStreaming,
   tokenCount: tokenCountProperty,
-  contextLimit: contextLimitProperty
+  contextLimit: contextLimitProperty,
+  onRefresh
 }: InstructionFormProperties): JSX.Element => {
   // We must call `useInstructionFormHandlers` inside the `Form` provider created by
   // `Form`. To ensure `useFormContext` is available we define an inner
   // component that consumes the context.
   const Inner = (): JSX.Element => {
-    const { register, onSendClick } = useInstructionFormHandlers({
+    const { register, submit, onStopClick } = useInstructionFormHandlers({
       currentSessionId,
-      onSendInstruction
+      onSendInstruction,
+      onRefresh
     })
 
-    const { state } = useSessionStore()
     const tokenCount = tokenCountProperty ?? 0
-    const contextLimit = contextLimitProperty ?? state.settings?.context_limit ?? 700000
     const { contextLeft, colorKey } = useInstructionFormLifecycle({
       isStreaming,
       tokenCount,
-      contextLimit
+      contextLimit: contextLimitProperty
     })
 
     return (
@@ -59,19 +59,31 @@ export const InstructionForm = ({
             register={register}
             disabled={isStreaming}
           />
-          <Button
-            className={overlaySendButton}
-            kind="primary"
-            size="default"
-            onClick={onSendClick}
-            disabled={isStreaming}
-            tabIndex={0}
-            aria-label="Send Instruction"
-          >
-            <IconPaperPlane />
-          </Button>
+          {isStreaming ? (
+            <Button
+              className={overlaySendButton}
+              kind="danger"
+              size="default"
+              onClick={onStopClick}
+              tabIndex={0}
+              aria-label="Stop Session"
+            >
+              ◽️
+            </Button>
+          ) : (
+            <Button
+              className={overlaySendButton}
+              kind="primary"
+              size="default"
+              onClick={submit}
+              tabIndex={0}
+              aria-label="Send Instruction"
+            >
+              <IconPaperPlane />
+            </Button>
+          )}
         </div>
-        {contextLimit > 0 && tokenCount !== null && (
+        {contextLimitProperty > 0 && tokenCount !== null && (
           <div className={contextLeftText[colorKey]}>({contextLeft}% context left)</div>
         )}
       </div>

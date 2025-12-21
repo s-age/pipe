@@ -1,8 +1,9 @@
 import hashlib
+import logging
 import os
 
 from pathspec import PathSpec
-from pipe.core.models.file_search import Level1Candidate, LsEntry
+from pipe.core.models.file_search import Level1Candidate, LsEntry, PrefetchResult
 from whoosh.fields import BOOLEAN, ID, NUMERIC, TEXT, Schema
 from whoosh.index import create_in, open_dir
 from whoosh.qparser import OrGroup, QueryParser
@@ -23,13 +24,14 @@ class FileIndexRepository:
             size=NUMERIC(stored=True, sortable=True),
             last_modified=NUMERIC(stored=True, sortable=True),
         )
+        self.logger = logging.getLogger(__name__)
         self._ensure_index_dir()
 
     def _ensure_index_dir(self):
         if not os.path.exists(self.index_dir):
             try:
                 os.makedirs(self.index_dir, mode=0o755)
-                print(f"Created index directory: {self.index_dir}")
+                self.logger.info(f"Created index directory: {self.index_dir}")
             except OSError as e:
                 raise RuntimeError(
                     f"Failed to create index directory {self.index_dir}: {e}"
@@ -38,6 +40,25 @@ class FileIndexRepository:
     def _get_gitignore_spec(self) -> PathSpec:
         gitignore_path = os.path.join(self.base_path, self.GITIGNORE_FILE)
         patterns = []
+
+        # Always exclude common patterns
+        default_patterns = [
+            "__pycache__/",
+            "*.pyc",
+            "*.pyo",
+            "*.pyd",
+            ".Python",
+            "*.so",
+            "*.egg-info/",
+            ".git/",
+            ".venv/",
+            "venv/",
+            "node_modules/",
+            ".DS_Store",
+        ]
+        patterns.extend(default_patterns)
+
+        # Add patterns from .gitignore if it exists
         if os.path.exists(gitignore_path):
             with open(gitignore_path, encoding="utf-8") as f:
                 for line in f:
@@ -60,7 +81,7 @@ class FileIndexRepository:
         return hashlib.sha256(parent_path.encode("utf-8")).hexdigest()
 
     def create_index(self):
-        print(f"Creating index in {self.index_dir} for {self.base_path}")
+        self.logger.info(f"Creating index in {self.index_dir} for {self.base_path}")
         if not os.path.exists(self.base_path):
             raise ValueError(f"Base path does not exist: {self.base_path}")
 
@@ -108,7 +129,7 @@ class FileIndexRepository:
                 )
                 indexed_count += 1
         writer.commit()
-        print(f"Indexed {indexed_count} files and directories")
+        self.logger.info(f"Indexed {indexed_count} files and directories")
 
     def search_l1_candidates(
         self, current_parent_path: str, query: str
@@ -156,7 +177,7 @@ class FileIndexRepository:
 
     def get_l2_prefetched_data(
         self, parent_dir_names: list[str], current_base_path: str
-    ) -> dict[str, list[Level1Candidate]]:
+    ) -> PrefetchResult:
         ix = open_dir(self.index_dir)
         searcher = ix.searcher()
         prefetched_data = {}
@@ -182,7 +203,7 @@ class FileIndexRepository:
                 )
             prefetched_data[dir_name] = l2_candidates
         searcher.close()
-        return prefetched_data
+        return PrefetchResult(data=prefetched_data)
 
     def get_ls_data(self, full_path: str) -> list[LsEntry]:
         if not os.path.exists(self.index_dir):

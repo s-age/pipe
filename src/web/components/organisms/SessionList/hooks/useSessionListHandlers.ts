@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 import type {
   SessionOverview,
   SessionTreeNode
@@ -11,9 +13,9 @@ export const useSessionListHandlers = (
     isSelected: boolean
   ) => void
 ): { handleSelectAll: () => void } => {
-  const handleSelectAll = (): void => {
+  const handleSelectAll = useCallback((): void => {
     onSelectAll(sessions, !allSelected)
-  }
+  }, [sessions, allSelected, onSelectAll])
 
   return {
     handleSelectAll

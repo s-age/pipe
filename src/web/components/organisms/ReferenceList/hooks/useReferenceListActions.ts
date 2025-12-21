@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
 
 import { useFileSearchExplorerActions } from '@/components/organisms/FileSearchExplorer/hooks/useFileSearchExplorerActions'
-import { editReferences } from '@/lib/api/session/editReferences'
+import type { BrowseResponse } from '@/lib/api/fs/browse'
+import { editReferences } from '@/lib/api/meta/editReferences'
 import { getSession } from '@/lib/api/session/getSession'
 import { addToast } from '@/stores/useToastStore'
 import type { Reference } from '@/types/reference'
@@ -23,16 +24,15 @@ export const useReferenceListActions = (
 
       try {
         await editReferences(currentSessionId, newReferences)
-        const { session } = await getSession(currentSessionId)
+        const sessionDetail = await getSession(currentSessionId)
         addToast({ status: 'success', title: 'Reference added successfully' })
 
-        return session.references
+        return sessionDetail.references
       } catch (error: unknown) {
         addToast({
           status: 'failure',
           title: (error as Error).message || 'Failed to add reference.'
         })
-        throw error
       }
     },
     [currentSessionId]
@@ -41,13 +41,14 @@ export const useReferenceListActions = (
   const loadRootSuggestions = useCallback(async () => {
     if (currentSessionId) {
       try {
-        const lsResult = await fileActions.getLsData({ final_path_list: [] })
+        const lsResult = await fileActions.browseDirectory({ finalPathList: [] })
         if (lsResult) {
-          const rootEntries = lsResult.entries.map((entry) => ({
-            name: entry.name,
-            isDirectory: entry.is_dir
-          }))
-          addToast({ status: 'success', title: 'Root suggestions loaded successfully' })
+          const rootEntries = lsResult.entries.map(
+            (entry: BrowseResponse['entries'][number]) => ({
+              name: entry.name,
+              isDirectory: entry.isDir
+            })
+          )
 
           return rootEntries
         }
@@ -65,16 +66,14 @@ export const useReferenceListActions = (
   const loadSubDirectorySuggestions = useCallback(
     async (pathParts: string[]) => {
       try {
-        const lsResult = await fileActions.getLsData({ final_path_list: pathParts })
+        const lsResult = await fileActions.browseDirectory({ finalPathList: pathParts })
         if (lsResult) {
-          const entries = lsResult.entries.map((entry) => ({
-            name: entry.name,
-            isDirectory: entry.is_dir
-          }))
-          addToast({
-            status: 'success',
-            title: 'Sub-directory suggestions loaded successfully'
-          })
+          const entries = lsResult.entries.map(
+            (entry: BrowseResponse['entries'][number]) => ({
+              name: entry.name,
+              isDirectory: entry.isDir
+            })
+          )
 
           return entries
         }

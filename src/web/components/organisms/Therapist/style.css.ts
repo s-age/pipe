@@ -141,3 +141,10 @@ export const resultItemHeading = style({
     }
   }
 })
+
+export const checkboxLabel = style({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+  cursor: 'pointer'
+})

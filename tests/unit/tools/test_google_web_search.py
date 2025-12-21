@@ -44,8 +44,8 @@ class TestGoogleWebSearchTool(unittest.TestCase):
             expected_command, shell=True, capture_output=True, text=True, check=True
         )
 
-        self.assertIn("content", result)
-        self.assertEqual(result["content"], "This is the search result.")
+        self.assertIn("content", result.data)
+        self.assertEqual(result.data["content"], "This is the search result.")
 
     @patch("pipe.core.tools.google_web_search.subprocess.run")
     def test_google_web_search_handles_subprocess_error(self, mock_subprocess_run):
@@ -61,9 +61,9 @@ class TestGoogleWebSearchTool(unittest.TestCase):
         result = google_web_search(query="test query")
 
         # 3. Assertions
-        self.assertIn("error", result)
+        self.assertIsNotNone(result.error)
         self.assertIn(
-            "Failed to execute search agent: Subprocess Failure", result["error"]
+            "Failed to execute search agent: Subprocess Failure", result.error
         )
 
 

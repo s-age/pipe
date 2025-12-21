@@ -1,47 +1,39 @@
-import glob as std_glob
 import os
-import subprocess
+
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
+from pipe.core.models.results.glob_result import GlobResult
+from pipe.core.models.tool_result import ToolResult
+from pipe.core.utils.path import get_project_root
 
 
 def glob(
     pattern: str, path: str | None = None, recursive: bool | None = True
-) -> dict[str, str]:
+) -> ToolResult[GlobResult]:
     """
     Efficiently finds files matching specific glob patterns, respecting .gitignore.
     """
     try:
-        search_path = path if path else "."
+        project_root = get_project_root()
+        repo = FileRepositoryFactory.create()
 
-        # Get all files matching the pattern
-        glob_pattern = os.path.join(search_path, pattern)
-        all_files = set(
-            std_glob.glob(
-                glob_pattern, recursive=recursive if recursive is not None else True
-            )
+        search_path = path if path else project_root
+
+        # repo.glob returns absolute paths
+        files = repo.glob(
+            pattern,
+            search_path=search_path,
+            recursive=recursive if recursive is not None else True,
+            respect_gitignore=True,
         )
 
-        # Get all ignored files from git
-        try:
-            git_process = subprocess.run(
-                ["git", "ls-files", "--ignored", "--exclude-standard", "--others"],
-                capture_output=True,
-                text=True,
-                cwd=search_path,  # Run git command in the target directory
-                check=True,
-            )
-            ignored_files = set(git_process.stdout.strip().split("\n"))
-            # Make ignored paths relative to the search_path if needed
-            ignored_files_abs = {os.path.join(search_path, f) for f in ignored_files}
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            # Git command might fail or git might not be installed.
-            # In this case, we proceed without filtering.
-            ignored_files_abs = set()
+        # Convert to relative paths to match original behavior
+        rel_files = [os.path.relpath(f, project_root) for f in files]
 
-        # Filter out the ignored files
-        matched_files = [f for f in all_files if f not in ignored_files_abs]
-        matched_files.sort(reverse=True)  # Sort by name descending as a default
+        # Sort by name descending as a default (matching original tool)
+        rel_files.sort(reverse=True)
 
-        content_string = "\n".join(matched_files)
-        return {"content": content_string}
+        content_string = "\n".join(rel_files)
+        result = GlobResult(content=content_string)
+        return ToolResult(data=result)
     except Exception as e:
-        return {"content": f"Error inside glob tool: {str(e)}"}
+        return ToolResult(error=f"Error inside glob tool: {str(e)}")

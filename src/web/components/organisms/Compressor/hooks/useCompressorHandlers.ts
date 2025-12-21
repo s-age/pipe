@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { ChangeEvent } from 'react'
 
 type useCompressorHandlersProperties = {
@@ -14,7 +14,6 @@ export type useCompressorHandlersReturn = {
   compressorSessionId: string | null
   handleStartChange: (event: ChangeEvent<HTMLSelectElement>) => void
   handleEndChange: (event: ChangeEvent<HTMLSelectElement>) => void
-  endOptions: number[]
   handleDeny: () => void
   setSummary: (summary: string) => void
   setError: (error: string | null) => void
@@ -59,16 +58,6 @@ export const useCompressorHandlers = ({
     [startLocal, effectiveMax]
   )
 
-  const endOptions = useMemo(() => {
-    const minEnd = startLocal + 1
-    const maxEnd = effectiveMax
-
-    return Array.from(
-      { length: Math.max(0, maxEnd - minEnd + 1) },
-      (_, i) => minEnd + i
-    )
-  }, [startLocal, effectiveMax])
-
   const handleDeny = useCallback((): void => {
     setSummary('')
     setError(null)
@@ -84,7 +73,6 @@ export const useCompressorHandlers = ({
     compressorSessionId,
     handleStartChange,
     handleEndChange,
-    endOptions,
     handleDeny,
     setSummary,
     setError,

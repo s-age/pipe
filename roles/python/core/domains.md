@@ -2,832 +2,313 @@
 
 ## Purpose
 
-Domains contain **pure business logic** for manipulating core data entities. This layer implements the rules and behaviors that define how the system works, isolated from infrastructure concerns like persistence or external APIs.
+Domains contain **pure business logic** for manipulating core data entities. This layer implements the rules and behaviors that define how the system works, isolated from infrastructure concerns.
+
+**Architecture Principle: 1:1 Correspondence with Models**
+
+For every model in `models/`, there should be a corresponding domain module in `domains/`:
+
+```
+models/session.py       →  domains/session.py       (fork, destroy)
+models/hyperparameters.py →  domains/hyperparameters.py (merge)
+models/turn.py          →  domains/turns.py         (filter, expire, delete)
+models/reference.py     →  domains/references.py    (TTL decay, filtering)
+```
+
+**Why this pattern?**
+
+1. **Separation of Concerns**: Models define WHAT data looks like (types), Domains define HOW to work with it (logic)
+2. **Testability**: Pure functions in domains are easier to test than methods in Pydantic models
+3. **Pydantic-Friendly**: Avoids complex logic in Pydantic models which can interfere with serialization
+4. **Clear Organization**: Easy to find where logic lives - just look for the corresponding domain module
 
 ## Responsibilities
 
 1. **Business Rules** - Implement domain-specific rules and constraints
-2. **Data Transformations** - Transform and filter data according to business logic
-3. **Validation Logic** - Complex business validations
+2. **Complex Operations** - Operations too complex for models (e.g., fork with ID generation)
+3. **Data Transformations** - Transform and filter data according to business logic
 4. **State Transitions** - Define valid state changes
 5. **Calculations** - Business calculations and derivations
 
-## Characteristics
+## Rules
 
-- ✅ Pure business logic functions
-- ✅ Stateless transformations
-- ✅ Work with collections and models
-- ✅ Implement complex filtering and rules
-- ✅ No side effects (no I/O, no persistence)
-- ❌ **NO file operations** - domains are pure
-- ❌ **NO API calls** - domains don't interact with external systems
-- ❌ **NO persistence** - domains don't save data
-- ❌ **NO dependency on services** - domains are low-level
+### ✅ DO
+
+- Write pure functions (input → output, no side effects)
+- Implement business rules and validations
+- Transform and filter data
+- Work with models and collections as parameters
+- Use TYPE_CHECKING imports to avoid circular dependencies
+- Keep functions stateless
+- Document business rules clearly in docstrings
+
+### ❌ DON'T
+
+- **NO file I/O** - Domains are pure, move I/O to repositories/
+- **NO API calls** - No external system interactions
+- **NO persistence** - Don't save data, just transform it
+- **NO service dependencies** - Domains are called BY services, not the reverse
+- **NO global state** - Functions should be stateless
+- **NO side effects** - Functions should not modify external state
 
 ## File Structure
 
 ```
 domains/
-├── __init__.py
-├── artifacts.py      # Artifact management logic
-├── references.py     # Reference TTL and filtering
-├── todos.py          # Todo validation and filtering
-└── turns.py          # Turn filtering and expiration
+├── session.py           # fork_session(), destroy_session()
+├── hyperparameters.py   # merge_hyperparameters()
+├── turns.py             # filter, expire, delete logic
+├── references.py        # TTL decay, filtering
+└── ...
+
+models/                  # Corresponding type definitions
+├── session.py
+├── hyperparameters.py
+├── turn.py
+├── reference.py
+└── ...
 ```
 
-## Dependencies
+## Examples
 
-**Allowed:**
-
-- ✅ `models/` - To work with data structures
-- ✅ `collections/` - To manipulate specialized collections
-- ✅ `utils/` - For datetime, pure utilities
-
-**Forbidden:**
-
-- ❌ `services/` - Domains are called BY services
-- ❌ `repositories/` - No persistence
-- ❌ `agents/` - No external interactions
-- ❌ `delegates/` - Wrong direction of dependency
-
-## Template
+### Example 1: Complex Operation (Session Fork)
 
 ```python
-"""
-Domain logic for [entity/concept].
-"""
+"""Domain logic for Session."""
 
+import hashlib
+import json
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pipe.core.models.some_model import SomeModel
-    from pipe.core.collections.some_collection import SomeCollection
+    from pipe.core.models.session import Session
 
-
-def apply_business_rule(
-    entity: "SomeModel",
-    parameter: str,
-) -> "SomeModel":
+def fork_session(
+    original: "Session", 
+    fork_index: int, 
+    timezone
+) -> "Session":
     """
-    Applies business rule to entity.
-
-    This is a pure function that:
-    1. Takes input data
-    2. Applies business logic
-    3. Returns new/modified data
-    4. Has no side effects
-
+    Creates a forked session with new ID generation.
+    
+    Business Rules:
+    - Fork index must be within range
+    - Fork point must be a model_response turn
+    - New ID is SHA256 hash of (purpose + original_id + fork_index + timestamp)
+    - Forked session contains history up to fork point
+    
     Args:
-        entity: The entity to process
-        parameter: Rule parameter
-
+        original: Original session to fork
+        fork_index: Turn index to fork from
+        timezone: Timezone for timestamp
+        
     Returns:
-        Modified entity
-
+        New forked session
+        
     Raises:
-        ValueError: If business rule is violated
+        IndexError: If fork_index out of range
+        ValueError: If fork point is not model_response
     """
-    # Validate business rule
-    if not _is_valid(entity, parameter):
-        raise ValueError(f"Business rule violated: {parameter}")
-
-    # Apply transformation
-    result = _transform(entity, parameter)
-
-    return result
-
-
-def filter_collection(
-    collection: "SomeCollection",
-    criteria: dict,
-) -> list["SomeModel"]:
-    """
-    Filters collection according to business criteria.
-
-    Args:
-        collection: Collection to filter
-        criteria: Business filtering criteria
-
-    Returns:
-        List of entities matching criteria
-    """
-    filtered = []
-    for item in collection:
-        if _matches_criteria(item, criteria):
-            filtered.append(item)
-    return filtered
-
-
-def _is_valid(entity: "SomeModel", parameter: str) -> bool:
-    """
-    Internal validation helper.
-
-    Private functions (prefixed with _) contain implementation details.
-    """
-    return len(parameter) > 0 and entity.status == "active"
-
-
-def _transform(entity: "SomeModel", parameter: str) -> "SomeModel":
-    """Internal transformation helper."""
-    # Business logic implementation
-    return entity.model_copy(update={"value": parameter})
-
-
-def _matches_criteria(item: "SomeModel", criteria: dict) -> bool:
-    """Internal filtering helper."""
-    for key, value in criteria.items():
-        if getattr(item, key) != value:
-            return False
-    return True
+    from pipe.core.models.session import Session
+    
+    # Validate range
+    if not (0 <= fork_index < len(original.turns)):
+        raise IndexError(f"fork_index {fork_index} out of range")
+    
+    # Validate turn type
+    if original.turns[fork_index].type != "model_response":
+        raise ValueError("Can only fork from model_response turn")
+    
+    # Generate new ID (complex business logic)
+    identity = json.dumps({
+        "purpose": f"Fork of: {original.purpose}",
+        "original_id": original.session_id,
+        "fork_at_turn": fork_index,
+        "timestamp": get_current_timestamp(timezone),
+    }, sort_keys=True)
+    new_id = hashlib.sha256(identity.encode()).hexdigest()
+    
+    # Create forked session
+    return Session(
+        session_id=new_id,
+        purpose=f"Fork of: {original.purpose}",
+        turns=original.turns[:fork_index + 1],
+        ...
+    )
 ```
 
-## Real Examples
-
-### turns.py - Turn Filtering and Expiration
-
-**Key Responsibilities:**
-
-- Filter turns for prompt generation
-- Limit tool response turns
-- Expire old tool responses to save tokens
-- Implement turn history optimization
+### Example 2: Data Transformation (Hyperparameter Merge)
 
 ```python
-from collections.abc import Iterator
-from typing import TYPE_CHECKING
+"""Domain logic for Hyperparameters."""
 
-from pipe.core.models.turn import ToolResponseTurn, Turn
+from typing import Any
+from pipe.core.models.hyperparameters import Hyperparameters
+
+def merge_hyperparameters(
+    existing: Hyperparameters | None, 
+    new_params: dict[str, Any]
+) -> Hyperparameters:
+    """
+    Merge new hyperparameter values with existing ones.
+    
+    Business Rules:
+    - If no existing, use new values directly
+    - If existing, merge new with defaults from existing
+    - Unspecified parameters retain existing values
+    
+    Args:
+        existing: Current hyperparameters or None
+        new_params: New parameter values (partial updates allowed)
+        
+    Returns:
+        Merged Hyperparameters instance
+    """
+    if existing:
+        merged = {
+            "temperature": new_params.get("temperature", existing.temperature),
+            "top_p": new_params.get("top_p", existing.top_p),
+            "top_k": new_params.get("top_k", existing.top_k),
+        }
+    else:
+        merged = new_params
+    
+    return Hyperparameters(**merged)
+```
+
+### Example 3: Filtering (Turn History)
+
+```python
+"""Domain logic for Turns."""
+
+from typing import TYPE_CHECKING, Iterator
 
 if TYPE_CHECKING:
+    from pipe.core.models.turn import Turn
     from pipe.core.collections.turns import TurnCollection
 
-
 def get_turns_for_prompt(
-    turns_collection: "TurnCollection",
+    turns: "TurnCollection", 
     tool_response_limit: int = 3
-) -> Iterator[Turn]:
+) -> Iterator["Turn"]:
     """
-    Yields turns for prompt generation, applying filtering rules.
-
+    Filter turns for prompt generation.
+    
     Business Rules:
-    - The last turn (current task) is excluded
-    - Only the last N 'tool_response' turns from history are included
-    - This prevents context bloat from old tool outputs
-
+    - Exclude last turn (current task)
+    - Include only last N tool responses to prevent context bloat
+    - Preserve all other turns
+    
     Args:
-        turns_collection: Full turn history
-        tool_response_limit: Maximum tool responses to include
-
+        turns: Full turn collection
+        tool_response_limit: Max tool responses to include
+        
     Yields:
         Turns suitable for prompt context
     """
     tool_response_count = 0
-    history = turns_collection[:-1]  # Exclude the last turn
-
-    # Iterate in reverse to easily count the last N tool_responses
+    history = turns[:-1]  # Exclude last
+    
     for turn in reversed(history):
-        if isinstance(turn, ToolResponseTurn):
+        if turn.type == "tool_response":
             tool_response_count += 1
             if tool_response_count > tool_response_limit:
                 continue  # Skip old tool responses
         yield turn
-
-
-def expire_old_tool_responses(
-    turns_collection: "TurnCollection",
-    expiration_threshold: int = 3
-) -> bool:
-    """
-    Expires message content of old tool_response turns to save tokens.
-
-    Business Rules:
-    - Tool responses older than N user tasks are expired
-    - Expired responses keep their 'succeeded' status
-    - Recent tool responses are preserved for context
-
-    This uses a safe rebuild pattern to avoid mutating during iteration.
-
-    Args:
-        turns_collection: Turn collection to process
-        expiration_threshold: Number of recent user tasks to preserve
-
-    Returns:
-        True if any turns were modified
-    """
-    if not turns_collection:
-        return False
-
-    # Find user task turns
-    user_tasks = [turn for turn in turns_collection if turn.type == "user_task"]
-    if len(user_tasks) <= expiration_threshold:
-        return False  # Not enough history to expire
-
-    # Calculate expiration timestamp
-    expiration_threshold_timestamp = user_tasks[-expiration_threshold].timestamp
-
-    # Rebuild collection with expired turns
-    new_turns = []
-    modified = False
-
-    for turn in turns_collection:
-        if (
-            isinstance(turn, ToolResponseTurn)
-            and turn.timestamp < expiration_threshold_timestamp
-            and turn.message  # Has content to expire
-        ):
-            # Expire this turn
-            expired_turn = turn.model_copy(update={
-                "message": "[Tool response expired to save tokens]"
-            })
-            new_turns.append(expired_turn)
-            modified = True
-        else:
-            new_turns.append(turn)
-
-    # Replace collection contents if modified
-    if modified:
-        turns_collection.clear()
-        turns_collection.extend(new_turns)
-
-    return modified
-
-
-def count_turns_by_type(turns_collection: "TurnCollection") -> dict[str, int]:
-    """
-    Counts turns by type for analytics.
-
-    Args:
-        turns_collection: Turn collection to analyze
-
-    Returns:
-        Dictionary mapping turn type to count
-    """
-    counts: dict[str, int] = {}
-
-    for turn in turns_collection:
-        turn_type = turn.type
-        counts[turn_type] = counts.get(turn_type, 0) + 1
-
-    return counts
 ```
 
-### references.py - Reference TTL Management
+## Common Patterns
 
-**Key Responsibilities:**
-
-- Decay reference TTL over time
-- Filter active vs expired references
-- Add references with proper initialization
-- Implement reference persistence rules
+### Pattern 1: Pure Transformation
 
 ```python
-from typing import TYPE_CHECKING
-
-from pipe.core.models.reference import Reference
-
-if TYPE_CHECKING:
-    from pipe.core.collections.references import ReferenceCollection
-
-
-def add_reference(
-    references: "ReferenceCollection",
-    path: str,
-    persist: bool = False,
-    initial_ttl: int = 5,
-) -> Reference:
-    """
-    Adds a reference with proper TTL initialization.
-
-    Business Rules:
-    - Persistent references have TTL = -1 (never expire)
-    - Regular references start with configurable TTL
-    - Duplicate paths are not allowed
-
-    Args:
-        references: Reference collection
-        path: File path to reference
-        persist: Whether reference should persist across turns
-        initial_ttl: Initial TTL for non-persistent references
-
-    Returns:
-        The created reference
-
-    Raises:
-        ValueError: If reference already exists
-    """
-    # Check for duplicates
-    if any(ref.path == path for ref in references):
-        raise ValueError(f"Reference already exists: {path}")
-
-    # Create reference with appropriate TTL
-    ttl = -1 if persist else initial_ttl
-
-    reference = Reference(
-        path=path,
-        ttl=ttl,
-        persistent=persist,
-    )
-
-    references.append(reference)
-    return reference
-
-
-def decay_reference_ttl(references: "ReferenceCollection") -> bool:
-    """
-    Decays TTL for all non-persistent references.
-
-    Business Rules:
-    - Persistent references (TTL = -1) are not affected
-    - Regular references have TTL decremented by 1
-    - References with TTL <= 0 are expired and removed
-
-    Args:
-        references: Reference collection to process
-
-    Returns:
-        True if any references were removed
-    """
-    initial_count = len(references)
-
-    # Rebuild collection with decayed/filtered references
-    active_refs = []
-
-    for ref in references:
-        if ref.persistent:
-            # Persistent references never decay
-            active_refs.append(ref)
-        elif ref.ttl > 0:
-            # Decay TTL
-            decayed = ref.model_copy(update={"ttl": ref.ttl - 1})
-            active_refs.append(decayed)
-        # else: TTL <= 0, reference expires (not added to active_refs)
-
-    # Replace collection contents
-    references.clear()
-    references.extend(active_refs)
-
-    return len(references) < initial_count
-
-
-def get_active_references(
-    references: "ReferenceCollection"
-) -> list[Reference]:
-    """
-    Filters for references that are still active (not expired).
-
-    Business Rules:
-    - Persistent references (TTL = -1) are always active
-    - Regular references with TTL > 0 are active
-    - References with TTL <= 0 are inactive
-
-    Args:
-        references: Reference collection
-
-    Returns:
-        List of active references
-    """
-    return [
-        ref for ref in references
-        if ref.persistent or ref.ttl > 0
-    ]
-
-
-def get_persistent_references(
-    references: "ReferenceCollection"
-) -> list[Reference]:
-    """
-    Filters for persistent references only.
-
-    Args:
-        references: Reference collection
-
-    Returns:
-        List of persistent references
-    """
-    return [ref for ref in references if ref.persistent]
-
-
-def refresh_reference_ttl(
-    references: "ReferenceCollection",
-    path: str,
-    new_ttl: int,
-) -> bool:
-    """
-    Refreshes TTL for a specific reference.
-
-    Business Rules:
-    - Can refresh non-persistent references
-    - Cannot modify persistent references
-    - Reference must exist
-
-    Args:
-        references: Reference collection
-        path: Path of reference to refresh
-        new_ttl: New TTL value
-
-    Returns:
-        True if reference was found and refreshed
-
-    Raises:
-        ValueError: If trying to refresh persistent reference
-    """
-    for i, ref in enumerate(references):
-        if ref.path == path:
-            if ref.persistent:
-                raise ValueError(f"Cannot refresh persistent reference: {path}")
-
-            refreshed = ref.model_copy(update={"ttl": new_ttl})
-            references[i] = refreshed
-            return True
-
-    return False
+def transform(input_data: Model) -> Model:
+    """Pure function: input → output, no side effects."""
+    # Business logic
+    return modified_model
 ```
 
-### todos.py - Todo Validation and Filtering
-
-**Key Responsibilities:**
-
-- Validate todo items
-- Filter todos by status
-- Sort todos by priority
-- Validate todo state transitions
+### Pattern 2: Safe Rebuild (for collections)
 
 ```python
-from typing import TYPE_CHECKING
-
-from pipe.core.models.todo import TodoItem, TodoStatus
-
-if TYPE_CHECKING:
-    pass
-
-
-def validate_todo(todo: TodoItem) -> bool:
-    """
-    Validates todo item according to business rules.
-
-    Business Rules:
-    - Title must not be empty
-    - Status must be valid
-    - Completed todos must have completion timestamp
-
-    Args:
-        todo: Todo item to validate
-
-    Returns:
-        True if valid
-
-    Raises:
-        ValueError: If validation fails
-    """
-    if not todo.title or not todo.title.strip():
-        raise ValueError("Todo title cannot be empty")
-
-    if todo.status not in TodoStatus:
-        raise ValueError(f"Invalid todo status: {todo.status}")
-
-    if todo.status == TodoStatus.COMPLETED and not todo.completed_at:
-        raise ValueError("Completed todo must have completion timestamp")
-
-    return True
-
-
-def filter_todos_by_status(
-    todos: list[TodoItem],
-    status: TodoStatus,
-) -> list[TodoItem]:
-    """
-    Filters todos by status.
-
-    Args:
-        todos: List of todos
-        status: Status to filter by
-
-    Returns:
-        Filtered list of todos
-    """
-    return [todo for todo in todos if todo.status == status]
-
-
-def get_active_todos(todos: list[TodoItem]) -> list[TodoItem]:
-    """
-    Gets all non-completed todos.
-
-    Args:
-        todos: List of todos
-
-    Returns:
-        List of active todos
-    """
-    return [
-        todo for todo in todos
-        if todo.status != TodoStatus.COMPLETED
-    ]
-
-
-def sort_todos_by_priority(todos: list[TodoItem]) -> list[TodoItem]:
-    """
-    Sorts todos by priority and creation time.
-
-    Business Rules:
-    - In-progress todos come first
-    - Then not-started todos
-    - Within each group, sort by creation time
-    - Completed todos come last
-
-    Args:
-        todos: List of todos
-
-    Returns:
-        Sorted list of todos
-    """
-    def sort_key(todo: TodoItem) -> tuple:
-        # Priority order: in-progress (0), not-started (1), completed (2)
-        status_priority = {
-            TodoStatus.IN_PROGRESS: 0,
-            TodoStatus.NOT_STARTED: 1,
-            TodoStatus.COMPLETED: 2,
-        }
-        return (
-            status_priority.get(todo.status, 99),
-            todo.created_at or "",
-        )
-
-    return sorted(todos, key=sort_key)
-
-
-def can_transition_status(
-    current: TodoStatus,
-    new: TodoStatus,
-) -> bool:
-    """
-    Validates if status transition is allowed.
-
-    Business Rules:
-    - Can start a not-started todo (not-started -> in-progress)
-    - Can complete an in-progress todo (in-progress -> completed)
-    - Can complete a not-started todo directly (not-started -> completed)
-    - Cannot reopen completed todos
-
-    Args:
-        current: Current status
-        new: New status
-
-    Returns:
-        True if transition is valid
-    """
-    valid_transitions = {
-        TodoStatus.NOT_STARTED: {TodoStatus.IN_PROGRESS, TodoStatus.COMPLETED},
-        TodoStatus.IN_PROGRESS: {TodoStatus.COMPLETED, TodoStatus.NOT_STARTED},
-        TodoStatus.COMPLETED: set(),  # No transitions from completed
-    }
-
-    return new in valid_transitions.get(current, set())
-```
-
-### artifacts.py - Artifact Management
-
-```python
-from typing import TYPE_CHECKING
-
-from pipe.core.models.artifact import Artifact
-
-if TYPE_CHECKING:
-    pass
-
-
-def validate_artifact_path(path: str, project_root: str) -> bool:
-    """
-    Validates artifact path according to business rules.
-
-    Business Rules:
-    - Path must be relative to project root
-    - Path must not escape project root (no ../)
-    - Path must not be absolute
-
-    Args:
-        path: Artifact path to validate
-        project_root: Project root directory
-
-    Returns:
-        True if valid
-
-    Raises:
-        ValueError: If validation fails
-    """
-    if os.path.isabs(path):
-        raise ValueError(f"Artifact path must be relative: {path}")
-
-    if ".." in path:
-        raise ValueError(f"Artifact path cannot contain '..': {path}")
-
-    # Check that resolved path is within project root
-    full_path = os.path.normpath(os.path.join(project_root, path))
-    if not full_path.startswith(project_root):
-        raise ValueError(f"Artifact path escapes project root: {path}")
-
-    return True
-
-
-def get_pending_artifacts(artifacts: list[Artifact]) -> list[Artifact]:
-    """
-    Filters for artifacts that haven't been created yet.
-
-    Args:
-        artifacts: List of artifacts
-
-    Returns:
-        List of pending artifacts
-    """
-    return [art for art in artifacts if not art.created]
-
-
-def mark_artifact_created(artifact: Artifact) -> Artifact:
-    """
-    Marks artifact as created.
-
-    Args:
-        artifact: Artifact to mark
-
-    Returns:
-        Updated artifact
-    """
-    return artifact.model_copy(update={"created": True})
-```
-
-## Domain Function Patterns
-
-### Pattern 1: Filter and Transform
-
-```python
-def process_entities(
-    entities: list[Entity],
-    filter_fn: Callable[[Entity], bool],
-    transform_fn: Callable[[Entity], Entity],
-) -> list[Entity]:
-    """
-    Generic filter and transform pattern.
-    """
-    return [
-        transform_fn(entity)
-        for entity in entities
-        if filter_fn(entity)
-    ]
-```
-
-### Pattern 2: Safe Rebuild
-
-```python
-def modify_collection(collection: Collection) -> bool:
-    """
-    Safely rebuilds collection without mutating during iteration.
-    """
+def process_collection(items: Collection) -> bool:
+    """Rebuild collection safely without mutating during iteration."""
     new_items = []
     modified = False
-
-    for item in collection:
+    
+    for item in items:
         if should_modify(item):
             new_items.append(modify(item))
             modified = True
         else:
             new_items.append(item)
-
+    
     if modified:
-        collection.clear()
-        collection.extend(new_items)
-
+        items.clear()
+        items.extend(new_items)
+    
     return modified
 ```
 
 ### Pattern 3: Business Rule Validation
 
 ```python
-def apply_rule(entity: Entity, rule: Rule) -> Entity:
-    """
-    Applies business rule with validation.
-    """
-    # Pre-condition check
-    if not can_apply_rule(entity, rule):
-        raise ValueError(f"Cannot apply rule {rule} to {entity}")
-
-    # Apply transformation
-    result = _transform_entity(entity, rule)
-
-    # Post-condition check
-    if not is_valid_result(result):
-        raise ValueError(f"Rule application resulted in invalid state")
-
+def apply_rule(entity: Model, param: str) -> Model:
+    """Apply business rule with pre/post validation."""
+    # Pre-condition
+    if not can_apply(entity, param):
+        raise ValueError("Cannot apply rule")
+    
+    # Transform
+    result = _transform(entity, param)
+    
+    # Post-condition
+    if not is_valid(result):
+        raise ValueError("Invalid result")
+    
     return result
 ```
 
 ## Testing
 
-### Unit Testing Domain Logic
-
 ```python
-# tests/core/domains/test_turns.py
-from pipe.core.domains.turns import get_turns_for_prompt, expire_old_tool_responses
-from pipe.core.models.turn import UserTaskTurn, ToolResponseTurn
-from pipe.core.collections.turns import TurnCollection
+# tests/core/domains/test_session.py
 
-def test_get_turns_for_prompt_limits_tool_responses():
-    # Setup
-    turns = TurnCollection([
-        UserTaskTurn(message="Task 1", timestamp="2024-01-01T00:00:00"),
-        ToolResponseTurn(message="Response 1", timestamp="2024-01-01T00:01:00"),
-        ToolResponseTurn(message="Response 2", timestamp="2024-01-01T00:02:00"),
-        ToolResponseTurn(message="Response 3", timestamp="2024-01-01T00:03:00"),
-        ToolResponseTurn(message="Response 4", timestamp="2024-01-01T00:04:00"),
-        UserTaskTurn(message="Task 2", timestamp="2024-01-01T00:05:00"),
-    ])
+def test_fork_session_validates_index():
+    """Test fork validates index range."""
+    session = create_test_session()
+    
+    with pytest.raises(IndexError):
+        fork_session(session, 999, timezone)
 
-    # Execute
-    result = list(get_turns_for_prompt(turns, tool_response_limit=3))
+def test_fork_session_generates_unique_id():
+    """Test fork generates unique session ID."""
+    session = create_test_session()
+    
+    forked = fork_session(session, 0, timezone)
+    
+    assert forked.session_id != session.session_id
+    assert len(forked.session_id) == 64  # SHA256 hex
 
-    # Verify
-    tool_responses = [t for t in result if isinstance(t, ToolResponseTurn)]
-    assert len(tool_responses) == 3  # Only last 3 tool responses
-
-
-def test_expire_old_tool_responses():
-    # Setup with 5 user tasks
-    turns = TurnCollection([
-        UserTaskTurn(message="Task 1", timestamp="2024-01-01T00:00:00"),
-        ToolResponseTurn(message="Old response", timestamp="2024-01-01T00:01:00"),
-        UserTaskTurn(message="Task 2", timestamp="2024-01-01T00:02:00"),
-        UserTaskTurn(message="Task 3", timestamp="2024-01-01T00:03:00"),
-        UserTaskTurn(message="Task 4", timestamp="2024-01-01T00:04:00"),
-        ToolResponseTurn(message="Recent response", timestamp="2024-01-01T00:05:00"),
-        UserTaskTurn(message="Task 5", timestamp="2024-01-01T00:06:00"),
-    ])
-
-    # Execute
-    modified = expire_old_tool_responses(turns, expiration_threshold=3)
-
-    # Verify
-    assert modified is True
-    assert "[expired]" in turns[1].message.lower()
-    assert "Recent response" == turns[5].message  # Recent not expired
-```
-
-## Best Practices
-
-### 1. Keep Functions Pure
-
-```python
-# ✅ GOOD: Pure function
-def filter_active(items: list[Item]) -> list[Item]:
-    return [item for item in items if item.active]
-
-# ❌ BAD: Side effects
-def filter_active(items: list[Item]) -> list[Item]:
-    items[:] = [item for item in items if item.active]  # Mutates input
-    return items
-```
-
-### 2. Explicit Business Rules
-
-```python
-# ✅ GOOD: Clear business rules in docstring
-def decay_ttl(references: list[Reference]) -> None:
-    """
-    Business Rules:
-    - Persistent references (TTL = -1) are not affected
-    - Regular references decrement by 1
-    - References with TTL <= 0 are removed
-    """
-    ...
-
-# ❌ BAD: Implicit rules
-def decay_ttl(references: list[Reference]) -> None:
-    """Decays TTL."""
-    ...
-```
-
-### 3. Avoid Services Dependency
-
-```python
-# ✅ GOOD: Domain is independent
-def process_turn(turn: Turn) -> Turn:
-    # Pure business logic
-    return turn.model_copy(update={"processed": True})
-
-# ❌ BAD: Depends on service
-def process_turn(turn: Turn, service: SessionService) -> Turn:
-    # Domain shouldn't depend on service
-    service.save_turn(turn)
-    return turn
+def test_merge_hyperparameters_preserves_unspecified():
+    """Test merge preserves unspecified parameters."""
+    existing = Hyperparameters(temperature=0.8, top_p=0.9, top_k=40)
+    
+    merged = merge_hyperparameters(existing, {"temperature": 1.0})
+    
+    assert merged.temperature == 1.0
+    assert merged.top_p == 0.9  # Preserved
+    assert merged.top_k == 40   # Preserved
 ```
 
 ## Summary
 
-Domains are the **heart of business logic**:
-
-- ✅ Pure business rules
+**Domains:**
+- ✅ Pure business logic functions
 - ✅ Stateless transformations
-- ✅ No side effects
-- ✅ Highly testable
-- ❌ No I/O operations
-- ❌ No external dependencies
-- ❌ No persistence
+- ✅ Work with models as parameters
+- ✅ 1:1 correspondence with models
+- ❌ No I/O, no persistence, no side effects
+- ❌ No service dependencies
 
-Domains encode the **what** (business rules), while services coordinate the **how** (execution).
+**Domains define HOW to work with data, Models define WHAT data looks like**

@@ -1,20 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
-export const useMultiStepReasoningLifecycle = (
+export type UseMultiStepReasoningLifecycleProperties = {
   multiStepReasoningEnabled: boolean
-): {
-  localEnabled: boolean
   setLocalEnabled: React.Dispatch<React.SetStateAction<boolean>>
-} => {
-  const [localEnabled, setLocalEnabled] = useState(multiStepReasoningEnabled)
+}
 
+/**
+ * useMultiStepReasoningLifecycle
+ *
+ * Manages MultiStepReasoning lifecycle effects (sync from props).
+ * Pattern: Lifecycle (separated from Handlers per hooks.md)
+ */
+export const useMultiStepReasoningLifecycle = ({
+  multiStepReasoningEnabled,
+  setLocalEnabled
+}: UseMultiStepReasoningLifecycleProperties): void => {
   // Update local state when prop changes
   useEffect(() => {
     setLocalEnabled(multiStepReasoningEnabled)
-  }, [multiStepReasoningEnabled])
-
-  return {
-    localEnabled,
-    setLocalEnabled
-  }
+  }, [multiStepReasoningEnabled, setLocalEnabled])
 }

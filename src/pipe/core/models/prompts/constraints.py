@@ -1,63 +1,38 @@
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel
+from pipe.core.models.base import CamelCaseModel
 
 if TYPE_CHECKING:
-    from pipe.core.models.settings import Settings
+    pass
 
 
-class PromptHyperparameter(BaseModel):
-    type: str
-    value: float
-    description: str
+class PromptHyperparameters(CamelCaseModel):
+    """Simplified hyperparameters for prompt rendering.
+
+    Only contains the numeric values. Type and description are handled
+    directly in the template (constraints.j2).
+    """
+
+    temperature: float | None
+    top_p: float | None
+    top_k: float | None
 
 
-class PromptHyperparameters(BaseModel):
-    description: str
-    temperature: PromptHyperparameter
-    top_p: PromptHyperparameter
-    top_k: PromptHyperparameter
+class PromptProcessingConfig(CamelCaseModel):
+    """Processing configuration for prompt rendering.
 
-    @classmethod
-    def from_merged_params(cls, merged_params: dict) -> "PromptHyperparameters":
-        """
-        Creates a PromptHyperparameters instance from a merged parameters dictionary.
-        """
-        return cls(
-            description="Hyperparameter settings for the model.",
-            temperature=PromptHyperparameter(
-                type="number", **merged_params["temperature"]
-            ),
-            top_p=PromptHyperparameter(type="number", **merged_params["top_p"]),
-            top_k=PromptHyperparameter(type="number", **merged_params["top_k"]),
-        )
+    Description is handled directly in the template (constraints.j2).
+    """
 
-
-class PromptProcessingConfig(BaseModel):
-    description: str
     multi_step_reasoning_active: bool
 
 
-class PromptConstraints(BaseModel):
-    description: str
+class PromptConstraints(CamelCaseModel):
+    """Constraints for prompt rendering.
+
+    Description is handled directly in the template (constraints.j2).
+    """
+
     language: str
     processing_config: PromptProcessingConfig
-    hyperparameters: PromptHyperparameters
-
-    @classmethod
-    def build(
-        cls,
-        settings: "Settings",
-        hyperparameters: PromptHyperparameters,
-        multi_step_reasoning_enabled: bool,
-    ) -> "PromptConstraints":
-        """Builds the PromptConstraints component."""
-        return cls(
-            description="Constraints for the model.",
-            language=settings.language,
-            processing_config=PromptProcessingConfig(
-                description="Configuration for processing.",
-                multi_step_reasoning_active=multi_step_reasoning_enabled,
-            ),
-            hyperparameters=hyperparameters,
-        )
+    hyperparameters: PromptHyperparameters | None = None

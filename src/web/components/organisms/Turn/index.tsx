@@ -1,4 +1,4 @@
-import { marked } from 'marked'
+import { clsx } from 'clsx'
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
@@ -9,11 +9,12 @@ import { IconFork } from '@/components/atoms/IconFork'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import { useTurnActions } from '@/components/organisms/Turn/hooks/useTurnActions'
 import { useTurnHandlers } from '@/components/organisms/Turn/hooks/useTurnHandlers'
-import { useTurnLifecycle } from '@/components/organisms/Turn/hooks/useTurnLifecycle'
 import type { Turn } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
+import { EditingContent } from './EditingContent'
+import { ModelResponseContent } from './ModelResponseContent'
 import {
   turnHeader,
   turnHeaderInfo,
@@ -21,14 +22,6 @@ import {
   turnTimestamp,
   turnHeaderControls,
   turnContent,
-  rawMarkdown,
-  renderedMarkdown,
-  toolResponseContent,
-  statusSuccess,
-  statusError,
-  editablePre,
-  editTextArea,
-  editButtonContainer,
   editButtonIcon,
   turnWrapper,
   userTaskAligned,
@@ -38,6 +31,8 @@ import {
   deleteButtonIcon,
   copyButtonIcon
 } from './style.css'
+import { ToolResponseContent } from './ToolResponseContent'
+import { UserTaskContent } from './UserTaskContent'
 
 type TurnProperties = {
   turn: Turn
@@ -63,7 +58,7 @@ type TurnProperties = {
   onSaveEdit?: () => void
 }
 
-const Component = ({
+export const TurnComponent = ({
   turn,
   index,
   expertMode,
@@ -81,22 +76,12 @@ const Component = ({
   onDelete: propertyOnDelete,
   onSaveEdit: propertyOnSaveEdit
 }: TurnProperties): JSX.Element => {
-  const {
-    isEditing: lifecycleIsEditing,
-    editedContent: lifecycleEditedContent,
-    setIsEditing,
-    setEditedContent
-  } = useTurnLifecycle({ turn })
-
   const { deleteTurnAction, editTurnAction, forkSessionAction } = useTurnActions()
 
   const handlers = useTurnHandlers({
     turn,
     index,
     sessionId: sessionId || '',
-    editedContent: lifecycleEditedContent,
-    setIsEditing,
-    setEditedContent,
     onRefresh: onRefresh || (async (): Promise<void> => {}),
     refreshSessionsInStore: refreshSessionsInStore || ((): void => {}),
     deleteTurnAction,
@@ -104,8 +89,8 @@ const Component = ({
     forkSessionAction
   })
 
-  const isEditing = sessionId ? lifecycleIsEditing : propertyIsEditing
-  const editedContent = sessionId ? lifecycleEditedContent : propertyEditedContent
+  const isEditing = sessionId ? handlers.isEditing : propertyIsEditing
+  const editedContent = sessionId ? handlers.editedContent : propertyEditedContent
   const onCopy = handlers?.handleCopy ?? propertyOnCopy
   const onEditedChange = handlers?.handleEditedChange ?? propertyOnEditedChange
   const onCancelEdit = handlers?.handleCancelEdit ?? propertyOnCancelEdit
@@ -131,78 +116,41 @@ const Component = ({
   }
 
   const renderTurnContent = (): JSX.Element | null => {
-    let markdownContent = ''
-    let statusClass = ''
-
     if (isEditing) {
       return (
-        <div className={turnContent}>
-          <textarea
-            className={editTextArea}
-            value={editedContent}
-            onChange={onEditedChange}
-          />
-          <div className={editButtonContainer}>
-            <Button kind="primary" size="default" onClick={onSaveEdit}>
-              Save
-            </Button>
-            <Button kind="secondary" size="default" onClick={onCancelEdit}>
-              Cancel
-            </Button>
-          </div>
-        </div>
+        <EditingContent
+          editedContent={editedContent}
+          onEditedChange={onEditedChange}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
+        />
       )
     }
 
     switch (turn.type) {
       case 'user_task':
-        return <pre className={editablePre}>{turn.instruction || ''}</pre>
+        return <UserTaskContent instruction={turn.instruction || ''} />
+
       case 'model_response':
       case 'compressed_history':
-        markdownContent = turn.content || ''
-
         return (
-          <div className={turnContent}>
-            {turn.type === 'compressed_history' && (
-              <p>
-                <strong>
-                  <em>-- History Compressed --</em>
-                </strong>
-              </p>
-            )}
-            <div className={rawMarkdown}>{markdownContent}</div>
-            {!isStreaming && (
-              <div
-                className={`${renderedMarkdown} markdown-body`}
-                dangerouslySetInnerHTML={{
-                  __html: marked.parse(markdownContent.trim())
-                }}
-              />
-            )}
-          </div>
+          <ModelResponseContent
+            content={turn.content || ''}
+            isCompressed={turn.type === 'compressed_history'}
+            isStreaming={isStreaming}
+          />
         )
+
       case 'function_calling':
         return (
           <pre className={turnContent}>{JSON.stringify(turn.response, null, 2)}</pre>
         )
+
       case 'tool_response':
         if (!turn.response) return null
-        // Treat any status starting with 'succe' (e.g., 'success', 'succeeded') as success
-        statusClass =
-          typeof turn.response.status === 'string' &&
-          turn.response.status.toLowerCase().startsWith('succe')
-            ? statusSuccess
-            : statusError
 
-        return (
-          <div className={toolResponseContent}>
-            <strong>Status: </strong>
-            <span className={statusClass}>{turn.response.status}</span>
-            {turn.response.output !== undefined && turn.response.output !== null && (
-              <pre>{JSON.stringify(turn.response.output, null, 2)}</pre>
-            )}
-          </div>
-        )
+        return <ToolResponseContent response={turn.response} />
+
       default:
         return <pre className={turnContent}>{JSON.stringify(turn, null, 2)}</pre>
     }
@@ -223,7 +171,10 @@ const Component = ({
 
   return (
     <div
-      className={`${turnWrapper} ${turn.type === 'user_task' ? userTaskAligned : otherTurnAligned}`}
+      className={clsx(
+        turnWrapper,
+        turn.type === 'user_task' ? userTaskAligned : otherTurnAligned
+      )}
     >
       <div className={turnContentBase} id={`turn-${index}`}>
         <div className={turnHeader}>
@@ -270,8 +221,3 @@ const Component = ({
     </div>
   )
 }
-
-// Export a named Turn component for consistency with the project's export rules
-export const TurnComponent = Component
-
-// Default export removed — use named export `TurnComponent`

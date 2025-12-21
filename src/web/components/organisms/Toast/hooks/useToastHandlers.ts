@@ -20,7 +20,8 @@ export const useToastHandlers = (
     const map: Record<string, ToastItem[]> = {}
     for (const p of allPositions) map[p] = []
     for (const t of toasts) {
-      const pos = (t.position as string) ?? 'top-right'
+      // Type guard: verify position is valid string, fallback to 'top-right'
+      const pos = typeof t.position === 'string' ? t.position : 'top-right'
       if (!map[pos]) map[pos] = []
       map[pos].push(t)
     }

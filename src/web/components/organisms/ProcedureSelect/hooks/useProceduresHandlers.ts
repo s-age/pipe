@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 
-import type { ProcedureOption } from '@/lib/api/procedures/getProcedures'
+import type { ProcedureOption } from '@/lib/api/fs/procedures'
 
 import type { UseProceduresActionsReturn } from './useProceduresActions'
 
@@ -10,14 +10,11 @@ export const useProceduresHandlers = (
   formContext: UseFormReturn | undefined
 ): {
   procedureOptions: ProcedureOption[]
-  filteredProcedureOptions: ProcedureOption[]
   handleFetchProcedures: () => Promise<void>
   handleFocus: () => Promise<void>
   handleProcedureChange: (values: string[]) => void
 } => {
   const [procedureOptions, setProcedureOptions] = useState<ProcedureOption[]>([])
-
-  const filteredProcedureOptions = useMemo(() => procedureOptions, [procedureOptions])
 
   const handleFetchProcedures = useCallback(async (): Promise<void> => {
     const procedures = await actions.fetchProcedures()
@@ -43,7 +40,6 @@ export const useProceduresHandlers = (
 
   return {
     procedureOptions,
-    filteredProcedureOptions,
     handleFetchProcedures,
     handleFocus,
     handleProcedureChange

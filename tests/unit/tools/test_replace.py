@@ -14,12 +14,19 @@ class TestReplaceTool(unittest.TestCase):
         with open(self.file_path, "w") as f:
             f.write("Hello world, this is a test.\nHello again!")
 
-        # Patch os.getcwd to return the temp dir, simulating it as the project root
-        self.getcwd_patcher = patch("os.getcwd", return_value=self.test_path)
-        self.mock_getcwd = self.getcwd_patcher.start()
+        # Patch FileRepositoryFactory.create to use test directory
+        self.patcher = patch("pipe.core.tools.replace.FileRepositoryFactory.create")
+        self.mock_factory = self.patcher.start()
+
+        # Import after patching to get the real repository classes
+        from pipe.core.repositories.sandbox_file_repository import (
+            SandboxFileRepository,
+        )
+
+        self.mock_factory.return_value = SandboxFileRepository(self.test_path)
 
     def tearDown(self):
-        self.getcwd_patcher.stop()
+        self.patcher.stop()
         self.temp_dir.cleanup()
 
     def test_replace_success(self):
@@ -29,9 +36,11 @@ class TestReplaceTool(unittest.TestCase):
             old_string="world",
             new_string="Python",
         )
-        self.assertEqual(result["status"], "success")
-        self.assertIn("Text replaced successfully", result["message"])
-        self.assertIn("diff", result["message"])
+        self.assertEqual(result.data.status, "success")
+        self.assertIn("Text replaced successfully", result.data.message)
+        self.assertIsNotNone(result.data.diff)
+
+        # Verify file content
         with open(self.file_path) as f:
             content = f.read()
         self.assertEqual(content, "Hello Python, this is a test.\nHello again!")
@@ -43,8 +52,9 @@ class TestReplaceTool(unittest.TestCase):
             old_string="nonexistent",
             new_string="...",
         )
-        self.assertEqual(result["status"], "failed")
-        self.assertIn("Old string not found", result["message"])
+        self.assertIsNone(result.data)
+        self.assertIsNotNone(result.error)
+        self.assertIn("Old string not found", result.error)
 
     def test_file_not_found(self):
         result = replace(
@@ -53,43 +63,51 @@ class TestReplaceTool(unittest.TestCase):
             old_string="a",
             new_string="b",
         )
-        self.assertIn("error", result)
-        self.assertIn("File not found", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("File not found", result.error)
 
     def test_path_is_directory(self):
         result = replace(
             file_path=self.test_path, instruction="...", old_string="a", new_string="b"
         )
-        self.assertIn("error", result)
-        self.assertIn("Path is not a file", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("Path is not a file", result.error)
 
     def test_path_outside_project_root(self):
         result = replace(
             file_path="/etc/passwd", instruction="...", old_string="a", new_string="b"
         )
-        self.assertIn("error", result)
-        self.assertIn("Modifying files outside project root", result["error"])
+        self.assertIsNotNone(result.error)
+        # SandboxFileRepository raises error for paths outside project root
+        self.assertIn("not allowed", result.error)
 
     def test_blocked_path(self):
         # Create a fake .git directory to test protection
         git_dir = os.path.join(self.test_path, ".git")
         os.makedirs(git_dir)
+        # We need the file to exist for replace to attempt reading it
+        config_path = os.path.join(git_dir, "config")
+        with open(config_path, "w") as f:
+            f.write("config_a")
+
         result = replace(
-            file_path=os.path.join(git_dir, "config"),
+            file_path=config_path,
             instruction="...",
             old_string="a",
             new_string="b",
         )
-        self.assertIn("error", result)
-        self.assertIn("sensitive path", result["error"])
+        self.assertIsNotNone(result.error)
+        # FileSystemRepository throws "Access denied: Writing to ... is not allowed"
+        # checking for "Access denied" or "not allowed" covers it
+        self.assertIn("not allowed", result.error)
 
     @patch("builtins.open", side_effect=OSError("Test I/O error"))
     def test_general_exception(self, mock_open):
         result = replace(
             file_path=self.file_path, instruction="...", old_string="a", new_string="b"
         )
-        self.assertIn("error", result)
-        self.assertIn("Failed to replace text", result["error"])
+        self.assertIsNotNone(result.error)
+        self.assertIn("Failed to replace text", result.error)
 
 
 if __name__ == "__main__":

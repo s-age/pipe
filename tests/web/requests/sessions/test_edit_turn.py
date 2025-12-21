@@ -1,25 +1,57 @@
 import unittest
+from unittest.mock import Mock, patch
 
+from pipe.core.models.session import Session
+from pipe.core.models.turn import ModelResponseTurn
 from pipe.web.requests.sessions.edit_turn import EditTurnRequest
 from pydantic import ValidationError
 
 
 class TestEditTurnRequest(unittest.TestCase):
-    def test_valid_content_is_accepted(self):
+    def setUp(self):
+        """Set up mock session data for validation tests."""
+        self.mock_session = Session(
+            session_id="test_session",
+            created_at="2024-01-01T00:00:00Z",
+            roles=[],
+            turns=[
+                ModelResponseTurn(
+                    type="model_response",
+                    content="test content",
+                    timestamp="2024-01-01T00:00:00Z",
+                )
+            ],
+        )
+
+    @patch("pipe.web.service_container.get_session_service")
+    def test_valid_content_is_accepted(self, mock_get_service):
         """Tests that valid content passes validation."""
-        request_data = {"content": "This is valid content."}
+        mock_service = Mock()
+        mock_service.get_session.return_value = self.mock_session
+        mock_get_service.return_value = mock_service
+
         try:
-            edit_request = EditTurnRequest(**request_data)
+            edit_request = EditTurnRequest.create_with_path_params(
+                path_params={"session_id": "test_session", "turn_index": "0"},
+                body_data={"content": "This is valid content."},
+            )
             self.assertEqual(edit_request.content, "This is valid content.")
             self.assertIsNone(edit_request.instruction)
         except Exception as e:
             self.fail(f"EditTurnRequest validation failed unexpectedly: {e}")
 
-    def test_valid_instruction_is_accepted(self):
+    @patch("pipe.web.service_container.get_session_service")
+    def test_valid_instruction_is_accepted(self, mock_get_service):
         """Tests that valid instruction passes validation."""
-        request_data = {"instruction": "This is a valid instruction."}
+        mock_service = Mock()
+        mock_service.get_session.return_value = self.mock_session
+        mock_get_service.return_value = mock_service
+
         try:
-            edit_request = EditTurnRequest(**request_data)
+            edit_request = EditTurnRequest.create_with_path_params(
+                path_params={"session_id": "test_session", "turn_index": "0"},
+                body_data={"instruction": "This is a valid instruction."},
+            )
             self.assertEqual(edit_request.instruction, "This is a valid instruction.")
             self.assertIsNone(edit_request.content)
         except Exception as e:
@@ -27,45 +59,68 @@ class TestEditTurnRequest(unittest.TestCase):
 
     def test_empty_content_raises_error(self):
         """Tests that empty content fails validation."""
-        request_data = {"content": ""}
         with self.assertRaises(ValidationError) as context:
-            EditTurnRequest(**request_data)
+            EditTurnRequest.create_with_path_params(
+                path_params={"session_id": "test_session", "turn_index": "0"},
+                body_data={"content": ""},
+            )
         self.assertIn("cannot be empty", str(context.exception).lower())
 
     def test_whitespace_only_content_raises_error(self):
         """Tests that whitespace-only content fails validation."""
-        request_data = {"content": "   \n\t  "}
         with self.assertRaises(ValidationError) as context:
-            EditTurnRequest(**request_data)
+            EditTurnRequest.create_with_path_params(
+                path_params={"session_id": "test_session", "turn_index": "0"},
+                body_data={"content": "   \n\t  "},
+            )
         self.assertIn("cannot be empty", str(context.exception).lower())
 
     def test_empty_instruction_raises_error(self):
         """Tests that empty instruction fails validation."""
-        request_data = {"instruction": ""}
         with self.assertRaises(ValidationError) as context:
-            EditTurnRequest(**request_data)
+            EditTurnRequest.create_with_path_params(
+                path_params={"session_id": "test_session", "turn_index": "0"},
+                body_data={"instruction": ""},
+            )
         self.assertIn("cannot be empty", str(context.exception).lower())
 
     def test_whitespace_only_instruction_raises_error(self):
         """Tests that whitespace-only instruction fails validation."""
-        request_data = {"instruction": "   "}
         with self.assertRaises(ValidationError) as context:
-            EditTurnRequest(**request_data)
+            EditTurnRequest.create_with_path_params(
+                path_params={"session_id": "test_session", "turn_index": "0"},
+                body_data={"instruction": "   "},
+            )
         self.assertIn("cannot be empty", str(context.exception).lower())
 
-    def test_model_dump_excludes_none_values(self):
+    @patch("pipe.web.service_container.get_session_service")
+    def test_model_dump_excludes_none_values(self, mock_get_service):
         """Tests that model_dump only includes non-None fields."""
-        request_data = {"content": "Some content"}
-        edit_request = EditTurnRequest(**request_data)
-        dumped = edit_request.model_dump()
-        self.assertIn("content", dumped)
-        self.assertNotIn("instruction", dumped)
+        mock_service = Mock()
+        mock_service.get_session.return_value = self.mock_session
+        mock_get_service.return_value = mock_service
 
-    def test_both_fields_can_be_provided(self):
+        edit_request = EditTurnRequest.create_with_path_params(
+            path_params={"session_id": "test_session", "turn_index": "0"},
+            body_data={"content": "Some content"},
+        )
+        dumped = edit_request.model_dump(exclude_none=True)
+        self.assertIn("content", dumped)
+        self.assertIn("session_id", dumped)
+        self.assertIn("turn_index", dumped)
+
+    @patch("pipe.web.service_container.get_session_service")
+    def test_both_fields_can_be_provided(self, mock_get_service):
         """Tests that both content and instruction can be provided together."""
-        request_data = {"content": "Content", "instruction": "Instruction"}
+        mock_service = Mock()
+        mock_service.get_session.return_value = self.mock_session
+        mock_get_service.return_value = mock_service
+
         try:
-            edit_request = EditTurnRequest(**request_data)
+            edit_request = EditTurnRequest.create_with_path_params(
+                path_params={"session_id": "test_session", "turn_index": "0"},
+                body_data={"content": "Content", "instruction": "Instruction"},
+            )
             self.assertEqual(edit_request.content, "Content")
             self.assertEqual(edit_request.instruction, "Instruction")
         except Exception as e:

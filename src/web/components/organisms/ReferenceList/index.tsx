@@ -16,19 +16,24 @@ import { referencesList, noItemsMessage } from './style.css'
 type ReferenceListProperties = {
   sessionDetail: SessionDetail
   placeholder?: string
+  refreshSessions: () => Promise<void>
 }
 
 export const ReferenceList = ({
   sessionDetail,
-  placeholder = 'Type to search files... (select from suggestions)'
+  placeholder = 'Type to search files... (select from suggestions)',
+  refreshSessions
 }: ReferenceListProperties): JSX.Element => {
   const formContext = useOptionalFormContext()
   const errors = formContext?.formState?.errors?.references
 
-  const { handleReferencesChange, references, existsValue } = useReferenceListHandlers(
-    sessionDetail,
-    formContext
-  )
+  const {
+    handleReferencesChange,
+    references,
+    existsValue,
+    accordionOpen,
+    setAccordionOpen
+  } = useReferenceListHandlers(sessionDetail, formContext)
 
   return (
     <MetaItem>
@@ -52,14 +57,17 @@ export const ReferenceList = ({
           >{`${references.length} ${references.length === 1 ? 'reference' : 'references'} · Advanced settings`}</span>
         }
         defaultOpen={false}
+        open={accordionOpen}
+        onOpenChange={setAccordionOpen}
       >
         <ul className={referencesList}>
           {references.map((reference, index) => (
             <ReferenceComponent
-              key={index}
+              key={reference.path}
               reference={reference}
-              currentSessionId={sessionDetail.session_id || null}
+              currentSessionId={sessionDetail.sessionId || null}
               index={index}
+              refreshSessions={refreshSessions}
             />
           ))}
         </ul>

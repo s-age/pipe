@@ -6,7 +6,10 @@ env/
 venv/
 ENV/
 .gemini/
+.claude/
+.mcp.json
 .coverage
+.processes/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
@@ -72,3 +75,7 @@ tests/sessions/
 
 # HTML Coverage Report
 htmlcov
+
+# Ignore pipe sessions and vite cache
+.pipe_sessions/
+.vite/

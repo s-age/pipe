@@ -4,7 +4,7 @@ import { SessionMeta } from '@/components/organisms/SessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import * as styles from './style.css'
-import { Tabs } from '../../atoms/Tabs'
+import { Tabs } from '../../molecules/Tabs'
 import { Compressor } from '../Compressor'
 import { Therapist } from '../Therapist'
 import { useSessionControlHandlers } from './hooks/useSessionControlHandlers'
@@ -13,11 +13,13 @@ import type { SessionControlTab } from './hooks/useSessionControlHandlers'
 export type SessionControlProperties = {
   sessionDetail: SessionDetail
   onRefresh: () => Promise<void>
+  onSessionDetailUpdate?: (sessionDetail: SessionDetail) => void
 }
 
 export const SessionControl = ({
   sessionDetail,
-  onRefresh
+  onRefresh,
+  onSessionDetailUpdate
 }: SessionControlProperties): JSX.Element => {
   const { active, handleTabChange } = useSessionControlHandlers()
 
@@ -33,7 +35,11 @@ export const SessionControl = ({
 
       <div className={styles.metaBody}>
         {active === 'meta' && (
-          <SessionMeta sessionDetail={sessionDetail} onRefresh={onRefresh} />
+          <SessionMeta
+            sessionDetail={sessionDetail}
+            onRefresh={onRefresh}
+            onSessionDetailUpdate={onSessionDetailUpdate}
+          />
         )}
 
         {active === 'compress' && (

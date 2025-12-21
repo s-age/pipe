@@ -3,14 +3,17 @@ Pydantic model for validating the request body of the new session API endpoint.
 """
 
 import os
-from typing import Any
 
+from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.reference import Reference
+from pipe.web.requests.base_request import BaseRequest
 from pipe.web.validators.rules.file_exists import validate_list_of_files_exist
-from pydantic import BaseModel, field_validator
+from pydantic import ConfigDict, field_validator
 
 
-class StartSessionRequest(BaseModel):
+class StartSessionRequest(BaseRequest):
+    model_config = ConfigDict(extra="ignore")
+
     purpose: str
     background: str
     instruction: str
@@ -20,7 +23,7 @@ class StartSessionRequest(BaseModel):
     artifacts: list[str] | None = None
     procedure: str | None = None
     multi_step_reasoning_enabled: bool = False
-    hyperparameters: dict[str, Any] | None = None
+    hyperparameters: Hyperparameters | None = None
 
     @field_validator("purpose", "background", "instruction")
     @classmethod

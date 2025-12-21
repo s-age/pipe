@@ -6,9 +6,10 @@ import warnings
 from dotenv import load_dotenv
 from pipe.core.dispatcher import dispatch
 from pipe.core.factories.service_factory import ServiceFactory
+from pipe.core.factories.settings_factory import SettingsFactory
 from pipe.core.models.args import TaktArgs
-from pipe.core.models.settings import Settings
-from pipe.core.utils.file import read_text_file, read_yaml_file
+from pipe.core.utils.file import read_text_file
+from pipe.core.utils.path import get_project_root
 from pipe.core.validators.sessions import start_session as start_session_validator
 
 # Ignore specific warnings from the genai library
@@ -137,42 +138,13 @@ def _parse_arguments():
     return args, parser
 
 
-def find_project_root_from_cwd():
-    """
-    Attempts to find the project root by searching upwards from the current
-    working directory for a marker file/directory (e.g., .git or pyproject.toml).
-    If not found, falls back to a path relative to the script's location.
-    """
-    current_dir = os.path.abspath(os.getcwd())
-
-    while True:
-        if os.path.exists(os.path.join(current_dir, ".git")) or os.path.exists(
-            os.path.join(current_dir, "pyproject.toml")
-        ):
-            return current_dir
-        parent_dir = os.path.dirname(current_dir)
-        if parent_dir == current_dir:  # Reached filesystem root
-            break
-        current_dir = parent_dir
-
-    # Fallback: if no marker found, assume project root is 3 levels up
-    # from script location
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
-
-
 def main():
-    project_root = find_project_root_from_cwd()
+    project_root = get_project_root()
     if not check_and_show_warning(project_root):
         sys.exit(1)
 
     load_dotenv()
-    config_path = os.path.join(project_root, "setting.yml")
-    if not os.path.exists(config_path):
-        config_path = os.path.join(project_root, "setting.default.yml")
-
-    settings_dict = read_yaml_file(config_path)
-    settings = Settings(**settings_dict)
+    settings = SettingsFactory.get_settings()
 
     parsed_args, parser = _parse_arguments()
     args = TaktArgs.from_parsed_args(parsed_args)

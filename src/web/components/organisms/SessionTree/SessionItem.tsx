@@ -1,6 +1,6 @@
+import { clsx } from 'clsx'
 import { forwardRef } from 'react'
 
-import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
 import { useSessionItemHandlers } from './hooks/useSessionItemHandlers'
@@ -14,22 +14,25 @@ import {
 type SessionItemProperties = {
   session: SessionOverview
   currentSessionId: string
-  selectSession: (id: string | null, detail: SessionDetail | null) => void
+  handleSelectSession: (sessionId: string) => Promise<void>
 }
 
 export const SessionItem = forwardRef<HTMLLIElement, SessionItemProperties>(
-  ({ session, currentSessionId, selectSession }, reference) => {
-    const { onClick } = useSessionItemHandlers({ session, selectSession })
+  ({ session, currentSessionId, handleSelectSession }, reference) => {
+    const { onClick } = useSessionItemHandlers({ session, handleSelectSession })
 
     return (
-      <li key={session.session_id} className={sessionListItem} ref={reference}>
+      <li key={session.sessionId} className={sessionListItem} ref={reference}>
         <a
-          href={`/session/${session.session_id}`}
-          className={`${sessionLink} ${session.session_id === currentSessionId ? sessionLinkActive : ''}`.trim()}
+          href={`/session/${session.sessionId}`}
+          className={clsx(
+            sessionLink,
+            session.sessionId === currentSessionId && sessionLinkActive
+          )}
           onClick={onClick}
         >
           {session.purpose}{' '}
-          <p className={sessionIdStyle}>{session.session_id.substring(0, 8)}</p>
+          <p className={sessionIdStyle}>{session.sessionId.substring(0, 8)}</p>
         </a>
       </li>
     )

@@ -1,11 +1,11 @@
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
+from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.settings import Settings
 from pipe.core.models.todo import TodoItem
-from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.services.session_service import SessionService
 from pipe.core.tools.edit_todos import edit_todos
 
@@ -29,12 +29,10 @@ class TestEditTodosTool(unittest.TestCase):
             },
         }
         self.settings = Settings(**settings_data)
-        self.mock_repository = Mock(spec=SessionRepository)
-        self.session_service = SessionService(
-            project_root=self.project_root,
-            settings=self.settings,
-            repository=self.mock_repository,
-        )
+        self.service_factory = ServiceFactory(self.project_root, self.settings)
+        self.session_service = self.service_factory.create_session_service()
+        self.todo_service = self.service_factory.create_session_todo_service()
+
         session = self.session_service.create_new_session("Test", "Test", [])
         self.session_id = session.session_id
 
@@ -43,9 +41,7 @@ class TestEditTodosTool(unittest.TestCase):
             TodoItem(title="Task 1", checked=False),
             TodoItem(title="Task 2", checked=True),
         ]
-        self.session_service.update_todos(
-            self.session_id, [t.model_dump() for t in initial_todos]
-        )
+        self.todo_service.update_todos(self.session_id, initial_todos)
 
     def tearDown(self):
         shutil.rmtree(self.project_root)
@@ -59,16 +55,25 @@ class TestEditTodosTool(unittest.TestCase):
             TodoItem(title="Task 3", checked=False),
         ]
         result = edit_todos(
-            todos=[t.model_dump() for t in new_todos],
+            todos=new_todos,
             session_service=self.session_service,
             session_id=self.session_id,
         )
 
-        self.assertIn("message", result)
-        self.assertNotIn("error", result)
-        self.assertIn("successfully updated", result["message"])
+        self.assertIsNotNone(result.data.message)
+        self.assertIsNone(result.data.error)
+        self.assertIn("successfully updated", result.data.message)
+        self.assertIsNotNone(result.data.current_todos)
 
-        # Verify that the todos were actually updated
+        # Verify that the returned todos match the new todos
+        self.assertEqual(len(result.data.current_todos), 2)
+        self.assertEqual(result.data.current_todos[0].title, "Task 1")
+        self.assertTrue(result.data.current_todos[0].checked)
+        self.assertEqual(result.data.current_todos[1].title, "Task 3")
+        self.assertFalse(result.data.current_todos[1].checked)
+
+        # Optional: Verify actual session state (though tool's return should be
+        # sufficient)
         session = self.session_service.get_session(self.session_id)
         self.assertEqual(len(session.todos), 2)
         self.assertEqual(session.todos[0].title, "Task 1")
@@ -81,8 +86,8 @@ class TestEditTodosTool(unittest.TestCase):
         Tests that an error is returned if session_service is not provided.
         """
         result = edit_todos(todos=[], session_id=self.session_id)
-        self.assertIn("error", result)
-        self.assertEqual(result["error"], "This tool requires an active session.")
+        self.assertIsNotNone(result.error)
+        self.assertEqual(result.error, "This tool requires a session_service.")
 
     def test_edit_todos_failure(self):
         """
@@ -94,20 +99,31 @@ class TestEditTodosTool(unittest.TestCase):
         mock_session_service.get_session.return_value = mock_session
         error_message = "Test exception"
 
+        # Mock the create_session_todo_service method of the ServiceFactory
         with patch(
-            "pipe.core.domains.todos.update_todos_in_session",
-            side_effect=Exception(error_message),
-        ) as mock_update_todos_in_session:
+            "pipe.core.tools.edit_todos.ServiceFactory.create_session_todo_service"
+        ) as mock_create_todo_service:
+            mock_todo_service = MagicMock(spec_set=self.todo_service)  # Create a mock
+            # for SessionTodoService
+            mock_create_todo_service.return_value = mock_todo_service
+
+            # Set the side effect on the update_todos method of the mock_todo_service
+            mock_todo_service.update_todos.side_effect = Exception(error_message)
+
             result = edit_todos(
                 todos=[],
-                session_service=mock_session_service,
+                session_service=self.session_service,
                 session_id=self.session_id,
             )
 
-            mock_update_todos_in_session.assert_called_once_with(mock_session, [])
-            self.assertIn("error", result)
+            mock_create_todo_service.assert_called_once()  # Ensure the factory
+            # method was called
+            mock_todo_service.update_todos.assert_called_once_with(
+                self.session_id, []
+            )  # Ensure update_todos was called on the mock service
+            self.assertIsNotNone(result.error)
             self.assertEqual(
-                result["error"], f"Failed to update todos in session: {error_message}"
+                result.error, f"Failed to update todos in session: {error_message}"
             )
 
 

@@ -17,5 +17,7 @@ class ProcedureRepository:
                     # Remove .md extension for the label
                     label = os.path.splitext(relative_path)[0].replace(os.sep, "/")
                     value = f"procedures/{relative_path.replace(os.sep, '/')}"
-                    procedure_options.append(ProcedureOption(label=label, value=value))
+                    procedure_options.append(
+                        ProcedureOption.model_validate({"label": label, "value": value})
+                    )
         return sorted(procedure_options, key=lambda x: x.label)

@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from pipe.core.models.base import CamelCaseModel
 
 
-class Reference(BaseModel):
+class Reference(CamelCaseModel):
     path: str
     disabled: bool = False
     ttl: int | None = None

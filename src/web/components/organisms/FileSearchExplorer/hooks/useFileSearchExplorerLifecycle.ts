@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react'
-
-import type { useFileSearchExplorerActions } from './useFileSearchExplorerActions'
+import { useEffect, useMemo, useState } from 'react'
 
 type Item = {
   label: string
@@ -10,25 +8,28 @@ type Item = {
 
 type UseFileSearchExplorerLifecycleProperties = {
   query: string
-  actions: ReturnType<typeof useFileSearchExplorerActions>
   inputReference: React.RefObject<HTMLInputElement | null>
   suggestionListReference: React.RefObject<HTMLUListElement | null>
   setSuggestions: (suggestions: Item[]) => void
   setSelectedIndex: (index: number) => void
+  selectedValues: string[]
   // ... cache management state/setters
 }
 
 export const useFileSearchExplorerLifecycle = ({
   query,
-  actions,
   inputReference,
   suggestionListReference,
   setSuggestions,
-  setSelectedIndex
+  setSelectedIndex,
+  selectedValues
 }: UseFileSearchExplorerLifecycleProperties): {
   debouncedQuery: string
+  existingValues: Set<string>
 } => {
   const [debouncedQuery, setDebouncedQuery] = useState<string>(query)
+
+  const existingValues = useMemo(() => new Set(selectedValues), [selectedValues])
 
   // Debounce processing
   useEffect((): (() => void) => {
@@ -40,15 +41,6 @@ export const useFileSearchExplorerLifecycle = ({
       clearTimeout(handler)
     }
   }, [query])
-
-  // Monitor changes in debouncedQuery and trigger API call
-  useEffect((): void => {
-    if (debouncedQuery) {
-      // Call searchL2 API here
-      void actions.searchL2({ query: debouncedQuery, path: '' }) // Set appropriate path
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -72,6 +64,7 @@ export const useFileSearchExplorerLifecycle = ({
   }, [inputReference, suggestionListReference, setSuggestions, setSelectedIndex])
 
   return {
-    debouncedQuery
+    debouncedQuery,
+    existingValues
   }
 }

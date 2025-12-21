@@ -1,0 +1,26 @@
+{% from "description.j2" import render_description_macro %}
+{% from "main_instruction.j2" import render_main_instruction_macro %}
+{% from "constraints.j2" import render_constraints_macro %}
+{% from "session_goal.j2" import render_session_goal_macro %}
+{% from "procedure.j2" import render_procedure_macro %}
+{% from "roles.j2" import render_roles_macro %}
+{% from "advanced_reasoning_flow.j2" import render_advanced_reasoning_flow_macro %}
+{% from "conversation_history.j2" import render_conversation_history_macro %}
+{
+  "description": {{ render_description_macro(session.description) }},
+  "main_instruction": {{ render_main_instruction_macro() }},
+  "constraints": {{ render_constraints_macro(session.constraints) }},
+  "session_goal": {{ render_session_goal_macro(session.session_goal) }},
+  {% if session.procedure %}
+  "procedure": {{ render_procedure_macro(session.procedure, session.procedure_content) }},
+  {% endif %}
+  {% if session.roles and session.roles.definitions | length > 0 %}
+  "roles": {{ render_roles_macro(session.roles) }},
+  {% endif %}
+  {% if session.cached_history %}
+  "cached_conversation": {{ render_conversation_history_macro(session.cached_history) }},
+  {% endif %}
+  {% if session.constraints.processing_config.multi_step_reasoning_active %}
+  "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.constraints.processing_config.multi_step_reasoning_active) }}
+  {% endif %}
+}

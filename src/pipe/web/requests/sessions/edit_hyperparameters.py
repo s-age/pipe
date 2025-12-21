@@ -11,27 +11,35 @@ Behaviour:
   - top_k: int >= 0
 """
 
-from typing import Any
+from typing import ClassVar
 
-from pydantic import BaseModel, model_validator
+from pipe.web.exceptions import NotFoundError
+from pipe.web.requests.base_request import BaseRequest
+from pipe.web.requests.common import normalize_camel_case_keys
+from pydantic import model_validator
 
 
-class EditHyperparametersRequest(BaseModel):
+class EditHyperparametersRequest(BaseRequest):
+    path_params: ClassVar[list[str]] = ["session_id"]
+
+    # Path parameter (from URL)
+    session_id: str
+
+    # Body fields (all optional, at least one required)
     temperature: float | None = None
     top_p: float | None = None
     top_k: int | None = None
 
     @model_validator(mode="before")
     @classmethod
-    def normalize_and_validate(cls, data: Any) -> Any:
+    def normalize_and_validate(cls, data: dict | list) -> dict:
         if not isinstance(data, dict):
             raise ValueError("Request body must be a JSON object.")
 
-        # Accept camelCase aliases and normalize to snake_case
-        if "topP" in data and "top_p" not in data:
-            data["top_p"] = data.pop("topP")
-        if "topK" in data and "top_k" not in data:
-            data["top_k"] = data.pop("topK")
+        # Normalize camelCase to snake_case
+        normalized = normalize_camel_case_keys(data)
+        assert isinstance(normalized, dict)  # Type narrowing for mypy
+        data = normalized
 
         # Require at least one hyperparameter field
         if not any(k in data for k in ("temperature", "top_p", "top_k")):
@@ -80,3 +88,14 @@ class EditHyperparametersRequest(BaseModel):
             data["top_k"] = k
 
         return data
+
+    @model_validator(mode="after")
+    def validate_session_exists(self):
+        """Validate that the session exists."""
+        from pipe.web.service_container import get_session_service
+
+        session_data = get_session_service().get_session(self.session_id)
+        if not session_data:
+            raise NotFoundError("Session not found.")
+
+        return self

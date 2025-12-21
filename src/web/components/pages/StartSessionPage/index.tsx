@@ -8,7 +8,7 @@ import { StartSessionForm } from '@/components/organisms/StartSessionForm'
 import { useStartSessionPageLifecycle } from './hooks/useStartSessionPageLifecycle'
 import { pageContent } from './style.css.ts'
 
-export const StartSessionPage: () => JSX.Element = () => {
+export const StartSessionPage = (): JSX.Element => {
   const {
     settings,
     parentOptions,
@@ -23,10 +23,10 @@ export const StartSessionPage: () => JSX.Element = () => {
     return <LoadingSpinner />
   }
 
-  if (error && !loading) {
+  if (error || !settings) {
     return (
       <AppLayout>
-        <ErrorMessage message={error} />
+        <ErrorMessage message={error || 'Failed to load settings'} />
       </AppLayout>
     )
   }
@@ -40,7 +40,6 @@ export const StartSessionPage: () => JSX.Element = () => {
           defaultValues={startDefaults ?? undefined}
         />
       </div>
-      {error && <ErrorMessage message={error} />}
     </AppLayout>
   )
 }

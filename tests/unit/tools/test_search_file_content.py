@@ -2,13 +2,22 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 
+from pipe.core.models.results.search_file_content_result import (
+    SearchFileContentResult,
+)
 from pipe.core.tools.search_file_content import search_file_content
 
 
 class TestSearchFileContentTool(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
+
+        # Patch get_project_root
+        self.patcher = patch("pipe.core.tools.search_file_content.get_project_root")
+        self.mock_get_project_root = self.patcher.start()
+        self.mock_get_project_root.return_value = self.test_dir
 
         # Create dummy files with content to search
         self.file1_path = os.path.join(self.test_dir, "file1.txt")
@@ -23,6 +32,7 @@ class TestSearchFileContentTool(unittest.TestCase):
             f.write("    print('hello')\n")
 
     def tearDown(self):
+        self.patcher.stop()
         shutil.rmtree(self.test_dir)
 
     def test_search_file_content_finds_pattern(self):
@@ -31,14 +41,14 @@ class TestSearchFileContentTool(unittest.TestCase):
         """
         result = search_file_content(path=self.test_dir, pattern="hello")
 
-        self.assertIn("content", result)
-        self.assertIsInstance(result["content"], list)
-        self.assertEqual(len(result["content"]), 3)
+        self.assertIsInstance(result.data, SearchFileContentResult)
+        self.assertIsInstance(result.data.content, list)
+        self.assertEqual(len(result.data.content), 3)
 
         # Check content of the results
-        content = result["content"]
+        content = result.data.content
         assert isinstance(content, list)
-        found_paths = {r["file_path"] for r in content}
+        found_paths = {r.file_path for r in content}
         expected_paths = {
             os.path.relpath(self.file1_path, self.test_dir),
             os.path.relpath(self.file2_path, self.test_dir),
@@ -51,27 +61,27 @@ class TestSearchFileContentTool(unittest.TestCase):
             (
                 m
                 for m in content
-                if m["file_path"] == os.path.relpath(self.file1_path, self.test_dir)
+                if m.file_path == os.path.relpath(self.file1_path, self.test_dir)
             ),
             None,
         )
         self.assertIsNotNone(hello_world_match)
         assert hello_world_match is not None
-        self.assertEqual(hello_world_match["line_number"], 1)
-        self.assertEqual(hello_world_match["line_content"], "hello world")
+        self.assertEqual(hello_world_match.line_number, 1)
+        self.assertEqual(hello_world_match.line_content, "hello world")
 
         def_hello_match = next(
             (
                 m
                 for m in content
-                if m["file_path"] == os.path.relpath(self.file2_path, self.test_dir)
-                and m["line_number"] == 2
+                if m.file_path == os.path.relpath(self.file2_path, self.test_dir)
+                and m.line_number == 2
             ),
             None,
         )
         self.assertIsNotNone(def_hello_match)
         assert def_hello_match is not None
-        self.assertEqual(def_hello_match["line_content"], "def hello():")
+        self.assertEqual(def_hello_match.line_content, "def hello():")
 
     def test_search_file_content_with_include_glob(self):
         """
@@ -82,13 +92,13 @@ class TestSearchFileContentTool(unittest.TestCase):
             path=self.test_dir, pattern="hello", include="*.txt"
         )
 
-        self.assertIn("content", result)
-        self.assertIsInstance(result["content"], list)
-        content = result["content"]
+        self.assertIsInstance(result.data, SearchFileContentResult)
+        self.assertIsInstance(result.data.content, list)
+        content = result.data.content
         assert isinstance(content, list)
         self.assertEqual(len(content), 1)
         self.assertEqual(
-            content[0]["file_path"],
+            content[0].file_path,
             os.path.relpath(self.file1_path, self.test_dir),
         )
 
@@ -98,8 +108,9 @@ class TestSearchFileContentTool(unittest.TestCase):
         """
         result = search_file_content(path=self.test_dir, pattern="non_existent_pattern")
 
-        self.assertIn("content", result)
-        self.assertEqual(result["content"], "No matches found.")
+        self.assertIsInstance(result.data, SearchFileContentResult)
+        self.assertIsInstance(result.data.content, str)
+        self.assertEqual(result.data.content, "No matches found.")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ import type {
 
 import { useSessionListHandlers } from './hooks/useSessionListHandlers'
 import { useSessionListLifecycle } from './hooks/useSessionListLifecycle'
+import { SessionListNode } from './SessionListNode'
 import {
   sessionList,
   header,
@@ -17,9 +18,7 @@ import {
   headerContent,
   headerSubject,
   headerShortHash,
-  headerUpdatedAt,
-  sessionNode,
-  sessionChildren
+  headerUpdatedAt
 } from './style.css'
 
 type Properties = {
@@ -31,6 +30,8 @@ type Properties = {
   ) => void
   onSelectSession: (sessionId: string, isSelected: boolean) => void
   updateLabel?: string
+  /** Use filePath instead of sessionId for archives to handle multiple versions */
+  useFilePath?: boolean
 }
 
 export const SessionList = ({
@@ -38,7 +39,8 @@ export const SessionList = ({
   selectedSessionIds,
   onSelectAll,
   onSelectSession,
-  updateLabel = 'Updated At'
+  updateLabel = 'Updated At',
+  useFilePath = false
 }: Properties): JSX.Element => {
   const getAllSessionIds = (
     sessions: SessionOverview[] | SessionTreeNode[]
@@ -46,7 +48,16 @@ export const SessionList = ({
     const ids: string[] = []
     const collectIds = (items: SessionOverview[] | SessionTreeNode[]): void => {
       items.forEach((item) => {
-        ids.push(item.session_id)
+        // For archives with filePath, use filePath as unique identifier
+        if (useFilePath && 'filePath' in item && item.filePath) {
+          ids.push(item.filePath)
+        } else if ('overview' in item) {
+          // For tree nodes, use sessionId
+          ids.push(item.sessionId)
+        } else {
+          // For flat sessions, use sessionId
+          ids.push(item.sessionId)
+        }
         if ('children' in item && item.children) {
           collectIds(item.children)
         }
@@ -74,54 +85,35 @@ export const SessionList = ({
       // Hierarchical nodes: render recursively
       const treeNodes = sessions as SessionTreeNode[]
 
-      return treeNodes.map((node) => renderNode(node))
+      return treeNodes.map((node) => (
+        <SessionListNode
+          key={node.sessionId}
+          node={node}
+          selectedSessionIds={selectedSessionIds}
+          onSelectSession={onSelectSession}
+          updateLabel={updateLabel}
+        />
+      ))
     } else {
       // Flat list: render as before
       const flatSessions = sessions as SessionOverview[]
 
-      return flatSessions.map((session) => (
-        <SessionItem
-          key={session.session_id}
-          session={session}
-          isSelected={selectedSessionIds.includes(session.session_id)}
-          onSelect={onSelectSession}
-          updateLabel={updateLabel}
-        />
-      ))
-    }
-  }
+      return flatSessions.map((session) => {
+        const itemId =
+          useFilePath && session.filePath ? session.filePath : session.sessionId
 
-  const renderNode = (node: SessionTreeNode): React.ReactElement => {
-    const overview = node.overview || {}
-    const sessionObject: SessionOverview = {
-      session_id: node.session_id,
-      purpose: (overview.purpose as string) || '',
-      background: (overview.background as string) || '',
-      roles: (overview.roles as string[]) || [],
-      procedure: (overview.procedure as string) || '',
-      artifacts: (overview.artifacts as string[]) || [],
-      multi_step_reasoning_enabled: !!overview.multi_step_reasoning_enabled,
-      token_count: (overview.token_count as number) || 0,
-      last_updated_at: (overview.last_updated_at as string) || '',
-      deleted_at: (overview.deleted_at as string) || ''
+        return (
+          <SessionItem
+            key={itemId}
+            session={session}
+            isSelected={selectedSessionIds.includes(itemId)}
+            onSelect={onSelectSession}
+            updateLabel={updateLabel}
+            useFilePath={useFilePath}
+          />
+        )
+      })
     }
-
-    let childrenElements: React.ReactElement[] | null = null
-    if (node.children && node.children.length > 0) {
-      childrenElements = node.children.map((child) => renderNode(child))
-    }
-
-    return (
-      <div key={node.session_id} className={sessionNode}>
-        <SessionItem
-          session={sessionObject}
-          isSelected={selectedSessionIds.includes(node.session_id)}
-          onSelect={onSelectSession}
-          updateLabel={updateLabel}
-        />
-        {childrenElements && <div className={sessionChildren}>{childrenElements}</div>}
-      </div>
-    )
   }
 
   return (

@@ -12,14 +12,14 @@ export type TherapistResultProperties = {
   diagnosis: Diagnosis
   isSubmitting: boolean
   selectedDeletions: number[]
-  selectedEdits: { turn: number; new_content: string }[]
+  selectedEdits: { turn: number; newContent: string }[]
   selectedCompressions: { start: number; end: number; reason: string }[]
   handleDeletionChange: (
     turn: number
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleEditChange: (edit: {
     turn: number
-    new_content: string
+    newContent: string
   }) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleApply: () => void
 }
@@ -52,7 +52,7 @@ export const TherapistResult = ({
         <ul className={styles.list}>
           {diagnosis.deletions?.map((turn: number) => (
             <li key={turn}>
-              <label>
+              <label className={styles.checkboxLabel}>
                 <Checkbox onChange={handleDeletionChange(turn)} />
                 Turn {turn}: Suggested removal
               </label>
@@ -66,9 +66,9 @@ export const TherapistResult = ({
         <ul className={styles.list}>
           {diagnosis.edits?.map((edit) => (
             <li key={edit.turn}>
-              <label>
+              <label className={styles.checkboxLabel}>
                 <Checkbox onChange={handleEditChange(edit)} />
-                Turn {edit.turn}: {edit.new_content}
+                Turn {edit.turn}: {edit.newContent}
               </label>
             </li>
           )) || <li>None</li>}
@@ -80,16 +80,16 @@ export const TherapistResult = ({
         <ul className={styles.list}>
           {diagnosis.compressions?.map((comp) => (
             <li key={`${comp.start}-${comp.end}`}>
-              <label>
+              <label className={styles.checkboxLabel}>
                 Turns {comp.start}-{comp.end}: {comp.reason}
               </label>
             </li>
           )) || <li>None</li>}
         </ul>
-        {diagnosis.raw_diagnosis && (
+        {diagnosis.rawDiagnosis && (
           <>
             <Heading level={5}>Raw Diagnosis:</Heading>
-            <pre>{diagnosis.raw_diagnosis}</pre>
+            <pre>{diagnosis.rawDiagnosis}</pre>
           </>
         )}
       </div>

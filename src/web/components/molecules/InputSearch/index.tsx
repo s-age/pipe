@@ -3,7 +3,7 @@ import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
 import { IconSearch } from '@/components/atoms/IconSearch'
 
-import { useInputSearch } from './hooks/useInputSearchHandlers'
+import { useInputSearchHandlers } from './hooks/useInputSearchHandlers'
 import { container, input, button } from './style.css'
 
 type InputSearchProperties = {
@@ -21,7 +21,7 @@ export const InputSearch = React.forwardRef<HTMLInputElement, InputSearchPropert
     { placeholder = 'Search...', value, onChange, onSubmit, register, name, onKeyDown },
     reference
   ) => {
-    const { handleSubmit, handleChange, registerProperties } = useInputSearch({
+    const { handleSubmit, handleChange, registerProperties } = useInputSearchHandlers({
       value,
       onChange,
       onSubmit,

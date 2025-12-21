@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react'
 
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
-import { useModal } from '@/components/molecules/Modal/hooks/useModal'
+import { useModal } from '@/components/organisms/ModalManager'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
@@ -21,22 +21,30 @@ export const useChatHistoryHandlers = ({
 }: UseChatHistoryHandlersProperties): {
   handleDeleteCurrentSession: () => void
   handleDeleteSession: (sessionId: string) => Promise<void>
+  handleRefreshSession: () => Promise<void>
 } => {
   const { show, hide } = useModal()
-  const { deleteSessionAction } = useChatHistoryActions({
-    currentSessionId,
-    refreshSessionsInStore
+  const { deleteSessionAction, refreshSession } = useChatHistoryActions({
+    currentSessionId
   })
 
   const modalIdReference = useRef<number | null>(null)
 
   const handleDeleteSession = useCallback(
     async (sessionId: string): Promise<void> => {
+      // Intentionally not awaiting - errors are handled in Actions layer
       void deleteSessionAction(sessionId)
       location.href = '/'
     },
     [deleteSessionAction]
   )
+
+  const handleRefreshSession = useCallback(async (): Promise<void> => {
+    const result = await refreshSession()
+    if (result) {
+      refreshSessionsInStore(result.sessionDetail, result.sessions)
+    }
+  }, [refreshSession, refreshSessionsInStore])
 
   const handleDeleteCurrentSession = useCallback((): void => {
     if (!currentSessionId) return
@@ -44,6 +52,7 @@ export const useChatHistoryHandlers = ({
     const sessionIdAtShow = currentSessionId
 
     const handleConfirm = async (): Promise<void> => {
+      // Intentionally not awaiting - errors are handled in Actions layer
       void handleDeleteSession(sessionIdAtShow)
       if (modalIdReference.current !== null) {
         hide(modalIdReference.current)
@@ -58,7 +67,7 @@ export const useChatHistoryHandlers = ({
       }
     }
 
-    modalIdReference.current = show(
+    const modalId = show(
       React.createElement(ConfirmModal, {
         title: 'Delete Session',
         message:
@@ -68,11 +77,17 @@ export const useChatHistoryHandlers = ({
         confirmText: 'Delete',
         cancelText: 'Cancel'
       })
-    ) as unknown as number
+    )
+
+    // Type guard: verify modalId is number
+    if (typeof modalId === 'number') {
+      modalIdReference.current = modalId
+    }
   }, [currentSessionId, handleDeleteSession, show, hide])
 
   return {
     handleDeleteCurrentSession,
-    handleDeleteSession
+    handleDeleteSession,
+    handleRefreshSession
   }
 }

@@ -1,5 +1,3 @@
-from typing import Any
-
 from pipe.core.models.turn import Turn
 
 
@@ -9,11 +7,11 @@ class PromptTurnCollection:
     for constraining the history size to fit within context limits.
     """
 
-    def __init__(self, turns: list[Turn], token_limit: int = 400000):
+    def __init__(self, turns: list[Turn], token_limit: int = 120000):
         self._turns = turns
         self.token_limit = token_limit
 
-    def get_turns(self) -> list[dict[str, Any]]:
+    def get_turns(self) -> list[Turn]:
         """
         Returns the turns for the prompt, constrained by the token limit.
 
@@ -23,4 +21,4 @@ class PromptTurnCollection:
         # Placeholder: In the future, this method will intelligently select turns
         # (e.g., omitting older ones) based on token count to not exceed
         # self.token_limit.
-        return [turn.model_dump() for turn in self._turns]
+        return self._turns

@@ -1,7 +1,7 @@
 import type { JSX } from 'react'
 import { createPortal } from 'react-dom'
 
-import { useTooltipPortal } from './hooks/useTooltipPortal'
+import { useTooltipLifecycle } from './hooks/useTooltipLifecycle'
 import {
   tooltipText,
   placementTop,
@@ -28,7 +28,7 @@ const TooltipPortal = ({
   offsetMain,
   offsetCross
 }: Properties): JSX.Element | null => {
-  const elementReference = useTooltipPortal({
+  const elementReference = useTooltipLifecycle({
     isVisible,
     placement,
     targetRect,

@@ -26,7 +26,7 @@ Use Docker Compose for a quick and isolated setup.
      cp .env.default .env
      ```
    - Edit `.env` and add your API keys:
-     - For Gemini API: `GEMINI_API_KEY='YOUR_API_KEY_HERE'`
+     - For Gemini API: `GOOGLE_API_KEY='YOUR_API_KEY_HERE'`
      - For other services, add as needed.
 
 3. **Run the application:**
@@ -101,7 +101,7 @@ For development or when Docker is not available, set up manually using Poetry.
    ```
 
 4. **Set up API Key:** Create a `.env` file (you can copy `.env.default`).
-   - For Gemini API mode: Add `GEMINI_API_KEY='YOUR_API_KEY_HERE'`.
+   - For Gemini API mode: Add `GOOGLE_API_KEY='YOUR_API_KEY_HERE'` in your `.env` file.
    - For `gemini-cli` mode: Set `GOOGLE_API_KEY` in your environment (e.g., `export GOOGLE_API_KEY='YOUR_API_KEY_HERE'`).
    - The system supports extensible backends; configure other agents (e.g., Claude, OpenAI) via `setting.yml` and their respective API keys.
 

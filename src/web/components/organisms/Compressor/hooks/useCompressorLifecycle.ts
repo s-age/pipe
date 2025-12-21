@@ -1,19 +1,35 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+
+import type { FormMethods } from '@/components/organisms/Form'
 
 import type { CompressorFormInputs } from '../schema'
 
 type UseCompressorLifecycleProperties = {
   effectiveMax: number
+  startLocal: number
+  endLocal: number
+  formContext: FormMethods<CompressorFormInputs> | undefined
 }
 
 type UseCompressorLifecycleReturn = {
   defaultValues: CompressorFormInputs
   mergedDefaultValues: Record<string, unknown>
+  endOptions: number[]
 }
 
 export const useCompressorLifecycle = ({
-  effectiveMax
+  effectiveMax,
+  startLocal,
+  endLocal,
+  formContext
 }: UseCompressorLifecycleProperties): UseCompressorLifecycleReturn => {
+  // Synchronize local state to React Hook Form values
+  useEffect(() => {
+    if (formContext) {
+      formContext.setValue('startTurn', startLocal)
+      formContext.setValue('endTurn', endLocal)
+    }
+  }, [formContext, startLocal, endLocal])
   const defaultValues = useMemo<CompressorFormInputs>(
     () => ({
       policy:
@@ -25,8 +41,8 @@ export const useCompressorLifecycle = ({
     [effectiveMax]
   )
 
-  // Ensure the form's defaultValues set `endTurn` to the current maximum when
-  // no endTurn is provided by the handler. This initializes End to Max.
+  // Ensure the form's defaultValues set `end_turn` to the current maximum when
+  // no end_turn is provided by the handler. This initializes End to Max.
   const mergedDefaultValues = useMemo(() => {
     try {
       const dv = { ...(defaultValues as Record<string, unknown>) }
@@ -43,8 +59,19 @@ export const useCompressorLifecycle = ({
     }
   }, [defaultValues, effectiveMax])
 
+  const endOptions = useMemo(() => {
+    const minEnd = startLocal + 1
+    const maxEnd = effectiveMax
+
+    return Array.from(
+      { length: Math.max(0, maxEnd - minEnd + 1) },
+      (_, i) => minEnd + i
+    )
+  }, [startLocal, effectiveMax])
+
   return {
     defaultValues,
-    mergedDefaultValues
+    mergedDefaultValues,
+    endOptions
   }
 }

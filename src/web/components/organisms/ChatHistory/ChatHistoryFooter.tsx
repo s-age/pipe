@@ -9,7 +9,8 @@ type ChatHistoryFooterProperties = {
   onSendInstruction: (instruction: string) => Promise<void>
   isStreaming: boolean
   tokenCount?: number
-  contextLimit?: number
+  contextLimit: number
+  onRefresh?: () => Promise<void>
 }
 
 export const ChatHistoryFooter = ({
@@ -17,7 +18,8 @@ export const ChatHistoryFooter = ({
   onSendInstruction,
   isStreaming,
   tokenCount,
-  contextLimit
+  contextLimit,
+  onRefresh
 }: ChatHistoryFooterProperties): JSX.Element => (
   <section className={newInstructionControl}>
     <div className={footerForm}>
@@ -27,6 +29,7 @@ export const ChatHistoryFooter = ({
         isStreaming={isStreaming}
         tokenCount={tokenCount}
         contextLimit={contextLimit}
+        onRefresh={onRefresh}
       />
     </div>
   </section>

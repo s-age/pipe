@@ -1,4 +1,4 @@
-import { useCallback, useId, useMemo, useState, useRef, useEffect } from 'react'
+import { useCallback, useId, useMemo, useState, useRef } from 'react'
 import type { InputHTMLAttributes } from 'react'
 import type {
   FieldValues,
@@ -7,6 +7,8 @@ import type {
 } from 'react-hook-form'
 
 import { useOptionalFormContext } from '@/components/organisms/Form'
+
+import { useSliderLifecycle } from './useSliderLifecycle'
 
 export type UseSliderProperties = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -40,7 +42,7 @@ export type UseSliderReturn = {
   thumbCx: number
 }
 
-export const useSlider = ({
+export const useSliderHandlers = ({
   min = 0,
   max = 100,
   step: _step = 1,
@@ -81,7 +83,10 @@ export const useSlider = ({
       const v = Number(event.target.value)
       // call react-hook-form onChange if present (it expects the native event)
       try {
-        registerProperties?.onChange?.(event as unknown as Event)
+        // Type guard: verify nativeEvent exists
+        if (event.nativeEvent) {
+          registerProperties?.onChange?.(event.nativeEvent)
+        }
       } catch {
         // ignore
       }
@@ -98,33 +103,9 @@ export const useSlider = ({
   const visibleValue =
     typeof controlledValue === 'number' ? controlledValue : internalValue
 
-  // measured width for responsive geometry (falls back to 300)
-  const [measuredWidth, setMeasuredWidth] = useState<number>(300)
-  const containerReference = useRef<HTMLDivElement | null>(null)
-
-  useEffect((): (() => void) | undefined => {
-    if (typeof window === 'undefined' || !('ResizeObserver' in window)) return undefined
-
-    let rafId: number | null = null
-    const ro = new ResizeObserver((entries) => {
-      const entry = entries[0]
-      if (!entry) return
-      const width = Math.max(0, Math.floor(entry.contentRect.width))
-      // throttle to rAF
-      if (rafId !== null) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(() => {
-        setMeasuredWidth(width || 300)
-        rafId = null
-      })
-    })
-
-    if (containerReference.current) ro.observe(containerReference.current)
-
-    return (): void => {
-      ro.disconnect()
-      if (rafId !== null) cancelAnimationFrame(rafId)
-    }
-  }, [])
+  // Lifecycle: ResizeObserver for responsive geometry
+  const { measuredWidth, containerRef: lifecycleContainerReference } =
+    useSliderLifecycle()
 
   const svgWidth = measuredWidth || 300
   const thumbR = 8
@@ -145,9 +126,7 @@ export const useSlider = ({
     registerProperties,
     visibleValue,
     handleChange,
-    containerRef: (element: HTMLDivElement | null): void => {
-      containerReference.current = element
-    },
+    containerRef: lifecycleContainerReference,
     svgWidth,
     thumbR,
     strokeWidth,

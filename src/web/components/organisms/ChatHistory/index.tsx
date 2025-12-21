@@ -7,7 +7,6 @@ import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 import { ChatHistoryBody } from './ChatHistoryBody'
 import { ChatHistoryFooter } from './ChatHistoryFooter'
 import { ChatHistoryHeader } from './ChatHistoryHeader'
-import { useChatHistoryActions } from './hooks/useChatHistoryActions'
 import { useChatHistoryHandlers } from './hooks/useChatHistoryHandlers'
 import { useChatStreaming } from './hooks/useChatStreaming'
 import { chatRoot } from './style.css'
@@ -31,27 +30,26 @@ export const ChatHistory = ({
 }: ChatHistoryProperties): JSX.Element => {
   const parameters = useParams()
   const sessionId = parameters['*'] || null
-  console.log(useParams<{ sessionId: string }>())
 
-  const { streamedText, isStreaming, turnsListReference, onSendInstruction } =
-    useChatStreaming({
-      currentSessionId: sessionId,
-      // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
-      setSessionDetail: setSessionDetail
-    })
+  const {
+    streamingTurns,
+    isStreaming,
+    turnsListReference,
+    onSendInstruction,
+    scrollToBottom
+  } = useChatStreaming({
+    currentSessionId: sessionId,
+    // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint
+    setSessionDetail: setSessionDetail
+  })
 
-  const { handleDeleteCurrentSession } = useChatHistoryHandlers({
+  const { handleDeleteCurrentSession, handleRefreshSession } = useChatHistoryHandlers({
     currentSessionId: sessionId,
     refreshSessionsInStore
   })
 
-  const { refreshSession } = useChatHistoryActions({
-    currentSessionId: sessionId,
-    refreshSessionsInStore
-  })
-
-  const tokenCount = sessionDetail?.token_count ?? 0
-  const contextLimit = sessionDetail?.settings?.context_limit ?? 700000
+  const tokenCount = sessionDetail?.tokenCount ?? 0
+  const contextLimit = sessionDetail?.settings?.contextLimit ?? 700000
 
   return (
     <div className={chatRoot}>
@@ -64,10 +62,11 @@ export const ChatHistory = ({
         currentSessionId={sessionId ?? null}
         expertMode={expertMode}
         isStreaming={isStreaming}
-        streamedText={streamedText}
+        streamingTurns={streamingTurns}
         turnsListReference={turnsListReference}
-        onRefresh={refreshSession}
+        onRefresh={handleRefreshSession}
         refreshSessionsInStore={refreshSessionsInStore}
+        scrollToBottom={scrollToBottom}
       />
       <ChatHistoryFooter
         currentSessionId={sessionId}
@@ -75,6 +74,7 @@ export const ChatHistory = ({
         isStreaming={isStreaming}
         tokenCount={tokenCount}
         contextLimit={contextLimit}
+        onRefresh={handleRefreshSession}
       />
     </div>
   )

@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react'
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
-import { useModal } from '@/components/molecules/Modal/hooks/useModal'
+import { useModal } from '@/components/organisms/ModalManager'
 import { getSession } from '@/lib/api/session/getSession'
 import type { Turn } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -14,9 +14,6 @@ type UseTurnHandlersProperties = {
   turn: Turn
   index: number
   sessionId: string
-  editedContent: string
-  setIsEditing: (isEditing: boolean) => void
-  setEditedContent: (editedContent: string) => void
   onRefresh: () => Promise<void>
   refreshSessionsInStore: (
     sessionDetail: SessionDetail,
@@ -26,25 +23,29 @@ type UseTurnHandlersProperties = {
   editTurnAction: (
     sessionId: string,
     turnIndex: number,
-    newContent: string,
+    new_content: string,
     turn: Turn
   ) => Promise<void>
-  forkSessionAction: (sessionId: string, forkIndex: number) => Promise<void>
+  forkSessionAction: (
+    sessionId: string,
+    forkIndex: number
+  ) => Promise<string | undefined>
 }
 
 export const useTurnHandlers = ({
   turn,
   index,
   sessionId,
-  editedContent,
-  setIsEditing,
-  setEditedContent,
   onRefresh,
   refreshSessionsInStore,
   deleteTurnAction,
   editTurnAction,
   forkSessionAction
 }: UseTurnHandlersProperties): {
+  isEditing: boolean
+  editedContent: string
+  setIsEditing: (isEditing: boolean) => void
+  setEditedContent: (editedContent: string) => void
   handleCopy: () => Promise<void>
   handleEditedChange: (event: ChangeEvent<HTMLTextAreaElement>) => void
   handleCancelEdit: () => void
@@ -53,6 +54,27 @@ export const useTurnHandlers = ({
   handleDelete: () => void
   handleSaveEdit: () => void
 } => {
+  const [isEditing, setIsEditing] = useState<boolean>(false)
+  const [editedContent, setEditedContent] = useState<string>(() => {
+    if (turn.type === 'user_task') {
+      return turn.instruction
+    }
+    if (turn.type === 'model_response' || turn.type === 'compressed_history') {
+      return turn.content
+    }
+    if (turn.type === 'function_calling') {
+      return turn.response
+    }
+    if (turn.type === 'tool_response') {
+      if (typeof turn.response.message === 'string') {
+        return turn.response.message
+      }
+
+      return JSON.stringify(turn.response.message, null, 2)
+    }
+
+    return ''
+  })
   const { show, hide } = useModal()
 
   const modalIdReference = useRef<number | null>(null)
@@ -60,7 +82,6 @@ export const useTurnHandlers = ({
 
   const handleCopy = useCallback(async (): Promise<void> => {
     await navigator.clipboard.writeText(editedContent)
-
     toast.addToast({ status: 'success', title: 'Copied to clipboard.' })
   }, [editedContent, toast])
 
@@ -73,16 +94,36 @@ export const useTurnHandlers = ({
 
   const handleCancelEdit = useCallback((): void => {
     setIsEditing(false)
-    setEditedContent(turn.content ?? turn.instruction ?? '')
-  }, [turn.content, turn.instruction, setIsEditing, setEditedContent])
+    let content = ''
+    if (turn.type === 'user_task') {
+      content = turn.instruction
+    } else if (turn.type === 'model_response' || turn.type === 'compressed_history') {
+      content = turn.content
+    } else if (turn.type === 'function_calling') {
+      content = turn.response
+    } else if (turn.type === 'tool_response') {
+      content =
+        typeof turn.response.message === 'string'
+          ? turn.response.message
+          : JSON.stringify(turn.response.message, null, 2)
+    }
+    setEditedContent(content)
+  }, [turn, setIsEditing, setEditedContent])
 
   const handleStartEdit = useCallback((): void => setIsEditing(true), [setIsEditing])
 
   const handleConfirmFork = useCallback(async (): Promise<void> => {
-    if (modalIdReference.current !== null) {
-      await forkSessionAction(sessionId, index)
-      hide(modalIdReference.current)
-      modalIdReference.current = null
+    const currentModalId = modalIdReference.current
+    if (currentModalId !== null) {
+      try {
+        const newSessionId = await forkSessionAction(sessionId, index)
+        if (newSessionId) {
+          window.location.href = `/session/${newSessionId}`
+        }
+      } finally {
+        hide(currentModalId)
+        modalIdReference.current = null
+      }
     }
   }, [forkSessionAction, sessionId, index, hide])
 
@@ -106,18 +147,24 @@ export const useTurnHandlers = ({
   }, [show, handleConfirmFork, handleCancelFork])
 
   const handleConfirmDelete = useCallback(async (): Promise<void> => {
-    if (modalIdReference.current !== null) {
-      await deleteTurnAction(sessionId, index)
-      await onRefresh()
-      const fetchedSessionDetailResponse = await getSession(sessionId)
-      const fetchedSessionTree = await getSessionTree()
-      const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
-        ...session,
-        session_id: id
-      }))
-      refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
-      hide(modalIdReference.current)
-      modalIdReference.current = null
+    const currentModalId = modalIdReference.current
+    if (currentModalId !== null) {
+      try {
+        await deleteTurnAction(sessionId, index)
+        await onRefresh()
+        const fetchedSessionDetailResponse = await getSession(sessionId)
+        const fetchedSessionTree = await getSessionTree()
+        const newSessions = fetchedSessionTree.sessions.map(
+          ([id, session]: [string, SessionOverview]) => ({
+            ...session,
+            sessionId: id
+          })
+        )
+        refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
+      } finally {
+        hide(currentModalId)
+        modalIdReference.current = null
+      }
     }
   }, [deleteTurnAction, sessionId, index, onRefresh, refreshSessionsInStore, hide])
 
@@ -141,16 +188,21 @@ export const useTurnHandlers = ({
   }, [show, handleConfirmDelete, handleCancelDelete])
 
   const handleSaveEdit = useCallback(async (): Promise<void> => {
-    await editTurnAction(sessionId, index, editedContent, turn)
-    await onRefresh()
-    const fetchedSessionDetailResponse = await getSession(sessionId)
-    const fetchedSessionTree = await getSessionTree()
-    const newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
-      ...session,
-      session_id: id
-    }))
-    refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
-    setIsEditing(false)
+    try {
+      await editTurnAction(sessionId, index, editedContent, turn)
+      await onRefresh()
+      const fetchedSessionDetailResponse = await getSession(sessionId)
+      const fetchedSessionTree = await getSessionTree()
+      const newSessions = fetchedSessionTree.sessions.map(
+        ([id, session]: [string, SessionOverview]) => ({
+          ...session,
+          sessionId: id
+        })
+      )
+      refreshSessionsInStore(fetchedSessionDetailResponse, newSessions)
+    } finally {
+      setIsEditing(false)
+    }
   }, [
     editTurnAction,
     sessionId,
@@ -163,6 +215,10 @@ export const useTurnHandlers = ({
   ])
 
   return {
+    isEditing,
+    editedContent,
+    setIsEditing,
+    setEditedContent,
     handleCopy,
     handleEditedChange,
     handleCancelEdit,

@@ -93,8 +93,12 @@ export const useMultipleSelectHandlers = ({
   )
 
   const handleKeyDown = useCallback(
-    (event: ReactKeyboardEvent) =>
-      handleKeyDownNative(event.nativeEvent as KeyboardEvent),
+    (event: ReactKeyboardEvent) => {
+      // Type guard: verify nativeEvent is KeyboardEvent
+      if (event.nativeEvent instanceof KeyboardEvent) {
+        handleKeyDownNative(event.nativeEvent)
+      }
+    },
     [handleKeyDownNative]
   )
 
@@ -107,7 +111,12 @@ export const useMultipleSelectHandlers = ({
     (event: ReactMouseEvent<HTMLLIElement>) => {
       // Prevent outer click handlers from reacting to this selection click
       event.stopPropagation()
-      const v = (event.currentTarget as HTMLElement).dataset.value
+      const target = event.currentTarget
+
+      // Type guard: verify target is HTMLElement
+      if (!(target instanceof HTMLElement)) return
+
+      const v = target.dataset.value
       // debug logs removed
       // Allow empty-string values (dataset returns '' for empty), reject only undefined
       if (v !== undefined) handleToggleSelect(v)
@@ -117,7 +126,12 @@ export const useMultipleSelectHandlers = ({
 
   const handleMouseEnter = useCallback(
     (event: ReactMouseEvent<HTMLLIElement>) => {
-      const index_ = (event.currentTarget as HTMLElement).dataset.index
+      const target = event.currentTarget
+
+      // Type guard: verify target is HTMLElement
+      if (!(target instanceof HTMLElement)) return
+
+      const index_ = target.dataset.index
       if (index_) setHighlightedIndex(Number(index_))
     },
     [setHighlightedIndex]
@@ -130,7 +144,11 @@ export const useMultipleSelectHandlers = ({
 
   const handleRemoveTag = useCallback(
     (event: React.MouseEvent) => {
-      const target = event.target as HTMLElement
+      const target = event.target
+
+      // Type guard: verify target is HTMLElement
+      if (!(target instanceof HTMLElement)) return
+
       const index = target.closest('[data-index]')?.getAttribute('data-index')
       if (index !== null) {
         handleToggleSelect(selectedValues[Number(index)])
@@ -142,7 +160,12 @@ export const useMultipleSelectHandlers = ({
   const handleCheckboxClick = useCallback(
     (event: ReactMouseEvent<HTMLInputElement>) => {
       event.stopPropagation()
-      const value = (event.currentTarget as HTMLInputElement).value
+      const target = event.currentTarget
+
+      // Type guard: verify target is HTMLInputElement
+      if (!(target instanceof HTMLInputElement)) return
+
+      const value = target.value
       handleToggleSelect(value)
     },
     [handleToggleSelect]

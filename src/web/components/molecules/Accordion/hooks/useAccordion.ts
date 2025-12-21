@@ -1,13 +1,17 @@
-import { useId, useState, type KeyboardEvent } from 'react'
+import { useId, useState, useMemo, type KeyboardEvent } from 'react'
 
 type UseAccordionProperties = {
   id?: string
   defaultOpen?: boolean
+  controlledOpen?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export const useAccordion = ({
   id,
-  defaultOpen = false
+  defaultOpen = false,
+  controlledOpen,
+  onOpenChange
 }: UseAccordionProperties): {
   open: boolean
   contentId: string
@@ -15,10 +19,23 @@ export const useAccordion = ({
   handleKeyDown: (event: KeyboardEvent) => void
 } => {
   const generatedId = useId()
-  const contentId = id ?? `accordion-content-${generatedId}`
-  const [open, setOpen] = useState<boolean>(defaultOpen)
+  const contentId = useMemo(
+    () => id ?? `accordion-content-${generatedId}`,
+    [id, generatedId]
+  )
+  const [uncontrolledOpen, setUncontrolledOpen] = useState<boolean>(defaultOpen)
 
-  const handleToggle = (): void => setOpen((s) => !s)
+  // Determine whether to use controlled or uncontrolled mode
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : uncontrolledOpen
+
+  const handleToggle = (): void => {
+    if (isControlled) {
+      onOpenChange?.(!open)
+    } else {
+      setUncontrolledOpen((s) => !s)
+    }
+  }
 
   const handleKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Enter' || event.key === ' ') {

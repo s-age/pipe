@@ -1,5 +1,5 @@
-import React from 'react'
 import type { JSX } from 'react'
+import { useWatch } from 'react-hook-form'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
@@ -7,6 +7,7 @@ import { Fieldset } from '@/components/molecules/Fieldset'
 import { MetaLabel } from '@/components/molecules/MetaItem'
 import { Select } from '@/components/molecules/Select'
 import { TextArea } from '@/components/molecules/TextArea'
+import { ArtifactList } from '@/components/organisms/ArtifactList'
 // form context is accessed inside handlers when needed
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
@@ -25,6 +26,7 @@ import {
   primaryButton,
   secondaryButton
 } from './style.css'
+import { MultiStepReasoning } from '../MultiStepReasoning'
 
 type StartSessionFormInnerProperties = {
   sessionDetail: SessionDetail
@@ -39,12 +41,20 @@ export const StartSessionFormInner = ({
   // react-hook-form internal `formState.isSubmitting` which may not update
   // when native form submission is prevented or when navigation happens
   // quickly after submit. The hook will manage a local `isSubmitting` flag.
-  const { handleCancel, handleCreateClick, isSubmitting } =
+  const { handleCancel, handleCreateClick, dummyHandler, isSubmitting } =
     useStartSessionFormHandlers()
 
   const formContext = useOptionalFormContext()
   const register = formContext?.register
   const errors = formContext?.formState?.errors
+  const control = formContext?.control
+
+  // Watch the multiStepReasoningEnabled field from the form
+  const multiStepReasoningEnabled = useWatch({
+    control,
+    name: 'multiStepReasoningEnabled',
+    defaultValue: false
+  })
 
   // Debug exposure removed.
 
@@ -59,7 +69,11 @@ export const StartSessionFormInner = ({
           <Fieldset
             legend={<MetaLabel required={true}>First Instruction:</MetaLabel>}
             className={fieldsetContainer}
-            error={errors?.instruction as unknown as React.ReactNode}
+            error={
+              errors?.instruction?.message
+                ? String(errors.instruction.message)
+                : undefined
+            }
           >
             {(ids) => (
               <TextArea
@@ -75,7 +89,7 @@ export const StartSessionFormInner = ({
         <Fieldset
           legend={<MetaLabel>Parent Session:</MetaLabel>}
           className={fieldsetContainer}
-          error={errors?.parent as unknown as React.ReactNode}
+          error={errors?.parent?.message ? String(errors.parent.message) : undefined}
         >
           <Select
             name="parent"
@@ -85,9 +99,16 @@ export const StartSessionFormInner = ({
           />
         </Fieldset>
 
-        <ReferenceList sessionDetail={sessionDetail} />
+        <ReferenceList sessionDetail={sessionDetail} refreshSessions={dummyHandler} />
+
+        <ArtifactList sessionDetail={sessionDetail} refreshSessions={dummyHandler} />
 
         <HyperParameters sessionDetail={sessionDetail} />
+
+        <MultiStepReasoning
+          multiStepReasoningEnabled={multiStepReasoningEnabled}
+          currentSessionId=""
+        />
 
         <div className={buttonBar}>
           <Button

@@ -1,9 +1,10 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
-import type { EditHyperparametersRequest } from '@/lib/api/session/editHyperparameters'
+import type { EditHyperparametersRequest } from '@/lib/api/meta/editHyperparameters'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { useHyperParametersActions } from './useHyperParametersActions'
+import { useHyperParametersLifecycle } from './useHyperParametersLifecycle'
 
 type UseSessionHyperparametersProperties = {
   sessionDetail: SessionDetail
@@ -29,11 +30,11 @@ export const useHyperParametersHandlers = ({
   // sequential setState calls inside an effect which the linter warns about.
   const [hpState, setHpState] = useState(() => ({
     temperature: sessionDetail.hyperparameters?.temperature ?? 0.7,
-    top_p: sessionDetail.hyperparameters?.top_p ?? 0.9,
-    top_k: sessionDetail.hyperparameters?.top_k ?? 5
+    topP: sessionDetail.hyperparameters?.topP ?? 0.9,
+    topK: sessionDetail.hyperparameters?.topK ?? 5
   }))
 
-  const { temperature, top_p: topP, top_k: topK } = hpState
+  const { temperature, topP: topP, topK: topK } = hpState
 
   // Provide individual setter functions compatible with existing callers.
   const setTemperature: React.Dispatch<React.SetStateAction<number>> = (value) => {
@@ -46,57 +47,36 @@ export const useHyperParametersHandlers = ({
   const setTopP: React.Dispatch<React.SetStateAction<number>> = (value) => {
     setHpState((previous) => ({
       ...previous,
-      top_p: typeof value === 'function' ? value(previous.top_p) : value
+      topP: typeof value === 'function' ? value(previous.topP) : value
     }))
   }
 
   const setTopK: React.Dispatch<React.SetStateAction<number>> = (value) => {
     setHpState((previous) => ({
       ...previous,
-      top_k: typeof value === 'function' ? value(previous.top_k) : value
+      topK: typeof value === 'function' ? value(previous.topK) : value
     }))
   }
 
-  // Sync authoritative sessionDetail into local UI state before paint to
-  // avoid visual flicker. We use useEffect and a single state update
-  // so the linter's concern about cascading renders is mitigated.
   const isInteractingReference = useRef<boolean>(false)
 
-  useEffect(() => {
-    if (!sessionDetail) return
-    // If the user is actively interacting with the slider, don't overwrite
-    // their in-progress UI changes with the authoritative sessionDetail.
-    if (isInteractingReference.current) return
-
-    const incoming = {
-      temperature: sessionDetail.hyperparameters?.temperature ?? hpState.temperature,
-      top_p: sessionDetail.hyperparameters?.top_p ?? hpState.top_p,
-      top_k: sessionDetail.hyperparameters?.top_k ?? hpState.top_k
-    }
-
-    // Only update if any value actually differs.
-    if (
-      incoming.temperature !== hpState.temperature ||
-      incoming.top_p !== hpState.top_p ||
-      incoming.top_k !== hpState.top_k
-    ) {
-      setHpState(incoming)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionDetail])
+  // Lifecycle: sync sessionDetail props to local state
+  useHyperParametersLifecycle({
+    sessionDetail,
+    hpState,
+    setHpState,
+    isInteractingReference
+  })
 
   const { updateHyperparameters } = useHyperParametersActions()
 
   const handleTemperatureMouseUp = useCallback(
     async (event: React.MouseEvent<HTMLDivElement>): Promise<void> => {
-      if (!sessionDetail.session_id) return
+      if (!sessionDetail.sessionId) return
       const newTemperature = Number(event.currentTarget.dataset.value)
       const payload: EditHyperparametersRequest = { temperature: newTemperature }
-      try {
-        await updateHyperparameters(sessionDetail.session_id, payload)
-      } finally {
-        isInteractingReference.current = false
-      }
+      await updateHyperparameters(sessionDetail.sessionId, payload)
+      isInteractingReference.current = false
     },
     [sessionDetail, updateHyperparameters]
   )
@@ -107,14 +87,11 @@ export const useHyperParametersHandlers = ({
 
   const handleTopPMouseUp = useCallback(
     async (event: React.MouseEvent<HTMLDivElement>): Promise<void> => {
-      if (!sessionDetail.session_id) return
+      if (!sessionDetail.sessionId) return
       const newTopP = Number(event.currentTarget.dataset.value)
-      const payload: EditHyperparametersRequest = { top_p: newTopP }
-      try {
-        await updateHyperparameters(sessionDetail.session_id, payload)
-      } finally {
-        isInteractingReference.current = false
-      }
+      const payload: EditHyperparametersRequest = { topP: newTopP }
+      await updateHyperparameters(sessionDetail.sessionId, payload)
+      isInteractingReference.current = false
     },
     [sessionDetail, updateHyperparameters]
   )
@@ -125,14 +102,11 @@ export const useHyperParametersHandlers = ({
 
   const handleTopKMouseUp = useCallback(
     async (event: React.MouseEvent<HTMLDivElement>): Promise<void> => {
-      if (!sessionDetail.session_id) return
+      if (!sessionDetail.sessionId) return
       const newTopK = Number(event.currentTarget.dataset.value)
-      const payload: EditHyperparametersRequest = { top_k: newTopK }
-      try {
-        await updateHyperparameters(sessionDetail.session_id, payload)
-      } finally {
-        isInteractingReference.current = false
-      }
+      const payload: EditHyperparametersRequest = { topK: newTopK }
+      await updateHyperparameters(sessionDetail.sessionId, payload)
+      isInteractingReference.current = false
     },
     [sessionDetail, updateHyperparameters]
   )

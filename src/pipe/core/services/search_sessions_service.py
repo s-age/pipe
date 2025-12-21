@@ -10,12 +10,14 @@ import json
 import os
 from collections.abc import Iterable
 
+from pipe.core.models.search_result import SessionSearchResult
+
 
 class SearchSessionsService:
     """Search sessions under a sessions directory.
 
     The service exposes a single `search(query)` method which returns a list
-    of dicts with `session_id` and `title` keys.
+    of SessionSearchResult objects.
     """
 
     def __init__(self, sessions_dir: str):
@@ -39,7 +41,7 @@ class SearchSessionsService:
             return session_id.replace(os.path.sep, "/")
         return rel
 
-    def search(self, query: str) -> list[dict[str, str]]:
+    def search(self, query: str) -> list[SessionSearchResult]:
         """Return matching sessions for `query`.
 
         Matching rules:
@@ -53,7 +55,7 @@ class SearchSessionsService:
             return []
 
         qlow = q.lower()
-        matches: dict[str, dict[str, str]] = {}
+        matches: dict[str, SessionSearchResult] = {}
 
         for fpath in self._iter_session_files():
             fname = os.path.basename(fpath)
@@ -103,9 +105,10 @@ class SearchSessionsService:
                             break
 
             if matched:
-                matches[session_id] = {
-                    "session_id": session_id,
-                    "title": title or os.path.splitext(fname)[0],
-                }
+                matches[session_id] = SessionSearchResult(
+                    session_id=session_id,
+                    title=title or os.path.splitext(fname)[0],
+                    path=fpath,
+                )
 
         return list(matches.values())

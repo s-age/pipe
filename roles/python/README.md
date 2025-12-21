@@ -6,7 +6,7 @@ Prioritize rules above all else.
 
 - Creativity should only be exercised within rules, specifically for readability and performance.
 - Rules vary by language, so refer to the respective guidelines if not provided:
-  - After implementation, always use py_checker.
+  - After implementation, always run code quality checks using Poetry.
   - When the linter/formatter can automatically fix it (e.g., ruff --fix, black, prettier), never commit code that requires manual fixing.
 
 ## Code Quality
@@ -86,14 +86,18 @@ BFF (Backend for Frontend) layer role definitions:
 
 The MCP (Model Context Protocol) server allows AI assistants to interact with the pipe tools via standardized JSON-RPC communication.
 
-To start the MCP server:
+To start the MCP server using Poetry:
 
 ```bash
-# If mcp_server is in your PATH
-mcp_server
+# Using Poetry (Recommended)
+poetry run mcp_server
 
 # Or using Python module
-python -m pipe.cli.mcp_server
+poetry run python -m pipe.cli.mcp_server
+
+# Or with activated Poetry shell
+poetry shell
+mcp_server
 ```
 
 The server listens on stdin/stdout and can be connected to MCP-compatible clients like Claude Desktop.
@@ -103,30 +107,92 @@ The server listens on stdin/stdout and can be connected to MCP-compatible client
 The following Python-specific tools are available in the `tools/` directory:
 
 - **py_analyze_code**: Analyzes the AST of a Python file to extract symbol information (classes, functions, variables).
+
   - Usage: `py_analyze_code(file_path: str) -> dict`
 
 - **py_auto_format_code**: Automatically formats Python code according to project standards.
+
   - Usage: `py_auto_format_code(file_path: str) -> str`
 
 - **py_generate_code**: Generates Python code based on specified requirements.
+
   - Usage: `py_generate_code(requirements: str) -> str`
 
 - **py_get_code_snippet**: Extracts code snippets for specific symbols (classes, functions) from a Python file.
+
   - Usage: `py_get_code_snippet(file_path: str, symbol_name: str) -> dict`
 
 - **py_get_symbol_references**: Finds all references to a specific symbol in the codebase.
+
   - Usage: `py_get_symbol_references(symbol_name: str) -> list`
 
 - **py_get_type_hints**: Extracts type hints for functions or classes in a Python file.
+
   - Usage: `py_get_type_hints(file_path: str, symbol_name: str) -> dict`
 
 - **py_refactor_code**: Performs automatic refactoring operations like renaming variables or extracting functions.
+
   - Usage: `py_refactor_code(args: PyRefactorCodeArgs) -> dict`
 
 - **py_run_and_test_code**: Executes Python code and runs associated tests.
   - Usage: `py_run_and_test_code(code: str, test_code: str) -> dict`
 
 These tools enable AI assistants to perform code analysis, generation, and modification tasks within the pipe project.
+
+## 🚀 Environment Setup with Poetry
+
+### Installation
+
+```bash
+# Install dependencies (creates virtual environment automatically)
+poetry install
+
+# Install with development dependencies
+poetry install --with dev
+```
+
+### Running Commands
+
+Always use `poetry run` to execute commands within the Poetry virtual environment:
+
+```bash
+# Run Python code
+poetry run python script.py
+
+# Run tests
+poetry run pytest
+
+# Run linting and type checking
+poetry run ruff check src/
+poetry run mypy src/
+```
+
+### Virtual Environment Activation
+
+For interactive work, activate the Poetry virtual environment:
+
+```bash
+# Activate the environment
+poetry shell
+
+# Now you can run commands directly
+python script.py
+pytest
+ruff check src/
+
+# Deactivate when done
+exit
+```
+
+### Important Notes for Testing
+
+When running tests with `poetry run pytest`, the correct Python virtual environment is automatically used. This ensures:
+
+- All dependencies are properly resolved
+- Proper module imports (e.g., `psutil`) work correctly
+- Type checking and linting tools use the correct environment
+
+**Always use `poetry run` for test execution** to avoid environment mismatch issues.
 
 ## 🎯 Key Principles
 
@@ -509,20 +575,36 @@ class CreateAction(BaseAction):
 
 ## 🛠️ Code Quality Checks
 
+### Using Poetry (Recommended)
+
 ```bash
 # Type checking
-mypy src/pipe/core
+poetry run mypy src/pipe/core
 
 # Linting
-ruff check src/pipe/core
+poetry run ruff check src/pipe/core
 
 # Formatting
-ruff format src/pipe/core
+poetry run ruff format src/pipe/core
 
 # Testing
-pytest tests/core
+poetry run pytest tests/core
 
 # Coverage
+poetry run pytest --cov=src/pipe/core tests/core
+```
+
+### Using Direct Commands (Requires Virtual Environment Activation)
+
+```bash
+# Activate Poetry virtual environment
+poetry shell
+
+# Then use commands directly
+mypy src/pipe/core
+ruff check src/pipe/core
+ruff format src/pipe/core
+pytest tests/core
 pytest --cov=src/pipe/core tests/core
 ```
 

@@ -26,11 +26,11 @@ const STUB_SESSION_DETAIL = {
   references: [],
   hyperparameters: {
     temperature: 0.7,
-    top_p: 0.9,
-    top_k: 5
+    topP: 0.9,
+    topK: 5
   },
-  session_id: null,
-  multi_step_reasoning_enabled: false,
+  sessionId: null,
+  multiStepReasoningEnabled: false,
   todos: [],
   turns: []
 }

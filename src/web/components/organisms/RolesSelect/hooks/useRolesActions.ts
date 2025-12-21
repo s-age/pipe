@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { getRoles, type RoleOption } from '@/lib/api/roles/getRoles'
+import { getRoles, type RoleOption } from '@/lib/api/fs/roles'
 import { addToast } from '@/stores/useToastStore'
 
 export type UseRolesActionsReturn = {

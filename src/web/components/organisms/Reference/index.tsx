@@ -7,7 +7,6 @@ import { Tooltip } from '@/components/organisms/Tooltip'
 import type { Reference } from '@/types/reference'
 
 import { useReferenceHandlers } from './hooks/useReferenceHandlers'
-import { useReferenceLifecycle } from './hooks/useReferenceLifecycle'
 import {
   referenceItem,
   referenceLabel,
@@ -24,21 +23,17 @@ type ReferenceProperties = {
   reference: Reference
   index: number
   currentSessionId: string | null
+  refreshSessions: () => Promise<void>
 }
 
 export const ReferenceComponent = ({
   reference,
   index,
-  currentSessionId
+  currentSessionId,
+  refreshSessions
 }: ReferenceProperties): JSX.Element => {
-  const { localReference, setLocalReference } = useReferenceLifecycle(reference)
-
-  const { handlePersistToggle, handleTtlAction, handleToggle } = useReferenceHandlers(
-    currentSessionId,
-    localReference,
-    index,
-    setLocalReference
-  )
+  const { localReference, handlePersistToggle, handleTtlAction, handleToggle } =
+    useReferenceHandlers(currentSessionId, reference, index, refreshSessions)
 
   const ttl = localReference.ttl !== null ? localReference.ttl : 3
 
@@ -47,6 +42,7 @@ export const ReferenceComponent = ({
       <div className={referenceLabel}>
         <Tooltip
           content={localReference.persist ? 'Unlock reference' : 'Lock reference'}
+          placement="bottom"
         >
           <Button
             kind="ghost"
@@ -79,7 +75,7 @@ export const ReferenceComponent = ({
 
       <div className={referenceActions}>
         <div className={ttlControls}>
-          <Tooltip content="Decrease TTL">
+          <Tooltip content="Decrease TTL" placement="bottom">
             <Button
               kind="primary"
               size="xsmall"
@@ -92,7 +88,7 @@ export const ReferenceComponent = ({
             </Button>
           </Tooltip>
           <span className={ttlValue}>{ttl}</span>
-          <Tooltip content="Increase TTL">
+          <Tooltip content="Increase TTL" placement="bottom">
             <Button
               kind="primary"
               size="xsmall"
@@ -105,7 +101,7 @@ export const ReferenceComponent = ({
             </Button>
           </Tooltip>
         </div>
-        <Tooltip content="Toggle reference enabled">
+        <Tooltip content="Toggle reference enabled" placement="bottom">
           <ToggleSwitch
             checked={!localReference.disabled}
             onChange={handleToggle}

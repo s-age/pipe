@@ -4,28 +4,23 @@ import { deleteSession } from '@/lib/api/session/deleteSession'
 import { getSession } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { getSessionTree } from '@/lib/api/sessionTree/getSessionTree'
-import type {
-  SessionOverview,
-  SessionTreeNode
-} from '@/lib/api/sessionTree/getSessionTree'
+import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 import { addToast } from '@/stores/useToastStore'
+import { normalizeSessionTree } from '@/utils/normalizeSessionTree'
 
 type UseChatHistoryActionsProperties = {
   currentSessionId: string | null
-  refreshSessionsInStore: (
-    sessionDetail: SessionDetail,
-    sessions: SessionOverview[]
-  ) => void
 }
 
 type UseChatHistoryActionsReturn = {
   deleteSessionAction: (sessionId: string) => Promise<void>
-  refreshSession: () => Promise<void>
+  refreshSession: () => Promise<
+    { sessionDetail: SessionDetail; sessions: SessionOverview[] } | undefined
+  >
 }
 
 export const useChatHistoryActions = ({
-  currentSessionId,
-  refreshSessionsInStore
+  currentSessionId
 }: UseChatHistoryActionsProperties): UseChatHistoryActionsReturn => {
   // Session actions
   const deleteSessionAction = useCallback(async (sessionId: string): Promise<void> => {
@@ -40,49 +35,26 @@ export const useChatHistoryActions = ({
     }
   }, [])
 
-  const refreshSession = useCallback(async (): Promise<void> => {
-    if (!currentSessionId) return
+  const refreshSession = useCallback(async (): Promise<
+    { sessionDetail: SessionDetail; sessions: SessionOverview[] } | undefined
+  > => {
+    if (!currentSessionId) return undefined
 
     try {
       const fetchedSessionDetailResponse = await getSession(currentSessionId)
       const fetchedSessionTree = await getSessionTree()
-      let newSessions: SessionOverview[]
-      if (fetchedSessionTree.session_tree) {
-        // hierarchical nodes — flatten for refreshSessionsInStore
-        const flatten: SessionOverview[] = []
-        const walk = (nodes: SessionTreeNode[]): void => {
-          for (const n of nodes) {
-            const overview = (n.overview || {}) as Partial<SessionOverview>
-            flatten.push({
-              session_id: n.session_id,
-              purpose: (overview.purpose as string) || '',
-              background: (overview.background as string) || '',
-              roles: (overview.roles as string[]) || [],
-              procedure: (overview.procedure as string) || '',
-              artifacts: (overview.artifacts as string[]) || [],
-              multi_step_reasoning_enabled: !!overview.multi_step_reasoning_enabled,
-              token_count: (overview.token_count as number) || 0,
-              last_updated_at: (overview.last_updated_at as string) || ''
-            })
-            if (n.children && n.children.length) walk(n.children)
-          }
-        }
-        walk(fetchedSessionTree.session_tree)
-        newSessions = flatten
-      } else {
-        newSessions = fetchedSessionTree.sessions.map(([id, session]) => ({
-          ...session,
-          session_id: id
-        }))
-      }
-      refreshSessionsInStore(fetchedSessionDetailResponse.session, newSessions)
+      const newSessions = normalizeSessionTree(fetchedSessionTree)
+
+      return { sessionDetail: fetchedSessionDetailResponse, sessions: newSessions }
     } catch (error: unknown) {
       addToast({
         status: 'failure',
         title: (error as Error).message || 'Failed to refresh session.'
       })
+
+      return undefined
     }
-  }, [currentSessionId, refreshSessionsInStore])
+  }, [currentSessionId])
 
   return {
     // Session actions

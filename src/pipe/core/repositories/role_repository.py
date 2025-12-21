@@ -17,5 +17,7 @@ class RoleRepository:
                     # Remove .md extension for the label
                     label = os.path.splitext(relative_path)[0].replace(os.sep, "/")
                     value = f"roles/{relative_path.replace(os.sep, '/')}"
-                    role_options.append(RoleOption(label=label, value=value))
+                    role_options.append(
+                        RoleOption.model_validate({"label": label, "value": value})
+                    )
         return sorted(role_options, key=lambda x: x.label)

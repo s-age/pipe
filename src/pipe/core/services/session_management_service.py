@@ -4,9 +4,7 @@ Session Management Service
 Handles bulk operations for session management including deletion, backup, and listing.
 """
 
-from typing import Any
-
-from pipe.core.collections.backup_files import BackupFiles
+from pipe.core.collections.backup_files import BackupFiles, SessionSummary
 from pipe.core.collections.files_to_delete import FilesToDelete
 from pipe.core.collections.files_to_move import FilesToMove
 from pipe.core.repositories.session_repository import SessionRepository
@@ -51,13 +49,12 @@ class SessionManagementService:
         files_to_move = FilesToMove(session_ids, self.repository)
         return files_to_move.execute()
 
-    def list_backup_sessions(self) -> list[dict[str, Any]]:
+    def list_backup_sessions(self) -> list[SessionSummary]:
         """
         List all sessions in the backup directory.
 
         Returns:
-            List of dictionaries containing session_id and file_path for each
-            backup session
+            List of SessionSummary objects containing session metadata
         """
         backup_files = BackupFiles(self.repository)
         return backup_files.list_sessions()
@@ -74,6 +71,30 @@ class SessionManagementService:
         """
         backup_files = BackupFiles(self.repository)
         return backup_files.delete(session_ids)
+
+    def delete_backups_by_session_ids(self, session_ids: list[str]) -> int:
+        """
+        Delete backup sessions by their session IDs.
+
+        This method handles the conversion from session_ids to file_paths internally.
+
+        Args:
+            session_ids: List of session IDs whose backups should be deleted
+
+        Returns:
+            Number of successfully deleted backup files
+        """
+        backup_files = BackupFiles(self.repository)
+        backup_sessions = backup_files.list_sessions()
+
+        # Convert session_ids to file_paths
+        file_paths = [
+            session.file_path
+            for session in backup_sessions
+            if session.session_id in session_ids
+        ]
+
+        return backup_files.delete_files(file_paths)
 
     def delete_backup_files(self, file_paths: list[str]) -> int:
         """

@@ -1,44 +1,49 @@
-from pipe.web.actions.compress_actions import (
+from pipe.web.actions.artifact import ArtifactsEditAction
+from pipe.web.actions.compress import (
     ApproveCompressorAction,
     CreateCompressorSessionAction,
     DenyCompressorAction,
 )
-from pipe.web.actions.file_search_actions import LsAction, SearchL2Action
-from pipe.web.actions.get_procedures_action import GetProceduresAction
-from pipe.web.actions.get_roles_action import GetRolesAction
-from pipe.web.actions.meta_actions import (
+from pipe.web.actions.fs import (
+    GetProceduresAction,
+    GetRolesAction,
+    IndexFilesAction,
+    LsAction,
+    SearchL2Action,
+    SearchSessionsAction,
+)
+from pipe.web.actions.meta import (
     HyperparametersEditAction,
     MultiStepReasoningEditAction,
     SessionMetaEditAction,
     TodosDeleteAction,
     TodosEditAction,
 )
-from pipe.web.actions.reference_actions import (
+from pipe.web.actions.reference import (
     ReferencePersistEditAction,
     ReferencesEditAction,
     ReferenceToggleDisabledAction,
     ReferenceTtlEditAction,
 )
-from pipe.web.actions.session_actions import (
+from pipe.web.actions.session import (
     SessionDeleteAction,
-    SessionForkAction,
     SessionGetAction,
     SessionInstructionAction,
-    SessionRawAction,
     SessionStartAction,
+    SessionStopAction,
 )
-from pipe.web.actions.session_management_actions import (
+from pipe.web.actions.session_management import (
     SessionsDeleteAction,
     SessionsDeleteBackupAction,
     SessionsListBackupAction,
     SessionsMoveToBackup,
 )
-from pipe.web.actions.session_tree_action import SessionTreeAction
-from pipe.web.actions.settings_actions import SettingsGetAction
-from pipe.web.actions.therapist_actions import (
+from pipe.web.actions.session_tree import SessionTreeAction
+from pipe.web.actions.settings import SettingsGetAction
+from pipe.web.actions.therapist import (
     CreateTherapistSessionAction,
 )
-from pipe.web.actions.turn_actions import (
+from pipe.web.actions.turn import (
     SessionTurnsGetAction,
     TurnDeleteAction,
     TurnEditAction,
@@ -54,13 +59,12 @@ __all__ = [
     "SessionStartAction",
     "SessionGetAction",
     "SessionDeleteAction",
+    "SessionStopAction",
     "SessionsDeleteAction",
     "SessionsMoveToBackup",
     "SessionsListBackupAction",
     "SessionsDeleteBackupAction",
-    "SessionRawAction",
     "SessionInstructionAction",
-    "SessionForkAction",
     "SessionTurnsGetAction",
     "TurnDeleteAction",
     "TurnEditAction",
@@ -73,9 +77,12 @@ __all__ = [
     "ReferencePersistEditAction",
     "ReferenceToggleDisabledAction",
     "ReferenceTtlEditAction",
+    "ArtifactsEditAction",
     "SettingsGetAction",
     "GetRolesAction",
     "LsAction",
     "SearchL2Action",
+    "IndexFilesAction",
+    "SearchSessionsAction",
     "GetProceduresAction",
 ]

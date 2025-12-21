@@ -2,7 +2,7 @@ import type { JSX } from 'react'
 import { Suspense, lazy } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
-import { ModalManager } from './components/organisms/Modal'
+import { ModalManager } from './components/organisms/ModalManager'
 import { Toasts } from './components/organisms/Toast'
 import { TooltipManager } from './components/organisms/Tooltip'
 import { ChatHistoryPage } from './components/pages/ChatHistoryPage'

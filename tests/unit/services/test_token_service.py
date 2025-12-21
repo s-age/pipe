@@ -1,29 +1,14 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from pipe.core.models.settings import Settings
+from helpers import create_test_settings
 from pipe.core.services.token_service import TokenService
 
 
 class TestTokenService(unittest.TestCase):
     def setUp(self):
         """Set up a dummy Settings object for the service."""
-        settings_data = {
-            "model": "gemini-test",
-            "search_model": "gemini-test",
-            "context_limit": 1000,
-            "api_mode": "gemini-api",
-            "language": "en",
-            "yolo": False,
-            "expert_mode": False,
-            "timezone": "UTC",
-            "parameters": {
-                "temperature": {"value": 0.1, "description": "t"},
-                "top_p": {"value": 0.2, "description": "p"},
-                "top_k": {"value": 10, "description": "k"},
-            },
-        }
-        self.settings = Settings(**settings_data)
+        self.settings = create_test_settings(context_limit=1000)
 
     @patch("google.genai.Client")
     def test_count_tokens_success(self, mock_genai_client):

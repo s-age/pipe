@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import { useTooltipStore, showTooltip, hideTooltip } from '@/stores/useTooltipStore'
+
+import { useTooltipStoreSubscription } from './useTooltipStoreSubscription'
 
 export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right'
 
 let nextTooltipId = 1
 
-export const useTooltip = (
+export const useTooltipHandlers = (
   content: string,
   forcedPlacement?: TooltipPlacement
 ): {
@@ -33,24 +35,14 @@ export const useTooltip = (
   const idReference = useRef<number | null>(null)
   const store = useTooltipStore()
 
-  useEffect(() => {
-    const data = store.active
-
-    if (!data) {
-      setIsVisible(false)
-      setTargetRect(null)
-
-      return
-    }
-
-    if (data.id === idReference.current) {
-      setPlacement((data.placement as TooltipPlacement) ?? 'top')
-      setTargetRect((data.rect as DOMRect) ?? null)
-      setIsVisible(true)
-    } else {
-      setIsVisible(false)
-    }
-  }, [store.active])
+  // Lifecycle: subscribe to tooltip store updates
+  useTooltipStoreSubscription({
+    idReference,
+    storeActive: store.active,
+    setIsVisible,
+    setPlacement,
+    setTargetRect
+  })
 
   const handleMouseEnter = useCallback(
     (
@@ -66,7 +58,11 @@ export const useTooltip = (
 
       const { content, offsetMain, offsetCross, placement } = options ?? {}
 
-      const element = event.currentTarget as HTMLElement
+      const element = event.currentTarget
+
+      // Type guard: verify element is HTMLElement
+      if (!(element instanceof HTMLElement)) return
+
       const rect = element.getBoundingClientRect()
       const vw = window.innerWidth
       const vh = window.innerHeight
@@ -88,8 +84,16 @@ export const useTooltip = (
             ? 'bottom'
             : 'top'
 
-      const chosenPlacement: TooltipPlacement =
-        (placement as TooltipPlacement) ?? computedPlacement
+      // Type guard: verify placement is valid
+      let chosenPlacement: TooltipPlacement = computedPlacement
+      if (
+        placement === 'top' ||
+        placement === 'bottom' ||
+        placement === 'left' ||
+        placement === 'right'
+      ) {
+        chosenPlacement = placement
+      }
 
       // Emit show to the tooltip store; include optional offsets/content
       showTooltip({

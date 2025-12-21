@@ -14,9 +14,9 @@ export const useSessionManagementLifecycle = ({ storeActions }: Properties): voi
 
   const loadData = useCallback<() => Promise<void>>(async (): Promise<void> => {
     try {
-      const { session_tree, archives } = await getSessionManagement()
-      const sessions = session_tree.map((node) => node.overview)
-      storeActions.setSessions(sessions)
+      const { sessionTree, archives } = await getSessionManagement()
+      // Keep the hierarchical structure (SessionTreeNode[]) to show child sessions
+      storeActions.setSessions(sessionTree)
       storeActions.setArchivedSessions(archives)
     } catch {
       addToast({

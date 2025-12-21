@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { MouseEvent, KeyboardEvent, Dispatch, SetStateAction } from 'react'
 
 import { useSearchSessionsActions } from './useSearchSessionsActions'
+import { useSearchSessionsLifecycle } from './useSearchSessionsLifecycle'
 
 type SearchResult = {
-  session_id: string
+  sessionId: string
   title: string
 }
 
@@ -28,7 +29,6 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
-  const timeoutIdReference = useRef<ReturnType<typeof window.setTimeout> | null>(null)
 
   const fetchResults = useCallback(
     async (q: string) => {
@@ -48,29 +48,14 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
     [executeSearch]
   )
 
-  useEffect(() => {
-    if (timeoutIdReference.current) window.clearTimeout(timeoutIdReference.current)
-
-    // setTimeout returns a platform-specific timer type; cast to the expected ReturnType
-    // NOTE: casting because TS lib types for setTimeout may differ between DOM and Node.
-    // This is safe in browser runtime.
-
-    timeoutIdReference.current = window.setTimeout(
-      () => fetchResults(query),
-      250
-    ) as unknown as ReturnType<typeof setTimeout>
-
-    return (): void => {
-      if (timeoutIdReference.current)
-        window.clearTimeout(timeoutIdReference.current as unknown as number)
-    }
-  }, [query, fetchResults])
+  // Lifecycle: debounced search
+  useSearchSessionsLifecycle({ query, fetchResults })
 
   const handleSubmit = useCallback(
     async (_value?: string) => {
       const matches = await fetchResults(query)
       if (matches.length > 0) {
-        window.location.href = `/session/${matches[0].session_id}`
+        window.location.href = `/session/${matches[0].sessionId}`
       } else {
         setOpen(true)
       }
@@ -93,7 +78,12 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
 
   const handleResultPointerDown = useCallback(
     (event: MouseEvent<HTMLDivElement>): void => {
-      const id = (event.currentTarget as HTMLElement).dataset.sessionId
+      const target = event.currentTarget
+
+      // Type guard: verify target is HTMLElement
+      if (!(target instanceof HTMLElement)) return
+
+      const id = target.dataset.sessionId
       if (id) handleSelect(id)
     },
     [handleSelect]
@@ -101,7 +91,12 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
 
   const handleResultKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>): void => {
-      const id = (event.currentTarget as HTMLElement).dataset.sessionId
+      const target = event.currentTarget
+
+      // Type guard: verify target is HTMLElement
+      if (!(target instanceof HTMLElement)) return
+
+      const id = target.dataset.sessionId
       if (!id) return
       if (event.key === 'Enter' || event.key === ' ') handleSelect(id)
     },

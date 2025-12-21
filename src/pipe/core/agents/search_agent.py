@@ -1,12 +1,12 @@
 import os
 import sys
 import warnings
-from typing import Any
 
 import google.genai as genai
 from google.genai import types
 from pipe.core.models.settings import Settings
 from pipe.core.utils.file import read_yaml_file
+from pipe.core.utils.path import get_project_root
 
 # Suppress specific UserWarning from pydantic
 warnings.filterwarnings(
@@ -17,13 +17,15 @@ warnings.filterwarnings(
 def call_gemini_api_with_grounding(
     settings: Settings, instruction: str, project_root: str
 ) -> types.GenerateContentResponse:
-    model_name = settings.search_model
+    if not settings.search_model:
+        raise ValueError("'search_model' not found in setting.yml")
+    model_name = settings.search_model.name
     if not model_name:
         raise ValueError("'search_model' not found in setting.yml")
 
     api_contents = [{"role": "user", "parts": [{"text": instruction}]}]
 
-    all_tools: list[Any] = [types.Tool(google_search=types.GoogleSearch())]
+    all_tools: list[types.Tool] = [types.Tool(google_search=types.GoogleSearch())]
 
     gen_config_params = {
         "temperature": settings.parameters.temperature.value,
@@ -32,7 +34,7 @@ def call_gemini_api_with_grounding(
     }
 
     config = types.GenerateContentConfig(
-        tools=all_tools,
+        tools=all_tools,  # type: ignore[arg-type]
         temperature=gen_config_params.get("temperature"),
         top_p=gen_config_params.get("top_p"),
         top_k=gen_config_params.get("top_k"),
@@ -55,9 +57,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     query = sys.argv[1]
-    project_root = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
-    )
+    project_root = get_project_root()
 
     settings_dict = read_yaml_file(os.path.join(project_root, "setting.yml"))
     settings = Settings(**settings_dict)

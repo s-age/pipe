@@ -20,12 +20,17 @@ import {
 
 type TodoListProperties = {
   sessionDetail: SessionDetail
+  onSessionDetailUpdate?: (sessionDetail: SessionDetail) => void
 }
 
-export const TodoList = ({ sessionDetail }: TodoListProperties): React.JSX.Element => {
+export const TodoList = ({
+  sessionDetail,
+  onSessionDetailUpdate
+}: TodoListProperties): React.JSX.Element => {
   const { register, handleDeleteAllTodos, handleCheckboxChange } =
     useSessionTodosHandlers({
-      sessionDetail
+      sessionDetail,
+      onSessionDetailUpdate
     })
 
   return (
@@ -33,15 +38,6 @@ export const TodoList = ({ sessionDetail }: TodoListProperties): React.JSX.Eleme
       <Fieldset legend="Todos">
         {() => (
           <div>
-            <Button
-              className={deleteTodosButton}
-              kind="secondary"
-              size="default"
-              onClick={handleDeleteAllTodos}
-            >
-              Delete All
-            </Button>
-
             {sessionDetail && sessionDetail.todos.length > 0 ? (
               <ul className={todosList}>
                 {sessionDetail.todos.map((todo: Todo, index: number) => (
@@ -64,6 +60,15 @@ export const TodoList = ({ sessionDetail }: TodoListProperties): React.JSX.Eleme
             ) : (
               <p className={noItemsMessage}>No todos for this session.</p>
             )}
+
+            <Button
+              className={deleteTodosButton}
+              kind="secondary"
+              size="default"
+              onClick={handleDeleteAllTodos}
+            >
+              Delete All Todos
+            </Button>
           </div>
         )}
       </Fieldset>

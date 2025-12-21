@@ -3,6 +3,7 @@ name = "pipe"
 version = "0.6.0"
 description = "A task-oriented chat agent for context engineering."
 authors = ["s-age <s-age@example.com>"]
+license = "CC0-1.0"
 package-mode = false
 
 [tool.poetry.dependencies]
@@ -21,6 +22,7 @@ watchdog = "4.0.1"
 Whoosh = "2.7.4"
 pathspec = "0.12.1"
 google-genai = "^1.52.0"
+psutil = "^6.1.1"
 
 [tool.poetry.scripts]
 takt = "pipe.cli.takt:main"

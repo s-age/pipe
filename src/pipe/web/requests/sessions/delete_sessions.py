@@ -2,14 +2,15 @@
 Pydantic model for validating the request body of the delete sessions API endpoint.
 """
 
-from pydantic import BaseModel, field_validator
+from pipe.web.requests.base_request import BaseRequest
+from pydantic import field_validator
 
 
-class DeleteSessionsRequest(BaseModel):
+class DeleteSessionsRequest(BaseRequest):
     session_ids: list[str]
 
 
-class DeleteBackupRequest(BaseModel):
+class DeleteBackupRequest(BaseRequest):
     """
     Request model for deleting backup sessions.
 

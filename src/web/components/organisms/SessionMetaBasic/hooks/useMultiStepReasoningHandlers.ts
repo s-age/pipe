@@ -1,8 +1,7 @@
 import { useCallback } from 'react'
 
+import { useMultiStepReasoningActions } from '@/components/organisms/MultiStepReasoning/hooks/useMultiStepReasoningActions'
 import type { SessionDetail } from '@/lib/api/session/getSession'
-
-import { useMultiStepReasoningActions } from './useMultiStepReasoningActions'
 
 type UseMultiStepReasoningHandlersProperties = {
   currentSessionId: string | null
@@ -25,8 +24,9 @@ export const useMultiStepReasoningHandlers = ({
 
       const checked = event.target.checked
 
+      // Intentionally not awaiting - errors are handled in Actions layer
       void updateMultiStepReasoning(currentSessionId, {
-        multi_step_reasoning_enabled: checked
+        multiStepReasoningEnabled: checked
       })
     },
     [currentSessionId, sessionDetail, updateMultiStepReasoning]

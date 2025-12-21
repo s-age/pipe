@@ -1,4 +1,5 @@
-import type { JSX } from 'react'
+import { clsx } from 'clsx'
+import type { JSX, RefObject } from 'react'
 
 import { Heading } from '@/components/atoms/Heading'
 import { TurnComponent as Turn } from '@/components/organisms/Turn'
@@ -6,6 +7,7 @@ import type { Turn as TurnType } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
+import { useChatHistoryLifecycle } from './hooks/useChatHistoryLifecycle'
 import {
   turnsColumn,
   turnsListSection,
@@ -19,13 +21,14 @@ type ChatHistoryBodyProperties = {
   currentSessionId: string | null
   expertMode: boolean
   isStreaming: boolean
-  streamedText: string | null
-  turnsListReference: React.RefObject<HTMLDivElement | null>
+  streamingTurns: TurnType[]
+  turnsListReference: RefObject<HTMLDivElement | null>
   onRefresh: () => Promise<void>
   refreshSessionsInStore: (
     sessionDetail: SessionDetail,
     sessions: SessionOverview[]
   ) => void
+  scrollToBottom: () => void
 }
 
 export const ChatHistoryBody = ({
@@ -33,11 +36,18 @@ export const ChatHistoryBody = ({
   currentSessionId,
   expertMode,
   isStreaming,
-  streamedText,
+  streamingTurns,
   turnsListReference,
   onRefresh,
-  refreshSessionsInStore
+  refreshSessionsInStore,
+  scrollToBottom
 }: ChatHistoryBodyProperties): JSX.Element => {
+  // Scroll to bottom when session changes
+  useChatHistoryLifecycle({
+    currentSessionId,
+    scrollToBottom
+  })
+
   if (!currentSessionId) {
     return (
       <div className={turnsColumn}>
@@ -64,46 +74,30 @@ export const ChatHistoryBody = ({
   }
 
   return (
-    <div className={`${panel} ${panelBottomSpacing}`}>
+    <div className={clsx(panel, panelBottomSpacing)}>
       <section className={turnsListSection} ref={turnsListReference}>
-        {sessionDetail.turns.map((turn: TurnType, i: number) => {
-          // Use a composite key that includes content/instruction to force remount on edit
-          // Simple hash function to keep key reasonable length
-          const content = turn.content ?? turn.instruction ?? ''
-          const simpleHash = content
-            .split('')
-            .reduce(
-              (accumulator, char) =>
-                ((accumulator << 5) - accumulator + char.charCodeAt(0)) | 0,
-              0
-            )
-          const key = `${turn.timestamp}-${i}-${simpleHash}`
-
-          return (
-            <Turn
-              key={key}
-              turn={turn}
-              index={i}
-              expertMode={expertMode}
-              sessionId={currentSessionId}
-              onRefresh={onRefresh}
-              refreshSessionsInStore={refreshSessionsInStore}
-            />
-          )
-        })}
-        {isStreaming && streamedText && (
+        {sessionDetail.turns.map((turn: TurnType, i: number) => (
           <Turn
-            key="streaming-response"
-            turn={{
-              type: 'model_response',
-              content: streamedText,
-              timestamp: new Date().toISOString()
-            }}
-            index={sessionDetail.turns.length}
+            key={i}
+            turn={turn}
+            index={i}
             expertMode={expertMode}
-            isStreaming={isStreaming}
+            sessionId={currentSessionId}
+            onRefresh={onRefresh}
+            refreshSessionsInStore={refreshSessionsInStore}
           />
-        )}
+        ))}
+
+        {isStreaming &&
+          streamingTurns.map((turn, turnIndex) => (
+            <Turn
+              key={`streaming-turn-${turnIndex}`}
+              turn={turn}
+              index={sessionDetail.turns.length + turnIndex}
+              expertMode={expertMode}
+              isStreaming={isStreaming}
+            />
+          ))}
       </section>
     </div>
   )

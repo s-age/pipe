@@ -1,17 +1,17 @@
 import { client } from '../client'
 
 export type CreateTherapistSessionRequest = {
-  session_id: string
+  sessionId: string
 }
 
 export type CreateTherapistSessionResponse = {
-  session_id: string
+  sessionId: string
   diagnosis: {
     deletions: number[]
-    edits: { turn: number; new_content: string }[]
+    edits: { turn: number; newContent: string }[]
     compressions: { start: number; end: number; reason: string }[]
     summary: string
-    raw_diagnosis?: string
+    rawDiagnosis?: string
   }
 }
 

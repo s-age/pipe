@@ -5,6 +5,22 @@ from pipe.core.models.turn import ToolResponseTurn, Turn
 
 if TYPE_CHECKING:
     from pipe.core.collections.turns import TurnCollection
+    from pipe.core.models.session import Session
+
+
+def delete_turns(session: "Session", turn_indices: list[int]) -> None:
+    """Delete multiple turns from a session, handling index shifts.
+
+    Sorts indices in descending order to avoid index shifting issues
+    when deleting multiple turns.
+
+    Args:
+        session: The session to modify
+        turn_indices: List of 0-based indices of turns to delete
+    """
+    sorted_indices = sorted(turn_indices, reverse=True)
+    for index in sorted_indices:
+        session.turns.delete_by_index(index)
 
 
 def get_turns_for_prompt(
@@ -16,10 +32,9 @@ def get_turns_for_prompt(
     - Only the last N 'tool_response' turns from the history are included.
     """
     tool_response_count = 0
-    history = turns_collection[:-1]  # Exclude the last turn
 
     # Iterate in reverse to easily count the last N tool_responses
-    for turn in reversed(history):
+    for turn in reversed(turns_collection):
         if isinstance(turn, ToolResponseTurn):
             tool_response_count += 1
             if tool_response_count > tool_response_limit:
@@ -50,11 +65,10 @@ def expire_old_tool_responses(
         if (
             turn.type == "tool_response"
             and turn.timestamp < expiration_threshold_timestamp
-            and isinstance(turn.response, dict)
-            and turn.response.get("status") == "succeeded"
+            and turn.response.status == "succeeded"
         ):
             modified_turn = turn.model_copy(deep=True)
-            modified_turn.response["message"] = (
+            modified_turn.response.message = (
                 "This tool response has expired to save tokens."
             )
             new_turns.append(modified_turn)

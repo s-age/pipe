@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react'
 import type { FormMethods } from '@/components/organisms/Form'
 import { useSessionMetaActions } from '@/components/organisms/SessionMeta/hooks/useSessionMetaActions'
 import type { SessionMetaFormInputs } from '@/components/organisms/SessionMeta/schema'
-import type { EditSessionMetaRequest } from '@/lib/api/session/editSessionMeta'
+import type { EditSessionMetaRequest } from '@/lib/api/meta/editSessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseSessionMetaHandlersProperties = {
@@ -16,20 +16,25 @@ export const useSessionMetaHandlers = ({
   onRefresh,
   formContext
 }: UseSessionMetaHandlersProperties): {
-  onSubmit: (data: SessionMetaFormInputs) => void
+  onSubmit: (data: SessionMetaFormInputs) => Promise<void>
   isSubmitting: boolean
   handleSaveClick: () => void
 } => {
-  const { handleMetaSave } = useSessionMetaActions({ onRefresh })
+  const { handleMetaSave } = useSessionMetaActions()
 
   const onSubmit = useCallback(
-    (data: SessionMetaFormInputs) => {
-      if (!sessionDetail.session_id) return
+    async (data: SessionMetaFormInputs) => {
+      if (!sessionDetail.sessionId) return
 
-      // roles, artifacts, references, procedure はすべて既に正しい形式なので変換不要
-      void handleMetaSave(sessionDetail.session_id, data as EditSessionMetaRequest)
+      // Note: SessionMetaFormInputs and EditSessionMetaRequest have compatible shapes
+      // roles, artifacts, procedure, hyperparameters are already in the correct format
+      await handleMetaSave(
+        sessionDetail.sessionId,
+        data as unknown as EditSessionMetaRequest
+      )
+      await onRefresh()
     },
-    [sessionDetail.session_id, handleMetaSave]
+    [sessionDetail.sessionId, handleMetaSave, onRefresh]
   )
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -37,14 +42,21 @@ export const useSessionMetaHandlers = ({
   const wrappedSubmit = useCallback(
     async (data: SessionMetaFormInputs) => {
       setIsSubmitting(true)
-      void onSubmit(data)
+      await onSubmit(data)
       setIsSubmitting(false)
     },
     [onSubmit]
   )
 
   const handleSaveClick = useCallback(() => {
-    void formContext?.handleSubmit(onSubmit as never)()
+    if (formContext?.handleSubmit) {
+      // Type guard: verify handleSubmit exists and call it
+      const submitHandler = formContext.handleSubmit(onSubmit as never)
+      if (typeof submitHandler === 'function') {
+        // Intentionally not awaiting - errors are handled in Actions layer
+        void submitHandler()
+      }
+    }
   }, [formContext, onSubmit])
 
   return { onSubmit: wrappedSubmit, isSubmitting, handleSaveClick }

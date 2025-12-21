@@ -3,6 +3,7 @@ import tempfile
 import unittest
 
 from pipe.core.collections.roles import RoleCollection
+from pipe.core.repositories.resource_repository import ResourceRepository
 
 
 class TestRoleCollection(unittest.TestCase):
@@ -26,6 +27,9 @@ class TestRoleCollection(unittest.TestCase):
         with open(self.role2_path_abs, "w") as f:
             f.write("You are a meticulous code reviewer.")
 
+        # Create a ResourceRepository for testing
+        self.resource_repository = ResourceRepository(self.project_root.name)
+
     def tearDown(self):
         # Clean up the temporary directory and files
         self.project_root.cleanup()
@@ -38,7 +42,7 @@ class TestRoleCollection(unittest.TestCase):
         role_paths = [self.role1_path_rel, self.role2_path_rel]
         collection = RoleCollection(role_paths)
 
-        prompt_data = collection.get_for_prompt(self.project_root.name)
+        prompt_data = collection.get_for_prompt(self.resource_repository)
 
         self.assertEqual(len(prompt_data), 2)
         self.assertIn("You are a senior software engineer.", prompt_data)
@@ -50,7 +54,7 @@ class TestRoleCollection(unittest.TestCase):
         empty list.
         """
         collection = RoleCollection([])
-        prompt_data = collection.get_for_prompt(self.project_root.name)
+        prompt_data = collection.get_for_prompt(self.resource_repository)
         self.assertEqual(len(prompt_data), 0)
 
     def test_get_for_prompt_handles_nonexistent_files_gracefully(self):
@@ -61,7 +65,7 @@ class TestRoleCollection(unittest.TestCase):
         role_paths = [self.role1_path_rel, self.non_existent_path_rel]
         collection = RoleCollection(role_paths)
 
-        prompt_data = collection.get_for_prompt(self.project_root.name)
+        prompt_data = collection.get_for_prompt(self.resource_repository)
 
         self.assertEqual(len(prompt_data), 1)
         self.assertEqual(prompt_data[0], "You are a senior software engineer.")

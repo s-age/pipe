@@ -4,18 +4,20 @@ from unittest.mock import MagicMock, patch
 from pipe.cli.takt import main
 from pipe.core.models.args import TaktArgs
 
+from tests.helpers.settings_factory import create_test_settings
+
 
 class TestTaktMain(unittest.TestCase):
     @patch("pipe.cli.takt.check_and_show_warning", return_value=True)
     @patch("pipe.cli.takt.load_dotenv")
-    @patch("pipe.cli.takt.read_yaml_file")
+    @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     @patch("pipe.cli.takt._parse_arguments")
     @patch("pipe.cli.takt.dispatch")
     def test_main_flow_with_api_mode_override(
         self,
         mock_dispatch,
         mock_parse_arguments,
-        mock_read_yaml,
+        mock_get_settings,
         mock_load_dotenv,
         mock_check_warning,
     ):
@@ -34,16 +36,10 @@ class TestTaktMain(unittest.TestCase):
         mock_parse_arguments.return_value = (mock_args, mock_parser)
 
         # Mock settings
-        mock_read_yaml.return_value = {
-            "model": "default-model",
-            "api_mode": "gemini-api",  # This should be overridden
-            "timezone": "UTC",
-            "parameters": {
-                "temperature": {"value": 0.5, "description": "temp"},
-                "top_p": {"value": 0.9, "description": "p"},
-                "top_k": {"value": 40, "description": "k"},
-            },
-        }
+        mock_get_settings.return_value = create_test_settings(
+            model_name="default-model",
+            api_mode="gemini-api",  # This should be overridden
+        )
 
         # Run the main function
         main()
@@ -51,7 +47,7 @@ class TestTaktMain(unittest.TestCase):
         # Assertions
         mock_check_warning.assert_called_once()
         mock_load_dotenv.assert_called_once()
-        mock_read_yaml.assert_called_once()
+        mock_get_settings.assert_called_once()
         mock_parse_arguments.assert_called_once()
         mock_dispatch.assert_called_once()
 
@@ -65,14 +61,14 @@ class TestTaktMain(unittest.TestCase):
 
     @patch("pipe.cli.takt.check_and_show_warning", return_value=True)
     @patch("pipe.cli.takt.load_dotenv")
-    @patch("pipe.cli.takt.read_yaml_file")
+    @patch("pipe.core.factories.settings_factory.SettingsFactory.get_settings")
     @patch("pipe.cli.takt._parse_arguments")
     @patch("pipe.cli.takt.dispatch")
     def test_main_flow_with_artifacts_and_procedure(
         self,
         mock_dispatch,
         mock_parse_arguments,
-        mock_read_yaml,
+        mock_get_settings,
         mock_load_dotenv,
         mock_check_warning,
     ):
@@ -92,16 +88,9 @@ class TestTaktMain(unittest.TestCase):
         mock_parse_arguments.return_value = (mock_args, mock_parser)
 
         # Mock settings
-        mock_read_yaml.return_value = {
-            "model": "default-model",
-            "api_mode": "gemini-api",
-            "timezone": "UTC",
-            "parameters": {
-                "temperature": {"value": 0.5, "description": "temp"},
-                "top_p": {"value": 0.9, "description": "p"},
-                "top_k": {"value": 40, "description": "k"},
-            },
-        }
+        mock_get_settings.return_value = create_test_settings(
+            model_name="default-model",
+        )
 
         # Run the main function
         main()
@@ -109,7 +98,7 @@ class TestTaktMain(unittest.TestCase):
         # Assertions
         mock_check_warning.assert_called_once()
         mock_load_dotenv.assert_called_once()
-        mock_read_yaml.assert_called_once()
+        mock_get_settings.assert_called_once()
         mock_parse_arguments.assert_called_once()
         mock_dispatch.assert_called_once()
 

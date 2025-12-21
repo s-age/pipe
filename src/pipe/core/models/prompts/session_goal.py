@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from pipe.core.models.base import CamelCaseModel
 
 
-class PromptSessionGoal(BaseModel):
+class PromptSessionGoal(CamelCaseModel):
     description: str
     purpose: str
     background: str

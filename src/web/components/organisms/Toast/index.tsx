@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import type { JSX } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -5,7 +6,7 @@ import type { ToastItem } from '@/stores/useToastStore'
 
 import { useToast } from './hooks/useToast'
 import { useToastHandlers } from './hooks/useToastHandlers'
-import { useToastItemLifecycle } from './hooks/useToastItemLifecycle'
+import { useToastItemHandlers } from './hooks/useToastItemHandlers'
 import * as styles from './style.css'
 
 type Position =
@@ -25,11 +26,17 @@ const allPositions: Position[] = [
   'bottom-right'
 ]
 
-const Icon = ({ status }: { status: string }): JSX.Element => {
+const Icon = ({ status }: { status: ToastItem['status'] }): JSX.Element => {
   if (status === 'success') return <span className={styles.icon}>✓</span>
   if (status === 'failure') return <span className={styles.icon}>✕</span>
 
   return <span className={styles.icon}>!</span>
+}
+
+const statusClassMap: Record<ToastItem['status'], string> = {
+  success: styles.statusSuccess,
+  failure: styles.statusFailure,
+  warning: styles.statusWarning
 }
 
 const ToastItem = ({
@@ -39,21 +46,18 @@ const ToastItem = ({
   item: ToastItem
   removeToast: (id: string) => void
 }): JSX.Element => {
-  const { handleMouseEnter, handleMouseLeave, handleClose, exiting, statusClass } =
-    useToastItemLifecycle(item, removeToast)
-
-  const statusClassName =
-    statusClass === 'statusSuccess'
-      ? styles.statusSuccess
-      : statusClass === 'statusFailure'
-        ? styles.statusFailure
-        : styles.statusWarning
+  const { handleMouseEnter, handleMouseLeave, handleClose, exiting } =
+    useToastItemHandlers({ item, removeToast })
 
   return (
     <div
       role={item.status === 'failure' ? 'alert' : 'status'}
       aria-live={item.status === 'failure' ? 'assertive' : 'polite'}
-      className={`${styles.toast} ${exiting ? styles.exit : styles.enter} ${statusClassName}`}
+      className={clsx(
+        styles.toast,
+        exiting ? styles.exit : styles.enter,
+        statusClassMap[item.status]
+      )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -75,24 +79,18 @@ const ToastItem = ({
   )
 }
 
-const ToastsComponent = (): JSX.Element => {
+export const Toasts = (): JSX.Element => {
   const { toasts, removeToast } = useToast()
   const { grouped } = useToastHandlers(toasts)
 
-  const positionElements: JSX.Element[] = []
-  for (const pos of allPositions) {
-    const children: JSX.Element[] = []
-    for (const item of grouped[pos]) {
-      children.push(<ToastItem key={item.id} item={item} removeToast={removeToast} />)
-    }
-    positionElements.push(
-      <div key={pos} className={styles.container} data-pos={pos} data-posname={pos}>
-        {children}
+  return createPortal(
+    allPositions.map((pos) => (
+      <div key={pos} className={styles.container} data-pos={pos}>
+        {grouped[pos].map((item) => (
+          <ToastItem key={item.id} item={item} removeToast={removeToast} />
+        ))}
       </div>
-    )
-  }
-
-  return createPortal(<>{positionElements}</>, document.body)
+    )),
+    document.body
+  )
 }
-
-export const Toasts = ToastsComponent

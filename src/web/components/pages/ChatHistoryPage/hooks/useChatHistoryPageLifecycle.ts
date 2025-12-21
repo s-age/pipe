@@ -8,15 +8,15 @@ import { addToast } from '@/stores/useToastStore'
 import type { SessionPair } from '@/types/session'
 import { isSessionPair } from '@/types/session'
 
-type UseSessionLoaderProperties = {
+type UseChatHistoryPageLifecycleProperties = {
   state: State
   actions: Actions
 }
 
-export const useSessionLoader = ({
+export const useChatHistoryPageLifecycle = ({
   state,
   actions
-}: UseSessionLoaderProperties): void => {
+}: UseChatHistoryPageLifecycleProperties): void => {
   const {
     sessionTree: { currentSessionId }
   } = state
@@ -57,26 +57,26 @@ export const useSessionLoader = ({
       updateSettings(data.settings || {})
 
       // `session_tree` from server may be hierarchical (SessionTreeNode[]) or flat pairs.
-      if (Array.isArray(data.session_tree) && data.session_tree.length > 0) {
-        const first = data.session_tree[0]
+      if (Array.isArray(data.sessionTree) && data.sessionTree.length > 0) {
+        const first = data.sessionTree[0]
 
         if (isSessionPair(first)) {
           // legacy flat [id, overview][] pairs
           setSessions(
-            (data.session_tree as SessionPair[]).map(([id, session]) => ({
+            (data.sessionTree as unknown as SessionPair[]).map(([id, session]) => ({
               ...session,
-              session_id: id
+              sessionId: id
             }))
           )
         } else {
           // hierarchical nodes
-          setSessions(data.session_tree as SessionTreeNode[])
+          setSessions(data.sessionTree as SessionTreeNode[])
         }
       }
 
-      if (data.current_session) {
-        setSessionDetail(data.current_session)
-        setRoleOptions(data.role_options || [])
+      if (data.currentSession) {
+        setSessionDetail(data.currentSession)
+        setRoleOptions(data.roleOptions || [])
       } else {
         setSessionDetail(null)
       }

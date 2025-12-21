@@ -1,23 +1,35 @@
 import os
 import subprocess
-from typing import Any
+from typing import TypedDict
+
+from pipe.core.models.tool_result import ToolResult
+from pipe.core.utils.path import get_project_root
 
 
-def ts_get_code_snippet(file_path: str, symbol_name: str) -> dict[str, Any]:
+class CodeSnippetResult(TypedDict, total=False):
+    """Result from extracting code snippet."""
+
+    snippet: str
+    error: str
+
+
+def ts_get_code_snippet(
+    file_path: str, symbol_name: str
+) -> ToolResult[CodeSnippetResult]:
     """
     Extracts a code snippet for a specific symbol from the given TypeScript file
     using ts-morph for full AST analysis.
     """
     if "node_modules" in os.path.normpath(file_path):
-        return {
-            "error": (
+        return ToolResult(
+            error=(
                 f"Operation on files within 'node_modules' is not allowed: "
                 f"{file_path}"
             )
-        }
+        )
 
     if not os.path.exists(file_path):
-        return {"error": f"File not found: {file_path}"}
+        return ToolResult(error=f"File not found: {file_path}")
 
     file_path = os.path.abspath(file_path)
 
@@ -29,17 +41,15 @@ def ts_get_code_snippet(file_path: str, symbol_name: str) -> dict[str, Any]:
         script_path = os.path.abspath(script_path)
 
         # Calculate project_root internally
-        project_root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..")
-        )
+        project_root = get_project_root()
 
         command = [
             "npx",
             "ts-node",
             script_path,
+            "get_code_snippet",
             file_path,
             symbol_name,
-            "get_code_snippet",
         ]
         process = subprocess.run(
             command, capture_output=True, text=True, check=True, cwd=project_root
@@ -47,11 +57,11 @@ def ts_get_code_snippet(file_path: str, symbol_name: str) -> dict[str, Any]:
 
         snippet = process.stdout.strip()
         if snippet:
-            return {"snippet": snippet}
+            return ToolResult(data={"snippet": snippet})
         else:
-            return {"error": "No code snippet found."}
+            return ToolResult(error="No code snippet found.")
 
     except subprocess.CalledProcessError as e:
-        return {"error": f"ts_analyzer.ts failed: {e.stderr.strip()}"}
+        return ToolResult(error=f"ts_analyzer.ts failed: {e.stderr.strip()}")
     except Exception as e:
-        return {"error": f"An unexpected error occurred: {e}"}
+        return ToolResult(error=f"An unexpected error occurred: {e}")

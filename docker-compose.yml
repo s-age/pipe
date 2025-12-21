@@ -2,15 +2,16 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.web
+      dockerfile: docker/Dockerfile.web
     ports:
-      - '5001:5001'
+      - "5001:5001"
     depends_on:
       - lsp
     environment:
       - FLASK_APP=pipe.web.app
       - FLASK_ENV=development
       - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
     env_file:
       - .env
     volumes:
@@ -21,22 +22,22 @@ services:
   react:
     build:
       context: .
-      dockerfile: Dockerfile.react
+      dockerfile: docker/Dockerfile.react
     ports:
-      - '3000:3000'
+      - "3000:3000"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - ./src/web:/app
+      - ./src/web/node_modules:/app/node_modules
     depends_on:
       - lsp
-    command: npm start
+    command: ["sh", "-c", "npm install && npm start"]
 
   lsp:
     build:
       context: .
-      dockerfile: Dockerfile.python
+      dockerfile: docker/Dockerfile.python
     ports:
-      - '2087:2087' # pygls default port, adjust if needed
+      - "2087:2087" # pygls default port, adjust if needed
     environment:
       - PYTHONPATH=/app/src
     env_file:
@@ -50,11 +51,12 @@ services:
   storybook:
     build:
       context: .
-      dockerfile: Dockerfile.storybook
+      dockerfile: docker/Dockerfile.storybook
     ports:
-      - '6006:6006'
+      - "6006:6006"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - ./src/web:/app
+      - ./src/web/node_modules:/app/node_modules
     profiles:
       - storybook
+    command: ["sh", "-c", "npm install && npm run storybook"]

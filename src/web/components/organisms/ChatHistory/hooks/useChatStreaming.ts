@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback, type RefObject } from 'react'
+import { useEffect, useRef, useCallback, type RefObject } from 'react'
 
+import { useChatStreamParser } from '@/hooks/useChatStreamParser'
+import { useStreamingClient } from '@/hooks/useStreamingClient'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import type { Turn } from '@/lib/api/session/getSession'
 import { getSession } from '@/lib/api/session/getSession'
-import { streamInstruction } from '@/lib/api/session/streamInstruction'
 import { addToast } from '@/stores/useToastStore'
 
 type SessionDetailCache = {
@@ -12,7 +14,7 @@ type SessionDetailCache = {
   }
 }
 
-const SESSION_DETAIL_CACHE_TTL = 30000 // 30秒
+const SESSION_DETAIL_CACHE_TTL = 30000 // 30 seconds
 
 type ChatStreamingProperties = {
   currentSessionId: string | null
@@ -20,7 +22,7 @@ type ChatStreamingProperties = {
 }
 
 type ChatStreamingReturn = {
-  streamedText: string | null
+  streamingTurns: Turn[]
   isStreaming: boolean
   turnsListReference: RefObject<HTMLDivElement | null>
   scrollToBottom: () => void
@@ -31,24 +33,26 @@ export const useChatStreaming = ({
   currentSessionId,
   setSessionDetail
 }: ChatStreamingProperties): ChatStreamingReturn => {
-  const [streamingTrigger, setStreamingTrigger] = useState<{
-    instruction: string
-    sessionId: string
-  } | null>(null)
-  const [streamedText, setStreamedText] = useState<string>('')
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
-  const controllerReference = useRef<AbortController | null>(null)
-  const sessionDetailCacheReference = useRef<SessionDetailCache>({})
   const turnsListReference = useRef<HTMLDivElement | null>(null)
+  const sessionDetailCacheReference = useRef<SessionDetailCache>({})
+  const previousLoadingState = useRef<boolean>(false)
 
-  // Session detail cache helpers
+  // 1. Client Hook: Handles API communication and SSE state
+  const { streamedText, isLoading, error, instructionTurn, startStreaming } =
+    useStreamingClient()
+
+  // 2. Parser Hook: Converts raw text to Turn objects
+  const { streamingTurns } = useChatStreamParser({
+    streamedText,
+    isStreaming: isLoading,
+    instructionTurn
+  })
+
+  // Session cache helpers
   const getSessionDetailFromCache = useCallback(
     (sessionId: string): SessionDetail | null => {
       const cached = sessionDetailCacheReference.current[sessionId]
-      if (!cached) {
-        return null
-      }
+      if (!cached) return null
 
       const now = Date.now()
       if (now - cached.timestamp > SESSION_DETAIL_CACHE_TTL) {
@@ -72,137 +76,76 @@ export const useChatStreaming = ({
     []
   )
 
-  // Streaming fetch effect (merged from useStreamingFetch)
-  useEffect((): (() => void) => {
-    if (!streamingTrigger) {
-      setStreamedText('')
-      if (controllerReference.current) {
-        controllerReference.current.abort()
-      }
-
-      return (): void => {}
+  // 3. Error Handling
+  useEffect(() => {
+    if (error) {
+      addToast({ status: 'failure', title: error })
     }
+  }, [error])
 
-    // Cleanup old controller before starting new request
-    if (controllerReference.current) {
-      controllerReference.current.abort()
-    }
-    controllerReference.current = new AbortController()
-    const signal = controllerReference.current.signal
+  // 4. Session Refresh on Completion
+  // Detect when loading finishes (true -> false) to refresh session data
+  useEffect(() => {
+    const wasLoading = previousLoadingState.current
+    if (wasLoading && !isLoading) {
+      // Streaming finished
+      if (streamedText.length > 0 && currentSessionId) {
+        void (async (): Promise<void> => {
+          // Try to get from cache first
+          const cachedDetail = getSessionDetailFromCache(currentSessionId)
+          if (cachedDetail) {
+            setSessionDetail(cachedDetail)
 
-    const fetchData = async (): Promise<void> => {
-      setIsLoading(true)
-      setError(null)
-      setStreamedText('')
-      let localError: string | null = null
-      let accum = ''
-
-      try {
-        const stream = await streamInstruction(streamingTrigger.sessionId, {
-          instruction: streamingTrigger.instruction,
-          signal
-        })
-
-        const reader = stream.getReader()
-        const decoder = new TextDecoder()
-        let done = false
-
-        while (!done) {
-          const { value, done: readerDone } = await reader.read()
-          done = readerDone
-          const chunk = decoder.decode(value, { stream: true })
-
-          if (chunk) {
-            accum += chunk
-            setStreamedText((previous) => previous + chunk)
+            return
           }
-        }
-      } catch (error_: unknown) {
-        console.error('[ERROR] Failed to fetch stream:', error_)
-        localError = (error_ as Error).message || 'Failed to fetch stream.'
-        setError(localError)
-      } finally {
-        setIsLoading(false)
 
-        // Handle completion (merged from useStreamingInstruction)
-        if (accum.length > 0 || localError) {
-          void (async (): Promise<void> => {
-            if (!currentSessionId) {
-              return
-            }
-
-            // Try to get from cache
-            const cachedDetail = getSessionDetailFromCache(currentSessionId)
-            if (cachedDetail) {
-              setSessionDetail(cachedDetail)
-
-              return
-            }
-
-            // Fetch from API if not cached
-            try {
-              const data = await getSession(currentSessionId)
-              cacheSessionDetail(currentSessionId, data.session)
-              setSessionDetail(data.session)
-            } catch (error: unknown) {
-              console.error('Failed to load session data after streaming:', error)
-            }
-          })()
-        }
-
-        // Clear trigger and streamed text
-        setStreamingTrigger(null)
-        setStreamedText('')
+          // Fetch from API
+          try {
+            const data = await getSession(currentSessionId)
+            cacheSessionDetail(currentSessionId, data)
+            setSessionDetail(data)
+          } catch {
+            addToast({
+              status: 'failure',
+              title: 'Failed to load session data after streaming.'
+            })
+          }
+        })()
       }
     }
-
-    void fetchData()
-
-    return (): void => {
-      if (controllerReference.current) {
-        controllerReference.current.abort()
-      }
-    }
+    previousLoadingState.current = isLoading
   }, [
-    streamingTrigger,
+    isLoading,
+    streamedText,
     currentSessionId,
     setSessionDetail,
     getSessionDetailFromCache,
     cacheSessionDetail
   ])
 
-  // Propagate streaming errors
-  useEffect(() => {
-    if (error) {
-      const message = typeof error === 'string' ? error : (error as Error).message
-      addToast({ status: 'failure', title: message })
-      setStreamingTrigger(null)
-    }
-  }, [error])
-
-  // Scroll management
+  // 5. Scroll Management
   const scrollToBottom = useCallback((): void => {
     if (turnsListReference.current) {
       turnsListReference.current.scrollTop = turnsListReference.current.scrollHeight
     }
   }, [])
 
-  // Auto-scroll when streaming text appears or when session changes
+  // Auto-scroll when new content arrives
   useEffect(() => {
     scrollToBottom()
-  }, [streamedText, currentSessionId, scrollToBottom])
+  }, [streamingTurns, scrollToBottom, currentSessionId])
 
-  // Send instruction handler
+  // 6. Action Handler
   const onSendInstruction = useCallback(
     async (instruction: string): Promise<void> => {
       if (!currentSessionId) return
-      setStreamingTrigger({ instruction, sessionId: currentSessionId })
+      await startStreaming(currentSessionId, instruction)
     },
-    [currentSessionId]
+    [currentSessionId, startStreaming]
   )
 
   return {
-    streamedText: streamedText || null,
+    streamingTurns,
     isStreaming: isLoading,
     turnsListReference,
     scrollToBottom,

@@ -3,15 +3,17 @@ import { useCallback } from 'react'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { FormMethods } from '@/components/organisms/Form'
 import { useSessionTodosActions } from '@/components/organisms/TodoList/hooks/useSessionTodosActions'
-import type { SessionDetail } from '@/lib/api/session/getSession'
+import { getSession, type SessionDetail } from '@/lib/api/session/getSession'
 import type { Todo } from '@/types/todo'
 
 type UseSessionTodosProperties = {
   sessionDetail: SessionDetail
+  onSessionDetailUpdate?: (sessionDetail: SessionDetail) => void
 }
 
 export const useSessionTodosHandlers = ({
-  sessionDetail
+  sessionDetail,
+  onSessionDetailUpdate
 }: UseSessionTodosProperties): {
   handleUpdateTodo: (todos: Todo[]) => Promise<void>
   handleDeleteAllTodos: () => Promise<void>
@@ -25,23 +27,37 @@ export const useSessionTodosHandlers = ({
 
   const { updateTodos, deleteAllTodos } = useSessionTodosActions()
 
-  // NOTE: getSession is available if callers need to fetch a fresh session.
-
   const handleUpdateTodo = useCallback(
     async (todos: Todo[]) => {
-      if (!sessionDetail.session_id) return
-      void updateTodos(sessionDetail.session_id, todos)
+      if (!sessionDetail.sessionId) return
+      await updateTodos(sessionDetail.sessionId, todos)
+
+      // Fetch fresh session detail to ensure UI is in sync
+      try {
+        const freshSessionDetail = await getSession(sessionDetail.sessionId)
+        onSessionDetailUpdate?.(freshSessionDetail)
+      } catch {
+        // Silently fail on refresh - the update was still successful
+      }
     },
-    [sessionDetail, updateTodos]
+    [sessionDetail, updateTodos, onSessionDetailUpdate]
   )
 
   const handleDeleteAllTodos = useCallback(async (): Promise<void> => {
-    if (!sessionDetail.session_id) return
+    if (!sessionDetail.sessionId) return
     if (!window.confirm('Are you sure you want to delete all todos for this session?'))
       return
 
-    void deleteAllTodos(sessionDetail.session_id)
-  }, [sessionDetail, deleteAllTodos])
+    await deleteAllTodos(sessionDetail.sessionId)
+
+    // Fetch fresh session detail to ensure UI is in sync
+    try {
+      const freshSessionDetail = await getSession(sessionDetail.sessionId)
+      onSessionDetailUpdate?.(freshSessionDetail)
+    } catch {
+      // Silently fail on refresh - the delete was still successful
+    }
+  }, [sessionDetail, deleteAllTodos, onSessionDetailUpdate])
 
   const handleTodoCheckboxChange = useCallback(
     (index?: number) => {
@@ -50,6 +66,7 @@ export const useSessionTodosHandlers = ({
         const todo = todos[index]
         if (todo) {
           const isChecked = !todo.checked
+          // Intentionally not awaiting - errors are handled in Actions layer
           void handleUpdateTodo(
             todos.map((t, i) => (i === index ? { ...t, checked: isChecked } : t))
           )

@@ -2,7 +2,7 @@ import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 
-import { useCompressorActions } from './hooks/useCompressorActions'
+import { useCompressorApprovalHandlers } from './hooks/useCompressorApprovalHandlers'
 import * as styles from './style.css'
 
 export type CompressorApprovalProperties = {
@@ -22,11 +22,9 @@ export type CompressorApprovalProperties = {
 
 export const CompressorApproval = ({
   summary,
-  sessionId,
   start,
   end,
   setSummary,
-  setError,
   setIsSubmitting,
   handleDeny,
   isSubmitting = false,
@@ -34,14 +32,12 @@ export const CompressorApproval = ({
   setCompressorSessionId,
   onRefresh
 }: CompressorApprovalProperties): JSX.Element => {
-  const { handleApprove } = useCompressorActions({
-    sessionId,
-    setSummary,
-    setError,
-    setIsSubmitting,
+  const { handleApprove } = useCompressorApprovalHandlers({
     compressorSessionId,
+    onRefresh,
+    setSummary,
     setCompressorSessionId,
-    onRefresh
+    setIsSubmitting
   })
 
   return (

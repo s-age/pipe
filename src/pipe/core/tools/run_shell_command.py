@@ -1,27 +1,31 @@
-import os
 import subprocess
+
+from pipe.core.factories.file_repository_factory import FileRepositoryFactory
+from pipe.core.models.results.run_shell_command_result import RunShellCommandResult
+from pipe.core.models.tool_result import ToolResult
+from pipe.core.utils.path import get_project_root
 
 
 def run_shell_command(
     command: str,
     description: str | None = None,
     directory: str | None = None,
-) -> dict:
+) -> ToolResult[RunShellCommandResult]:
     try:
+        # Get project root and create repository
+        project_root = get_project_root()
+        repo = FileRepositoryFactory.create()
+
         # Determine the directory to run the command in
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         if directory:
-            target_directory = os.path.abspath(directory)
-            if not os.path.isdir(target_directory):
-                return {"error": f"Directory does not exist: {directory}"}
-            if not target_directory.startswith(project_root):
-                return {
-                    "error": (
-                        "Running commands outside project root is not allowed: "
-                        f"{directory}"
-                    )
-                }
-            cwd = target_directory
+            # Validate directory using repository
+            if not repo.exists(directory):
+                return ToolResult(error=f"Directory does not exist: {directory}")
+            if not repo.is_dir(directory):
+                return ToolResult(error=f"Path is not a directory: {directory}")
+
+            # Get validated absolute path
+            cwd = repo.get_absolute_path(directory)
         else:
             cwd = project_root
 
@@ -35,26 +39,27 @@ def run_shell_command(
             check=False,  # Do not raise an exception for non-zero exit codes
         )
 
-        # Prepare the result dictionary
-        result = {
-            "command": command,
-            "directory": str(cwd),
-            "stdout": process.stdout.strip() if process.stdout else "(empty)",
-            "stderr": process.stderr.strip() if process.stderr else "(empty)",
-            "exit_code": process.returncode,
-            "error": "(none)",
-            "signal": "(none)",  # subprocess.run doesn't directly expose signal for
-            # shell=True
-            "background_pids": "(none)",  # Not easily captured with shell=True
-            "process_group_pgid": "(none)",  # Not easily captured with shell=True
-        }
-
+        error_msg = "(none)"
         if process.returncode != 0:
-            result["error"] = f"Command failed with exit code {process.returncode}"
+            error_msg = f"Command failed with exit code {process.returncode}"
 
-        return result
+        result = RunShellCommandResult(
+            command=command,
+            directory=str(cwd),
+            stdout=process.stdout.strip() if process.stdout else "(empty)",
+            stderr=process.stderr.strip() if process.stderr else "(empty)",
+            exit_code=process.returncode,
+            error=error_msg,
+            signal="(none)",
+            background_pids="(none)",
+            process_group_pgid="(none)",
+        )
+        return ToolResult(data=result)
 
+    except ValueError as e:
+        # FileSystemRepository validation errors
+        return ToolResult(error=f"Invalid directory: {e}")
     except FileNotFoundError:
-        return {"error": f"Command not found: {command.split()[0]}"}
+        return ToolResult(error=f"Command not found: {command.split()[0]}")
     except Exception as e:
-        return {"error": f"Error inside run_shell_command tool: {str(e)}"}
+        return ToolResult(error=f"Error inside run_shell_command tool: {str(e)}")

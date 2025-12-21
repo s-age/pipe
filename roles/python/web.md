@@ -102,11 +102,12 @@ Each action performs **one** operation:
 
 - ✅ Single responsibility
 - ✅ Direct service calls
-- ✅ Simple error handling
-- ✅ Return `(dict, status_code)` tuple
+- ✅ Raise HttpException for errors
+- ✅ Return data directly (dispatcher wraps in ApiResponse)
 - ❌ **NO orchestration** - one operation only
 - ❌ **NO business logic** - delegate to core
 - ❌ **NO state** - stateless operations
+- ❌ **NO manual ApiResponse wrapping** - dispatcher handles it
 
 ### Request Models
 
@@ -164,19 +165,25 @@ Each action performs **one** operation:
 ```python
 # ✅ GOOD: Single responsibility
 class SessionGetAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
-        session_id = self.params.get("session_id")
+    def execute(self) -> dict[str, Any]:
+        session_id = self.request.get_path_param("session_id")
+        if not session_id:
+            raise BadRequestError("session_id is required")
+
         session = session_service.get_session(session_id)
-        return {"session": session.to_dict()}, 200
+        if not session:
+            raise NotFoundError("Session not found")
+
+        return session.to_dict()  # Dispatcher wraps in ApiResponse
 
 # ❌ BAD: Multiple responsibilities
 class SessionGetAction(BaseAction):
-    def execute(self) -> tuple[dict[str, Any], int]:
+    def execute(self):
         # Getting session AND tree AND settings - too much!
         session = session_service.get_session(session_id)
         tree = session_service.get_tree()
         settings = settings_service.get_settings()
-        return {...}, 200
+        return {...}  # Use controller instead!
 ```
 
 ### 2. Use Controllers for Orchestration
@@ -185,13 +192,16 @@ class SessionGetAction(BaseAction):
 # ✅ GOOD: Controller orchestrates multiple actions
 class SessionDetailController:
     def get_session_with_tree(self, session_id: str):
-        tree_response, _ = SessionTreeAction(...).execute()
-        session_response, _ = SessionGetAction(...).execute()
+        try:
+            tree_data = SessionTreeAction(...).execute()
+            session_data = SessionGetAction(...).execute()
 
-        return {
-            "session_tree": tree_response["sessions"],
-            "current_session": session_response["session"],
-        }, 200
+            return {
+                "session_tree": tree_data.get("sessions", []),
+                "current_session": session_data,
+            }, 200
+        except HttpException as e:
+            return {"success": False, "message": e.message}, e.status_code
 
 # ❌ BAD: Action doing orchestration
 class SessionGetAction(BaseAction):
@@ -227,52 +237,67 @@ class SessionStartAction(BaseAction):
 ### 4. Return Consistent Responses
 
 ```python
-# ✅ GOOD: Consistent response format
-def execute(self) -> tuple[dict[str, Any], int]:
-    return {"session": session.to_dict()}, 200
+# ✅ GOOD: Return data directly
+def execute(self) -> dict[str, Any]:
+    return session.to_dict()  # Dispatcher wraps: ApiResponse(success=True, data=...)
 
-# ❌ BAD: Inconsistent format
+# ❌ BAD: Return non-serializable objects
 def execute(self):
-    return session, 200  # Not a dict!
+    return session  # Domain object - not JSON serializable!
 ```
 
 ## Error Handling
 
-### Standard Error Response
+### HttpException Hierarchy
 
 ```python
-# Validation error
-return {"message": "Validation failed: ...", "errors": [...]}, 422
-
-# Not found
-return {"message": "Session not found"}, 404
-
-# Server error
-return {"message": "Internal error", "details": str(e)}, 500
-
-# Success
-return {"session": session.to_dict()}, 200
+from pipe.web.exceptions import (
+    BadRequestError,          # 400 - Invalid input
+    NotFoundError,            # 404 - Resource not found
+    UnprocessableEntityError, # 422 - Validation failure
+    InternalServerError,      # 500 - Unexpected error
+)
 ```
 
-### Exception Handling Pattern
+### Standard Error Pattern
 
 ```python
-def execute(self) -> tuple[dict[str, Any], int]:
-    try:
-        # Validate request
-        request_data = RequestModel(**self.request_data.get_json())
+def execute(self) -> dict[str, Any]:
+    resource_id = self.request.get_path_param("resource_id")
+    if not resource_id:
+        raise BadRequestError("resource_id is required")
 
-        # Call service
-        result = service.do_something(request_data.field)
+    resource = service.get_resource(resource_id)
+    if not resource:
+        raise NotFoundError("Resource not found")
 
-        return {"result": result}, 200
+    return resource.to_dict()
+    # Dispatcher catches HttpException and returns appropriate status
+```
 
-    except ValidationError as e:
-        return {"message": str(e)}, 422
-    except FileNotFoundError:
-        return {"message": "Resource not found"}, 404
-    except Exception as e:
-        return {"message": str(e)}, 500
+### Validation Error Handling
+
+```python
+# With request_model (new pattern)
+class UpdateResourceAction(BaseAction):
+    request_model = UpdateResourceRequest  # Pre-validated!
+
+    def execute(self) -> dict[str, str]:
+        req = self.validated_request  # Already validated
+        service.update(req.resource_id, req.data)
+        return {"message": "Updated"}
+        # ValidationError caught by dispatcher → 422
+
+# With body_model (legacy pattern)
+class UpdateResourceAction(BaseAction):
+    body_model = UpdateResourceBodyModel
+
+    def execute(self) -> dict[str, str]:
+        resource_id = self.request.get_path_param("resource_id")
+        body = self.request.get_body()  # May raise ValidationError
+        service.update(resource_id, body.data)
+        return {"message": "Updated"}
+        # ValidationError caught by dispatcher → 422
 ```
 
 ## Testing
@@ -281,16 +306,19 @@ def execute(self) -> tuple[dict[str, Any], int]:
 
 ```python
 # tests/web/actions/test_session_actions.py
+import pytest
+from pipe.web.exceptions import NotFoundError
+
 def test_session_get_action_success():
     action = SessionGetAction(
         params={"session_id": "test-123"},
         request_data=None,
     )
 
-    response, status = action.execute()
+    data = action.execute()  # Returns data directly
 
-    assert status == 200
-    assert "session" in response
+    assert "session_id" in data
+    assert data["session_id"] == "test-123"
 
 
 def test_session_get_action_not_found():
@@ -299,10 +327,9 @@ def test_session_get_action_not_found():
         request_data=None,
     )
 
-    response, status = action.execute()
-
-    assert status == 404
-    assert "message" in response
+    # Should raise NotFoundError
+    with pytest.raises(NotFoundError, match="Session not found"):
+        action.execute()
 ```
 
 ### Testing Request Models

@@ -53,7 +53,7 @@ paths:
           description: Internal server error
 
   # Roles (v1)
-  /api/v1/roles:
+  /api/v1/fs/roles:
     get:
       summary: Get available roles (v1)
       description: Returns a list of available roles for selection, including their labels and values.
@@ -72,7 +72,7 @@ paths:
           description: Internal server error
 
   # Procedures (v1)
-  /api/v1/procedures:
+  /api/v1/fs/procedures:
     get:
       summary: Get available procedures (v1)
       description: Returns a list of available procedures for selection, including their labels and values.
@@ -416,7 +416,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/search:
+  /api/v1/fs/search:
     post:
       summary: Search sessions by query
       description: "Search session files (filename, purpose, background, and turns) for a given query string. Returns matching session IDs and titles."
@@ -650,6 +650,39 @@ paths:
         '500':
           description: Internal server error
 
+  /api/v1/session/{session_id}/artifacts:
+    patch:
+      summary: Edit session artifacts
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditArtifactsRequest'
+      responses:
+        '200':
+          description: Session artifacts updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '422':
+          description: Validation error
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+
   /api/v1/session/{session_id}/hyperparameters:
     patch:
       summary: Edit only hyperparameters for a session (temperature, top_p/topP, top_k/topK)
@@ -724,7 +757,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/sessions/archives:
+  /api/v1/session_management/archives:
     get:
       summary: List archived sessions
       tags:
@@ -956,7 +989,7 @@ paths:
           description: Internal server error
 
   # File Search Endpoints
-  /api/v1/search_l2:
+  /api/v1/fs/browse_l2:
     post:
       summary: Search for level 1 candidates and prefetch level 2 data
       tags:
@@ -979,9 +1012,9 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/ls:
+  /api/v1/fs/browse:
     post:
-      summary: Get ls-like data for a final path
+      summary: Browse directory contents
       tags:
         - file-search
       requestBody:
@@ -1007,7 +1040,7 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/index_files:
+  /api/v1/fs/index_files:
     post:
       summary: Create or update the Whoosh file index
       tags:
@@ -1277,6 +1310,27 @@ components:
           default: false
       required:
         - path
+    Artifact:
+      type: object
+      properties:
+        path:
+          type: string
+          description: The file path of the artifact
+        contents:
+          type: string
+          nullable: true
+          description: The contents of the artifact file
+      required:
+        - path
+    EditArtifactsRequest:
+      type: object
+      properties:
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Artifact'
+      required:
+        - artifacts
     TodoItem:
       type: object
       properties:

@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import type { JSX, ReactNode } from 'react'
 
 import * as styles from './style.css'
@@ -23,7 +24,7 @@ type MetaItemProperties = {
 }
 
 export const MetaItem = ({ children, className }: MetaItemProperties): JSX.Element => (
-  <div className={`${styles.wrapper} ${className ?? ''}`.trim()}>{children}</div>
+  <div className={clsx(styles.wrapper, className)}>{children}</div>
 )
 
 export type { MetaLabelProperties as MetaLabelProps }

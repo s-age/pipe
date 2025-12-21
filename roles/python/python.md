@@ -1,5 +1,31 @@
 # Python Project Guidelines (src/pipe/core)
 
+## 🛡️ Code Quality Assurance Process
+
+**CRITICAL**: Every code modification must follow this verification pipeline to ensure safety and quality.
+
+```mermaid
+graph TD
+    A([Code Modification]) --> B[Step 1: Auto Format]
+    B -->|py_auto_format_code| C{Format OK?}
+    C -- No --> B
+    C -- Yes --> D[Step 2: Static Analysis]
+    D -->|py_checker| E{Lint/Type OK?}
+    E -- No --> F[Fix Errors]
+    F --> B
+    E -- Yes --> G[Step 3: Dynamic Verification]
+    G -->|py_run_and_test_code| H{Tests Pass?}
+    H -- No --> I[Fix Logic/Tests]
+    I --> B
+    H -- Yes --> J([Task Complete])
+```
+
+1.  **Auto Format (`py_auto_format_code`)**: Always run first to fix style and syntax issues.
+2.  **Static Analysis (`py_checker`)**: Must pass with no errors. Fix type hints and linting rules.
+3.  **Dynamic Verification (`py_run_and_test_code`)**: Run relevant tests. Create new tests if needed.
+
+---
+
 ## Overview
 
 This document defines project-wide Python conventions, forbidden patterns, and architectural principles for `src/pipe/core`. These rules ensure code quality, maintainability, and consistent architectural patterns across all layers.
@@ -465,74 +491,7 @@ py_get_code_snippet(
 
 **Best practice**: Use instead of reading entire files when you need specific functions
 
-### Code Generation Tools
-
-#### py_generate_code
-
-**Purpose**: Generate code following project patterns and templates
-
-**Use when**:
-
-- Creating new actions, services, repositories following established patterns
-- Generating boilerplate code with correct structure
-- Ensuring consistency with existing code style
-- Starting new modules with proper scaffolding
-
-**Example**:
-
-```python
-# Generate a new action following web/actions pattern
-py_generate_code(
-    type="action",
-    name="TodoCreateAction",
-    template="web/actions/base_action.py",
-    layer="web/actions"
-)
-
-# Generate a new domain module
-py_generate_code(
-    type="domain",
-    name="todo_logic",
-    template="core/domains/turns.py"
-)
-```
-
-**Best practice**: Use templates from similar existing code to maintain consistency
-
 ### Code Modification Tools
-
-#### py_refactor_code
-
-**Purpose**: Safely refactor code (rename symbols, extract methods, move code)
-
-**Use when**:
-
-- Renaming functions/classes across entire codebase
-- Extracting methods to improve code organization
-- Moving code between modules while maintaining references
-- Ensuring all usages are updated
-
-**Example**:
-
-```python
-# Rename function and update all call sites automatically
-py_refactor_code(
-    operation="rename",
-    symbol="get_session",
-    new_name="find_session",
-    file="src/pipe/core/services/session_service.py"
-)
-
-# Extract method from a long function
-py_refactor_code(
-    operation="extract_method",
-    function="process_session",
-    lines=(45, 67),
-    new_method_name="validate_session_state"
-)
-```
-
-**Best practice**: Use for safe refactoring instead of manual find-replace
 
 #### py_auto_format_code
 
@@ -604,9 +563,9 @@ py_run_and_test_code(
 1. py_get_symbol_references    → Find similar existing features
 2. py_get_code_snippet          → Study implementation patterns
 3. py_get_type_hints            → Understand required types
-4. py_generate_code             → Generate initial boilerplate
-5. [Manual coding]              → Implement specific logic
-6. py_auto_format_code          → Format the code
+4. [Manual coding]              → Implement specific logic
+5. py_auto_format_code          → Format the code
+6. py_checker                   → Verify types and linting
 7. py_run_and_test_code         → Validate implementation
 ```
 
@@ -615,9 +574,10 @@ py_run_and_test_code(
 ```
 1. py_analyze_code              → Understand current structure
 2. py_get_symbol_references     → Find all usages
-3. py_refactor_code             → Perform safe refactoring
+3. [Manual refactoring]         → Perform safe refactoring
 4. py_auto_format_code          → Clean up formatting
-5. py_run_and_test_code         → Ensure nothing broke
+5. py_checker                   → Verify types and linting
+6. py_run_and_test_code         → Ensure nothing broke
 ```
 
 ### Workflow 3: Fixing Architecture Violations
@@ -626,8 +586,8 @@ py_run_and_test_code(
 1. py_analyze_code              → Identify improper dependencies
 2. py_get_symbol_references     → Find violation locations
 3. [Manual fix]                 → Move code to correct layer
-4. py_refactor_code             → Update all references
-5. py_auto_format_code          → Format changes
+4. py_auto_format_code          → Format changes
+5. py_checker                   → Verify types and linting
 6. py_run_and_test_code         → Verify fixes work
 ```
 
@@ -648,17 +608,16 @@ py_run_and_test_code(
 - ✅ **py_get_symbol_references** before renaming/removing public APIs
 - ✅ **py_get_type_hints** when calling unfamiliar functions
 - ✅ **py_auto_format_code** after all code modifications
+- ✅ **py_checker** to verify static analysis before testing
 - ✅ **py_run_and_test_code** to validate changes before committing
 - ✅ **py_get_code_snippet** to read specific functions instead of entire files
-- ✅ **py_refactor_code** for safe renames across the codebase
 
 ### DON'T Do These
 
 - ❌ Modify code without checking references first (use py_get_symbol_references)
-- ❌ Generate code without understanding existing patterns (use py_get_code_snippet)
 - ❌ Skip formatting - always use py_auto_format_code after changes
 - ❌ Commit without running tests (use py_run_and_test_code)
-- ❌ Rename symbols manually (use py_refactor_code instead)
+- ❌ Commit with lint errors (use py_checker)
 - ❌ Read entire files when you need one function (use py_get_code_snippet)
 
 ### Architecture Validation with Tools

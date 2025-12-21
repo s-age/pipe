@@ -12,13 +12,13 @@ export type StartSessionRequest = {
   references: Reference[] | null
   artifacts: string[] | null
   procedure: string | null
-  multi_step_reasoning_enabled: boolean
+  multiStepReasoningEnabled: boolean
   hyperparameters: Hyperparameters | null
 }
 
 export const startSession = async (
   data: StartSessionRequest
-): Promise<{ session_id: string }> =>
-  client.post<{ session_id: string }>('/session/start', {
+): Promise<{ sessionId: string }> =>
+  client.post<{ sessionId: string }>('/session/start', {
     body: data
   })

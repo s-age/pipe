@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pipe.core.models.base import CamelCaseModel
 
 
-class RoleOption(BaseModel):
+class RoleOption(CamelCaseModel):
     label: str
     value: str

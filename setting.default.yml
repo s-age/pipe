@@ -1,19 +1,32 @@
-# Default model to use
-model: gemini-2.5-flash
-search_model: gemini-2.5-flash
-
-# Context window limit for the model. Note: Reserve 20-30% of the context window
-# for LLM thinking space to avoid token limit errors during tool use and reasoning.
-context_limit: 700000
+# Model configurations
+# Each model has specific context_limit and cache_update_threshold settings
+# cache_update_threshold: Set to -1 to disable explicit caching
+model_configs:
+  - name: gemini-3-flash-preview
+    context_limit: 700000
+    cache_update_threshold: 50000
+  - name: gemini-3-pro-preview
+    context_limit: 700000
+    cache_update_threshold: 25000
+  - name: gemini-2.5-flash
+    context_limit: 700000
+    cache_update_threshold: 50000
+  - name: gemini-2.5-pro
+    context_limit: 700000
+    cache_update_threshold: 25000
 
 # API mode: 'gemini-api' for direct API calls, 'gemini-cli' for CLI interaction.
 api_mode: gemini-api
+
+# Default model to use (must exist in model_configs)
+model: gemini-2.5-flash
+search_model: gemini-2.5-flash
 
 # Max tool calls to prevent infinite loops
 max_tool_calls: 10
 
 # The language hint for the model
-language: 'english'
+language: "english"
 
 # Auto-confirm for gemini-cli. If false, the -y flag will be omitted.
 yolo: false
@@ -22,19 +35,19 @@ yolo: false
 parameters:
   temperature:
     value: 0.2
-    description: 'Be precise and factual. A lower value is preferred for deterministic output.'
+    description: "Be precise and factual. A lower value is preferred for deterministic output."
   top_p:
     value: 0.5
-    description: 'Consider a broad range of possibilities, but adhere strictly to the temperature setting.'
+    description: "Consider a broad range of possibilities, but adhere strictly to the temperature setting."
   top_k:
     value: 5
-    description: 'Limit the generation to the top 5 most likely tokens at each step.'
+    description: "Limit the generation to the top 5 most likely tokens at each step."
 
 # Expert mode: If true, shows advanced/destructive UI controls like turn-by-turn edit and delete.
 expert_mode: false
 
 # Path to the directory where session files are stored.
-sessions_path: 'sessions'
+sessions_path: "sessions"
 
 # Default Time-To-Live (TTL) for new file references.
 reference_ttl: 3

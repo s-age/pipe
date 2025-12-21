@@ -1,16 +1,16 @@
 import { useEffect, useRef } from 'react'
 
-type UseSelectUIProperties = {
+type UseSelectLifecycleProperties = {
   isOpen: boolean
   close: () => void
   clearHighlight: () => void
 }
 
-export const useSelectUI = ({
+export const useSelectLifecycle = ({
   isOpen,
   close,
   clearHighlight
-}: UseSelectUIProperties): {
+}: UseSelectLifecycleProperties): {
   rootReference: React.RefObject<HTMLDivElement | null>
 } => {
   const rootReference = useRef<HTMLDivElement | null>(null)
@@ -38,4 +38,4 @@ export const useSelectUI = ({
   return { rootReference }
 }
 
-// (Removed temporary default export) Use named export `useSelectUI`.
+// (Removed temporary default export) Use named export `useSelectLifecycle`.

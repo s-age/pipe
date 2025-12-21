@@ -1,30 +1,26 @@
 import type { JSX } from 'react'
 
-import { Form } from '@/components/organisms/Form'
+import { Form, useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { CompressorApproval } from './CompressorApproval'
 import { CompressorForm } from './CompressorForm'
 import { useCompressorHandlers } from './hooks/useCompressorHandlers'
 import { useCompressorLifecycle } from './hooks/useCompressorLifecycle'
-import { compressorSchema } from './schema'
+import { compressorSchema, type CompressorFormInputs } from './schema'
 
 export type CompressorProperties = {
   sessionDetail: SessionDetail | null
   onRefresh: () => Promise<void>
 }
 
-export const Compressor = ({
+const CompressorContent = ({
   sessionDetail,
   onRefresh
 }: CompressorProperties): JSX.Element => {
-  const sessionId = sessionDetail?.session_id ?? ''
+  const sessionId = sessionDetail?.sessionId ?? ''
   const maxTurn = sessionDetail?.turns?.length ?? 0
   const effectiveMax = maxTurn
-
-  const { mergedDefaultValues } = useCompressorLifecycle({
-    effectiveMax
-  })
 
   const {
     summary,
@@ -35,7 +31,6 @@ export const Compressor = ({
     compressorSessionId,
     handleStartChange,
     handleEndChange,
-    endOptions,
     handleDeny,
     setSummary,
     setError,
@@ -45,9 +40,18 @@ export const Compressor = ({
     effectiveMax
   })
 
+  const formContext = useOptionalFormContext<CompressorFormInputs>()
+
+  const { endOptions } = useCompressorLifecycle({
+    effectiveMax,
+    startLocal,
+    endLocal,
+    formContext
+  })
+
   return (
-    <Form defaultValues={mergedDefaultValues} schema={compressorSchema}>
-      {!compressorSessionId ? (
+    <>
+      {!compressorSessionId || !summary || summary.startsWith('Rejected:') ? (
         <CompressorForm
           sessionId={sessionId}
           effectiveMax={effectiveMax}
@@ -82,6 +86,27 @@ export const Compressor = ({
           onRefresh={onRefresh}
         />
       )}
+    </>
+  )
+}
+
+export const Compressor = ({
+  sessionDetail,
+  onRefresh
+}: CompressorProperties): JSX.Element => {
+  const maxTurn = sessionDetail?.turns?.length ?? 0
+  const effectiveMax = maxTurn
+
+  const { mergedDefaultValues } = useCompressorLifecycle({
+    effectiveMax,
+    startLocal: 1,
+    endLocal: effectiveMax,
+    formContext: undefined
+  })
+
+  return (
+    <Form defaultValues={mergedDefaultValues} schema={compressorSchema}>
+      <CompressorContent sessionDetail={sessionDetail} onRefresh={onRefresh} />
     </Form>
   )
 }

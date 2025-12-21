@@ -127,9 +127,10 @@ These tools enable AI assistants to perform code analysis, type checking, and re
 
 ### 2. State Management
 
-- Use Zustand for global state
+- Use React Context + useReducer for global app state (e.g. toasts, loaders)
+- Use Custom Hook + useReducer for page state
 - Keep local state in components when possible
-- Avoid prop drilling with context
+- Avoid prop drilling (except for Page Store distribution)
 
 ### 3. Type Safety
 

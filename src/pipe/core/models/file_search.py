@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
+from pipe.core.models.base import CamelCaseModel
+from pydantic import Field
 
 
-class FileIndexEntry(BaseModel):
+class FileIndexEntry(CamelCaseModel):
     """
     Entry for a file/directory to be stored in the Whoosh index.
     """
@@ -18,7 +19,7 @@ class FileIndexEntry(BaseModel):
     )
 
 
-class Level1Candidate(BaseModel):
+class Level1Candidate(CamelCaseModel):
     """
     First-level search candidate.
     """
@@ -28,7 +29,7 @@ class Level1Candidate(BaseModel):
     path_segment: str = Field(..., description="Path segment")
 
 
-class SearchL2Request(BaseModel):
+class SearchL2Request(CamelCaseModel):
     """
     Request body for the /api/search_l2 endpoint.
     """
@@ -40,7 +41,7 @@ class SearchL2Request(BaseModel):
     query: str = Field(..., description="User's search query")
 
 
-class SearchL2Response(BaseModel):
+class SearchL2Response(CamelCaseModel):
     """
     Response body from the /api/search_l2 endpoint.
     """
@@ -53,7 +54,7 @@ class SearchL2Response(BaseModel):
     )
 
 
-class LsRequest(BaseModel):
+class LsRequest(CamelCaseModel):
     """
     Request body for the /api/ls endpoint.
     """
@@ -64,7 +65,7 @@ class LsRequest(BaseModel):
     )
 
 
-class LsEntry(BaseModel):
+class LsEntry(CamelCaseModel):
     """
     Individual entry for the ls endpoint.
     """
@@ -78,11 +79,21 @@ class LsEntry(BaseModel):
     path: str = Field(..., description="Full path of the file")
 
 
-class LsResponse(BaseModel):
+class LsResponse(CamelCaseModel):
     """
     Response body from the /api/ls endpoint.
     """
 
     entries: list[LsEntry] = Field(
         ..., description="List of content for the specified path"
+    )
+
+
+class PrefetchResult(CamelCaseModel):
+    """
+    Result of prefetching Level 2 candidate data.
+    """
+
+    data: dict[str, list[Level1Candidate]] = Field(
+        ..., description="Mapping of directory names to their Level 1 candidates"
     )

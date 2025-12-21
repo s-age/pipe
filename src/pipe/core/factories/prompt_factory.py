@@ -11,6 +11,9 @@ import zoneinfo
 
 from pipe.core.models.artifact import Artifact
 from pipe.core.models.prompt import Prompt
+from pipe.core.models.prompts.constraints import PromptConstraints
+from pipe.core.models.prompts.conversation_history import PromptConversationHistory
+from pipe.core.models.prompts.roles import PromptRoles
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 from pipe.core.models.turn import UserTaskTurn
@@ -60,13 +63,8 @@ class PromptFactory:
         from pipe.core.domains.references import get_references_for_prompt
         from pipe.core.domains.todos import get_todos_for_prompt
         from pipe.core.models.hyperparameters import Hyperparameters
-        from pipe.core.models.prompts.constraints import PromptConstraints
-        from pipe.core.models.prompts.conversation_history import (
-            PromptConversationHistory,
-        )
         from pipe.core.models.prompts.current_task import PromptCurrentTask
         from pipe.core.models.prompts.file_reference import PromptFileReference
-        from pipe.core.models.prompts.roles import PromptRoles
         from pipe.core.models.prompts.session_goal import PromptSessionGoal
         from pipe.core.models.prompts.todo import PromptTodo
         from pipe.core.utils.datetime import get_current_timestamp
@@ -85,12 +83,12 @@ class PromptFactory:
             )
 
         # 2. Build Constraints
-        constraints = PromptConstraints.build(
+        constraints = self._build_constraints(
             settings, merged_hyperparameters, session.multi_step_reasoning_enabled
         )
 
         # 3. Build Roles
-        roles = PromptRoles.build(session.roles, self.resource_repository)
+        roles = self._build_roles(session.roles)
 
         # 4. Build File References
         references_with_content = list(
@@ -128,7 +126,7 @@ class PromptFactory:
                 history_turns_for_prompt = session.turns[:-1]  # Exclude from history
 
         # 7. Build conversation history (both full and split for caching)
-        conversation_history = PromptConversationHistory.build(
+        conversation_history = self._build_conversation_history(
             history_turns_for_prompt, settings.tool_response_expiration
         )
 
@@ -200,6 +198,86 @@ class PromptFactory:
         }
 
         return Prompt(**prompt_data)
+
+    def _build_constraints(
+        self, settings: Settings, hyperparameters, multi_step_reasoning_enabled: bool
+    ) -> PromptConstraints:
+        """
+        Build the PromptConstraints component.
+
+        Args:
+            settings: Application settings
+            hyperparameters: Hyperparameters (may be None)
+            multi_step_reasoning_enabled: Whether multi-step reasoning is enabled
+
+        Returns:
+            A PromptConstraints instance
+        """
+        from pipe.core.models.prompts.constraints import (
+            PromptHyperparameters,
+            PromptProcessingConfig,
+        )
+
+        prompt_hyperparameters = None
+        if hyperparameters:
+            prompt_hyperparameters = PromptHyperparameters(
+                temperature=hyperparameters.temperature,
+                top_p=hyperparameters.top_p,
+                top_k=hyperparameters.top_k,
+            )
+
+        return PromptConstraints(
+            language=settings.language,
+            processing_config=PromptProcessingConfig(
+                multi_step_reasoning_active=multi_step_reasoning_enabled,
+            ),
+            hyperparameters=prompt_hyperparameters,
+        )
+
+    def _build_roles(self, roles: list[str]) -> PromptRoles:
+        """
+        Build the PromptRoles component.
+
+        Args:
+            roles: List of role file paths
+
+        Returns:
+            A PromptRoles instance with role definitions loaded
+        """
+        from pipe.core.collections.roles import RoleCollection
+
+        return PromptRoles(
+            description="The following are the roles for this session.",
+            definitions=RoleCollection(roles).get_for_prompt(self.resource_repository),
+        )
+
+    def _build_conversation_history(
+        self, turns, tool_response_limit: int
+    ) -> PromptConversationHistory:
+        """
+        Build the PromptConversationHistory component.
+
+        Args:
+            turns: Turn collection to process
+            tool_response_limit: Limit for tool responses
+
+        Returns:
+            A PromptConversationHistory instance
+        """
+        from pipe.core.domains.turns import get_turns_for_prompt
+
+        # get_turns_for_prompt yields turns in reverse order (newest first).
+        # We need to reverse them back to chronological order (oldest first).
+        history_turns = list(get_turns_for_prompt(turns, tool_response_limit))
+        history_turns.reverse()
+
+        return PromptConversationHistory(
+            description=(
+                "Historical record of past interactions in this session, in "
+                "chronological order."
+            ),
+            turns=history_turns,
+        )
 
     def _resolve_procedure_content(
         self, procedure_path: str | None, timezone: str

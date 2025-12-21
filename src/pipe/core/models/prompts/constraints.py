@@ -3,8 +3,7 @@ from typing import TYPE_CHECKING
 from pipe.core.models.base import CamelCaseModel
 
 if TYPE_CHECKING:
-    from pipe.core.models.hyperparameters import Hyperparameters
-    from pipe.core.models.settings import Settings
+    pass
 
 
 class PromptHyperparameters(CamelCaseModel):
@@ -17,17 +16,6 @@ class PromptHyperparameters(CamelCaseModel):
     temperature: float | None
     top_p: float | None
     top_k: float | None
-
-    @classmethod
-    def from_hyperparameters(
-        cls, hyperparameters: "Hyperparameters"
-    ) -> "PromptHyperparameters":
-        """Creates a PromptHyperparameters instance from Hyperparameters model."""
-        return cls(
-            temperature=hyperparameters.temperature,
-            top_p=hyperparameters.top_p,
-            top_k=hyperparameters.top_k,
-        )
 
 
 class PromptProcessingConfig(CamelCaseModel):
@@ -48,25 +36,3 @@ class PromptConstraints(CamelCaseModel):
     language: str
     processing_config: PromptProcessingConfig
     hyperparameters: PromptHyperparameters | None = None
-
-    @classmethod
-    def build(
-        cls,
-        settings: "Settings",
-        hyperparameters: "Hyperparameters | None",
-        multi_step_reasoning_enabled: bool,
-    ) -> "PromptConstraints":
-        """Builds the PromptConstraints component."""
-        prompt_hyperparameters = None
-        if hyperparameters:
-            prompt_hyperparameters = PromptHyperparameters.from_hyperparameters(
-                hyperparameters
-            )
-
-        return cls(
-            language=settings.language,
-            processing_config=PromptProcessingConfig(
-                multi_step_reasoning_active=multi_step_reasoning_enabled,
-            ),
-            hyperparameters=prompt_hyperparameters,
-        )

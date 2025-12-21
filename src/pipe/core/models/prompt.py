@@ -12,8 +12,7 @@ from .prompts.session_goal import PromptSessionGoal
 from .prompts.todo import PromptTodo
 
 if TYPE_CHECKING:
-    from pipe.core.models.session import Session
-    from pipe.core.models.settings import Settings
+    pass
 
 
 class ReasoningProcess(TypedDict):
@@ -45,31 +44,3 @@ class Prompt(CamelCaseModel):
     procedure: str | None = None
     procedure_content: str | None = None
     raw_response: str | None = None
-
-    @classmethod
-    def from_session(
-        cls,
-        session: "Session",
-        settings: "Settings",
-        project_root: str,
-        artifacts: list[Artifact] | None = None,
-        current_instruction: str | None = None,
-    ) -> "Prompt":
-        """
-        Builds and returns a Prompt object from a session's data.
-
-        Delegates to PromptFactory for the actual prompt construction.
-        This method is maintained for backward compatibility.
-        """
-        from pipe.core.factories.prompt_factory import PromptFactory
-        from pipe.core.repositories.resource_repository import ResourceRepository
-
-        resource_repo = ResourceRepository(project_root)
-        factory = PromptFactory(project_root, resource_repo)
-
-        return factory.create(
-            session=session,
-            settings=settings,
-            artifacts=artifacts,
-            current_instruction=current_instruction,
-        )

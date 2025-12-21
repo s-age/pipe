@@ -34,36 +34,54 @@ class TestSessionApi(unittest.TestCase):
         )
 
         # Mock DI container for action dependency injection
-        self.di_container_patcher = patch("pipe.web.dispatcher._container")
+        # We need to patch _get_dispatcher to return a dispatcher with mocked container
+        from pipe.core.agents.takt_agent import TaktAgent
+        from pipe.core.container import DependencyContainer
+        from pipe.core.services.session_management_service import (
+            SessionManagementService,
+        )
+        from pipe.core.services.session_service import SessionService
+        from pipe.core.services.session_workflow_service import (
+            SessionWorkflowService,
+        )
+        from pipe.web.binder import RequestBinder
+        from pipe.web.dispatcher import ActionDispatcher
+        from pipe.web.factory import GenericActionFactory
+
+        # Create a mock container
+        mock_container = MagicMock(spec=DependencyContainer)
+
+        def mock_get(service_type):
+            service_map = {
+                SessionService: self.mock_session_service,
+                SessionWorkflowService: self.mock_session_workflow_service,
+                SessionManagementService: self.mock_session_management_service,
+                TaktAgent: self.mock_takt_agent,
+            }
+            return service_map.get(service_type)
+
+        mock_container.get = mock_get
+
+        # Create dispatcher with mocked container
+        binder = RequestBinder()
+        factory = GenericActionFactory(mock_container)
+        mock_dispatcher = ActionDispatcher(binder, factory)
+
+        # Patch get_dispatcher to return our mock dispatcher
+        self.dispatcher_patcher = patch(
+            "pipe.web.dispatcher.get_dispatcher", return_value=mock_dispatcher
+        )
 
         self.patcher.start()
         self.workflow_patcher.start()
         self.management_patcher.start()
-
-        mock_container = self.di_container_patcher.start()
-        if mock_container:
-            # Mock container.get() to return mocked services
-            from pipe.core.services.session_service import SessionService
-            from pipe.core.services.session_workflow_service import SessionWorkflowService
-            from pipe.core.services.session_management_service import SessionManagementService
-            from pipe.core.agents.takt_agent import TaktAgent
-
-            def mock_get(service_type):
-                service_map = {
-                    SessionService: self.mock_session_service,
-                    SessionWorkflowService: self.mock_session_workflow_service,
-                    SessionManagementService: self.mock_session_management_service,
-                    TaktAgent: self.mock_takt_agent,
-                }
-                return service_map.get(service_type)
-
-            mock_container.get = mock_get
+        self.dispatcher_patcher.start()
 
     def tearDown(self):
         self.patcher.stop()
         self.workflow_patcher.stop()
         self.management_patcher.stop()
-        self.di_container_patcher.stop()
+        self.dispatcher_patcher.stop()
 
     def test_get_session_api_success(self):
         """Tests successfully getting a single session via API."""
@@ -96,8 +114,7 @@ class TestSessionApi(unittest.TestCase):
             [session_id]
         )
 
-    @patch("pipe.core.agents.takt_agent.TaktAgent.run_existing_session")
-    def test_create_new_session_api_success(self, mock_run_existing_session):
+    def test_create_new_session_api_success(self):
         # Configure the mock to return a proper session object
         mock_session = MagicMock()
         mock_session.session_id = "new_session_123"
@@ -124,7 +141,7 @@ class TestSessionApi(unittest.TestCase):
         self.assertIn("data", response_json)
         data = response_json["data"]
         self.assertEqual(data["sessionId"], "new_session_123")
-        mock_run_existing_session.assert_called_once()
+        self.mock_takt_agent.run_existing_session.assert_called_once()
 
     def test_fork_session_api_success(self):
         """Tests successfully forking a session."""

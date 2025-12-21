@@ -25,14 +25,6 @@ class TaktArgs:
     therapist: str | None = None
     output_format: str = "json"
 
-    def to_turn(self, timestamp: str):
-        """Converts args to a UserTaskTurn."""
-        from pipe.core.models.turn import UserTaskTurn
-
-        return UserTaskTurn(
-            type="user_task", instruction=self.instruction, timestamp=timestamp
-        )
-
     @classmethod
     def from_parsed_args(cls, parsed_args):
         """Creates an instance from argparse's parsed arguments."""

@@ -12,6 +12,7 @@ from pipe.core.collections.turns import TurnCollection
 from pipe.core.utils.datetime import get_current_timestamp
 
 if TYPE_CHECKING:
+    from pipe.core.collections.references import ReferenceCollection
     from pipe.core.models.session import Session
 
 
@@ -72,7 +73,7 @@ def fork_session(
         else new_session_id_suffix
     )
 
-    return Session(
+    forked_session = Session(
         session_id=new_session_id,
         created_at=timestamp,
         purpose=forked_purpose,
@@ -85,6 +86,13 @@ def fork_session(
         procedure=original.procedure,
         turns=forked_turns,
     )
+
+    # Ensure references are properly initialized
+    # (although they should already be configured from the original session)
+    if forked_session.references and original.references:
+        forked_session.references.default_ttl = original.references.default_ttl
+
+    return forked_session
 
 
 def destroy_session(session: "Session"):
@@ -101,3 +109,19 @@ def destroy_session(session: "Session"):
         "destroy_session() is deprecated. "
         "Use SessionRepository.delete(session_id) instead."
     )
+
+
+def initialize_session_references(
+    references: "ReferenceCollection", reference_ttl: int
+) -> None:
+    """Initialize ReferenceCollection with TTL configuration.
+
+    This function separates the initialization logic from the Session model,
+    ensuring that models remain pure data structures without initialization logic.
+
+    Args:
+        references: The ReferenceCollection to initialize
+        reference_ttl: The default TTL value for references
+    """
+    if references:
+        references.default_ttl = reference_ttl

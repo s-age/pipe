@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import zoneinfo
-from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
+from typing import TYPE_CHECKING, ClassVar, TypedDict
 
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
 from pipe.core.models.base import CamelCaseModel
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.todo import TodoItem
-from pydantic import ConfigDict, Field, PrivateAttr, model_validator
+from pydantic import ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
 
@@ -189,18 +189,13 @@ class Session(CamelCaseModel):
     )
 
     # --- Class Variables for Configuration (used by factories) ---
+    # Note: These ClassVars are kept for backward compatibility but are deprecated.
+    # Use domain functions like initialize_session_references() instead.
     sessions_dir: ClassVar[str | None] = None
     backups_dir: ClassVar[str | None] = None
     timezone_obj: ClassVar[zoneinfo.ZoneInfo | None] = None
     default_hyperparameters: ClassVar[Hyperparameters | None] = None
     reference_ttl: ClassVar[int] = 3
-
-    # --- Private Instance Attributes for self-contained persistence ---
-    _sessions_dir: str | None = PrivateAttr(None)
-    _backups_dir: str | None = PrivateAttr(None)
-    _timezone_obj: zoneinfo.ZoneInfo | None = PrivateAttr(None)
-    _default_hyperparameters: Hyperparameters | None = PrivateAttr(None)
-    _reference_ttl: int = PrivateAttr(3)
 
     # --- Public Fields ---
     session_id: str
@@ -219,21 +214,3 @@ class Session(CamelCaseModel):
     pools: TurnCollection = Field(default_factory=TurnCollection)
     todos: list[TodoItem] = Field(default_factory=list)
     raw_response: str | None = None
-
-    def model_post_init(self, __context: Any) -> None:
-        """Initializes instance-specific configurations after the model is created.
-
-        Note: __context parameter type is Any because it's a Pydantic framework
-        requirement. The context parameter is opaque and not used.
-        """
-        # Populate private attributes from class variables. This ensures that
-        # instances created by factories or direct instantiation are self-contained.
-        self._sessions_dir = self.__class__.sessions_dir
-        self._backups_dir = self.__class__.backups_dir
-        self._timezone_obj = self.__class__.timezone_obj
-        self._default_hyperparameters = self.__class__.default_hyperparameters
-        self._reference_ttl = self.__class__.reference_ttl
-
-        # Configure the reference collection with the instance-specific TTL
-        if self.references:
-            self.references.default_ttl = self._reference_ttl

@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import pytest
 from pipe.core.collections.references import ReferenceCollection
 from pipe.core.collections.turns import TurnCollection
+from pipe.core.domains.args import convert_args_to_turn
 from pipe.core.factories.service_factory import ServiceFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.hyperparameters import Hyperparameters
@@ -99,7 +100,9 @@ class TestPromptService(unittest.TestCase):
         session_id = session.session_id
 
         # 2. Manually add historical turns in chronological order
-        session.turns.append(TaktArgs(instruction="First instruction").to_turn("..."))
+        session.turns.append(
+            convert_args_to_turn(TaktArgs(instruction="First instruction"), "...")
+        )
         session.turns.append(
             ModelResponseTurn(
                 type="model_response", content="Response to first", timestamp="..."
@@ -229,7 +232,9 @@ class TestPromptService(unittest.TestCase):
                 type="model_response", content="First response", timestamp="..."
             )
         )
-        session.turns.append(TaktArgs(instruction="Second").to_turn("..."))
+        session.turns.append(
+            convert_args_to_turn(TaktArgs(instruction="Second"), "...")
+        )
 
         # Set up a mock repository that simulates saving and finding sessions
         session_map = {session_id: session}

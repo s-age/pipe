@@ -8,6 +8,7 @@ import sys
 import zoneinfo
 from typing import TYPE_CHECKING
 
+from pipe.core.domains.session import initialize_session_references
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.artifact import Artifact
 from pipe.core.models.hyperparameters import Hyperparameters
@@ -252,5 +253,8 @@ class SessionService:
             artifacts=artifacts or [],
             procedure=procedure,
         )
+
+        # Initialize session references with TTL configuration
+        initialize_session_references(session.references, self.settings.reference_ttl)
 
         return session

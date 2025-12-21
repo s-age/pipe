@@ -21,10 +21,15 @@ def run(
     response_text = result.get("response", "")
     stats = result.get("stats")
     token_count = 0
-    if stats and "models" in stats:
-        # Extract total tokens from the first model
-        model_stats: dict[str, Any] = next(iter(stats["models"].values()), {})
-        token_count = model_stats.get("tokens", {}).get("total", 0)
+    if stats:
+        # Try to extract total_tokens directly from stats (stream-json format)
+        if "total_tokens" in stats:
+            token_count = stats.get("total_tokens", 0)
+        # Fallback to old format with models
+        elif "models" in stats:
+            # Extract total tokens from the first model
+            model_stats: dict[str, Any] = next(iter(stats["models"].values()), {})
+            token_count = model_stats.get("tokens", {}).get("total", 0)
 
     # For stream-json, response_text is empty, collect from the streamed output
     if args.output_format == "stream-json":

@@ -9,7 +9,7 @@ from pipe.core.models.results.read_many_files_result import (
 )
 from pydantic import ValidationError
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestReadManyFilesResult:

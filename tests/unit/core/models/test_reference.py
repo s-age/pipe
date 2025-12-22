@@ -2,7 +2,7 @@ import pytest
 from pipe.core.models.reference import Reference
 from pydantic import ValidationError
 
-from tests.helpers import ReferenceFactory
+from tests.factories.models import ReferenceFactory
 
 
 class TestReferenceModel:

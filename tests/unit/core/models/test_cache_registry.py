@@ -4,7 +4,7 @@ import pytest
 from pipe.core.models.cache_registry import CacheRegistry, CacheRegistryEntry
 from pydantic import ValidationError
 
-from tests.helpers.cache_registry_factory import CacheRegistryFactory
+from tests.factories.models.cache_registry_factory import CacheRegistryFactory
 
 
 class TestCacheRegistryEntry:

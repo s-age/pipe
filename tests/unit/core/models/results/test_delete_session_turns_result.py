@@ -6,7 +6,7 @@ from pipe.core.models.results.delete_session_turns_result import (
     DeleteSessionTurnsResult,
 )
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestDeleteSessionTurnsResult:

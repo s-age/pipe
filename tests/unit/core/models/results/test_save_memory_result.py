@@ -4,7 +4,7 @@ import pytest
 from pipe.core.models.results.save_memory_result import SaveMemoryResult
 from pydantic import ValidationError
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestSaveMemoryResult:

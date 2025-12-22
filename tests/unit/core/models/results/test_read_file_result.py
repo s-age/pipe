@@ -2,7 +2,7 @@ import json
 
 from pipe.core.models.results.read_file_result import ReadFileResult
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestReadFileResultModel:

@@ -7,7 +7,7 @@ from pipe.core.models.session import Session
 from pipe.core.models.todo import TodoItem
 from pydantic import ValidationError
 
-from tests.helpers import SessionFactory
+from tests.factories.models import SessionFactory
 
 
 class TestSessionModel:

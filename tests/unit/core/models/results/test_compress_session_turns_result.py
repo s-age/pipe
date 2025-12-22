@@ -6,7 +6,7 @@ from pipe.core.models.results.compress_session_turns_result import (
     CompressSessionTurnsResult,
 )
 
-from tests.helpers import ResultFactory
+from tests.factories.models import ResultFactory
 
 
 class TestCompressSessionTurnsResultModel:

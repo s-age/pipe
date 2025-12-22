@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from pipe.core.tools.compress_session_turns import compress_session_turns
 
-from tests.helpers.settings_factory import create_test_settings
+from tests.factories.models.settings_factory import create_test_settings
 
 # Ignore Pydantic warnings about 'Operation' class from google-genai
 warnings.filterwarnings(

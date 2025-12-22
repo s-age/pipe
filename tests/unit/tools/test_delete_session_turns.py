@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from pipe.core.tools.delete_session_turns import delete_session_turns
 
-from tests.helpers.settings_factory import create_test_settings
+from tests.factories.models.settings_factory import create_test_settings
 
 
 class TestDeleteSessionTurns(unittest.TestCase):

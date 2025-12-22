@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from pipe.core.tools.get_session import get_session
 
-from tests.helpers.settings_factory import create_test_settings
+from tests.factories.models.settings_factory import create_test_settings
 
 
 class TestGetSession(unittest.TestCase):

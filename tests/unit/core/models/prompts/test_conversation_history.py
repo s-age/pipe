@@ -2,7 +2,7 @@ import pytest
 from pipe.core.models.prompts.conversation_history import PromptConversationHistory
 from pydantic import ValidationError
 
-from tests.helpers.turn_factory import TurnFactory
+from tests.factories.models.turn_factory import TurnFactory
 
 
 class TestPromptConversationHistory:

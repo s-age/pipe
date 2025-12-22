@@ -1,8 +1,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from helpers import create_test_settings
 from pipe.core.services.token_service import TokenService
+
+from tests.factories.models import create_test_settings
 
 
 class TestTokenService(unittest.TestCase):

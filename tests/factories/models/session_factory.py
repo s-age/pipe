@@ -71,7 +71,7 @@ class SessionFactory:
         Returns:
             Session object with turns
         """
-        from tests.helpers.turn_factory import TurnFactory
+        from tests.factories.models.turn_factory import TurnFactory
 
         turns = TurnFactory.create_batch(turn_count)
         return SessionFactory.create(turns=TurnCollection(turns), **kwargs)

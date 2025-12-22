@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from pipe.cli.takt import main
 from pipe.core.models.args import TaktArgs
 
-from tests.helpers.settings_factory import create_test_settings
+from tests.factories.models.settings_factory import create_test_settings
 
 
 class TestTaktMain(unittest.TestCase):

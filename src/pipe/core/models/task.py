@@ -2,17 +2,18 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pipe.core.models.base import CamelCaseModel
+from pydantic import Field
 
 
-class AgentTask(BaseModel):
+class AgentTask(CamelCaseModel):
     """Agent execution task"""
 
     type: Literal["agent"] = "agent"
     instruction: str = Field(..., description="Instruction for the agent")
 
 
-class ScriptTask(BaseModel):
+class ScriptTask(CamelCaseModel):
     """Script execution task"""
 
     type: Literal["script"] = "script"
@@ -24,7 +25,7 @@ class ScriptTask(BaseModel):
 Task = AgentTask | ScriptTask
 
 
-class TaskExecutionResult(BaseModel):
+class TaskExecutionResult(CamelCaseModel):
     """Task execution result"""
 
     task_index: int = Field(..., description="Task index (0-based)")
@@ -38,7 +39,7 @@ class TaskExecutionResult(BaseModel):
     )
 
 
-class PipelineResult(BaseModel):
+class PipelineResult(CamelCaseModel):
     """Overall pipeline execution result"""
 
     status: Literal["success", "failed"] = Field(..., description="Overall status")

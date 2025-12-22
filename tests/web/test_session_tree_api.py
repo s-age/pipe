@@ -26,7 +26,14 @@ class TestSessionTreeApi(unittest.TestCase):
     def test_get_session_tree_api_v1(self):
         """Tests the v1 API endpoint for getting session tree."""
         mock_tree_result = SessionTreeResult(
-            sessions={"session1": {"purpose": "Test 1", "session_id": "session1"}},
+            sessions={
+                "session1": {
+                    "purpose": "Test 1",
+                    "session_id": "session1",
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "last_updated_at": "2024-01-01T00:00:00Z",
+                }
+            },
             session_tree=[],
         )
         self.mock_session_tree_service.get_session_tree.return_value = mock_tree_result
@@ -43,8 +50,8 @@ class TestSessionTreeApi(unittest.TestCase):
                 "session1": {
                     "purpose": "Test 1",
                     "sessionId": "session1",
-                    "createdAt": None,
-                    "lastUpdatedAt": None,
+                    "createdAt": "2024-01-01T00:00:00Z",
+                    "lastUpdatedAt": "2024-01-01T00:00:00Z",
                 }
             },
             "sessionTree": [],

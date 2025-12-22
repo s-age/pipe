@@ -16,8 +16,8 @@
     "enabled": true,
     "servers": {
       "pipe_tools": {
-        "command": "python3",
-        "args": ["-m", "pipe.cli.mcp_server"]
+        "command": "poetry",
+        "args": ["run", "python", "-m", "pipe.cli.mcp_server"]
       }
     }
   },

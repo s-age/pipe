@@ -2,10 +2,11 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pipe.core.models.base import CamelCaseModel
+from pydantic import Field
 
 
-class VerificationResult(BaseModel):
+class VerificationResult(CamelCaseModel):
     """Result of summary verification process."""
 
     verification_status: Literal["pending_approval", "rejected"] = Field(
@@ -17,15 +18,15 @@ class VerificationResult(BaseModel):
 
     next_action: str = Field(description="Instructions for next action")
 
-    model_config = ConfigDict(frozen=True)
+    model_config = CamelCaseModel.model_config | {"frozen": True}
 
 
-class VerificationError(BaseModel):
+class VerificationError(CamelCaseModel):
     """Error result when verification fails."""
 
     error: str = Field(description="Error message describing what went wrong")
 
-    model_config = ConfigDict(frozen=True)
+    model_config = CamelCaseModel.model_config | {"frozen": True}
 
 
 # Union type for verification results

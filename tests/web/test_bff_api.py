@@ -84,8 +84,18 @@ class TestBffApi(unittest.TestCase):
         # Mock SessionTreeAction dependencies
         mock_tree_result = SessionTreeResult(
             sessions={
-                "session1": {"session_id": "session1", "purpose": "Test 1"},
-                "session2": {"session_id": "session2", "purpose": "Test 2"},
+                "session1": {
+                    "session_id": "session1",
+                    "purpose": "Test 1",
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "last_updated_at": "2024-01-01T00:00:00Z",
+                },
+                "session2": {
+                    "session_id": "session2",
+                    "purpose": "Test 2",
+                    "created_at": "2024-01-02T00:00:00Z",
+                    "last_updated_at": "2024-01-02T00:00:00Z",
+                },
             },
             session_tree=[],
         )

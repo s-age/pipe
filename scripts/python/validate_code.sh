@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 #
-# Validate test file quality gates
+# Validate code quality gates for entire project
 #
-# Usage: validate_test.sh <test_file_path>
+# Usage: validate_code.sh
 #
 # This script:
-# 1. Runs Ruff linting
-# 2. Runs MyPy type checking
-# 3. Runs PyTest execution
-# 4. Checks git status for changes outside tests/
+# 1. Runs Ruff linting with auto-fix on entire project
+# 2. Runs Ruff formatting on entire project
+# 3. Runs MyPy type checking on entire project
+# 4. Runs PyTest execution
+# 5. Checks git status for changes outside tests/
 #
 # Exit codes:
 #   0 - All checks passed, changes only in tests/
@@ -17,30 +18,15 @@
 
 set -euo pipefail
 
-# Check arguments
-if [ $# -ne 1 ]; then
-    echo "Error: Missing test file path argument"
-    echo "Usage: $0 <test_file_path>"
-    exit 1
-fi
-
-TEST_FILE="$1"
-
-# Verify test file exists
-if [ ! -f "$TEST_FILE" ]; then
-    echo "Error: Test file not found: $TEST_FILE"
-    exit 1
-fi
-
 echo "=================================================="
 echo "Quality Gate Validation"
-echo "Test file: $TEST_FILE"
+echo "Checking entire project"
 echo "=================================================="
 echo ""
 
-# Quality gate 1: Ruff
-echo "[1/3] Running Ruff linting..."
-if poetry run ruff check "$TEST_FILE"; then
+# Quality gate 1: Ruff check
+echo "[1/4] Running Ruff linting..."
+if poetry run ruff check --fix .; then
     echo "✅ Ruff check passed"
 else
     echo "❌ Ruff check failed"
@@ -48,9 +34,19 @@ else
 fi
 echo ""
 
-# Quality gate 2: MyPy
-echo "[2/3] Running MyPy type checking..."
-if poetry run mypy "$TEST_FILE"; then
+# Quality gate 2: Ruff format
+echo "[2/4] Running Ruff formatting..."
+if poetry run ruff format .; then
+    echo "✅ Ruff format passed"
+else
+    echo "❌ Ruff format failed"
+    exit 1
+fi
+echo ""
+
+# Quality gate 3: MyPy
+echo "[3/4] Running MyPy type checking..."
+if poetry run mypy .; then
     echo "✅ MyPy check passed"
 else
     echo "❌ MyPy check failed"
@@ -58,8 +54,8 @@ else
 fi
 echo ""
 
-# Quality gate 3: PyTest
-echo "[3/3] Running PyTest..."
+# Quality gate 4: PyTest
+echo "[4/4] Running PyTest..."
 if poetry run pytest -v; then
     echo "✅ PyTest passed"
 else

@@ -62,7 +62,6 @@ tasks = [
     {
         "type": "script",
         "script": "python/validate_code.sh",
-        "args": [test_output_path],
         "max_retries": 2  # Total 3 attempts (initial + 2 retries)
     }
 ]
@@ -152,7 +151,6 @@ Summary:
 {
     "type": "script",
     "script": "python/validate_code.sh",
-    "args": ["<test_file_path>"],
     "max_retries": 2  # Optional: retry on failure (default: 0)
 }
 ```

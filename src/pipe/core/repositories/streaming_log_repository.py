@@ -103,6 +103,37 @@ class StreamingLogRepository:
         self.file_handle.write(log_line)
         self.file_handle.flush()  # Ensure immediate write for real-time access
 
+    def append_log(self, text: str, log_type: str = "INFO") -> None:
+        """
+        Append a log entry without requiring explicit timestamp management.
+
+        This is a convenience method for simple logging use cases where you don't
+        want to manage timestamps or file handles manually. It automatically:
+        - Opens the file in append mode if not already open
+        - Generates a current timestamp
+        - Writes the log line
+        - Closes the file to ensure data is written
+
+        Args:
+            text: The text content to log
+            log_type: Type of log entry (defaults to "INFO")
+
+        Note:
+        - Opens and closes file for each call (safe for concurrent access)
+        - Equivalent to StreamingRepository.append() for migration compatibility
+        - For bulk writes, use context manager with write_log_line() instead
+        """
+        was_open = self.file_handle is not None
+
+        if not was_open:
+            self.open(mode="a")
+
+        current_time = get_current_datetime(self.timezone)
+        self.write_log_line(log_type, text, current_time)
+
+        if not was_open:
+            self.close()
+
     def close(self) -> None:
         """
         Close the log file if it's open.
@@ -135,6 +166,28 @@ class StreamingLogRepository:
             exc_tb: Exception traceback if an error occurred
         """
         self.close()
+
+    def delete(self) -> bool:
+        """
+        Delete the streaming log file for this session.
+
+        Returns:
+            True if the file was deleted, False if it didn't exist
+
+        Note:
+        - Closes the file handle if it's open before deleting
+        - Safe to call even if file doesn't exist
+        """
+        self.close()
+
+        if os.path.exists(self.log_file_path):
+            try:
+                os.remove(self.log_file_path)
+                return True
+            except OSError:
+                return False
+
+        return False
 
     @staticmethod
     def cleanup_old_logs(

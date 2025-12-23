@@ -41,8 +41,8 @@ from pipe.core.models.settings import Settings  # noqa: E402
 from pipe.core.repositories.settings_repository import (  # noqa: E402
     SettingsRepository,
 )
-from pipe.core.repositories.streaming_repository import (  # noqa: E402
-    StreamingRepository,
+from pipe.core.repositories.streaming_log_repository import (  # noqa: E402
+    StreamingLogRepository,
 )
 from pipe.core.utils.datetime import get_current_timestamp  # noqa: E402
 from pipe.core.utils.file import append_to_text_file  # noqa: E402
@@ -286,9 +286,6 @@ def execute_tool(tool_name, arguments):
     project_root = BASE_DIR
     session_id = get_latest_session_id()
 
-    # Initialize StreamingRepository for logging tool calls
-    streaming_repo = StreamingRepository(SESSIONS_DIR)
-
     # Log the start of the tool call to the pool
     if session_id:
         try:
@@ -306,14 +303,17 @@ def execute_tool(tool_name, arguments):
             session_turn_service.add_to_pool(session_id, function_calling_turn)
 
             # Log to streaming.log in NDJSON format
+            streaming_log_repo = StreamingLogRepository(
+                project_root, session_id, settings
+            )
             tool_log_data = {
                 "type": "function_calling",
                 "tool_name": tool_name,
                 "arguments": arguments,
                 "timestamp": get_current_timestamp(session_service.timezone_obj),
             }
-            streaming_repo.append(
-                session_id, json.dumps(tool_log_data, ensure_ascii=False)
+            streaming_log_repo.append_log(
+                json.dumps(tool_log_data, ensure_ascii=False), "TOOL_CALL"
             )
         except Exception:
             # Avoid crashing the server if logging fails
@@ -411,14 +411,18 @@ def execute_tool(tool_name, arguments):
                 session_turn_service.add_to_pool(session_id, tool_response_turn)
 
                 # Log to streaming.log in NDJSON format
+                streaming_log_repo = StreamingLogRepository(
+                    project_root, session_id, settings
+                )
                 tool_response_log_data = {
                     "type": "tool_response",
                     "tool_name": tool_name,
                     "response": formatted_response,
                     "timestamp": get_current_timestamp(session_service.timezone_obj),
                 }
-                streaming_repo.append(
-                    session_id, json.dumps(tool_response_log_data, ensure_ascii=False)
+                streaming_log_repo.append_log(
+                    json.dumps(tool_response_log_data, ensure_ascii=False),
+                    "TOOL_RESPONSE",
                 )
             except Exception:
                 # Avoid crashing the server if logging fails

@@ -433,7 +433,11 @@ def main() -> None:
         sys.exit(0 if all_success else 1)
 
     except Exception as e:
+        import traceback
+
         print(f"[serial_manager] Fatal error: {e}", file=sys.stderr)
+        print("[serial_manager] Traceback:", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         logger.exception("Serial manager failed")
         sys.exit(1)
 

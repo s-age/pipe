@@ -33,7 +33,7 @@ def validate_script_path(script_name: str, project_root: str) -> Path:
         - Prevents symlink-based escapes
     """
     # Get absolute path to scripts directory
-    scripts_dir = (Path(project_root) / "src/pipe/scripts").resolve()
+    scripts_dir = (Path(project_root) / "scripts").resolve()
 
     # Check for invalid characters (allow forward slashes for subdirectories)
     if "\\" in script_name or ".." in script_name:

@@ -184,7 +184,18 @@ def execute_script_task(
     started_at = get_current_timestamp()
 
     # Validate script path (security check)
-    script_path = validate_script_path(task.script, project_root)
+    try:
+        script_path = validate_script_path(task.script, project_root)
+    except FileNotFoundError as e:
+        # Provide helpful error message for missing scripts
+        print(f"[task_executor] Script validation failed: {e}", flush=True)
+        print(f"[task_executor] Requested script: {task.script}", flush=True)
+        print(f"[task_executor] Project root: {project_root}", flush=True)
+        raise
+    except Exception as e:
+        # Handle other validation errors
+        print(f"[task_executor] Script validation error: {e}", flush=True)
+        raise
 
     # Set environment variables
     env = os.environ.copy()

@@ -324,6 +324,9 @@ def launch_conductor(
                 for m in file_metadata
             ]
         )
+        # Get first file for example
+        first_file = file_metadata[0]
+
         instruction_template = (
             "Follow @procedures/python_unit_test_conductor.md to generate tests "
             "for the following files:\n\n"
@@ -333,9 +336,46 @@ def launch_conductor(
             "2. Create TODO list via edit_todos\n"
             "3. Process ONLY THE FIRST FILE via invoke_serial_children\n"
             "4. DO NOT process remaining files - wait for script to call you again\n\n"
-            "IMPORTANT: Process only ONE file per invocation, then exit."
+            "IMPORTANT: Process only ONE file per invocation, then exit.\n\n"
+            "**CORRECT invoke_serial_children usage example (for {source_file}):**\n"
+            "```python\n"
+            "invoke_serial_children(\n"
+            "    tasks=[\n"
+            "        {{\n"
+            '            "type": "agent",\n'
+            '            "instruction": "Follow '
+            "@procedures/python_unit_test_generation.md "
+            "to write tests. Target: {source_file}. "
+            "Output: {test_file}. Execute all 7 steps "
+            'sequentially. Coverage: 95%+.",\n'
+            '            "roles": ["roles/python/tests/core/{layer}.md"],\n'
+            '            "procedure": "procedures/python_unit_test_generation.md",\n'
+            '            "references_persist": ["{source_file}"]\n'
+            "        }},\n"
+            "        {{\n"
+            '            "type": "script",\n'
+            '            "script": "python/validate_code.sh",\n'
+            '            "args": ["{test_file}"],\n'
+            '            "max_retries": 2\n'
+            "        }}\n"
+            "    ],\n"
+            '    purpose="Generate tests for {filename}",\n'
+            '    background="Write comprehensive pytest tests for {source_file}",\n'
+            '    roles=["roles/python/tests/core/{layer}.md"],\n'
+            '    procedure="procedures/python_unit_test_generation.md",\n'
+            '    references_persist=["{source_file}"]\n'
+            ")\n"
+            "```\n"
+            "**NOTE**: tasks parameter takes a LIST of DICT objects, NOT strings. "
+            "Do NOT escape quotes inside task dictionaries."
         )
-        instruction = instruction_template.format(file_list=file_list)
+        instruction = instruction_template.format(
+            file_list=file_list,
+            source_file=first_file["source_file"],
+            test_file=first_file["test_file"],
+            layer=first_file["layer"],
+            filename=first_file["filename"],
+        )
         takt_cmd.extend(["--instruction", instruction])
         resume_mode = False
 
@@ -421,7 +461,7 @@ def launch_conductor(
         print("Error: takt command not found. Is Poetry installed?")
         raise SystemExit(1)
 
-    return None
+    return session_id
 
 
 def main():

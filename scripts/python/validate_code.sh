@@ -60,7 +60,7 @@ echo ""
 
 # Quality gate 3: PyTest
 echo "[3/3] Running PyTest..."
-if poetry run pytest "$TEST_FILE" -v; then
+if poetry run pytest -v; then
     echo "✅ PyTest passed"
 else
     echo "❌ PyTest failed"

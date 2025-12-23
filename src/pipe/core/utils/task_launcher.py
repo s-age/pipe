@@ -94,9 +94,6 @@ def launch_manager(
             stdin=subprocess.DEVNULL,
         )
 
-    print(f"[task_launcher] Launched {manager_type} manager (detached)")
-    print(f"[task_launcher] Log file: {log_file}")
-    print("[task_launcher] Parent process exiting to save tokens...")
-
-    # Exit parent process immediately
+    # Exit parent process immediately (suppress stdout to avoid polluting tool output)
+    # Manager logs are available in the log file
     sys.exit(0)

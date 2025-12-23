@@ -257,7 +257,7 @@ def call_gemini_cli(
                     # Use a timeout to avoid hanging indefinitely
                     # 300 seconds (5 minutes) to allow for complex compression
                     stdout, stderr = process.communicate(
-                        pretty_printed_prompt, timeout=300
+                        pretty_printed_prompt, timeout=900
                     )
                 except subprocess.TimeoutExpired:
                     process.kill()

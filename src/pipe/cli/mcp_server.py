@@ -171,14 +171,34 @@ def get_tool_definitions():
                         get_args(param_type)[0] if get_args(param_type) else str
                     )
                     item_origin_type = getattr(list_item_type, "__origin__", None)
-                    if inspect.isclass(list_item_type) and issubclass(
+
+                    # Handle Union types (e.g., dict | str)
+                    if item_origin_type is Union:
+                        union_args = get_args(list_item_type)
+                        if any(
+                            getattr(t, "__origin__", None) in (dict, dict) or t is dict
+                            for t in union_args
+                        ):
+                            # If any member of the union is a dict, treat the
+                            # items as objects
+                            properties[name] = {
+                                "type": "array",
+                                "items": {"type": "object"},
+                            }
+                        else:
+                            # Default to string for other unions in lists
+                            properties[name] = {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            }
+                    elif inspect.isclass(list_item_type) and issubclass(
                         list_item_type, BaseModel
                     ):
                         properties[name] = {
                             "type": "array",
                             "items": list_item_type.model_json_schema(),
                         }
-                    elif item_origin_type in (dict, dict):
+                    elif item_origin_type in (dict, dict) or list_item_type is dict:
                         properties[name] = {
                             "type": "array",
                             "items": {"type": "object"},

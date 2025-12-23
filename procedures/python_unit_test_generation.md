@@ -20,18 +20,14 @@ graph TD
 
     Step3 --> Step4[Step 4: Write test code]
 
-    Step4 --> Step5A[Step 5a: Run Ruff]
-    Step5A --> CheckRuff{Ruff<br/>passed?}
-    CheckRuff -- No --> Step4
-    CheckRuff -- Yes --> Step5B[Step 5b: Run MyPy]
+    Step4 --> Step5A[Step 5a: Run py_checker]
+    Step5A --> CheckChecker{py_checker<br/>passed?}
+    CheckChecker -- No --> Step4
+    CheckChecker -- Yes --> Step5B[Step 5b: Run py_run_and_test_code]
 
-    Step5B --> CheckMyPy{MyPy<br/>passed?}
-    CheckMyPy -- No --> Step4
-    CheckMyPy -- Yes --> Step5C[Step 5c: Run PyTest]
-
-    Step5C --> CheckPyTest{PyTest<br/>passed?}
-    CheckPyTest -- No --> Step4
-    CheckPyTest -- Yes --> Step6[Step 6: Verify git status]
+    Step5B --> CheckTests{Tests<br/>passed?}
+    CheckTests -- No --> Step4
+    CheckTests -- Yes --> Step6[Step 6: Verify git status]
 
     Step6 --> Step7{Only tests/<br/>changed?}
     Step7 -- Yes --> Commit[Step 7a: Auto-commit]
@@ -48,11 +44,9 @@ graph TD
     style Step4 fill:#ffe1f0
     style Step5A fill:#f0e1ff
     style Step5B fill:#f0e1ff
-    style Step5C fill:#f0e1ff
     style Step6 fill:#e1ffe1
-    style CheckRuff fill:#ffcccc
-    style CheckMyPy fill:#ffcccc
-    style CheckPyTest fill:#ffcccc
+    style CheckChecker fill:#ffcccc
+    style CheckTests fill:#ffcccc
     style Step7 fill:#ffcccc
     style Commit fill:#ccffcc
     style Report fill:#ffffcc
@@ -136,26 +130,28 @@ graph TD
 
 ### Step 5: Execute Quality Checks
 
-Run checks **in sequence**. If any fail, return to **Step 4** and fix.
+Run checks **in sequence** using the provided tools. If any fail, return to **Step 4** and fix.
 
-#### Step 5a: Run Ruff (Linting)
-```bash
-poetry run ruff check {test_output_path}
+**CRITICAL**: Both py_checker and py_run_and_test_code MUST pass. Tests that fail linting or execution have NO VALUE and must not be committed.
+
+#### Step 5a: Run py_checker (Linting and Type Checking)
+```python
+py_checker()
 ```
+This tool runs:
+1. ruff check --fix (entire project)
+2. ruff format (entire project)
+3. mypy (entire project)
+
 - **Pass**: Continue to Step 5b
-- **Fail**: Fix linting errors, return to Step 4
+- **Fail**: Fix linting/type errors, return to Step 4
 
-#### Step 5b: Run MyPy (Type Checking)
-```bash
-poetry run mypy {test_output_path}
+#### Step 5b: Run py_run_and_test_code (Test Execution)
+```python
+py_run_and_test_code()
 ```
-- **Pass**: Continue to Step 5c
-- **Fail**: Fix type errors, return to Step 4
+This runs all tests in the project using pytest.
 
-#### Step 5c: Run PyTest (Test Execution)
-```bash
-poetry run pytest {test_output_path} -v
-```
 - **Pass**: Continue to Step 6
 - **Fail**: Fix test logic, return to Step 4
 
@@ -257,9 +253,8 @@ Execution:
   Step 2: Review roles/python/tests/core/repositories.md (use tmp_path, test CRUD)
   Step 3: Plan TestArchiveRepositorySave, TestArchiveRepositoryRestore, etc.
   Step 4: Write test file with fixtures, test classes, methods
-  Step 5a: poetry run ruff check → PASS
-  Step 5b: poetry run mypy → PASS
-  Step 5c: poetry run pytest → PASS
+  Step 5a: py_checker() → PASS (ruff check, ruff format, mypy on entire project)
+  Step 5b: py_run_and_test_code() → PASS (pytest on entire project)
   Step 6: git status --short → M tests/unit/core/repositories/test_archive_repository.py
   Step 7a: git commit -m "test: add tests for archive_repository"
 

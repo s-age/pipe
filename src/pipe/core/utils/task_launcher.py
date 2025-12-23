@@ -96,3 +96,4 @@ def launch_manager(
 
     # Exit parent process immediately
     sys.exit(0)
+

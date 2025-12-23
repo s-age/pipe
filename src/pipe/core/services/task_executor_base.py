@@ -55,13 +55,34 @@ def execute_agent_task(
                 purpose,
                 "--background",
                 background,
-                "--instruction",
-                task.instruction,
             ]
         )
         # Add parent option if specified
         if parent_session_id:
             cmd.extend(["--parent", parent_session_id])
+
+        # Add optional takt parameters
+        if task.roles:
+            for role in task.roles:
+                cmd.extend(["--roles", role])
+
+        if task.procedure:
+            cmd.extend(["--procedure", task.procedure])
+
+        if task.references:
+            for ref in task.references:
+                cmd.extend(["--references", ref])
+
+        if task.references_persist:
+            for ref in task.references_persist:
+                cmd.extend(["--references-persist", ref])
+
+        if task.artifacts:
+            for artifact in task.artifacts:
+                cmd.extend(["--artifacts", artifact])
+
+        # Instruction comes last
+        cmd.extend(["--instruction", task.instruction])
 
     result = subprocess.run(cmd, cwd=project_root, capture_output=True, text=True)
 
@@ -128,6 +149,9 @@ def execute_script_task(
         Passes session info via environment variables:
         - PIPE_SESSION_ID
         - PIPE_PROJECT_ROOT
+
+        Retry logic is handled at the serial manager level,
+        not within this function.
     """
     start_time = time.time()
     started_at = get_current_timestamp()

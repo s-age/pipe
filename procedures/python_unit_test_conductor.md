@@ -1,0 +1,209 @@
+# Procedure: Python Unit Test Generation Conductor
+
+## Purpose
+Orchestrate automated test generation for multiple Python source files by delegating to child agents via `invoke_serial_children`.
+
+## Applicability
+Used by conductor agents managing batch test generation. Invoked via `scripts/python/tests/generate_unit_test.py` script.
+
+---
+
+## Step-by-Step Execution
+
+### Step 1: Receive Target File List
+
+**Input**: List of files from user instruction
+**Actions**:
+1. Parse file list from instruction
+2. Identify layer for each file (repositories, services, models, etc.)
+3. Determine test output path for each file
+
+**Output**: Structured list of files to process
+
+---
+
+### Step 2: Create TODO List
+
+**Actions**:
+1. Use `edit_todos` tool
+2. Create one TODO item per file:
+   - Status: "pending"
+   - Content: "Generate tests for {file_path}"
+
+**Output**: TODO list initialized
+
+---
+
+### Step 3: Process Files Sequentially
+
+For **each file** in the list, execute Steps 3a-3d:
+
+#### Step 3a: Mark TODO as In Progress
+
+**Actions**:
+```python
+edit_todos: Update current file status to "in_progress"
+```
+
+#### Step 3b: Construct Task Sequence
+
+**Actions**:
+Build task list with agent task and validation script:
+
+```python
+tasks = [
+    {
+        "type": "agent",
+        "instruction": f"Follow @procedures/python_unit_test_generation.md to write tests. Target: {target_file_path}. Output: {test_output_path}. Execute all 7 steps sequentially. Coverage: 95%+.",
+        "roles": [f"roles/python/tests/core/{layer}.md"],
+        "procedure": "procedures/python_unit_test_generation.md",
+        "references_persist": [target_file_path]
+    },
+    {
+        "type": "script",
+        "script": "python/validate_code.sh",
+        "args": [test_output_path],
+        "max_retries": 2  # Total 3 attempts (initial + 2 retries)
+    }
+]
+```
+
+**Notes**:
+- Agent task properties: `roles`, `procedure`, `references_persist` specify takt parameters
+- `artifacts` is optional - omit to allow factory file creation
+- `max_retries=2` means 3 total attempts (1 initial + 2 retries)
+
+#### Step 3c: Invoke Serial Children
+
+**Actions**:
+```python
+invoke_serial_children(
+    tasks=tasks,
+    child_session_id=None,  # NEW session per file
+    purpose=f"Generate tests for {filename}",
+    background=f"Write comprehensive pytest tests for {target_file_path}",
+    roles=[f"roles/python/tests/core/{layer}.md"],
+    procedure="procedures/python_unit_test_generation.md",
+    references_persist=[target_file_path]
+)
+```
+
+**Notes**:
+- `roles`, `procedure`, `references_persist` are specified at tool level
+- These parameters are injected into agent tasks that don't already have them
+- This ensures agents follow the correct procedure and role constraints
+
+**Result**: Conductor exits immediately
+
+#### Step 3d: Resume and Mark Complete
+
+**Actions** (when conductor resumes):
+1. Check previous task result
+2. If successful: `edit_todos` to mark file as "completed"
+3. If failed: Report error and stop
+4. Move to next file
+
+---
+
+### Step 4: Report Final Summary
+
+**Actions**:
+1. Count completed files
+2. List generated test files
+3. Report to user:
+```
+✅ Test generation complete
+
+Summary:
+- Files processed: {count}
+- Tests generated: {list_of_test_files}
+- All quality gates passed
+```
+
+**Output**: Final report
+
+---
+
+## Constraints (Must Not)
+
+- ❌ Never write test code directly
+- ❌ Never run quality commands directly
+- ❌ Never reuse child sessions (create new session per file)
+- ❌ Never wait after `invoke_serial_children` (exit immediately)
+- ❌ Never skip TODO updates
+
+---
+
+## Tool Usage
+
+### Primary Tools
+1. **edit_todos**: Create and update TODO list
+2. **invoke_serial_children**: Delegate test generation + validation
+
+### Task Structure
+```python
+# Agent task: Write tests
+{
+    "type": "agent",
+    "instruction": "<detailed instruction with procedure reference>"
+}
+
+# Script task: Validate quality (with retry)
+{
+    "type": "script",
+    "script": "python/validate_code.sh",
+    "args": ["<test_file_path>"],
+    "max_retries": 2  # Optional: retry on failure (default: 0)
+}
+```
+
+**Retry Behavior**:
+- `max_retries=0`: No retry (default), fails immediately
+- `max_retries=2`: Retry up to 2 times (3 total attempts)
+- Serial manager handles retries automatically by:
+  1. Finding the preceding agent task
+  2. Re-executing the agent with error information from failed script
+  3. Re-executing the script task
+  4. Repeating up to max_retries times
+- Conductor only sees final result (success or failure)
+
+---
+
+## Example Execution
+
+```
+Input:
+  - src/pipe/core/repositories/archive_repository.py
+  - src/pipe/core/repositories/session_repository.py
+
+Step 1: Parse files, identify layer=repositories
+Step 2: edit_todos (2 pending items)
+
+Step 3 (File 1):
+  3a: edit_todos (archive_repository → in_progress)
+  3b: Construct instruction + tasks
+  3c: invoke_serial_children (NEW session)
+  [Conductor exits]
+  [Child agent executes]
+  [Script validates]
+  [Conductor resumes]
+  3d: edit_todos (archive_repository → completed)
+
+Step 3 (File 2):
+  3a: edit_todos (session_repository → in_progress)
+  3b: Construct instruction + tasks
+  3c: invoke_serial_children (NEW session)
+  [Repeat]
+
+Step 4: Report summary (2 files, 2 tests)
+```
+
+---
+
+## Notes
+
+- **One session per file**: Prevents context window bloat
+- **Sequential processing**: One file at a time
+- **No waiting**: Conductor exits after delegation
+- **Error handling**: Script task detects failures
+- **Resumable**: Can restart from TODO list

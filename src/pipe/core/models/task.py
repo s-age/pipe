@@ -11,6 +11,21 @@ class AgentTask(CamelCaseModel):
 
     type: Literal["agent"] = "agent"
     instruction: str = Field(..., description="Instruction for the agent")
+    roles: list[str] | None = Field(
+        None, description="Role file paths (optional)"
+    )
+    procedure: str | None = Field(
+        None, description="Procedure file path (optional)"
+    )
+    references: list[str] | None = Field(
+        None, description="Reference file paths with default TTL (optional)"
+    )
+    references_persist: list[str] | None = Field(
+        None, description="Reference file paths with no expiration (optional)"
+    )
+    artifacts: list[str] | None = Field(
+        None, description="Artifact file paths (optional)"
+    )
 
 
 class ScriptTask(CamelCaseModel):
@@ -19,6 +34,9 @@ class ScriptTask(CamelCaseModel):
     type: Literal["script"] = "script"
     script: str = Field(..., description="Script name (under scripts/ directory)")
     args: list[str] = Field(default_factory=list, description="Script arguments")
+    max_retries: int = Field(
+        default=0, description="Maximum retry attempts on failure (0 = no retry)"
+    )
 
 
 # Unified task type

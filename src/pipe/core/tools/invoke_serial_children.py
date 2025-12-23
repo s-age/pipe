@@ -14,6 +14,11 @@ def invoke_serial_children(
     child_session_id: str | None = None,
     purpose: str | None = None,
     background: str | None = None,
+    roles: list[str] | None = None,
+    procedure: str | None = None,
+    references: list[str] | None = None,
+    references_persist: list[str] | None = None,
+    artifacts: list[str] | None = None,
 ) -> ToolResult:
     """
     Execute multiple tasks serially in child agent sessions and exit parent process.
@@ -21,19 +26,36 @@ def invoke_serial_children(
     Args:
         tasks: List of task definitions
             Example for agent tasks: [
-                {"type": "agent", "instruction": "Implement feature"},
+                {
+                    "type": "agent",
+                    "instruction": "Implement feature",
+                    "roles": ["roles/python/tests/core/repositories.md"],
+                    "procedure": "procedures/python_unit_test_generation.md",
+                    "references_persist": ["src/file.py"]
+                },
                 {"type": "agent", "instruction": "Run tests"}
             ]
             Example for script tasks: [
-                {"type": "script", "script": "lint_with_retry.sh", "args": ["3"]}
+                {
+                    "type": "script",
+                    "script": "python/validate_code.sh",
+                    "args": ["tests/unit/test_file.py"],
+                    "max_retries": 2  # Optional: retry on failure
+                }
             ]
         child_session_id: Child session ID (optional)
             - If provided: Use existing child session for agent tasks
             - If None: Create new child session for each agent task
         purpose: Purpose for new child sessions
-            (required if child_session_id is None)
+            (required if child_session_id is None and agent tasks exist)
         background: Background for new child sessions
-            (required if child_session_id is None)
+            (required if child_session_id is None and agent tasks exist)
+        roles: Role file paths for agent tasks (optional)
+        procedure: Procedure file path for agent tasks (optional)
+        references: Reference files with default TTL for agent tasks (optional)
+        references_persist: Reference files with no expiration for agent tasks
+            (optional)
+        artifacts: Artifact file paths for agent tasks (optional)
 
     Returns:
         ToolResult (actually never returns - process exits)
@@ -93,17 +115,36 @@ def invoke_serial_children(
     if not tasks:
         raise ValueError("At least one task is required")
 
+    # Inject roles, procedure, references, artifacts into agent tasks if not already set
+    processed_tasks = []
     for task in tasks:
         if "type" not in task:
             raise ValueError("Task must have 'type' field")
         if task["type"] not in ("agent", "script"):
             raise ValueError(f"Invalid task type: {task['type']}")
 
+        # For agent tasks, inject parameters if not already present
+        if task["type"] == "agent":
+            task_copy = task.copy()
+            if "roles" not in task_copy and roles:
+                task_copy["roles"] = roles
+            if "procedure" not in task_copy and procedure:
+                task_copy["procedure"] = procedure
+            if "references" not in task_copy and references:
+                task_copy["references"] = references
+            if "references_persist" not in task_copy and references_persist:
+                task_copy["references_persist"] = references_persist
+            if "artifacts" not in task_copy and artifacts:
+                task_copy["artifacts"] = artifacts
+            processed_tasks.append(task_copy)
+        else:
+            processed_tasks.append(task)
+
     # Launch manager and exit parent process
     # Pass both parent and child session info, plus session creation parameters
     launch_manager(
         manager_type="serial",
-        tasks=tasks,
+        tasks=processed_tasks,
         parent_session_id=parent_session_id,
         child_session_id=child_session_id,
         purpose=purpose,

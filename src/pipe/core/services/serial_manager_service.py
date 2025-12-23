@@ -131,6 +131,7 @@ def execute_tasks_serially(
             # Extract session ID from output for retry purposes
             if result.output_preview:
                 import re
+
                 match = re.search(
                     r"\[CREATED_SESSION:([a-f0-9/]+)\]", result.output_preview
                 )
@@ -170,7 +171,8 @@ def execute_tasks_serially(
                         # Re-execute the agent task with error information
                         agent_task = tasks[agent_task_index]
                         error_info = (
-                            result.output_preview if result and result.output_preview
+                            result.output_preview
+                            if result and result.output_preview
                             else "Script validation failed"
                         )
 
@@ -185,8 +187,7 @@ def execute_tasks_serially(
 
                         # Create a new agent task with error context
                         retry_agent_task = AgentTask(
-                            type="agent",
-                            instruction=retry_instruction
+                            type="agent", instruction=retry_instruction
                         )
 
                         print(

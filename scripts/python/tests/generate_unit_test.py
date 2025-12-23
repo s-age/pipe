@@ -14,7 +14,8 @@ Usage:
 
 Examples:
     # Generate tests for all files in a directory
-    poetry run python scripts/python/tests/generate_unit_test.py src/pipe/core/repositories
+    poetry run python scripts/python/tests/generate_unit_test.py \
+        src/pipe/core/repositories
 
     # Generate tests for specific files
     poetry run python scripts/python/tests/generate_unit_test.py \
@@ -46,9 +47,10 @@ def find_python_files(targets: list[str]) -> list[str]:
         targets: List of file or directory paths
 
     Returns:
-        List of absolute file paths
+        List of relative file paths (relative to current working directory)
     """
     python_files = []
+    cwd = Path.cwd()
 
     for target in targets:
         target_path = Path(target)
@@ -60,7 +62,13 @@ def find_python_files(targets: list[str]) -> list[str]:
         if target_path.is_file():
             # Single file
             if target_path.suffix == ".py":
-                python_files.append(str(target_path.absolute()))
+                # Convert to relative path
+                try:
+                    rel_path = target_path.absolute().relative_to(cwd)
+                    python_files.append(str(rel_path))
+                except ValueError:
+                    # If not relative to cwd, use absolute
+                    python_files.append(str(target_path.absolute()))
         elif target_path.is_dir():
             # Directory - recursively find files
             for py_file in target_path.rglob("*.py"):
@@ -80,7 +88,13 @@ def find_python_files(targets: list[str]) -> list[str]:
                 if "__pycache__" in str(py_file):
                     continue
 
-                python_files.append(str(py_file.absolute()))
+                # Convert to relative path
+                try:
+                    rel_path = py_file.absolute().relative_to(cwd)
+                    python_files.append(str(rel_path))
+                except ValueError:
+                    # If not relative to cwd, use absolute
+                    python_files.append(str(py_file.absolute()))
 
     return sorted(python_files)
 
@@ -195,7 +209,7 @@ def wait_for_conductor_completion(
         # Check if result file exists
         if result_path.exists():
             try:
-                with open(result_path, "r") as f:
+                with open(result_path) as f:
                     result = json.load(f)
 
                 status = result.get("status")
@@ -206,7 +220,7 @@ def wait_for_conductor_completion(
 
                 return status == "success"
 
-            except (json.JSONDecodeError, IOError) as e:
+            except (OSError, json.JSONDecodeError) as e:
                 print(f"\n[Polling] Warning: Failed to read result file: {e}")
                 # Continue polling
 
@@ -232,23 +246,25 @@ def get_remaining_todos(session_id: str) -> list[dict]:
         return []
 
     try:
-        with open(todos_path, "r") as f:
+        with open(todos_path) as f:
             data = json.load(f)
 
         todos = data.get("todos", [])
         pending = [t for t in todos if t.get("status") == "pending"]
 
-        print(f"\n[TODO] Found {len(pending)} pending items (out of {len(todos)} total)")
+        print(
+            f"\n[TODO] Found {len(pending)} pending items (out of {len(todos)} total)"
+        )
         return pending
 
-    except (json.JSONDecodeError, IOError) as e:
+    except (OSError, json.JSONDecodeError) as e:
         print(f"[TODO] Error reading TODO file: {e}")
         return []
 
 
 def launch_conductor(
     file_metadata: list[dict], session_id: str | None = None
-) -> str:
+) -> str | None:
     """
     Launch Test Conductor agent via takt.
 
@@ -261,7 +277,7 @@ def launch_conductor(
     """
     if not file_metadata and not session_id:
         print("No files to process")
-        sys.exit(0)
+        return None
 
     # Build takt command
     takt_cmd = ["poetry", "run", "takt"]
@@ -274,7 +290,8 @@ def launch_conductor(
             [
                 "--instruction",
                 "Continue test generation for remaining pending files in TODO list. "
-                "Process ONLY THE NEXT PENDING FILE via invoke_serial_children, then exit. "
+                "Process ONLY THE NEXT PENDING FILE via invoke_serial_children, "
+                "then exit. "
                 "DO NOT process all remaining files at once.",
             ]
         )
@@ -286,13 +303,15 @@ def launch_conductor(
         takt_cmd.extend(
             [
                 "--purpose",
-                f"Automated test generation for {len(file_metadata)} Python source files",
+                f"Automated test generation for {len(file_metadata)} "
+                "Python source files",
             ]
         )
         takt_cmd.extend(
             [
                 "--background",
-                "Orchestrate test generation by delegating to child agents via invoke_serial_children",
+                "Orchestrate test generation by delegating to child agents "
+                "via invoke_serial_children",
             ]
         )
         takt_cmd.extend(["--roles", "roles/conductor.md"])
@@ -305,18 +324,18 @@ def launch_conductor(
                 for m in file_metadata
             ]
         )
-        instruction = f"""Follow @procedures/python_unit_test_conductor.md to generate tests for the following files:
-
-{file_list}
-
-Execute all steps in the procedure:
-1. Receive and parse file list (done above)
-2. Create TODO list via edit_todos
-3. Process ONLY THE FIRST FILE via invoke_serial_children
-4. DO NOT process remaining files - wait for script to call you again
-
-IMPORTANT: Process only ONE file per invocation, then exit."""
-
+        instruction_template = (
+            "Follow @procedures/python_unit_test_conductor.md to generate tests "
+            "for the following files:\n\n"
+            "{file_list}\n\n"
+            "Execute all steps in the procedure:\n"
+            "1. Receive and parse file list (done above)\n"
+            "2. Create TODO list via edit_todos\n"
+            "3. Process ONLY THE FIRST FILE via invoke_serial_children\n"
+            "4. DO NOT process remaining files - wait for script to call you again\n\n"
+            "IMPORTANT: Process only ONE file per invocation, then exit."
+        )
+        instruction = instruction_template.format(file_list=file_list)
         takt_cmd.extend(["--instruction", instruction])
         resume_mode = False
 
@@ -324,34 +343,85 @@ IMPORTANT: Process only ONE file per invocation, then exit."""
     print(f"[Conductor] Command: {' '.join(takt_cmd)}\n")
 
     try:
-        result = subprocess.run(
-            takt_cmd, check=True, capture_output=True, text=True
-        )
+        result = subprocess.run(takt_cmd, check=False, capture_output=True, text=True)
 
         # Extract session ID from output
         if not resume_mode:
-            # Parse JSON response from takt
-            try:
-                for line in result.stdout.strip().split("\n"):
-                    if line.strip().startswith("{"):
+            session_id_from_stdout = None
+            for line in result.stdout.strip().split("\n"):
+                if line.strip().startswith("{"):
+                    try:
                         data = json.loads(line.strip())
                         if "session_id" in data:
-                            session_id = data["session_id"]
-                            print(f"[Conductor] Created session: {session_id}")
-                            break
-            except json.JSONDecodeError:
-                print("[Conductor] Warning: Could not parse session ID from output")
+                            session_id_from_stdout = data["session_id"]
+                            print(
+                                f"[Conductor] Created session: {session_id_from_stdout}"
+                            )
+                            session_id = session_id_from_stdout
+                            break  # Found session_id, exit loop
+                    except json.JSONDecodeError:
+                        print(
+                            "[Conductor] Warning: Could not parse "
+                            "session ID from stdout"
+                        )
+                        continue  # Continue to next line if JSON fails
 
-        return session_id
+            # If session_id not found in stdout, try to find the latest session file
+            if session_id is None:  # Check session_id for the overall status
+                print(
+                    "[Conductor] Session ID not in stdout, searching for "
+                    "latest session file..."
+                )
+                sessions_dir = Path("sessions")
+                if sessions_dir.exists():
+                    # Find the most recently created session file
+                    session_files = sorted(
+                        [
+                            f
+                            for f in sessions_dir.glob("*.json")
+                            if not f.name.startswith(".")
+                        ],
+                        key=lambda f: f.stat().st_mtime,
+                        reverse=True,
+                    )
+                    for session_file in session_files[:5]:  # Check last 5 sessions
+                        try:
+                            with open(session_file) as f:
+                                session_data = json.load(f)
+                                candidate_id = session_data.get("session_id")
+                                purpose = session_data.get("purpose", "")
+                                # Match purpose to ensure we get the right session
+                                if (
+                                    candidate_id
+                                    and "Automated test generation" in purpose
+                                ):
+                                    session_id = candidate_id
+                                    print(
+                                        f"[Conductor] Found session from file: "
+                                        f"{session_id}"
+                                    )
+                                    break
+                        except (OSError, json.JSONDecodeError):
+                            continue
 
-    except subprocess.CalledProcessError as e:
-        print(f"Error: takt command failed with exit code {e.returncode}")
-        if e.stderr:
-            print(f"stderr: {e.stderr}")
-        sys.exit(e.returncode)
+        if session_id is None:
+            print("[Conductor] Error: Could not determine session ID")
+            print(f"[Conductor] stdout: {result.stdout}")
+            print(f"[Conductor] stderr: {result.stderr}")
+            raise SystemExit(1)
+
+        # Check exit code after we have session_id
+        if result.returncode != 0:
+            print(f"[Conductor] Warning: takt exited with code {result.returncode}")
+            if result.stderr:
+                print(f"[Conductor] stderr: {result.stderr}")
+            # Don't exit here - conductor may have called invoke_serial_children
+
     except FileNotFoundError:
         print("Error: takt command not found. Is Poetry installed?")
-        sys.exit(1)
+        raise SystemExit(1)
+
+    return None
 
 
 def main():

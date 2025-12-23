@@ -11,12 +11,8 @@ class AgentTask(CamelCaseModel):
 
     type: Literal["agent"] = "agent"
     instruction: str = Field(..., description="Instruction for the agent")
-    roles: list[str] | None = Field(
-        None, description="Role file paths (optional)"
-    )
-    procedure: str | None = Field(
-        None, description="Procedure file path (optional)"
-    )
+    roles: list[str] | None = Field(None, description="Role file paths (optional)")
+    procedure: str | None = Field(None, description="Procedure file path (optional)")
     references: list[str] | None = Field(
         None, description="Reference file paths with default TTL (optional)"
     )

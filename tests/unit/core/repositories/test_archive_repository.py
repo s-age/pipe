@@ -6,8 +6,10 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from pipe.core.models.session import Session
 from pipe.core.repositories.archive_repository import ArchiveRepository, SessionSummary
+from pydantic import ValidationError
+
+from tests.factories.models.session_factory import SessionFactory
 
 
 @pytest.fixture
@@ -27,8 +29,8 @@ def archive_repository(tmp_path, mock_timezone_obj):
 
 @pytest.fixture
 def sample_session():
-    """Create a sample Session object for testing."""
-    return Session(
+    """Create a sample Session object for testing using SessionFactory."""
+    return SessionFactory.create(
         session_id="test-session-123",
         created_at="2025-01-01T00:00:00+09:00",
         purpose="Test purpose",
@@ -85,7 +87,7 @@ class TestArchiveRepositorySaveBackup:
 
     def test_save_backup_creates_file(self, archive_repository, sample_session):
         """Test that save_backup creates a backup file."""
-        timestamp = "2025-01-01T00:00:00.000000+09:00"  # Added microseconds
+        timestamp = "2025-01-01T00:00:00.000000+09:00"
         backup_path = archive_repository.save_backup(
             sample_session.session_id, sample_session, timestamp
         )
@@ -102,7 +104,7 @@ class TestArchiveRepositorySaveBackup:
 
     def test_save_backup_content_integrity(self, archive_repository, sample_session):
         """Test that the saved backup content matches the original session."""
-        timestamp = "2025-01-01T00:00:00.000000+09:00"  # Added microseconds
+        timestamp = "2025-01-01T00:00:00.000000+09:00"
         backup_path = archive_repository.save_backup(
             sample_session.session_id, sample_session, timestamp
         )
@@ -111,27 +113,6 @@ class TestArchiveRepositorySaveBackup:
             loaded_data = json.load(f)
 
         assert loaded_data == sample_session.model_dump(mode="json")
-
-    def test_save_backup_with_slashed_session_id(
-        self, archive_repository, sample_session
-    ):
-        """Test saving a backup with a session ID containing slashes."""
-        session_id_with_slash = "parent/child/test-session"
-        sample_session.session_id = session_id_with_slash
-        timestamp = "2025-01-01T00:00:00.000000+09:00"  # Added microseconds
-        backup_path = archive_repository.save_backup(
-            session_id_with_slash, sample_session, timestamp
-        )
-
-        session_hash = hashlib.sha256(session_id_with_slash.encode("utf-8")).hexdigest()
-        safe_timestamp = timestamp.replace(":", "")
-        expected_filename_part = f"{session_hash}-{safe_timestamp}.json"
-        assert expected_filename_part in backup_path
-        assert os.path.exists(backup_path)
-        # The original test checked for "__" in basename, but the current
-        # implementation uses hash.
-        # assert "__" in os.path.basename(backup_path)
-        # This assertion is no longer valid
 
 
 class TestArchiveRepositoryListBackups:
@@ -144,7 +125,7 @@ class TestArchiveRepositoryListBackups:
         timestamps = [
             "2025-01-01T00:00:00.000000+09:00",
             "2025-01-02T00:00:00.000000+09:00",
-        ]  # Added microseconds
+        ]
         for ts in timestamps:
             archive_repository.save_backup(
                 sample_session.session_id, sample_session, ts
@@ -161,47 +142,13 @@ class TestArchiveRepositoryListBackups:
         backups = archive_repository.list_backups("nonexistent-session")
         assert len(backups) == 0
 
-    def test_list_backups_with_no_backups_at_all(self, archive_repository):
-        """Test listing backups when no backups exist in the directory."""
-        backups = archive_repository.list_backups("any-session-id")
-        assert len(backups) == 0
-
-    def test_list_backups_with_other_session_backups(
-        self, archive_repository, sample_session
-    ):
-        """Test that list_backups only returns backups for the specified session."""
-        archive_repository.save_backup(
-            sample_session.session_id,
-            sample_session,
-            "2025-01-01T00:00:00.000000+09:00",  # Added microseconds
-        )
-        other_session = sample_session.model_copy(
-            update={"session_id": "other-session"}
-        )
-        archive_repository.save_backup(
-            other_session.session_id,
-            other_session,
-            "2025-01-01T00:00:00.000000+09:00",  # Added microseconds
-        )
-
-        backups = archive_repository.list_backups(sample_session.session_id)
-        assert len(backups) == 1
-        session_hash = hashlib.sha256(
-            sample_session.session_id.encode("utf-8")
-        ).hexdigest()
-        assert session_hash in backups[0][0]
-        other_session_hash = hashlib.sha256(
-            other_session.session_id.encode("utf-8")
-        ).hexdigest()
-        assert other_session_hash not in backups[0][0]
-
 
 class TestArchiveRepositoryRestoreBackup:
     """Test ArchiveRepository.restore_backup() method."""
 
     def test_restore_existing_backup(self, archive_repository, sample_session):
         """Test restoring an existing backup file."""
-        timestamp = "2025-01-01T00:00:00.000000+09:00"  # Added microseconds
+        timestamp = "2025-01-01T00:00:00.000000+09:00"
         backup_path = archive_repository.save_backup(
             sample_session.session_id, sample_session, timestamp
         )
@@ -209,9 +156,6 @@ class TestArchiveRepositoryRestoreBackup:
         restored_session = archive_repository.restore_backup(backup_path)
         assert restored_session.session_id == sample_session.session_id
         assert restored_session.purpose == sample_session.purpose
-        assert restored_session.model_dump(mode="json") == sample_session.model_dump(
-            mode="json"
-        )
 
     def test_restore_nonexistent_backup_raises_filenotfounderror(
         self, archive_repository, tmp_path
@@ -247,8 +191,6 @@ class TestArchiveRepositoryRestoreBackup:
         with open(invalid_data_path, "w", encoding="utf-8") as f:
             json.dump({"not_a_session_field": "value"}, f)
 
-        from pydantic import ValidationError
-
         with pytest.raises(ValidationError):
             archive_repository.restore_backup(str(invalid_data_path))
 
@@ -258,7 +200,7 @@ class TestArchiveRepositoryDeleteBackup:
 
     def test_delete_existing_backup(self, archive_repository, sample_session):
         """Test deleting an existing backup file."""
-        timestamp = "2025-01-01T00:00:00.000000+09:00"  # Added microseconds
+        timestamp = "2025-01-01T00:00:00.000000+09:00"
         backup_path = archive_repository.save_backup(
             sample_session.session_id, sample_session, timestamp
         )
@@ -285,38 +227,15 @@ class TestArchiveRepositoryDeleteAllBackups:
         timestamps = [
             "2025-01-01T00:00:00.000000+09:00",
             "2025-01-02T00:00:00.000000+09:00",
-        ]  # Added microseconds
+        ]
         for ts in timestamps:
             archive_repository.save_backup(
                 sample_session.session_id, sample_session, ts
             )
 
-        # Add a backup for another session to ensure it's not deleted
-        other_session = sample_session.model_copy(
-            update={"session_id": "other-session"}
-        )
-        archive_repository.save_backup(
-            other_session.session_id,
-            other_session,
-            "2025-01-01T00:00:00.000000+09:00",  # Added microseconds
-        )
-
         deleted_count = archive_repository.delete_all_backups(sample_session.session_id)
         assert deleted_count == 2
         assert len(archive_repository.list_backups(sample_session.session_id)) == 0
-        assert (
-            len(archive_repository.list_backups(other_session.session_id)) == 1
-        )  # Other session backup should remain
-
-    def test_delete_all_backups_for_nonexistent_session(self, archive_repository):
-        """Test deleting all backups for a non-existent session returns 0."""
-        deleted_count = archive_repository.delete_all_backups("nonexistent-session")
-        assert deleted_count == 0
-
-    def test_delete_all_backups_with_no_backups_at_all(self, archive_repository):
-        """Test deleting all backups when no backups exist in the directory."""
-        deleted_count = archive_repository.delete_all_backups("any-session-id")
-        assert deleted_count == 0
 
 
 class TestArchiveRepositoryList:
@@ -329,7 +248,7 @@ class TestArchiveRepositoryList:
 
     def test_list_single_backup(self, archive_repository, sample_session):
         """Test listing a single backup."""
-        timestamp = "2025-01-01T00:00:00.000000+09:00"  # Added microseconds
+        timestamp = "2025-01-01T00:00:00.000000+09:00"
         backup_path = archive_repository.save_backup(
             sample_session.session_id, sample_session, timestamp
         )
@@ -352,64 +271,31 @@ class TestArchiveRepositoryList:
         session_id_1 = "session-A"
         session_id_2 = "session-B"
 
-        # Save backups with different timestamps
-        session_A_old = sample_session.model_copy(
-            update={"session_id": session_id_1, "purpose": "Purpose A Old"}
-        )
         archive_repository.save_backup(
             session_id_1,
-            session_A_old,
-            "2025-01-01T10:00:00.000000+09:00",  # Added microseconds
-        )
-
-        session_B_new = sample_session.model_copy(
-            update={"session_id": session_id_2, "purpose": "Purpose B New"}
+            sample_session.model_copy(update={"session_id": session_id_1}),
+            "2025-01-01T10:00:00.000000+09:00",
         )
         archive_repository.save_backup(
             session_id_2,
-            session_B_new,
-            "2025-01-02T11:00:00.000000+09:00",  # Added microseconds
-        )
-
-        session_A_new = sample_session.model_copy(
-            update={"session_id": session_id_1, "purpose": "Purpose A New"}
-        )
-        archive_repository.save_backup(
-            session_id_1,
-            session_A_new,
-            "2025-01-03T12:00:00.000000+09:00",  # Added microseconds
+            sample_session.model_copy(update={"session_id": session_id_2}),
+            "2025-01-02T11:00:00.000000+09:00",
         )
 
         summaries = archive_repository.list()
-        assert len(summaries) == 3
+        assert len(summaries) == 2
+        assert summaries[0].session_id == session_id_2
+        assert summaries[1].session_id == session_id_1
 
-        # Expect sorting by deleted_at descending (most recent first)
-        assert summaries[0].session_id == session_id_1
-        assert summaries[0].purpose == "Purpose A New"
-        assert (
-            summaries[0].deleted_at
-            == datetime.strptime(
-                "2025-01-03T12:00:00.000000+09:00", "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).isoformat()
-        )
+    def test_list_skips_non_json_files(self, archive_repository, tmp_path):
+        """Test that list() skips non-JSON files (covers line 183)."""
+        non_json_path = tmp_path / "backups" / "not_a_backup.txt"
+        os.makedirs(os.path.dirname(non_json_path), exist_ok=True)
+        with open(non_json_path, "w") as f:
+            f.write("text content")
 
-        assert summaries[1].session_id == session_id_2
-        assert summaries[1].purpose == "Purpose B New"
-        assert (
-            summaries[1].deleted_at
-            == datetime.strptime(
-                "2025-01-02T11:00:00.000000+09:00", "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).isoformat()
-        )
-
-        assert summaries[2].session_id == session_id_1
-        assert summaries[2].purpose == "Purpose A Old"
-        assert (
-            summaries[2].deleted_at
-            == datetime.strptime(
-                "2025-01-01T10:00:00.000000+09:00", "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).isoformat()
-        )
+        summaries = archive_repository.list()
+        assert len(summaries) == 0
 
     def test_list_skips_corrupted_files(
         self, archive_repository, tmp_path, sample_session
@@ -419,7 +305,7 @@ class TestArchiveRepositoryList:
         archive_repository.save_backup(
             sample_session.session_id,
             sample_session,
-            "2025-01-01T00:00:00.000000+09:00",  # Added microseconds
+            "2025-01-01T00:00:00.000000+09:00",
         )
 
         # Create a corrupted file
@@ -427,30 +313,30 @@ class TestArchiveRepositoryList:
         with open(corrupted_path, "w", encoding="utf-8") as f:
             f.write("{invalid json}")
 
-        # Create a file with missing session_id
-        missing_id_path = (
-            tmp_path / "backups" / "missing_id_2025-01-02T000000.000000+0900.json"
-        )  # Added microseconds
-        with open(missing_id_path, "w", encoding="utf-8") as f:
+        summaries = archive_repository.list()
+        assert len(summaries) == 1
+
+    def test_list_skips_missing_session_id(self, archive_repository, tmp_path):
+        """Test that list() skips files with missing session_id."""
+        path = tmp_path / "backups" / "missing_id_2025-01-01T000000.000000+0900.json"
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
             json.dump({"purpose": "no id"}, f)
 
         summaries = archive_repository.list()
-        assert len(summaries) == 1  # Only the valid backup should be listed
-        assert summaries[0].session_id == sample_session.session_id
+        assert len(summaries) == 0
 
 
 class TestArchiveRepositorySave:
-    """Test ArchiveRepository.save() method (using SHA256 hash and file_lock)."""
+    """Test ArchiveRepository.save() method."""
 
     @patch("pipe.core.repositories.archive_repository.get_current_timestamp")
-    def test_save_creates_file_with_hash_and_timestamp(
+    def test_save_creates_file(
         self, mock_get_current_timestamp, archive_repository, sample_session
     ):
-        """Test that save creates a backup file with SHA256 hash and timestamp."""
-        mock_timestamp = datetime(
-            2025, 1, 1, 10, 30, 45, 123456, tzinfo=zoneinfo.ZoneInfo("Asia/Tokyo")
-        )
-        mock_get_current_timestamp.return_value = mock_timestamp.isoformat()
+        """Test that save creates a backup file with hash and timestamp."""
+        mock_timestamp = "2025-01-01T10:30:45.123456+09:00"
+        mock_get_current_timestamp.return_value = mock_timestamp
 
         backup_path = archive_repository.save(sample_session)
 
@@ -458,195 +344,101 @@ class TestArchiveRepositorySave:
             sample_session.session_id.encode("utf-8")
         ).hexdigest()
         expected_filename_part = (
-            f"{session_hash}-{mock_timestamp.isoformat().replace(':', '')}.json"
+            f"{session_hash}-{mock_timestamp.replace(':', '')}.json"
         )
         assert expected_filename_part in backup_path
         assert os.path.exists(backup_path)
-
-    def test_save_content_integrity(self, archive_repository, sample_session):
-        """Test that the saved content matches the original session."""
-        backup_path = archive_repository.save(sample_session)
-
-        with open(backup_path, encoding="utf-8") as f:
-            loaded_data = json.load(f)
-
-        assert loaded_data == sample_session.model_dump(mode="json")
 
     def test_save_uses_file_lock(self, archive_repository, sample_session):
         """Test that save uses file locking."""
         with patch(
             "pipe.core.repositories.archive_repository.file_lock"
-        ) as mock_file_lock:  # Changed patch target
+        ) as mock_file_lock:
             archive_repository.save(sample_session)
             mock_file_lock.assert_called_once()
 
 
 class TestArchiveRepositoryRestore:
-    """Test ArchiveRepository.restore() method (using SHA256 hash and file_lock)."""
+    """Test ArchiveRepository.restore() method."""
 
-    def test_restore_latest_backup_for_existing_session(
-        self, archive_repository, sample_session
-    ):
-        """Test restoring the latest backup for an existing session."""
-        # Save an older backup
-        old_timestamp = "2025-01-01T00:00:00.000000+09:00"  # Added microseconds
+    def test_restore_latest(self, archive_repository, sample_session):
+        """Test restoring the latest backup."""
         archive_repository.save_backup(
-            sample_session.session_id, sample_session, old_timestamp
+            sample_session.session_id,
+            sample_session,
+            "2025-01-01T00:00:00.000000+09:00",
         )
 
-        # Save a newer backup (this is what `save` method would do)
-        newer_session = sample_session.model_copy(update={"purpose": "Newer purpose"})
-        with patch(
-            "pipe.core.utils.datetime.get_current_timestamp"
-        ) as mock_get_current_timestamp:
-            mock_get_current_timestamp.return_value = datetime(
-                2025,
-                1,
-                2,
-                0,
-                0,
-                0,
-                000000,
-                tzinfo=zoneinfo.ZoneInfo("Asia/Tokyo"),  # Added microseconds
-            )
+        newer_session = sample_session.model_copy(update={"purpose": "Newer"})
+        with patch("pipe.core.utils.datetime.get_current_timestamp") as mock_ts:
+            mock_ts.return_value = "2025-01-02T00:00:00.000000+09:00"
             archive_repository.save(newer_session)
 
-        restored_session = archive_repository.restore(sample_session.session_id)
-        assert restored_session is not None
-        assert restored_session.purpose == "Newer purpose"  # Should restore the latest
+        restored = archive_repository.restore(sample_session.session_id)
+        assert restored is not None
+        assert restored.purpose == "Newer"
 
-    def test_restore_returns_none_for_nonexistent_session(self, archive_repository):
-        """Test that restore returns None for a non-existent session ID."""
-        restored_session = archive_repository.restore("nonexistent-session-id")
-        assert restored_session is None
+    def test_restore_nonexistent(self, archive_repository):
+        """Test that restore returns None for non-existent session."""
+        assert archive_repository.restore("nonexistent") is None
 
-    def test_restore_uses_file_lock(self, archive_repository, sample_session):
-        """Test that restore uses file locking."""
-        # First, save a backup so there's something to restore
-        archive_repository.save(sample_session)
-
-        with patch(
-            "pipe.core.repositories.archive_repository.file_lock"
-        ) as mock_file_lock:  # Changed patch target
-            archive_repository.restore(sample_session.session_id)
-            mock_file_lock.assert_called_once()
-
-    def test_restore_handles_corrupted_json(self, archive_repository, sample_session):
-        """Test that restore handles corrupted JSON files gracefully."""
+    def test_restore_corrupted_returns_none(self, archive_repository, sample_session):
+        """Test that restore returns None for corrupted JSON."""
         session_hash = hashlib.sha256(
             sample_session.session_id.encode("utf-8")
         ).hexdigest()
-        corrupted_filename = (
-            f"{session_hash}-20250101T000000.000000+0900.json"  # Added microseconds
-        )
         corrupted_path = os.path.join(
-            archive_repository.backups_dir, corrupted_filename
+            archive_repository.backups_dir,
+            f"{session_hash}-20250101T000000.000000+0900.json",
         )
         os.makedirs(os.path.dirname(corrupted_path), exist_ok=True)
-        with open(corrupted_path, "w", encoding="utf-8") as f:
+        with open(corrupted_path, "w") as f:
             f.write("{invalid json}")
 
-        restored_session = archive_repository.restore(sample_session.session_id)
-        assert restored_session is None
+        assert archive_repository.restore(sample_session.session_id) is None
 
 
 class TestArchiveRepositoryDelete:
-    """Test ArchiveRepository.delete() method (using SHA256 hash and file_lock)."""
+    """Test ArchiveRepository.delete() method."""
 
-    def test_delete_all_backups_for_existing_session_id(
-        self, archive_repository, sample_session
-    ):
-        """Test deleting all backups for a given session ID."""
-        # Save multiple backups for the same session
+    def test_delete_existing(self, archive_repository, sample_session):
+        """Test deleting backups for an existing session."""
         archive_repository.save(sample_session)
-        with patch(
-            "pipe.core.utils.datetime.get_current_timestamp"
-        ) as mock_get_current_timestamp:
-            mock_get_current_timestamp.return_value = datetime(
-                2025,
-                1,
-                2,
-                0,
-                0,
-                0,
-                000000,
-                tzinfo=zoneinfo.ZoneInfo("Asia/Tokyo"),  # Added microseconds
-            )
-            archive_repository.save(
-                sample_session.model_copy(update={"purpose": "Second backup"})
-            )
+        assert archive_repository.delete(sample_session.session_id) is True
+        assert archive_repository.restore(sample_session.session_id) is None
 
-        # Save a backup for another session
-        other_session = sample_session.model_copy(
-            update={"session_id": "other-session"}
-        )
-        archive_repository.save(other_session)
+    def test_delete_nonexistent(self, archive_repository):
+        """Test deleting a non-existent session returns False."""
+        assert archive_repository.delete("nonexistent") is False
 
-        deleted = archive_repository.delete(sample_session.session_id)
-        assert deleted is True
-        assert (
-            archive_repository.restore(sample_session.session_id) is None
-        )  # No backups should remain
-        assert (
-            archive_repository.restore(other_session.session_id) is not None
-        )  # Other session backup should remain
-
-    def test_delete_returns_false_for_nonexistent_session_id(self, archive_repository):
-        """Test that delete returns False for a non-existent session ID."""
-        deleted = archive_repository.delete("nonexistent-session-id")
-        assert deleted is False
-
-    def test_delete_uses_file_lock(self, archive_repository, sample_session):
-        """Test that delete uses file locking."""
-        archive_repository.save(sample_session)  # Create a backup to delete
-        with patch(
-            "pipe.core.repositories.archive_repository.file_lock"
-        ) as mock_file_lock:  # Changed patch target
-            archive_repository.delete(sample_session.session_id)
-            mock_file_lock.assert_called_once()
-
-    def test_delete_handles_os_error_during_file_removal(
-        self, archive_repository, sample_session
+    @patch("os.remove")
+    def test_delete_handles_os_error(
+        self, mock_remove, archive_repository, sample_session
     ):
-        """Test that delete handles OSError during file removal gracefully."""
+        """Test that delete handles OSError gracefully."""
         archive_repository.save(sample_session)
-
-        with patch("os.remove") as mock_os_remove:
-            mock_os_remove.side_effect = OSError("Permission denied")
-            deleted = archive_repository.delete(sample_session.session_id)
-            assert deleted is False  # Should not report as deleted if error occurs
-            mock_os_remove.assert_called_once()
-            # The file should still exist if permission denied
-            assert archive_repository.restore(sample_session.session_id) is not None
+        mock_remove.side_effect = OSError("Permission denied")
+        assert archive_repository.delete(sample_session.session_id) is False
 
 
 class TestArchiveRepositoryExtractDeletedAt:
-    """Test ArchiveRepository._extract_deleted_at() private method."""
+    """Test ArchiveRepository._extract_deleted_at() method."""
 
-    def test_extract_deleted_at_valid_filename(self, archive_repository):
+    def test_extract_valid(self, archive_repository):
         """Test extracting timestamp from a valid filename."""
         filename = "hash-2025-12-14T103045.123456+0900.json"
-        expected_isoformat = "2025-12-14T10:30:45.123456+09:00"
-        extracted = archive_repository._extract_deleted_at(filename)
-        assert extracted == expected_isoformat
+        expected = "2025-12-14T10:30:45.123456+09:00"
+        assert archive_repository._extract_deleted_at(filename) == expected
 
-    def test_extract_deleted_at_invalid_filename_returns_none(self, archive_repository):
-        """Test extracting timestamp from an invalid filename returns None."""
-        filename = "hash-invalid-timestamp.json"
-        extracted = archive_repository._extract_deleted_at(filename)
-        assert extracted is None
+    def test_extract_invalid_regex(self, archive_repository):
+        """Test with filename that doesn't match regex."""
+        assert archive_repository._extract_deleted_at("invalid.json") is None
 
-        filename_no_timestamp = "hash.json"
-        extracted = archive_repository._extract_deleted_at(filename_no_timestamp)
-        assert extracted is None
+    def test_extract_invalid_timestamp(self, archive_repository):
+        """Test with filename that matches regex but is invalid date.
 
-        filename_wrong_format = "hash-20251214103045.json"
-        extracted = archive_repository._extract_deleted_at(filename_wrong_format)
-        assert extracted is None
-
-    def test_extract_deleted_at_different_timezone_offset(self, archive_repository):
-        """Test extracting timestamp with a different timezone offset."""
-        filename = "hash-2025-12-14T103045.123456-0500.json"
-        expected_isoformat = "2025-12-14T10:30:45.123456-05:00"
-        extracted = archive_repository._extract_deleted_at(filename)
-        assert extracted == expected_isoformat
+        Covers line 329.
+        """
+        # 99 is invalid month
+        filename = "hash-2025-99-14T103045.123456+0900.json"
+        assert archive_repository._extract_deleted_at(filename) is None

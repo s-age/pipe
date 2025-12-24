@@ -107,6 +107,20 @@ def call_gemini_cli(
                 data = json.loads(line.strip())
                 if data.get("type") == "message" and data.get("role") == "assistant":
                     assistant_content += data.get("content", "")
+                elif data.get("type") == "tool_use":
+                    # Store tool call for later processing
+                    tool_calls.append(data)
+                    # Tee to streaming log
+                    if streaming_log_repo:
+                        tool_name = data.get("tool_name", "")
+                        parameters = data.get("parameters", {})
+                        truncated_params = str(parameters)[:200]
+                        if len(str(parameters)) > 200:
+                            truncated_params += "..."
+                        log_content = (
+                            f"TOOL_USE: {tool_name} | params: {truncated_params}"
+                        )
+                        streaming_log_repo.append_log(log_content, "TOOL_USE")
                 elif data.get("type") == "tool_result":
                     # Store tool result for later processing
                     tool_results.append(data)

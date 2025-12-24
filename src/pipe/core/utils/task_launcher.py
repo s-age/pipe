@@ -4,6 +4,7 @@ Environment: Poetry-managed Python project
 """
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -93,6 +94,13 @@ def launch_manager(
             stderr=subprocess.STDOUT,  # Redirect stderr to stdout (same log file)
             stdin=subprocess.DEVNULL,
         )
+
+    # Cleanup parent process registration before exiting
+    # This is crucial to allow the parent session to be re-invoked later
+    from pipe.core.services.process_manager_service import ProcessManagerService
+
+    process_manager = ProcessManagerService(project_root)
+    process_manager.cleanup_process(parent_session_id)
 
     # Exit parent process immediately (suppress stdout to avoid polluting tool output)
     # Manager logs are available in the log file

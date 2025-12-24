@@ -9,6 +9,7 @@ from pipe.core.utils.task_launcher import launch_manager
 class TestLaunchManager:
     """Tests for task_launcher utility."""
 
+
     @pytest.fixture
     def mock_project_root(self, tmp_path):
         """Mock get_project_root to return a temporary directory."""
@@ -28,7 +29,18 @@ class TestLaunchManager:
         with patch("sys.exit") as mock:
             yield mock
 
-    def test_launch_manager_serial(self, mock_project_root, mock_popen, mock_sys_exit):
+    @pytest.fixture
+    def mock_process_manager(self):
+        """Mock ProcessManagerService."""
+        with patch(
+            "pipe.core.services.process_manager_service.ProcessManagerService"
+        ) as mock_class:
+            mock_instance = mock_class.return_value
+            yield mock_instance
+
+    def test_launch_manager_serial(
+        self, mock_project_root, mock_popen, mock_sys_exit, mock_process_manager
+    ):
         """Test launching a serial manager."""
         tasks = [{"id": "task1", "type": "shell", "command": "echo test"}]
         parent_id = "parent123"
@@ -66,11 +78,14 @@ class TestLaunchManager:
         assert kwargs["stdout"] is not None  # It should be a file object
         assert kwargs["stderr"] == -2  # subprocess.STDOUT is -2
 
+        # Verify process cleanup was called before exit
+        mock_process_manager.cleanup_process.assert_called_once_with(parent_id)
+
         # Verify sys.exit(0) was called
         mock_sys_exit.assert_called_once_with(0)
 
     def test_launch_manager_parallel(
-        self, mock_project_root, mock_popen, mock_sys_exit
+        self, mock_project_root, mock_popen, mock_sys_exit, mock_process_manager
     ):
         """Test launching a parallel manager with extra arguments."""
         tasks = [{"id": "task1"}]
@@ -98,10 +113,13 @@ class TestLaunchManager:
         )
         assert tasks_file.exists()
 
+        # Verify process cleanup was called before exit
+        mock_process_manager.cleanup_process.assert_called_once_with(parent_id)
+
         mock_sys_exit.assert_called_once_with(0)
 
     def test_launch_manager_with_child_session(
-        self, mock_project_root, mock_popen, mock_sys_exit
+        self, mock_project_root, mock_popen, mock_sys_exit, mock_process_manager
     ):
         """Test launching manager with child session info."""
         tasks = [{"id": "task1"}]
@@ -129,6 +147,9 @@ class TestLaunchManager:
             assert data["purpose"] == purpose
             assert data["background"] == background
 
+        # Verify process cleanup was called before exit
+        mock_process_manager.cleanup_process.assert_called_once_with(parent_id)
+
         mock_sys_exit.assert_called_once_with(0)
 
     def test_launch_manager_unknown_type(
@@ -147,7 +168,7 @@ class TestLaunchManager:
         mock_sys_exit.assert_not_called()
 
     def test_launch_manager_creates_log_file(
-        self, mock_project_root, mock_popen, mock_sys_exit
+        self, mock_project_root, mock_popen, mock_sys_exit, mock_process_manager
     ):
         """Test that log file is created in the sessions directory."""
         parent_id = "log_test"
@@ -163,5 +184,8 @@ class TestLaunchManager:
             / f"{parent_id}_serial_manager.log"
         )
         assert log_file.exists()
+
+        # Verify process cleanup was called before exit
+        mock_process_manager.cleanup_process.assert_called_once_with(parent_id)
 
         mock_sys_exit.assert_called_once_with(0)

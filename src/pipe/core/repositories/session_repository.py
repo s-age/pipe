@@ -161,7 +161,11 @@ class SessionRepository(FileRepository):
             ValueError: If the index data is invalid
         """
         with file_lock(self.index_lock_path):
-            index_data = self._read_json(self.index_path, default_data={"sessions": {}})
+            return self._load_index_no_lock()
+
+    def _load_index_no_lock(self) -> SessionIndex:
+        """Internal method to load index without acquiring lock."""
+        index_data = self._read_json(self.index_path, default_data={"sessions": {}})
         # Convert dict entries to SessionIndexEntry objects
         sessions = {}
         for session_id, entry_data in index_data.get("sessions", {}).items():
@@ -210,16 +214,26 @@ class SessionRepository(FileRepository):
 
             # Attempt to remove empty parent directories
             current_dir = os.path.dirname(session_path)
-            while current_dir != self.sessions_dir and not os.listdir(current_dir):
+            while current_dir != self.sessions_dir:
                 try:
+                    files = os.listdir(current_dir)
+                    # Consider directory empty if it only contains lock files
+                    remaining = [f for f in files if not f.endswith(".lock")]
+                    if remaining:
+                        break
+
+                    # To rmdir, we must remove all files including lock files
+                    for f in files:
+                        os.remove(os.path.join(current_dir, f))
+
                     os.rmdir(current_dir)
                     current_dir = os.path.dirname(current_dir)
                 except OSError as e:
                     print(
-                        f"Error deleting empty directory {current_dir}: {e}",
+                        f"Error deleting directory {current_dir}: {e}",
                         file=sys.stderr,
                     )
-                    break  # Stop if we encounter an error or non-empty directory
+                    break
 
         # Delete from index with Atomic Update pattern
         with file_lock(self.index_lock_path):
@@ -397,7 +411,7 @@ class SessionRepository(FileRepository):
             session_id: ID of the session whose metadata should be updated
         """
         with file_lock(self.index_lock_path):
-            index = self.load_index()
+            index = self._load_index_no_lock()
 
             if session_id in index.sessions:
                 index.sessions[session_id].last_updated_at = get_current_timestamp(

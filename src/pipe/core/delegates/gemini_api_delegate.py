@@ -6,7 +6,7 @@ from pipe.core.models.turn import (
     ModelResponseTurn,
 )
 from pipe.core.models.unified_chunk import MetadataChunk, TextChunk, ToolCallChunk
-from pipe.core.repositories.streaming_repository import StreamingRepository
+from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
 from pipe.core.services.gemini_client_service import GeminiClientService
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
@@ -37,6 +37,13 @@ def run_stream(
 
     # Ensure PIPE_SESSION_ID is set for mcp_server
     os.environ["PIPE_SESSION_ID"] = session_id
+
+    # Initialize streaming log repository for tee-style logging
+    streaming_log_repo = StreamingLogRepository(
+        project_root=session_service.project_root,
+        session_id=session_id,
+        settings=settings,
+    )
 
     while tool_call_count < max_tool_calls:
         session_turn_service.merge_pool_into_turns(session_id)
@@ -165,6 +172,29 @@ def run_stream(
         try:
             tool_result = execute_tool(function_call.name, dict(function_call.args))
 
+            # Log tool result to streaming log
+            if streaming_log_repo:
+                if (
+                    isinstance(tool_result, dict)
+                    and "error" in tool_result
+                    and tool_result["error"] is not None
+                ):
+                    status = "failed"
+                    output = str(tool_result["error"])
+                else:
+                    status = "succeeded"
+                    if isinstance(tool_result, dict):
+                        output = tool_result.get("message", str(tool_result))
+                    else:
+                        output = str(tool_result)
+
+                truncated_output = f"{output[:200]}..." if len(output) > 200 else output
+                log_content = (
+                    f"TOOL_RESULT: {function_call.name} | status: {status} | "
+                    f"output: {truncated_output}"
+                )
+                streaming_log_repo.append_log(log_content, "TOOL_RESULT")
+
             # Update the FunctionCallingTurn in the pool with raw_response
             # (contains thought signature)
             if gemini_client.last_raw_response:
@@ -180,6 +210,18 @@ def run_stream(
 
         except Exception as e:
             tool_result = {"error": str(e)}
+
+            # Log tool error to streaming log
+            if streaming_log_repo:
+                error_msg = str(e)
+                truncated_error = (
+                    f"{error_msg[:200]}..." if len(error_msg) > 200 else error_msg
+                )
+                log_content = (
+                    f"TOOL_RESULT: {function_call.name} | status: failed | "
+                    f"output: {truncated_error}"
+                )
+                streaming_log_repo.append_log(log_content, "TOOL_RESULT")
 
         reloaded_session = session_service.get_session(session_id)
         if reloaded_session:
@@ -235,9 +277,10 @@ def run_stream(
             )
 
     # Cleanup streaming.log after model response is complete
-    sessions_dir = os.path.join(session_service.project_root, "sessions")
-    streaming_repo = StreamingRepository(sessions_dir)
-    streaming_repo.cleanup(session_id)
+    streaming_log_repo = StreamingLogRepository(
+        session_service.project_root, session_id, settings
+    )
+    streaming_log_repo.delete()
 
     # Return final data
     yield (

@@ -463,6 +463,55 @@ When generating tests, the following quality standards must be strictly followed
 - ❌ **No unclear assertions** (avoid `assert result` without context)
 - ❌ **No state leakage** between tests (use fixtures with proper scope)
 - ❌ **No unnecessary mocks** for pure functions (Models/Domains/Collections)
+- ❌ **No unrestored global state changes** (see "Global State Management" below)
+
+### Global State Management
+
+**CRITICAL**: Tests that modify global state (current directory, environment variables, etc.) **MUST** restore the original state after completion. Failure to do so will cause other tests to fail in unpredictable ways.
+
+#### Common Global State Issues
+
+**❌ BAD - Changes current directory without restoring:**
+```python
+def test_relative_path(self, tmp_path):
+    """Test with relative path."""
+    os.chdir(tmp_path)  # ❌ Never restored - breaks subsequent tests!
+    repo = SomeRepository(project_root=".")
+    assert repo.project_root == str(tmp_path.resolve())
+```
+
+**✅ GOOD - Uses try-finally to restore state:**
+```python
+def test_relative_path(self, tmp_path):
+    """Test with relative path."""
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        repo = SomeRepository(project_root=".")
+        assert repo.project_root == str(tmp_path.resolve())
+    finally:
+        os.chdir(original_cwd)  # ✅ Always restored
+```
+
+**✅ BETTER - Uses monkeypatch fixture (pytest recommended):**
+```python
+def test_relative_path(self, tmp_path, monkeypatch):
+    """Test with relative path."""
+    monkeypatch.chdir(tmp_path)  # ✅ Automatically restored by pytest
+    repo = SomeRepository(project_root=".")
+    assert repo.project_root == str(tmp_path.resolve())
+```
+
+#### Other Common Global State Changes
+
+Always restore these after modification:
+- `os.chdir()` - Current working directory
+- `os.environ` - Environment variables
+- `sys.path` - Python import paths
+- Module-level variables or singletons
+- File system state outside `tmp_path`
+
+Use `monkeypatch` fixture whenever possible for automatic cleanup.
 
 ### Mandatory Requirements
 

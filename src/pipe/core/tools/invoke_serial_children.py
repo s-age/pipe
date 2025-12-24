@@ -100,7 +100,6 @@ def invoke_serial_children(
         else:
             processed_tasks.append(task)
 
-
     # Launch manager and exit parent process
     # Pass both parent and child session info, plus session creation parameters
     launch_manager(

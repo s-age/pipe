@@ -1,7 +1,7 @@
 import subprocess
 
-from pipe.core.factories.file_repository_factory import FileRepositoryFactory
 from pipe.core.models.tool_result import ToolResult
+from pipe.core.utils.path import get_project_root
 from pydantic import BaseModel
 
 
@@ -24,31 +24,35 @@ class PyCheckerResult(BaseModel):
     error: str | None = None
 
 
-def py_checker(project_root: str) -> ToolResult[PyCheckerResult]:
+def py_checker() -> ToolResult[PyCheckerResult]:
     """
-    Runs a sequence of Python code quality checks and fixes:
+    Runs ALL of the following Python code quality checks and fixes in a
+    single execution:
     1. ruff check --fix (lint and auto-fix)
     2. ruff format (code formatting)
     3. mypy (type checking)
 
-    Args:
-        project_root: The root directory of the Python project to check.
+    IMPORTANT: This tool executes all three steps automatically in one call.
+    You will receive results for all steps in a single response.
+    Do NOT call this tool multiple times to run individual steps.
+
+    NOTE: If errors remain after execution, they require manual fixes.
+    Running this tool again without making code changes will produce the
+    same errors. Only call this tool again after you have manually fixed
+    the reported issues.
+
+    This tool performs static analysis on the entire project and may take
+    approximately 30 seconds or more to complete, depending on project size.
+    Please wait for the complete result and do not call this tool multiple
+    times in parallel.
 
     Returns:
-        A dictionary containing the results of each step, including stdout, stderr,
-        and any errors encountered.
+        A dictionary containing the results of each step, including stdout,
+        stderr, and any errors encountered.
     """
     try:
-        # Create repository (auto-loads project_root and settings)
-        repo = FileRepositoryFactory.create()
-
-        # Validate and get absolute path
-        if not repo.exists(project_root):
-            return ToolResult(error=f"Project root does not exist: {project_root}")
-        if not repo.is_dir(project_root):
-            return ToolResult(error=f"Project root is not a directory: {project_root}")
-
-        abs_project_root = repo.get_absolute_path(project_root)
+        # Get project root automatically
+        abs_project_root = get_project_root()
 
         results = PyCheckerResult()
 
@@ -124,8 +128,5 @@ def py_checker(project_root: str) -> ToolResult[PyCheckerResult]:
 
         return ToolResult(data=results)
 
-    except ValueError as e:
-        # FileSystemRepository validation errors
-        return ToolResult(error=f"Invalid project root: {e}")
     except Exception as e:
         return ToolResult(error=f"Unexpected error in py_checker: {str(e)}")

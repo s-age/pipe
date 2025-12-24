@@ -117,12 +117,16 @@ def execute_agent_task(
 
     # Log errors to streaming log if execution failed
     if result.returncode != 0 and parent_session_id:
-        from pathlib import Path
+        from pipe.core.repositories.settings_repository import SettingsRepository
+        from pipe.core.repositories.streaming_log_repository import (
+            StreamingLogRepository,
+        )
 
-        from pipe.core.repositories.streaming_repository import StreamingRepository
-
-        streaming_logs_dir = str(Path(project_root) / "sessions" / "streaming")
-        streaming_repo = StreamingRepository(streaming_logs_dir)
+        settings_repo = SettingsRepository()
+        settings = settings_repo.load()
+        streaming_log_repo = StreamingLogRepository(
+            project_root, parent_session_id, settings
+        )
 
         error_log = (
             f"[task_executor] Agent task failed with exit code {result.returncode}\n"
@@ -134,7 +138,7 @@ def execute_agent_task(
         if created_session_id:
             error_log += f"[task_executor] Created session: {created_session_id}\n"
 
-        streaming_repo.append(parent_session_id, error_log)
+        streaming_log_repo.append_log(error_log, "ERROR")
 
     # Include created session ID in output preview if available
     output_preview = result.stdout[:500] if result.stdout else None

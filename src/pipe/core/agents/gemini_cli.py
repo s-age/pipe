@@ -29,9 +29,19 @@ def call_gemini_cli(
 ) -> dict:
     # Import here to avoid circular dependency
     from pipe.core.factories.service_factory import ServiceFactory
+    from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
 
     settings = session_service.settings
     project_root = session_service.project_root
+
+    # Initialize streaming log repository for tee-style logging
+    streaming_log_repo = None
+    if session_service.current_session_id:
+        streaming_log_repo = StreamingLogRepository(
+            project_root=project_root,
+            session_id=session_service.current_session_id,
+            settings=settings,
+        )
 
     model_name = settings.model.name
     if not model_name:
@@ -82,7 +92,7 @@ def call_gemini_cli(
 
         full_response = ""
         assistant_content = ""
-        tool_calls = []  # Store tool_use events
+        tool_calls: list[dict] = []  # Store tool_use events
         tool_results = []  # Store tool_result events
 
         while True:
@@ -97,12 +107,25 @@ def call_gemini_cli(
                 data = json.loads(line.strip())
                 if data.get("type") == "message" and data.get("role") == "assistant":
                     assistant_content += data.get("content", "")
-                elif data.get("type") == "tool_use":
-                    # Store tool call for later processing
-                    tool_calls.append(data)
                 elif data.get("type") == "tool_result":
                     # Store tool result for later processing
                     tool_results.append(data)
+                    # Tee to streaming log
+                    if streaming_log_repo:
+                        tool_id = data.get("tool_id", "")
+                        status = data.get("status", "")
+                        output = data.get("output", "")
+                        error = data.get("error", "")
+                        truncated_output = (
+                            f"{output[:200]}..." if len(output) > 200 else output
+                        )
+                        log_content = (
+                            f"TOOL_RESULT: {tool_id} | status: {status} | "
+                            f"output: {truncated_output}"
+                        )
+                        if error:
+                            log_content += f" | error: {error}"
+                        streaming_log_repo.append_log(log_content, "TOOL_RESULT")
             except json.JSONDecodeError:
                 pass
 
@@ -257,7 +280,7 @@ def call_gemini_cli(
                     # Use a timeout to avoid hanging indefinitely
                     # 300 seconds (5 minutes) to allow for complex compression
                     stdout, stderr = process.communicate(
-                        pretty_printed_prompt, timeout=300
+                        pretty_printed_prompt, timeout=900
                     )
                 except subprocess.TimeoutExpired:
                     process.kill()

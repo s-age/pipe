@@ -2,7 +2,7 @@ import json
 
 from pipe.core.models.results.ts_run_and_test_code_result import TsRunAndTestCodeResult
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestTsRunAndTestCodeResult:

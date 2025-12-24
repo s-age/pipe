@@ -218,6 +218,15 @@ class GeminiClientService:
             lstrip_blocks=True,
         )
 
+        # Add custom filter to serialize Pydantic models to dict for JSON serialization
+        def pydantic_dump(obj):
+            """Convert Pydantic model to dict using model_dump()."""
+            if hasattr(obj, "model_dump"):
+                return obj.model_dump()
+            return obj
+
+        template_env.filters["pydantic_dump"] = pydantic_dump
+
         static_content = ""
         dynamic_content = ""
 

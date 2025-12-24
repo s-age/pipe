@@ -2,7 +2,7 @@ import json
 
 from pipe.core.models.results.web_fetch_result import WebFetchResult
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestWebFetchResultModel:

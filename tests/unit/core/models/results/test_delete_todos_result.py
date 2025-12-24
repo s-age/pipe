@@ -4,8 +4,8 @@ import json
 
 from pipe.core.models.results.delete_todos_result import DeleteTodosResult
 
-from tests.helpers.results_factory import ResultFactory
-from tests.helpers.todo_factory import TodoFactory
+from tests.factories.models.results.results_factory import ResultFactory
+from tests.factories.models.todo_factory import TodoFactory
 
 
 class TestDeleteTodosResult:

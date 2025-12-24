@@ -2,7 +2,7 @@ import pytest
 from pipe.core.models.artifact import Artifact
 from pydantic import ValidationError
 
-from tests.helpers import ArtifactFactory
+from tests.factories.models import ArtifactFactory
 
 
 class TestArtifactModel:

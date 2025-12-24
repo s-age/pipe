@@ -7,7 +7,7 @@ from pipe.core.models.results.session_tree_result import (
 )
 from pydantic import ValidationError
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestSessionTreeNode:

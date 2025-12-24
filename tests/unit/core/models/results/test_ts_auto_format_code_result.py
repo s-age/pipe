@@ -9,7 +9,7 @@ from pipe.core.models.results.ts_auto_format_code_result import (
 )
 from pydantic import ValidationError
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestTsAutoFormatCodeResult:

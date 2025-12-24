@@ -2,7 +2,7 @@ import pytest
 from pipe.core.models.prompts.todo import PromptTodo
 from pydantic import ValidationError
 
-from tests.helpers.prompt_todo_factory import PromptTodoFactory
+from tests.factories.models.prompts.prompt_todo_factory import PromptTodoFactory
 
 
 class TestPromptTodoModel:

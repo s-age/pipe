@@ -1,6 +1,6 @@
 from pipe.core.models.results.run_shell_command_result import RunShellCommandResult
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestRunShellCommandResult:

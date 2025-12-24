@@ -6,7 +6,7 @@ import pytest
 from pipe.core.models.results.write_file_result import WriteFileResult
 from pydantic import ValidationError
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestWriteFileResult:

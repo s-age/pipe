@@ -35,8 +35,8 @@ def validate_script_path(script_name: str, project_root: str) -> Path:
     # Get absolute path to scripts directory
     scripts_dir = (Path(project_root) / "src/pipe/scripts").resolve()
 
-    # Check for invalid characters in script name
-    if "/" in script_name or "\\" in script_name or ".." in script_name:
+    # Check for invalid characters (allow forward slashes for subdirectories)
+    if "\\" in script_name or ".." in script_name:
         raise ScriptValidationError(f"Invalid characters in script name: {script_name}")
 
     # Construct absolute path and normalize

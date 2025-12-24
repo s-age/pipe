@@ -1,7 +1,7 @@
 # Python Testing Strategy - src/pipe/core Layered Approach
 
 ## Purpose
-This document defines a comprehensive testing strategy for each layer under `src/pipe/core`, outlining role definitions, helpers, and available tools for automated test generation.
+This document defines a comprehensive testing strategy for each layer under `src/pipe/core`, outlining role definitions, factories, and available tools for automated test generation.
 
 ## Principles
 
@@ -27,14 +27,14 @@ Tools (External Tool Integration)
 
 ---
 
-## Test Helper & Factory Design
+## Test Factory Design
 
-### Factory Helper Pattern
+### Factory Pattern
 
-Helpers are provided to eliminate duplication in test data generation and improve maintainability.
+Factories are provided to eliminate duplication in test data generation and improve maintainability.
 
 ```python
-# tests/factories/__init__.py
+# tests/factories/models/__init__.py
 """Test data factories for unit tests."""
 
 from .session_factory import SessionFactory
@@ -49,7 +49,7 @@ __all__ = [
 ```
 
 ```python
-# tests/factories/session_factory.py
+# tests/factories/models/session_factory.py
 """Factory for creating Session test fixtures."""
 
 from typing import Optional
@@ -59,7 +59,7 @@ from pipe.core.collections.turns import TurnCollection
 
 
 class SessionFactory:
-    """Helper class for creating Session objects in tests."""
+    """Factory class for creating Session objects in tests."""
 
     @staticmethod
     def create(
@@ -131,7 +131,7 @@ class SessionFactory:
         return SessionFactory.create(turns=TurnCollection(turns), **kwargs)
 
 
-# tests/factories/turn_factory.py
+# tests/factories/models/turn_factory.py
 """Factory for creating Turn test fixtures."""
 
 from pipe.core.models.turn import (
@@ -142,7 +142,7 @@ from pipe.core.models.turn import (
 
 
 class TurnFactory:
-    """Helper class for creating Turn objects in tests."""
+    """Factory class for creating Turn objects in tests."""
 
     @staticmethod
     def create_user_task(
@@ -192,7 +192,7 @@ class TurnFactory:
         return turns
 
 
-# tests/factories/settings_factory.py
+# tests/factories/models/settings_factory.py
 """Factory for creating Settings test fixtures."""
 
 from unittest.mock import Mock
@@ -200,7 +200,7 @@ from pipe.core.models.settings import Settings
 
 
 class SettingsFactory:
-    """Helper class for creating Settings objects in tests."""
+    """Factory class for creating Settings objects in tests."""
 
     @staticmethod
     def create_mock(
@@ -235,7 +235,7 @@ class SettingsFactory:
 
 ```python
 # tests/unit/core/services/test_session_service.py
-from tests.factories import SessionFactory, SettingsFactory
+from tests.factories.models import SessionFactory, SettingsFactory
 
 
 def test_example_with_factories():
@@ -508,7 +508,7 @@ session.copy(deep=True)               # ❌ Deprecated
 ## Summary
 
 - **Layer structure is important**: Even when using mocks, a testing strategy tailored to each layer's responsibilities is necessary.
-- **Factory helpers are effective**: Eliminate duplication in test data generation and improve maintainability.
+- **Factories are effective**: Eliminate duplication in test data generation and improve maintainability.
 - **Mock usage**:
   - Models/Domains/Collections → No mocks needed (Pure logic/Data structures)
   - Repositories → Basically real file I/O (verify with tmp_path), mock only abnormal cases

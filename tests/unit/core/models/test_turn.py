@@ -9,7 +9,7 @@ from pipe.core.models.turn import (
 )
 from pydantic import TypeAdapter, ValidationError
 
-from tests.helpers.turn_factory import TurnFactory
+from tests.factories.models.turn_factory import TurnFactory
 
 
 class TestTurnModels:

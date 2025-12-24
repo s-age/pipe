@@ -99,9 +99,17 @@ def execute_tasks_serially(
 
     Note:
         If any task fails (exit_code != 0), immediately returns
-        including the failed task's result (Short-Circuit behavior)
+        including the failed task's result (Short-Circuit behavior).
+
+        For script tasks with max_retries > 0, retry logic works as follows:
+        1. Find the preceding agent task (backtrack through previous tasks)
+        2. Re-execute the agent task with error information
+        3. Re-execute the script task
+        4. Repeat up to max_retries times
     """
     results: list[TaskExecutionResult] = []
+    # Track last created session ID for each agent task
+    last_agent_session_id: str | None = None
 
     for i, task in enumerate(tasks):
         print(
@@ -119,9 +127,127 @@ def execute_tasks_serially(
                 purpose,
                 background,
             )
+
+            # Extract session ID from output for retry purposes
+            if result.output_preview:
+                import re
+
+                match = re.search(
+                    r"\[CREATED_SESSION:([a-f0-9/]+)\]", result.output_preview
+                )
+                if match:
+                    last_agent_session_id = match.group(1)
+                elif child_session_id:
+                    # Using existing session
+                    last_agent_session_id = child_session_id
+
         elif task.type == "script":
-            # Scripts use parent session ID
-            result = execute_script_task(task, parent_session_id, project_root)
+            # Execute script task with retry logic
+            result = None
+            max_attempts = task.max_retries + 1
+
+            for attempt in range(max_attempts):
+                if attempt > 0:
+                    print(
+                        f"[serial_manager] Retry attempt {attempt}/{task.max_retries} "
+                        f"for script task {i+1}",
+                        flush=True,
+                    )
+
+                    # Find the preceding agent task to re-execute
+                    agent_task_index = None
+                    for j in range(i - 1, -1, -1):
+                        if tasks[j].type == "agent":
+                            agent_task_index = j
+                            break
+
+                    if agent_task_index is None:
+                        print(
+                            "[serial_manager] WARNING: No preceding agent task found "
+                            "for retry. Retrying script only.",
+                            flush=True,
+                        )
+                    else:
+                        # Re-execute the agent task with error information
+                        agent_task = tasks[agent_task_index]
+                        error_info = (
+                            result.output_preview
+                            if result and result.output_preview
+                            else "Script validation failed"
+                        )
+
+                        # Create instruction with error context
+                        retry_instruction = (
+                            f"{agent_task.instruction}\n\n"
+                            f"PREVIOUS ATTEMPT FAILED:\n"
+                            f"Error output from validation script:\n"
+                            f"```\n{error_info}\n```\n\n"
+                            f"Please fix the issues and try again."
+                        )
+
+                        # Create a new agent task with error context
+                        retry_agent_task = AgentTask(
+                            type="agent", instruction=retry_instruction
+                        )
+
+                        print(
+                            f"[serial_manager] Re-executing agent task "
+                            f"{agent_task_index+1} with error context",
+                            flush=True,
+                        )
+
+                        # Re-execute agent using session from previous execution
+                        agent_result = execute_agent_task(
+                            retry_agent_task,
+                            last_agent_session_id,  # Continue existing session
+                            project_root,
+                            parent_session_id,
+                            purpose,
+                            background,
+                        )
+
+                        if agent_result.exit_code != 0:
+                            print(
+                                f"[serial_manager] Agent re-execution FAILED "
+                                f"(exit code {agent_result.exit_code})",
+                                flush=True,
+                            )
+                            # Don't save agent retry result, but abort retry loop
+                            break
+
+                        print(
+                            "[serial_manager] Agent re-execution completed "
+                            "successfully",
+                            flush=True,
+                        )
+
+                # Execute (or re-execute) the script task
+                result = execute_script_task(task, parent_session_id, project_root)
+
+                # Success - stop retrying
+                if result.exit_code == 0:
+                    if attempt > 0:
+                        print(
+                            f"[serial_manager] Script succeeded on retry "
+                            f"attempt {attempt}",
+                            flush=True,
+                        )
+                    break
+
+                # Failure - log and continue to next attempt if retries remain
+                if attempt < task.max_retries:
+                    print(
+                        f"[serial_manager] Script failed with exit code "
+                        f"{result.exit_code}",
+                        flush=True,
+                    )
+                else:
+                    # Final attempt failed
+                    print(
+                        f"[serial_manager] Script failed after {max_attempts} attempts "
+                        f"(exit code {result.exit_code})",
+                        flush=True,
+                    )
         else:
             raise ValueError(f"Unknown task type: {task.type}")
 

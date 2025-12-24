@@ -2,7 +2,7 @@ import pytest
 from pipe.core.models.search_result import SessionSearchResult
 from pydantic import ValidationError
 
-from tests.helpers.search_result_factory import SearchResultFactory
+from tests.factories.models.search_result_factory import SearchResultFactory
 
 
 class TestSessionSearchResult:

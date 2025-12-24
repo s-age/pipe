@@ -81,17 +81,21 @@ def launch_manager(
         parent_session_id,
     ] + extra_args
 
-    # Launch as detached process
-    subprocess.Popen(
-        cmd,
-        cwd=project_root,
-        start_new_session=True,  # Independent from parent process
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        stdin=subprocess.DEVNULL,
-    )
+    # Launch as detached process with logging
+    log_file = sessions_dir / f"{parent_session_id}_{manager_type}_manager.log"
+
+    with open(log_file, "w", encoding="utf-8") as log_f:
+        subprocess.Popen(
+            cmd,
+            cwd=project_root,
+            start_new_session=True,  # Independent from parent process
+            stdout=log_f,
+            stderr=subprocess.STDOUT,  # Redirect stderr to stdout (same log file)
+            stdin=subprocess.DEVNULL,
+        )
 
     print(f"[task_launcher] Launched {manager_type} manager (detached)")
+    print(f"[task_launcher] Log file: {log_file}")
     print("[task_launcher] Parent process exiting to save tokens...")
 
     # Exit parent process immediately

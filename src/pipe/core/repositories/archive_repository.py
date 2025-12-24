@@ -72,10 +72,13 @@ class ArchiveRepository(FileRepository):
         Returns:
             The path where the backup was saved
         """
-        # Create backup filename: {session_id}_{timestamp}.json
-        # Replace slashes in session_id with underscores for filesystem compatibility
-        safe_session_id = session_id.replace("/", "__")
-        backup_filename = f"{safe_session_id}_{timestamp}.json"
+        # Create backup filename: {hash(session_id)}-{timestamp}.json
+        session_hash = hashlib.sha256(session_id.encode("utf-8")).hexdigest()
+
+        # Ensure timestamp is filesystem safe (remove colons)
+        safe_timestamp = timestamp.replace(":", "")
+
+        backup_filename = f"{session_hash}-{safe_timestamp}.json"
         backup_path = os.path.join(self.backups_dir, backup_filename)
 
         # Serialize and write the backup
@@ -95,8 +98,8 @@ class ArchiveRepository(FileRepository):
             List of (backup_filename, backup_path) tuples,
             sorted by timestamp (most recent first)
         """
-        safe_session_id = session_id.replace("/", "__")
-        prefix = f"{safe_session_id}_"
+        session_hash = hashlib.sha256(session_id.encode("utf-8")).hexdigest()
+        prefix = f"{session_hash}-"
 
         backups = []
         for filename in os.listdir(self.backups_dir):
@@ -126,6 +129,10 @@ class ArchiveRepository(FileRepository):
             raise FileNotFoundError(f"Backup file not found: {backup_path}")
 
         data = self._read_json(backup_path)
+        if data is None:
+            # If _read_json returns None, it means JSON was invalid or file was empty.
+            # We raise a ValueError to indicate invalid data format.
+            raise ValueError(f"Invalid JSON data in backup file: {backup_path}")
         return Session.model_validate(data)
 
     def delete_backup(self, backup_path: str) -> bool:
@@ -307,17 +314,15 @@ class ArchiveRepository(FileRepository):
         Returns:
             ISO 8601 formatted timestamp, or None if parsing fails
         """
+        import re
+
+        match = re.search(r"(\d{4}-\d{2}-\d{2}T\d{6}\.\d{6}[+-]\d{4})", filename)
+        if not match:
+            return None
+
+        datetime_str = match.group(1)
         try:
-            name_without_ext = filename.replace(".json", "")
-            parts = name_without_ext.split("-", 1)
-
-            if len(parts) != 2:
-                return None
-
-            datetime_str = parts[1]
             # Parse the datetime string using strptime and convert to ISO format
-            # This operation is specific to extracting from filename format,
-            # so using datetime.strptime directly is appropriate here
             dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H%M%S.%f%z")
             return dt.isoformat()
         except (ValueError, IndexError):

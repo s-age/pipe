@@ -2,7 +2,7 @@ import json
 
 from pipe.core.models.results.py_run_and_test_code_result import PyRunAndTestCodeResult
 
-from tests.helpers.results_factory import ResultFactory
+from tests.factories.models.results.results_factory import ResultFactory
 
 
 class TestPyRunAndTestCodeResult:

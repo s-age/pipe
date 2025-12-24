@@ -2,7 +2,11 @@
 #
 # Validate code quality gates for entire project
 #
-# Usage: validate_code.sh
+# Usage: validate_code.sh [--verbose] [--coverage]
+#
+# Options:
+#   --verbose    Enable verbose output for pytest
+#   --coverage   Enable coverage reporting for pytest
 #
 # This script:
 # 1. Runs Ruff linting with auto-fix on entire project
@@ -17,6 +21,27 @@
 #
 
 set -euo pipefail
+
+# Parse arguments
+VERBOSE_ENABLED=false
+COVERAGE_ENABLED=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --verbose)
+            VERBOSE_ENABLED=true
+            shift
+            ;;
+        --coverage)
+            COVERAGE_ENABLED=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: validate_code.sh [--verbose] [--coverage]"
+            exit 1
+            ;;
+    esac
+done
 
 echo "=================================================="
 echo "Quality Gate Validation"
@@ -56,7 +81,19 @@ echo ""
 
 # Quality gate 4: PyTest
 echo "[4/4] Running PyTest..."
-if poetry run pytest -v; then
+PYTEST_ARGS=""
+
+if [ "$VERBOSE_ENABLED" = true ]; then
+    echo "Verbose output enabled"
+    PYTEST_ARGS="$PYTEST_ARGS -v"
+fi
+
+if [ "$COVERAGE_ENABLED" = true ]; then
+    echo "Coverage reporting enabled"
+    PYTEST_ARGS="$PYTEST_ARGS --cov=src/pipe --cov-report=term-missing --cov-report=html"
+fi
+
+if poetry run pytest $PYTEST_ARGS; then
     echo "✅ PyTest passed"
 else
     echo "❌ PyTest failed"

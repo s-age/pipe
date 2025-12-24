@@ -38,7 +38,7 @@ def execute_agent_task(
     started_at = get_current_timestamp()
 
     # Build takt command
-    cmd = ["poetry", "run", "takt"]
+    cmd = ["poetry", "run", "takt", "--output-format", "stream-json"]
 
     if session_id:
         # Use existing session

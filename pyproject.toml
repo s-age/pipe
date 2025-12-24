@@ -48,7 +48,6 @@ filterwarnings = [
     "ignore:Field name \"done\" shadows an attribute in parent \"Operation\".*:UserWarning",
     "ignore:Field name \"error\" shadows an attribute in parent \"Operation\".*:UserWarning",
 ]
-addopts = "--cov=src/pipe --cov-report=term-missing --cov-report=html"
 
 [tool.ruff]
 line-length = 88

@@ -15,12 +15,6 @@ def run(
     Handles the logic for the 'gemini-cli' mode by delegating to call_gemini_cli.
     This function is now only responsible for getting the model's response text.
     """
-    # DEBUG: Log delegate entry
-    with open("/tmp/gemini_cli_debug.log", "a") as f:
-        f.write("gemini_cli_delegate.run called\n")
-        f.write(f"output_format: {args.output_format}\n")
-        f.write(f"current_session_id: {session_service.current_session_id}\n")
-
     # Call the agent and return the response text.
     # The dispatcher will be responsible for creating and adding the turn.
     result = call_gemini_cli(session_service, args.output_format)

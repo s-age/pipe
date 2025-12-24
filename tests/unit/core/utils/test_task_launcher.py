@@ -9,7 +9,6 @@ from pipe.core.utils.task_launcher import launch_manager
 class TestLaunchManager:
     """Tests for task_launcher utility."""
 
-
     @pytest.fixture
     def mock_project_root(self, tmp_path):
         """Mock get_project_root to return a temporary directory."""

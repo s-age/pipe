@@ -12,9 +12,12 @@ Used by any agent tasked with writing tests. Invoked via detailed instruction fr
 
 ```mermaid
 graph TD
-    Start([Start: Receive target file]) --> Step1[Step 1: Read and analyze target file]
+    Start([Start: Receive target file]) --> Step1A[Step 1a: py_get_symbol_references<br/>MANDATORY]
+    Step1A --> Step1B[Step 1b: py_analyze_code<br/>MANDATORY]
+    Step1B --> Step1C[Step 1c: py_test_strategist<br/>MANDATORY]
+    Step1C --> Step1D[Step 1d: Manual analysis]
 
-    Step1 --> Step2[Step 2: Review applicable test strategies]
+    Step1D --> Step2[Step 2: Review applicable test strategies]
 
     Step2 --> Step3[Step 3: Plan test structure]
 
@@ -38,7 +41,10 @@ graph TD
 
     style Start fill:#e1f5e1
     style End fill:#e1f5e1
-    style Step1 fill:#fff4e1
+    style Step1A fill:#ffdddd
+    style Step1B fill:#ffdddd
+    style Step1C fill:#ffdddd
+    style Step1D fill:#fff4e1
     style Step2 fill:#fff4e1
     style Step3 fill:#e1f0ff
     style Step4 fill:#ffe1f0
@@ -58,16 +64,63 @@ graph TD
 
 ### Step 1: Read and Analyze Target File
 
-**Actions**:
-1. Read the target source file: `{target_file_path}`
-2. Identify:
-   - Public interface (classes, methods, functions)
-   - Dependencies (imports, external calls)
-   - Data flow (inputs, outputs, state changes)
-   - Edge cases (empty inputs, boundary values, None)
-   - Error conditions (exceptions, validation failures)
+**CRITICAL**: The following tool executions are **MANDATORY** and must be performed in order. Do NOT skip any tool.
 
-**Output**: Mental model of what needs testing
+#### Step 1a: Understand Impact Scope (Mandatory)
+```python
+py_get_symbol_references(file_path="{target_file_path}")
+```
+This tool reveals:
+- How many files depend on this code
+- Which symbols are actively used
+- The impact radius of potential bugs
+
+**Purpose**: Determine test priority and coverage density based on usage.
+
+#### Step 1b: Extract Specifications and Docstrings (Mandatory)
+```python
+py_analyze_code(file_path="{target_file_path}")
+```
+This tool provides:
+- Docstrings for all classes, methods, and functions
+- Expected behavior descriptions
+- Parameter details and return values
+- Usage examples from documentation
+
+**Purpose**: Build test cases from **specifications** (what it should do), not implementation details (how it does it).
+
+#### Step 1c: Determine Test Strategy (Mandatory)
+```python
+py_test_strategist(file_path="{target_file_path}")
+```
+This tool analyzes:
+- Complexity metrics (cyclomatic complexity, nesting depth)
+- Required mocking patterns
+- Suggested test structure
+- Risk areas requiring extra coverage
+
+**Purpose**: Know **how to test** (mocking strategy, complexity handling) before writing any code.
+
+#### Step 1d: Manual Analysis
+After running the three mandatory tools, manually identify:
+- Public interface (classes, methods, functions)
+- Dependencies (imports, external calls)
+- Data flow (inputs, outputs, state changes)
+- Edge cases (empty inputs, boundary values, None)
+- Error conditions (exceptions, validation failures)
+
+**Output**: Complete test specification including:
+- Impact scope (from `py_get_symbol_references`)
+- Behavioral specifications (from `py_analyze_code`)
+- Technical test strategy (from `py_test_strategist`)
+- Manual analysis notes
+
+**Rationale**: This "golden routine" ensures tests are:
+1. **Prioritized by importance** (symbol references)
+2. **Aligned with specifications** (docstrings, not implementation)
+3. **Technically sound** (proper mocking and complexity handling)
+
+Skipping these tools is equivalent to climbing a mountain without a map—it invites coverage gaps and wasted effort.
 
 ---
 
@@ -226,9 +279,11 @@ git commit -m "test: add tests for {filename}"
 - ❌ Modifying production code without user approval
 
 ### Prohibited Shortcuts
+- ❌ Skipping mandatory tool executions in Step 1 (py_get_symbol_references, py_analyze_code, py_test_strategist)
 - ❌ Proceeding to next step if current step fails
 - ❌ Batching quality checks (run sequentially)
 - ❌ Assuming tests pass without running them
+- ❌ Writing tests based solely on implementation details instead of specifications
 
 ---
 
@@ -249,7 +304,16 @@ Input:
   layer: repositories
 
 Execution:
-  Step 1: Read archive_repository.py, identify save(), restore(), delete() methods
+  Step 1a: py_get_symbol_references(src/pipe/core/repositories/archive_repository.py)
+           → Found 5 references in service layer (high priority)
+  Step 1b: py_analyze_code(src/pipe/core/repositories/archive_repository.py)
+           → Extracted docstrings for save(), restore(), delete()
+           → Identified spec: "save() must create parent dirs", "delete() must handle missing files"
+  Step 1c: py_test_strategist(src/pipe/core/repositories/archive_repository.py)
+           → Complexity: Medium (cyclomatic=8)
+           → Strategy: Use tmp_path for real file I/O, mock Path.exists for error cases
+  Step 1d: Manual analysis
+           → Identify edge cases: empty archives, corrupted files, permission errors
   Step 2: Review roles/python/tests/core/repositories.md (use tmp_path, test CRUD)
   Step 3: Plan TestArchiveRepositorySave, TestArchiveRepositoryRestore, etc.
   Step 4: Write test file with fixtures, test classes, methods
@@ -265,6 +329,8 @@ Output: Success, test committed
 
 ## Notes
 
+- **Mandatory tool execution**: Step 1a-1c tools are NON-NEGOTIABLE. They form the "golden routine" that prevents coverage gaps and wasted effort
+- **Specification-driven testing**: Use `py_analyze_code` output (docstrings) to design tests, not implementation details
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
 - **No skipping**: Quality checks must all pass before commit

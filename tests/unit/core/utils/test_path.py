@@ -94,3 +94,22 @@ class TestGetProjectRoot:
 
         # Verify
         assert root == str(root_dir)
+
+    def test_get_project_root_empty_markers_triggers_fallback(self, tmp_path):
+        """Test that empty markers list triggers fallback logic."""
+        # Setup
+        root_dir = tmp_path / "project"
+        root_dir.mkdir()
+        (root_dir / "pyproject.toml").touch()
+
+        # Execute with empty markers
+        with patch("pipe.core.utils.path.__file__", str(root_dir / "src" / "path.py")):
+            # markers=() means it will never find a marker and go to fallback
+            root = get_project_root(start_dir=str(root_dir), markers=())
+
+            # Fallback: 3 levels up from root_dir/src
+            # root_dir/src -> root_dir -> tmp_path -> tmp_path's parent
+            expected = os.path.abspath(
+                os.path.join(str(root_dir / "src"), "..", "..", "..")
+            )
+            assert root == expected

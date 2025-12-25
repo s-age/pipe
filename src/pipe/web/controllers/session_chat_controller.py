@@ -1,9 +1,5 @@
 from flask import Request
-from pipe.web.actions import (
-    SessionGetAction,
-    SessionTreeAction,
-    SettingsGetAction,
-)
+from pipe.web.actions import SessionGetAction, SessionTreeAction, SettingsGetAction
 from pipe.web.dispatcher import dispatch_action
 from pipe.web.exceptions import HttpException
 from pipe.web.responses import ApiResponse

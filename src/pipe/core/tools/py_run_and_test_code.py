@@ -8,9 +8,7 @@ import subprocess
 import tempfile
 
 from pipe.core.factories.file_repository_factory import FileRepositoryFactory
-from pipe.core.models.results.py_run_and_test_code_result import (
-    PyRunAndTestCodeResult,
-)
+from pipe.core.models.results.py_run_and_test_code_result import PyRunAndTestCodeResult
 from pipe.core.models.tool_result import ToolResult
 
 

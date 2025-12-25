@@ -2,8 +2,8 @@ import os
 from unittest.mock import MagicMock
 
 import pytest
-from pipe.core.models.file_search import (  # noqa: F401
-    Level1Candidate,
+from pipe.core.models.file_search import (
+    Level1Candidate,  # noqa: F401
     LsEntry,
     PrefetchResult,
     SearchL2Response,

@@ -2,9 +2,7 @@ import json
 import os
 
 from pipe.cli.mcp_server import execute_tool
-from pipe.core.models.turn import (
-    ModelResponseTurn,
-)
+from pipe.core.models.turn import ModelResponseTurn
 from pipe.core.models.unified_chunk import MetadataChunk, TextChunk, ToolCallChunk
 from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
 from pipe.core.services.gemini_client_service import GeminiClientService

@@ -183,17 +183,61 @@ Run checks **in sequence** using the provided tools. If any fail, return to **St
 
 **CRITICAL**: Both py_checker and py_run_and_test_code MUST pass. Tests that fail linting or execution have NO VALUE and must not be committed.
 
-#### Step 5a: Run py_checker (Linting and Type Checking)
+#### Step 5a: Run py_checker (Integrated Format + Validation)
 ```python
 py_checker()
 ```
-This tool runs:
-1. ruff check --fix (entire project)
-2. ruff format (entire project)
-3. mypy (entire project)
 
+**CRITICAL - Integrated Pre-Formatting**:
+This tool now automatically performs **silent pre-formatting** before validation:
+
+**STEP 0 (Silent - Output Suppressed)**:
+1. `isort .` (entire project - import sorting)
+2. `black .` (entire project - code formatting)
+
+**STEP 1-4 (Reported)**:
+1. `ruff check --fix` (entire project)
+2. `ruff format` (entire project)
+3. `black` (entire project - validation pass)
+4. `mypy` (entire project)
+
+**Why Pre-Formatting is Silent**:
+- **Token efficiency**: Formatting output is discarded to save ~5,000-10,000 tokens
+- **State synchronization**: Files are formatted BEFORE validation checks
+- **Error prevention**: Eliminates "stale state" issues caused by formatters
+
+**CRITICAL - State Synchronization**:
+After `py_checker` completes:
+- All files have been **formatted and validated** in a single atomic operation
+- Your in-memory "last known state" is now **STALE** (files were auto-formatted)
+- **[MANDATORY]** Execute `read_file` on `{test_output_path}` BEFORE any error fixes
+- **[PROHIBITED]** Do NOT use `replace` tool based on your memory of what you wrote
+
+**Error Recovery Protocol**:
+If `py_checker` reports linting/type errors that require fixes:
+1. **[MANDATORY]** Execute `read_file` on `{test_output_path}` FIRST
+2. **[PROHIBITED]** Do NOT use `replace` tool based on your memory of what you wrote
+3. **[REQUIRED]** Use the fresh file content from `read_file` as the source for `replace`
+4. **Rationale**: Prevents "string not found" errors caused by formatter modifications
+
+**Example Trap (Common Failure Pattern)**:
+```
+# You wrote:
+def test_example():
+    x=1  # Bad formatting
+
+# py_checker silently pre-formats to:
+def test_example():
+    x = 1  # Good formatting
+
+# Then validation reports an error (e.g., unused variable)
+
+# If you try to replace "x=1" without reading first → TOOL FAILURE
+```
+
+**Decision Tree**:
 - **Pass**: Continue to Step 5b
-- **Fail**: Fix linting/type errors, return to Step 4
+- **Fail**: Execute `read_file` → Fix errors using fresh content → Re-run `py_checker`
 
 #### Step 5b: Run py_run_and_test_code (Test Execution)
 ```python
@@ -374,71 +418,11 @@ git commit -m "test: add tests for {filename}"
 - ❌ Writing tests based solely on implementation details instead of specifications
 
 ### Prohibited Token-Wasting Actions
-- ❌ **[CRITICAL]** Running `read_file` when file content is already in `current_task` or `file_references`
+- ❌ **[CRITICAL]** Running `read_file` when file content is already in `current_task` or `file_references` (Step 1 only)
 - ❌ **[CRITICAL]** Running `git diff` or `git diff HEAD` in Step 6 (use `git status --short` ONLY)
-- ❌ **[CRITICAL]** Re-reading content you just wrote with `write_file`
+- ❌ **[CRITICAL]** Re-reading content you just wrote with `write_file` (except Step 5a error recovery)
 - ❌ Executing redundant verification commands that duplicate information already in context
-
----
-
-## Token Efficiency Strategy
-
-### Overview
-This procedure can consume 430,000-780,000 tokens in a typical execution. The following optimizations can reduce this to ~200,000 tokens (45% reduction).
-
-### Optimization 1: Pre-Inject File Content (Step 1)
-**Current Cost**: ~50,000-100,000 tokens (read_file + py_analyze_code tool calls)
-**Optimized Cost**: ~0 tokens (skip tools when content provided)
-
-**Implementation**:
-When invoking this procedure, include target file content in `current_task`:
-```markdown
-Target file content:
-```python
-# [Full source code here]
-```
-
-This allows the agent to:
-- Skip `read_file` execution (saves 1 request-response cycle)
-- Skip or streamline `py_analyze_code` (use provided content directly)
-- Proceed immediately to Step 1c (manual analysis)
-
-**Token Savings**: 50,000-100,000 tokens per execution
-
-### Optimization 2: Prohibit git diff (Step 6)
-**Current Cost**: ~30,000-50,000 tokens (full file diff output)
-**Optimized Cost**: ~100 tokens (git status --short output)
-
-**Rationale**:
-- Agent uses `write_file` to create test file
-- Immediately running `git diff` re-reads the same content
-- This is "double-billing" - writing content, then reading it back
-- `git status --short` provides sufficient verification (file name only)
-
-**Token Savings**: 30,000-50,000 tokens per execution
-
-### Optimization 3: Conditional Tool Execution
-**Principle**: "Don't ask for information you already have"
-
-**Implementation**:
-- Check `current_task` and `file_references` BEFORE executing tools
-- If content exists, analyze directly without tool calls
-- Only execute tools when information is genuinely missing
-
-**Expected Turn Reduction**: 11 turns → 6-7 turns
-
-### Theoretical Minimum Cost
-With all optimizations:
-- Pre-injected context: -50,000 to -100,000 tokens
-- No git diff: -30,000 to -50,000 tokens
-- Conditional execution: -20,000 to -30,000 tokens
-- **Total savings**: ~100,000-180,000 tokens (23-42% reduction)
-- **Target cost**: ~200,000-250,000 tokens per test file
-
-### Benchmark (Happy Path)
-- **Before optimization**: 780,000 tokens (11 turns)
-- **After optimization**: 430,000 tokens (9 turns, conditional skips)
-- **Theoretical minimum**: ~200,000 tokens (6-7 turns, full pre-injection)
+- ❌ **[CRITICAL]** Using `replace` tool based on stale memory after `py_checker` runs (must `read_file` first)
 
 ---
 
@@ -493,26 +477,6 @@ Output: Success, test committed
 - **Error handling**: Always return to Step 4 on any failure
 - **No skipping**: Quality checks must all pass before commit
 - **Verification efficiency**: Use `git status --short` ONLY in Step 6. Never use `git diff` to re-read what you just wrote.
+- **Formatter safeguard**: ALWAYS execute `read_file` BEFORE fixing lint errors in Step 5a. Your memory is stale after auto-formatters run.
 - **ABSOLUTE PROHIBITION**: ANY changes to files outside `tests/` directory will result in immediate procedure abort with NO commit
 
-## Cost-Performance Trade-offs
-
-### High-Quality Path (Current Default)
-- **Cost**: 430,000-780,000 tokens
-- **Turns**: 9-11
-- **Quality**: Highest (full tool execution, comprehensive verification)
-- **Use case**: First test file for a new module, complex logic
-
-### Optimized Path (Conditional Skips)
-- **Cost**: 300,000-430,000 tokens
-- **Turns**: 7-9
-- **Quality**: High (conditional tool execution, streamlined verification)
-- **Use case**: Standard test files with clear requirements
-
-### Minimum Path (Full Pre-injection)
-- **Cost**: 200,000-250,000 tokens
-- **Turns**: 6-7
-- **Quality**: High (context-driven, minimal tool calls)
-- **Use case**: Batch test generation, well-understood codebase
-
-**Recommendation**: Start with High-Quality Path for critical modules, migrate to Optimized/Minimum Path once patterns are established.

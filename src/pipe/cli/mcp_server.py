@@ -29,25 +29,18 @@ import warnings
 from functools import lru_cache
 from typing import Union, get_args, get_type_hints
 
-# Add src directory to Python path BEFORE local imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
+from pipe.core.factories.service_factory import ServiceFactory
+from pipe.core.models.settings import Settings
+from pipe.core.repositories.settings_repository import SettingsRepository
+from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
+from pipe.core.utils.datetime import get_current_timestamp
+from pipe.core.utils.file import append_to_text_file
+from pipe.core.utils.path import get_project_root
+from pydantic import BaseModel
 
 # Suppress Pydantic warnings early, before importing any pydantic models
 warnings.filterwarnings("ignore", message=".*is not a Python type.*\n")
 warnings.filterwarnings("ignore", message="Field name .* shadows an attribute")
-
-from pipe.core.factories.service_factory import ServiceFactory  # noqa: E402
-from pipe.core.models.settings import Settings  # noqa: E402
-from pipe.core.repositories.settings_repository import (  # noqa: E402
-    SettingsRepository,
-)
-from pipe.core.repositories.streaming_log_repository import (  # noqa: E402
-    StreamingLogRepository,
-)
-from pipe.core.utils.datetime import get_current_timestamp  # noqa: E402
-from pipe.core.utils.file import append_to_text_file  # noqa: E402
-from pipe.core.utils.path import get_project_root  # noqa: E402
-from pydantic import BaseModel  # noqa: E402
 
 # --- Global Paths ---
 BASE_DIR = get_project_root()

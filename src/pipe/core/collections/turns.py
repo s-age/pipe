@@ -1,11 +1,7 @@
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
-from pipe.core.models.turn import (
-    ModelResponseTurnUpdate,
-    Turn,
-    UserTaskTurnUpdate,
-)
+from pipe.core.models.turn import ModelResponseTurnUpdate, Turn, UserTaskTurnUpdate
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 

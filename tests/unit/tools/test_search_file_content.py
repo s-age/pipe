@@ -4,9 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from pipe.core.models.results.search_file_content_result import (
-    SearchFileContentResult,
-)
+from pipe.core.models.results.search_file_content_result import SearchFileContentResult
 from pipe.core.tools.search_file_content import search_file_content
 
 

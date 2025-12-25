@@ -29,14 +29,20 @@ def py_checker() -> ToolResult[PyCheckerResult]:
     """
     Runs ALL of the following Python code quality checks and fixes in a
     single execution:
+
+    STEP 0 (Pre-formatting - Silent):
+    - isort . (import sorting, output suppressed)
+    - black . (code formatting, output suppressed)
+
+    STEP 1-4 (Validation - Reported):
     1. ruff check --fix (lint and auto-fix)
     2. ruff format (code formatting)
     3. black (88-character line length enforcement and formatting)
     4. mypy (type checking)
 
-    IMPORTANT: This tool executes all four steps automatically in one call.
-    You will receive results for all steps in a single response.
-    Do NOT call this tool multiple times to run individual steps.
+    IMPORTANT: This tool executes all steps automatically in one call.
+    You will receive results for validation steps (1-4) only.
+    Pre-formatting results are suppressed to reduce token consumption.
 
     NOTE: If errors remain after execution, they require manual fixes.
     Running this tool again without making code changes will produce the
@@ -49,14 +55,39 @@ def py_checker() -> ToolResult[PyCheckerResult]:
     times in parallel.
 
     Returns:
-        A dictionary containing the results of each step, including stdout,
-        stderr, and any errors encountered.
+        A dictionary containing the results of each validation step,
+        including stdout, stderr, and any errors encountered.
     """
     try:
         # Get project root automatically
         abs_project_root = get_project_root()
 
         results = PyCheckerResult()
+
+        # STEP 0: Pre-formatting (Silent) - Run isort and black first
+        # This ensures files are formatted BEFORE validation checks
+        # Output is suppressed to save tokens
+        try:
+            # Run isort (import sorting)
+            subprocess.run(
+                ["poetry", "run", "isort", "."],
+                capture_output=True,
+                text=True,
+                cwd=abs_project_root,
+                check=False,
+            )
+            # Run black (code formatting)
+            subprocess.run(
+                ["poetry", "run", "black", "."],
+                capture_output=True,
+                text=True,
+                cwd=abs_project_root,
+                check=False,
+            )
+            # Errors in pre-formatting are ignored - validation steps will catch issues
+        except Exception:
+            # Silently continue - validation steps will report any real issues
+            pass
 
         # Step 1: ruff check --fix
         try:

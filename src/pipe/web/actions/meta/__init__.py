@@ -1,8 +1,6 @@
 """Meta related actions."""
 
-from pipe.web.actions.meta.hyperparameters_edit_action import (
-    HyperparametersEditAction,
-)
+from pipe.web.actions.meta.hyperparameters_edit_action import HyperparametersEditAction
 from pipe.web.actions.meta.multi_step_reasoning_edit_action import (
     MultiStepReasoningEditAction,
 )

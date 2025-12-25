@@ -5,9 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pipe.core.services.gemini_tool_service import (
-    GeminiToolService,
-)
+from pipe.core.services.gemini_tool_service import GeminiToolService
 
 
 class TestGeminiToolService(unittest.TestCase):

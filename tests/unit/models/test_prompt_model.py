@@ -1,9 +1,7 @@
 import unittest
 
 from pipe.core.models.prompt import Prompt
-from pipe.core.models.prompts.constraints import (
-    PromptConstraints,
-)
+from pipe.core.models.prompts.constraints import PromptConstraints
 from pipe.core.models.prompts.conversation_history import PromptConversationHistory
 from pipe.core.models.prompts.current_task import PromptCurrentTask
 from pipe.core.models.prompts.file_reference import PromptFileReference

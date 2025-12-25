@@ -121,6 +121,74 @@ def call_gemini_cli(
                             f"TOOL_USE: {tool_name} | params: {truncated_params}"
                         )
                         streaming_log_repo.append_log(log_content, "TOOL_USE")
+
+                        # Add to pool (skip if added by mcp_server.py)
+                        import time
+
+                        from pipe.core.models.turn import FunctionCallingTurn
+                        from pipe.core.services.session_turn_service import (
+                            SessionTurnService,
+                        )
+                        from pipe.core.utils.datetime import get_current_timestamp
+
+                        session_id = session_service.current_session_id
+                        if session_id:
+                            params_json = json.dumps(parameters, ensure_ascii=False)
+                            response_str = f"{tool_name}({params_json})"
+                            timestamp = data.get(
+                                "timestamp",
+                                get_current_timestamp(session_service.timezone_obj),
+                            )
+
+                            # Wait briefly for mcp_server.py to write
+                            time.sleep(0.05)
+
+                            # Reload session from file to get latest pools
+                            session = session_service.repository.find(session_id)
+                            if session:
+                                already_exists = False
+                                # Check recent pool entries (last 5)
+                                recent_pools = (
+                                    session.pools[-5:]
+                                    if len(session.pools) >= 5
+                                    else session.pools
+                                )
+                                for pool_entry in recent_pools:
+                                    if (
+                                        hasattr(pool_entry, "type")
+                                        and pool_entry.type == "function_calling"
+                                        and hasattr(pool_entry, "response")
+                                        and pool_entry.response == response_str
+                                    ):
+                                        already_exists = True
+                                        break
+
+                                if not already_exists:
+                                    function_calling_turn = FunctionCallingTurn(
+                                        type="function_calling",
+                                        response=response_str,
+                                        timestamp=timestamp,
+                                    )
+
+                                    session_turn_service = SessionTurnService(
+                                        session_service.settings,
+                                        session_service.repository,
+                                    )
+                                    session_turn_service.add_to_pool(
+                                        session_id, function_calling_turn
+                                    )
+
+                                    # Log TOOL_CALL for standard tools
+                                    tool_log_data = {
+                                        "type": "function_calling",
+                                        "tool_name": tool_name,
+                                        "arguments": parameters,
+                                        "timestamp": timestamp,
+                                    }
+                                    streaming_log_repo.append_log(
+                                        json.dumps(tool_log_data, ensure_ascii=False),
+                                        "TOOL_CALL",
+                                    )
                 elif data.get("type") == "tool_result":
                     # Store tool result for later processing
                     tool_results.append(data)

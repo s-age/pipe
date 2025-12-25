@@ -77,8 +77,8 @@ class TestLaunchManager:
         assert kwargs["stdout"] is not None  # It should be a file object
         assert kwargs["stderr"] == -2  # subprocess.STDOUT is -2
 
-        # Verify process cleanup was called before exit
-        mock_process_manager.cleanup_process.assert_called_once_with(parent_id)
+        # Verify process kill was called before exit
+        mock_process_manager.kill_process.assert_called_once_with(parent_id)
 
         # Verify sys.exit(0) was called
         mock_sys_exit.assert_called_once_with(0)
@@ -112,8 +112,8 @@ class TestLaunchManager:
         )
         assert tasks_file.exists()
 
-        # Verify process cleanup was called before exit
-        mock_process_manager.cleanup_process.assert_called_once_with(parent_id)
+        # Verify process kill was called before exit
+        mock_process_manager.kill_process.assert_called_once_with(parent_id)
 
         mock_sys_exit.assert_called_once_with(0)
 
@@ -146,8 +146,8 @@ class TestLaunchManager:
             assert data["purpose"] == purpose
             assert data["background"] == background
 
-        # Verify process cleanup was called before exit
-        mock_process_manager.cleanup_process.assert_called_once_with(parent_id)
+        # Verify process kill was called before exit
+        mock_process_manager.kill_process.assert_called_once_with(parent_id)
 
         mock_sys_exit.assert_called_once_with(0)
 
@@ -184,7 +184,7 @@ class TestLaunchManager:
         )
         assert log_file.exists()
 
-        # Verify process cleanup was called before exit
-        mock_process_manager.cleanup_process.assert_called_once_with(parent_id)
+        # Verify process kill was called before exit
+        mock_process_manager.kill_process.assert_called_once_with(parent_id)
 
         mock_sys_exit.assert_called_once_with(0)

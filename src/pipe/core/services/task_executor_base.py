@@ -221,7 +221,9 @@ def execute_script_task(
         started_at=started_at,
         completed_at=completed_at,
         duration_seconds=duration,
-        output_preview=(result.stdout + result.stderr)[:500]
-        if (result.stdout or result.stderr)
-        else None,
+        output_preview=(
+            (result.stdout + result.stderr)[:500]
+            if (result.stdout or result.stderr)
+            else None
+        ),
     )

@@ -61,7 +61,7 @@ def py_checker() -> ToolResult[PyCheckerResult]:
         # Step 1: ruff check --fix
         try:
             process1 = subprocess.run(
-                ["ruff", "check", "--fix", "."],
+                ["poetry", "run", "ruff", "check", "--fix", "."],
                 capture_output=True,
                 text=True,
                 cwd=abs_project_root,
@@ -81,7 +81,7 @@ def py_checker() -> ToolResult[PyCheckerResult]:
         # Step 2: ruff format (only if ruff check succeeded or had fixable issues)
         try:
             process2 = subprocess.run(
-                ["ruff", "format", "."],
+                ["poetry", "run", "ruff", "format", "."],
                 capture_output=True,
                 text=True,
                 cwd=abs_project_root,
@@ -101,7 +101,7 @@ def py_checker() -> ToolResult[PyCheckerResult]:
         # Step 3: black (88-character line length enforcement)
         try:
             process3 = subprocess.run(
-                ["black", "."],
+                ["poetry", "run", "black", "."],
                 capture_output=True,
                 text=True,
                 cwd=abs_project_root,
@@ -121,7 +121,7 @@ def py_checker() -> ToolResult[PyCheckerResult]:
         # Step 4: mypy
         try:
             process4 = subprocess.run(
-                ["mypy", "."],
+                ["poetry", "run", "mypy", "."],
                 capture_output=True,
                 text=True,
                 cwd=abs_project_root,

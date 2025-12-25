@@ -20,7 +20,7 @@ def py_auto_format_code(file_path: str) -> ToolResult[PyAutoFormatCodeResult]:
 
     # 1. Run isort to sort imports
     try:
-        isort_command = ["isort", file_path]
+        isort_command = ["poetry", "run", "isort", file_path]
         isort_result = subprocess.run(
             isort_command, capture_output=True, text=True, check=True
         )
@@ -55,7 +55,7 @@ def py_auto_format_code(file_path: str) -> ToolResult[PyAutoFormatCodeResult]:
 
     # 2. Run Black to format code
     try:
-        black_command = ["black", file_path]
+        black_command = ["poetry", "run", "black", file_path]
         black_result = subprocess.run(
             black_command, capture_output=True, text=True, check=True
         )
@@ -92,7 +92,7 @@ def py_auto_format_code(file_path: str) -> ToolResult[PyAutoFormatCodeResult]:
     try:
         # Ruff can act as a formatter as well.
         # We'll run `ruff format` for formatting and `ruff check` for linting.
-        ruff_format_command = ["ruff", "format", file_path]
+        ruff_format_command = ["poetry", "run", "ruff", "format", file_path]
         ruff_format_result = subprocess.run(
             ruff_format_command, capture_output=True, text=True, check=True
         )
@@ -106,7 +106,7 @@ def py_auto_format_code(file_path: str) -> ToolResult[PyAutoFormatCodeResult]:
             )
         )
 
-        ruff_check_command = ["ruff", "check", file_path]
+        ruff_check_command = ["poetry", "run", "ruff", "check", file_path]
         ruff_check_result = subprocess.run(
             ruff_check_command, capture_output=True, text=True, check=True
         )

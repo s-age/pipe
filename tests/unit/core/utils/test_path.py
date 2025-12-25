@@ -7,64 +7,96 @@ from pipe.core.utils.path import get_project_root
 class TestGetProjectRoot:
     """Tests for get_project_root function."""
 
-    def test_find_root_in_start_dir(self, tmp_path):
-        """Test finding root when marker is in starting directory."""
-        # Create a marker in the temp directory
-        (tmp_path / "pyproject.toml").touch()
+    def test_get_project_root_with_marker_in_start_dir(self, tmp_path):
+        """Test finding project root when marker is in the start directory."""
+        # Setup: Create a directory with a marker file
+        project_dir = tmp_path / "my_project"
+        project_dir.mkdir()
+        (project_dir / "pyproject.toml").touch()
 
-        root = get_project_root(start_dir=str(tmp_path))
-        assert os.path.abspath(root) == os.path.abspath(str(tmp_path))
+        # Execute
+        root = get_project_root(start_dir=str(project_dir))
 
-    def test_find_root_in_parent_dir(self, tmp_path):
-        """Test finding root when marker is in a parent directory."""
-        root_dir = tmp_path / "project"
-        root_dir.mkdir()
-        subdir = root_dir / "src" / "pipe"
-        subdir.mkdir(parents=True)
+        # Verify
+        assert root == str(project_dir)
 
-        # Create a marker in the root directory
-        (root_dir / ".git").mkdir()
+    def test_get_project_root_with_marker_in_parent_dir(self, tmp_path):
+        """Test finding project root by searching upward."""
+        # Setup: Create project_root/subdir/subsubdir and put marker in project_root
+        project_dir = tmp_path / "my_project"
+        project_dir.mkdir()
+        (project_dir / ".git").mkdir()
 
-        root = get_project_root(start_dir=str(subdir))
-        assert os.path.abspath(root) == os.path.abspath(str(root_dir))
+        subdir = project_dir / "subdir"
+        subdir.mkdir()
+        subsubdir = subdir / "subsubdir"
+        subsubdir.mkdir()
 
-    def test_find_root_with_custom_markers(self, tmp_path):
-        """Test finding the project root with custom markers."""
-        (tmp_path / "custom_marker").touch()
+        # Execute
+        root = get_project_root(start_dir=str(subsubdir))
 
-        root = get_project_root(start_dir=str(tmp_path), markers=("custom_marker",))
-        assert os.path.abspath(root) == os.path.abspath(str(tmp_path))
+        # Verify
+        assert root == str(project_dir)
 
-    def test_find_root_default_start_dir(self, tmp_path, monkeypatch):
-        """Test finding root using the default starting directory (CWD)."""
-        (tmp_path / "pyproject.toml").touch()
+    def test_get_project_root_with_custom_markers(self, tmp_path):
+        """Test finding project root with custom marker files."""
+        # Setup: Create a directory with a custom marker
+        project_dir = tmp_path / "my_project"
+        project_dir.mkdir()
+        (project_dir / "custom_marker.txt").touch()
 
-        # Change the current working directory to the temp path
-        monkeypatch.chdir(tmp_path)
+        # Execute
+        root = get_project_root(
+            start_dir=str(project_dir), markers=("custom_marker.txt",)
+        )
 
-        root = get_project_root()
-        assert os.path.abspath(root) == os.path.abspath(str(tmp_path))
+        # Verify
+        assert root == str(project_dir)
 
-    def test_fallback_to_script_location(self):
-        """Test the fallback logic when no markers are found."""
-        # Mock os.path.exists to always return False for the markers
-        # and mock os.path.dirname to simulate reaching filesystem root
-        # This will force the function to break the loop and hit fallback
+    def test_get_project_root_defaults_to_cwd(self, tmp_path):
+        """Test that start_dir defaults to current working directory."""
+        # Setup: Create a directory with a marker and mock getcwd to it
+        project_dir = tmp_path / "my_project"
+        project_dir.mkdir()
+        (project_dir / "pyproject.toml").touch()
+
+        with patch("os.getcwd", return_value=str(project_dir)):
+            # Execute
+            root = get_project_root()
+
+            # Verify
+            assert root == str(project_dir)
+
+    def test_get_project_root_fallback_to_script_location(self, tmp_path):
+        """Test fallback logic when no markers are found up to filesystem root."""
+        # Setup: Use a temporary directory as root to ensure no markers are found
+        # We need to mock os.path.exists to always return False for markers
+        # and also handle the upward traversal.
+        # However, a simpler way is to mock the loop or the markers.
+
+        # We want to test this part:
+        # script_dir = os.path.dirname(os.path.abspath(__file__))
+        # return os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
+
+        # Let's mock os.path.exists to never find markers
         with patch("os.path.exists", return_value=False):
-            # We don't need to mock os.path.dirname if we use a path
-            # that eventually reaches root
-            # But it's safer to mock it to break the loop quickly
-            with patch("os.path.dirname", side_effect=lambda p: p):
+            # Also mock os.path.dirname to simulate reaching filesystem root quickly
+            # to avoid infinite loop or long traversal if abspath behaves unexpectedly
+            with patch("os.path.dirname") as mock_dirname:
+                # First call to dirname returns '/', second call returns '/' (root)
+                mock_dirname.side_effect = lambda p: "/" if p != "/" else "/"
+
+                # Execute
                 root = get_project_root(start_dir="/some/path")
 
-                # The fallback is hardcoded relative to the path.py file.
-                # Just verify it's an absolute path.
-                assert os.path.isabs(root)
+                # Verify it calls the fallback
+                # The fallback is calculated based on pipe/core/utils/path.py
+                # 3 levels up from src/pipe/core/utils is src/
+                import pipe.core.utils.path as path_module
 
-    def test_reach_filesystem_root(self, tmp_path):
-        """Test that the loop terminates when filesystem root is reached."""
-        # Mocking exists is easier
-        with patch("os.path.exists", return_value=False):
-            # This should hit the fallback logic
-            root = get_project_root(start_dir=str(tmp_path))
-            assert os.path.isabs(root)
+                script_dir = os.path.dirname(os.path.abspath(path_module.__file__))
+                expected_fallback = os.path.abspath(
+                    os.path.join(script_dir, "..", "..", "..")
+                )
+
+                assert root == expected_fallback

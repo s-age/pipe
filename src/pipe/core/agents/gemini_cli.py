@@ -94,6 +94,7 @@ def call_gemini_cli(
         assistant_content = ""
         tool_calls: list[dict] = []  # Store tool_use events
         tool_results = []  # Store tool_result events
+        result_stats = None  # Store stats from result event
 
         while True:
             if not process.stdout:
@@ -110,6 +111,9 @@ def call_gemini_cli(
                 data = json.loads(line.strip())
                 if data.get("type") == "message" and data.get("role") == "assistant":
                     assistant_content += data.get("content", "")
+                elif data.get("type") == "result":
+                    # Store stats from result event
+                    result_stats = data.get("stats")
                 elif data.get("type") == "tool_use":
                     # Store tool call for later processing
                     tool_calls.append(data)
@@ -260,34 +264,13 @@ def call_gemini_cli(
                     # Save updated session
                     session_service.repository.save(session)
 
-        # For stream-json, parse the final result if possible
-        try:
-            lines = full_response.strip().split("\n")
-            for line in reversed(lines):
-                try:
-                    result = json.loads(line)
-                    if result.get("type") == "result":
-                        return {
-                            "response": assistant_content,
-                            "stats": result.get("stats"),
-                            "tool_calls": tool_calls,
-                            "tool_results": tool_results,
-                        }
-                except json.JSONDecodeError:
-                    continue
-            return {
-                "response": assistant_content,
-                "stats": None,
-                "tool_calls": tool_calls,
-                "tool_results": tool_results,
-            }
-        except json.JSONDecodeError:
-            return {
-                "response": assistant_content,
-                "stats": None,
-                "tool_calls": tool_calls,
-                "tool_results": tool_results,
-            }
+        # Return the collected data with stats from stream
+        return {
+            "response": assistant_content,
+            "stats": result_stats,
+            "tool_calls": tool_calls,
+            "tool_results": tool_results,
+        }
     else:
         # Original logic for json and text
         # Avoid passing a very large prompt as a single argv element (can hit
@@ -454,9 +437,26 @@ class GeminiCliAgent(BaseAgent):
         )
         session_turn_service.merge_pool_into_turns(session_id)
 
-        model_response_text, token_count = gemini_cli_delegate.run(
+        model_response_text, token_count, stats = gemini_cli_delegate.run(
             args, session_service, session_turn_service
         )
+
+        # Append stats as markdown to model_response_text
+        if stats:
+            markdown_lines = [
+                "\n### Actual Token Stats",
+                f"- total_tokens: {stats.get('total_tokens', 0)}",
+                f"- input_tokens: {stats.get('input_tokens', 0)}",
+                f"- output_tokens: {stats.get('output_tokens', 0)}",
+                f"- cached: {stats.get('cached', 0)}",
+            ]
+            if "input" in stats:
+                markdown_lines.append(f"- input: {stats.get('input', 0)}")
+            if "tool_calls" in stats:
+                markdown_lines.append(f"- tool_calls: {stats.get('tool_calls', 0)}")
+
+            markdown_text = "\n".join(markdown_lines)
+            model_response_text += "\n\n" + markdown_text
 
         if args.output_format == "text":
             print(model_response_text)

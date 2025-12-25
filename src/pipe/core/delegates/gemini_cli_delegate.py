@@ -10,7 +10,7 @@ def run(
     args: TaktArgs,
     session_service: SessionService,
     session_turn_service: SessionTurnService,
-) -> tuple[str, int]:
+) -> tuple[str, int, dict | None]:
     """
     Handles the logic for the 'gemini-cli' mode by delegating to call_gemini_cli.
     This function is now only responsible for getting the model's response text.
@@ -59,4 +59,4 @@ def run(
 
         session_turn_service.merge_pool_into_turns(session_id)
 
-    return response_text, token_count
+    return response_text, token_count, stats

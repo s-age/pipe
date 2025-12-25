@@ -81,11 +81,11 @@ echo ""
 
 # Quality gate 4: PyTest
 echo "[4/4] Running PyTest..."
-PYTEST_ARGS=""
+PYTEST_ARGS="-q"
 
 if [ "$VERBOSE_ENABLED" = true ]; then
     echo "Verbose output enabled"
-    PYTEST_ARGS="$PYTEST_ARGS -v"
+    PYTEST_ARGS="-v"
 fi
 
 if [ "$COVERAGE_ENABLED" = true ]; then

@@ -27,7 +27,6 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     session_id = session_service.current_session_id
 
     api_mode = session_service.settings.api_mode
-    settings = session_service.settings
     service_factory = ServiceFactory(
         session_service.project_root, session_service.settings
     )
@@ -71,25 +70,9 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     try:
         # Calculate token count for text output
         try:
-            prompt_model = prompt_service.build_prompt(session_service)
-            from jinja2 import Environment, FileSystemLoader
-            from pipe.core.agents.gemini_api import load_tools
-            from pipe.core.services.token_service import TokenService
-
-            token_service = TokenService(settings=settings)
-            tools = load_tools(session_service.project_root)
-            template_env = Environment(
-                loader=FileSystemLoader(
-                    os.path.join(session_service.project_root, "templates", "prompt")
-                ),
-                trim_blocks=True,
-                lstrip_blocks=True,
-            )
-            template = template_env.get_template("gemini_api_prompt.j2")
-            context = prompt_model.model_dump()
-            api_contents_string = template.render(session=context)
-            prompt_token_count = token_service.count_tokens(
-                api_contents_string, tools=tools
+            token_service = service_factory.create_gemini_token_count_service()
+            prompt_token_count = token_service.count_tokens_from_prompt(
+                session_service, prompt_service
             )
             is_within_limit, message = token_service.check_limit(prompt_token_count)
             if not is_within_limit:

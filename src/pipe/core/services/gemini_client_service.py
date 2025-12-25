@@ -19,8 +19,8 @@ from pipe.core.models.unified_chunk import (
 )
 from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
 from pipe.core.services.gemini_cache_service import GeminiCacheService
+from pipe.core.services.gemini_token_count_service import GeminiTokenCountService
 from pipe.core.services.gemini_tool_service import GeminiToolService
-from pipe.core.services.token_service import TokenService
 from pipe.core.utils.datetime import get_current_datetime
 
 if TYPE_CHECKING:
@@ -73,7 +73,11 @@ class GeminiClientService:
         # Initialize sub-services
         self.tool_service = GeminiToolService()
         self.cache_service = GeminiCacheService(self.project_root, self.settings)
-        self.token_service = TokenService(settings=self.settings)
+        self.token_service = GeminiTokenCountService(
+            settings=self.settings,
+            tool_service=self.tool_service,
+            project_root=self.project_root,
+        )
         self.last_raw_response: str | None = None
 
         # Convert timezone string to ZoneInfo object

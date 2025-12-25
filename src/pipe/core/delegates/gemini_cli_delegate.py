@@ -22,8 +22,19 @@ def run(
     stats = result.get("stats")
     token_count = 0
     if stats:
-        # Try to extract total_tokens directly from stats (stream-json format)
-        if "total_tokens" in stats:
+        # Calculate actual consumed tokens (not cumulative total_tokens)
+        # Consumed = non-cached input tokens + output tokens
+        input_tokens = stats.get("input_tokens", 0)
+        cached_tokens = stats.get("cached", 0)
+        output_tokens = stats.get("output_tokens", 0)
+
+        # Actual consumption = input_tokens - cached_tokens + output_tokens
+        # But if we don't have detailed stats, fall back to total_tokens
+        if input_tokens > 0 or output_tokens > 0:
+            non_cached_input = max(0, input_tokens - cached_tokens)
+            token_count = non_cached_input + output_tokens
+        elif "total_tokens" in stats:
+            # Fallback to total_tokens if detailed stats not available
             token_count = stats.get("total_tokens", 0)
         # Fallback to old format with models
         elif "models" in stats:

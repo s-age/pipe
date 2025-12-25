@@ -200,7 +200,24 @@ This runs all tests in the project using pytest.
 **CRITICAL**: Always use grep to filter output to avoid context window overflow.
 
 ```bash
-poetry run pytest --cov=src --cov-report=term-missing | grep {test_output_path}
+poetry run pytest --cov=src --cov-report=term-missing tests/{test_path} | grep {source_file_name}
+```
+
+**Correct Usage**:
+- ✅ `--cov=src` (module root path, NOT file path)
+- ✅ `tests/{test_path}` (run only the specific test file)
+- ✅ `grep {source_file_name}` (filter by SOURCE file name, NOT test file name)
+
+**Incorrect Usage Examples**:
+- ❌ `--cov=src/pipe/core/utils/path.py` (file path - causes "module not imported" error)
+- ❌ `grep test_path.py` (test file name - shows nothing)
+- ❌ No grep filter (context window overflow with full project output)
+
+**Example**:
+```bash
+# For source file: src/pipe/core/utils/path.py
+# Test file: tests/unit/core/utils/test_path.py
+poetry run pytest --cov=src --cov-report=term-missing tests/unit/core/utils/test_path.py | grep path.py
 ```
 
 **Purpose**:
@@ -209,9 +226,11 @@ poetry run pytest --cov=src --cov-report=term-missing | grep {test_output_path}
 - Full project coverage output consumes excessive tokens and provides unnecessary information
 
 **Actions**:
-1. Run coverage with grep filter for the target test file
-2. Verify coverage meets project standards
-3. If coverage is insufficient, return to Step 4 and add missing test cases
+1. Run coverage with `--cov=src` (module root)
+2. Execute only the specific test file
+3. Filter output with grep for the source file name
+4. Verify coverage meets project standards
+5. If coverage is insufficient, return to Step 4 and add missing test cases
 
 **Output**: Coverage verification passed
 
@@ -219,56 +238,97 @@ poetry run pytest --cov=src --cov-report=term-missing | grep {test_output_path}
 
 ### Step 6: Verify Git Status
 
+**CRITICAL**: This step detects unauthorized file modifications and triggers immediate abort if violated.
+
 **Actions**:
 1. Run:
    ```bash
    git status --short
    ```
-2. Check modified files
-3. Confirm only files under `tests/` are modified
+2. Analyze ALL modified files in the output
+3. Verify that ONLY the following files are modified:
+   - The test file you are writing: `{test_output_path}`
+   - NO other files should appear in git diff
 
-**Output**: List of changed files
+**Expected Output**:
+```
+M  tests/unit/core/utils/test_path.py
+```
+
+**Forbidden Scenarios**:
+- ❌ ANY files outside `tests/` directory are modified
+- ❌ ANY test files you did NOT create/modify appear in git diff
+- ❌ ANY production code files appear in git diff
+- ❌ ANY configuration files (pyproject.toml, .gitignore, etc.) appear in git diff
+
+**Output**: List of changed files for Step 7 validation
 
 ---
 
 ### Step 7: Final Action
 
-#### Step 7a: If Only tests/ Changed (Auto-Commit)
+**Decision Tree**:
+1. Check if ONLY `{test_output_path}` is modified → Proceed to Step 7a
+2. Check if ANY other files are modified → Proceed to Step 7b (ABORT)
 
-**Condition**: All modified files are under `tests/` directory
+#### Step 7a: If Only Target Test File Changed (Auto-Commit)
+
+**Condition**: ONLY the test file you are writing (`{test_output_path}`) is modified
+
+**Validation**:
+```bash
+# Expected git status output:
+M  {test_output_path}
+# OR for new files:
+A  {test_output_path}
+```
 
 **Actions**:
 ```bash
-git add tests/
+git add {test_output_path}
 git commit -m "test: add tests for {filename}"
 ```
 
 **Output**: Committed changes
 
-#### Step 7b: If Production Code Changed (ABORT - DO NOT COMMIT)
+#### Step 7b: If ANY Other Files Changed (ABORT - DO NOT COMMIT)
 
-**Condition**: Any modified files outside `tests/` directory
+**Condition**: ANY of the following are true:
+1. Files outside `tests/` directory are modified
+2. Test files OTHER than `{test_output_path}` are modified
+3. Configuration files are modified
+4. ANY files you did not intentionally create/modify appear in git diff
 
-**CRITICAL**: This is a **FATAL ERROR**. Tests must NEVER modify production code.
+**CRITICAL**: This is a **FATAL ERROR**. Tests must ONLY modify the single test file being written.
 
 **Actions**:
-1. Report modified files and abort:
+1. Report ALL modified files and abort immediately:
    ```
-   🚨 FATAL ERROR: Production code changes detected
+   🚨 FATAL ERROR: Unauthorized file modifications detected
 
-   Modified files outside tests/:
-   - {file1}
-   - {file2}
+   Expected ONLY this file to be modified:
+   - {test_output_path}
 
-   ABORT: Tests must NOT modify production code.
-   This indicates a serious issue in the test implementation.
-   DO NOT COMMIT. Investigate and fix the root cause.
+   But git diff shows these files were also changed:
+   - {unrelated_file1}
+   - {unrelated_file2}
+
+   ABORT: Tests must ONLY modify the target test file.
+   Unrelated file changes indicate:
+   - Accidental code modification
+   - Tool side effects
+   - Import errors modifying __pycache__
+   - Configuration file corruption
+
+   DO NOT COMMIT. DO NOT PROCEED. ABORT IMMEDIATELY.
    ```
 2. **DO NOT commit under ANY circumstances**
 3. **DO NOT wait for user confirmation**
-4. **ABORT the procedure immediately**
+4. **DO NOT attempt to fix or rollback**
+5. **ABORT the procedure immediately**
+6. **Report to user for investigation**
 
-**Output**: Procedure aborted, no commit made
+**Output**: Procedure aborted, no commit made, error reported
 
 ---
 
@@ -287,8 +347,10 @@ git commit -m "test: add tests for {filename}"
 - ❌ Skipping quality checks
 - ❌ Committing with failing tests
 - ❌ **ABSOLUTE PROHIBITION**: Modifying ANY files outside `tests/` directory
-- ❌ **ABSOLUTE PROHIBITION**: Modifying ANY files not directly related to the test being written
-- ❌ **ABSOLUTE PROHIBITION**: Committing if ANY files outside `tests/` are changed
+- ❌ **ABSOLUTE PROHIBITION**: Modifying ANY test files other than `{test_output_path}`
+- ❌ **ABSOLUTE PROHIBITION**: Committing if git diff shows ANY unintended file changes
+- ❌ **ABSOLUTE PROHIBITION**: Using `--cov={file_path}` (must use `--cov=src`)
+- ❌ **ABSOLUTE PROHIBITION**: Running coverage without grep filter (causes context overflow)
 
 ### Prohibited Shortcuts
 - ❌ Skipping mandatory tool executions in Step 1 (py_analyze_code, py_test_strategist)
@@ -329,10 +391,12 @@ Execution:
   Step 4: Write test file with fixtures, test classes, methods
   Step 5a: py_checker() → PASS (ruff check, ruff format, mypy on entire project)
   Step 5b: py_run_and_test_code() → PASS (pytest on entire project)
-  Step 5c: poetry run pytest --cov=src --cov-report=term-missing | grep test_archive_repository.py
+  Step 5c: poetry run pytest --cov=src --cov-report=term-missing tests/unit/core/repositories/test_archive_repository.py | grep archive_repository.py
            → Coverage: 95% (acceptable)
   Step 6: git status --short → M tests/unit/core/repositories/test_archive_repository.py
-  Step 7a: git commit -m "test: add tests for archive_repository"
+           → Verification: ONLY the target test file is modified ✓
+  Step 7a: git add tests/unit/core/repositories/test_archive_repository.py
+           git commit -m "test: add tests for archive_repository"
 
 Output: Success, test committed
 ```

@@ -165,6 +165,15 @@ Summary:
   4. Repeating up to max_retries times
 - Conductor only sees final result (success or failure)
 
+**Exit Code 2 - ABORT (Permanent Failure)**:
+- Scripts can exit with code 2 to signal a permanent failure that should NOT be retried
+- Serial manager immediately aborts without retries, regardless of `max_retries` setting
+- Use cases for exit code 2:
+  - Unauthorized file modifications detected (e.g., changes outside `tests/`)
+  - Validation failures requiring manual investigation
+  - Configuration issues that cannot be auto-fixed
+- The abort reason is automatically reported to the parent session for investigation
+
 ---
 
 ## Example Execution

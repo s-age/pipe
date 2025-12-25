@@ -106,6 +106,11 @@ def execute_tasks_serially(
         2. Re-execute the agent task with error information
         3. Re-execute the script task
         4. Repeat up to max_retries times
+
+        SPECIAL HANDLING for exit_code 2:
+        - exit_code 2 indicates a PERMANENT FAILURE (e.g., unauthorized file modifications)
+        - Immediately aborts without retries, regardless of max_retries setting
+        - This prevents wasted effort on issues that cannot be fixed through retries
     """
     results: list[TaskExecutionResult] = []
     # Track last created session ID for each agent task
@@ -234,6 +239,20 @@ def execute_tasks_serially(
                         )
                     break
 
+                # Exit code 2: ABORT - Permanent failure, do not retry
+                if result.exit_code == 2:
+                    print(
+                        "[serial_manager] Script ABORTED with exit code 2 "
+                        "(permanent failure, no retries)",
+                        flush=True,
+                    )
+                    if result.output_preview:
+                        print(
+                            f"[serial_manager] Abort reason:\n{result.output_preview}",
+                            flush=True,
+                        )
+                    break
+
                 # Failure - log and continue to next attempt if retries remain
                 if attempt < task.max_retries:
                     print(
@@ -326,7 +345,10 @@ def save_pipeline_result(
 
 
 def invoke_parent_session(
-    session_id: str, child_session_ids: list[str], project_root: str
+    session_id: str,
+    child_session_ids: list[str],
+    project_root: str,
+    results: list[TaskExecutionResult] | None = None,
 ) -> None:
     """
     Invoke parent session to notify completion with child session IDs.
@@ -335,6 +357,7 @@ def invoke_parent_session(
         session_id: Parent session ID
         child_session_ids: List of child session IDs created
         project_root: Project root path
+        results: List of task execution results (optional, for error reporting)
 
     Note:
         Sends instruction to parent session with information about how to
@@ -342,8 +365,31 @@ def invoke_parent_session(
     """
     print(f"[serial_manager] Invoking parent session: {session_id}", flush=True)
 
-    # Build instruction with child session IDs
-    if child_session_ids:
+    # Check for abort (exit_code 2)
+    abort_result = None
+    if results:
+        for result in results:
+            if result.exit_code == 2:
+                abort_result = result
+                break
+
+    # Build instruction with abort information or child session IDs
+    if abort_result:
+        instruction = (
+            f"🚨 Task execution ABORTED (exit code 2 - permanent failure)\n\n"
+            f"Task {abort_result.task_index + 1} failed with exit code 2, "
+            f"indicating a permanent failure that cannot be fixed through retries.\n\n"
+        )
+        if abort_result.output_preview:
+            instruction += f"Abort reason:\n```\n{abort_result.output_preview}\n```\n\n"
+        instruction += (
+            "This typically indicates:\n"
+            "- Unauthorized file modifications detected\n"
+            "- Validation failures that require manual investigation\n"
+            "- Configuration issues that cannot be auto-fixed\n\n"
+            "Please investigate the issue manually before retrying."
+        )
+    elif child_session_ids:
         session_ids_json = json.dumps(child_session_ids)
         instruction = (
             f"Child agent tasks completed successfully. "
@@ -426,8 +472,10 @@ def main() -> None:
         else:
             print("[serial_manager] ✗ Pipeline failed")
 
-        # Invoke parent session with child session IDs
-        invoke_parent_session(parent_session_id, child_session_ids, project_root)
+        # Invoke parent session with child session IDs and results
+        invoke_parent_session(
+            parent_session_id, child_session_ids, project_root, results
+        )
 
         # Exit with appropriate code
         sys.exit(0 if all_success else 1)

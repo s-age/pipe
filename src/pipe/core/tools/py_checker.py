@@ -19,6 +19,7 @@ class PyCheckerResult(BaseModel):
 
     ruff_check: CheckStepResult | None = None
     ruff_format: CheckStepResult | None = None
+    black: CheckStepResult | None = None
     mypy: CheckStepResult | None = None
     overall_success: bool = False
     error: str | None = None
@@ -30,9 +31,10 @@ def py_checker() -> ToolResult[PyCheckerResult]:
     single execution:
     1. ruff check --fix (lint and auto-fix)
     2. ruff format (code formatting)
-    3. mypy (type checking)
+    3. black (88-character line length enforcement and formatting)
+    4. mypy (type checking)
 
-    IMPORTANT: This tool executes all three steps automatically in one call.
+    IMPORTANT: This tool executes all four steps automatically in one call.
     You will receive results for all steps in a single response.
     Do NOT call this tool multiple times to run individual steps.
 
@@ -96,9 +98,29 @@ def py_checker() -> ToolResult[PyCheckerResult]:
         except Exception as e:
             return ToolResult(error=f"Error running ruff format: {str(e)}")
 
-        # Step 3: mypy
+        # Step 3: black (88-character line length enforcement)
         try:
             process3 = subprocess.run(
+                ["black", "."],
+                capture_output=True,
+                text=True,
+                cwd=abs_project_root,
+                check=False,
+            )
+            results.black = CheckStepResult(
+                stdout=process3.stdout.strip() if process3.stdout else "",
+                stderr=process3.stderr.strip() if process3.stderr else "",
+                exit_code=process3.returncode,
+                success=process3.returncode == 0,
+            )
+        except FileNotFoundError:
+            return ToolResult(error="black command not found. Please install black.")
+        except Exception as e:
+            return ToolResult(error=f"Error running black: {str(e)}")
+
+        # Step 4: mypy
+        try:
+            process4 = subprocess.run(
                 ["mypy", "."],
                 capture_output=True,
                 text=True,
@@ -106,10 +128,10 @@ def py_checker() -> ToolResult[PyCheckerResult]:
                 check=False,
             )
             results.mypy = CheckStepResult(
-                stdout=process3.stdout.strip() if process3.stdout else "",
-                stderr=process3.stderr.strip() if process3.stderr else "",
-                exit_code=process3.returncode,
-                success=process3.returncode == 0,
+                stdout=process4.stdout.strip() if process4.stdout else "",
+                stderr=process4.stderr.strip() if process4.stderr else "",
+                exit_code=process4.returncode,
+                success=process4.returncode == 0,
             )
         except FileNotFoundError:
             return ToolResult(error="mypy command not found. Please install mypy.")
@@ -121,9 +143,13 @@ def py_checker() -> ToolResult[PyCheckerResult]:
         ruff_format_success = (
             results.ruff_format.success if results.ruff_format else False
         )
+        black_success = results.black.success if results.black else False
         mypy_success = results.mypy.success if results.mypy else False
         results.overall_success = (
-            ruff_check_success and ruff_format_success and mypy_success
+            ruff_check_success
+            and ruff_format_success
+            and black_success
+            and mypy_success
         )
 
         return ToolResult(data=results)

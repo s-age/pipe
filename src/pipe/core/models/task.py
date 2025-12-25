@@ -25,13 +25,25 @@ class AgentTask(CamelCaseModel):
 
 
 class ScriptTask(CamelCaseModel):
-    """Script execution task"""
+    """Script execution task
+
+    Exit Code Handling:
+        - 0: Success (continue to next task)
+        - 1: Retriable failure (retry if max_retries > 0)
+        - 2: ABORT - Permanent failure (immediately abort, no retries)
+
+    Exit code 2 is used for permanent failures that cannot be fixed through retries,
+    such as unauthorized file modifications, validation failures requiring manual
+    investigation, or configuration issues.
+    """
 
     type: Literal["script"] = "script"
     script: str = Field(..., description="Script name (under scripts/ directory)")
     args: list[str] = Field(default_factory=list, description="Script arguments")
     max_retries: int = Field(
-        default=0, description="Maximum retry attempts on failure (0 = no retry)"
+        default=0,
+        description="Maximum retry attempts on failure (0 = no retry). "
+        "Note: exit code 2 will abort immediately regardless of this setting.",
     )
 
 
@@ -44,7 +56,10 @@ class TaskExecutionResult(CamelCaseModel):
 
     task_index: int = Field(..., description="Task index (0-based)")
     task_type: Literal["agent", "script"] = Field(..., description="Task type")
-    exit_code: int = Field(..., description="Exit code (0=success)")
+    exit_code: int = Field(
+        ...,
+        description="Exit code (0=success, 1=retriable failure, 2=permanent abort)",
+    )
     started_at: str = Field(..., description="Start time (ISO 8601)")
     completed_at: str = Field(..., description="Completion time (ISO 8601)")
     duration_seconds: float = Field(..., description="Execution duration (seconds)")

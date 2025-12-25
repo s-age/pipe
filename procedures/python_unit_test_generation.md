@@ -12,12 +12,11 @@ Used by any agent tasked with writing tests. Invoked via detailed instruction fr
 
 ```mermaid
 graph TD
-    Start([Start: Receive target file]) --> Step1A[Step 1a: py_get_symbol_references<br/>MANDATORY]
-    Step1A --> Step1B[Step 1b: py_analyze_code<br/>MANDATORY]
-    Step1B --> Step1C[Step 1c: py_test_strategist<br/>MANDATORY]
-    Step1C --> Step1D[Step 1d: Manual analysis]
+    Start([Start: Receive target file]) --> Step1A[Step 1a: py_analyze_code<br/>MANDATORY]
+    Step1A --> Step1B[Step 1b: py_test_strategist<br/>MANDATORY]
+    Step1B --> Step1C[Step 1c: Manual analysis]
 
-    Step1D --> Step2[Step 2: Review applicable test strategies]
+    Step1C --> Step2[Step 2: Review applicable test strategies]
 
     Step2 --> Step3[Step 3: Plan test structure]
 
@@ -30,32 +29,34 @@ graph TD
 
     Step5B --> CheckTests{Tests<br/>passed?}
     CheckTests -- No --> Step4
-    CheckTests -- Yes --> Step6[Step 6: Verify git status]
+    CheckTests -- Yes --> Step5C[Step 5c: Verify Coverage]
+
+    Step5C --> Step6[Step 6: Verify git status]
 
     Step6 --> Step7{Only tests/<br/>changed?}
     Step7 -- Yes --> Commit[Step 7a: Auto-commit]
-    Step7 -- No --> Report[Step 7b: Report and wait]
+    Step7 -- No --> Report[Step 7b: ABORT - DO NOT COMMIT]
 
     Commit --> End([End: Success])
-    Report --> End
+    Report --> End([End: Aborted])
 
     style Start fill:#e1f5e1
     style End fill:#e1f5e1
     style Step1A fill:#ffdddd
     style Step1B fill:#ffdddd
-    style Step1C fill:#ffdddd
-    style Step1D fill:#fff4e1
+    style Step1C fill:#fff4e1
     style Step2 fill:#fff4e1
     style Step3 fill:#e1f0ff
     style Step4 fill:#ffe1f0
     style Step5A fill:#f0e1ff
     style Step5B fill:#f0e1ff
+    style Step5C fill:#f0e1ff
     style Step6 fill:#e1ffe1
     style CheckChecker fill:#ffcccc
     style CheckTests fill:#ffcccc
     style Step7 fill:#ffcccc
     style Commit fill:#ccffcc
-    style Report fill:#ffffcc
+    style Report fill:#ffcccc
 ```
 
 ---
@@ -66,18 +67,7 @@ graph TD
 
 **CRITICAL**: The following tool executions are **MANDATORY** and must be performed in order. Do NOT skip any tool.
 
-#### Step 1a: Understand Impact Scope (Mandatory)
-```python
-py_get_symbol_references(file_path="{target_file_path}")
-```
-This tool reveals:
-- How many files depend on this code
-- Which symbols are actively used
-- The impact radius of potential bugs
-
-**Purpose**: Determine test priority and coverage density based on usage.
-
-#### Step 1b: Extract Specifications and Docstrings (Mandatory)
+#### Step 1a: Extract Specifications and Docstrings (Mandatory)
 ```python
 py_analyze_code(file_path="{target_file_path}")
 ```
@@ -89,7 +79,7 @@ This tool provides:
 
 **Purpose**: Build test cases from **specifications** (what it should do), not implementation details (how it does it).
 
-#### Step 1c: Determine Test Strategy (Mandatory)
+#### Step 1b: Determine Test Strategy (Mandatory)
 ```python
 py_test_strategist(file_path="{target_file_path}")
 ```
@@ -101,8 +91,8 @@ This tool analyzes:
 
 **Purpose**: Know **how to test** (mocking strategy, complexity handling) before writing any code.
 
-#### Step 1d: Manual Analysis
-After running the three mandatory tools, manually identify:
+#### Step 1c: Manual Analysis
+After running the two mandatory tools, manually identify:
 - Public interface (classes, methods, functions)
 - Dependencies (imports, external calls)
 - Data flow (inputs, outputs, state changes)
@@ -110,15 +100,13 @@ After running the three mandatory tools, manually identify:
 - Error conditions (exceptions, validation failures)
 
 **Output**: Complete test specification including:
-- Impact scope (from `py_get_symbol_references`)
 - Behavioral specifications (from `py_analyze_code`)
 - Technical test strategy (from `py_test_strategist`)
 - Manual analysis notes
 
 **Rationale**: This "golden routine" ensures tests are:
-1. **Prioritized by importance** (symbol references)
-2. **Aligned with specifications** (docstrings, not implementation)
-3. **Technically sound** (proper mocking and complexity handling)
+1. **Aligned with specifications** (docstrings, not implementation)
+2. **Technically sound** (proper mocking and complexity handling)
 
 Skipping these tools is equivalent to climbing a mountain without a map—it invites coverage gaps and wasted effort.
 
@@ -205,10 +193,27 @@ py_run_and_test_code()
 ```
 This runs all tests in the project using pytest.
 
-- **Pass**: Continue to Step 6
+- **Pass**: Continue to Step 5c
 - **Fail**: Fix test logic, return to Step 4
 
-**Output**: All quality checks passed
+#### Step 5c: Verify Coverage (Mandatory)
+**CRITICAL**: Always use grep to filter output to avoid context window overflow.
+
+```bash
+poetry run pytest --cov=src --cov-report=term-missing | grep {test_output_path}
+```
+
+**Purpose**:
+- Verify test coverage for the specific file being tested
+- Avoid overwhelming context window with full project coverage output
+- Full project coverage output consumes excessive tokens and provides unnecessary information
+
+**Actions**:
+1. Run coverage with grep filter for the target test file
+2. Verify coverage meets project standards
+3. If coverage is insufficient, return to Step 4 and add missing test cases
+
+**Output**: Coverage verification passed
 
 ---
 
@@ -240,25 +245,30 @@ git commit -m "test: add tests for {filename}"
 
 **Output**: Committed changes
 
-#### Step 7b: If Production Code Changed (Report and Wait)
+#### Step 7b: If Production Code Changed (ABORT - DO NOT COMMIT)
 
 **Condition**: Any modified files outside `tests/` directory
 
+**CRITICAL**: This is a **FATAL ERROR**. Tests must NEVER modify production code.
+
 **Actions**:
-1. Report modified files to user:
+1. Report modified files and abort:
    ```
-   ⚠️  WARNING: Production code changes detected
+   🚨 FATAL ERROR: Production code changes detected
 
    Modified files outside tests/:
    - {file1}
    - {file2}
 
-   Please review changes and confirm before committing.
+   ABORT: Tests must NOT modify production code.
+   This indicates a serious issue in the test implementation.
+   DO NOT COMMIT. Investigate and fix the root cause.
    ```
-2. Wait for user confirmation
-3. Do NOT auto-commit
+2. **DO NOT commit under ANY circumstances**
+3. **DO NOT wait for user confirmation**
+4. **ABORT the procedure immediately**
 
-**Output**: User notified, awaiting confirmation
+**Output**: Procedure aborted, no commit made
 
 ---
 
@@ -276,10 +286,12 @@ git commit -m "test: add tests for {filename}"
 - ❌ Test dependencies (tests must be independent)
 - ❌ Skipping quality checks
 - ❌ Committing with failing tests
-- ❌ Modifying production code without user approval
+- ❌ **ABSOLUTE PROHIBITION**: Modifying ANY files outside `tests/` directory
+- ❌ **ABSOLUTE PROHIBITION**: Modifying ANY files not directly related to the test being written
+- ❌ **ABSOLUTE PROHIBITION**: Committing if ANY files outside `tests/` are changed
 
 ### Prohibited Shortcuts
-- ❌ Skipping mandatory tool executions in Step 1 (py_get_symbol_references, py_analyze_code, py_test_strategist)
+- ❌ Skipping mandatory tool executions in Step 1 (py_analyze_code, py_test_strategist)
 - ❌ Proceeding to next step if current step fails
 - ❌ Batching quality checks (run sequentially)
 - ❌ Assuming tests pass without running them
@@ -304,21 +316,21 @@ Input:
   layer: repositories
 
 Execution:
-  Step 1a: py_get_symbol_references(src/pipe/core/repositories/archive_repository.py)
-           → Found 5 references in service layer (high priority)
-  Step 1b: py_analyze_code(src/pipe/core/repositories/archive_repository.py)
+  Step 1a: py_analyze_code(src/pipe/core/repositories/archive_repository.py)
            → Extracted docstrings for save(), restore(), delete()
            → Identified spec: "save() must create parent dirs", "delete() must handle missing files"
-  Step 1c: py_test_strategist(src/pipe/core/repositories/archive_repository.py)
+  Step 1b: py_test_strategist(src/pipe/core/repositories/archive_repository.py)
            → Complexity: Medium (cyclomatic=8)
            → Strategy: Use tmp_path for real file I/O, mock Path.exists for error cases
-  Step 1d: Manual analysis
+  Step 1c: Manual analysis
            → Identify edge cases: empty archives, corrupted files, permission errors
   Step 2: Review roles/python/tests/core/repositories.md (use tmp_path, test CRUD)
   Step 3: Plan TestArchiveRepositorySave, TestArchiveRepositoryRestore, etc.
   Step 4: Write test file with fixtures, test classes, methods
   Step 5a: py_checker() → PASS (ruff check, ruff format, mypy on entire project)
   Step 5b: py_run_and_test_code() → PASS (pytest on entire project)
+  Step 5c: poetry run pytest --cov=src --cov-report=term-missing | grep test_archive_repository.py
+           → Coverage: 95% (acceptable)
   Step 6: git status --short → M tests/unit/core/repositories/test_archive_repository.py
   Step 7a: git commit -m "test: add tests for archive_repository"
 
@@ -329,9 +341,9 @@ Output: Success, test committed
 
 ## Notes
 
-- **Mandatory tool execution**: Step 1a-1c tools are NON-NEGOTIABLE. They form the "golden routine" that prevents coverage gaps and wasted effort
+- **Mandatory tool execution**: Step 1a-1b tools are NON-NEGOTIABLE. They form the "golden routine" that prevents coverage gaps and wasted effort
 - **Specification-driven testing**: Use `py_analyze_code` output (docstrings) to design tests, not implementation details
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
 - **No skipping**: Quality checks must all pass before commit
-- **User approval**: Required for any production code changes
+- **ABSOLUTE PROHIBITION**: ANY changes to files outside `tests/` directory will result in immediate procedure abort with NO commit

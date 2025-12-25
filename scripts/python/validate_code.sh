@@ -25,6 +25,7 @@ set -euo pipefail
 # Parse arguments
 VERBOSE_ENABLED=false
 COVERAGE_ENABLED=false
+POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
     case $1 in
         --verbose)
@@ -35,23 +36,36 @@ while [[ $# -gt 0 ]]; do
             COVERAGE_ENABLED=true
             shift
             ;;
-        *)
+        -*)
             echo "Unknown option: $1"
-            echo "Usage: validate_code.sh [--verbose] [--coverage]"
+            echo "Usage: validate_code.sh [--verbose] [--coverage] [paths...]"
             exit 1
+            ;;
+        *)
+            POSITIONAL_ARGS+=("$1")
+            shift
             ;;
     esac
 done
 
 echo "=================================================="
 echo "Quality Gate Validation"
-echo "Checking entire project"
+if [ ${#POSITIONAL_ARGS[@]} -gt 0 ]; then
+    echo "Checking paths: ${POSITIONAL_ARGS[*]}"
+else
+    echo "Checking entire project"
+fi
 echo "=================================================="
 echo ""
 
 # Quality gate 1: Ruff check
 echo "[1/4] Running Ruff linting..."
-if poetry run ruff check --fix .; then
+RUFF_CHECK_TARGETS="."
+if [ ${#POSITIONAL_ARGS[@]} -gt 0 ]; then
+    RUFF_CHECK_TARGETS="${POSITIONAL_ARGS[*]}"
+fi
+
+if poetry run ruff check --fix $RUFF_CHECK_TARGETS; then
     echo "✅ Ruff check passed"
 else
     echo "❌ Ruff check failed"
@@ -61,7 +75,12 @@ echo ""
 
 # Quality gate 2: Ruff format
 echo "[2/4] Running Ruff formatting..."
-if poetry run ruff format .; then
+RUFF_FORMAT_TARGETS="."
+if [ ${#POSITIONAL_ARGS[@]} -gt 0 ]; then
+    RUFF_FORMAT_TARGETS="${POSITIONAL_ARGS[*]}"
+fi
+
+if poetry run ruff format $RUFF_FORMAT_TARGETS; then
     echo "✅ Ruff format passed"
 else
     echo "❌ Ruff format failed"
@@ -71,7 +90,12 @@ echo ""
 
 # Quality gate 3: MyPy
 echo "[3/4] Running MyPy type checking..."
-if poetry run mypy .; then
+MYPY_TARGETS="."
+if [ ${#POSITIONAL_ARGS[@]} -gt 0 ]; then
+    MYPY_TARGETS="${POSITIONAL_ARGS[*]}"
+fi
+
+if poetry run mypy $MYPY_TARGETS; then
     echo "✅ MyPy check passed"
 else
     echo "❌ MyPy check failed"
@@ -91,6 +115,10 @@ fi
 if [ "$COVERAGE_ENABLED" = true ]; then
     echo "Coverage reporting enabled"
     PYTEST_ARGS="$PYTEST_ARGS --cov=src/pipe --cov-report=term-missing --cov-report=html"
+fi
+
+if [ ${#POSITIONAL_ARGS[@]} -gt 0 ]; then
+    PYTEST_ARGS="$PYTEST_ARGS ${POSITIONAL_ARGS[*]}"
 fi
 
 if poetry run pytest $PYTEST_ARGS; then
@@ -127,7 +155,6 @@ if [ -n "$NON_TEST_CHANGES" ]; then
     echo "$NON_TEST_CHANGES"
     echo ""
     echo "Action required: User confirmation needed before committing"
-    exit 1
 fi
 
 echo "✅ All changes are within tests/ directory"

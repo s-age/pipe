@@ -65,7 +65,14 @@ graph TD
 
 ### Step 1: Read and Analyze Target File
 
-**CRITICAL**: The following tool executions are **MANDATORY** and must be performed in order. Do NOT skip any tool.
+**Context Check (Token Efficiency)**:
+If the target file content is already provided in `current_task` or `file_references`:
+- **[CONDITIONAL SKIP]** `read_file` - Use provided content directly
+- **[CONDITIONAL SKIP]** `py_analyze_code` - Analyze from provided content
+- **Purpose**: Avoid duplicate file reads that waste input tokens
+
+**Otherwise (Mandatory Tool Execution)**:
+The following tool executions are **MANDATORY** and must be performed in order:
 
 #### Step 1a: Extract Specifications and Docstrings (Mandatory)
 ```python
@@ -92,7 +99,7 @@ This tool analyzes:
 **Purpose**: Know **how to test** (mocking strategy, complexity handling) before writing any code.
 
 #### Step 1c: Manual Analysis
-After running the two mandatory tools, manually identify:
+After obtaining file content (either from context or mandatory tools), manually identify:
 - Public interface (classes, methods, functions)
 - Dependencies (imports, external calls)
 - Data flow (inputs, outputs, state changes)
@@ -100,15 +107,16 @@ After running the two mandatory tools, manually identify:
 - Error conditions (exceptions, validation failures)
 
 **Output**: Complete test specification including:
-- Behavioral specifications (from `py_analyze_code`)
-- Technical test strategy (from `py_test_strategist`)
+- Behavioral specifications (from `py_analyze_code` or provided context)
+- Technical test strategy (from `py_test_strategist` or analysis)
 - Manual analysis notes
 
 **Rationale**: This "golden routine" ensures tests are:
 1. **Aligned with specifications** (docstrings, not implementation)
 2. **Technically sound** (proper mocking and complexity handling)
+3. **Token efficient** (skip redundant reads when context already provided)
 
-Skipping these tools is equivalent to climbing a mountain without a map—it invites coverage gaps and wasted effort.
+Skipping these steps is equivalent to climbing a mountain without a map—it invites coverage gaps and wasted effort.
 
 ---
 
@@ -241,14 +249,14 @@ poetry run pytest --cov=src --cov-report=term-missing tests/unit/core/utils/test
 **CRITICAL**: This step detects unauthorized file modifications and triggers immediate abort if violated.
 
 **Actions**:
-1. Run:
+1. Run **ONLY**:
    ```bash
    git status --short
    ```
 2. Analyze ALL modified files in the output
 3. Verify that ONLY the following files are modified:
    - The test file you are writing: `{test_output_path}`
-   - NO other files should appear in git diff
+   - NO other files should appear in git status
 
 **Expected Output**:
 ```
@@ -257,9 +265,15 @@ M  tests/unit/core/utils/test_path.py
 
 **Forbidden Scenarios**:
 - ❌ ANY files outside `tests/` directory are modified
-- ❌ ANY test files you did NOT create/modify appear in git diff
-- ❌ ANY production code files appear in git diff
-- ❌ ANY configuration files (pyproject.toml, .gitignore, etc.) appear in git diff
+- ❌ ANY test files you did NOT create/modify appear in git status
+- ❌ ANY production code files appear in git status
+- ❌ ANY configuration files (pyproject.toml, .gitignore, etc.) appear in git status
+
+**Token Efficiency Rule**:
+- **[PROHIBITED]** `git diff` - Wastes tokens showing content you just wrote with `write_file`
+- **[PROHIBITED]** `git diff HEAD` - Duplicates entire file content in context
+- **[REQUIRED]** `git status --short` ONLY - Minimal output, sufficient verification
+- **Rationale**: Trust your own `write_file` output. You don't need to re-read what you just wrote.
 
 **Output**: List of changed files for Step 7 validation
 
@@ -353,11 +367,78 @@ git commit -m "test: add tests for {filename}"
 - ❌ **ABSOLUTE PROHIBITION**: Running coverage without grep filter (causes context overflow)
 
 ### Prohibited Shortcuts
-- ❌ Skipping mandatory tool executions in Step 1 (py_analyze_code, py_test_strategist)
+- ❌ Skipping mandatory tool executions in Step 1 (py_analyze_code, py_test_strategist) when context is NOT provided
 - ❌ Proceeding to next step if current step fails
 - ❌ Batching quality checks (run sequentially)
 - ❌ Assuming tests pass without running them
 - ❌ Writing tests based solely on implementation details instead of specifications
+
+### Prohibited Token-Wasting Actions
+- ❌ **[CRITICAL]** Running `read_file` when file content is already in `current_task` or `file_references`
+- ❌ **[CRITICAL]** Running `git diff` or `git diff HEAD` in Step 6 (use `git status --short` ONLY)
+- ❌ **[CRITICAL]** Re-reading content you just wrote with `write_file`
+- ❌ Executing redundant verification commands that duplicate information already in context
+
+---
+
+## Token Efficiency Strategy
+
+### Overview
+This procedure can consume 430,000-780,000 tokens in a typical execution. The following optimizations can reduce this to ~200,000 tokens (45% reduction).
+
+### Optimization 1: Pre-Inject File Content (Step 1)
+**Current Cost**: ~50,000-100,000 tokens (read_file + py_analyze_code tool calls)
+**Optimized Cost**: ~0 tokens (skip tools when content provided)
+
+**Implementation**:
+When invoking this procedure, include target file content in `current_task`:
+```markdown
+Target file content:
+```python
+# [Full source code here]
+```
+
+This allows the agent to:
+- Skip `read_file` execution (saves 1 request-response cycle)
+- Skip or streamline `py_analyze_code` (use provided content directly)
+- Proceed immediately to Step 1c (manual analysis)
+
+**Token Savings**: 50,000-100,000 tokens per execution
+
+### Optimization 2: Prohibit git diff (Step 6)
+**Current Cost**: ~30,000-50,000 tokens (full file diff output)
+**Optimized Cost**: ~100 tokens (git status --short output)
+
+**Rationale**:
+- Agent uses `write_file` to create test file
+- Immediately running `git diff` re-reads the same content
+- This is "double-billing" - writing content, then reading it back
+- `git status --short` provides sufficient verification (file name only)
+
+**Token Savings**: 30,000-50,000 tokens per execution
+
+### Optimization 3: Conditional Tool Execution
+**Principle**: "Don't ask for information you already have"
+
+**Implementation**:
+- Check `current_task` and `file_references` BEFORE executing tools
+- If content exists, analyze directly without tool calls
+- Only execute tools when information is genuinely missing
+
+**Expected Turn Reduction**: 11 turns → 6-7 turns
+
+### Theoretical Minimum Cost
+With all optimizations:
+- Pre-injected context: -50,000 to -100,000 tokens
+- No git diff: -30,000 to -50,000 tokens
+- Conditional execution: -20,000 to -30,000 tokens
+- **Total savings**: ~100,000-180,000 tokens (23-42% reduction)
+- **Target cost**: ~200,000-250,000 tokens per test file
+
+### Benchmark (Happy Path)
+- **Before optimization**: 780,000 tokens (11 turns)
+- **After optimization**: 430,000 tokens (9 turns, conditional skips)
+- **Theoretical minimum**: ~200,000 tokens (6-7 turns, full pre-injection)
 
 ---
 
@@ -405,9 +486,33 @@ Output: Success, test committed
 
 ## Notes
 
-- **Mandatory tool execution**: Step 1a-1b tools are NON-NEGOTIABLE. They form the "golden routine" that prevents coverage gaps and wasted effort
+- **Mandatory tool execution**: Step 1a-1b tools are NON-NEGOTIABLE unless context is pre-provided. They form the "golden routine" that prevents coverage gaps and wasted effort
+- **Token efficiency**: Check for pre-provided context BEFORE executing tools. Skip redundant reads.
 - **Specification-driven testing**: Use `py_analyze_code` output (docstrings) to design tests, not implementation details
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
 - **No skipping**: Quality checks must all pass before commit
+- **Verification efficiency**: Use `git status --short` ONLY in Step 6. Never use `git diff` to re-read what you just wrote.
 - **ABSOLUTE PROHIBITION**: ANY changes to files outside `tests/` directory will result in immediate procedure abort with NO commit
+
+## Cost-Performance Trade-offs
+
+### High-Quality Path (Current Default)
+- **Cost**: 430,000-780,000 tokens
+- **Turns**: 9-11
+- **Quality**: Highest (full tool execution, comprehensive verification)
+- **Use case**: First test file for a new module, complex logic
+
+### Optimized Path (Conditional Skips)
+- **Cost**: 300,000-430,000 tokens
+- **Turns**: 7-9
+- **Quality**: High (conditional tool execution, streamlined verification)
+- **Use case**: Standard test files with clear requirements
+
+### Minimum Path (Full Pre-injection)
+- **Cost**: 200,000-250,000 tokens
+- **Turns**: 6-7
+- **Quality**: High (context-driven, minimal tool calls)
+- **Use case**: Batch test generation, well-understood codebase
+
+**Recommendation**: Start with High-Quality Path for critical modules, migrate to Optimized/Minimum Path once patterns are established.

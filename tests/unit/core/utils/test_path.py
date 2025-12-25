@@ -1,7 +1,3 @@
-"""
-Unit tests for the path utility module.
-"""
-
 import os
 from unittest.mock import patch
 
@@ -9,109 +5,97 @@ from pipe.core.utils.path import get_project_root
 
 
 class TestGetProjectRoot:
-    """Tests for the get_project_root function."""
+    """Tests for get_project_root function."""
 
-    def test_get_project_root_from_current_dir(self, tmp_path):
-        """Test finding the project root when a marker is in the start directory."""
-        # Setup: Create a marker in the tmp_path
+    def test_get_project_root_current_dir_has_marker(self, tmp_path):
+        """Test finding root when it is the starting directory."""
         marker = "pyproject.toml"
-        (tmp_path / marker).touch()
+        marker_file = tmp_path / marker
+        marker_file.touch()
 
-        # Execute
-        root = get_project_root(start_dir=str(tmp_path))
-
-        # Verify
-        assert root == str(tmp_path)
-
-    def test_get_project_root_from_nested_dir(self, tmp_path):
-        """Test finding the project root from a nested subdirectory."""
-        # Setup: Create a marker in the tmp_path and a nested directory
-        marker = ".git"
-        (tmp_path / marker).mkdir()
-        nested_dir = tmp_path / "subdir1" / "subdir2"
-        nested_dir.mkdir(parents=True)
-
-        # Execute
-        root = get_project_root(start_dir=str(nested_dir))
-
-        # Verify
-        assert root == str(tmp_path)
-
-    def test_get_project_root_with_custom_markers(self, tmp_path):
-        """Test finding the project root using custom marker files."""
-        # Setup: Create a custom marker
-        marker = "my_custom_marker"
-        (tmp_path / marker).touch()
-
-        # Execute
         root = get_project_root(start_dir=str(tmp_path), markers=(marker,))
-
-        # Verify
         assert root == str(tmp_path)
+        assert os.path.isabs(root)
+
+    def test_get_project_root_parent_dir_has_marker(self, tmp_path):
+        """Test finding root in a parent directory."""
+        root_dir = tmp_path / "root"
+        root_dir.mkdir()
+        sub_dir = root_dir / "subdir" / "deep"
+        sub_dir.mkdir(parents=True)
+
+        marker = ".git"
+        (root_dir / marker).mkdir()  # .git is often a directory
+
+        root = get_project_root(start_dir=str(sub_dir), markers=(marker,))
+        assert root == str(root_dir)
+
+    def test_get_project_root_default_markers(self, tmp_path):
+        """Test finding root using default markers (.git, pyproject.toml)."""
+        root_dir = tmp_path / "project"
+        root_dir.mkdir()
+        sub_dir = root_dir / "src"
+        sub_dir.mkdir()
+
+        (root_dir / "pyproject.toml").touch()
+
+        root = get_project_root(start_dir=str(sub_dir))
+        assert root == str(root_dir)
+
+    def test_get_project_root_no_start_dir(self, tmp_path, monkeypatch):
+        """Test using current working directory when start_dir is None."""
+        root_dir = tmp_path / "work"
+        root_dir.mkdir()
+        (root_dir / "pyproject.toml").touch()
+
+        monkeypatch.chdir(root_dir)
+        root = get_project_root()
+        assert root == str(root_dir)
 
     def test_get_project_root_multiple_markers(self, tmp_path):
-        """Test finding the nearest marker among multiple specified markers."""
-        # Setup:
-        # tmp_path/ (root)
-        # ├── .git/
-        # └── sub/
-        #     ├── pyproject.toml
-        #     └── target/
-        (tmp_path / ".git").mkdir()
-        sub_dir = tmp_path / "sub"
-        sub_dir.mkdir()
-        (sub_dir / "pyproject.toml").touch()
-        target_dir = sub_dir / "target"
-        target_dir.mkdir()
+        """Test that it finds the first marker encountered while going up."""
+        grandparent = tmp_path / "grandparent"
+        parent = grandparent / "parent"
+        child = parent / "child"
+        child.mkdir(parents=True)
 
-        # Should find pyproject.toml in sub/ first, not .git in tmp_path/
-        root = get_project_root(start_dir=str(target_dir))
+        (grandparent / "pyproject.toml").touch()
+        (parent / ".git").mkdir()
 
-        assert root == str(sub_dir)
+        # Should find .git in parent first, as it's closer to child
+        root = get_project_root(start_dir=str(child))
+        assert root == str(parent)
 
-    def test_get_project_root_default_start_dir(self, tmp_path, monkeypatch):
-        """Test finding the project root using the default starting directory (CWD)."""
-        # Setup: Create a marker in tmp_path and change CWD to it
-        marker = "pyproject.toml"
-        (tmp_path / marker).touch()
-        monkeypatch.chdir(tmp_path)
-
-        # Execute
-        root = get_project_root()
-
-        # Verify
-        assert root == str(tmp_path)
-
-    def test_get_project_root_empty_markers(self, tmp_path):
-        """Test that empty markers lead to fallback logic."""
-        (tmp_path / ".git").mkdir()
-
-        # Even with .git present, if markers is empty, it should fallback
+    def test_get_project_root_fallback(self, tmp_path):
+        """Test fallback when no markers are found up to filesystem root."""
+        # Mock os.path.exists to always return False to trigger fallback
         with patch("os.path.exists", return_value=False):
-            root = get_project_root(start_dir=str(tmp_path), markers=())
-            # Fallback should be returned (absolute path)
-            assert os.path.isabs(root)
-
-    def test_get_project_root_fallback(self):
-        """Test the fallback logic when no markers are found up to the root."""
-        with patch("os.path.exists", return_value=False):
-            with patch(
-                "pipe.core.utils.path.__file__", "/mock/src/pipe/core/utils/path.py"
-            ):
-                # Fallback is script_dir ( /mock/src/pipe/core/utils ) + "../../.."
-                # utils -> core -> pipe -> src
-                root = get_project_root(start_dir="/mock/start")
-
-                assert root.endswith("src")
-                assert "mock" in root
-
-    def test_get_project_root_reaches_filesystem_root(self, tmp_path):
-        """Test that the search stops and falls back when the filesystem root is reached."""
-        # Start from a path and ensure we don't find anything
-        with patch("os.path.exists", return_value=False):
-            # This should trigger the break in the while loop when parent_dir == current_dir
             root = get_project_root(start_dir=str(tmp_path))
 
-            # Should return the fallback path
-            assert root is not None
-            assert os.path.isabs(root)
+            # Calculate expected fallback relative to the script location
+            import pipe.core.utils.path as path_module
+
+            script_dir = os.path.dirname(os.path.abspath(path_module.__file__))
+            expected_fallback = os.path.abspath(
+                os.path.join(script_dir, "..", "..", "..")
+            )
+
+            assert root == expected_fallback
+
+    def test_get_project_root_reaches_fs_root(self):
+        """Test behavior when reaching the filesystem root without finding markers."""
+        # Using a very unlikely marker to ensure it reaches the root
+        marker = "non_existent_marker_xyz_123"
+
+        # Start from root (or as close as possible in a cross-platform way)
+        start_dir = os.path.abspath(os.sep)
+
+        root = get_project_root(start_dir=start_dir, markers=(marker,))
+
+        # Should trigger fallback
+        import pipe.core.utils.path as path_module
+
+        script_dir = os.path.dirname(os.path.abspath(path_module.__file__))
+        expected_fallback = os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
+
+        assert root == expected_fallback

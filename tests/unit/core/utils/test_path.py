@@ -43,6 +43,26 @@ class TestGetProjectRoot:
 
         assert root == str(tmp_path)
 
+    def test_get_project_root_multiple_markers(self, tmp_path):
+        """Test finding the nearest marker among multiple specified markers."""
+        # Setup:
+        # tmp_path/ (root)
+        # ├── .git/
+        # └── sub/
+        #     ├── pyproject.toml
+        #     └── target/
+        (tmp_path / ".git").mkdir()
+        sub_dir = tmp_path / "sub"
+        sub_dir.mkdir()
+        (sub_dir / "pyproject.toml").touch()
+        target_dir = sub_dir / "target"
+        target_dir.mkdir()
+
+        # Should find pyproject.toml in sub/ first, not .git in tmp_path/
+        root = get_project_root(start_dir=str(target_dir))
+
+        assert root == str(sub_dir)
+
     def test_get_project_root_default_cwd(self, tmp_path):
         """Test that start_dir=None uses the current working directory."""
         # Setup: create a marker in tmp_path and change CWD
@@ -52,28 +72,37 @@ class TestGetProjectRoot:
             root = get_project_root(start_dir=None)
             assert root == str(tmp_path)
 
+    def test_get_project_root_empty_markers(self, tmp_path):
+        """Test that empty markers lead to fallback logic."""
+        (tmp_path / ".git").mkdir()
+        script_dir = os.path.dirname(os.path.abspath(path_module.__file__))
+        expected_fallback = os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
+
+        # Even with .git present, if markers is empty, it should fallback
+        root = get_project_root(start_dir=str(tmp_path), markers=())
+        assert root == expected_fallback
+
     def test_get_project_root_fallback(self, tmp_path):
         """Test fallback logic when no markers are found.
 
         The fallback logic assumes the root is 3 levels up from the script location.
-        In this project structure:
-        src/pipe/core/utils/path.py -> root is 'pipe/'
         """
         # Calculate the expected fallback path
         script_dir = os.path.dirname(os.path.abspath(path_module.__file__))
         expected_fallback = os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
 
         # We use a directory that definitely has no markers up to the filesystem root
-        # and mock os.path.exists to be safe.
         with patch("os.path.exists", return_value=False):
             root = get_project_root(start_dir=str(tmp_path))
             assert root == expected_fallback
 
-    def test_get_project_root_stops_at_filesystem_root(self, tmp_path):
+    def test_get_project_root_stops_at_filesystem_root(self):
         """Test that the upward search stops at the filesystem root."""
-        # This is implicitly tested by the fallback test, but we can be more explicit
-        # if we want to ensure it doesn't infinite loop.
+        script_dir = os.path.dirname(os.path.abspath(path_module.__file__))
+        expected_fallback = os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
+
         with patch("os.path.exists", return_value=False):
             # If it reaches the root, it should break the while loop and return fallback
+            # We use "/" for Unix systems as a root example
             root = get_project_root(start_dir="/")
-            assert root is not None
+            assert root == expected_fallback

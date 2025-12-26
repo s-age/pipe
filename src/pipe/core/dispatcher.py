@@ -56,16 +56,8 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         session_service.project_root, session_service.settings
     )
 
-    # For stream-json, also output to stdout
+    # For stream-json, determine if we should output to stdout
     stream_to_stdout = args.output_format == "stream-json"
-    if stream_to_stdout:
-        # Send initial instruction event
-        print(
-            json.dumps(
-                {"type": "instruction", "content": args.instruction}, ensure_ascii=False
-            ),
-            flush=True,
-        )
 
     try:
         # Calculate token count for text output
@@ -95,6 +87,16 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         # Decrement TTL for all active references before calling the delegate
         reference_service.decrement_all_references_ttl_in_session(session_id)
         turn_service.expire_old_tool_responses(session_id)
+
+        # Send initial instruction event for stream-json (after all validations)
+        if stream_to_stdout:
+            print(
+                json.dumps(
+                    {"type": "instruction", "content": args.instruction},
+                    ensure_ascii=False,
+                ),
+                flush=True,
+            )
 
         # 5. Start transaction (add user_instruction to pools)
         turn_service.start_transaction(session_id, args.instruction)

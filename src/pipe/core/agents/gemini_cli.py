@@ -20,7 +20,6 @@ from pipe.core.agents.base import BaseAgent
 from pipe.core.models.args import TaktArgs
 
 if TYPE_CHECKING:
-    from pipe.core.services.prompt_service import PromptService
     from pipe.core.services.session_service import SessionService
 
 
@@ -251,14 +250,12 @@ class GeminiCliAgent(BaseAgent):
         self,
         args: TaktArgs,
         session_service: "SessionService",
-        prompt_service: "PromptService",
     ) -> tuple[str, int | None, list, str | None]:
         """Execute the Gemini CLI agent.
 
         Args:
             args: Command line arguments
             session_service: Service for session management
-            prompt_service: Service for prompt building
 
         Returns:
             Tuple of (response_text, token_count, turns_to_save, thought_text)

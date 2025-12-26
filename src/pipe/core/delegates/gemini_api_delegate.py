@@ -2,11 +2,10 @@ import json
 import os
 
 from pipe.cli.mcp_server import execute_tool
+from pipe.core.agents.gemini_api import GeminiApiAgent
 from pipe.core.models.turn import ModelResponseTurn
 from pipe.core.models.unified_chunk import MetadataChunk, TextChunk, ToolCallChunk
 from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
-from pipe.core.services.gemini_client_service import GeminiClientService
-from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.session_turn_service import SessionTurnService
 from pipe.core.utils.datetime import get_current_timestamp
@@ -15,7 +14,6 @@ from pipe.core.utils.datetime import get_current_timestamp
 def run_stream(
     args,
     session_service: SessionService,
-    prompt_service: PromptService,
     session_turn_service: SessionTurnService,
 ):
     """Streaming version for web UI."""
@@ -70,9 +68,9 @@ def run_stream(
                 session_service.current_session = reloaded_session
                 session_data = session_service.current_session
 
-        # Use GeminiClientService with unified Pydantic chunk format
-        gemini_client = GeminiClientService(session_service)
-        stream = gemini_client.stream_content(prompt_service)
+        # Use GeminiApiAgent with unified Pydantic chunk format
+        gemini_agent = GeminiApiAgent(session_service)
+        stream = gemini_agent.stream_content()
 
         full_text_parts = []
         thought_parts = []
@@ -205,14 +203,14 @@ def run_stream(
 
             # Update the FunctionCallingTurn in the pool with raw_response
             # (contains thought signature)
-            if gemini_client.last_raw_response:
+            if gemini_agent.last_raw_response:
                 # Reload session to get the pool updated by execute_tool
                 session = session_service.repository.find(session_id)
                 if session and session.pools:
                     # Find the last FunctionCallingTurn in the pool
                     for turn in reversed(session.pools):
                         if turn.type == "function_calling":
-                            turn.raw_response = gemini_client.last_raw_response
+                            turn.raw_response = gemini_agent.last_raw_response
                             session_service.repository.save(session)
                             break
 
@@ -265,7 +263,7 @@ def run_stream(
         content=model_response_text,
         thought=model_response_thought if model_response_thought else None,
         timestamp=get_current_timestamp(timezone_obj),
-        raw_response=gemini_client.last_raw_response,
+        raw_response=gemini_agent.last_raw_response,
     )
     intermediate_turns.append(final_model_turn)
 

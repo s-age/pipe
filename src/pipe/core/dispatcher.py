@@ -104,7 +104,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
 
         # 6. Execute agent
         AgentClass = get_agent_class(api_mode)
-        agent_instance = AgentClass()
+        agent_instance = AgentClass(session_service)
 
         # Use streaming mode for stream-json output format
         used_stream_mode = False
@@ -116,9 +116,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
             token_count = None
             turns_to_save = []
 
-            for stream_item in agent_instance.run_stream(
-                args, session_service, prompt_service
-            ):
+            for stream_item in agent_instance.run_stream(args, session_service):
                 # Check if this is the final tuple (ends with "end")
                 if isinstance(stream_item, tuple) and stream_item[0] == "end":
                     (
@@ -139,7 +137,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
                     )
         else:
             # Non-streaming mode: get complete response
-            result = agent_instance.run(args, session_service, prompt_service)
+            result = agent_instance.run(args, session_service)
             if len(result) == 4:
                 (
                     model_response_text,

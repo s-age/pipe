@@ -12,7 +12,6 @@
 import json
 import os
 import subprocess
-import sys
 from typing import TYPE_CHECKING
 
 from pipe.core.agents import register_agent
@@ -53,13 +52,30 @@ def call_gemini_cli(
     )
     pretty_printed_prompt = payload_builder.build(session_service)
 
-    if output_format == "stream-json":
-        # For stream-json, stream the output in real-time
-        from pipe.core.domains.gemini_cli_stream_processor import (
-            GeminiCliStreamProcessor,
-        )
+    # Use a temporary file to pass the prompt to gemini-cli.
+    # We pipe this file directly to stdin to avoid buffer issues and argument limits.
+    import tempfile
 
-        command = ["gemini", "-y", "-m", model_name, "-o", output_format, "-p", "-"]
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, encoding="utf-8"
+        ) as tf:
+            tf.write(pretty_printed_prompt)
+            tmp_path = tf.name
+
+        # Use '-' to tell gemini to read from stdin
+        command = [
+            "gemini",
+            "-y",
+            "-m",
+            model_name,
+            "-o",
+            output_format,
+            "-p",
+            "-",
+        ]
+
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
         if session_service.current_session_id:
@@ -68,178 +84,107 @@ def call_gemini_cli(
         if "GOOGLE_API_KEY" in os.environ:
             env["GEMINI_API_KEY"] = os.environ["GOOGLE_API_KEY"]
 
-        process = subprocess.Popen(
-            command,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            env=env,
-            bufsize=1,
-        )
-
-        if process.stdin:
-            process.stdin.write(pretty_printed_prompt)
-        if process.stdin:
-            process.stdin.close()
-
-        # Use the stream processor to handle JSON parsing and logging
-        stream_processor = GeminiCliStreamProcessor(
-            session_service=session_service,
-            streaming_log_repo=streaming_log_repo,
-        )
-
-        while True:
-            if not process.stdout:
-                break
-            line = process.stdout.readline()
-            if not line:
-                break
-            stream_processor.process_line(line)
-
-        stderr_output = ""
-        if process.stderr:
-            stderr_output = process.stderr.read()
-        return_code = process.wait()
-        if return_code != 0:
-            raise RuntimeError(f"Error during gemini-cli execution: {stderr_output}")
-
-        # Save tool results to session pool
-        stream_processor.save_tool_results_to_pool()
-
-        # Return the collected result
-        return stream_processor.get_result()
-    else:
-        # Original logic for json and text
-        # Avoid passing a very large prompt as a single argv element (can hit
-        # the system ARG_MAX / Argument list too long). Try streaming the prompt
-        # via stdin first (many CLIs accept '-' to mean read from stdin). If
-        # that fails, fall back to writing the prompt to a temporary file and
-        # passing the filename.
-        command = ["gemini", "-y", "-m", model_name, "-o", output_format, "-p", "-"]
-
-        env = os.environ.copy()
-        env["PYTHONUNBUFFERED"] = "1"  # Force unbuffered output for streaming
-        # CRITICAL: This environment variable ensures that the Gemini CLI
-        # operates within the context of the current session.
-        # Do NOT remove or modify this line without careful consideration,
-        # as it is essential for tools to access session-specific data.
-        if session_service.current_session_id:
-            env["PIPE_SESSION_ID"] = session_service.current_session_id
-        # Pass GOOGLE_API_KEY as GEMINI_API_KEY for gemini-cli
-        if "GOOGLE_API_KEY" in os.environ:
-            env["GEMINI_API_KEY"] = os.environ["GOOGLE_API_KEY"]
-
-        try:
-            # First attempt: stream prompt via stdin (using '-' with -p)
-            try:
-                # Debug: show we're attempting to launch gemini with stdin
-                process = subprocess.Popen(
-                    command,
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    encoding="utf-8",
-                    env=env,
-                    bufsize=1,
+        with open(tmp_path, encoding="utf-8") as stdin_f:
+            if output_format == "stream-json":
+                # For stream-json, stream the output in real-time
+                from pipe.core.domains.gemini_cli_stream_processor import (
+                    GeminiCliStreamProcessor,
                 )
 
                 try:
-                    # Use a timeout to avoid hanging indefinitely
-                    # 300 seconds (5 minutes) to allow for complex compression
-                    stdout, stderr = process.communicate(
-                        pretty_printed_prompt, timeout=900
+                    process = subprocess.Popen(
+                        command,
+                        stdin=stdin_f,  # Direct file pipe
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding="utf-8",
+                        env=env,
+                        bufsize=1,
                     )
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    stdout, stderr = process.communicate()
+
+                    # Use the stream processor to handle JSON parsing and logging
+                    stream_processor = GeminiCliStreamProcessor(
+                        session_service=session_service,
+                        streaming_log_repo=streaming_log_repo,
+                    )
+
+                    while True:
+                        if not process.stdout:
+                            break
+                        line = process.stdout.readline()
+                        if not line:
+                            break
+                        stream_processor.process_line(line)
+
+                    stderr_output = ""
+                    if process.stderr:
+                        stderr_output = process.stderr.read()
+                    return_code = process.wait()
+                    if return_code != 0:
+                        raise RuntimeError(
+                            f"Error during gemini-cli execution: {stderr_output}"
+                        )
+
+                    # Save tool results to session pool
+                    stream_processor.save_tool_results_to_pool()
+
+                    # Return the collected result
+                    return stream_processor.get_result()
+                except FileNotFoundError:
                     raise RuntimeError(
-                        "gemini-cli timed out when streaming prompt via stdin"
+                        "Error: 'gemini' command not found. "
+                        "Please ensure it is installed and in your PATH."
                     )
 
-                return_code = process.returncode
+            else:
+                # Original logic for json and text
+                try:
+                    process = subprocess.Popen(
+                        command,
+                        stdin=stdin_f,  # Direct file pipe
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding="utf-8",
+                        env=env,
+                        bufsize=1,
+                    )
 
-                if return_code == 0:
-                    if output_format == "text":
-                        print("DEBUG: gemini(stdin) completed", file=sys.stderr)
+                    full_response = ""
+                    if process.stdout:
+                        for line in iter(process.stdout.readline, ""):
+                            full_response += line
+
+                    stderr_output = ""
+                    if process.stderr:
+                        stderr_output = process.stderr.read()
+
+                    return_code = process.wait()
+                    if return_code != 0:
+                        raise RuntimeError(
+                            f"Error during gemini-cli execution: " f"{stderr_output}"
+                        )
+
                     try:
-                        result = json.loads(stdout)
+                        result = json.loads(full_response)
                         return result
                     except json.JSONDecodeError:
-                        return {"response": stdout, "stats": None}
-                # If non-zero, fall through to fallback below and include stderr
-                last_error = stderr
-            except OSError as e:
-                # Could be "Argument list too long" or other exec issues.
-                last_error = str(e)
-
-            # Fallback: write prompt to a temporary file and pass filename
-            import tempfile
-
-            tmp_path = None
-            try:
-                with tempfile.NamedTemporaryFile(
-                    mode="w", delete=False, encoding="utf-8"
-                ) as tf:
-                    tf.write(pretty_printed_prompt)
-                    tmp_path = tf.name
-
-                command_file = [
-                    "gemini",
-                    "-y",
-                    "-m",
-                    model_name,
-                    "-o",
-                    output_format,
-                    "-p",
-                    tmp_path,
-                ]
-                process = subprocess.Popen(
-                    command_file,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    encoding="utf-8",
-                    env=env,
-                    bufsize=1,
-                )
-
-                full_response = ""
-                if process.stdout:
-                    for line in iter(process.stdout.readline, ""):
-                        full_response += line
-
-                stderr_output = ""
-                if process.stderr:
-                    stderr_output = process.stderr.read()
-
-                return_code = process.wait()
-                if return_code != 0:
+                        return {"response": full_response, "stats": None}
+                except FileNotFoundError:
                     raise RuntimeError(
-                        f"Error during gemini-cli execution: "
-                        f"{last_error or stderr_output}"
+                        "Error: 'gemini' command not found. "
+                        "Please ensure it is installed and in your PATH."
                     )
+                except Exception as e:
+                    raise RuntimeError(f"An unexpected error occurred: {e}")
 
-                try:
-                    result = json.loads(full_response)
-                    return result
-                except json.JSONDecodeError:
-                    return {"response": full_response, "stats": None}
-            finally:
-                try:
-                    if tmp_path and os.path.exists(tmp_path):
-                        os.remove(tmp_path)
-                except Exception:
-                    pass
-        except FileNotFoundError:
-            raise RuntimeError(
-                "Error: 'gemini' command not found. "
-                "Please ensure it is installed and in your PATH."
-            )
-        except Exception as e:
-            raise RuntimeError(f"An unexpected error occurred: {e}")
+    finally:
+        try:
+            if tmp_path and os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except Exception:
+            pass
 
 
 @register_agent("gemini-cli")

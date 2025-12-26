@@ -1,7 +1,8 @@
-from typing import Any
-
 from pipe.core.agents.gemini_cli import call_gemini_cli
+from pipe.core.domains import gemini_token_count
+from pipe.core.domains.gemini_cli_payload import GeminiCliPayloadBuilder
 from pipe.core.models.args import TaktArgs
+from pipe.core.services.gemini_tool_service import GeminiToolService
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.session_turn_service import SessionTurnService
 
@@ -20,27 +21,26 @@ def run(
     result = call_gemini_cli(session_service, args.output_format)
     response_text = result.get("response", "")
     stats = result.get("stats")
-    token_count = 0
-    if stats:
-        # Calculate actual consumed tokens (not cumulative total_tokens)
-        # Consumed = non-cached input tokens + output tokens
-        input_tokens = stats.get("input_tokens", 0)
-        cached_tokens = stats.get("cached", 0)
-        output_tokens = stats.get("output_tokens", 0)
 
-        # Actual consumption = input_tokens - cached_tokens + output_tokens
-        # But if we don't have detailed stats, fall back to total_tokens
-        if input_tokens > 0 or output_tokens > 0:
-            non_cached_input = max(0, input_tokens - cached_tokens)
-            token_count = non_cached_input + output_tokens
-        elif "total_tokens" in stats:
-            # Fallback to total_tokens if detailed stats not available
-            token_count = stats.get("total_tokens", 0)
-        # Fallback to old format with models
-        elif "models" in stats:
-            # Extract total tokens from the first model
-            model_stats: dict[str, Any] = next(iter(stats["models"].values()), {})
-            token_count = model_stats.get("tokens", {}).get("total", 0)
+    # Calculate token count from the complete prompt (including all turns)
+    # Build the prompt using GeminiCliPayloadBuilder
+    payload_builder = GeminiCliPayloadBuilder(
+        project_root=session_service.project_root,
+        api_mode=session_service.settings.api_mode,
+    )
+    rendered_prompt = payload_builder.build(session_service)
+
+    # Load tools
+    tool_service = GeminiToolService()
+    tools = tool_service.load_tools(session_service.project_root)
+
+    # Create tokenizer and count tokens
+    tokenizer = gemini_token_count.create_local_tokenizer(
+        session_service.settings.model.name
+    )
+    token_count = gemini_token_count.count_tokens(
+        rendered_prompt, tools=tools, tokenizer=tokenizer
+    )
 
     # For stream-json, response_text is empty, collect from the streamed output
     if args.output_format == "stream-json":

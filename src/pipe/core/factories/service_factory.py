@@ -15,8 +15,6 @@ from pipe.core.repositories.role_repository import RoleRepository
 from pipe.core.repositories.session_repository import SessionRepository
 from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
 from pipe.core.services.file_indexer_service import FileIndexerService
-from pipe.core.services.gemini_token_count_service import GeminiTokenCountService
-from pipe.core.services.gemini_tool_service import GeminiToolService
 from pipe.core.services.procedure_service import ProcedureService
 from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.role_service import RoleService
@@ -194,12 +192,3 @@ class ServiceFactory:
     def create_session_instruction_service(self) -> SessionInstructionService:
         """Creates a SessionInstructionService with its dependencies."""
         return SessionInstructionService(self.project_root, self.settings)
-
-    def create_gemini_token_count_service(self) -> GeminiTokenCountService:
-        """Creates a GeminiTokenCountService with its dependencies."""
-        tool_service = GeminiToolService()
-        return GeminiTokenCountService(
-            settings=self.settings,
-            tool_service=tool_service,
-            project_root=self.project_root,
-        )

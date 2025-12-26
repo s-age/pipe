@@ -91,7 +91,7 @@ class SessionWorkflowService:
         return new_session.session_id
 
     def _calculate_token_count(self, session) -> int:
-        """Calculate token count for a session using GeminiTokenCountService.
+        """Calculate token count for a session using domain logic.
 
         Args:
             session: The session to calculate token count for
@@ -100,20 +100,12 @@ class SessionWorkflowService:
             The calculated token count
         """
         try:
+            from pipe.core.domains import gemini_token_count
             from pipe.core.factories.service_factory import ServiceFactory
-            from pipe.core.services.gemini_token_count_service import (
-                GeminiTokenCountService,
-            )
             from pipe.core.services.gemini_tool_service import GeminiToolService
 
             # Create service factory to get properly initialized services
             service_factory = ServiceFactory(self.project_root, self.settings)
-
-            # Initialize token count service
-            tool_service = GeminiToolService()
-            token_count_service = GeminiTokenCountService(
-                self.settings, tool_service, self.project_root
-            )
 
             # Get session and prompt services from factory
             session_service = service_factory.create_session_service()
@@ -123,9 +115,30 @@ class SessionWorkflowService:
             session_service.current_session = session
             session_service.current_session_id = session.session_id
 
-            # Calculate tokens
-            token_count = token_count_service.count_tokens_from_prompt(
-                session_service, prompt_service
+            # Build prompt model
+            prompt_model = prompt_service.build_prompt(session_service)
+
+            # Determine which template to use based on api_mode
+            template_name = (
+                "gemini_api_prompt.j2"
+                if session_service.settings.api_mode == "gemini-api"
+                else "gemini_cli_prompt.j2"
+            )
+            template = prompt_service.jinja_env.get_template(template_name)
+
+            # Render the template with the prompt model data
+            rendered_prompt = template.render(session=prompt_model)
+
+            # Load tools
+            tool_service = GeminiToolService()
+            tools = tool_service.load_tools(self.project_root)
+
+            # Create tokenizer and count tokens
+            tokenizer = gemini_token_count.create_local_tokenizer(
+                self.settings.model.name
+            )
+            token_count = gemini_token_count.count_tokens(
+                rendered_prompt, tools=tools, tokenizer=tokenizer
             )
 
             return token_count

@@ -246,6 +246,14 @@ def call_gemini_cli(
 class GeminiCliAgent(BaseAgent):
     """Agent for Gemini CLI mode."""
 
+    def __init__(self, session_service: "SessionService"):
+        """Initialize the Gemini CLI agent.
+
+        Args:
+            session_service: Session service for accessing session data and settings
+        """
+        self.session_service = session_service
+
     def run(
         self,
         args: TaktArgs,

@@ -13,6 +13,7 @@ import google.genai as genai
 from google.genai import types
 from pipe.core.agents import register_agent
 from pipe.core.agents.base import BaseAgent
+from pipe.core.domains import gemini_token_count
 from pipe.core.domains.gemini_api_cache import GeminiApiCacheManager
 from pipe.core.domains.gemini_api_payload import GeminiApiPayloadBuilder
 from pipe.core.domains.gemini_api_stream_processor import GeminiApiStreamProcessor
@@ -20,7 +21,6 @@ from pipe.core.domains.gemini_cache import GeminiCache
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.unified_chunk import UnifiedChunk
 from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
-from pipe.core.services.gemini_token_count_service import GeminiTokenCountService
 from pipe.core.services.gemini_tool_service import GeminiToolService
 
 if TYPE_CHECKING:
@@ -58,11 +58,14 @@ class GeminiApiAgent(BaseAgent):
         # Initialize sub-services and domain classes
         self.tool_service = GeminiToolService()
         self.cache_manager = GeminiApiCacheManager(self.project_root, self.settings)
-        self.token_service = GeminiTokenCountService(
-            settings=self.settings,
-            tool_service=self.tool_service,
-            project_root=self.project_root,
+
+        # Initialize tokenizer for token counting
+        self.tokenizer = gemini_token_count.create_local_tokenizer(
+            self.settings.model.name
         )
+        self.model_name = self.settings.model.name
+        self.context_limit = self.settings.model.context_limit
+
         self.payload_builder = GeminiApiPayloadBuilder(self.project_root, self.settings)
         self.last_raw_response: str | None = None
 
@@ -199,11 +202,13 @@ class GeminiApiAgent(BaseAgent):
 
         # 6. Check token limits
         full_text = (static_content or "") + dynamic_content
-        token_count = self.token_service.count_tokens(
-            full_text, tools=loaded_tools_data
+        token_count = gemini_token_count.count_tokens(
+            full_text, tools=loaded_tools_data, tokenizer=self.tokenizer
         )
 
-        is_within_limit, message = self.token_service.check_limit(token_count)
+        is_within_limit, message = gemini_token_count.check_token_limit(
+            token_count, self.context_limit
+        )
         if not is_within_limit:
             raise ValueError("Prompt exceeds context window limit. Aborting.")
 
@@ -236,7 +241,7 @@ class GeminiApiAgent(BaseAgent):
                     converted_tools=converted_tools,
                     buffered_history_contents=buffered_contents,
                     current_task_content=current_task_content,
-                    model_name=self.token_service.model_name,
+                    model_name=self.model_name,
                     streaming_log_repo=streaming_log_repo,
                 )
             )
@@ -289,7 +294,7 @@ class GeminiApiAgent(BaseAgent):
             stream = client.models.generate_content_stream(
                 contents=content_to_send,
                 config=config,
-                model=self.token_service.model_name,
+                model=self.model_name,
             )
 
             # Use stream processor to handle chunk processing and logging

@@ -52,7 +52,19 @@ class GeminiTokenCountService:
         try:
             from google.genai.local_tokenizer import LocalTokenizer
 
-            self.tokenizer = LocalTokenizer(model_name=self.model_name)
+            # Map unsupported model names to supported ones for tokenization
+            # LocalTokenizer doesn't support all model names (e.g., gemini-3.x, preview models)
+            # See: https://github.com/googleapis/python-genai/issues/1784
+            # Workaround: Replace gemini-3.x with gemini-2.5-x and remove -preview suffix
+            tokenizer_model_name = (
+                self.model_name.replace("gemini-3.", "gemini-2.5-")
+                .replace("gemini-3-", "gemini-2.5-")
+                .replace("-preview", "")
+            )
+            self.tokenizer = LocalTokenizer(model_name=tokenizer_model_name)
+        except ImportError:
+            # Silently fall back to estimation if dependencies are missing
+            self.tokenizer = None
         except Exception as e:
             print(f"Warning: Failed to initialize LocalTokenizer: {e}")
             print("Token counting will use fallback estimation.")

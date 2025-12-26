@@ -114,7 +114,9 @@ class ServiceFactory:
         """Creates a SessionWorkflowService with its dependencies."""
         optimization_service = self.create_session_optimization_service()
         repository = SessionRepository(self.project_root, self.settings)
-        return SessionWorkflowService(optimization_service, repository, self.settings)
+        return SessionWorkflowService(
+            optimization_service, repository, self.settings, self.project_root
+        )
 
     def create_session_optimization_service(self) -> SessionOptimizationService:
         """Creates a SessionOptimizationService with its dependencies."""

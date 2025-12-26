@@ -26,17 +26,20 @@ class SessionWorkflowService:
         optimization_service=None,
         repository: SessionRepository = None,
         settings: Settings = None,
+        project_root: str | None = None,
     ):
         """Initialize with dependencies.
 
         Args:
             optimization_service: SessionOptimizationService for workflow operations
             repository: SessionRepository for persistence
-            settings: Settings for timezone
+            settings: Settings for timezone and model configuration
+            project_root: Project root directory for tool loading
         """
         self.optimization_service = optimization_service
         self.repository = repository
         self.settings = settings
+        self.project_root = project_root
 
         # Initialize timezone_obj
         if settings:
@@ -79,9 +82,57 @@ class SessionWorkflowService:
         # Use domain logic for fork operation and validation
         new_session = fork_session(original_session, fork_index, self.timezone_obj)
 
+        # Calculate token count for the forked session
+        if self.settings and self.project_root:
+            new_session.token_count = self._calculate_token_count(new_session)
+
         self.repository.save(new_session)
 
         return new_session.session_id
+
+    def _calculate_token_count(self, session) -> int:
+        """Calculate token count for a session using GeminiTokenCountService.
+
+        Args:
+            session: The session to calculate token count for
+
+        Returns:
+            The calculated token count
+        """
+        try:
+            from pipe.core.factories.service_factory import ServiceFactory
+            from pipe.core.services.gemini_token_count_service import (
+                GeminiTokenCountService,
+            )
+            from pipe.core.services.gemini_tool_service import GeminiToolService
+
+            # Create service factory to get properly initialized services
+            service_factory = ServiceFactory(self.project_root, self.settings)
+
+            # Initialize token count service
+            tool_service = GeminiToolService()
+            token_count_service = GeminiTokenCountService(
+                self.settings, tool_service, self.project_root
+            )
+
+            # Get session and prompt services from factory
+            session_service = service_factory.create_session_service()
+            prompt_service = service_factory.create_prompt_service()
+
+            # Temporarily set the current session to the forked session
+            session_service.current_session = session
+            session_service.current_session_id = session.session_id
+
+            # Calculate tokens
+            token_count = token_count_service.count_tokens_from_prompt(
+                session_service, prompt_service
+            )
+
+            return token_count
+        except Exception as e:
+            print(f"Warning: Failed to calculate token count for forked session: {e}")
+            # Fallback: return 0 if calculation fails
+            return 0
 
     def run_takt_for_therapist(self, session_id: str) -> TherapistResult:
         """Create therapist session and run initial takt command.

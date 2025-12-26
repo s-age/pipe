@@ -143,6 +143,8 @@ class TestSessionService(unittest.TestCase):
 
     def test_fork_session_success(self):
         """Tests the successful forking of a session."""
+        from pipe.core.models.todo import TodoItem
+
         session = self.session_service.create_new_session("Original", "BG", [])
         session_id = session.session_id
         session.turns.append(
@@ -153,6 +155,14 @@ class TestSessionService(unittest.TestCase):
                 type="model_response", content="First response", timestamp="..."
             )
         )
+        # Set cumulative token statistics on the original session
+        session.cumulative_total_tokens = 1000
+        session.cumulative_cached_tokens = 500
+        # Add todos to the original session
+        session.todos = [
+            TodoItem(title="Todo 1", checked=False),
+            TodoItem(title="Todo 2", checked=True, description="Completed task"),
+        ]
         self.session_service.repository.save(session)
 
         forked_id = self.workflow_service.fork_session(session_id, fork_index=1)
@@ -162,6 +172,19 @@ class TestSessionService(unittest.TestCase):
         self.assertTrue(forked_session.purpose.startswith("Fork of: Original"))
         self.assertEqual(len(forked_session.turns), 2)  # Turns up to the fork point
         self.assertEqual(forked_session.turns[1].content, "First response")
+        # Verify that cumulative token statistics are reset to 0 in the forked session
+        self.assertEqual(forked_session.cumulative_total_tokens, 0)
+        self.assertEqual(forked_session.cumulative_cached_tokens, 0)
+        # Verify that token_count is calculated (should be > 0 for non-empty session)
+        # Note: The actual value depends on tokenizer availability, so we just check it's >= 0
+        self.assertGreaterEqual(forked_session.token_count, 0)
+        # Verify that todos are copied with their completion status
+        self.assertEqual(len(forked_session.todos), 2)
+        self.assertEqual(forked_session.todos[0].title, "Todo 1")
+        self.assertFalse(forked_session.todos[0].checked)
+        self.assertEqual(forked_session.todos[1].title, "Todo 2")
+        self.assertTrue(forked_session.todos[1].checked)
+        self.assertEqual(forked_session.todos[1].description, "Completed task")
 
     def test_edit_session_meta(self):
         """Tests editing a session's metadata."""

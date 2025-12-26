@@ -1,10 +1,10 @@
 # This script acts as a wrapper for the official Google Gemini CLI tool.
-# Its main purpose is to construct a detailed prompt using the PromptBuilder
-# and then execute the 'gemini' command-line tool as a subprocess with
-# the generated prompt.
+# It handles the execution of the 'gemini' command-line tool as a subprocess.
 #
-# This allows the application to leverage the functionality of the official CLI
-# while programmatically controlling the input and context.
+# Responsibilities:
+# - gemini_cli_payload.py: Constructs the JSON prompt payload
+# - gemini_cli_stream_processor.py: Processes streaming JSON output and manages logs
+# - This file: Manages subprocess communication and coordination
 #
 # For more information on the underlying tool, see the official repository:
 # https://github.com/google-gemini/gemini-cli
@@ -28,7 +28,7 @@ def call_gemini_cli(
     session_service: "SessionService", output_format: str = "json"
 ) -> dict:
     # Import here to avoid circular dependency
-    from pipe.core.factories.service_factory import ServiceFactory
+    from pipe.core.domains.gemini_cli_payload import GeminiCliPayloadBuilder
     from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
 
     settings = session_service.settings
@@ -47,24 +47,19 @@ def call_gemini_cli(
     if not model_name:
         raise ValueError("'model' not found in settings")
 
-    service_factory = ServiceFactory(project_root, settings)
-    prompt_service = service_factory.create_prompt_service()
-    prompt_model = prompt_service.build_prompt(session_service)
-
-    # Render the prompt using the appropriate template
-    template_name = (
-        "gemini_api_prompt.j2"
-        if settings.api_mode == "gemini-api"
-        else "gemini_cli_prompt.j2"
+    # Build prompt using the new payload builder (bypasses PromptService)
+    payload_builder = GeminiCliPayloadBuilder(
+        project_root=project_root,
+        api_mode=settings.api_mode,
     )
-    template = prompt_service.jinja_env.get_template(template_name)
-    rendered_prompt = template.render(session=prompt_model)
-
-    # Ensure the rendered prompt is valid JSON and pretty-print it
-    pretty_printed_prompt = json.dumps(json.loads(rendered_prompt), indent=2)
+    pretty_printed_prompt = payload_builder.build(session_service)
 
     if output_format == "stream-json":
         # For stream-json, stream the output in real-time
+        from pipe.core.domains.gemini_cli_stream_processor import (
+            GeminiCliStreamProcessor,
+        )
+
         command = ["gemini", "-y", "-m", model_name, "-o", output_format, "-p", "-"]
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
@@ -90,11 +85,11 @@ def call_gemini_cli(
         if process.stdin:
             process.stdin.close()
 
-        full_response = ""
-        assistant_content = ""
-        tool_calls: list[dict] = []  # Store tool_use events
-        tool_results = []  # Store tool_result events
-        result_stats = None  # Store stats from result event
+        # Use the stream processor to handle JSON parsing and logging
+        stream_processor = GeminiCliStreamProcessor(
+            session_service=session_service,
+            streaming_log_repo=streaming_log_repo,
+        )
 
         while True:
             if not process.stdout:
@@ -102,84 +97,7 @@ def call_gemini_cli(
             line = process.stdout.readline()
             if not line:
                 break
-            print(line.strip())
-            full_response += line
-            # Tee all output to streaming log
-            if streaming_log_repo:
-                streaming_log_repo.append_log(line.strip(), "STREAM")
-            try:
-                data = json.loads(line.strip())
-                if data.get("type") == "message" and data.get("role") == "assistant":
-                    assistant_content += data.get("content", "")
-                elif data.get("type") == "result":
-                    # Store stats from result event
-                    result_stats = data.get("stats")
-                elif data.get("type") == "tool_use":
-                    # Store tool call for later processing
-                    tool_calls.append(data)
-
-                    # Add to pool (skip if added by mcp_server.py)
-                    import time
-
-                    from pipe.core.models.turn import FunctionCallingTurn
-                    from pipe.core.services.session_turn_service import (
-                        SessionTurnService,
-                    )
-                    from pipe.core.utils.datetime import get_current_timestamp
-
-                    session_id = session_service.current_session_id
-                    if session_id:
-                        tool_name = data.get("tool_name", "")
-                        parameters = data.get("parameters", {})
-                        params_json = json.dumps(parameters, ensure_ascii=False)
-                        response_str = f"{tool_name}({params_json})"
-                        timestamp = data.get(
-                            "timestamp",
-                            get_current_timestamp(session_service.timezone_obj),
-                        )
-
-                        # Wait briefly for mcp_server.py to write
-                        time.sleep(0.05)
-
-                        # Reload session from file to get latest pools
-                        session = session_service.repository.find(session_id)
-                        if session:
-                            already_exists = False
-                            # Check recent pool entries (last 5)
-                            recent_pools = (
-                                session.pools[-5:]
-                                if len(session.pools) >= 5
-                                else session.pools
-                            )
-                            for pool_entry in recent_pools:
-                                if (
-                                    hasattr(pool_entry, "type")
-                                    and pool_entry.type == "function_calling"
-                                    and hasattr(pool_entry, "response")
-                                    and pool_entry.response == response_str
-                                ):
-                                    already_exists = True
-                                    break
-
-                            if not already_exists:
-                                function_calling_turn = FunctionCallingTurn(
-                                    type="function_calling",
-                                    response=response_str,
-                                    timestamp=timestamp,
-                                )
-
-                                session_turn_service = SessionTurnService(
-                                    session_service.settings,
-                                    session_service.repository,
-                                )
-                                session_turn_service.add_to_pool(
-                                    session_id, function_calling_turn
-                                )
-                elif data.get("type") == "tool_result":
-                    # Store tool result for later processing
-                    tool_results.append(data)
-            except json.JSONDecodeError:
-                pass
+            stream_processor.process_line(line)
 
         stderr_output = ""
         if process.stderr:
@@ -188,89 +106,11 @@ def call_gemini_cli(
         if return_code != 0:
             raise RuntimeError(f"Error during gemini-cli execution: {stderr_output}")
 
-        # Save tool calls and results to session pool
-        # Only save if pools is empty (standard tools)
-        # Skip if mcp_server already saved (pipe_tools)
-        if tool_calls or tool_results:
-            from pipe.core.models.turn import (
-                FunctionCallingTurn,
-                ToolResponseTurn,
-                TurnResponse,
-            )
-            from pipe.core.utils.datetime import get_current_timestamp
+        # Save tool results to session pool
+        stream_processor.save_tool_results_to_pool()
 
-            session_id = session_service.current_session_id
-
-            # Reload session to check if mcp_server.py added tools to pools
-            session = session_service.repository.find(session_id)
-            if session:
-                # Only add to pools if it's empty (standard tools)
-                # If pools has data, mcp_server.py recorded pipe_tools
-                if len(session.pools) == 0:
-                    for tool_call in tool_calls:
-                        # Create FunctionCallingTurn
-                        tool_name = tool_call.get("tool_name", "")
-                        parameters = tool_call.get("parameters", {})
-                        # Format as function call string
-                        params_json = json.dumps(parameters, ensure_ascii=False)
-                        response_str = f"{tool_name}({params_json})"
-                        timestamp = tool_call.get(
-                            "timestamp",
-                            get_current_timestamp(session_service.timezone_obj),
-                        )
-                        turn = FunctionCallingTurn(
-                            type="function_calling",
-                            response=response_str,
-                            timestamp=timestamp,
-                        )
-                        session.pools.append(turn)
-
-                    for tool_result in tool_results:
-                        # Create ToolResponseTurn
-                        # Extract tool name from tool_id
-                        tool_name = tool_result.get("tool_id", "").split("-")[0]
-                        status = tool_result.get("status", "failed")
-                        output = tool_result.get("output", "")
-                        error = tool_result.get("error")
-
-                        # Create TurnResponse
-                        if status == "success":
-                            response = TurnResponse(
-                                status="succeeded",
-                                message=output,
-                            )
-                        else:
-                            if isinstance(error, dict):
-                                error_msg = error.get("message", "")
-                            else:
-                                error_msg = str(error)
-                            response = TurnResponse(
-                                status="failed",
-                                message=error_msg,
-                            )
-
-                        timestamp = tool_result.get(
-                            "timestamp",
-                            get_current_timestamp(session_service.timezone_obj),
-                        )
-                        turn = ToolResponseTurn(
-                            type="tool_response",
-                            name=tool_name,
-                            response=response,
-                            timestamp=timestamp,
-                        )
-                        session.pools.append(turn)
-
-                    # Save updated session
-                    session_service.repository.save(session)
-
-        # Return the collected data with stats from stream
-        return {
-            "response": assistant_content,
-            "stats": result_stats,
-            "tool_calls": tool_calls,
-            "tool_results": tool_results,
-        }
+        # Return the collected result
+        return stream_processor.get_result()
     else:
         # Original logic for json and text
         # Avoid passing a very large prompt as a single argv element (can hit

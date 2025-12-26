@@ -26,7 +26,7 @@ def call_gemini_cli(
     session_service: "SessionService",
     output_format: str = "json",
     prompt: str | None = None,
-) -> dict:
+):
     # Import here to avoid circular dependency
     from pipe.core.domains.gemini_cli_payload import GeminiCliPayloadBuilder
     from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
@@ -119,7 +119,6 @@ def call_gemini_cli(
 
                     # Use the stream processor to handle JSON parsing and logging
                     stream_processor = GeminiCliStreamProcessor(
-                        session_service=session_service,
                         streaming_log_repo=streaming_log_repo,
                     )
 
@@ -140,10 +139,7 @@ def call_gemini_cli(
                             f"Error during gemini-cli execution: {stderr_output}"
                         )
 
-                    # Save tool results to session pool
-                    stream_processor.save_tool_results_to_pool()
-
-                    # Return the collected result
+                    # Return the collected result (no persistence here)
                     return stream_processor.get_result()
 
                 else:
@@ -214,19 +210,16 @@ class GeminiCliAgent(BaseAgent):
         from pipe.core.services.session_turn_service import SessionTurnService
         from pipe.core.utils.datetime import get_current_timestamp
 
-        # Explicitly merge any tool calls from the pool into the main turns history
-        # before calling the agent.
-        session_id = session_service.current_session_id
         session_turn_service = SessionTurnService(
             session_service.settings, session_service.repository
         )
-        session_turn_service.merge_pool_into_turns(session_id)
 
         model_response_text, token_count, stats = gemini_cli_delegate.run(
             args, session_service, session_turn_service
         )
 
         # Update cumulative token stats in session
+        session_id = session_service.current_session_id
         if stats and session_id:
             session = session_service.get_session(session_id)
             if session:

@@ -107,6 +107,8 @@ class SessionInputData(TypedDict, total=False):
     multi_step_reasoning_enabled: bool
     token_count: int
     cached_content_token_count: int
+    cumulative_total_tokens: int
+    cumulative_cached_tokens: int
     hyperparameters: HyperparametersInput | None
     references: list[ReferenceInput]
     artifacts: list[str]
@@ -206,6 +208,8 @@ class Session(CamelCaseModel):
     multi_step_reasoning_enabled: bool = False
     token_count: int = 0
     cached_content_token_count: int = 0  # From last API response usage_metadata
+    cumulative_total_tokens: int = 0  # Cumulative total tokens across all turns
+    cumulative_cached_tokens: int = 0  # Cumulative cached tokens across all turns
     hyperparameters: Hyperparameters | None = None
     references: ReferenceCollection = Field(default_factory=ReferenceCollection)
     artifacts: list[str] = []

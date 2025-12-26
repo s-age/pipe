@@ -441,22 +441,15 @@ class GeminiCliAgent(BaseAgent):
             args, session_service, session_turn_service
         )
 
-        # Append stats as markdown to model_response_text
-        if stats:
-            markdown_lines = [
-                "\n### Actual Token Stats",
-                f"- total_tokens: {stats.get('total_tokens', 0)}",
-                f"- input_tokens: {stats.get('input_tokens', 0)}",
-                f"- output_tokens: {stats.get('output_tokens', 0)}",
-                f"- cached: {stats.get('cached', 0)}",
-            ]
-            if "input" in stats:
-                markdown_lines.append(f"- input: {stats.get('input', 0)}")
-            if "tool_calls" in stats:
-                markdown_lines.append(f"- tool_calls: {stats.get('tool_calls', 0)}")
-
-            markdown_text = "\n".join(markdown_lines)
-            model_response_text += "\n\n" + markdown_text
+        # Update cumulative token stats in session
+        if stats and session_id:
+            session = session_service.get_session(session_id)
+            if session:
+                # Add total_tokens and cached to cumulative counters
+                session.cumulative_total_tokens += stats.get("total_tokens", 0)
+                session.cumulative_cached_tokens += stats.get("cached", 0)
+                # Save updated session
+                session_service.repository.save(session)
 
         if args.output_format == "text":
             print(model_response_text)

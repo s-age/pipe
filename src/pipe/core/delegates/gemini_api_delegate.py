@@ -133,6 +133,16 @@ def run_stream(
                     session_service.current_session = reloaded_session
                     session_data = session_service.current_session
 
+            # Update cumulative token stats in session
+            session = session_service.get_session(session_id)
+            if session:
+                # Add total_tokens and cached to cumulative counters
+                total_tokens = token_count
+                cached_tokens = cached_count or 0
+                session.cumulative_total_tokens += total_tokens
+                session.cumulative_cached_tokens += cached_tokens
+                session_service.repository.save(session)
+
         # Check if we have a tool call
         function_call = None
         if tool_call_chunk:

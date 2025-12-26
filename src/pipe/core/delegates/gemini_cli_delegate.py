@@ -16,20 +16,15 @@ def run(
     Handles the logic for the 'gemini-cli' mode by delegating to call_gemini_cli.
     This function is now only responsible for getting the model's response text.
     """
-    # Call the agent and return the response text.
-    # The dispatcher will be responsible for creating and adding the turn.
-    result = call_gemini_cli(session_service, args.output_format)
-    response_text = result.get("response", "")
-    stats = result.get("stats")
-
-    # Calculate token count from the complete prompt (including all turns)
-    # Build the prompt using GeminiCliPayloadBuilder
+    # Build the prompt once using GeminiCliPayloadBuilder
+    # This prompt will be used for both token counting and the API call
     payload_builder = GeminiCliPayloadBuilder(
         project_root=session_service.project_root,
         api_mode=session_service.settings.api_mode,
     )
     rendered_prompt = payload_builder.build(session_service)
 
+    # Calculate token count from the complete prompt (including all turns)
     # Load tools
     tool_service = GeminiToolService()
     tools = tool_service.load_tools(session_service.project_root)
@@ -41,6 +36,14 @@ def run(
     token_count = gemini_token_count.count_tokens(
         rendered_prompt, tools=tools, tokenizer=tokenizer
     )
+
+    # Call the agent with the pre-built prompt
+    # This eliminates redundant prompt construction
+    result = call_gemini_cli(
+        session_service, args.output_format, prompt=rendered_prompt
+    )
+    response_text = result.get("response", "")
+    stats = result.get("stats")
 
     # For stream-json, response_text is empty, collect from the streamed output
     if args.output_format == "stream-json":

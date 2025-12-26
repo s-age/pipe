@@ -23,7 +23,9 @@ if TYPE_CHECKING:
 
 
 def call_gemini_cli(
-    session_service: "SessionService", output_format: str = "json"
+    session_service: "SessionService",
+    output_format: str = "json",
+    prompt: str | None = None,
 ) -> dict:
     # Import here to avoid circular dependency
     from pipe.core.domains.gemini_cli_payload import GeminiCliPayloadBuilder
@@ -45,12 +47,16 @@ def call_gemini_cli(
     if not model_name:
         raise ValueError("'model' not found in settings")
 
-    # Build prompt using the new payload builder (bypasses PromptService)
-    payload_builder = GeminiCliPayloadBuilder(
-        project_root=project_root,
-        api_mode=settings.api_mode,
-    )
-    pretty_printed_prompt = payload_builder.build(session_service)
+    # Use provided prompt or build it internally
+    if prompt is not None:
+        pretty_printed_prompt = prompt
+    else:
+        # Build prompt using the new payload builder (bypasses PromptService)
+        payload_builder = GeminiCliPayloadBuilder(
+            project_root=project_root,
+            api_mode=settings.api_mode,
+        )
+        pretty_printed_prompt = payload_builder.build(session_service)
 
     # Use a temporary file to pass the prompt to gemini-cli.
     # We pipe this file directly to stdin to avoid buffer issues and argument limits.
@@ -85,22 +91,30 @@ def call_gemini_cli(
             env["GEMINI_API_KEY"] = os.environ["GOOGLE_API_KEY"]
 
         with open(tmp_path, encoding="utf-8") as stdin_f:
-            if output_format == "stream-json":
-                # For stream-json, stream the output in real-time
-                from pipe.core.domains.gemini_cli_stream_processor import (
-                    GeminiCliStreamProcessor,
+            # Unified subprocess launch logic
+            try:
+                process = subprocess.Popen(
+                    command,
+                    stdin=stdin_f,  # Direct file pipe
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    encoding="utf-8",
+                    env=env,
+                    bufsize=1,
+                )
+            except FileNotFoundError:
+                raise RuntimeError(
+                    "Error: 'gemini' command not found. "
+                    "Please ensure it is installed and in your PATH."
                 )
 
-                try:
-                    process = subprocess.Popen(
-                        command,
-                        stdin=stdin_f,  # Direct file pipe
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding="utf-8",
-                        env=env,
-                        bufsize=1,
+            # Handle output based on format
+            try:
+                if output_format == "stream-json":
+                    # For stream-json, stream the output in real-time
+                    from pipe.core.domains.gemini_cli_stream_processor import (
+                        GeminiCliStreamProcessor,
                     )
 
                     # Use the stream processor to handle JSON parsing and logging
@@ -131,26 +145,9 @@ def call_gemini_cli(
 
                     # Return the collected result
                     return stream_processor.get_result()
-                except FileNotFoundError:
-                    raise RuntimeError(
-                        "Error: 'gemini' command not found. "
-                        "Please ensure it is installed and in your PATH."
-                    )
 
-            else:
-                # Original logic for json and text
-                try:
-                    process = subprocess.Popen(
-                        command,
-                        stdin=stdin_f,  # Direct file pipe
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding="utf-8",
-                        env=env,
-                        bufsize=1,
-                    )
-
+                else:
+                    # Original logic for json and text
                     full_response = ""
                     if process.stdout:
                         for line in iter(process.stdout.readline, ""):
@@ -163,7 +160,7 @@ def call_gemini_cli(
                     return_code = process.wait()
                     if return_code != 0:
                         raise RuntimeError(
-                            f"Error during gemini-cli execution: " f"{stderr_output}"
+                            f"Error during gemini-cli execution: {stderr_output}"
                         )
 
                     try:
@@ -171,13 +168,11 @@ def call_gemini_cli(
                         return result
                     except json.JSONDecodeError:
                         return {"response": full_response, "stats": None}
-                except FileNotFoundError:
-                    raise RuntimeError(
-                        "Error: 'gemini' command not found. "
-                        "Please ensure it is installed and in your PATH."
-                    )
-                except Exception as e:
-                    raise RuntimeError(f"An unexpected error occurred: {e}")
+
+            except Exception as e:
+                if "gemini" in str(e) and "not found" in str(e):
+                    raise
+                raise RuntimeError(f"An unexpected error occurred: {e}")
 
     finally:
         try:

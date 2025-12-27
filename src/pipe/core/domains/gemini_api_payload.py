@@ -14,6 +14,10 @@ from google.genai import types
 from jinja2 import Environment, FileSystemLoader
 from pipe.core.domains.artifacts import build_artifacts_from_data
 from pipe.core.factories.prompt_factory import PromptFactory
+from pipe.core.models.gemini_api_payload import (
+    GeminiApiDynamicPayload,
+    GeminiApiStaticPayload,
+)
 from pipe.core.models.prompt import Prompt
 from pipe.core.repositories.resource_repository import ResourceRepository
 
@@ -119,37 +123,119 @@ class GeminiApiPayloadBuilder:
             current_instruction=session_service.current_instruction,
         )
 
-    def render(self, prompt_model: Prompt) -> tuple[str, str]:
+    def render(
+        self, prompt_model: Prompt
+    ) -> tuple[GeminiApiStaticPayload, GeminiApiDynamicPayload]:
         """
-        Render the Prompt model into static and dynamic content.
-
-        Args:
-            prompt_model: The Prompt object to render
+        Convert Prompt model to complete 4-layer API payload.
 
         Returns:
-            Tuple of (static_content, dynamic_content)
+            Tuple of (static_payload, dynamic_payload)
+            - Static: Cached content + Buffered history (Layers 1-2)
+            - Dynamic: Dynamic context + Current instruction (Layers 3-4)
         """
+        # Build Static Part (Layers 1-2)
+        static = self._render_static_payload(prompt_model)
+
+        # Build Dynamic Part (Layers 3-4)
+        dynamic = self._render_dynamic_payload(prompt_model)
+
+        return static, dynamic
+
+    def _render_static_payload(self, prompt_model: Prompt) -> GeminiApiStaticPayload:
+        """
+        Build static (cacheable) part of payload.
+
+        Returns:
+            GeminiApiStaticPayload containing Layer 1 (cached) and Layer 3 (buffered)
+        """
+        # Layer 1: Render cached content (static system instructions)
+        cached_content = self._render_static_template(prompt_model)
+
+        # Layer 3: Convert buffered history with thought_signature restoration
+        buffered_history = self._convert_buffered_history(prompt_model.buffered_history)
+
+        return GeminiApiStaticPayload(
+            cached_content=cached_content, buffered_history=buffered_history
+        )
+
+    def _render_dynamic_payload(self, prompt_model: Prompt) -> GeminiApiDynamicPayload:
+        """
+        Build dynamic (non-cacheable) part of payload.
+
+        Returns:
+            GeminiApiDynamicPayload containing Layer 2 (dynamic) and Layer 4 (instruction)
+        """
+        # Layer 2: Render dynamic context (JSON)
+        dynamic_content = self._render_dynamic_template(prompt_model)
+
+        # Layer 4: Convert current instruction
+        current_instruction = self._convert_current_instruction(
+            prompt_model.current_task
+        )
+
+        return GeminiApiDynamicPayload(
+            dynamic_content=dynamic_content, current_instruction=current_instruction
+        )
+
+    def _render_static_template(self, prompt_model: Prompt) -> str:
+        """Render Layer 1: Cached content (gemini_static_prompt.j2)."""
         context = prompt_model.model_dump()
-
-        static_content = ""
-        dynamic_content = ""
-
         try:
-            # Render static template (cached)
-            static_template = self.jinja_env.get_template("gemini_static_prompt.j2")
-            static_content = static_template.render(session=context)
-
-            # Render dynamic template (not cached)
-            dynamic_template = self.jinja_env.get_template("gemini_dynamic_prompt.j2")
-            dynamic_content = dynamic_template.render(session=context)
-
+            template = self.jinja_env.get_template("gemini_static_prompt.j2")
+            return template.render(session=context)
         except Exception:
             # Fallback: use monolithic template (no caching)
             template = self.jinja_env.get_template("gemini_api_prompt.j2")
-            dynamic_content = template.render(session=context)
-            static_content = ""
+            return ""
 
-        return static_content, dynamic_content
+    def _render_dynamic_template(self, prompt_model: Prompt) -> str:
+        """Render Layer 2: Dynamic content as JSON."""
+        context = prompt_model.model_dump()
+        try:
+            template = self.jinja_env.get_template("gemini_dynamic_prompt.j2")
+            return template.render(session=context)
+        except Exception:
+            # Fallback: use monolithic template (no caching)
+            template = self.jinja_env.get_template("gemini_api_prompt.j2")
+            return template.render(session=context)
+
+    def _convert_buffered_history(self, buffered_history) -> list[types.Content]:
+        """
+        Convert Layer 3: Buffered history to Content objects.
+        Restores thought_signature from raw_response.
+        """
+        if not buffered_history or not buffered_history.turns:
+            return []
+
+        return [self.convert_turn_to_content(turn) for turn in buffered_history.turns]
+
+    def _convert_current_instruction(self, current_task) -> types.Content | None:
+        """Convert Layer 4: Current instruction to Content object."""
+        if not current_task or not current_task.instruction.strip():
+            return None
+
+        return types.Content(
+            role="user", parts=[types.Part(text=current_task.instruction)]
+        )
+
+    def build_payloads_with_tools(
+        self,
+        session_service: "SessionService",
+        loaded_tools: list[dict],
+    ) -> tuple[GeminiApiStaticPayload, GeminiApiDynamicPayload, list[types.Tool]]:
+        """
+        Build complete 4-layer payload with tools.
+
+        This is the primary entry point for Agent layer.
+
+        Returns:
+            Tuple of (static_payload, dynamic_payload, converted_tools)
+        """
+        prompt_model = self.build_prompt(session_service)
+        static, dynamic = self.render(prompt_model)
+        converted_tools = self.convert_tools(loaded_tools)
+        return static, dynamic, converted_tools
 
     def convert_tools(self, loaded_tools_data: list[dict]) -> list[types.Tool]:
         """

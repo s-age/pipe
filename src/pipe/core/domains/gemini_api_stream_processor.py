@@ -6,7 +6,7 @@ Handles streaming chunk processing, logging, and conversion to unified format.
 
 import json
 from collections.abc import Generator
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 
 from google.genai import types
 from pipe.core.models.unified_chunk import (
@@ -22,25 +22,6 @@ if TYPE_CHECKING:
     import zoneinfo
 
     from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
-
-
-class LogUsageInfo(TypedDict):
-    """TypedDict for usage information in logs."""
-
-    prompt_tokens: int | None
-    candidates_tokens: int | None
-    total_tokens: int | None
-    cached_content_tokens: int | None
-
-
-class LogInfo(TypedDict):
-    """TypedDict for chunk information in logs."""
-
-    has_candidates: bool
-    finish_reason: str | None
-    text_content: str
-    thought_content: str | None
-    usage: LogUsageInfo | None
 
 
 class GeminiApiStreamProcessor:
@@ -98,50 +79,17 @@ class GeminiApiStreamProcessor:
 
     def _log_raw_chunk(self, chunk: types.GenerateContentResponse) -> None:
         """
-        Log a raw chunk with extracted metadata.
+        Log the complete raw chunk from API as-is.
 
         Args:
             chunk: Gemini API response chunk
         """
         try:
-            log_info: LogInfo = {
-                "has_candidates": bool(chunk.candidates),
-                "finish_reason": None,
-                "text_content": "",
-                "thought_content": None,
-                "usage": None,
-            }
-
-            if chunk.candidates:
-                candidate = chunk.candidates[0]
-                log_info["finish_reason"] = (
-                    str(candidate.finish_reason) if candidate.finish_reason else None
-                )
-
-                if candidate.content and candidate.content.parts:
-                    for part in candidate.content.parts:
-                        if part.text is not None:
-                            if hasattr(part, "thought") and part.thought:
-                                # Accumulate thoughts as text
-                                curr = log_info["thought_content"] or ""
-                                log_info["thought_content"] = curr + part.text
-                            else:
-                                log_info["text_content"] += part.text
-
-            if chunk.usage_metadata:
-                log_usage: LogUsageInfo = {
-                    "prompt_tokens": chunk.usage_metadata.prompt_token_count,
-                    "candidates_tokens": chunk.usage_metadata.candidates_token_count,
-                    "total_tokens": chunk.usage_metadata.total_token_count,
-                    "cached_content_tokens": (
-                        chunk.usage_metadata.cached_content_token_count
-                    ),
-                }
-                log_info["usage"] = log_usage
-
+            # Log the entire API response as-is
+            chunk_data = chunk.model_dump()
             self.streaming_log_repo.write_log_line(
                 "RAW_CHUNK",
-                json.dumps(log_info, ensure_ascii=False),
+                json.dumps(chunk_data, ensure_ascii=False),
                 get_current_datetime(self.timezone),
             )
         except Exception:

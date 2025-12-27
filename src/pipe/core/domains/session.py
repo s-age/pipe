@@ -89,6 +89,8 @@ def fork_session(
         # Reset cumulative token statistics for the forked session
         cumulative_total_tokens=0,
         cumulative_cached_tokens=0,
+        cached_content_token_count=0,
+        cached_turn_count=0,
     )
 
     # Ensure references are properly initialized

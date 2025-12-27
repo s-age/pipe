@@ -93,8 +93,8 @@ class GeminiApiStreamProcessor:
             unified_chunks = self._convert_chunk_to_unified_format(chunk)
             yield from unified_chunks
 
-        # After stream completes, save the last chunk as raw_response
-        self._save_last_raw_response()
+        # After stream completes, save the collected chunks as raw_response
+        self._save_raw_response()
 
     def _log_raw_chunk(self, chunk: types.GenerateContentResponse) -> None:
         """
@@ -195,31 +195,40 @@ class GeminiApiStreamProcessor:
 
         return unified_chunks
 
-    def _save_last_raw_response(self) -> None:
+    def _save_raw_response(self) -> None:
         """
-        Save the last chunk with candidates as raw_response JSON.
+        Save the collected chunks as raw_response JSON if thought_signature exists.
 
         This preserves the thought signature for history reconstruction.
+        If no thought_signature is found, raw_response is set to None to save space.
         """
         if not self.collected_chunks:
             return
 
-        # Search backwards for the last chunk with candidates
-        target_chunk = None
-        for chunk in reversed(self.collected_chunks):
+        has_thought_signature = False
+        for chunk in self.collected_chunks:
             if chunk.candidates:
-                target_chunk = chunk
+                for candidate in chunk.candidates:
+                    if candidate.content and candidate.content.parts:
+                        for part in candidate.content.parts:
+                            if getattr(part, "thought_signature", None):
+                                has_thought_signature = True
+                                break
+                    if has_thought_signature:
+                        break
+            if has_thought_signature:
                 break
 
-        # Fallback to the absolute last chunk if none have candidates
-        if not target_chunk:
-            target_chunk = self.collected_chunks[-1]
-
-        if target_chunk:
+        if has_thought_signature:
             try:
-                self.last_raw_response = target_chunk.model_dump_json()
+                # Dump all chunks to a list of dicts
+                chunks_data = [chunk.model_dump() for chunk in self.collected_chunks]
+                self.last_raw_response = json.dumps(chunks_data, ensure_ascii=False)
             except Exception:
-                pass
+                # Fallback or error handling if needed, currently just keeping None
+                self.last_raw_response = None
+        else:
+            self.last_raw_response = None
 
     def get_last_raw_response(self) -> str | None:
         """

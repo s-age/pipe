@@ -282,6 +282,12 @@ def run_stream(
                 session_id, first_cached_content_token_count
             )
 
+        # Update cached_turn_count using the value from the agent
+        if gemini_agent.last_cached_turn_count is not None:
+            session_meta_service.update_cached_turn_count(
+                session_id, gemini_agent.last_cached_turn_count
+            )
+
     # Cleanup streaming.log after model response is complete
     streaming_log_repo = StreamingLogRepository(
         session_service.project_root, session_id, settings

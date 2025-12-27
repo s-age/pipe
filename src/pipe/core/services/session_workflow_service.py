@@ -118,12 +118,8 @@ class SessionWorkflowService:
             # Build prompt model
             prompt_model = prompt_service.build_prompt(session_service)
 
-            # Determine which template to use based on api_mode
-            template_name = (
-                "gemini_api_prompt.j2"
-                if session_service.settings.api_mode == "gemini-api"
-                else "gemini_cli_prompt.j2"
-            )
+            # Always use gemini_cli_prompt.j2 for consistent token calculation
+            template_name = "gemini_cli_prompt.j2"
             template = prompt_service.jinja_env.get_template(template_name)
 
             # Render the template with the prompt model data

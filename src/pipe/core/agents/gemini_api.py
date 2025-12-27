@@ -76,6 +76,8 @@ class GeminiApiAgent(BaseAgent):
             # Fallback to UTC if timezone not found
             self.timezone = zoneinfo.ZoneInfo("UTC")
 
+        self.last_cached_turn_count: int | None = None
+
     def run(
         self,
         args: TaktArgs,
@@ -247,6 +249,16 @@ class GeminiApiAgent(BaseAgent):
             )
         finally:
             streaming_log_repo.close()
+
+        # Capture the number of turns used in the cache if cache is active
+        if (
+            cached_content_name
+            and prompt_model.cached_history
+            and prompt_model.cached_history.turns
+        ):
+            self.last_cached_turn_count = len(prompt_model.cached_history.turns)
+        else:
+            self.last_cached_turn_count = 0
 
         # 10. Build generation config
         config = self.payload_builder.build_generation_config(

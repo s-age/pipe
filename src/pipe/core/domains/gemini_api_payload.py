@@ -6,6 +6,7 @@ Supports caching by splitting prompts into static (cacheable) and dynamic parts.
 Also builds generation configuration with hyperparameters.
 """
 
+import json
 import os
 from typing import TYPE_CHECKING
 
@@ -58,6 +59,12 @@ class GeminiApiPayloadBuilder:
             trim_blocks=True,
             lstrip_blocks=True,
         )
+
+        # Configure tojson filter to disable ASCII escaping
+        def tojson_filter(value):
+            return json.dumps(value, ensure_ascii=False)
+
+        env.filters["tojson"] = tojson_filter
 
         # Add custom filter to serialize Pydantic models to dict for JSON serialization
         def pydantic_dump(obj):
@@ -278,12 +285,32 @@ class GeminiApiPayloadBuilder:
             Content object with thought signature, or None if restoration fails
         """
         try:
-            # Restore the full response object to preserve structure
-            response = types.GenerateContentResponse.model_validate_json(
-                raw_response_json
-            )
-            if response.candidates and response.candidates[0].content:
-                return response.candidates[0].content
+            parsed = json.loads(raw_response_json)
+
+            # Handle list of chunks (new format)
+            if isinstance(parsed, list):
+                # Iterate backwards to find the chunk with thought_signature
+                for item in reversed(parsed):
+                    try:
+                        response = types.GenerateContentResponse.model_validate(item)
+                        if response.candidates and response.candidates[0].content:
+                            content = response.candidates[0].content
+                            if content.parts:
+                                for part in content.parts:
+                                    if getattr(part, "thought_signature", None):
+                                        return content
+                    except Exception:
+                        continue
+                return None
+
+            # Handle single object (old format)
+            elif isinstance(parsed, dict):
+                response = types.GenerateContentResponse.model_validate(parsed)
+                if response.candidates and response.candidates[0].content:
+                    return response.candidates[0].content
+                return None
+
             return None
+
         except Exception:
             return None

@@ -107,6 +107,7 @@ class SessionInputData(TypedDict, total=False):
     multi_step_reasoning_enabled: bool
     token_count: int
     cached_content_token_count: int
+    cached_turn_count: int
     cumulative_total_tokens: int
     cumulative_cached_tokens: int
     hyperparameters: HyperparametersInput | None
@@ -208,6 +209,7 @@ class Session(CamelCaseModel):
     multi_step_reasoning_enabled: bool = False
     token_count: int = 0
     cached_content_token_count: int = 0  # From last API response usage_metadata
+    cached_turn_count: int = 0  # Number of turns included in the current cache
     cumulative_total_tokens: int = 0  # Cumulative total tokens across all turns
     cumulative_cached_tokens: int = 0  # Cumulative cached tokens across all turns
     hyperparameters: Hyperparameters | None = None

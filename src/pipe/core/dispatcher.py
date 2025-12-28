@@ -27,7 +27,6 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
     session_id = session_service.current_session_id
 
     api_mode = session_service.settings.api_mode
-    settings = session_service.settings
     service_factory = ServiceFactory(
         session_service.project_root, session_service.settings
     )
@@ -57,39 +56,15 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         session_service.project_root, session_service.settings
     )
 
-    # For stream-json, also output to stdout
+    # For stream-json, determine if we should output to stdout
     stream_to_stdout = args.output_format == "stream-json"
-    if stream_to_stdout:
-        # Send initial instruction event
-        print(
-            json.dumps(
-                {"type": "instruction", "content": args.instruction}, ensure_ascii=False
-            ),
-            flush=True,
-        )
 
     try:
         # Calculate token count for text output
         try:
-            prompt_model = prompt_service.build_prompt(session_service)
-            from jinja2 import Environment, FileSystemLoader
-            from pipe.core.agents.gemini_api import load_tools
-            from pipe.core.services.token_service import TokenService
-
-            token_service = TokenService(settings=settings)
-            tools = load_tools(session_service.project_root)
-            template_env = Environment(
-                loader=FileSystemLoader(
-                    os.path.join(session_service.project_root, "templates", "prompt")
-                ),
-                trim_blocks=True,
-                lstrip_blocks=True,
-            )
-            template = template_env.get_template("gemini_api_prompt.j2")
-            context = prompt_model.model_dump()
-            api_contents_string = template.render(session=context)
-            prompt_token_count = token_service.count_tokens(
-                api_contents_string, tools=tools
+            token_service = service_factory.create_gemini_token_count_service()
+            prompt_token_count = token_service.count_tokens_from_prompt(
+                session_service, prompt_service
             )
             is_within_limit, message = token_service.check_limit(prompt_token_count)
             if not is_within_limit:
@@ -113,13 +88,23 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
         reference_service.decrement_all_references_ttl_in_session(session_id)
         turn_service.expire_old_tool_responses(session_id)
 
+        # Send initial instruction event for stream-json (after all validations)
+        if stream_to_stdout:
+            print(
+                json.dumps(
+                    {"type": "instruction", "content": args.instruction},
+                    ensure_ascii=False,
+                ),
+                flush=True,
+            )
+
         # 5. Start transaction (add user_instruction to pools)
         turn_service.start_transaction(session_id, args.instruction)
         logger.log_event({"type": "transaction", "action": "start"})
 
         # 6. Execute agent
         AgentClass = get_agent_class(api_mode)
-        agent_instance = AgentClass()
+        agent_instance = AgentClass(session_service)
 
         # Use streaming mode for stream-json output format
         used_stream_mode = False
@@ -131,9 +116,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
             token_count = None
             turns_to_save = []
 
-            for stream_item in agent_instance.run_stream(
-                args, session_service, prompt_service
-            ):
+            for stream_item in agent_instance.run_stream(args, session_service):
                 # Check if this is the final tuple (ends with "end")
                 if isinstance(stream_item, tuple) and stream_item[0] == "end":
                     (
@@ -154,7 +137,7 @@ def _dispatch_run(args: TaktArgs, session_service: SessionService):
                     )
         else:
             # Non-streaming mode: get complete response
-            result = agent_instance.run(args, session_service, prompt_service)
+            result = agent_instance.run(args, session_service)
             if len(result) == 4:
                 (
                     model_response_text,

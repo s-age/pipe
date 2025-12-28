@@ -51,7 +51,7 @@ def toggle_reference_disabled(references_collection: "ReferenceCollection", path
 def get_active_references(
     references_collection: "ReferenceCollection",
 ) -> list[Reference]:
-    """Get all active (non-disabled) references from the collection.
+    """Get all active (non-disabled and non-expired) references from the collection.
 
     This is a pure function that filters references without performing I/O.
     The caller (Service layer) is responsible for reading file contents.
@@ -60,9 +60,13 @@ def get_active_references(
         references_collection: Collection of references
 
     Returns:
-        List of active Reference objects
+        List of active Reference objects (disabled=False and ttl > 0 or ttl is None)
     """
-    return [ref for ref in references_collection.data if not ref.disabled]
+    return [
+        ref
+        for ref in references_collection.data
+        if not ref.disabled and (ref.ttl is None or ref.ttl > 0)
+    ]
 
 
 def decrement_all_references_ttl(

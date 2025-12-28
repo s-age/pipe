@@ -41,9 +41,7 @@ class TestSessionApi(unittest.TestCase):
             SessionManagementService,
         )
         from pipe.core.services.session_service import SessionService
-        from pipe.core.services.session_workflow_service import (
-            SessionWorkflowService,
-        )
+        from pipe.core.services.session_workflow_service import SessionWorkflowService
         from pipe.web.binder import RequestBinder
         from pipe.web.dispatcher import ActionDispatcher
         from pipe.web.factory import GenericActionFactory

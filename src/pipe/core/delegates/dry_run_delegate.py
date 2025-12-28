@@ -22,4 +22,4 @@ def run(session_service: SessionService, prompt_service: PromptService):
     rendered_prompt = template.render(session=prompt_model)
 
     # Print the rendered JSON, ensuring it's pretty-printed
-    print(json.dumps(json.loads(rendered_prompt), indent=2))
+    print(json.dumps(json.loads(rendered_prompt), indent=2, ensure_ascii=False))

@@ -28,9 +28,11 @@ def invoke_serial_children(
     parent_session_id = os.getenv("PIPE_SESSION_ID")
 
     if not parent_session_id:
-        raise ValueError(
-            "Parent session ID not found. Please ensure PIPE_SESSION_ID environment "
-            "variable is set."
+        return ToolResult(
+            error=(
+                "Parent session ID not found. Please ensure PIPE_SESSION_ID "
+                "environment variable is set."
+            )
         )
 
     # Normalize tasks: convert string tasks to dict if necessary
@@ -40,7 +42,7 @@ def invoke_serial_children(
             try:
                 normalized_tasks.append(json.loads(task))
             except json.JSONDecodeError:
-                raise ValueError(f"Failed to parse task as JSON: {task}")
+                return ToolResult(error=f"Failed to parse task as JSON: {task}")
         else:
             normalized_tasks.append(task)
 
@@ -65,23 +67,23 @@ def invoke_serial_children(
         # Check if any agent tasks exist
         has_agent_tasks = any(task.get("type") == "agent" for task in normalized_tasks)
         if has_agent_tasks and (not purpose or not background):
-            raise ValueError(
-                "When child_session_id is not provided and agent tasks exist, "
+            return ToolResult(
+                error="When child_session_id is not provided and agent tasks exist, "
                 "both 'purpose' and 'background' are required for creating "
                 "new child sessions."
             )
 
     # Validate task definitions
     if not normalized_tasks:
-        raise ValueError("At least one task is required")
+        return ToolResult(error="At least one task is required")
 
     # Inject roles, procedure, references, artifacts into agent tasks if not already set
     processed_tasks = []
     for task in normalized_tasks:
         if "type" not in task:
-            raise ValueError("Task must have 'type' field")
+            return ToolResult(error="Task must have 'type' field")
         if task["type"] not in ("agent", "script"):
-            raise ValueError(f"Invalid task type: {task['type']}")
+            return ToolResult(error=f"Invalid task type: {task['type']}")
 
         # For agent tasks, inject parameters if not already present
         if task["type"] == "agent":

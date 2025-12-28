@@ -59,9 +59,11 @@ def search_file_content(
                             FileMatchItem(
                                 file_path=os.path.relpath(
                                     filepath,
-                                    search_path
-                                    if os.path.isabs(search_path)
-                                    else os.path.abspath(search_path),
+                                    (
+                                        search_path
+                                        if os.path.isabs(search_path)
+                                        else os.path.abspath(search_path)
+                                    ),
                                 ),
                                 line_number=line_num,
                                 line_content=line.strip(),

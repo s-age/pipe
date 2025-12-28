@@ -122,25 +122,29 @@ class ActionDispatcher:
                 # 1. Custom HTTP Exceptions (Subclasses first for specific handling)
                 if isinstance(e, BadRequestError):
                     response = ApiResponse(success=False, message=e.message)
-                    return response.model_dump(
-                        mode="json", by_alias=True
-                    ), e.status_code
+                    return (
+                        response.model_dump(mode="json", by_alias=True),
+                        e.status_code,
+                    )
                 elif isinstance(e, NotFoundError):
                     response = ApiResponse(success=False, message=e.message)
-                    return response.model_dump(
-                        mode="json", by_alias=True
-                    ), e.status_code
+                    return (
+                        response.model_dump(mode="json", by_alias=True),
+                        e.status_code,
+                    )
                 elif isinstance(e, UnprocessableEntityError):
                     response = ApiResponse(success=False, message=e.message)
-                    return response.model_dump(
-                        mode="json", by_alias=True
-                    ), e.status_code
+                    return (
+                        response.model_dump(mode="json", by_alias=True),
+                        e.status_code,
+                    )
                 # Catch any other custom HttpExceptions not covered by specific checks
                 elif isinstance(e, HttpException):
                     response = ApiResponse(success=False, message=e.message)
-                    return response.model_dump(
-                        mode="json", by_alias=True
-                    ), e.status_code
+                    return (
+                        response.model_dump(mode="json", by_alias=True),
+                        e.status_code,
+                    )
 
                 # 2. Standard Python Exceptions with specific HTTP codes
                 elif isinstance(

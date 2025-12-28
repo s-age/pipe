@@ -41,7 +41,7 @@ class SessionInstructionAction(BaseAction):
 
             def error_response():
                 yield (
-                    f"data: {json.dumps({'error': 'Internal Error (Request Missing)'})}"
+                    f"data: {json.dumps({'error': 'Internal Error (Request Missing)'}, ensure_ascii=False)}"
                     "\n\n"
                 )
 
@@ -53,7 +53,7 @@ class SessionInstructionAction(BaseAction):
         if not session_data:
 
             def error_response():
-                yield f"data: {json.dumps({'error': 'Session not found'})}\n\n"
+                yield f"data: {json.dumps({'error': 'Session not found'}, ensure_ascii=False)}\n\n"
 
             return Response(error_response(), mimetype="text/event-stream")
 
@@ -62,6 +62,6 @@ class SessionInstructionAction(BaseAction):
             for data in self.session_instruction_service.execute_instruction_stream(
                 session_data, request.instruction
             ):
-                yield f"data: {json.dumps(data)}\n\n"
+                yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
 
         return Response(stream_with_context(generate()), mimetype="text/event-stream")

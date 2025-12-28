@@ -6,11 +6,7 @@ from typing import Any
 from pipe.core.collections.pools import PoolCollection
 from pipe.core.domains.turns import delete_turns, expire_old_tool_responses
 from pipe.core.models.settings import Settings
-from pipe.core.models.turn import (
-    ModelResponseTurnUpdate,
-    Turn,
-    UserTaskTurnUpdate,
-)
+from pipe.core.models.turn import ModelResponseTurnUpdate, Turn, UserTaskTurnUpdate
 from pipe.core.repositories.session_repository import SessionRepository
 
 

@@ -19,9 +19,7 @@ class TestReplaceTool(unittest.TestCase):
         self.mock_factory = self.patcher.start()
 
         # Import after patching to get the real repository classes
-        from pipe.core.repositories.sandbox_file_repository import (
-            SandboxFileRepository,
-        )
+        from pipe.core.repositories.sandbox_file_repository import SandboxFileRepository
 
         self.mock_factory.return_value = SandboxFileRepository(self.test_path)
 

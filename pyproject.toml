@@ -23,6 +23,8 @@ Whoosh = "2.7.4"
 pathspec = "0.12.1"
 google-genai = "^1.52.0"
 psutil = "^6.1.1"
+protobuf = "^5.29.0"
+sentencepiece = "^0.2.0"
 
 [tool.poetry.scripts]
 takt = "pipe.cli.takt:main"
@@ -36,6 +38,7 @@ ruff = "0.5.5"
 mypy = "1.13.0"
 types-PyYAML = "*"
 pytest-cov = "*"
+black = "^25.12.0"
 
 [tool.pytest.ini_options]
 testpaths = [
@@ -48,7 +51,6 @@ filterwarnings = [
     "ignore:Field name \"done\" shadows an attribute in parent \"Operation\".*:UserWarning",
     "ignore:Field name \"error\" shadows an attribute in parent \"Operation\".*:UserWarning",
 ]
-addopts = "--cov=src/pipe --cov-report=term-missing --cov-report=html"
 
 [tool.ruff]
 line-length = 88
@@ -56,9 +58,14 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "UP"]
+ignore = ["E501"]
+extend-ignore = ["E203"]
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.black]
+line-length = 88
 
 [tool.mypy]
 python_version = "3.12"

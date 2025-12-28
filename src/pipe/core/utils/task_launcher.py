@@ -94,6 +94,13 @@ def launch_manager(
             stdin=subprocess.DEVNULL,
         )
 
+    # Kill parent agent process (not cleanup - we need to terminate the agent)
+    # This is crucial to allow the parent session to be re-invoked later
+    from pipe.core.services.process_manager_service import ProcessManagerService
+
+    process_manager = ProcessManagerService(project_root)
+    process_manager.kill_process(parent_session_id)
+
     # Exit parent process immediately (suppress stdout to avoid polluting tool output)
     # Manager logs are available in the log file
     sys.exit(0)

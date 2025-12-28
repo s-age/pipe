@@ -5,9 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pipe.core.services.gemini_tool_service import (
-    GeminiToolService,
-)
+from pipe.core.services.gemini_tool_service import GeminiToolService
 
 
 class TestGeminiToolService(unittest.TestCase):
@@ -114,11 +112,13 @@ class TestGeminiToolService(unittest.TestCase):
         """Test _generate_tool_definition when function name doesn't match module."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tool_file = Path(tmpdir) / "tool_a.py"
-            tool_file.write_text("""
+            tool_file.write_text(
+                """
 def tool_b(query: str) -> str:
     \"\"\"Some tool.\"\"\"
     return query
-""")
+"""
+            )
 
             result = self.service._generate_tool_definition("tool_a", str(tool_file))
             self.assertIsNone(result)
@@ -127,11 +127,13 @@ def tool_b(query: str) -> str:
         """Test _generate_tool_definition with a valid tool."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tool_file = Path(tmpdir) / "search_tool.py"
-            tool_file.write_text("""
+            tool_file.write_text(
+                """
 def search_tool(query: str, limit: int = 10) -> str:
     \"\"\"Search for something.\"\"\"
     return f"Searching for {query}"
-""")
+"""
+            )
 
             result = self.service._generate_tool_definition(
                 "search_tool", str(tool_file)
@@ -149,11 +151,13 @@ def search_tool(query: str, limit: int = 10) -> str:
         """Test that system parameters are filtered out."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tool_file = Path(tmpdir) / "my_tool.py"
-            tool_file.write_text("""
+            tool_file.write_text(
+                """
 def my_tool(query: str, session_id: str, settings) -> str:
     \"\"\"My tool.\"\"\"
     return query
-""")
+"""
+            )
 
             result = self.service._generate_tool_definition("my_tool", str(tool_file))
 
@@ -183,19 +187,23 @@ def my_tool(query: str, session_id: str, settings) -> str:
 
             # Create first tool
             tool1_file = tools_dir / "search.py"
-            tool1_file.write_text("""
+            tool1_file.write_text(
+                """
 def search(query: str) -> str:
     \"\"\"Search tool.\"\"\"
     return query
-""")
+"""
+            )
 
             # Create second tool
             tool2_file = tools_dir / "calculate.py"
-            tool2_file.write_text("""
+            tool2_file.write_text(
+                """
 def calculate(expression: str) -> str:
     \"\"\"Calculate tool.\"\"\"
     return str(eval(expression))
-""")
+"""
+            )
 
             # Create init file (should be ignored)
             init_file = tools_dir / "__init__.py"

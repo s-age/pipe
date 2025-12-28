@@ -46,22 +46,24 @@ class GeminiCache:
         turns: "TurnCollection",
         cached_content_token_count: int = 0,
         prompt_token_count: int = 0,
+        cached_turn_count: int = 0,
     ) -> tuple[PromptConversationHistory | None, PromptConversationHistory | None]:
         """
         Split conversation history into cached and buffered portions.
 
-        Decision logic based on API response metadata:
-        - If no cache exists (cached_content_token_count == 0):
-          - If buffered content >= CACHE_UPDATE_THRESHOLD: cache all history
-          - Otherwise: buffer all history
-        - If cache exists (cached_content_token_count > 0):
-          - If buffered content >= CACHE_UPDATE_THRESHOLD: expand cache
-          - Otherwise: keep current cache boundary
+        Decision logic:
+        - If should_update_cache is True:
+          - Cache all history except the last turn (thought signature requirement).
+        - If should_update_cache is False and cached_turn_count > 0:
+          - Keep the existing cache boundary using cached_turn_count.
+        - Otherwise:
+          - Buffer all history.
 
         Args:
             turns: Collection of conversation turns
             cached_content_token_count: From usage_metadata.cached_content_token_count
             prompt_token_count: From usage_metadata.prompt_token_count
+            cached_turn_count: Number of turns currently in the cache
 
         Returns:
             Tuple of (cached_history, buffered_history)
@@ -85,37 +87,32 @@ class GeminiCache:
 
         if should_update_cache:
             # Cache history but keep the last turn buffered for thought signature
-            if len(all_turns) > 0:
+            if len(all_turns) > 1:
                 cached_turns = all_turns[:-1]
                 buffered_turns = all_turns[-1:]
             else:
+                # If only 1 turn, we can't cache (need 1 for thought signature in buffer)
                 cached_turns = None
-                buffered_turns = None
+                buffered_turns = all_turns
 
             logging.info(
                 f"Cache decision: Caching "
                 f"{len(cached_turns) if cached_turns else 0} turns. "
                 f"Buffering last turn for thought signature. "
                 f"Prompt tokens: {prompt_token_count}, "
-                f"Previous cache: {cached_content_token_count}"
+                f"Previous cache tokens: {cached_content_token_count}"
             )
-        elif cached_content_token_count > 0:
-            # We have an existing cache, split based on turn count proportion
-            # Use cached_content_token_count to estimate the split point
-            cache_ratio = (
-                cached_content_token_count / prompt_token_count
-                if prompt_token_count > 0
-                else 0
-            )
-            cache_boundary_index = int(len(all_turns) * cache_ratio)
+        elif cached_turn_count > 0:
+            # We have an existing cache, use the stored turn count
+            # Validate boundary
+            boundary = cached_turn_count
+            if boundary >= len(all_turns):
+                # Should not happen normally, but ensure we keep at least 1 buffered
+                boundary = max(0, len(all_turns) - 1)
 
-            # Ensure we never cache the last turn (thought signature requirement)
-            if cache_boundary_index >= len(all_turns):
-                cache_boundary_index = len(all_turns) - 1
-
-            if cache_boundary_index > 0:
-                cached_turns = all_turns[:cache_boundary_index]
-                buffered_turns = all_turns[cache_boundary_index:]
+            if boundary > 0:
+                cached_turns = all_turns[:boundary]
+                buffered_turns = all_turns[boundary:]
             else:
                 cached_turns = None
                 buffered_turns = all_turns
@@ -125,7 +122,7 @@ class GeminiCache:
                 f"Cached turns: {len(cached_turns) if cached_turns else 0}, "
                 f"Buffered turns: {len(buffered_turns) if buffered_turns else 0}, "
                 f"Cached tokens: {cached_content_token_count}, "
-                f"Prompt tokens: {prompt_token_count}"
+                f"Cached turn count: {cached_turn_count}"
             )
         else:
             # No cache yet and below threshold

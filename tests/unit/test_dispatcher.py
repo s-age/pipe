@@ -87,13 +87,10 @@ class TestDispatcher(unittest.TestCase):
         mock_dry_run.assert_called_once()
         mock_gemini_run.assert_not_called()
 
-    @patch(
-        "pipe.core.agents.gemini_api.GeminiApiAgent.run",
-        return_value=("model response", 100, []),
-    )
+    @patch("pipe.core.dispatcher.get_agent_class")
     @patch("pipe.core.dispatcher.ServiceFactory")
     def test_dispatch_run_handles_gemini_api_mode(
-        self, mock_factory_class, mock_agent_run
+        self, mock_factory_class, mock_get_agent_class
     ):
         """Tests that _dispatch_run routes to gemini_api_delegate via registry."""
         from pipe.core.dispatcher import _dispatch_run
@@ -116,16 +113,21 @@ class TestDispatcher(unittest.TestCase):
         mock_factory.create_session_meta_service.return_value = mock_meta_service
         mock_factory_class.return_value = mock_factory
 
-        _dispatch_run(args, self.session_service)
-        mock_agent_run.assert_called_once()
+        # Setup mock agent instance
+        mock_agent_instance = MagicMock()
+        mock_agent_instance.run.return_value = ("model response", 100, [], None)
+        mock_agent_class = MagicMock(return_value=mock_agent_instance)
+        mock_get_agent_class.return_value = mock_agent_class
 
-    @patch(
-        "pipe.core.agents.gemini_cli.GeminiCliAgent.run",
-        return_value=("cli response", 100, []),
-    )
+        _dispatch_run(args, self.session_service)
+        mock_get_agent_class.assert_called_once_with("gemini-api")
+        mock_agent_class.assert_called_once_with(self.session_service)
+        mock_agent_instance.run.assert_called_once()
+
+    @patch("pipe.core.dispatcher.get_agent_class")
     @patch("pipe.core.dispatcher.ServiceFactory")
     def test_dispatch_run_handles_gemini_cli_mode(
-        self, mock_factory_class, mock_agent_run
+        self, mock_factory_class, mock_get_agent_class
     ):
         """Tests that _dispatch_run routes to gemini_cli_delegate via registry."""
         from pipe.core.dispatcher import _dispatch_run
@@ -148,8 +150,16 @@ class TestDispatcher(unittest.TestCase):
         mock_factory.create_session_meta_service.return_value = mock_meta_service
         mock_factory_class.return_value = mock_factory
 
+        # Setup mock agent instance
+        mock_agent_instance = MagicMock()
+        mock_agent_instance.run.return_value = ("cli response", 100, [], None)
+        mock_agent_class = MagicMock(return_value=mock_agent_instance)
+        mock_get_agent_class.return_value = mock_agent_class
+
         _dispatch_run(args, self.session_service)
-        mock_agent_run.assert_called_once()
+        mock_get_agent_class.assert_called_once_with("gemini-cli")
+        mock_agent_class.assert_called_once_with(self.session_service)
+        mock_agent_instance.run.assert_called_once()
 
     @patch("pipe.core.dispatcher.ServiceFactory")
     def test_dispatch_run_handles_unknown_api_mode(self, mock_factory_class):
@@ -178,12 +188,11 @@ class TestDispatcher(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r"Unknown api_mode.*Available agents"):
             _dispatch_run(args, self.session_service)
 
-    @patch(
-        "pipe.core.agents.gemini_api.GeminiApiAgent.run",
-        return_value=("model response", 100, []),
-    )
+    @patch("pipe.core.dispatcher.get_agent_class")
     @patch("pipe.core.dispatcher.ServiceFactory")
-    def test_ttl_and_expiration_are_called(self, mock_factory_class, mock_agent_run):
+    def test_ttl_and_expiration_are_called(
+        self, mock_factory_class, mock_get_agent_class
+    ):
         """Tests that TTL decrement and tool response expiration are called."""
         from pipe.core.dispatcher import _dispatch_run
 
@@ -201,6 +210,12 @@ class TestDispatcher(unittest.TestCase):
         mock_factory.create_session_meta_service.return_value = mock_meta_service
         mock_factory_class.return_value = mock_factory
 
+        # Setup mock agent instance
+        mock_agent_instance = MagicMock()
+        mock_agent_instance.run.return_value = ("model response", 100, [], None)
+        mock_agent_class = MagicMock(return_value=mock_agent_instance)
+        mock_get_agent_class.return_value = mock_agent_class
+
         args = TaktArgs(instruction="Do something", purpose="p", background="b")
         mock_session_service = MagicMock(spec=SessionService)
         mock_session_service.settings = self.settings
@@ -213,7 +228,7 @@ class TestDispatcher(unittest.TestCase):
         mock_turn_service.expire_old_tool_responses.assert_called_once_with(
             "test_session"
         )
-        mock_agent_run.assert_called_once()
+        mock_agent_instance.run.assert_called_once()
 
     @patch("pipe.core.delegates.dry_run_delegate.run")
     @patch("pipe.core.dispatcher.ServiceFactory")

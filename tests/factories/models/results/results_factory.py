@@ -34,12 +34,8 @@ from pipe.core.models.results.session_tree_result import (
 from pipe.core.models.results.ts_auto_format_code_result import (
     FormatterToolResult as TsFormatterToolResult,
 )
-from pipe.core.models.results.ts_auto_format_code_result import (
-    TsAutoFormatCodeResult,
-)
-from pipe.core.models.results.ts_run_and_test_code_result import (
-    TsRunAndTestCodeResult,
-)
+from pipe.core.models.results.ts_auto_format_code_result import TsAutoFormatCodeResult
+from pipe.core.models.results.ts_run_and_test_code_result import TsRunAndTestCodeResult
 from pipe.core.models.results.verification_result import (
     VerificationError,
     VerificationResult,

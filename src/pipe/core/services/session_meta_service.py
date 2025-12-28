@@ -79,3 +79,15 @@ class SessionMetaService:
         if session:
             session.cached_content_token_count = cached_content_token_count
             self.repository.save(session)
+
+    def update_cached_turn_count(self, session_id: str, cached_turn_count: int):
+        """Update the number of turns included in the cache.
+
+        Args:
+            session_id: Session ID to update
+            cached_turn_count: Number of turns cached
+        """
+        session = self.repository.find(session_id)
+        if session:
+            session.cached_turn_count = cached_turn_count
+            self.repository.save(session)

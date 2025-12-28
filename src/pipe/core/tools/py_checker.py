@@ -19,6 +19,7 @@ class PyCheckerResult(BaseModel):
 
     ruff_check: CheckStepResult | None = None
     ruff_format: CheckStepResult | None = None
+    black: CheckStepResult | None = None
     mypy: CheckStepResult | None = None
     overall_success: bool = False
     error: str | None = None
@@ -28,13 +29,20 @@ def py_checker() -> ToolResult[PyCheckerResult]:
     """
     Runs ALL of the following Python code quality checks and fixes in a
     single execution:
+
+    STEP 0 (Pre-formatting - Silent):
+    - isort . (import sorting, output suppressed)
+    - black . (code formatting, output suppressed)
+
+    STEP 1-4 (Validation - Reported):
     1. ruff check --fix (lint and auto-fix)
     2. ruff format (code formatting)
-    3. mypy (type checking)
+    3. black (88-character line length enforcement and formatting)
+    4. mypy (type checking)
 
-    IMPORTANT: This tool executes all three steps automatically in one call.
-    You will receive results for all steps in a single response.
-    Do NOT call this tool multiple times to run individual steps.
+    IMPORTANT: This tool executes all steps automatically in one call.
+    You will receive results for validation steps (1-4) only.
+    Pre-formatting results are suppressed to reduce token consumption.
 
     NOTE: If errors remain after execution, they require manual fixes.
     Running this tool again without making code changes will produce the
@@ -47,8 +55,8 @@ def py_checker() -> ToolResult[PyCheckerResult]:
     times in parallel.
 
     Returns:
-        A dictionary containing the results of each step, including stdout,
-        stderr, and any errors encountered.
+        A dictionary containing the results of each validation step,
+        including stdout, stderr, and any errors encountered.
     """
     try:
         # Get project root automatically
@@ -56,10 +64,35 @@ def py_checker() -> ToolResult[PyCheckerResult]:
 
         results = PyCheckerResult()
 
+        # STEP 0: Pre-formatting (Silent) - Run isort and black first
+        # This ensures files are formatted BEFORE validation checks
+        # Output is suppressed to save tokens
+        try:
+            # Run isort (import sorting)
+            subprocess.run(
+                ["poetry", "run", "isort", "."],
+                capture_output=True,
+                text=True,
+                cwd=abs_project_root,
+                check=False,
+            )
+            # Run black (code formatting)
+            subprocess.run(
+                ["poetry", "run", "black", "."],
+                capture_output=True,
+                text=True,
+                cwd=abs_project_root,
+                check=False,
+            )
+            # Errors in pre-formatting are ignored - validation steps will catch issues
+        except Exception:
+            # Silently continue - validation steps will report any real issues
+            pass
+
         # Step 1: ruff check --fix
         try:
             process1 = subprocess.run(
-                ["ruff", "check", "--fix", "."],
+                ["poetry", "run", "ruff", "check", "--fix", "."],
                 capture_output=True,
                 text=True,
                 cwd=abs_project_root,
@@ -79,7 +112,7 @@ def py_checker() -> ToolResult[PyCheckerResult]:
         # Step 2: ruff format (only if ruff check succeeded or had fixable issues)
         try:
             process2 = subprocess.run(
-                ["ruff", "format", "."],
+                ["poetry", "run", "ruff", "format", "."],
                 capture_output=True,
                 text=True,
                 cwd=abs_project_root,
@@ -96,20 +129,40 @@ def py_checker() -> ToolResult[PyCheckerResult]:
         except Exception as e:
             return ToolResult(error=f"Error running ruff format: {str(e)}")
 
-        # Step 3: mypy
+        # Step 3: black (88-character line length enforcement)
         try:
             process3 = subprocess.run(
-                ["mypy", "."],
+                ["poetry", "run", "black", "."],
+                capture_output=True,
+                text=True,
+                cwd=abs_project_root,
+                check=False,
+            )
+            results.black = CheckStepResult(
+                stdout=process3.stdout.strip() if process3.stdout else "",
+                stderr=process3.stderr.strip() if process3.stderr else "",
+                exit_code=process3.returncode,
+                success=process3.returncode == 0,
+            )
+        except FileNotFoundError:
+            return ToolResult(error="black command not found. Please install black.")
+        except Exception as e:
+            return ToolResult(error=f"Error running black: {str(e)}")
+
+        # Step 4: mypy
+        try:
+            process4 = subprocess.run(
+                ["poetry", "run", "mypy", "."],
                 capture_output=True,
                 text=True,
                 cwd=abs_project_root,
                 check=False,
             )
             results.mypy = CheckStepResult(
-                stdout=process3.stdout.strip() if process3.stdout else "",
-                stderr=process3.stderr.strip() if process3.stderr else "",
-                exit_code=process3.returncode,
-                success=process3.returncode == 0,
+                stdout=process4.stdout.strip() if process4.stdout else "",
+                stderr=process4.stderr.strip() if process4.stderr else "",
+                exit_code=process4.returncode,
+                success=process4.returncode == 0,
             )
         except FileNotFoundError:
             return ToolResult(error="mypy command not found. Please install mypy.")
@@ -121,9 +174,13 @@ def py_checker() -> ToolResult[PyCheckerResult]:
         ruff_format_success = (
             results.ruff_format.success if results.ruff_format else False
         )
+        black_success = results.black.success if results.black else False
         mypy_success = results.mypy.success if results.mypy else False
         results.overall_success = (
-            ruff_check_success and ruff_format_success and mypy_success
+            ruff_check_success
+            and ruff_format_success
+            and black_success
+            and mypy_success
         )
 
         return ToolResult(data=results)

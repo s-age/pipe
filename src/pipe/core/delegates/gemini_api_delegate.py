@@ -2,13 +2,10 @@ import json
 import os
 
 from pipe.cli.mcp_server import execute_tool
-from pipe.core.models.turn import (
-    ModelResponseTurn,
-)
+from pipe.core.agents.gemini_api import GeminiApiAgent
+from pipe.core.models.turn import ModelResponseTurn
 from pipe.core.models.unified_chunk import MetadataChunk, TextChunk, ToolCallChunk
 from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
-from pipe.core.services.gemini_client_service import GeminiClientService
-from pipe.core.services.prompt_service import PromptService
 from pipe.core.services.session_service import SessionService
 from pipe.core.services.session_turn_service import SessionTurnService
 from pipe.core.utils.datetime import get_current_timestamp
@@ -17,7 +14,6 @@ from pipe.core.utils.datetime import get_current_timestamp
 def run_stream(
     args,
     session_service: SessionService,
-    prompt_service: PromptService,
     session_turn_service: SessionTurnService,
 ):
     """Streaming version for web UI."""
@@ -72,9 +68,9 @@ def run_stream(
                 session_service.current_session = reloaded_session
                 session_data = session_service.current_session
 
-        # Use GeminiClientService with unified Pydantic chunk format
-        gemini_client = GeminiClientService(session_service)
-        stream = gemini_client.stream_content(prompt_service)
+        # Use GeminiApiAgent with unified Pydantic chunk format
+        gemini_agent = GeminiApiAgent(session_service)
+        stream = gemini_agent.stream_content()
 
         full_text_parts = []
         thought_parts = []
@@ -116,17 +112,21 @@ def run_stream(
             token_count = prompt_tokens + candidate_tokens
             prompt_token_count_for_cache = prompt_tokens
 
-            # Capture cached_content_token_count from the first response only
+            # Update cached_content_token_count from every response (not just first)
+            # This ensures we always have the latest cache state, especially when
+            # cache is recreated/updated during the conversation
             cached_count = usage_metadata.cached_content_token_count
-            if first_cached_content_token_count is None and cached_count is not None:
-                first_cached_content_token_count = cached_count
+            if cached_count is not None:
+                # Track the first response's cache count for final update
+                if first_cached_content_token_count is None:
+                    first_cached_content_token_count = cached_count
 
-                # Update session with first response's cached count immediately
+                # Update session with current cache count immediately
                 from pipe.core.services.session_meta_service import SessionMetaService
 
                 session_meta_service = SessionMetaService(session_service.repository)
                 session_meta_service.update_cached_content_token_count(
-                    session_id, first_cached_content_token_count
+                    session_id, cached_count
                 )
 
                 # Reload session after cache count update
@@ -134,6 +134,16 @@ def run_stream(
                 if reloaded_session:
                     session_service.current_session = reloaded_session
                     session_data = session_service.current_session
+
+            # Update cumulative token stats in session
+            session = session_service.get_session(session_id)
+            if session:
+                # Add total_tokens and cached to cumulative counters
+                total_tokens = token_count
+                cached_tokens = cached_count or 0
+                session.cumulative_total_tokens += total_tokens
+                session.cumulative_cached_tokens += cached_tokens
+                session_service.repository.save(session)
 
         # Check if we have a tool call
         function_call = None
@@ -197,14 +207,14 @@ def run_stream(
 
             # Update the FunctionCallingTurn in the pool with raw_response
             # (contains thought signature)
-            if gemini_client.last_raw_response:
+            if gemini_agent.last_raw_response:
                 # Reload session to get the pool updated by execute_tool
                 session = session_service.repository.find(session_id)
                 if session and session.pools:
                     # Find the last FunctionCallingTurn in the pool
                     for turn in reversed(session.pools):
                         if turn.type == "function_calling":
-                            turn.raw_response = gemini_client.last_raw_response
+                            turn.raw_response = gemini_agent.last_raw_response
                             session_service.repository.save(session)
                             break
 
@@ -257,7 +267,7 @@ def run_stream(
         content=model_response_text,
         thought=model_response_thought if model_response_thought else None,
         timestamp=get_current_timestamp(timezone_obj),
-        raw_response=gemini_client.last_raw_response,
+        raw_response=gemini_agent.last_raw_response,
     )
     intermediate_turns.append(final_model_turn)
 
@@ -274,6 +284,12 @@ def run_stream(
         if first_cached_content_token_count is not None:
             session_meta_service.update_cached_content_token_count(
                 session_id, first_cached_content_token_count
+            )
+
+        # Update cached_turn_count using the value from the agent
+        if gemini_agent.last_cached_turn_count is not None:
+            session_meta_service.update_cached_turn_count(
+                session_id, gemini_agent.last_cached_turn_count
             )
 
     # Cleanup streaming.log after model response is complete

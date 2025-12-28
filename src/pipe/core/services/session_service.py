@@ -125,9 +125,6 @@ class SessionService:
         # This logic is now in the repository
         return self.repository._get_path_for_id(session_id)
 
-    def _get_session_lock_path(self, session_id: str) -> str:
-        return f"{self._get_session_path(session_id)}.lock"
-
     def create_new_session(
         self,
         purpose: str,

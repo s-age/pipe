@@ -40,9 +40,7 @@ from pipe.web.actions.session_management import (
 )
 from pipe.web.actions.session_tree import SessionTreeAction
 from pipe.web.actions.settings import SettingsGetAction
-from pipe.web.actions.therapist import (
-    CreateTherapistSessionAction,
-)
+from pipe.web.actions.therapist import CreateTherapistSessionAction
 from pipe.web.actions.turn import (
     SessionTurnsGetAction,
     TurnDeleteAction,

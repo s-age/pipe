@@ -8,9 +8,7 @@ import subprocess
 import tempfile
 
 from pipe.core.factories.file_repository_factory import FileRepositoryFactory
-from pipe.core.models.results.py_run_and_test_code_result import (
-    PyRunAndTestCodeResult,
-)
+from pipe.core.models.results.py_run_and_test_code_result import PyRunAndTestCodeResult
 from pipe.core.models.tool_result import ToolResult
 
 
@@ -45,7 +43,7 @@ def py_run_and_test_code(
                 )
             )
         # Run all tests in the project
-        command = ["pytest"]
+        command = ["poetry", "run", "pytest", "-q"]
     else:
         # Security check for file_path
         try:
@@ -62,7 +60,15 @@ def py_run_and_test_code(
 
         if test_case_name:
             # Use pytest to run a specific test case
-            command = ["pytest", abs_file_path, "-k", test_case_name]
+            command = [
+                "poetry",
+                "run",
+                "pytest",
+                "-q",
+                abs_file_path,
+                "-k",
+                test_case_name,
+            ]
         elif function_name:
             # Create and run a temporary script to execute a specific function
             module_name = os.path.basename(abs_file_path).replace(".py", "")
@@ -77,10 +83,10 @@ def py_run_and_test_code(
             temp_script.write(temp_script_content)
             temp_script.close()
 
-            command = ["python", temp_script.name]
+            command = ["poetry", "run", "python", temp_script.name]
         else:
             # Execute the entire file
-            command = ["python", abs_file_path]
+            command = ["poetry", "run", "python", abs_file_path]
 
     try:
         result_process = subprocess.run(

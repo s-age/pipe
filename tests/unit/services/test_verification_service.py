@@ -8,10 +8,7 @@ from pipe.core.models.results.verification_result import (
     VerificationError,
     VerificationResult,
 )
-from pipe.core.models.turn import (
-    ModelResponseTurn,
-    UserTaskTurn,
-)
+from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
 from pipe.core.services.verification_service import VerificationService
 
 

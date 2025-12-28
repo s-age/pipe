@@ -2,6 +2,7 @@
 Factory for creating and wiring up application services.
 """
 
+import json
 import os
 from pathlib import Path
 
@@ -49,6 +50,12 @@ class ServiceFactory:
         template_path = os.path.join(self.project_root, "templates", "prompt")
         loader = FileSystemLoader(template_path)
         env = Environment(loader=loader, autoescape=False)
+
+        # Configure tojson filter to disable ASCII escaping
+        def tojson_filter(value):
+            return json.dumps(value, ensure_ascii=False)
+
+        env.filters["tojson"] = tojson_filter
 
         # Add custom filter to serialize Pydantic models to dict for JSON serialization
         def pydantic_dump(obj):
@@ -112,7 +119,9 @@ class ServiceFactory:
         """Creates a SessionWorkflowService with its dependencies."""
         optimization_service = self.create_session_optimization_service()
         repository = SessionRepository(self.project_root, self.settings)
-        return SessionWorkflowService(optimization_service, repository, self.settings)
+        return SessionWorkflowService(
+            optimization_service, repository, self.settings, self.project_root
+        )
 
     def create_session_optimization_service(self) -> SessionOptimizationService:
         """Creates a SessionOptimizationService with its dependencies."""

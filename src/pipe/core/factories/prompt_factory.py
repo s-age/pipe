@@ -166,6 +166,7 @@ class PromptFactory:
             history_turns_for_prompt,
             cached_content_token_count=session.cached_content_token_count,
             prompt_token_count=session.token_count,
+            cached_turn_count=session.cached_turn_count,
         )
 
         # 8. Build current task

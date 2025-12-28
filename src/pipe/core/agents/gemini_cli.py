@@ -284,6 +284,9 @@ class GeminiCliAgent(BaseAgent):
         project_root = session_service.project_root
         session_id = session_service.current_session_id
 
+        # Yield empty string immediately to activate generator and show progress
+        yield ""
+
         # Initialize streaming log repository
         streaming_log_repo = None
         if session_id:

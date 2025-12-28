@@ -49,6 +49,12 @@ class GeminiCliPayloadBuilder(BasePayloadBuilder):
         loader = FileSystemLoader(template_path)
         env = Environment(loader=loader, autoescape=False)
 
+        # Configure tojson filter to disable ASCII escaping
+        def tojson_filter(value):
+            return json.dumps(value, ensure_ascii=False)
+
+        env.filters["tojson"] = tojson_filter
+
         # Add custom filter to serialize Pydantic models to dict for JSON serialization
         def pydantic_dump(obj):
             """Convert Pydantic model to dict using model_dump()."""

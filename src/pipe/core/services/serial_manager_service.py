@@ -390,7 +390,7 @@ def invoke_parent_session(
             "Please investigate the issue manually before retrying."
         )
     elif child_session_ids:
-        session_ids_json = json.dumps(child_session_ids)
+        session_ids_json = json.dumps(child_session_ids, ensure_ascii=False)
         instruction = (
             f"Child agent tasks completed successfully. "
             f"To retrieve the results, use get_sessions_final_turns "

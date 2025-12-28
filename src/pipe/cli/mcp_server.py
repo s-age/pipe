@@ -683,7 +683,7 @@ def main():
             # JSON-RPC 2.0: Only send response if request had an id
             # (notifications don't get responses)
             if response and req_id is not None:
-                payload = json.dumps(response)
+                payload = json.dumps(response, ensure_ascii=False)
 
                 # Use sys.stdout.write and explicitly flush after writing
                 sys.stdout.write(

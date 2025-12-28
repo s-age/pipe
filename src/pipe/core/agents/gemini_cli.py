@@ -243,3 +243,206 @@ class GeminiCliAgent(BaseAgent):
         turns_to_save = [final_turn]
 
         return model_response_text, token_count, turns_to_save, None
+
+    def run_stream(
+        self,
+        args: TaktArgs,
+        session_service: "SessionService",
+    ):
+        """Execute the Gemini CLI agent in streaming mode.
+
+        This method yields intermediate results for WebUI streaming support.
+
+        Args:
+            args: Command line arguments
+            session_service: Service for session management
+
+        Yields:
+            Intermediate streaming results and final tuple
+        """
+        # Import here to avoid circular dependency
+        import tempfile
+
+        from pipe.core.domains import gemini_token_count
+        from pipe.core.domains.gemini_cli_payload import GeminiCliPayloadBuilder
+        from pipe.core.domains.gemini_cli_stream_processor import (
+            GeminiCliStreamProcessor,
+        )
+        from pipe.core.models.turn import ModelResponseTurn
+        from pipe.core.repositories.streaming_log_repository import (
+            StreamingLogRepository,
+        )
+        from pipe.core.services.gemini_tool_service import GeminiToolService
+        from pipe.core.services.session_turn_service import SessionTurnService
+        from pipe.core.utils.datetime import get_current_timestamp
+
+        session_turn_service = SessionTurnService(
+            session_service.settings, session_service.repository
+        )
+
+        settings = session_service.settings
+        project_root = session_service.project_root
+        session_id = session_service.current_session_id
+
+        # Initialize streaming log repository
+        streaming_log_repo = None
+        if session_id:
+            streaming_log_repo = StreamingLogRepository(
+                project_root=project_root,
+                session_id=session_id,
+                settings=settings,
+            )
+
+        # Build prompt
+        payload_builder = GeminiCliPayloadBuilder(
+            project_root=project_root,
+            api_mode=settings.api_mode,
+        )
+        rendered_prompt = payload_builder.build(session_service)
+
+        # Calculate token count
+        tool_service = GeminiToolService()
+        tools = tool_service.load_tools(project_root)
+        tokenizer = gemini_token_count.create_local_tokenizer(settings.model.name)
+        token_count = gemini_token_count.count_tokens(
+            rendered_prompt, tools=tools, tokenizer=tokenizer
+        )
+
+        # Prepare gemini-cli subprocess
+        model_name = settings.model.name
+        if not model_name:
+            raise ValueError("'model' not found in settings")
+
+        # Use stream-json format for streaming
+        output_format = "stream-json"
+
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", delete=False, encoding="utf-8"
+            ) as tf:
+                tf.write(rendered_prompt)
+                tmp_path = tf.name
+
+            command = [
+                "gemini",
+                "-y",
+                "-m",
+                model_name,
+                "-o",
+                output_format,
+                "-p",
+                "-",
+            ]
+
+            env = os.environ.copy()
+            env["PYTHONUNBUFFERED"] = "1"
+            if session_id:
+                env["PIPE_SESSION_ID"] = session_id
+            if "GOOGLE_API_KEY" in os.environ:
+                env["GEMINI_API_KEY"] = os.environ["GOOGLE_API_KEY"]
+
+            with open(tmp_path, encoding="utf-8") as stdin_f:
+                try:
+                    process = subprocess.Popen(
+                        command,
+                        stdin=stdin_f,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding="utf-8",
+                        env=env,
+                        bufsize=1,
+                    )
+                except FileNotFoundError:
+                    raise RuntimeError(
+                        "Error: 'gemini' command not found. "
+                        "Please ensure it is installed and in your PATH."
+                    )
+
+                # Stream processor to collect response
+                stream_processor = GeminiCliStreamProcessor(
+                    streaming_log_repo=streaming_log_repo,
+                )
+
+                # Stream output line by line
+                while True:
+                    if not process.stdout:
+                        break
+                    line = process.stdout.readline()
+                    if not line:
+                        break
+
+                    # Process line (prints to stdout and logs)
+                    stream_processor.process_line(line)
+
+                    # Parse and yield assistant content chunks
+                    try:
+                        data = json.loads(line.strip())
+                        if (
+                            data.get("type") == "message"
+                            and data.get("role") == "assistant"
+                            and data.get("delta")
+                        ):
+                            content = data.get("content", "")
+                            if content:
+                                yield content
+                    except json.JSONDecodeError:
+                        pass
+
+                stderr_output = ""
+                if process.stderr:
+                    stderr_output = process.stderr.read()
+                return_code = process.wait()
+                if return_code != 0:
+                    raise RuntimeError(
+                        f"Error during gemini-cli execution: {stderr_output}"
+                    )
+
+                # Get final result
+                result = stream_processor.get_result()
+                model_response_text = result.response
+                stats = result.stats
+
+                # Reconcile tool calls
+                from pipe.core.delegates.gemini_cli_delegate import (
+                    _reconcile_tool_calls,
+                )
+
+                if session_id:
+                    session_service.current_session = session_service.get_session(
+                        session_id
+                    )
+                    _reconcile_tool_calls(result, session_service)
+                    session_turn_service.merge_pool_into_turns(session_id)
+
+                # Update cumulative token stats
+                if stats and session_id:
+                    session = session_service.get_session(session_id)
+                    if session:
+                        session.cumulative_total_tokens += stats.get("total_tokens", 0)
+                        session.cumulative_cached_tokens += stats.get("cached", 0)
+                        session_service.repository.save(session)
+
+                final_turn = ModelResponseTurn(
+                    type="model_response",
+                    content=model_response_text,
+                    timestamp=get_current_timestamp(session_service.timezone_obj),
+                )
+                turns_to_save = [final_turn]
+
+                # Yield final result with "end" marker
+                yield (
+                    "end",
+                    model_response_text,
+                    token_count,
+                    turns_to_save,
+                    None,
+                )
+
+        finally:
+            try:
+                if tmp_path and os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            except Exception:
+                pass

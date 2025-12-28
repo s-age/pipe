@@ -145,29 +145,43 @@ class GeminiApiStreamProcessor:
 
     def _save_raw_response(self) -> None:
         """
-        Save the collected chunks as raw_response JSON if thought_signature exists.
+        Save the collected chunks as raw_response JSON if special content exists.
 
-        This preserves the thought signature for history reconstruction.
-        If no thought_signature is found, raw_response is set to None to save space.
+        This preserves:
+        - thought_signature (for thinking models)
+        - thought=True parts (thinking process)
+        - function_call (tool invocations)
+
+        If none of these are found, raw_response is set to None to save space.
+        Note: function_response (tool results) is not saved as it's external data.
         """
         if not self.collected_chunks:
             return
 
-        has_thought_signature = False
+        should_save = False
         for chunk in self.collected_chunks:
             if chunk.candidates:
                 for candidate in chunk.candidates:
                     if candidate.content and candidate.content.parts:
                         for part in candidate.content.parts:
+                            # Check for thought_signature
                             if getattr(part, "thought_signature", None):
-                                has_thought_signature = True
+                                should_save = True
                                 break
-                    if has_thought_signature:
+                            # Check for thought=True
+                            if getattr(part, "thought", False):
+                                should_save = True
+                                break
+                            # Check for function_call (tool invocation)
+                            if getattr(part, "function_call", None):
+                                should_save = True
+                                break
+                    if should_save:
                         break
-            if has_thought_signature:
+            if should_save:
                 break
 
-        if has_thought_signature:
+        if should_save:
             try:
                 # Dump all chunks to a list of dicts
                 chunks_data = [chunk.model_dump() for chunk in self.collected_chunks]

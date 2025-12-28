@@ -181,6 +181,9 @@ class GeminiApiAgent(BaseAgent):
             self.session_service, loaded_tools
         )
 
+        # Store cached turn count from payload builder
+        self.last_cached_turn_count = self.payload_builder.last_cached_turn_count
+
         # 2. Validate token limits (use dict format for token counting)
         self._validate_context_limit(static, dynamic, loaded_tools)
 
@@ -260,6 +263,7 @@ class GeminiApiAgent(BaseAgent):
                     self.model_name,
                     tools,
                     self.project_root,
+                    session_data.session_id,
                 )
 
             elif not session_data.cached_content_token_count:
@@ -295,6 +299,7 @@ class GeminiApiAgent(BaseAgent):
                             self.model_name,
                             tools,
                             self.project_root,
+                            session_data.session_id,
                         )
                     except Exception:
                         # Fallback if cache retrieval fails

@@ -8,6 +8,7 @@ class CacheRegistryEntry(BaseModel):
 
     name: str = Field(description="Cache resource name (e.g., 'cachedContents/xxx')")
     expire_time: str = Field(description="ISO format expiration timestamp")
+    session_id: str = Field(description="Session ID that owns this cache")
 
     model_config = ConfigDict(frozen=True)
 

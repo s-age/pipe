@@ -13,10 +13,13 @@ class TestCacheRegistryEntry:
     def test_valid_entry_creation(self):
         """Test creating a valid entry."""
         entry = CacheRegistryFactory.create_entry(
-            name="cachedContents/abc", expire_time="2025-01-01T00:00:00Z"
+            name="cachedContents/abc",
+            expire_time="2025-01-01T00:00:00Z",
+            session_id="test_session",
         )
         assert entry.name == "cachedContents/abc"
         assert entry.expire_time == "2025-01-01T00:00:00Z"
+        assert entry.session_id == "test_session"
 
     def test_missing_required_fields(self):
         """Test validation error when required fields are missing."""
@@ -51,13 +54,16 @@ class TestCacheRegistry:
 
     def test_to_dict(self):
         """Test conversion to dictionary."""
-        entry = CacheRegistryFactory.create_entry(name="cache1", expire_time="time1")
+        entry = CacheRegistryFactory.create_entry(
+            name="cache1", expire_time="time1", session_id="session1"
+        )
         registry = CacheRegistryFactory.create(entries={"hash1": entry})
 
         expected = {
             "hash1": {
                 "name": "cache1",
                 "expire_time": "time1",
+                "session_id": "session1",
             }
         }
         assert registry.to_dict() == expected
@@ -68,20 +74,25 @@ class TestCacheRegistry:
             "hash1": {
                 "name": "cache1",
                 "expire_time": "time1",
+                "session_id": "session1",
             }
         }
         registry = CacheRegistry.from_dict(data)
         assert "hash1" in registry.entries
         assert registry.entries["hash1"].name == "cache1"
         assert registry.entries["hash1"].expire_time == "time1"
+        assert registry.entries["hash1"].session_id == "session1"
 
     def test_model_dump_json(self):
         """Test standard Pydantic serialization."""
-        entry = CacheRegistryFactory.create_entry(name="cache1", expire_time="time1")
+        entry = CacheRegistryFactory.create_entry(
+            name="cache1", expire_time="time1", session_id="session1"
+        )
         registry = CacheRegistryFactory.create(entries={"hash1": entry})
 
         dumped = registry.model_dump()
         assert dumped["entries"]["hash1"]["name"] == "cache1"
+        assert dumped["entries"]["hash1"]["session_id"] == "session1"
 
     def test_model_validate(self):
         """Test standard Pydantic deserialization."""
@@ -90,8 +101,10 @@ class TestCacheRegistry:
                 "hash1": {
                     "name": "cache1",
                     "expire_time": "time1",
+                    "session_id": "session1",
                 }
             }
         }
         registry = CacheRegistry.model_validate(data)
         assert registry.entries["hash1"].name == "cache1"
+        assert registry.entries["hash1"].session_id == "session1"

@@ -48,6 +48,7 @@ class GeminiApiPayloadBuilder:
         self.jinja_env = self._create_jinja_environment()
         self.resource_repository = ResourceRepository(project_root)
         self.prompt_factory = PromptFactory(project_root, self.resource_repository)
+        self.last_cached_turn_count: int | None = None
 
     def _create_jinja_environment(self) -> Environment:
         """
@@ -235,6 +236,13 @@ class GeminiApiPayloadBuilder:
         prompt_model = self.build_prompt(session_service)
         static, dynamic = self.render(prompt_model)
         converted_tools = self.convert_tools(loaded_tools)
+
+        # Track cached turn count for session metadata updates
+        if prompt_model.cached_history and prompt_model.cached_history.turns:
+            self.last_cached_turn_count = len(prompt_model.cached_history.turns)
+        else:
+            self.last_cached_turn_count = 0
+
         return static, dynamic, converted_tools
 
     def convert_tools(self, loaded_tools_data: list[dict]) -> list[types.Tool]:

@@ -112,17 +112,21 @@ def run_stream(
             token_count = prompt_tokens + candidate_tokens
             prompt_token_count_for_cache = prompt_tokens
 
-            # Capture cached_content_token_count from the first response only
+            # Update cached_content_token_count from every response (not just first)
+            # This ensures we always have the latest cache state, especially when
+            # cache is recreated/updated during the conversation
             cached_count = usage_metadata.cached_content_token_count
-            if first_cached_content_token_count is None and cached_count is not None:
-                first_cached_content_token_count = cached_count
+            if cached_count is not None:
+                # Track the first response's cache count for final update
+                if first_cached_content_token_count is None:
+                    first_cached_content_token_count = cached_count
 
-                # Update session with first response's cached count immediately
+                # Update session with current cache count immediately
                 from pipe.core.services.session_meta_service import SessionMetaService
 
                 session_meta_service = SessionMetaService(session_service.repository)
                 session_meta_service.update_cached_content_token_count(
-                    session_id, first_cached_content_token_count
+                    session_id, cached_count
                 )
 
                 # Reload session after cache count update

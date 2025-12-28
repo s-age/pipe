@@ -86,7 +86,12 @@ class GeminiCliPayloadBuilder(BasePayloadBuilder):
         rendered_prompt = template.render(session=prompt_model)
 
         # Ensure the rendered prompt is valid JSON and pretty-print it
-        return json.dumps(json.loads(rendered_prompt), indent=2, ensure_ascii=False)
+        json_output = json.dumps(
+            json.loads(rendered_prompt), indent=2, ensure_ascii=False
+        )
+
+        # Escape @ to prevent gemini-cli from treating it as a file path
+        return json_output.replace("@", "\\@")
 
     def build(self, session_service: "SessionService") -> str:
         """

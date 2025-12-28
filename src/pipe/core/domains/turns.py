@@ -1,11 +1,22 @@
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
-from pipe.core.models.turn import ToolResponseTurn, Turn
+from pipe.core.models.turn import ToolResponseTurn, Turn, TurnResponse
+from pydantic import Field
 
 if TYPE_CHECKING:
     from pipe.core.collections.turns import TurnCollection
     from pipe.core.models.session import Session
+
+
+class ExpiredToolResponse(TurnResponse):
+    """Minimal response object for expired tool responses."""
+
+    status: str = Field(default="succeeded", description="Status of the tool response")
+    message: str = Field(
+        default="This tool response has expired to save tokens.",
+        description="Expiration message",
+    )
 
 
 def delete_turns(session: "Session", turn_indices: list[int]) -> None:
@@ -67,10 +78,9 @@ def expire_old_tool_responses(
             and turn.timestamp < expiration_threshold_timestamp
             and turn.response.status == "succeeded"
         ):
+            # Replace entire response object to clear all fields
             modified_turn = turn.model_copy(deep=True)
-            modified_turn.response.message = (
-                "This tool response has expired to save tokens."
-            )
+            modified_turn.response = ExpiredToolResponse()
             new_turns.append(modified_turn)
             modified = True
         else:

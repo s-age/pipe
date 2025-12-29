@@ -297,7 +297,11 @@ def execute_next_todo(session_id: str) -> bool:
         "2. Process this file via invoke_serial_children\n"
         "3. Mark as completed when done\n"
         "4. Exit immediately\n\n"
-        "IMPORTANT: Process only THIS ONE TODO, then exit."
+        "IMPORTANT: Process only THIS ONE TODO, then exit.\n\n"
+        "Tool Usage Guidelines:\n"
+        "- When using tools like py_analyze_code, py_test_strategist, etc., "
+        "do not output the function call as text - just execute it.\n"
+        "- If a tool needs to be called, call it directly without describing the call in your response."
     )
 
     # Execute takt with instruction

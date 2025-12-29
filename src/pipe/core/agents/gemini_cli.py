@@ -389,9 +389,7 @@ class GeminiCliAgent(BaseAgent):
         stats = result.stats
 
         # Reconcile tool calls
-        from pipe.core.delegates.gemini_cli_delegate import (
-            _reconcile_tool_calls,
-        )
+        from pipe.core.delegates.gemini_cli_delegate import _reconcile_tool_calls
 
         if session_id:
             session_service.current_session = session_service.get_session(session_id)

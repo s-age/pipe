@@ -54,7 +54,7 @@ Build task list with agent task and validation script:
 tasks = [
     {
         "type": "agent",
-        "instruction": f"Follow @procedures/python_unit_test_generation.md to write tests. Target: {target_file_path}. Output: {test_output_path}. Execute all 7 steps sequentially. Coverage: 95%+.",
+        "instruction": f"Follow @procedures/python_unit_test_generation.md to write tests. Target: {target_file_path}. Output: {test_output_path}. Execute all 7 steps sequentially. Coverage: 95%+.\n\nTool Usage Guidelines:\n- When using tools like py_analyze_code, py_test_strategist, etc., do not output the function call as text - just execute it.\n- If a tool needs to be called, call it directly without describing the call in your response.",
         "roles": [f"roles/python/tests/core/{layer}.md"],
         "procedure": "procedures/python_unit_test_generation.md",
         "references_persist": [target_file_path]

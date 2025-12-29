@@ -247,16 +247,6 @@ class GeminiApiAgent(BaseAgent):
             # Get or create cache if needed
             cached_content_name = None
             if should_cache and static.cached_content:
-                cache_msg = (
-                    f"Cache decision: CREATING/UPDATING cache. "
-                    f"Current cached_tokens={session_data.cached_content_token_count}, "
-                    f"Current prompt_tokens={session_data.token_count}, "
-                    f"Buffered tokens={buffered_tokens}"
-                )
-                streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
-                )
-
                 cached_content_name = gemini_cache_utils.get_or_create_cache(
                     client,
                     static.cached_content,
@@ -264,6 +254,17 @@ class GeminiApiAgent(BaseAgent):
                     tools,
                     self.project_root,
                     session_data.session_id,
+                    force_create=should_cache,
+                )
+
+                cache_msg = (
+                    f"Cache decision: CREATING/UPDATING cache (key={cached_content_name}). "
+                    f"Current cached_tokens={session_data.cached_content_token_count}, "
+                    f"Current prompt_tokens={session_data.token_count}, "
+                    f"Buffered tokens={buffered_tokens}"
+                )
+                streaming_log_repo.write_log_line(
+                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
                 )
 
             elif not session_data.cached_content_token_count:
@@ -280,17 +281,6 @@ class GeminiApiAgent(BaseAgent):
 
             else:
                 # Use existing cache
-                cache_msg = (
-                    f"Cache decision: USING EXISTING cache (buffered below threshold). "
-                    f"Current cached_tokens={session_data.cached_content_token_count}, "
-                    f"Current prompt_tokens={session_data.token_count}, "
-                    f"Buffered tokens={buffered_tokens}, "
-                    f"Threshold={gemini_cache.cache_update_threshold}"
-                )
-                streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
-                )
-
                 if static.cached_content:
                     try:
                         cached_content_name = gemini_cache_utils.get_or_create_cache(
@@ -301,9 +291,31 @@ class GeminiApiAgent(BaseAgent):
                             self.project_root,
                             session_data.session_id,
                         )
-                    except Exception:
-                        # Fallback if cache retrieval fails
-                        pass
+                        cache_msg = (
+                            f"Cache decision: USING EXISTING cache (key={cached_content_name}). "
+                            f"Current cached_tokens={session_data.cached_content_token_count}, "
+                            f"Current prompt_tokens={session_data.token_count}, "
+                            f"Buffered tokens={buffered_tokens}, "
+                            f"Threshold={gemini_cache.cache_update_threshold}"
+                        )
+                    except Exception as e:
+                        cache_msg = (
+                            f"Cache decision: FAILED to get cache (error={str(e)}). "
+                            f"Current cached_tokens={session_data.cached_content_token_count}, "
+                            f"Current prompt_tokens={session_data.token_count}, "
+                            f"Buffered tokens={buffered_tokens}"
+                        )
+                else:
+                    cache_msg = (
+                        f"Cache decision: NO CACHE (static.cached_content is empty). "
+                        f"Current cached_tokens={session_data.cached_content_token_count}, "
+                        f"Current prompt_tokens={session_data.token_count}, "
+                        f"Buffered tokens={buffered_tokens}"
+                    )
+
+                streaming_log_repo.write_log_line(
+                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
+                )
 
         finally:
             streaming_log_repo.close()

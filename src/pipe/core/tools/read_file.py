@@ -53,6 +53,8 @@ def read_file(
             factory = ServiceFactory(project_root, settings)
             reference_service = factory.create_session_reference_service()
 
+            # Set TTL to 0 to track what has been read
+            # without sending duplicate file contents
             reference_service.add_reference_to_session(session_id, abs_path)
             reference_service.update_reference_ttl_in_session(session_id, abs_path, 3)
 

@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { useParams } from 'react-router-dom'
 
 import type { State, Actions } from '@/stores/useChatHistoryStore'
 import { useSessionStore } from '@/stores/useChatHistoryStore'
@@ -17,16 +18,22 @@ type UseChatHistoryPageHandlersReturn = {
 }
 
 export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn => {
+  const { '*': urlSessionId } = useParams<{ '*': string }>()
   const { state, actions } = useSessionStore()
   const {
-    sessionTree: { sessions, currentSessionId },
+    sessionTree: { sessions },
     sessionDetail,
     settings
   } = state
 
   const { selectSession, setSessionDetail, refreshSessions } = actions
 
-  const { fetchChatHistory } = useChatHistoryPageActions({ currentSessionId })
+  // Use URL session ID if available, otherwise fall back to store's currentSessionId
+  const activeSessionId = urlSessionId as string
+
+  const { fetchChatHistory } = useChatHistoryPageActions({
+    currentSessionId: activeSessionId
+  })
 
   const onRefresh = useCallback(
     async (sessionId?: string): Promise<void> => {

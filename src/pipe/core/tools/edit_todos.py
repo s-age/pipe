@@ -12,9 +12,37 @@ def edit_todos(
     """
     Edits the list of TODO items directly within the session data.
 
+    Returns the updated TODO list in the result, so you can verify the changes were applied.
+
+    Args:
+        todos: List of TODO items with fields:
+            - title (str, required): The TODO item title
+            - description (str, optional): Additional description
+            - checked (bool, optional): Whether the item is completed
+
+    Returns:
+        ToolResult containing EditTodosResult with:
+            - status: "succeeded" or "failed"
+            - message: Success/error message
+            - current_todos: The updated list of TODO items after the operation
+            - error: Error message if failed (None if succeeded)
+
     Example:
-    edit_todos(todos=[{"title": "test1", "description": "", "checked": False},
-    {"title": "test2", "description": "", "checked": False}])
+        edit_todos(todos=[
+            {"title": "test1", "description": "", "checked": False},
+            {"title": "test2", "description": "", "checked": False}
+        ])
+
+        Returns:
+        {
+            "status": "succeeded",
+            "message": "Todos successfully updated in session <session_id>.",
+            "current_todos": [
+                {"title": "test1", "description": "", "checked": False},
+                {"title": "test2", "description": "", "checked": False}
+            ],
+            "error": null
+        }
     """
     if not session_service:
         return ToolResult(error="This tool requires a session_service.")

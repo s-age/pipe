@@ -2,12 +2,20 @@
 """
 Automated test generation orchestration script.
 
-This script:
+This script implements a two-phase approach:
+
+Phase 1: Initialize Session (new sessions only)
 1. Scans target paths for Python source files
-2. Launches Test Conductor agent via takt
-3. Polls for conductor completion and checks TODOs
-4. Continues processing with 120s wait between files (TPM/RPM mitigation)
-5. Repeats until all files processed or timeout
+2. Launches Test Conductor to create TODO list via edit_todos
+3. Conductor exits immediately after TODO creation
+
+Phase 2: Process TODOs (iterative)
+1. Reads unchecked TODOs from sessions/${sessionId}.json
+2. Sends instruction to process the first unchecked TODO
+3. Polls .processes/${sessionId}.pid for deletion (completion)
+4. Checks TODOs for changes
+5. Continues with next TODO if unchecked items remain
+6. Waits 120s between iterations (TPM/RPM mitigation)
 
 Usage:
     poetry run python scripts/python/tests/generate_unit_test.py <targets...> [options]
@@ -24,7 +32,7 @@ Examples:
 
     # Resume existing conductor session
     poetry run python scripts/python/tests/generate_unit_test.py \
-        --session abc123 src/pipe/core/repositories
+        --session abc123
 
     # Custom timeout (default: 600s)
     poetry run python scripts/python/tests/generate_unit_test.py \
@@ -169,21 +177,21 @@ def build_file_metadata(files: list[str]) -> list[dict]:
     return metadata
 
 
-def get_session_result_path(session_id: str) -> Path:
-    """Get path to serial result file for session."""
-    return Path(f".pipe_sessions/{session_id}_serial_result.json")
+def get_session_json_path(session_id: str) -> Path:
+    """Get path to session JSON file."""
+    return Path(f"sessions/{session_id}.json")
 
 
-def get_session_todos_path(session_id: str) -> Path:
-    """Get path to todos file for session."""
-    return Path(f".pipe_sessions/{session_id}_todos.json")
+def get_pid_file_path(session_id: str) -> Path:
+    """Get path to PID file for session."""
+    return Path(f".processes/{session_id}.pid")
 
 
 def wait_for_conductor_completion(
     session_id: str, timeout: int = 600, poll_interval: int = 5
 ) -> bool:
     """
-    Poll for conductor completion by checking serial result file.
+    Poll for conductor completion by checking PID file deletion.
 
     Args:
         session_id: Conductor session ID
@@ -191,14 +199,15 @@ def wait_for_conductor_completion(
         poll_interval: Polling interval in seconds
 
     Returns:
-        True if completed successfully, False if timeout or failure
+        True if completed (PID deleted), False if timeout
     """
-    result_path = get_session_result_path(session_id)
+    pid_path = get_pid_file_path(session_id)
     start_time = time.time()
 
     print(f"\n[Polling] Waiting for conductor completion (timeout: {timeout}s)...")
-    print(f"[Polling] Result file: {result_path}")
+    print(f"[Polling] Monitoring PID file: {pid_path}")
 
+    # Wait for PID file to be deleted
     while True:
         elapsed = time.time() - start_time
 
@@ -206,178 +215,177 @@ def wait_for_conductor_completion(
             print(f"\n[Polling] ⏱️  Timeout after {timeout}s")
             return False
 
-        # Check if result file exists
-        if result_path.exists():
-            try:
-                with open(result_path) as f:
-                    result = json.load(f)
-
-                status = result.get("status")
-                print(f"\n[Polling] ✓ Conductor completed with status: {status}")
-
-                # Delete result file for next iteration
-                result_path.unlink()
-
-                return status == "success"
-
-            except (OSError, json.JSONDecodeError) as e:
-                print(f"\n[Polling] Warning: Failed to read result file: {e}")
-                # Continue polling
+        # Check if PID file has been deleted (or never existed)
+        if not pid_path.exists():
+            print("\n[Polling] ✓ Conductor completed (PID file deleted)")
+            return True
 
         # Show progress
-        print(f"[Polling] Waiting... ({int(elapsed)}s elapsed)", end="\r", flush=True)
+        print(
+            f"[Polling] Waiting for PID deletion... ({int(elapsed)}s)",
+            end="\r",
+            flush=True,
+        )
         time.sleep(poll_interval)
 
 
-def get_remaining_todos(session_id: str) -> list[dict]:
+def get_todos_from_session(session_id: str) -> tuple[list[dict], list[dict]]:
     """
-    Get pending TODO items from conductor session.
+    Get TODO items from session JSON file.
 
     Args:
         session_id: Conductor session ID
 
     Returns:
-        List of pending TODO items
+        Tuple of (all_todos, unchecked_todos)
     """
-    todos_path = get_session_todos_path(session_id)
+    session_path = get_session_json_path(session_id)
 
-    if not todos_path.exists():
-        print(f"[TODO] No TODO file found: {todos_path}")
-        return []
+    if not session_path.exists():
+        print(f"[TODO] Session file not found: {session_path}")
+        return [], []
 
     try:
-        with open(todos_path) as f:
+        with open(session_path) as f:
             data = json.load(f)
 
         todos = data.get("todos", [])
-        pending = [t for t in todos if t.get("status") == "pending"]
+        unchecked = [t for t in todos if not t.get("checked", False)]
 
         print(
-            f"\n[TODO] Found {len(pending)} pending items (out of {len(todos)} total)"
+            f"\n[TODO] Found {len(unchecked)} unchecked items (out of {len(todos)} total)"
         )
-        return pending
+        for idx, todo in enumerate(unchecked, 1):
+            print(
+                f"  {idx}. {todo.get('title', 'Untitled')}: {todo.get('description', '')}"
+            )
+
+        return todos, unchecked
 
     except (OSError, json.JSONDecodeError) as e:
-        print(f"[TODO] Error reading TODO file: {e}")
-        return []
+        print(f"[TODO] Error reading session file: {e}")
+        return [], []
 
 
-def launch_conductor(
-    file_metadata: list[dict], session_id: str | None = None
-) -> str | None:
+def execute_next_todo(session_id: str) -> bool:
     """
-    Launch Test Conductor agent via takt.
+    Execute the next unchecked TODO by sending instruction to conductor.
+
+    Args:
+        session_id: Conductor session ID
+
+    Returns:
+        True if instruction sent successfully, False otherwise
+    """
+    _, unchecked_todos = get_todos_from_session(session_id)
+
+    if not unchecked_todos:
+        print("\n[TODO] No unchecked TODOs found")
+        return False
+
+    # Get the first unchecked TODO
+    next_todo = unchecked_todos[0]
+    todo_title = next_todo.get("title", "")
+
+    print(f"\n[Execute] Processing next TODO: {todo_title}")
+
+    # Build instruction to process this TODO
+    instruction = (
+        f"Process the next TODO item: {todo_title}\n\n"
+        "Follow @procedures/python_unit_test_conductor.md:\n"
+        "1. Mark the TODO as in_progress via edit_todos\n"
+        "2. Process this file via invoke_serial_children\n"
+        "3. Mark as completed when done\n"
+        "4. Exit immediately\n\n"
+        "IMPORTANT: Process only THIS ONE TODO, then exit."
+    )
+
+    # Execute takt with instruction
+    takt_cmd = [
+        "poetry",
+        "run",
+        "takt",
+        "--session",
+        session_id,
+        "--instruction",
+        instruction,
+    ]
+
+    print(f"[Execute] Command: {' '.join(takt_cmd[:6])}...")
+
+    try:
+        result = subprocess.run(takt_cmd, check=False, capture_output=True, text=True)
+
+        if result.returncode != 0:
+            print(f"[Execute] Warning: takt exited with code {result.returncode}")
+            if result.stderr:
+                print(f"[Execute] stderr: {result.stderr}")
+
+        return True
+
+    except FileNotFoundError:
+        print("[Execute] Error: takt command not found")
+        return False
+
+
+def launch_conductor_for_init(file_metadata: list[dict]) -> str | None:
+    """
+    Launch Test Conductor agent to create TODO list only.
 
     Args:
         file_metadata: List of file metadata
-        session_id: Optional session ID to resume
 
     Returns:
-        Session ID (new or resumed)
+        Session ID of created session
     """
-    if not file_metadata and not session_id:
+    if not file_metadata:
         print("No files to process")
         return None
 
-    # Build takt command
+    # Start new session with conductor role + procedure
+    print(f"\n[Conductor] Starting new session for {len(file_metadata)} files")
+
     takt_cmd = ["poetry", "run", "takt"]
 
-    if session_id:
-        # Resume existing session
-        print(f"\n[Conductor] Resuming session: {session_id}")
-        takt_cmd.extend(["--session", session_id])
-        takt_cmd.extend(
-            [
-                "--instruction",
-                "Continue test generation for remaining pending files in TODO list. "
-                "Process ONLY THE NEXT PENDING FILE via invoke_serial_children, "
-                "then exit. "
-                "DO NOT process all remaining files at once.",
-            ]
-        )
-        resume_mode = True
-    else:
-        # Start new session with conductor role + procedure
-        print(f"\n[Conductor] Starting new session for {len(file_metadata)} files")
+    takt_cmd.extend(
+        [
+            "--purpose",
+            f"Automated test generation for {len(file_metadata)} "
+            "Python source files",
+        ]
+    )
+    takt_cmd.extend(
+        [
+            "--background",
+            "Orchestrate test generation by delegating to child agents "
+            "via invoke_serial_children",
+        ]
+    )
+    takt_cmd.extend(["--roles", "roles/conductor.md"])
+    takt_cmd.extend(["--procedure", "procedures/python_unit_test_conductor.md"])
 
-        takt_cmd.extend(
-            [
-                "--purpose",
-                f"Automated test generation for {len(file_metadata)} "
-                "Python source files",
-            ]
-        )
-        takt_cmd.extend(
-            [
-                "--background",
-                "Orchestrate test generation by delegating to child agents "
-                "via invoke_serial_children",
-            ]
-        )
-        takt_cmd.extend(["--roles", "roles/conductor.md"])
-        takt_cmd.extend(["--procedure", "procedures/python_unit_test_conductor.md"])
+    # Build initial instruction
+    file_list = "\n".join(
+        [
+            f"- {m['source_file']} → {m['test_file']} (layer: {m['layer']})"
+            for m in file_metadata
+        ]
+    )
 
-        # Build initial instruction
-        file_list = "\n".join(
-            [
-                f"- {m['source_file']} → {m['test_file']} (layer: {m['layer']})"
-                for m in file_metadata
-            ]
-        )
-        # Get first file for example
-        first_file = file_metadata[0]
-
-        instruction_template = (
-            "Follow @procedures/python_unit_test_conductor.md to generate tests "
-            "for the following files:\n\n"
-            "{file_list}\n\n"
-            "Execute all steps in the procedure:\n"
-            "1. Receive and parse file list (done above)\n"
-            "2. Create TODO list via edit_todos\n"
-            "3. Process ONLY THE FIRST FILE via invoke_serial_children\n"
-            "4. DO NOT process remaining files - wait for script to call you again\n\n"
-            "IMPORTANT: Process only ONE file per invocation, then exit.\n\n"
-            "**CORRECT invoke_serial_children usage example (for {source_file}):**\n"
-            "```python\n"
-            "invoke_serial_children(\n"
-            "    tasks=[\n"
-            "        {{\n"
-            '            "type": "agent",\n'
-            '            "instruction": "Follow '
-            "@procedures/python_unit_test_generation.md "
-            "to write tests. Target: {source_file}. "
-            "Output: {test_file}. Execute all 7 steps "
-            'sequentially. Coverage: 95%+.",\n'
-            '            "roles": ["roles/python/tests/core/{layer}.md"],\n'
-            '            "procedure": "procedures/python_unit_test_generation.md",\n'
-            '            "references_persist": ["{source_file}"]\n'
-            "        }},\n"
-            "        {{\n"
-            '            "type": "script",\n'
-            '            "script": "python/validate_code.sh",\n'
-            '            "args": ["{test_file}"],\n'
-            '            "max_retries": 2\n'
-            "        }}\n"
-            "    ],\n"
-            '    purpose="Generate tests for {filename}",\n'
-            '    background="Write comprehensive pytest tests for {source_file}",\n'
-            '    roles=["roles/python/tests/core/{layer}.md"],\n'
-            '    procedure="procedures/python_unit_test_generation.md",\n'
-            '    references_persist=["{source_file}"]\n'
-            ")\n"
-            "```\n"
-            "**NOTE**: tasks parameter takes a LIST of DICT objects, NOT strings. "
-            "Do NOT escape quotes inside task dictionaries."
-        )
-        instruction = instruction_template.format(
-            file_list=file_list,
-            source_file=first_file["source_file"],
-            test_file=first_file["test_file"],
-            layer=first_file["layer"],
-            filename=first_file["filename"],
-        )
-        takt_cmd.extend(["--instruction", instruction])
-        resume_mode = False
+    instruction_template = (
+        "Follow @procedures/python_unit_test_conductor.md to generate tests "
+        "for the following files:\n\n"
+        "{file_list}\n\n"
+        "Execute ONLY step 2:\n"
+        "2. Create TODO list via edit_todos with all files listed above\n\n"
+        "After successfully creating TODOs with edit_todos, EXIT IMMEDIATELY.\n"
+        "DO NOT process any files yet - the script will call you again "
+        "to process each file one by one.\n\n"
+        "IMPORTANT: Only create the TODO list, then exit. "
+        "Do NOT call invoke_serial_children in this invocation."
+    )
+    instruction = instruction_template.format(file_list=file_list)
+    takt_cmd.extend(["--instruction", instruction])
 
     # Execute takt and capture session ID
     print(f"[Conductor] Command: {' '.join(takt_cmd)}\n")
@@ -386,63 +394,52 @@ def launch_conductor(
         result = subprocess.run(takt_cmd, check=False, capture_output=True, text=True)
 
         # Extract session ID from output
-        if not resume_mode:
-            session_id_from_stdout = None
-            for line in result.stdout.strip().split("\n"):
-                if line.strip().startswith("{"):
-                    try:
-                        data = json.loads(line.strip())
-                        if "session_id" in data:
-                            session_id_from_stdout = data["session_id"]
-                            print(
-                                f"[Conductor] Created session: {session_id_from_stdout}"
-                            )
-                            session_id = session_id_from_stdout
-                            break  # Found session_id, exit loop
-                    except json.JSONDecodeError:
-                        print(
-                            "[Conductor] Warning: Could not parse "
-                            "session ID from stdout"
-                        )
-                        continue  # Continue to next line if JSON fails
+        session_id = None
+        for line in result.stdout.strip().split("\n"):
+            if line.strip().startswith("{"):
+                try:
+                    data = json.loads(line.strip())
+                    if "session_id" in data:
+                        session_id = data["session_id"]
+                        print(f"[Conductor] Created session: {session_id}")
+                        break  # Found session_id, exit loop
+                except json.JSONDecodeError:
+                    print("[Conductor] Warning: Could not parse session ID from stdout")
+                    continue  # Continue to next line if JSON fails
 
-            # If session_id not found in stdout, try to find the latest session file
-            if session_id is None:  # Check session_id for the overall status
-                print(
-                    "[Conductor] Session ID not in stdout, searching for "
-                    "latest session file..."
+        # If session_id not found in stdout, try to find the latest session file
+        if session_id is None:
+            print(
+                "[Conductor] Session ID not in stdout, searching for "
+                "latest session file..."
+            )
+            sessions_dir = Path("sessions")
+            if sessions_dir.exists():
+                # Find the most recently created session file
+                session_files = sorted(
+                    [
+                        f
+                        for f in sessions_dir.glob("*.json")
+                        if not f.name.startswith(".")
+                    ],
+                    key=lambda f: f.stat().st_mtime,
+                    reverse=True,
                 )
-                sessions_dir = Path("sessions")
-                if sessions_dir.exists():
-                    # Find the most recently created session file
-                    session_files = sorted(
-                        [
-                            f
-                            for f in sessions_dir.glob("*.json")
-                            if not f.name.startswith(".")
-                        ],
-                        key=lambda f: f.stat().st_mtime,
-                        reverse=True,
-                    )
-                    for session_file in session_files[:5]:  # Check last 5 sessions
-                        try:
-                            with open(session_file) as f:
-                                session_data = json.load(f)
-                                candidate_id = session_data.get("session_id")
-                                purpose = session_data.get("purpose", "")
-                                # Match purpose to ensure we get the right session
-                                if (
-                                    candidate_id
-                                    and "Automated test generation" in purpose
-                                ):
-                                    session_id = candidate_id
-                                    print(
-                                        f"[Conductor] Found session from file: "
-                                        f"{session_id}"
-                                    )
-                                    break
-                        except (OSError, json.JSONDecodeError):
-                            continue
+                for session_file in session_files[:5]:  # Check last 5 sessions
+                    try:
+                        with open(session_file) as f:
+                            session_data = json.load(f)
+                            candidate_id = session_data.get("session_id")
+                            purpose = session_data.get("purpose", "")
+                            # Match purpose to ensure we get the right session
+                            if candidate_id and "Automated test generation" in purpose:
+                                session_id = candidate_id
+                                print(
+                                    f"[Conductor] Found session from file: {session_id}"
+                                )
+                                break
+                    except (OSError, json.JSONDecodeError):
+                        continue
 
         if session_id is None:
             print("[Conductor] Error: Could not determine session ID")
@@ -527,8 +524,36 @@ def main():
     else:
         file_metadata = []  # Not needed for resume
 
-    # Main orchestration loop
+    # Phase 1: Initialize session and create TODOs (only for new sessions)
     session_id = args.session
+
+    if not session_id:
+        print("\n" + "=" * 70)
+        print("Phase 1: Initialize Session and Create TODOs")
+        print("=" * 70)
+
+        # Launch conductor to create TODO list only
+        session_id = launch_conductor_for_init(file_metadata)
+
+        if not session_id:
+            print("\n[Error] Failed to create session")
+            sys.exit(1)
+
+        # Wait for TODO creation to complete
+        success = wait_for_conductor_completion(session_id, timeout=args.timeout)
+
+        if not success:
+            print("\n[Error] Failed to create TODO list")
+            print(f"[Info] You can resume with: --session {session_id}")
+            sys.exit(1)
+
+        print("\n[Init] TODO list created successfully")
+
+    # Phase 2: Process TODOs one by one
+    print("\n" + "=" * 70)
+    print("Phase 2: Process TODOs")
+    print("=" * 70)
+
     iteration = 0
     max_iterations = 100  # Safety limit
 
@@ -538,11 +563,22 @@ def main():
         print(f"Iteration {iteration}")
         print(f"{'=' * 70}")
 
-        # Launch or resume conductor
-        session_id = launch_conductor(file_metadata, session_id)
+        # Check TODOs before processing
+        _, unchecked_todos = get_todos_from_session(session_id)
 
-        if not session_id:
-            print("\n[Error] Failed to get session ID")
+        if not unchecked_todos:
+            print("\n" + "=" * 70)
+            print("✅ All files processed successfully!")
+            print("=" * 70)
+            sys.exit(0)
+
+        # Execute next TODO
+        print(f"\n[Process] {len(unchecked_todos)} TODOs remaining")
+        success = execute_next_todo(session_id)
+
+        if not success:
+            print("\n[Error] Failed to execute TODO")
+            print(f"[Info] You can resume with: --session {session_id}")
             sys.exit(1)
 
         # Wait for conductor completion
@@ -553,22 +589,10 @@ def main():
             print(f"[Info] You can resume with: --session {session_id}")
             sys.exit(1)
 
-        # Check remaining TODOs
-        pending_todos = get_remaining_todos(session_id)
-
-        if not pending_todos:
-            print("\n" + "=" * 70)
-            print("✅ All files processed successfully!")
-            print("=" * 70)
-            sys.exit(0)
-
         # Wait before next iteration (TPM/RPM mitigation)
-        print(f"\n[Wait] Sleeping {args.wait}s before processing next file...")
-        print(f"[Wait] Remaining files: {len(pending_todos)}")
-        time.sleep(args.wait)
-
-        # Continue with same session
-        # file_metadata will be ignored on resume
+        if iteration < max_iterations:
+            print(f"\n[Wait] Sleeping {args.wait}s before processing next file...")
+            time.sleep(args.wait)
 
     print("\n[Error] Maximum iterations reached")
     sys.exit(1)

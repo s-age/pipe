@@ -41,6 +41,9 @@ def run_stream(
         settings=settings,
     )
 
+    # Create GeminiApiAgent ONCE outside the loop to preserve payload_service state
+    gemini_agent = GeminiApiAgent(session_service)
+
     while tool_call_count < max_tool_calls:
         session_turn_service.merge_pool_into_turns(session_id)
 
@@ -68,8 +71,8 @@ def run_stream(
                 session_service.current_session = reloaded_session
                 session_data = session_service.current_session
 
-        # Use GeminiApiAgent with unified Pydantic chunk format
-        gemini_agent = GeminiApiAgent(session_service)
+        # Update session_service reference in agent (session may have been reloaded)
+        gemini_agent.session_service = session_service
         stream = gemini_agent.stream_content()
 
         full_text_parts = []
@@ -93,6 +96,17 @@ def run_stream(
             elif isinstance(unified_chunk, MetadataChunk):
                 # Store usage metadata
                 usage_metadata = unified_chunk.usage
+
+                # Update GeminiPayloadService with token summary
+                if usage_metadata:
+                    gemini_agent.payload_service.update_token_summary(
+                        {
+                            "cached_content_token_count": usage_metadata.cached_content_token_count
+                            or 0,
+                            "prompt_token_count": usage_metadata.prompt_token_count
+                            or 0,
+                        }
+                    )
 
         if not usage_metadata and not full_text_parts and not tool_call_chunk:
             yield "API Error: Model stream was empty."
@@ -182,22 +196,23 @@ def run_stream(
         try:
             tool_result = execute_tool(function_call.name, dict(function_call.args))
 
+            # Determine status and message for both logging and payload service
+            if (
+                isinstance(tool_result, dict)
+                and "error" in tool_result
+                and tool_result["error"] is not None
+            ):
+                status = "failed"
+                output = str(tool_result["error"])
+            else:
+                status = "succeeded"
+                if isinstance(tool_result, dict):
+                    output = tool_result.get("message", str(tool_result))
+                else:
+                    output = str(tool_result)
+
             # Log tool result to streaming log
             if streaming_log_repo:
-                if (
-                    isinstance(tool_result, dict)
-                    and "error" in tool_result
-                    and tool_result["error"] is not None
-                ):
-                    status = "failed"
-                    output = str(tool_result["error"])
-                else:
-                    status = "succeeded"
-                    if isinstance(tool_result, dict):
-                        output = tool_result.get("message", str(tool_result))
-                    else:
-                        output = str(tool_result)
-
                 truncated_output = f"{output[:200]}..." if len(output) > 200 else output
                 log_content = (
                     f"TOOL_RESULT: {function_call.name} | status: {status} | "
@@ -267,7 +282,7 @@ def run_stream(
         content=model_response_text,
         thought=model_response_thought if model_response_thought else None,
         timestamp=get_current_timestamp(timezone_obj),
-        raw_response=gemini_agent.last_raw_response,
+        raw_response=gemini_agent.last_raw_response if gemini_agent else None,
     )
     intermediate_turns.append(final_model_turn)
 
@@ -287,7 +302,7 @@ def run_stream(
             )
 
         # Update cached_turn_count using the value from the agent
-        if gemini_agent.last_cached_turn_count is not None:
+        if gemini_agent and gemini_agent.last_cached_turn_count is not None:
             session_meta_service.update_cached_turn_count(
                 session_id, gemini_agent.last_cached_turn_count
             )

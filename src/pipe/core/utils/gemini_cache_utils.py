@@ -42,6 +42,26 @@ def is_cache_expired(
         return True
 
 
+def get_cache_name_for_session(project_root: str, session_id: str) -> str | None:
+    """
+    Get the cache name for a session from the registry.
+
+    Args:
+        project_root: Project root for registry path
+        session_id: Session ID
+
+    Returns:
+        Cache name (e.g., "cachedContents/xxx") or None if not found or expired
+    """
+    registry_path = os.path.join(project_root, "sessions", ".cache_registry.json")
+    cache_registry = _load_registry(registry_path)
+
+    cached_entry = cache_registry.entries.get(session_id)
+    if cached_entry and not is_cache_expired(cached_entry.expire_time):
+        return cached_entry.name
+    return None
+
+
 def get_or_create_cache(
     client: genai.Client,
     static_content: str,

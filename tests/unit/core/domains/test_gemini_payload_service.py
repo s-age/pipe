@@ -123,10 +123,16 @@ class TestPrepareRequestBasicFlow:
         ) as mock_update:
             mock_update.return_value = (None, 0, [])
 
-            with patch(
-                "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
-            ) as mock_dynamic:
+            with (
+                patch(
+                    "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                ) as mock_dynamic,
+                patch(
+                    "pipe.core.domains.gemini_api_static_payload.build"
+                ) as mock_static_build,
+            ):
                 mock_dynamic.return_value.build.return_value = []
+                mock_static_build.return_value = []
 
                 payload_service.prepare_request(
                     session=mock_session,
@@ -183,10 +189,16 @@ class TestPrepareRequestBasicFlow:
         ) as mock_update:
             mock_update.return_value = (None, 0, buffered_turns)
 
-            with patch(
-                "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
-            ) as mock_dynamic:
+            with (
+                patch(
+                    "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                ) as mock_dynamic,
+                patch(
+                    "pipe.core.domains.gemini_api_static_payload.build"
+                ) as mock_static_build,
+            ):
                 mock_dynamic.return_value.build.return_value = []
+                mock_static_build.return_value = []
 
                 mock_prompt = MagicMock()
                 mock_prompt_factory.create.return_value = mock_prompt
@@ -223,6 +235,78 @@ class TestPrepareRequestBasicFlow:
                 )
 
                 assert contents == mock_contents
+                assert cache_name == "cache-xyz"
+
+    def test_prepare_request_includes_static_when_no_cache(
+        self, payload_service, mock_session, mock_prompt_factory
+    ):
+        """Test that prepare_request includes static content when cache_name is None."""
+        mock_static_contents = [MagicMock()]
+        mock_dynamic_contents = [MagicMock()]
+
+        with patch.object(
+            payload_service.cache_manager, "update_if_needed"
+        ) as mock_update:
+            mock_update.return_value = (None, 0, [])  # No cache
+
+            with (
+                patch(
+                    "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                ) as mock_dynamic,
+                patch(
+                    "pipe.core.domains.gemini_api_static_payload.build"
+                ) as mock_static_build,
+            ):
+                mock_dynamic.return_value.build.return_value = mock_dynamic_contents
+                mock_static_build.return_value = mock_static_contents
+
+                contents, cache_name = payload_service.prepare_request(
+                    session=mock_session,
+                    prompt_factory=mock_prompt_factory,
+                    current_instruction=None,
+                )
+
+                # Verify static payload was built
+                mock_static_build.assert_called_once()
+
+                # Verify contents includes both static and dynamic
+                assert len(contents) == 2
+                assert contents[0] == mock_static_contents[0]
+                assert contents[1] == mock_dynamic_contents[0]
+                assert cache_name is None
+
+    def test_prepare_request_excludes_static_when_cache_exists(
+        self, payload_service, mock_session, mock_prompt_factory
+    ):
+        """Test that prepare_request excludes static content when cache exists."""
+        mock_dynamic_contents = [MagicMock()]
+
+        with patch.object(
+            payload_service.cache_manager, "update_if_needed"
+        ) as mock_update:
+            mock_update.return_value = ("cache-xyz", 3, [])  # Cache exists
+
+            with (
+                patch(
+                    "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                ) as mock_dynamic,
+                patch(
+                    "pipe.core.domains.gemini_api_static_payload.build"
+                ) as mock_static_build,
+            ):
+                mock_dynamic.return_value.build.return_value = mock_dynamic_contents
+
+                contents, cache_name = payload_service.prepare_request(
+                    session=mock_session,
+                    prompt_factory=mock_prompt_factory,
+                    current_instruction=None,
+                )
+
+                # Verify static payload was NOT built
+                mock_static_build.assert_not_called()
+
+                # Verify contents only includes dynamic
+                assert contents == mock_dynamic_contents
                 assert cache_name == "cache-xyz"
 
 
@@ -278,10 +362,16 @@ class TestTimeSeriesScenario:
         """
         mock_session.turns = []
 
-        with patch(
-            "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
-        ) as mock_dynamic:
+        with (
+            patch(
+                "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+            ) as mock_dynamic,
+            patch(
+                "pipe.core.domains.gemini_api_static_payload.build"
+            ) as mock_static_build,
+        ):
             mock_dynamic.return_value.build.return_value = []
+            mock_static_build.return_value = []
 
             # T1: First request
             payload_service.prepare_request(

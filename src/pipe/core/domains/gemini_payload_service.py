@@ -114,6 +114,7 @@ class GeminiPayloadService:
         session.cached_turn_count = confirmed_cached_count
 
         # === Phase 2: Payload Construction ===
+        # Build prompt object with buffered_history override
         prompt = prompt_factory.create(
             session=session,
             settings=self.settings,
@@ -125,8 +126,31 @@ class GeminiPayloadService:
         # Note: prompt.buffered_history expects list[Turn], not PromptConversationHistory
         prompt.buffered_history = buffered_history  # type: ignore[assignment]
 
+        # Build contents following 4-layer architecture:
+        # Layer 1 (Static) - only if no cache
+        # Layer 2 (Dynamic) - always
+        # Layer 3 (Buffered) - handled by dynamic_builder
+        # Layer 4 (Trigger) - handled by dynamic_builder
+        contents: list[types.Content] = []
+
+        # Layer 1: Static (only if no cache exists)
+        if cache_name is None:
+            from pipe.core.domains import gemini_api_static_payload
+
+            static_contents = gemini_api_static_payload.build(
+                session=session,
+                full_history=full_history,
+                cached_turn_count=confirmed_cached_count,
+                project_root=self.project_root,
+                prompt_factory=prompt_factory,
+                settings=self.settings,
+            )
+            contents.extend(static_contents)
+
+        # Layers 2-4: Dynamic + Buffered + Trigger
         dynamic_builder = GeminiApiDynamicPayload(project_root=self.project_root)
-        contents: list[types.Content] = dynamic_builder.build(prompt=prompt)
+        dynamic_contents = dynamic_builder.build(prompt=prompt)
+        contents.extend(dynamic_contents)
 
         return (contents, cache_name)
 

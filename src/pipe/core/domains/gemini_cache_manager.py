@@ -124,13 +124,7 @@ class GeminiCacheManager:
             )
 
             # Delete old cache if exists (from registry)
-            old_cache_name = self._get_existing_cache_name(session.session_id)
-            if old_cache_name:
-                try:
-                    self.client.caches.delete(name=old_cache_name)
-                except Exception:
-                    # Ignore deletion errors (cache may not exist)
-                    pass
+            self.delete_cache_by_session_id(session.session_id)
 
             # Create new cache
             try:
@@ -180,6 +174,21 @@ class GeminiCacheManager:
             project_root=self.project_root,
             session_id=session_id,
         )
+
+    def delete_cache_by_session_id(self, session_id: str) -> None:
+        """
+        Delete cache for a session by session ID.
+
+        Args:
+            session_id: Session ID to delete cache for
+        """
+        cache_name = self._get_existing_cache_name(session_id)
+        if cache_name:
+            try:
+                self.client.caches.delete(name=cache_name)
+            except Exception:
+                # Ignore deletion errors (cache may not exist)
+                pass
 
     def _update_registry(self, session_id: str, cache_name: str, cached_obj) -> None:
         """

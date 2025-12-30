@@ -1,5 +1,6 @@
 """Service for managing session metadata."""
 
+from pipe.core.domains.gemini_cache_manager import GeminiCacheManager
 from pipe.core.domains.hyperparameters import merge_hyperparameters
 from pipe.core.models.hyperparameters import Hyperparameters
 from pipe.core.models.session import Session, SessionMetaUpdate
@@ -9,8 +10,13 @@ from pipe.core.repositories.session_repository import SessionRepository
 class SessionMetaService:
     """Handles all metadata-related operations for sessions."""
 
-    def __init__(self, repository: SessionRepository):
+    def __init__(
+        self,
+        repository: SessionRepository,
+        cache_manager: GeminiCacheManager | None = None,
+    ):
         self.repository = repository
+        self.cache_manager = cache_manager
 
     def edit_session_meta(self, session_id: str, update_data: SessionMetaUpdate):
         """Edit session metadata with type-safe updates.
@@ -32,6 +38,14 @@ class SessionMetaService:
                 setattr(session, key, value)
 
         self.repository.save(session)
+
+        # Delete cache if cache_manager is available
+        # This ensures that changes to static content (meta info) are reflected
+        if self.cache_manager:
+            self.cache_manager.delete_cache_by_session_id(session_id)
+            # Reset cached_turn_count since cache was deleted
+            session.cached_turn_count = 0
+            self.repository.save(session)
 
     def update_hyperparameters(
         self, session_id: str, new_params: Hyperparameters

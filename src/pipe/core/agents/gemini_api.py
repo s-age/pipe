@@ -89,6 +89,7 @@ class GeminiApiAgent(BaseAgent):
 
         # Initialize other fields
         self.last_raw_response: str | None = None
+        self.last_stream_processor: GeminiApiStreamProcessor | None = None
 
         try:
             self.timezone = zoneinfo.ZoneInfo(self.settings.timezone)
@@ -390,6 +391,9 @@ class GeminiApiAgent(BaseAgent):
 
             # Save the last raw response for thought signature
             self.last_raw_response = stream_processor.get_last_raw_response()
+
+            # Store stream processor reference for accessing last usage metadata
+            self.last_stream_processor = stream_processor
 
         except Exception as e:
             raise RuntimeError(f"Error during Gemini API execution: {e}")

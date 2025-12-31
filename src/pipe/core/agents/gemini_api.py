@@ -20,6 +20,7 @@ from pipe.core.domains.gemini_payload_service import GeminiPayloadService
 from pipe.core.factories.prompt_factory import PromptFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.unified_chunk import UnifiedChunk
+from pipe.core.repositories.resource_repository import ResourceRepository
 from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
 from pipe.core.services.gemini_tool_service import GeminiToolService
 from pipe.core.utils.datetime import get_current_datetime
@@ -77,7 +78,7 @@ class GeminiApiAgent(BaseAgent):
         )
         self.prompt_factory = PromptFactory(
             project_root=self.project_root,
-            resource_repository=session_service.repository,
+            resource_repository=ResourceRepository(project_root=self.project_root),
         )
 
         # Initialize tokenizer

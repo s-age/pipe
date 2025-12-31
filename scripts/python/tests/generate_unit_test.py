@@ -7,15 +7,25 @@ This script implements a two-phase approach:
 Phase 1: Initialize Session (new sessions only)
 1. Scans target paths for Python source files
 2. Launches Test Conductor to create TODO list via edit_todos
+   - Each TODO contains metadata: source_file, test_file, layer
 3. Conductor exits immediately after TODO creation
 
 Phase 2: Process TODOs (iterative)
 1. Reads unchecked TODOs from sessions/${sessionId}.json
-2. Sends instruction to process the first unchecked TODO
-3. Polls .processes/${sessionId}.pid for deletion (completion)
-4. Checks TODOs for changes
+2. Parses metadata from TODO description
+3. Sends fully-formed invoke_serial_children instruction to conductor with:
+   - Expanded roles (tests.md + layer-specific role)
+   - File paths and layer information
+   - Complete task structure with agent + validation script
+4. Polls .processes/${sessionId}.pid for deletion (completion)
 5. Continues with next TODO if unchecked items remain
 6. Waits 120s between iterations (TPM/RPM mitigation)
+
+Key Improvements:
+- No more vague "mark as in_progress" instructions (pipe doesn't use that state)
+- Fully expanded invoke_serial_children parameters in the instruction
+- Includes both tests.md and layer-specific roles
+- Complete task structure with retry configuration
 
 Usage:
     poetry run python scripts/python/tests/generate_unit_test.py <targets...> [options]
@@ -286,23 +296,89 @@ def execute_next_todo(session_id: str) -> bool:
     # Get the first unchecked TODO
     next_todo = unchecked_todos[0]
     todo_title = next_todo.get("title", "")
+    todo_description = next_todo.get("description", "")
 
     print(f"\n[Execute] Processing next TODO: {todo_title}")
 
-    # Build instruction to process this TODO
-    instruction = (
-        f"Process the next TODO item: {todo_title}\n\n"
-        "Follow @procedures/python_unit_test_conductor.md:\n"
-        "1. Mark the TODO as in_progress via edit_todos\n"
-        "2. Process this file via invoke_serial_children\n"
-        "3. Mark as completed when done\n"
-        "4. Exit immediately\n\n"
-        "IMPORTANT: Process only THIS ONE TODO, then exit.\n\n"
-        "Tool Usage Guidelines:\n"
-        "- When using tools like py_analyze_code, py_test_strategist, etc., "
-        "do not output the function call as text - just execute it.\n"
-        "- If a tool needs to be called, call it directly without describing the call in your response."
-    )
+    # Parse file metadata from description
+    # Expected format: "source_file=..., test_file=..., layer=..."
+    source_file = ""
+    test_file = ""
+    layer = ""
+
+    try:
+        # Parse description to extract metadata
+        for part in todo_description.split(", "):
+            if "=" in part:
+                key, value = part.split("=", 1)
+                if key.strip() == "source_file":
+                    source_file = value.strip()
+                elif key.strip() == "test_file":
+                    test_file = value.strip()
+                elif key.strip() == "layer":
+                    layer = value.strip()
+    except Exception as e:
+        print(f"[Execute] Warning: Failed to parse TODO description: {e}")
+        print(f"[Execute] Description: {todo_description}")
+
+    if not source_file or not layer:
+        print("[Execute] Error: Could not extract source_file or layer from TODO")
+        return False
+
+    # Derive test_file if not provided
+    if not test_file:
+        filename = Path(source_file).stem
+        test_file = f"tests/unit/core/{layer}/test_{filename}.py"
+
+    filename = Path(source_file).stem
+
+    print(f"[Execute] Source: {source_file}")
+    print(f"[Execute] Test: {test_file}")
+    print(f"[Execute] Layer: {layer}")
+
+    # Build comprehensive instruction with all necessary parameters
+    instruction = f"""Process the next TODO item: {todo_title}
+
+Follow @procedures/python_unit_test_conductor.md Step 3b-3c:
+
+File Details:
+- Source file: {source_file}
+- Test output: {test_file}
+- Layer: {layer}
+- Filename: {filename}
+
+Execute invoke_serial_children with the following exact parameters:
+
+invoke_serial_children(
+{{
+  "roles": ["roles/python/tests/tests.md", "roles/python/tests/core/{layer}.md"],
+  "references_persist": ["{source_file}"],
+  "purpose": "Generate tests for {filename}.py",
+  "tasks": [
+    {{
+      "type": "agent",
+      "instruction": "Follow @procedures/python_unit_test_generation.md to write tests. Target: {source_file}. Output: {test_file}. Execute all 7 steps sequentially. Coverage: 95%+.\\n\\nTool Usage Guidelines:\\n- When using tools like py_analyze_code, py_test_strategist, etc., do not output the function call as text - just execute it.\\n- If a tool needs to be called, call it directly without describing the call in your response.",
+      "roles": ["roles/python/tests/tests.md", "roles/python/tests/core/{layer}.md"],
+      "references_persist": ["{source_file}"],
+      "procedure": "procedures/python_unit_test_generation.md"
+    }},
+    {{
+      "type": "script",
+      "script": "python/validate_code.sh",
+      "max_retries": 2
+    }}
+  ],
+  "background": "Write comprehensive pytest tests for {source_file}",
+  "child_session_id": null,
+  "procedure": "procedures/python_unit_test_generation.md"
+}})
+
+After calling invoke_serial_children, EXIT IMMEDIATELY.
+
+Tool Usage Guidelines:
+- Do not output the function call as text - just execute it.
+- Call the tool directly without describing the call in your response.
+"""
 
     # Execute takt with instruction
     takt_cmd = [
@@ -382,6 +458,12 @@ def launch_conductor_for_init(file_metadata: list[dict]) -> str | None:
         "{file_list}\n\n"
         "Execute ONLY step 2:\n"
         "2. Create TODO list via edit_todos with all files listed above\n\n"
+        "IMPORTANT: For each TODO, the description field MUST contain metadata in this format:\n"
+        '  description: "source_file=<path>, test_file=<path>, layer=<layer>"\n\n'
+        "Example:\n"
+        '  title: "Generate tests for gemini_api_static_payload.py"\n'
+        '  description: "source_file=src/pipe/core/domains/gemini_api_static_payload.py, '
+        'test_file=tests/unit/core/domains/test_gemini_api_static_payload.py, layer=domains"\n\n'
         "After successfully creating TODOs with edit_todos, EXIT IMMEDIATELY.\n"
         "DO NOT process any files yet - the script will call you again "
         "to process each file one by one.\n\n"

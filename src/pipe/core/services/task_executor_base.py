@@ -89,28 +89,37 @@ def execute_agent_task(
     completed_at = get_current_timestamp()
     duration = time.time() - start_time
 
-    # Extract session_id from stdout for new sessions
-    # The takt CLI outputs session info as JSON (last line of stdout)
+    # Extract session_id from stdout/stderr for new sessions
+    # The takt CLI outputs session info as JSON (last line of stdout) or stderr
     created_session_id = None
-    if result.stdout and not session_id:
+    if not session_id:
         import json
+        import re
 
-        # Try to parse the last line as JSON
-        try:
-            lines = result.stdout.strip().split("\n")
-            # The JSON response is usually on the last line
-            for line in reversed(lines):
-                if line.strip().startswith("{"):
-                    session_data = json.loads(line.strip())
-                    if "session_id" in session_data:
-                        created_session_id = session_data["session_id"]
-                        break
-        except (json.JSONDecodeError, KeyError, IndexError):
-            # Fallback: try regex extraction
-            import re
+        # Try to parse stdout as JSON
+        if result.stdout:
+            try:
+                lines = result.stdout.strip().split("\n")
+                # The JSON response is usually on the last line
+                for line in reversed(lines):
+                    if line.strip().startswith("{"):
+                        session_data = json.loads(line.strip())
+                        if "session_id" in session_data:
+                            created_session_id = session_data["session_id"]
+                            break
+            except (json.JSONDecodeError, KeyError, IndexError):
+                pass
 
+        # Fallback: try stderr extraction (e.g., "New session created: xxx")
+        if not created_session_id and result.stderr:
+            match = re.search(r"New session created: (.+)", result.stderr)
+            if match:
+                created_session_id = match.group(1).strip()
+
+        # Final fallback: try regex on stdout
+        if not created_session_id and result.stdout:
             session_id_match = re.search(
-                r'"session_id":\s*"([a-f0-9]+)"', result.stdout
+                r'"session_id":\s*"([a-f0-9/]+)"', result.stdout
             )
             if session_id_match:
                 created_session_id = session_id_match.group(1)

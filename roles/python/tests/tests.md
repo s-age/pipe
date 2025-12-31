@@ -678,3 +678,25 @@ session.copy(deep=True)               # ❌ Deprecated
 
 ---
 
+## Test Execution Report
+
+After completing test development and execution, you **MUST** include the following report at the end of your test summary:
+
+- [ ] **Linter (Ruff/Format)**: (Pass/Fail - number of fixes applied)
+- [ ] **Type Check (MyPy)**: (Pass/Fail)
+- [ ] **Test Result (Pytest)**: (Pass/Fail - Passed: X, Failed: Y)
+- [ ] **Coverage**: (XX%) - **Did we achieve the target (95%)?**
+
+### Example Report
+
+```markdown
+## Test Execution Report
+
+- [x] **Linter (Ruff/Format)**: Pass - 3 formatting fixes applied
+- [x] **Type Check (MyPy)**: Pass
+- [x] **Test Result (Pytest)**: Pass - Passed: 47, Failed: 0
+- [x] **Coverage**: 96.2% - **Target (95%) achieved ✓**
+```
+
+---
+

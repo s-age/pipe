@@ -80,22 +80,30 @@ def _parse_arguments():
     parser.add_argument(
         "--roles",
         type=str,
-        help="Comma-separated paths to role files for the new session.",
+        action="append",
+        help="Path to role file for the new session. Can be specified multiple times or as comma-separated values.",
     )
     parser.add_argument("--parent", type=str, help="The ID of the parent session.")
     parser.add_argument(
         "--instruction", type=str, help="The specific instruction for the current task."
     )
     parser.add_argument(
-        "--references", type=str, help="Comma-separated paths to reference files."
+        "--references",
+        type=str,
+        action="append",
+        help="Path to reference file. Can be specified multiple times or as comma-separated values.",
     )
     parser.add_argument(
         "--references-persist",
         type=str,
-        help="Comma-separated paths to persistent reference files.",
+        action="append",
+        help="Path to persistent reference file. Can be specified multiple times or as comma-separated values.",
     )
     parser.add_argument(
-        "--artifacts", type=str, help="Comma-separated paths to artifact files."
+        "--artifacts",
+        type=str,
+        action="append",
+        help="Path to artifact file. Can be specified multiple times or as comma-separated values.",
     )
     parser.add_argument("--procedure", type=str, help="Path to the procedure file.")
     parser.add_argument(

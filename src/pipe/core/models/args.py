@@ -26,33 +26,39 @@ class TaktArgs:
     @classmethod
     def from_parsed_args(cls, parsed_args):
         """Creates an instance from argparse's parsed arguments."""
+
+        def flatten_list_arg(arg_value):
+            """Flatten list arguments that may contain comma-separated values.
+
+            Supports both:
+            - Multiple --arg flags: ['file1.md', 'file2.md'] (action='append')
+            - Comma-separated values: 'file1.md,file2.md' (string)
+            - Mixed: ['file1.md', 'file2.md,file3.md'] (action='append' with commas)
+            """
+            if not arg_value:
+                return []
+            # Handle both string (old behavior) and list (new with action='append')
+            if isinstance(arg_value, str):
+                # Old behavior: single string with comma-separated values
+                return [v.strip() for v in arg_value.split(",") if v.strip()]
+            # New behavior: list due to action='append'
+            result = []
+            for item in arg_value:
+                # Each item might be comma-separated
+                result.extend([v.strip() for v in item.split(",") if v.strip()])
+            return result
+
         return cls(
             dry_run=parsed_args.dry_run,
             session=parsed_args.session,
             purpose=parsed_args.purpose,
             background=parsed_args.background,
-            roles=(
-                [r.strip() for r in parsed_args.roles.split(",")]
-                if parsed_args.roles
-                else []
-            ),
+            roles=flatten_list_arg(parsed_args.roles),
             parent=parsed_args.parent,
             instruction=parsed_args.instruction,
-            references=(
-                [r.strip() for r in parsed_args.references.split(",")]
-                if parsed_args.references
-                else []
-            ),
-            references_persist=(
-                [r.strip() for r in parsed_args.references_persist.split(",")]
-                if parsed_args.references_persist
-                else []
-            ),
-            artifacts=(
-                [r.strip() for r in parsed_args.artifacts.split(",")]
-                if parsed_args.artifacts
-                else []
-            ),
+            references=flatten_list_arg(parsed_args.references),
+            references_persist=flatten_list_arg(parsed_args.references_persist),
+            artifacts=flatten_list_arg(parsed_args.artifacts),
             procedure=parsed_args.procedure,
             multi_step_reasoning=parsed_args.multi_step_reasoning,
             fork=parsed_args.fork,

@@ -14,18 +14,14 @@ from google.genai import types
 from pipe.core.agents import register_agent
 from pipe.core.agents.base import BaseAgent
 from pipe.core.domains import gemini_token_count
-from pipe.core.domains.gemini_api_payload import GeminiApiPayloadBuilder
 from pipe.core.domains.gemini_api_stream_processor import GeminiApiStreamProcessor
-from pipe.core.domains.gemini_cache import GeminiCache
+from pipe.core.domains.gemini_payload_service import GeminiPayloadService
+from pipe.core.factories.prompt_factory import PromptFactory
 from pipe.core.models.args import TaktArgs
-from pipe.core.models.gemini_api_payload import (
-    GeminiApiDynamicPayload,
-    GeminiApiStaticPayload,
-)
 from pipe.core.models.unified_chunk import UnifiedChunk
+from pipe.core.repositories.resource_repository import ResourceRepository
 from pipe.core.repositories.streaming_log_repository import StreamingLogRepository
 from pipe.core.services.gemini_tool_service import GeminiToolService
-from pipe.core.utils import gemini_cache_utils
 from pipe.core.utils.datetime import get_current_datetime
 
 if TYPE_CHECKING:
@@ -53,7 +49,6 @@ class GeminiApiAgent(BaseAgent):
         self,
         session_service: "SessionService",
         tool_service: GeminiToolService | None = None,
-        payload_builder: GeminiApiPayloadBuilder | None = None,
     ):
         """
         Initialize the Gemini API agent.
@@ -61,7 +56,6 @@ class GeminiApiAgent(BaseAgent):
         Args:
             session_service: Session service (required)
             tool_service: Optional tool service (default: GeminiToolService)
-            payload_builder: Optional payload builder (default: GeminiApiPayloadBuilder)
         """
         self.session_service = session_service
         self.settings = session_service.settings
@@ -69,8 +63,16 @@ class GeminiApiAgent(BaseAgent):
 
         # Initialize sub-services with DI support
         self.tool_service = tool_service or GeminiToolService()
-        self.payload_builder = payload_builder or GeminiApiPayloadBuilder(
-            self.project_root, self.settings
+
+        # Initialize new payload service and prompt factory
+        self.payload_service = GeminiPayloadService(
+            client=genai.Client(),
+            project_root=self.project_root,
+            settings=self.settings,
+        )
+        self.prompt_factory = PromptFactory(
+            project_root=self.project_root,
+            resource_repository=ResourceRepository(project_root=self.project_root),
         )
 
         # Initialize tokenizer
@@ -82,6 +84,7 @@ class GeminiApiAgent(BaseAgent):
 
         # Initialize other fields
         self.last_raw_response: str | None = None
+        self.last_stream_processor: GeminiApiStreamProcessor | None = None
 
         try:
             self.timezone = zoneinfo.ZoneInfo(self.settings.timezone)
@@ -159,11 +162,11 @@ class GeminiApiAgent(BaseAgent):
         """
         Execute Gemini API call with streaming.
 
-        Flow (4-layer architecture):
-        1. Build complete 4-layer payload (PayloadBuilder)
-        2. Validate token limits
-        3. Execute with cache
-        4. Stream and process response (StreamProcessor)
+        Flow (New architecture with GeminiPayloadService):
+        1. Prepare request with cache management (GeminiPayloadService)
+        2. Load tools
+        3. Log cache decision
+        4. Execute streaming call
 
         Yields:
             Pydantic UnifiedChunk instances (TextChunk | ToolCallChunk | MetadataChunk)
@@ -175,197 +178,169 @@ class GeminiApiAgent(BaseAgent):
         session_data = self.session_service.current_session
         os.environ["PIPE_SESSION_ID"] = session_data.session_id
 
-        # 1. Build complete 4-layer payload
-        loaded_tools = self.tool_service.load_tools(self.project_root)
-        static, dynamic, tools = self.payload_builder.build_payloads_with_tools(
-            self.session_service, loaded_tools
+        # 0. Initialize token summary from session data if not yet set
+        # This ensures cache decisions use current session state, not stale initial values
+        if self.payload_service.last_token_summary["buffered_tokens"] == 0:
+            self.payload_service.update_token_summary(
+                {
+                    "cached_content_token_count": session_data.cached_content_token_count,
+                    "prompt_token_count": session_data.token_count,
+                }
+            )
+
+        # 1. Prepare request payload with cache management
+        contents, cache_name = self.payload_service.prepare_request(
+            session=session_data,
+            prompt_factory=self.prompt_factory,
+            current_instruction=None,  # No new instruction in stream_content
         )
 
-        # Store cached turn count from payload builder
-        self.last_cached_turn_count = self.payload_builder.last_cached_turn_count
+        # Store cached turn count from session (updated by payload_service)
+        self.last_cached_turn_count = session_data.cached_turn_count
 
-        # 2. Validate token limits (use dict format for token counting)
-        self._validate_context_limit(static, dynamic, loaded_tools)
+        # 2. Load tools
+        loaded_tools = self.tool_service.load_tools(self.project_root)
+        tools = self.tool_service.convert_to_genai_tools(loaded_tools)
 
-        # 3. Execute with cache
-        yield from self._execute_with_cache(static, dynamic, tools, session_data)
+        # 3. Log cache decision
+        self._log_cache_decision(
+            session_data,
+            cache_name,
+            self.payload_service.last_token_summary["buffered_tokens"],
+        )
 
-    def _validate_context_limit(
-        self,
-        static: GeminiApiStaticPayload,
-        dynamic: GeminiApiDynamicPayload,
-        tools_dict: list[dict],
+        # 4. Build generation config
+        config = self._build_generation_config(
+            session_data=session_data,
+            cached_content_name=cache_name,
+            converted_tools=tools,
+        )
+
+        # 5. Execute streaming call
+        client = genai.Client()
+        yield from self._execute_streaming_call(
+            client=client,
+            content_to_send=contents,
+            config=config,
+            session_data=session_data,
+        )
+
+    def _log_cache_decision(
+        self, session_data, cache_name: str | None, buffered_tokens: int
     ) -> None:
-        """Validate that payload doesn't exceed token limit.
+        """
+        Log cache decision to streaming log.
 
         Args:
-            static: Static payload
-            dynamic: Dynamic payload
-            tools_dict: Tool definitions in dict format (for token counting)
+            session_data: Current session data
+            cache_name: Cache name if using cache, None otherwise
+            buffered_tokens: Number of buffered tokens (not in cache)
         """
-        full_text = (static.cached_content or "") + dynamic.dynamic_content
-        token_count = gemini_token_count.count_tokens(
-            full_text, tools=tools_dict, tokenizer=self.tokenizer
-        )
-
-        is_within_limit, message = gemini_token_count.check_token_limit(
-            token_count, self.context_limit
-        )
-        if not is_within_limit:
-            raise ValueError("Prompt exceeds context window limit. Aborting.")
-
-    def _execute_with_cache(
-        self,
-        static: GeminiApiStaticPayload,
-        dynamic: GeminiApiDynamicPayload,
-        tools: list[types.Tool],
-        session_data,
-    ) -> Generator[UnifiedChunk, None, None]:
-        """Execute API call with cache management."""
-        client = genai.Client()
-
-        # Determine cache strategy
-        gemini_cache = GeminiCache(
-            tool_response_limit=self.settings.tool_response_expiration,
-            cache_update_threshold=self.settings.model.cache_update_threshold,
-        )
-
-        buffered_tokens = (
-            session_data.token_count - session_data.cached_content_token_count
-            if session_data.cached_content_token_count > 0
-            else session_data.token_count
-        )
-        should_cache = gemini_cache.should_update_cache(buffered_tokens)
-
-        # Setup logging repository
         streaming_log_repo = StreamingLogRepository(
             self.project_root, session_data.session_id, self.settings
         )
         streaming_log_repo.open(mode="a")
 
         try:
-            # Get or create cache if needed
-            cached_content_name = None
-            if should_cache and static.cached_content:
-                cache_msg = (
-                    f"Cache decision: CREATING/UPDATING cache. "
-                    f"Current cached_tokens={session_data.cached_content_token_count}, "
-                    f"Current prompt_tokens={session_data.token_count}, "
-                    f"Buffered tokens={buffered_tokens}"
-                )
-                streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
-                )
+            threshold = self.settings.model.cache_update_threshold
 
-                cached_content_name = gemini_cache_utils.get_or_create_cache(
-                    client,
-                    static.cached_content,
-                    self.model_name,
-                    tools,
-                    self.project_root,
-                    session_data.session_id,
-                )
+            # Get turn counts
+            cached_turn_count = session_data.cached_turn_count
+            total_turns = len(session_data.turns)
+            buffered_turn_count = total_turns - cached_turn_count
 
-            elif not session_data.cached_content_token_count:
-                # No cache exists, below threshold
-                cache_msg = (
-                    f"Cache decision: NO CACHE (below threshold). "
-                    f"Current prompt_tokens={session_data.token_count}, "
-                    f"Threshold={gemini_cache.cache_update_threshold}. "
-                    f"Sending static + dynamic content"
-                )
-                streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
-                )
+            # Build turn count info string
+            turn_info = f"Static({cached_turn_count} turns), Buffered({buffered_turn_count} turns)"
 
+            if cache_name:
+                # Check if this is a new cache or using existing
+                if buffered_tokens >= threshold:
+                    # Case 1: Cache Update (Creation/Recreation)
+                    cache_msg = (
+                        f"Cache decision: CREATING/UPDATING cache (key={cache_name}). "
+                        f"Current cached_tokens={session_data.cached_content_token_count}, "
+                        f"Current prompt_tokens={session_data.token_count}, "
+                        f"Buffered tokens={buffered_tokens}. "
+                        f"{turn_info}"
+                    )
+                else:
+                    # Case 2: Using Existing Cache (No Update)
+                    cache_msg = (
+                        f"Cache decision: USING EXISTING cache (key={cache_name}). "
+                        f"Current cached_tokens={session_data.cached_content_token_count}, "
+                        f"Current prompt_tokens={session_data.token_count}, "
+                        f"Buffered tokens={buffered_tokens}, "
+                        f"Threshold={threshold}. "
+                        f"{turn_info}"
+                    )
             else:
-                # Use existing cache
-                cache_msg = (
-                    f"Cache decision: USING EXISTING cache (buffered below threshold). "
-                    f"Current cached_tokens={session_data.cached_content_token_count}, "
-                    f"Current prompt_tokens={session_data.token_count}, "
-                    f"Buffered tokens={buffered_tokens}, "
-                    f"Threshold={gemini_cache.cache_update_threshold}"
-                )
-                streaming_log_repo.write_log_line(
-                    "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
-                )
+                # No cache
+                if session_data.cached_content_token_count > 0:
+                    # Case 4: No Cache (Empty Static Content)
+                    cache_msg = (
+                        f"Cache decision: NO CACHE (static.cached_content is empty). "
+                        f"Current cached_tokens={session_data.cached_content_token_count}, "
+                        f"Current prompt_tokens={session_data.token_count}, "
+                        f"Buffered tokens={buffered_tokens}. "
+                        f"{turn_info}"
+                    )
+                else:
+                    # Case 3: No Cache (Below Threshold)
+                    cache_msg = (
+                        f"Cache decision: NO CACHE (below threshold). "
+                        f"Current prompt_tokens={session_data.token_count}, "
+                        f"Threshold={threshold}. "
+                        f"Sending static + dynamic content. "
+                        f"{turn_info}"
+                    )
 
-                if static.cached_content:
-                    try:
-                        cached_content_name = gemini_cache_utils.get_or_create_cache(
-                            client,
-                            static.cached_content,
-                            self.model_name,
-                            tools,
-                            self.project_root,
-                            session_data.session_id,
-                        )
-                    except Exception:
-                        # Fallback if cache retrieval fails
-                        pass
-
+            streaming_log_repo.write_log_line(
+                "CACHE_DECISION", cache_msg, get_current_datetime(self.timezone)
+            )
         finally:
             streaming_log_repo.close()
 
-        # Build content list (4-layer ordering)
-        content_to_send = self._build_content_list(
-            static, dynamic, use_cache=(cached_content_name is not None)
-        )
-
-        # Build generation config
-        config = self.payload_builder.build_generation_config(
-            session_data=session_data,
-            cached_content_name=cached_content_name,
-            converted_tools=tools,
-        )
-
-        # Execute streaming call
-        yield from self._execute_streaming_call(
-            client=client,
-            content_to_send=content_to_send,
-            config=config,
-            session_data=session_data,
-        )
-
-    def _build_content_list(
+    def _build_generation_config(
         self,
-        static: GeminiApiStaticPayload,
-        dynamic: GeminiApiDynamicPayload,
-        use_cache: bool = False,
-    ) -> list[types.Content | str]:
+        session_data,
+        cached_content_name: str | None,
+        converted_tools: list[types.Tool],
+    ) -> types.GenerateContentConfig:
         """
-        Build ordered content list for API transmission.
+        Build generation configuration for API call.
 
         Args:
-            static: Static payload (Layers 1-2)
-            dynamic: Dynamic payload (Layers 3-4)
-            use_cache: If True, skip Layer 1 (use cache reference instead)
+            session_data: Current session data
+            cached_content_name: Cache name if using cache
+            converted_tools: Tool definitions
 
         Returns:
-            Ordered list following 4-layer architecture:
-            Layer 1 (Static): Cached content (skip if using cache)
-            Layer 2 (Dynamic): Dynamic context
-            Layer 3 (Buffered): Recent history
-            Layer 4 (Trigger): Current instruction
+            Generation config object
         """
-        content = []
+        # Base parameters from settings
+        gen_config_params = {
+            "temperature": self.settings.parameters.temperature.value,
+            "top_p": self.settings.parameters.top_p.value,
+            "top_k": self.settings.parameters.top_k.value,
+        }
 
-        # Layer 1: Cached content (skip if using cache reference)
-        if not use_cache and static.cached_content:
-            content.append(static.cached_content)
+        # Override with session hyperparameters if present
+        if session_params := session_data.hyperparameters:
+            if temp_val := session_params.temperature:
+                gen_config_params["temperature"] = temp_val
+            if top_p_val := session_params.top_p:
+                gen_config_params["top_p"] = top_p_val
+            if top_k_val := session_params.top_k:
+                gen_config_params["top_k"] = top_k_val
 
-        # Layer 2: Dynamic context
-        content.append(dynamic.dynamic_content)
-
-        # Layer 3: Buffered history
-        content.extend(static.buffered_history)
-
-        # Layer 4: Current instruction
-        if dynamic.current_instruction:
-            content.append(dynamic.current_instruction)
-
-        return content
+        # If using cache, don't pass tools again (they're in the cache)
+        return types.GenerateContentConfig(
+            tools=None if cached_content_name else converted_tools,  # type: ignore[arg-type]
+            temperature=gen_config_params.get("temperature"),
+            top_p=gen_config_params.get("top_p"),
+            top_k=gen_config_params.get("top_k"),
+            cached_content=cached_content_name,
+        )
 
     def _execute_streaming_call(
         self,
@@ -411,6 +386,9 @@ class GeminiApiAgent(BaseAgent):
 
             # Save the last raw response for thought signature
             self.last_raw_response = stream_processor.get_last_raw_response()
+
+            # Store stream processor reference for accessing last usage metadata
+            self.last_stream_processor = stream_processor
 
         except Exception as e:
             raise RuntimeError(f"Error during Gemini API execution: {e}")

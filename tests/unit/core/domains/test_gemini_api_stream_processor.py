@@ -209,3 +209,132 @@ class TestSaveRawResponse:
 
         # Verify raw response is None
         assert processor.last_raw_response is None
+
+
+class TestGetLastUsageMetadata:
+    """Tests for get_last_usage_metadata method."""
+
+    def test_get_last_usage_metadata_with_single_chunk(self):
+        """Test that last usage metadata is returned from a single chunk."""
+        from pipe.core.models.unified_chunk import UsageMetadata
+
+        mock_log_repo = MagicMock()
+        timezone = ZoneInfo("UTC")
+        processor = GeminiApiStreamProcessor(mock_log_repo, timezone)
+
+        # Create mock chunk with usage metadata
+        mock_usage = MagicMock()
+        mock_usage.prompt_token_count = 100
+        mock_usage.candidates_token_count = 50
+        mock_usage.total_token_count = 150
+        mock_usage.cached_content_token_count = 3950
+
+        mock_chunk = MagicMock(spec=types.GenerateContentResponse)
+        mock_chunk.candidates = []
+        mock_chunk.usage_metadata = mock_usage
+        mock_chunk.model_dump.return_value = {"test": "data"}
+
+        # Process the chunk
+        list(processor._convert_chunk_to_unified_format(mock_chunk))
+
+        # Verify last usage metadata
+        last_usage = processor.get_last_usage_metadata()
+        assert last_usage is not None
+        assert isinstance(last_usage, UsageMetadata)
+        assert last_usage.prompt_token_count == 100
+        assert last_usage.candidates_token_count == 50
+        assert last_usage.total_token_count == 150
+        assert last_usage.cached_content_token_count == 3950
+
+    def test_get_last_usage_metadata_with_multiple_chunks(self):
+        """Test that last usage metadata is from the final chunk."""
+        from pipe.core.models.unified_chunk import UsageMetadata
+
+        mock_log_repo = MagicMock()
+        timezone = ZoneInfo("UTC")
+        processor = GeminiApiStreamProcessor(mock_log_repo, timezone)
+
+        # Create first chunk with usage metadata
+        mock_usage1 = MagicMock()
+        mock_usage1.prompt_token_count = 100
+        mock_usage1.candidates_token_count = 50
+        mock_usage1.total_token_count = 150
+        mock_usage1.cached_content_token_count = None
+
+        mock_chunk1 = MagicMock(spec=types.GenerateContentResponse)
+        mock_chunk1.candidates = []
+        mock_chunk1.usage_metadata = mock_usage1
+        mock_chunk1.model_dump.return_value = {"chunk": "1"}
+
+        # Create second chunk with different usage metadata
+        mock_usage2 = MagicMock()
+        mock_usage2.prompt_token_count = 200
+        mock_usage2.candidates_token_count = 75
+        mock_usage2.total_token_count = 275
+        mock_usage2.cached_content_token_count = 3950
+
+        mock_chunk2 = MagicMock(spec=types.GenerateContentResponse)
+        mock_chunk2.candidates = []
+        mock_chunk2.usage_metadata = mock_usage2
+        mock_chunk2.model_dump.return_value = {"chunk": "2"}
+
+        # Process both chunks
+        list(processor._convert_chunk_to_unified_format(mock_chunk1))
+        list(processor._convert_chunk_to_unified_format(mock_chunk2))
+
+        # Verify last usage metadata is from the second chunk
+        last_usage = processor.get_last_usage_metadata()
+        assert last_usage is not None
+        assert isinstance(last_usage, UsageMetadata)
+        assert last_usage.prompt_token_count == 200
+        assert last_usage.candidates_token_count == 75
+        assert last_usage.total_token_count == 275
+        assert last_usage.cached_content_token_count == 3950
+
+    def test_get_last_usage_metadata_with_no_usage(self):
+        """Test that None is returned when no usage metadata exists."""
+        mock_log_repo = MagicMock()
+        timezone = ZoneInfo("UTC")
+        processor = GeminiApiStreamProcessor(mock_log_repo, timezone)
+
+        # Create chunk without usage metadata
+        mock_chunk = MagicMock(spec=types.GenerateContentResponse)
+        mock_chunk.candidates = []
+        mock_chunk.usage_metadata = None
+        mock_chunk.model_dump.return_value = {"chunk": "1"}
+
+        # Process the chunk
+        list(processor._convert_chunk_to_unified_format(mock_chunk))
+
+        # Verify no usage metadata
+        last_usage = processor.get_last_usage_metadata()
+        assert last_usage is None
+
+    def test_get_last_usage_metadata_with_null_cached_count(self):
+        """Test that cached_content_token_count=None is properly stored."""
+        from pipe.core.models.unified_chunk import UsageMetadata
+
+        mock_log_repo = MagicMock()
+        timezone = ZoneInfo("UTC")
+        processor = GeminiApiStreamProcessor(mock_log_repo, timezone)
+
+        # Create mock chunk with cached_content_token_count=None
+        mock_usage = MagicMock()
+        mock_usage.prompt_token_count = 100
+        mock_usage.candidates_token_count = 50
+        mock_usage.total_token_count = 150
+        mock_usage.cached_content_token_count = None
+
+        mock_chunk = MagicMock(spec=types.GenerateContentResponse)
+        mock_chunk.candidates = []
+        mock_chunk.usage_metadata = mock_usage
+        mock_chunk.model_dump.return_value = {"test": "data"}
+
+        # Process the chunk
+        list(processor._convert_chunk_to_unified_format(mock_chunk))
+
+        # Verify last usage metadata with None cached count
+        last_usage = processor.get_last_usage_metadata()
+        assert last_usage is not None
+        assert isinstance(last_usage, UsageMetadata)
+        assert last_usage.cached_content_token_count is None

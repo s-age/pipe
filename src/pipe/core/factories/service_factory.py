@@ -158,7 +158,23 @@ class ServiceFactory:
     def create_session_meta_service(self) -> SessionMetaService:
         """Creates a SessionMetaService with its dependencies."""
         repository = SessionRepository(self.project_root, self.settings)
-        return SessionMetaService(repository)
+
+        # Create cache manager if Gemini API is configured
+        cache_manager = None
+        if hasattr(self.settings, "agent") and self.settings.agent == "gemini-api":
+            from google.genai import Client
+            from pipe.core.domains.gemini_cache_manager import GeminiCacheManager
+
+            client = Client(api_key=self.settings.gemini_api_key)
+            cache_manager = GeminiCacheManager(
+                client=client,
+                project_root=self.project_root,
+                model_name=self.settings.model.name,
+                cache_update_threshold=self.settings.model.cache_update_threshold,
+                settings=self.settings,
+            )
+
+        return SessionMetaService(repository, cache_manager)
 
     def create_session_todo_service(self) -> SessionTodoService:
         """Creates a SessionTodoService with its dependencies."""

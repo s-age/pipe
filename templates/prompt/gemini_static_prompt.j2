@@ -1,4 +1,3 @@
-{% from "description.j2" import render_description_macro %}
 {% from "main_instruction.j2" import render_main_instruction_macro %}
 {% from "constraints.j2" import render_constraints_macro %}
 {% from "session_goal.j2" import render_session_goal_macro %}
@@ -7,7 +6,7 @@
 {% from "advanced_reasoning_flow.j2" import render_advanced_reasoning_flow_macro %}
 {% from "conversation_history.j2" import render_conversation_history_macro %}
 {
-  "description": {{ render_description_macro(session.description) }},
+  "description": "This structured prompt guides your response. First, understand the core instructions: `main_instruction` defines your thinking process. Next, identify the immediate objective from `current_task` and `todos`. Then, gather all context required to execute the task by processing `session_goal`, `roles`, `constraints`, `conversation_history`, and `file_references` in that order. Finally, execute the `current_task` by synthesizing all gathered information.",
   "main_instruction": {{ render_main_instruction_macro() }},
   "constraints": {{ render_constraints_macro(session.constraints) }},
   "session_goal": {{ render_session_goal_macro(session.session_goal) }},
@@ -17,8 +16,22 @@
   {% if session.roles and session.roles.definitions | length > 0 %}
   "roles": {{ render_roles_macro(session.roles) }},
   {% endif %}
-  {% if session.cached_history %}
-  "cached_conversation": {{ render_conversation_history_macro(session.cached_history) }},
+  {% if cached_history %}
+  "cached_conversation": {
+    "description": "Cached conversation history that has been previously processed and stored in the cache.",
+    "turns": [
+      {% for turn in cached_history %}
+      {
+        "type": {{ turn.type | tojson }}
+        {% if turn.instruction %}, "instruction": {{ turn.instruction | tojson }}{% endif %}
+        {% if turn.content %}, "content": {{ turn.content | tojson }}{% endif %}
+        {% if turn.function_call %}, "function_call": {{ turn.function_call | tojson }}{% endif %}
+        {% if turn.name %}, "name": {{ turn.name | tojson }}{% endif %}
+        {% if turn.response %}, "response": {{ turn.response | pydantic_dump | tojson }}{% endif %}
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  },
   {% endif %}
   {% if session.constraints.processing_config.multi_step_reasoning_active %}
   "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.constraints.processing_config.multi_step_reasoning_active) }}

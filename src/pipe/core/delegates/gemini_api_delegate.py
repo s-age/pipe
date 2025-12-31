@@ -23,13 +23,19 @@ def run_stream(
     prompt_token_count_for_cache = 0  # Track prompt tokens for cache decisions
     intermediate_turns = []
     tool_call_count = 0
-    first_cached_content_token_count = None  # Track first response's cache count
+    last_cached_content_token_count = (
+        None  # Track last response's cache count (from final chunk)
+    )
 
     settings = session_service.settings
     max_tool_calls = settings.max_tool_calls
     session_data = session_service.current_session
     session_id = session_service.current_session_id
     timezone_obj = session_service.timezone_obj
+
+    previous_cached_content_token_count = (
+        session_data.cached_content_token_count
+    )  # Track previous cache count for delta calculation
 
     # Ensure PIPE_SESSION_ID is set for mcp_server
     os.environ["PIPE_SESSION_ID"] = session_id
@@ -40,6 +46,9 @@ def run_stream(
         session_id=session_id,
         settings=settings,
     )
+
+    # Create GeminiApiAgent ONCE outside the loop to preserve payload_service state
+    gemini_agent = GeminiApiAgent(session_service)
 
     while tool_call_count < max_tool_calls:
         session_turn_service.merge_pool_into_turns(session_id)
@@ -68,8 +77,8 @@ def run_stream(
                 session_service.current_session = reloaded_session
                 session_data = session_service.current_session
 
-        # Use GeminiApiAgent with unified Pydantic chunk format
-        gemini_agent = GeminiApiAgent(session_service)
+        # Update session_service reference in agent (session may have been reloaded)
+        gemini_agent.session_service = session_service
         stream = gemini_agent.stream_content()
 
         full_text_parts = []
@@ -94,6 +103,17 @@ def run_stream(
                 # Store usage metadata
                 usage_metadata = unified_chunk.usage
 
+                # Update GeminiPayloadService with token summary
+                if usage_metadata:
+                    gemini_agent.payload_service.update_token_summary(
+                        {
+                            "cached_content_token_count": usage_metadata.cached_content_token_count
+                            or 0,
+                            "prompt_token_count": usage_metadata.prompt_token_count
+                            or 0,
+                        }
+                    )
+
         if not usage_metadata and not full_text_parts and not tool_call_chunk:
             yield "API Error: Model stream was empty."
             model_response_text = "API Error: Model stream was empty."
@@ -109,39 +129,44 @@ def run_stream(
         if usage_metadata:
             prompt_tokens = usage_metadata.prompt_token_count or 0
             candidate_tokens = usage_metadata.candidates_token_count or 0
-            token_count = prompt_tokens + candidate_tokens
-            prompt_token_count_for_cache = prompt_tokens
+            total_tokens = usage_metadata.total_token_count or 0
 
-            # Update cached_content_token_count from every response (not just first)
-            # This ensures we always have the latest cache state, especially when
-            # cache is recreated/updated during the conversation
+            # Track the last cached_content_token_count from the stream
+            # Note: We'll save this at the end, not during the loop
             cached_count = usage_metadata.cached_content_token_count
-            if cached_count is not None:
-                # Track the first response's cache count for final update
-                if first_cached_content_token_count is None:
-                    first_cached_content_token_count = cached_count
+            if cached_count is None:
+                last_cached_content_token_count = 0
+            else:
+                last_cached_content_token_count = cached_count
 
-                # Update session with current cache count immediately
-                from pipe.core.services.session_meta_service import SessionMetaService
+            # Calculate cache delta (increase in cached tokens)
+            cache_delta = 0
+            if (
+                cached_count is not None
+                and previous_cached_content_token_count is not None
+            ):
+                cache_delta = cached_count - previous_cached_content_token_count
+                # Update previous for next iteration
+                previous_cached_content_token_count = cached_count
 
-                session_meta_service = SessionMetaService(session_service.repository)
-                session_meta_service.update_cached_content_token_count(
-                    session_id, cached_count
-                )
+            # token_count: Complete total for this API call (includes thoughts for billing/stats)
+            # Subtract cache_delta to get actual conversation growth
+            raw_total_tokens = (
+                total_tokens if total_tokens else (prompt_tokens + candidate_tokens)
+            )
+            token_count = raw_total_tokens - cache_delta
 
-                # Reload session after cache count update
-                reloaded_session = session_service.get_session(session_id)
-                if reloaded_session:
-                    session_service.current_session = reloaded_session
-                    session_data = session_service.current_session
+            # prompt_token_count_for_cache: Tokens that will be in next prompt
+            # (excludes thoughts since they're not part of conversation history)
+            prompt_token_count_for_cache = prompt_tokens + candidate_tokens
 
             # Update cumulative token stats in session
             session = session_service.get_session(session_id)
             if session:
-                # Add total_tokens and cached to cumulative counters
-                total_tokens = token_count
+                # Add raw_total_tokens (includes prompt + candidates + thoughts) to cumulative counter
+                # Note: We use raw_total_tokens here to maintain consistency with the original behavior
                 cached_tokens = cached_count or 0
-                session.cumulative_total_tokens += total_tokens
+                session.cumulative_total_tokens += raw_total_tokens
                 session.cumulative_cached_tokens += cached_tokens
                 session_service.repository.save(session)
 
@@ -182,22 +207,23 @@ def run_stream(
         try:
             tool_result = execute_tool(function_call.name, dict(function_call.args))
 
+            # Determine status and message for both logging and payload service
+            if (
+                isinstance(tool_result, dict)
+                and "error" in tool_result
+                and tool_result["error"] is not None
+            ):
+                status = "failed"
+                output = str(tool_result["error"])
+            else:
+                status = "succeeded"
+                if isinstance(tool_result, dict):
+                    output = tool_result.get("message", str(tool_result))
+                else:
+                    output = str(tool_result)
+
             # Log tool result to streaming log
             if streaming_log_repo:
-                if (
-                    isinstance(tool_result, dict)
-                    and "error" in tool_result
-                    and tool_result["error"] is not None
-                ):
-                    status = "failed"
-                    output = str(tool_result["error"])
-                else:
-                    status = "succeeded"
-                    if isinstance(tool_result, dict):
-                        output = tool_result.get("message", str(tool_result))
-                    else:
-                        output = str(tool_result)
-
                 truncated_output = f"{output[:200]}..." if len(output) > 200 else output
                 log_content = (
                     f"TOOL_RESULT: {function_call.name} | status: {status} | "
@@ -267,11 +293,12 @@ def run_stream(
         content=model_response_text,
         thought=model_response_thought if model_response_thought else None,
         timestamp=get_current_timestamp(timezone_obj),
-        raw_response=gemini_agent.last_raw_response,
+        raw_response=gemini_agent.last_raw_response if gemini_agent else None,
     )
     intermediate_turns.append(final_model_turn)
 
-    # Update token count and cached content token count
+    # Update token count and cached content token count at the end
+    # Use the last values from the final chunk of the last API call
     if prompt_token_count_for_cache > 0:
         from pipe.core.services.session_meta_service import SessionMetaService
 
@@ -280,14 +307,16 @@ def run_stream(
             session_id, prompt_token_count_for_cache
         )
 
-        # Update cached_content_token_count from first API response only
-        if first_cached_content_token_count is not None:
+        # Update cached_content_token_count from the LAST chunk of the stream
+        # This is critical: we use the final value, not the first one
+        # None means we haven't received any response yet (first iteration)
+        if last_cached_content_token_count is not None:
             session_meta_service.update_cached_content_token_count(
-                session_id, first_cached_content_token_count
+                session_id, last_cached_content_token_count
             )
 
         # Update cached_turn_count using the value from the agent
-        if gemini_agent.last_cached_turn_count is not None:
+        if gemini_agent and gemini_agent.last_cached_turn_count is not None:
             session_meta_service.update_cached_turn_count(
                 session_id, gemini_agent.last_cached_turn_count
             )

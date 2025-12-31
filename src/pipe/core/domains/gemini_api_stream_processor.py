@@ -50,6 +50,7 @@ class GeminiApiStreamProcessor:
         self.timezone = timezone
         self.collected_chunks: list[types.GenerateContentResponse] = []
         self.last_raw_response: str | None = None
+        self.last_usage_metadata: UsageMetadata | None = None
 
     def process_stream(
         self,
@@ -130,16 +131,15 @@ class GeminiApiStreamProcessor:
 
         # Extract usage metadata (typically on final chunk)
         if chunk.usage_metadata:
-            unified_chunks.append(
-                MetadataChunk(
-                    usage=UsageMetadata(
-                        prompt_token_count=chunk.usage_metadata.prompt_token_count,
-                        candidates_token_count=chunk.usage_metadata.candidates_token_count,
-                        total_token_count=chunk.usage_metadata.total_token_count,
-                        cached_content_token_count=chunk.usage_metadata.cached_content_token_count,
-                    )
-                )
+            usage = UsageMetadata(
+                prompt_token_count=chunk.usage_metadata.prompt_token_count,
+                candidates_token_count=chunk.usage_metadata.candidates_token_count,
+                total_token_count=chunk.usage_metadata.total_token_count,
+                cached_content_token_count=chunk.usage_metadata.cached_content_token_count,
             )
+            # Store the last usage metadata (important for tracking final cached_content_token_count)
+            self.last_usage_metadata = usage
+            unified_chunks.append(MetadataChunk(usage=usage))
 
         return unified_chunks
 
@@ -200,3 +200,12 @@ class GeminiApiStreamProcessor:
             JSON string of the last response chunk, or None
         """
         return self.last_raw_response
+
+    def get_last_usage_metadata(self) -> UsageMetadata | None:
+        """
+        Get the last usage metadata from the stream.
+
+        Returns:
+            UsageMetadata from the last chunk with usage data, or None
+        """
+        return self.last_usage_metadata

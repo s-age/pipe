@@ -274,22 +274,24 @@ class TestCreateCache:
                 static_content="test content",
                 model_name="gemini-2.0-flash-exp",
                 tools=[],
-                content_hash="hash123",
+                session_id="test_session_123",
                 cache_registry=cache_registry,
                 registry_path=registry_path,
-                session_id="test_session_123",
             )
 
             # Verify cache was created
             assert result == "cachedContents/test123"
 
-            # Verify registry uses API expire_time
-            assert "hash123" in cache_registry.entries
+            # Verify registry uses session_id as key and API expire_time
+            assert "test_session_123" in cache_registry.entries
             assert (
-                cache_registry.entries["hash123"].expire_time
+                cache_registry.entries["test_session_123"].expire_time
                 == api_expire_time.isoformat()
             )
-            assert cache_registry.entries["hash123"].session_id == "test_session_123"
+            assert (
+                cache_registry.entries["test_session_123"].session_id
+                == "test_session_123"
+            )
 
     def test_create_cache_fallback_without_api_expire_time(self):
         """Test that _create_cache falls back to conservative time when API doesn't provide expire_time."""
@@ -319,10 +321,9 @@ class TestCreateCache:
                 static_content="test content",
                 model_name="gemini-2.0-flash-exp",
                 tools=[],
-                content_hash="hash123",
+                session_id="test_session_456",
                 cache_registry=cache_registry,
                 registry_path=registry_path,
-                session_id="test_session_456",
             )
 
             # Verify cache was created
@@ -330,9 +331,12 @@ class TestCreateCache:
 
             # Verify registry uses fallback time (55 minutes = 3300 seconds)
             expected_expire_time = fixed_now + timedelta(seconds=3300)
-            assert "hash123" in cache_registry.entries
+            assert "test_session_456" in cache_registry.entries
             assert (
-                cache_registry.entries["hash123"].expire_time
+                cache_registry.entries["test_session_456"].expire_time
                 == expected_expire_time.isoformat()
             )
-            assert cache_registry.entries["hash123"].session_id == "test_session_456"
+            assert (
+                cache_registry.entries["test_session_456"].session_id
+                == "test_session_456"
+            )

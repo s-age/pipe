@@ -6,6 +6,8 @@ import logging
 import os
 from typing import Any, NotRequired, TypedDict, Union, get_args, get_type_hints
 
+from google.genai import types
+
 logger = logging.getLogger(__name__)
 
 
@@ -92,6 +94,37 @@ class GeminiToolService:
                 tool_defs.append(tool_def)
 
         return tool_defs
+
+    def convert_to_genai_tools(
+        self, tool_definitions: list[GeminiToolDefinition]
+    ) -> list[types.Tool]:
+        """
+        Convert tool definitions to Gemini API types.Tool objects.
+
+        Args:
+            tool_definitions: List of tool definitions from load_tools()
+
+        Returns:
+            List of types.Tool objects suitable for Gemini API calls
+        """
+        converted_tools = []
+        for tool_def in tool_definitions:
+            # Get parameters dict and convert to Schema
+            parameters_dict = tool_def.get("parameters", {})
+            parameters_schema = types.Schema(**parameters_dict)  # type: ignore[arg-type]
+
+            converted_tools.append(
+                types.Tool(
+                    function_declarations=[
+                        types.FunctionDeclaration(
+                            name=tool_def["name"],
+                            description=tool_def.get("description", ""),
+                            parameters=parameters_schema,
+                        )
+                    ]
+                )
+            )
+        return converted_tools
 
     def _generate_tool_definition(
         self, tool_name: str, tool_file_path: str

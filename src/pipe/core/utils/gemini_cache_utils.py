@@ -3,7 +3,6 @@
 This module provides stateless utility functions for managing Gemini API cache lifecycle.
 """
 
-import hashlib
 import json
 import os
 from datetime import UTC, datetime, timedelta
@@ -43,6 +42,37 @@ def is_cache_expired(
         return True
 
 
+def get_cache_name_for_session(
+    project_root: str,
+    session_id: str,
+    settings: "Settings | None" = None,  # type: ignore[name-defined] # noqa: F821
+) -> str | None:
+    """
+    Get the cache name for a session from the registry.
+
+    Args:
+        project_root: Project root for registry path
+        session_id: Session ID
+        settings: Application settings (for timezone)
+
+    Returns:
+        Cache name (e.g., "cachedContents/xxx") or None if not found or expired
+    """
+    from zoneinfo import ZoneInfo
+
+    registry_path = os.path.join(project_root, "sessions", ".cache_registry.json")
+    cache_registry = _load_registry(registry_path)
+
+    cached_entry = cache_registry.entries.get(session_id)
+    if cached_entry:
+        # Use user's timezone for cache expiration check
+        user_tz = ZoneInfo(settings.timezone) if settings else UTC
+        current_time = get_current_datetime(user_tz)
+        if not is_cache_expired(cached_entry.expire_time, current_time):
+            return cached_entry.name
+    return None
+
+
 def get_or_create_cache(
     client: genai.Client,
     static_content: str,
@@ -50,6 +80,7 @@ def get_or_create_cache(
     tools: list[types.Tool],
     project_root: str,
     session_id: str,
+    force_create: bool = False,
 ) -> str | None:
     """
     Get existing cache or create new one for a session.
@@ -64,16 +95,12 @@ def get_or_create_cache(
         tools: Tool definitions
         project_root: Project root for registry path
         session_id: Session ID that owns this cache
+        force_create: If True, delete existing cache and create new one
 
     Returns:
         Cache name (e.g., "cachedContents/xxx") or None if failed
     """
     registry_path = os.path.join(project_root, "sessions", ".cache_registry.json")
-
-    # Calculate content hash
-    tools_str = str(tools) if tools else ""
-    combined_content = static_content + tools_str
-    content_hash = hashlib.md5(combined_content.encode("utf-8")).hexdigest()
 
     # Load registry
     cache_registry = _load_registry(registry_path)
@@ -81,19 +108,19 @@ def get_or_create_cache(
     # Clean up expired caches (up to 5 per execution)
     _clean_expired_caches(client, registry_path, cache_registry, limit=5)
 
-    # Check existing cache with same content hash
-    cached_entry = cache_registry.entries.get(content_hash)
-    if cached_entry:
-        # Verify it belongs to this session and is still valid
-        if (
-            cached_entry.session_id == session_id
-            and not is_cache_expired(cached_entry.expire_time)
-            and _verify_cache_exists(client, cached_entry.name)
+    # Check existing cache for this session
+    cached_entry = cache_registry.entries.get(session_id)
+    if cached_entry and not force_create:
+        # Verify it is still valid
+        if not is_cache_expired(cached_entry.expire_time) and _verify_cache_exists(
+            client, cached_entry.name
         ):
             return cached_entry.name
 
-    # Delete any existing cache for this session (enforce 1 cache per session)
-    _delete_session_cache(client, cache_registry, session_id)
+    # Delete existing cache if present
+    if cached_entry:
+        _delete_session_cache(client, cache_registry, session_id)
+        _save_registry(registry_path, cache_registry)
 
     # Create new cache
     cache_name = _create_cache(
@@ -101,10 +128,9 @@ def get_or_create_cache(
         static_content,
         model_name,
         tools,
-        content_hash,
+        session_id,
         cache_registry,
         registry_path,
-        session_id,
     )
     return cache_name
 
@@ -229,10 +255,9 @@ def _create_cache(
     static_content: str,
     model_name: str,
     tools: list[types.Tool],
-    content_hash: str,
+    session_id: str,
     cache_registry: CacheRegistry,
     registry_path: str,
-    session_id: str,
 ) -> str | None:
     """Create new cache and update registry."""
     try:
@@ -259,8 +284,8 @@ def _create_cache(
             fallback_expire_time = get_current_datetime() + timedelta(seconds=3300)
             expire_time_str = fallback_expire_time.isoformat()
 
-        # Update registry
-        cache_registry.entries[content_hash] = CacheRegistryEntry(
+        # Update registry: store cache_name by session_id
+        cache_registry.entries[session_id] = CacheRegistryEntry(
             name=cache_name,
             expire_time=expire_time_str,
             session_id=session_id,

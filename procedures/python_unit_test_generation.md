@@ -34,10 +34,10 @@ graph TD
     Step5C --> Step6[Step 6: Verify git status]
 
     Step6 --> Step7{Only tests/<br/>changed?}
-    Step7 -- Yes --> Commit[Step 7a: Auto-commit]
-    Step7 -- No --> Report[Step 7b: ABORT - DO NOT COMMIT]
+    Step7 -- Yes --> Success[Step 7a: Report Success]
+    Step7 -- No --> Report[Step 7b: ABORT - Report Error]
 
-    Commit --> End([End: Success])
+    Success --> End([End: Success])
     Report --> End([End: Aborted])
 
     style Start fill:#e1f5e1
@@ -55,7 +55,7 @@ graph TD
     style CheckChecker fill:#ffcccc
     style CheckTests fill:#ffcccc
     style Step7 fill:#ffcccc
-    style Commit fill:#ccffcc
+    style Success fill:#ccffcc
     style Report fill:#ffcccc
 ```
 
@@ -329,7 +329,7 @@ M  tests/unit/core/utils/test_path.py
 1. Check if ONLY `{test_output_path}` is modified → Proceed to Step 7a
 2. Check if ANY other files are modified → Proceed to Step 7b (ABORT)
 
-#### Step 7a: If Only Target Test File Changed (Auto-Commit)
+#### Step 7a: If Only Target Test File Changed (Report Success)
 
 **Condition**: ONLY the test file you are writing (`{test_output_path}`) is modified
 
@@ -342,14 +342,14 @@ A  {test_output_path}
 ```
 
 **Actions**:
-```bash
-git add {test_output_path}
-git commit -m "test: add tests for {filename}"
-```
+Report successful test implementation with the following information:
+- Test file path: `{test_output_path}`
+- Coverage metrics
+- All quality checks passed
 
-**Output**: Committed changes
+**Output**: Success report (gatekeeper will handle commit)
 
-#### Step 7b: If ANY Other Files Changed (ABORT - DO NOT COMMIT)
+#### Step 7b: If ANY Other Files Changed (ABORT - Report Error)
 
 **Condition**: ANY of the following are true:
 1. Files outside `tests/` directory are modified
@@ -367,7 +367,7 @@ git commit -m "test: add tests for {filename}"
    Expected ONLY this file to be modified:
    - {test_output_path}
 
-   But git diff shows these files were also changed:
+   But git status shows these files were also changed:
    - {unrelated_file1}
    - {unrelated_file2}
 
@@ -378,15 +378,14 @@ git commit -m "test: add tests for {filename}"
    - Import errors modifying __pycache__
    - Configuration file corruption
 
-   DO NOT COMMIT. DO NOT PROCEED. ABORT IMMEDIATELY.
+   ABORT IMMEDIATELY. Report for investigation.
    ```
-2. **DO NOT commit under ANY circumstances**
-3. **DO NOT wait for user confirmation**
-4. **DO NOT attempt to fix or rollback**
-5. **ABORT the procedure immediately**
-6. **Report to user for investigation**
+2. **DO NOT wait for user confirmation**
+3. **DO NOT attempt to fix or rollback**
+4. **ABORT the procedure immediately**
+5. **Report error for investigation**
 
-**Output**: Procedure aborted, no commit made, error reported
+**Output**: Procedure aborted, error reported (gatekeeper will NOT commit)
 
 ---
 
@@ -410,10 +409,8 @@ git commit -m "test: add tests for {filename}"
 - ❌ Hardcoded file paths (use `tmp_path`, `tempfile`)
 - ❌ Test dependencies (tests must be independent)
 - ❌ Skipping quality checks
-- ❌ Committing with failing tests
 - ❌ **ABSOLUTE PROHIBITION**: Modifying ANY files outside `tests/` directory
 - ❌ **ABSOLUTE PROHIBITION**: Modifying ANY test files other than `{test_output_path}`
-- ❌ **ABSOLUTE PROHIBITION**: Committing if git diff shows ANY unintended file changes
 - ❌ **ABSOLUTE PROHIBITION**: Using `--cov={file_path}` (must use `--cov=src`)
 - ❌ **ABSOLUTE PROHIBITION**: Running coverage without grep filter (causes context overflow)
 
@@ -467,10 +464,9 @@ Execution:
            → Coverage: 95% (acceptable)
   Step 6: git status --short → M tests/unit/core/repositories/test_archive_repository.py
            → Verification: ONLY the target test file is modified ✓
-  Step 7a: git add tests/unit/core/repositories/test_archive_repository.py
-           git commit -m "test: add tests for archive_repository"
+  Step 7a: Report success with coverage metrics
 
-Output: Success, test committed
+Output: Success, ready for gatekeeper review
 ```
 
 ---
@@ -482,8 +478,9 @@ Output: Success, test committed
 - **Specification-driven testing**: Use `py_analyze_code` output (docstrings) to design tests, not implementation details
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
-- **No skipping**: Quality checks must all pass before commit
+- **No skipping**: Quality checks must all pass before reporting success
 - **Verification efficiency**: Use `git status --short` ONLY in Step 6. Never use `git diff` to re-read what you just wrote.
 - **Formatter safeguard**: ALWAYS execute `read_file` BEFORE fixing lint errors in Step 5a. Your memory is stale after auto-formatters run.
-- **ABSOLUTE PROHIBITION**: ANY changes to files outside `tests/` directory will result in immediate procedure abort with NO commit
+- **ABSOLUTE PROHIBITION**: ANY changes to files outside `tests/` directory will result in immediate procedure abort and error report
+- **Commit responsibility**: Test implementation agents do NOT commit. They report success/failure to gatekeeper for review and commit decision.
 

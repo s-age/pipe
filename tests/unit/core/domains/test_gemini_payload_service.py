@@ -6,10 +6,7 @@ import pytest
 from pipe.core.domains.gemini_payload_service import GeminiPayloadService
 from pipe.core.models.session import Session
 from pipe.core.models.settings import ModelConfig, Settings
-from pipe.core.models.turn import (
-    ModelResponseTurn,
-    UserTaskTurn,
-)
+from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
 
 
 @pytest.fixture

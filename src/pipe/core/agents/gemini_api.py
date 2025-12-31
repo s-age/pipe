@@ -14,7 +14,6 @@ from google.genai import types
 from pipe.core.agents import register_agent
 from pipe.core.agents.base import BaseAgent
 from pipe.core.domains import gemini_token_count
-from pipe.core.domains.gemini_api_payload import GeminiApiPayloadBuilder
 from pipe.core.domains.gemini_api_stream_processor import GeminiApiStreamProcessor
 from pipe.core.domains.gemini_payload_service import GeminiPayloadService
 from pipe.core.factories.prompt_factory import PromptFactory
@@ -50,7 +49,6 @@ class GeminiApiAgent(BaseAgent):
         self,
         session_service: "SessionService",
         tool_service: GeminiToolService | None = None,
-        payload_builder: GeminiApiPayloadBuilder | None = None,
     ):
         """
         Initialize the Gemini API agent.
@@ -58,7 +56,6 @@ class GeminiApiAgent(BaseAgent):
         Args:
             session_service: Session service (required)
             tool_service: Optional tool service (default: GeminiToolService)
-            payload_builder: Optional payload builder (default: GeminiApiPayloadBuilder)
         """
         self.session_service = session_service
         self.settings = session_service.settings
@@ -66,9 +63,6 @@ class GeminiApiAgent(BaseAgent):
 
         # Initialize sub-services with DI support
         self.tool_service = tool_service or GeminiToolService()
-        self.payload_builder = payload_builder or GeminiApiPayloadBuilder(
-            self.project_root, self.settings
-        )
 
         # Initialize new payload service and prompt factory
         self.payload_service = GeminiPayloadService(

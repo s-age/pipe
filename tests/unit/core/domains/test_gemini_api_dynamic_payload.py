@@ -11,11 +11,7 @@ from pipe.core.models.prompt import Prompt
 from pipe.core.models.prompts.current_task import PromptCurrentTask
 from pipe.core.models.prompts.file_reference import PromptFileReference
 from pipe.core.models.prompts.todo import PromptTodo
-from pipe.core.models.turn import (
-    FunctionCallingTurn,
-    ModelResponseTurn,
-    UserTaskTurn,
-)
+from pipe.core.models.turn import FunctionCallingTurn, ModelResponseTurn, UserTaskTurn
 
 
 @pytest.fixture

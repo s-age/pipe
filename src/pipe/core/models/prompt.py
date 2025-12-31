@@ -37,7 +37,6 @@ class Prompt(CamelCaseModel):
     roles: PromptRoles
     constraints: PromptConstraints
     conversation_history: PromptConversationHistory
-    cached_history: PromptConversationHistory | None = None
     buffered_history: PromptConversationHistory | None = None
     file_references: list[PromptFileReference] | None = None
     artifacts: list[Artifact] | None = None  # Changed type to list[Artifact]

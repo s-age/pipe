@@ -205,10 +205,7 @@ class GeminiCacheManager:
         import os
         from datetime import timedelta
 
-        from pipe.core.models.cache_registry import (
-            CacheRegistry,
-            CacheRegistryEntry,
-        )
+        from pipe.core.models.cache_registry import CacheRegistry, CacheRegistryEntry
         from pipe.core.utils.datetime import get_current_datetime
 
         registry_path = f"{self.project_root}/sessions/.cache_registry.json"

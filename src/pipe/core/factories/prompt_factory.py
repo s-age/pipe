@@ -155,20 +155,6 @@ class PromptFactory:
             history_turns_for_prompt, settings.tool_response_expiration
         )
 
-        # 7.1. Split history for Gemini caching strategy
-        from pipe.core.domains.gemini_cache import GeminiCache
-
-        gemini_cache = GeminiCache(
-            tool_response_limit=settings.tool_response_expiration,
-            cache_update_threshold=settings.model.cache_update_threshold,
-        )
-        cached_history, buffered_history = gemini_cache.split_history(
-            history_turns_for_prompt,
-            cached_content_token_count=session.cached_content_token_count,
-            prompt_token_count=session.token_count,
-            cached_turn_count=session.cached_turn_count,
-        )
-
         # 8. Build current task
         current_task_turn = UserTaskTurn(
             type="user_task",
@@ -207,8 +193,6 @@ class PromptFactory:
                 "instructions."
             ),
             "conversation_history": conversation_history,
-            "cached_history": cached_history,
-            "buffered_history": buffered_history,
             "current_task": current_task,
             "todos": prompt_todos if prompt_todos else None,
             "file_references": prompt_references if prompt_references else None,

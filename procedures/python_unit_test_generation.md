@@ -392,6 +392,13 @@ git commit -m "test: add tests for {filename}"
 
 ## Constraints (Must Not)
 
+### Project Environment
+- **Poetry Environment**: This project uses Poetry for dependency management
+- ❌ **ABSOLUTE PROHIBITION**: Adding ANY new dependencies to pyproject.toml
+- ❌ **ABSOLUTE PROHIBITION**: Installing ANY new libraries via poetry add or pip install
+- ✅ **REQUIRED**: Use ONLY existing dependencies already defined in pyproject.toml
+- **Rationale**: Test implementation must work within the existing dependency constraints
+
 ### Prohibited Pydantic Patterns
 - ❌ `session.dict()` (use `session.model_dump()`)
 - ❌ `Session.parse_obj(data)` (use `Session.model_validate(data)`)

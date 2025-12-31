@@ -7,6 +7,7 @@ delete/create execution, and cached_turn_count management.
 
 from __future__ import annotations
 
+from datetime import UTC
 from typing import TypedDict
 
 from google.genai import Client
@@ -173,6 +174,7 @@ class GeminiCacheManager:
         return gemini_cache_utils.get_cache_name_for_session(
             project_root=self.project_root,
             session_id=session_id,
+            settings=self.settings,
         )
 
     def delete_cache_by_session_id(self, session_id: str) -> None:
@@ -224,7 +226,13 @@ class GeminiCacheManager:
         if api_expire_time:
             expire_time_str = api_expire_time.isoformat()
         else:
-            fallback_expire_time = get_current_datetime() + timedelta(seconds=3300)
+            # Fallback: use user's timezone from settings
+            from zoneinfo import ZoneInfo
+
+            user_tz = ZoneInfo(self.settings.timezone) if self.settings else UTC
+            fallback_expire_time = get_current_datetime(user_tz) + timedelta(
+                seconds=3600
+            )
             expire_time_str = fallback_expire_time.isoformat()
 
         # Update registry

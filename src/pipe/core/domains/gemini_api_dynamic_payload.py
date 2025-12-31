@@ -40,26 +40,30 @@ class GeminiApiDynamicPayload:
         """
         self.project_root = project_root
 
-    def build(self, prompt: Prompt) -> list[types.Content]:
+    def build(self, prompt: Prompt, dynamic_json: str) -> list[types.Content]:
         """
         Construct the payload for models.generate_content.
 
         Args:
             prompt: Prompt object containing all dynamic context.
+            dynamic_json: Pre-rendered dynamic JSON string from gemini_dynamic_prompt.j2.
 
         Returns:
             List of Content objects for API request.
 
         Internal Logic:
-            1. Dynamic Context (Layer 2): Render gemini_dynamic_prompt.j2
+            1. Dynamic Context (Layer 2): Use pre-rendered dynamic JSON
             2. Buffered History (Layer 3): Restore thought signatures
             3. Trigger (Layer 4): Add current task if exists
         """
         contents: list[types.Content] = []
 
         # Layer 2: Dynamic Context
-        dynamic_content = self._build_dynamic_context(prompt)
-        if dynamic_content:
+        if dynamic_json.strip():
+            dynamic_content = types.Content(
+                role="user",
+                parts=[types.Part(text=dynamic_json)],
+            )
             contents.append(dynamic_content)
 
         # Layer 3: Buffered History
@@ -82,6 +86,35 @@ class GeminiApiDynamicPayload:
             contents.append(trigger_content)
 
         return contents
+
+    def render_dynamic_json(self, prompt: Prompt) -> str:
+        """
+        Render dynamic context JSON from prompt using gemini_dynamic_prompt.j2.
+
+        Args:
+            prompt: Prompt object with dynamic context fields.
+
+        Returns:
+            Rendered JSON string (empty string if no dynamic context).
+        """
+        template_path = os.path.join(self.project_root, "templates", "prompt")
+        jinja_env = Environment(
+            loader=FileSystemLoader(template_path),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
+
+        template = jinja_env.get_template("gemini_dynamic_prompt.j2")
+
+        # Build rendering context
+        rendering_context = {
+            "file_references": prompt.file_references,
+            "current_datetime": prompt.current_datetime,
+            "todos": prompt.todos,
+            "artifacts": prompt.artifacts,
+        }
+
+        return template.render(session=rendering_context)
 
     def _build_dynamic_context(self, prompt: Prompt) -> types.Content | None:
         """

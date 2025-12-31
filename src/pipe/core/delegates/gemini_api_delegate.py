@@ -134,7 +134,9 @@ def run_stream(
             # Track the last cached_content_token_count from the stream
             # Note: We'll save this at the end, not during the loop
             cached_count = usage_metadata.cached_content_token_count
-            if cached_count is not None:
+            if cached_count is None:
+                last_cached_content_token_count = 0
+            else:
                 last_cached_content_token_count = cached_count
 
             # Calculate cache delta (increase in cached tokens)
@@ -307,6 +309,7 @@ def run_stream(
 
         # Update cached_content_token_count from the LAST chunk of the stream
         # This is critical: we use the final value, not the first one
+        # None means we haven't received any response yet (first iteration)
         if last_cached_content_token_count is not None:
             session_meta_service.update_cached_content_token_count(
                 session_id, last_cached_content_token_count

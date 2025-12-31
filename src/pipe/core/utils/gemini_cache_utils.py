@@ -42,23 +42,34 @@ def is_cache_expired(
         return True
 
 
-def get_cache_name_for_session(project_root: str, session_id: str) -> str | None:
+def get_cache_name_for_session(
+    project_root: str,
+    session_id: str,
+    settings: "Settings | None" = None,  # type: ignore[name-defined] # noqa: F821
+) -> str | None:
     """
     Get the cache name for a session from the registry.
 
     Args:
         project_root: Project root for registry path
         session_id: Session ID
+        settings: Application settings (for timezone)
 
     Returns:
         Cache name (e.g., "cachedContents/xxx") or None if not found or expired
     """
+    from zoneinfo import ZoneInfo
+
     registry_path = os.path.join(project_root, "sessions", ".cache_registry.json")
     cache_registry = _load_registry(registry_path)
 
     cached_entry = cache_registry.entries.get(session_id)
-    if cached_entry and not is_cache_expired(cached_entry.expire_time):
-        return cached_entry.name
+    if cached_entry:
+        # Use user's timezone for cache expiration check
+        user_tz = ZoneInfo(settings.timezone) if settings else UTC
+        current_time = get_current_datetime(user_tz)
+        if not is_cache_expired(cached_entry.expire_time, current_time):
+            return cached_entry.name
     return None
 
 

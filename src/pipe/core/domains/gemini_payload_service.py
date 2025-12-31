@@ -51,6 +51,9 @@ class GeminiPayloadService:
             "current_prompt_tokens": 0,
             "buffered_tokens": 0,
         }
+        self.last_dynamic_tokens: int = (
+            0  # Track dynamic layer tokens from last request
+        )
 
         # Cache manager instance (created once, reused across requests)
         from google.genai.types import Content  # noqa: F401
@@ -149,7 +152,24 @@ class GeminiPayloadService:
 
         # Layers 2-4: Dynamic + Buffered + Trigger
         dynamic_builder = GeminiApiDynamicPayload(project_root=self.project_root)
-        dynamic_contents = dynamic_builder.build(prompt=prompt)
+
+        # Render dynamic JSON once and reuse it
+        dynamic_json = dynamic_builder.render_dynamic_json(prompt=prompt)
+
+        # Calculate dynamic layer token count
+        from pipe.core.domains import gemini_token_count
+
+        tokenizer = gemini_token_count.create_local_tokenizer(
+            self.settings.model.name  # type: ignore[attr-defined]
+        )
+        self.last_dynamic_tokens = gemini_token_count.count_tokens(
+            dynamic_json, tools=None, tokenizer=tokenizer
+        )
+
+        # Build full dynamic contents using the pre-rendered JSON
+        dynamic_contents = dynamic_builder.build(
+            prompt=prompt, dynamic_json=dynamic_json
+        )
         contents.extend(dynamic_contents)
 
         return (contents, cache_name)
@@ -162,12 +182,23 @@ class GeminiPayloadService:
             usage_metadata: Usage metadata from API response containing:
                 - cached_content_token_count: Number of tokens in cache
                 - prompt_token_count: Total number of tokens in prompt
+
+        Note:
+            Automatically subtracts self.last_dynamic_tokens from buffered_tokens
+            to exclude Dynamic Layer (file_references, artifacts, etc.) from cache threshold calculation.
         """
         cached_tokens = usage_metadata.get("cached_content_token_count", 0)
         prompt_tokens = usage_metadata.get("prompt_token_count", 0)
 
+        # Calculate buffered tokens and subtract dynamic layer tokens
+        # buffered_tokens should only include conversation history, not dynamic context
+        raw_buffered_tokens = prompt_tokens - cached_tokens
+        adjusted_buffered_tokens = max(
+            0, raw_buffered_tokens - self.last_dynamic_tokens
+        )
+
         self.last_token_summary = TokenCountSummary(
             cached_tokens=cached_tokens,
             current_prompt_tokens=prompt_tokens,
-            buffered_tokens=prompt_tokens - cached_tokens,
+            buffered_tokens=adjusted_buffered_tokens,
         )

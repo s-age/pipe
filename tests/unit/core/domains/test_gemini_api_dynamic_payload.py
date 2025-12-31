@@ -47,14 +47,10 @@ class TestGeminiApiDynamicPayload:
         mock_prompt.buffered_history = None
         mock_prompt.current_task = None
 
-        with patch.object(
-            builder, "_build_dynamic_context", return_value=None
-        ) as mock_context:
-            result = builder.build(mock_prompt)
+        result = builder.build(mock_prompt, dynamic_json="")
 
-            mock_context.assert_called_once_with(mock_prompt)
-            assert isinstance(result, list)
-            assert len(result) == 0
+        assert isinstance(result, list)
+        assert len(result) == 0
 
     def test_build_with_current_task_only(self, builder, mock_prompt):
         """Test build with only current task."""
@@ -69,15 +65,14 @@ class TestGeminiApiDynamicPayload:
             timestamp="2025-01-01T00:00:00Z",
         )
 
-        with patch.object(builder, "_build_dynamic_context", return_value=None):
-            result = builder.build(mock_prompt)
+        result = builder.build(mock_prompt, dynamic_json="")
 
-            assert len(result) == 1
-            assert isinstance(result[0], types.Content)
-            assert result[0].role == "user"
-            assert result[0].parts is not None
-            assert len(result[0].parts) == 1
-            assert result[0].parts[0].text == "Test instruction"
+        assert len(result) == 1
+        assert isinstance(result[0], types.Content)
+        assert result[0].role == "user"
+        assert result[0].parts is not None
+        assert len(result[0].parts) == 1
+        assert result[0].parts[0].text == "Test instruction"
 
     def test_build_with_all_layers(self, builder, mock_prompt):
         """Test build with all layers (dynamic context, buffered history, current task)."""
@@ -94,25 +89,20 @@ class TestGeminiApiDynamicPayload:
             )
         ]
 
-        mock_dynamic_content = types.Content(
-            role="user",
-            parts=[types.Part(text='{"dynamic": "context"}')],
-        )
+        dynamic_json = '{"dynamic": "context"}'
+        result = builder.build(mock_prompt, dynamic_json=dynamic_json)
 
-        with patch.object(
-            builder, "_build_dynamic_context", return_value=mock_dynamic_content
-        ):
-            result = builder.build(mock_prompt)
-
-            # Should have: dynamic context + buffered history + current task
-            assert len(result) == 3
-            assert result[0] == mock_dynamic_content
-            assert result[1].role == "user"
-            assert result[1].parts is not None
-            assert result[1].parts[0].text == "Previous task"
-            assert result[2].role == "user"
-            assert result[2].parts is not None
-            assert result[2].parts[0].text == "Do something"
+        # Should have: dynamic context + buffered history + current task
+        assert len(result) == 3
+        assert result[0].role == "user"
+        assert result[0].parts is not None
+        assert result[0].parts[0].text == '{"dynamic": "context"}'
+        assert result[1].role == "user"
+        assert result[1].parts is not None
+        assert result[1].parts[0].text == "Previous task"
+        assert result[2].role == "user"
+        assert result[2].parts is not None
+        assert result[2].parts[0].text == "Do something"
 
 
 class TestBuildDynamicContext:

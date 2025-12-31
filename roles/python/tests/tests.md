@@ -361,6 +361,117 @@ def temp_sessions_dir(temp_project_root):
   - `patch`: Function/Class mocking
   - `patch.object`: Object method mocking
 
+### Time Mocking
+
+**CRITICAL**: When testing functions that depend on current time (`datetime.now()`, `time.time()`, etc.), **ALWAYS use `freezegun`** instead of `unittest.mock.patch`.
+
+#### Why freezegun is Required
+
+Mocking `datetime.now()` with `unittest.mock` is extremely error-prone and inefficient:
+
+**❌ BAD - Complex and fragile with unittest.mock:**
+```python
+from unittest.mock import patch
+
+@pytest.fixture
+def mock_datetime_now():
+    """Mocks datetime.now - requires complex side_effect logic."""
+    fixed_datetime = datetime(2025, 1, 1, 10, 30, 0, tzinfo=UTC)
+    with patch("module.datetime") as mock_dt:
+        # ❌ This doesn't handle timezone arguments correctly
+        mock_dt.now.return_value = fixed_datetime
+
+        # ❌ Need additional side_effect for timezone support
+        def now_side_effect(tz=UTC):
+            return datetime(2025, 1, 1, 10, 30, 0).replace(tzinfo=tz)
+        mock_dt.now.side_effect = now_side_effect
+        yield mock_dt
+
+def test_with_mock(mock_datetime_now):
+    # Tests become fragile and require fixture adjustments per test
+    tokyo_tz = ZoneInfo("Asia/Tokyo")
+    # Must manually override return_value in each test
+    mock_datetime_now.now.return_value = datetime(2025, 1, 1, 19, 30, 0, tzinfo=tokyo_tz)
+    result = get_current_datetime(tz=tokyo_tz)
+    assert result.tzinfo == tokyo_tz
+```
+
+**Problems:**
+- Requires 20+ lines of complex fixture code
+- `side_effect` logic must handle all timezone cases
+- Each test needs manual `return_value` overrides
+- Fragile - breaks when `datetime.now()` arguments change
+- High agent iteration cost (38+ turns to get it working)
+
+**✅ GOOD - Simple and robust with freezegun:**
+```python
+from freezegun import freeze_time
+
+@freeze_time("2025-01-01 10:30:00")
+def test_with_freezegun():
+    """Test with freezegun - single decorator, no fixtures needed."""
+    # Works with any timezone automatically
+    tokyo_tz = ZoneInfo("Asia/Tokyo")
+    result = get_current_datetime(tz=tokyo_tz)
+
+    # freezegun handles timezone conversion correctly
+    assert result.tzinfo == tokyo_tz
+    assert result == datetime(2025, 1, 1, 19, 30, 0, tzinfo=tokyo_tz)  # Auto +9h
+
+@freeze_time("2025-01-01 10:30:00")
+def test_utc_default():
+    """UTC works out of the box."""
+    result = get_current_datetime()
+    assert result == datetime(2025, 1, 1, 10, 30, 0, tzinfo=UTC)
+```
+
+**Benefits:**
+- **1 line decorator** vs 20+ lines of fixture code
+- **No manual timezone handling** - freezegun handles it automatically
+- **No test-specific adjustments** - same decorator works for all cases
+- **Robust** - resistant to implementation changes
+- **Efficient** - reduces agent iterations from 38+ to ~6 turns (84% reduction)
+
+#### freezegun Usage Patterns
+
+```python
+# Basic time freezing
+@freeze_time("2025-01-01 10:30:00")
+def test_basic():
+    assert datetime.now() == datetime(2025, 1, 1, 10, 30, 0)
+
+# With timezone offset
+@freeze_time("2025-01-01 10:30:00", tz_offset=9)  # JST (+9h)
+def test_with_offset():
+    tokyo_tz = ZoneInfo("Asia/Tokyo")
+    result = datetime.now(tokyo_tz)
+    assert result.hour == 19  # 10:30 UTC = 19:30 JST
+
+# Context manager form (for partial test time freezing)
+def test_with_context():
+    with freeze_time("2025-01-01 10:30:00"):
+        assert datetime.now().hour == 10
+    # Time unfrozen after context
+
+# Moving time within test
+@freeze_time("2025-01-01 10:30:00", tick=True)
+def test_time_progression():
+    start = datetime.now()
+    time.sleep(1)  # With tick=True, time actually advances
+    end = datetime.now()
+    assert (end - start).seconds >= 1
+```
+
+#### Installation
+
+```toml
+# pyproject.toml
+[tool.poetry.group.test.dependencies]
+freezegun = "^1.5.0"
+```
+
+**Guideline**: If your test needs to control time, use `freezegun`. Only use `unittest.mock` for mocking custom functions or classes, not for standard library time functions.
+
 ### Assertion Helpers
 - **pytest assertions**: Detailed error messages
 - **pytest.raises**: Exception testing

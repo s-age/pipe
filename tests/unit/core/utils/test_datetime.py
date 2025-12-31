@@ -1,73 +1,64 @@
+"""
+Unit tests for the datetime utility module.
+"""
+
 from datetime import UTC, datetime
-from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
+from freezegun import freeze_time
 from pipe.core.utils.datetime import get_current_datetime, get_current_timestamp
 
 
-class TestGetCurrentDatetime:
-    """Tests for get_current_datetime function."""
+class TestDatetimeUtils:
+    """Tests for datetime utility functions."""
 
+    @freeze_time("2025-01-01 10:30:00")
     def test_get_current_datetime_utc_default(self):
-        """Test that get_current_datetime returns UTC by default."""
-        fixed_now = datetime(2025, 12, 23, 12, 0, 0, tzinfo=UTC)
-        with patch("pipe.core.utils.datetime.datetime") as mock_datetime:
-            mock_datetime.now.return_value = fixed_now
+        """Test get_current_datetime returns UTC datetime by default."""
+        expected_datetime = datetime(2025, 1, 1, 10, 30, 0, tzinfo=UTC)
+        result = get_current_datetime()
+        assert result == expected_datetime
+        assert result.tzinfo == UTC
 
-            result = get_current_datetime()
+    @freeze_time("2025-01-01 10:30:00")
+    def test_get_current_datetime_with_timezone(self):
+        """Test get_current_datetime returns datetime in specified timezone."""
+        tokyo_tz = ZoneInfo("Asia/Tokyo")
+        expected_datetime = datetime(
+            2025, 1, 1, 19, 30, 0, tzinfo=tokyo_tz
+        )  # 10:30 UTC is 19:30 JST
+        result = get_current_datetime(tz=tokyo_tz)
+        assert result == expected_datetime
+        assert result.tzinfo == tokyo_tz
 
-            assert result == fixed_now
-            assert result.tzinfo == UTC
-            mock_datetime.now.assert_called_once_with(UTC)
+    @freeze_time("2025-01-01 10:30:00")
+    def test_get_current_timestamp_iso_format_default_utc(self):
+        """Test get_current_timestamp returns ISO 8601 format in UTC by default."""
+        expected_timestamp = "2025-01-01T10:30:00+00:00"
+        result = get_current_timestamp()
+        assert result == expected_timestamp
 
-    def test_get_current_datetime_specific_tz(self):
-        """Test that get_current_datetime returns datetime in specified timezone."""
-        jst = ZoneInfo("Asia/Tokyo")
-        fixed_now = datetime(2025, 12, 23, 21, 0, 0, tzinfo=jst)
-        with patch("pipe.core.utils.datetime.datetime") as mock_datetime:
-            mock_datetime.now.return_value = fixed_now
+    @freeze_time("2025-01-01 10:30:00")
+    def test_get_current_timestamp_iso_format_with_timezone(self):
+        """Test get_current_timestamp returns ISO 8601 format in specified timezone."""
+        tokyo_tz = ZoneInfo("Asia/Tokyo")
+        expected_timestamp = "2025-01-01T19:30:00+09:00"  # 10:30 UTC is 19:30 JST
+        result = get_current_timestamp(tz=tokyo_tz)
+        assert result == expected_timestamp
 
-            result = get_current_datetime(tz=jst)
+    @freeze_time("2025-01-01 10:30:00")
+    def test_get_current_timestamp_custom_format_default_utc(self):
+        """Test get_current_timestamp returns custom format in UTC by default."""
+        custom_format = "%Y/%m/%d %H:%M:%S %Z%z"
+        expected_timestamp = "2025/01/01 10:30:00 UTC+0000"
+        result = get_current_timestamp(fmt=custom_format)
+        assert result == expected_timestamp
 
-            assert result == fixed_now
-            assert result.tzinfo == jst
-            mock_datetime.now.assert_called_once_with(jst)
-
-
-class TestGetCurrentTimestamp:
-    """Tests for get_current_timestamp function."""
-
-    def test_get_current_timestamp_iso_default(self):
-        """Test that get_current_timestamp returns ISO format by default."""
-        fixed_now = datetime(2025, 12, 23, 12, 0, 0, tzinfo=UTC)
-        with patch("pipe.core.utils.datetime.get_current_datetime") as mock_get_now:
-            mock_get_now.return_value = fixed_now
-
-            result = get_current_timestamp()
-
-            assert result == "2025-12-23T12:00:00+00:00"
-            mock_get_now.assert_called_once_with(UTC)
-
-    def test_get_current_timestamp_specific_tz(self):
-        """Test that get_current_timestamp returns ISO format for specific timezone."""
-        jst = ZoneInfo("Asia/Tokyo")
-        fixed_now = datetime(2025, 12, 23, 21, 0, 0, tzinfo=jst)
-        with patch("pipe.core.utils.datetime.get_current_datetime") as mock_get_now:
-            mock_get_now.return_value = fixed_now
-
-            result = get_current_timestamp(tz=jst)
-
-            assert result == "2025-12-23T21:00:00+09:00"
-            mock_get_now.assert_called_once_with(jst)
-
-    def test_get_current_timestamp_custom_format(self):
-        """Test get_current_timestamp with a custom format string."""
-        fixed_now = datetime(2025, 12, 23, 12, 0, 0, tzinfo=UTC)
-        fmt = "%Y/%m/%d %H:%M:%S"
-        with patch("pipe.core.utils.datetime.get_current_datetime") as mock_get_now:
-            mock_get_now.return_value = fixed_now
-
-            result = get_current_timestamp(fmt=fmt)
-
-            assert result == "2025/12/23 12:00:00"
-            mock_get_now.assert_called_once_with(UTC)
+    @freeze_time("2025-01-01 10:30:00")
+    def test_get_current_timestamp_custom_format_with_timezone(self):
+        """Test get_current_timestamp returns custom format in specified timezone."""
+        tokyo_tz = ZoneInfo("Asia/Tokyo")
+        custom_format = "%Y/%m/%d %H:%M:%S %Z%z"
+        expected_timestamp = "2025/01/01 19:30:00 JST+0900"  # 10:30 UTC is 19:30 JST
+        result = get_current_timestamp(tz=tokyo_tz, fmt=custom_format)
+        assert result == expected_timestamp

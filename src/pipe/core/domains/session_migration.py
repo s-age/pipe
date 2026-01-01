@@ -29,6 +29,7 @@ def migrate_session_data(data: dict[str, Any], timezone_obj: Any) -> dict[str, A
     """
     # Migration 1: Set default created_at if missing
     session_creation_time = data.get("created_at", get_current_timestamp(timezone_obj))
+    data["created_at"] = session_creation_time
 
     # Migration 2 & 3: Migrate turns and pools
     for turn_list_key in ["turns", "pools"]:

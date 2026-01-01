@@ -144,11 +144,20 @@ class PromptFactory:
             current_task_instruction_content = current_instruction
         elif session.turns:
             # If no current_instruction, but session has turns,
-            # the last turn might be the current task if it's a UserTaskTurn.
+            # try to find the active user task.
             last_turn = session.turns[-1]
+
             if isinstance(last_turn, UserTaskTurn):
                 current_task_instruction_content = last_turn.instruction
                 history_turns_for_prompt = session.turns[:-1]  # Exclude from history
+            else:
+                # If we are in a tool loop (last turn is NOT UserTaskTurn),
+                # find the most recent UserTaskTurn to reiterate as current_task.
+                for turn in reversed(session.turns):
+                    if isinstance(turn, UserTaskTurn):
+                        current_task_instruction_content = turn.instruction
+                        # Do NOT exclude from history, as it's deep in the flow
+                        break
 
         # 7. Build conversation history (both full and split for caching)
         conversation_history = self._build_conversation_history(

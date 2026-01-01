@@ -733,6 +733,161 @@ When generating tests, the following quality standards must be strictly followed
 - ❌ **No unrestored global state changes** (see "Global State Management" below)
 - ❌ **No invalid escape sequences** in string literals (see "String Escape Sequences" below)
 - ❌ **No over-mocking of infrastructure** (see "Mock Complexity vs Real Implementation" below)
+- ❌ **No imports from non-existent modules** (see "Import Verification" below)
+
+### Import Verification
+
+**CRITICAL**: Before writing any import statement in test code, you **MUST** verify that the module or class exists in the codebase. Importing from non-existent modules causes immediate test collection failures.
+
+#### Mandatory Verification Steps
+
+**BEFORE writing any import statement:**
+
+1. **Read the actual source file** to verify the module structure
+2. **Check what is actually exported** from that module
+3. **Use exact import paths** that match the codebase structure
+
+**❌ BAD - Importing non-existent modules:**
+```python
+# ❌ WRONG - Assuming a module exists without verification
+from pipe.core.models.prompts.main_instruction import PromptMainInstruction
+# This fails if PromptMainInstruction doesn't exist!
+
+# ❌ WRONG - Assuming a field is a complex object
+mock_prompt.main_instruction = PromptMainInstruction(
+    description="Test", flowchart="Flow"
+)
+# Fails if main_instruction is actually just a string!
+```
+
+**✅ GOOD - Verify before importing:**
+```python
+# Step 1: Read the source file first
+# $ Read src/pipe/core/models/prompt.py
+
+# Step 2: Verify what exists
+# Found: main_instruction: str  (it's a simple string, not a class!)
+
+# Step 3: Write correct code based on actual structure
+mock_prompt = MagicMock()
+mock_prompt.main_instruction = "Test instruction"  # ✅ Correct - it's a string
+```
+
+#### Verification Protocol
+
+**For every import statement, follow this checklist:**
+
+1. **Module exists?**
+   ```bash
+   # Use Glob or Grep to find the module
+   Glob: "**/*main_instruction*.py"
+   ```
+
+2. **Class/function exists in module?**
+   ```bash
+   # Read the actual file
+   Read: src/pipe/core/models/prompts/main_instruction.py
+   ```
+
+3. **Import path is correct?**
+   ```python
+   # Verify the import matches the file structure
+   # If file is at: src/pipe/core/models/prompt.py
+   # Then import is: from pipe.core.models.prompt import Prompt
+   ```
+
+4. **Field type matches usage?**
+   ```python
+   # If the model defines: main_instruction: str
+   # Don't treat it as: PromptMainInstruction(...)
+   # Use it as: "string value"
+   ```
+
+#### Common Mistakes to Avoid
+
+**Mistake 1: Assuming complex types without verification**
+```python
+# ❌ WRONG - Assuming every field is a Pydantic model
+class Prompt(CamelCaseModel):
+    main_instruction: str  # ← This is just a string!
+
+# In test - WRONG assumption:
+mock.main_instruction = PromptMainInstruction(...)  # ❌ No such class!
+
+# ✅ CORRECT - verified it's a string:
+mock.main_instruction = "Test instruction"
+```
+
+**Mistake 2: Not reading the actual model definition**
+```python
+# ❌ WRONG - Guessing the structure
+from pipe.core.models.prompts.constraints import Constraints  # May not exist
+
+# ✅ CORRECT - Read src/pipe/core/models/prompts/constraints.py first
+from pipe.core.models.prompts.constraints import PromptConstraints  # Verified name
+```
+
+**Mistake 3: Inventing modules that don't exist**
+```python
+# ❌ WRONG - Creating imports without verification
+from pipe.core.models.prompts.main_instruction import PromptMainInstruction
+from pipe.core.models.prompts.description import PromptDescription
+from pipe.core.models.prompts.datetime import PromptDateTime
+
+# These modules may not exist! Verify first with Glob/Grep/Read.
+```
+
+#### Decision Tree: Import Verification
+
+```
+Need to import a class/module?
+├─ 1. Does the file exist?
+│  ├─ YES → Continue to step 2
+│  └─ NO → ❌ STOP - Don't import non-existent modules
+│
+├─ 2. Does the class/function exist in that file?
+│  ├─ YES → Continue to step 3
+│  └─ NO → ❌ STOP - Find the correct location or use alternative
+│
+├─ 3. Is the import path correct?
+│  ├─ YES → Continue to step 4
+│  └─ NO → ❌ STOP - Fix the import path
+│
+└─ 4. Does the field type match your usage?
+   ├─ YES → ✅ Safe to import and use
+   └─ NO → ❌ STOP - Adjust your code to match the actual type
+```
+
+#### Quick Verification Commands
+
+Before writing imports, run these checks:
+
+```bash
+# Check if module exists
+Glob: "**/*module_name*.py"
+
+# Check class exists in module
+Grep: "class ClassName" --path src/pipe/core/models
+
+# Read the actual file to verify structure
+Read: src/pipe/core/models/prompt.py
+```
+
+#### Summary
+
+**Golden Rule**: **NEVER write an import statement without first verifying the module and class exist.**
+
+- ✅ **DO**: Read source files before importing
+- ✅ **DO**: Verify field types match actual model definitions
+- ✅ **DO**: Use Glob/Grep/Read to confirm module structure
+- ❌ **DON'T**: Assume modules exist based on naming conventions
+- ❌ **DON'T**: Treat simple types (str, int) as complex objects
+- ❌ **DON'T**: Invent import paths without verification
+
+**If unsure about a module structure:**
+1. Use Glob to find similar files
+2. Read existing test files that import from the same module
+3. Read the actual source file to verify the structure
 
 ### Global State Management
 

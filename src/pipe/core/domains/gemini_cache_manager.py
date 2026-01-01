@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import UTC
 from typing import TypedDict
 
-from google.genai import Client
+from google.genai import Client, types
 from pipe.core.domains import gemini_api_static_payload
 from pipe.core.models.session import Session
 from pipe.core.models.turn import Turn
@@ -70,6 +70,7 @@ class GeminiCacheManager:
         full_history: list[Turn],
         token_count_summary: TokenCountSummary,
         threshold: int,
+        tools: list[types.Tool] | None = None,
     ) -> tuple[str | None, int, list[Turn]]:
         """
         Assemble buffered history and determine if cache should be updated.
@@ -79,6 +80,7 @@ class GeminiCacheManager:
             full_history: Complete list of all persisted session turns.
             token_count_summary: Token count information (cached_tokens, current_prompt_tokens, buffered_tokens).
             threshold: Cache update threshold in tokens.
+            tools: List of tools to include in cache configuration (optional).
 
         Returns:
             tuple[str | None, int, list[Turn]]: (cache_name, cached_turn_count, buffered_history)
@@ -93,7 +95,7 @@ class GeminiCacheManager:
             4. IF buffered_tokens > threshold (Update Flow):
                - Delete old cache if exists
                - Generate new cache content via gemini_api_static_payload.build()
-               - Create new cache
+               - Create new cache (with tools if provided)
                - State remains unchanged (cache recreated with same range)
                - Return (new_cache_name, current_cached_turn_count, buffered_history)
             5. ELSE (Maintain Flow):
@@ -127,14 +129,19 @@ class GeminiCacheManager:
             # Delete old cache if exists (from registry)
             self.delete_cache_by_session_id(session.session_id)
 
+            # Create new cache configuration
+            cache_config = {
+                "contents": cached_contents,
+                "ttl": "3600s",
+            }
+            if tools:
+                cache_config["tools"] = tools
+
             # Create new cache
             try:
                 cached_obj = self.client.caches.create(
                     model=self.model_name,
-                    config={  # type: ignore[arg-type]
-                        "contents": cached_contents,
-                        "ttl": "3600s",
-                    },
+                    config=cache_config,  # type: ignore[arg-type]
                 )
                 new_cache_name = cached_obj.name
 

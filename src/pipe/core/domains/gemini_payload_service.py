@@ -6,7 +6,7 @@ This service manages the complete lifecycle of Gemini API request preparation:
 - Orchestrates cache management and payload generation
 """
 
-from google.genai import Client
+from google.genai import Client, types
 from pipe.core.domains.gemini_api_dynamic_payload import GeminiApiDynamicPayload
 from pipe.core.domains.gemini_cache_manager import GeminiCacheManager, TokenCountSummary
 from pipe.core.models.session import Session
@@ -76,6 +76,7 @@ class GeminiPayloadService:
         session: Session,
         prompt_factory: "PromptFactory",  # type: ignore[name-defined] # noqa: F821
         current_instruction: str | None = None,
+        tools: list[types.Tool] | None = None,
     ) -> tuple[list["Content"], str | None]:  # type: ignore[name-defined] # noqa: F821
         """
         Prepare the complete API request payload with cache management.
@@ -84,6 +85,7 @@ class GeminiPayloadService:
             session: Current session object.
             prompt_factory: Factory to create Prompt objects.
             current_instruction: User's current input (optional).
+            tools: List of tools to include in cache configuration (optional).
 
         Returns:
             tuple: (contents, cache_name)
@@ -96,7 +98,6 @@ class GeminiPayloadService:
             3. Build Prompt object with buffered_history
             4. Generate dynamic payload contents
         """
-        from google.genai import types
 
         # === Phase 1: Cache Management ===
         # Set prompt_factory in cache_manager (needed for static payload generation)
@@ -110,6 +111,7 @@ class GeminiPayloadService:
                 full_history=full_history,
                 token_count_summary=self.last_token_summary,
                 threshold=self.settings.model.cache_update_threshold,  # type: ignore[attr-defined]
+                tools=tools,
             )
         )
 

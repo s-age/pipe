@@ -188,19 +188,20 @@ class GeminiApiAgent(BaseAgent):
                 }
             )
 
-        # 1. Prepare request payload with cache management
+        # 1. Load tools
+        loaded_tools = self.tool_service.load_tools(self.project_root)
+        tools = self.tool_service.convert_to_genai_tools(loaded_tools)
+
+        # 2. Prepare request payload with cache management
         contents, cache_name = self.payload_service.prepare_request(
             session=session_data,
             prompt_factory=self.prompt_factory,
             current_instruction=None,  # No new instruction in stream_content
+            tools=tools,
         )
 
         # Store cached turn count from session (updated by payload_service)
         self.last_cached_turn_count = session_data.cached_turn_count
-
-        # 2. Load tools
-        loaded_tools = self.tool_service.load_tools(self.project_root)
-        tools = self.tool_service.convert_to_genai_tools(loaded_tools)
 
         # 3. Log cache decision
         self._log_cache_decision(

@@ -150,6 +150,7 @@ def _extract_import_info(target_file_path: str) -> dict[str, MockTarget]:
                 )
         elif isinstance(node, ast.ImportFrom):
             # Handle: from os.path import join, from typing import List
+            # Special case: from pipe.core.domains import gemini_api_static_payload
             module = node.module or ""
             for alias in node.names:
                 if alias.name == "*":
@@ -431,13 +432,34 @@ def py_test_strategist(
         # Build mock_targets with patch paths
         mock_targets = []
         for mc in func_analysis.mock_candidates:
-            if mc.name in import_info:
-                # Use import info to generate accurate patch path
+            # Check if this is an attribute access (e.g., "module.function")
+            parts = mc.name.split(".")
+
+            if len(parts) > 1:
+                # Attribute access: check if the base is an imported module
+                base_name = parts[0]
+                if base_name in import_info:
+                    # Build patch path: target_module.base_name.attribute
+                    target_module = _get_module_namespace(target_file_path)
+                    full_path = f"{target_module}.{mc.name}"
+                    mock_targets.append(
+                        MockTarget(
+                            dependency_name=mc.name,
+                            patch_path=full_path,
+                            import_type="attribute_access",
+                            original_import=f"# Attribute access on: {import_info[base_name].original_import}",
+                        )
+                    )
+                else:
+                    # Base not found in imports (e.g., self.method_call)
+                    # Skip these as they are instance methods, not external dependencies
+                    continue
+            elif mc.name in import_info:
+                # Direct import: use the import info
                 mock_targets.append(import_info[mc.name])
             else:
                 # Fallback: create basic MockTarget without import info
                 # This handles cases where dependency is not directly imported
-                # (e.g., attributes accessed on imported modules)
                 target_module = _get_module_namespace(target_file_path)
                 mock_targets.append(
                     MockTarget(

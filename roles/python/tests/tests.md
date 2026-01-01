@@ -5,6 +5,109 @@ This document defines a comprehensive testing strategy for each layer under `src
 
 ## Principles
 
+### Python Import Error Resolution Protocol
+
+**CRITICAL**: When encountering `ModuleNotFoundError` or `ImportError`, you **MUST NEVER** manipulate `sys.path` (append, insert) within source code. Code must be environment-independent.
+
+#### Resolution Steps (In Order)
+
+Follow these steps strictly when import errors occur. Do NOT apply quick fixes without investigation:
+
+1. **Imitate Working Examples (Highest Priority)**:
+   - Read other successfully running test files in the `tests/` directory
+   - Compare and imitate their import statement patterns and structure
+   - Ask: "How do other files import `tests.factories`?" - This is the fastest path to solution
+   - **Example**:
+     ```python
+     # ✅ CORRECT - Found in existing tests/unit/core/services/test_session_service.py
+     from tests.factories.models import SessionFactory, SettingsFactory
+
+     # ❌ WRONG - Trying to use sys.path manipulation
+     import sys
+     sys.path.append(str(Path(__file__).parent.parent.parent))
+     from tests.factories.models import SessionFactory
+     ```
+
+2. **Verify Execution Context**:
+   - Ensure pytest is run from the **project root directory**
+   - Verify command is run through Poetry: `poetry run pytest`
+   - If running from a subdirectory, Python may not recognize parent directories as packages
+   - **Example**:
+     ```bash
+     # ✅ CORRECT - Run from project root
+     cd /path/to/project/root
+     poetry run pytest tests/unit/core/models/test_session.py
+
+     # ❌ WRONG - Running from subdirectory
+     cd /path/to/project/root/tests/unit
+     poetry run pytest core/models/test_session.py  # May cause import errors
+     ```
+
+3. **Check Package Structure**:
+   - Verify `__init__.py` exists in necessary directories to mark them as packages
+   - For src-layout projects, ensure `src` is in the path or installed (`pip install -e .`)
+   - **Example**:
+     ```
+     project/
+     ├── src/
+     │   └── pipe/
+     │       └── __init__.py  # ✅ Required
+     └── tests/
+         ├── __init__.py      # ✅ Required for test imports
+         ├── factories/
+         │   └── __init__.py  # ✅ Required
+         └── unit/
+             └── __init__.py  # ✅ Required
+     ```
+
+4. **Last Resort - Environment Configuration (NOT Code)**:
+   - If nothing works, modify the **environment**, not the code
+   - Use `PYTHONPATH` at command execution time
+   - Or configure `pytest.ini` or `pyproject.toml`
+   - **Examples**:
+     ```bash
+     # Option 1: PYTHONPATH environment variable
+     PYTHONPATH=. poetry run pytest tests/
+
+     # Option 2: Add to pytest.ini
+     [pytest]
+     pythonpath = .
+
+     # Option 3: Add to pyproject.toml
+     [tool.pytest.ini_options]
+     pythonpath = ["."]
+     ```
+
+#### Prohibited Patterns
+
+**❌ NEVER DO THIS:**
+```python
+# ❌ Manipulating sys.path in test files
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+# ❌ Manipulating sys.path in production code
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+```
+
+**Why this is prohibited:**
+- Makes code environment-dependent (breaks in CI/CD, different machines)
+- Hides structural problems in the project
+- Creates maintenance nightmares
+- Violates Python packaging best practices
+
+**✅ CORRECT APPROACH:**
+1. First, read existing working test files and imitate their imports
+2. Ensure proper package structure (`__init__.py` files)
+3. Run pytest from project root with Poetry
+4. Only if necessary, configure environment via `pytest.ini` or `PYTHONPATH`
+
+---
+
 ### Layer Structure and Testing Philosophy
 
 In Python, the idea that "mocking all dependencies allows ignoring layer structure" is **incorrect**. Since the purpose and strategy of testing differ for each layer, tests must be designed with an understanding of each layer's responsibilities.

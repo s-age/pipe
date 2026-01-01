@@ -575,6 +575,7 @@ When generating tests, the following quality standards must be strictly followed
 - ❌ **No state leakage** between tests (use fixtures with proper scope)
 - ❌ **No unnecessary mocks** for pure functions (Models/Domains/Collections)
 - ❌ **No unrestored global state changes** (see "Global State Management" below)
+- ❌ **No invalid escape sequences** in string literals (see "String Escape Sequences" below)
 
 ### Global State Management
 
@@ -623,6 +624,125 @@ Always restore these after modification:
 - File system state outside `tmp_path`
 
 Use `monkeypatch` fixture whenever possible for automatic cleanup.
+
+### String Escape Sequences
+
+**CRITICAL**: When writing string literals that contain backslashes or special characters, you **MUST** use proper escape sequences to avoid `SyntaxError`.
+
+**DEFAULT RULE**: When in doubt, **ALWAYS use raw strings (`r"..."`)** for any string containing backslashes. This eliminates most escape sequence errors and improves code readability.
+
+#### Common Pitfalls
+
+**❌ BAD - Invalid unicode escape sequence:**
+```python
+def test_unicode_not_escaped(self):
+    """Test that unicode sequences are not escaped."""
+    result = '{"name": "田中"}'
+    assert "\u" not in result  # ❌ SyntaxError: invalid escape sequence '\u'
+```
+
+**✅ GOOD - Use raw string (ALWAYS PREFERRED):**
+```python
+def test_unicode_not_escaped(self):
+    """Test that unicode sequences are not escaped."""
+    result = '{"name": "田中"}'
+
+    # ✅ PREFERRED: Raw string (eliminates escape sequence errors)
+    assert r"\u" not in result
+
+    # ✅ Also correct but less readable: Escaped backslash
+    assert "\\u" not in result
+```
+
+**WHY RAW STRINGS ARE CRITICAL:**
+- **Error Prevention**: Raw strings (`r"..."`) treat backslashes as literal characters, eliminating 90% of escape sequence errors
+- **Readability**: `r"\u"` is clearer than `"\\u"` - what you see is what you get
+- **Maintainability**: Future modifications won't accidentally break escape sequences
+- **Consistency**: Using raw strings consistently reduces cognitive load
+
+#### Escape Sequence Rules
+
+1. **Backslash literals**: **ALWAYS prefer raw strings `r"..."` over escaped backslashes**
+   ```python
+   # ✅ PREFERRED: Raw string (clear and error-free)
+   assert r"\n" not in text      # Looking for literal \n string
+
+   # ✅ Also correct but less readable: Escaped backslash
+   assert "\\n" not in text      # Same as above, but requires mental parsing
+
+   # ❌ WRONG: Missing escape or raw string prefix
+   assert "\n" not in text       # This checks for newline character, not \n string
+   ```
+
+2. **Unicode escape sequences**: **Use raw strings for literal backslash-u, or complete `\uXXXX` for actual unicode**
+   ```python
+   # ✅ PREFERRED: Raw string for literal \u checking
+   assert r"\u" not in text           # Looking for literal \u characters
+   assert r"\u0041" in raw_text       # Looking for literal string \u0041
+
+   # ✅ Valid unicode escape (intentional unicode character)
+   assert "\u0041" == "A"             # Actually means unicode character U+0041
+
+   # ✅ Also correct but less clear: Escaped backslash
+   assert "\\u0041" in raw_text       # Same as r"\u0041" but harder to read
+
+   # ❌ WRONG: Incomplete escape sequences
+   assert "\u" not in text            # SyntaxError: incomplete escape '\u'
+   assert "\u041" == "A"              # SyntaxError: needs exactly 4 hex digits
+   ```
+
+3. **Regex patterns**: **ALWAYS use raw strings - this is the standard convention**
+   ```python
+   # ✅ PREFERRED: Raw string (standard for regex)
+   pattern = r"\d+"              # Regex for digits
+   pattern = r"\.txt$"           # Regex for .txt extension
+   pattern = r"\w+@\w+\.\w+"     # Email pattern
+
+   # ❌ WRONG: Escaped backslashes (hard to read and error-prone)
+   pattern = "\\d+"              # Requires mental parsing
+   pattern = "\\.txt$"           # Easy to make mistakes
+   pattern = "\\w+@\\w+\\.\\w+"  # Unreadable!
+   ```
+
+4. **Windows paths**: **Prefer raw strings or use forward slashes (cross-platform)**
+   ```python
+   # ✅ PREFERRED: Raw string (preserves backslashes)
+   path = r"C:\Users\Documents"
+
+   # ✅ Also good: Forward slashes (works on Windows too)
+   path = "C:/Users/Documents"
+
+   # ❌ WRONG: Unescaped backslashes
+   path = "C:\Users\Documents"   # \U is invalid escape sequence
+   path = "C:\test\new"          # \t and \n become tab and newline!
+   ```
+
+#### Verification Before Committing
+
+**DECISION TREE** - Follow this order when writing strings with backslashes:
+
+1. **Does the string contain ANY backslash?**
+   - YES → **Use raw string `r"..."` by default** (safest choice)
+   - NO → Regular string is fine
+
+2. **Is this a regex pattern?**
+   - YES → **MUST use raw string `r"..."` (convention)**
+   - NO → Continue to step 3
+
+3. **Are you intentionally using escape sequences (`\n`, `\t`, `\uXXXX`)?**
+   - YES → Regular string with valid escapes (verify completeness!)
+   - NO → **Use raw string `r"..."`**
+
+4. **Still unsure?**
+   - **Default to raw string `r"..."`** - it's almost always the right choice
+
+**VERIFICATION CHECKLIST:**
+- ✅ If you wrote `"\u"` or `"\x"` or `"\N"` → **Change to `r"\u"` or `r"\x"` or `r"\N"`**
+- ✅ If you wrote `"\\something"` → **Consider changing to `r"\something"`** (simpler)
+- ✅ For regex: **ALWAYS use `r"..."`**, no exceptions
+- ✅ After ANY string edit: Run `poetry run black <file>` to catch syntax errors immediately
+
+**IMPORTANT**: Black will fail on invalid escape sequences before they reach the Quality Gate. Use it as your first line of defense.
 
 ### Mandatory Requirements
 

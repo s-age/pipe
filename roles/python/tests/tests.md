@@ -723,6 +723,109 @@ def test_prepare_request(mock_count_tokens):
    - If you see `module 'X' has no attribute 'Y'`, the import is likely function-level
    - Switch to patching the module directly
 
+##### TYPE_CHECKING Imports: Special Handling Required
+
+**CRITICAL**: When production code uses `TYPE_CHECKING` guards for imports, those imports **DO NOT exist at runtime**. This requires special handling in tests.
+
+**Understanding TYPE_CHECKING:**
+
+```python
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from google.genai.local_tokenizer import LocalTokenizer  # ← Only exists during type checking!
+```
+
+- `TYPE_CHECKING` is `True` during static type analysis (MyPy)
+- `TYPE_CHECKING` is `False` at runtime (when tests run)
+- **Result**: `LocalTokenizer` is NOT a module attribute at runtime
+
+**❌ WRONG - Patching TYPE_CHECKING imports:**
+
+```python
+# Production code (gemini_token_count.py)
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from google.genai.local_tokenizer import LocalTokenizer
+
+def create_local_tokenizer(model_name: str) -> LocalTokenizer | None:
+    try:
+        from google.genai.local_tokenizer import LocalTokenizer  # ← Function-level import!
+        return LocalTokenizer(model_name=model_name)
+    except ImportError:
+        return None
+
+# ❌ WRONG TEST - Trying to patch module-level attribute
+@patch("pipe.core.domains.gemini_token_count.LocalTokenizer")
+def test_create_local_tokenizer(MockLocalTokenizer):
+    """This FAILS with AttributeError!"""
+    # AttributeError: module 'pipe.core.domains.gemini_token_count' has no attribute 'LocalTokenizer'
+    # Because LocalTokenizer only exists in TYPE_CHECKING block!
+```
+
+**✅ CORRECT - Patch where it's actually imported (function-level):**
+
+```python
+@patch("google.genai.local_tokenizer.LocalTokenizer")
+def test_create_local_tokenizer(MockLocalTokenizer):
+    """Patch at the source module, not the TYPE_CHECKING import."""
+    # ✅ This works because we're patching where the function imports it from
+    MockLocalTokenizer.return_value = MagicMock()
+
+    result = create_local_tokenizer("gemini-1.5-flash")
+
+    assert result == MockLocalTokenizer.return_value
+    MockLocalTokenizer.assert_called_once_with(model_name="gemini-1.5-flash")
+```
+
+**Why this works:**
+- The function imports `LocalTokenizer` from `google.genai.local_tokenizer` at runtime
+- We patch the actual source (`google.genai.local_tokenizer.LocalTokenizer`)
+- Not the TYPE_CHECKING import that doesn't exist at runtime
+
+**Identification Checklist:**
+
+Before writing a `@patch` for any import, check:
+
+1. **Read the production code** - Look for `if TYPE_CHECKING:` blocks
+2. **Identify TYPE_CHECKING imports** - These are type hints only, not runtime attributes
+3. **Find actual runtime imports** - Usually inside functions (after the TYPE_CHECKING block)
+4. **Patch the runtime import location** - Not the module-level TYPE_CHECKING import
+
+**Common Error Patterns:**
+
+```python
+# Error message indicating TYPE_CHECKING issue:
+# AttributeError: <module 'pipe.core.domains.gemini_token_count'> does not have the attribute 'LocalTokenizer'
+
+# ✅ SOLUTION: Patch the source module, not the module using TYPE_CHECKING
+@patch("google.genai.local_tokenizer.LocalTokenizer")  # Source
+# NOT:
+@patch("pipe.core.domains.gemini_token_count.LocalTokenizer")  # TYPE_CHECKING import
+```
+
+**Alternative Solution - Mock the function-level import:**
+
+When a function does dynamic imports, you can also patch the function-level import directly:
+
+```python
+def test_create_local_tokenizer_import_error():
+    """Test handling of ImportError when LocalTokenizer is unavailable."""
+    # Patch the import at the source to raise ImportError
+    with patch("google.genai.local_tokenizer.LocalTokenizer", side_effect=ImportError):
+        result = create_local_tokenizer("gemini-1.5-flash")
+        assert result is None
+```
+
+**Summary: TYPE_CHECKING Import Rules**
+
+- ✅ **DO**: Identify TYPE_CHECKING blocks in production code before writing tests
+- ✅ **DO**: Patch imports at their source module (e.g., `google.genai.local_tokenizer.LocalTokenizer`)
+- ✅ **DO**: Look for function-level imports after TYPE_CHECKING blocks
+- ❌ **DON'T**: Patch module attributes that only exist in TYPE_CHECKING blocks
+- ❌ **DON'T**: Assume all module-level imports are available at runtime
+
 #### TypedDict Attribute Access
 
 **CRITICAL**: `TypedDict` creates **dict objects**, not classes with attributes. Attempting attribute access will cause `AttributeError`.

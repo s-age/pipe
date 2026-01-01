@@ -5,6 +5,7 @@ Generates JSON-formatted prompts for the gemini-cli tool using Jinja2 templates.
 """
 
 import json
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from jinja2 import Environment, FileSystemLoader
@@ -43,9 +44,7 @@ class GeminiCliPayloadBuilder(BasePayloadBuilder):
         Returns:
             Configured Jinja2 Environment
         """
-        import os
-
-        template_path = os.path.join(self.project_root, "templates", "prompt")
+        template_path = str(Path(self.project_root) / "templates" / "prompt")
         loader = FileSystemLoader(template_path)
         env = Environment(loader=loader, autoescape=False)
 

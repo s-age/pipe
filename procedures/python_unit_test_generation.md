@@ -93,10 +93,56 @@ py_test_strategist(file_path="{target_file_path}")
 This tool analyzes:
 - Complexity metrics (cyclomatic complexity, nesting depth)
 - Required mocking patterns
+- **Mock patch paths** (automatically extracts import statements and generates correct @patch paths)
 - Suggested test structure
 - Risk areas requiring extra coverage
 
 **Purpose**: Know **how to test** (mocking strategy, complexity handling) before writing any code.
+
+**CRITICAL - Mock Patch Paths**:
+The tool automatically analyzes import statements and provides `mock_targets` with accurate patch paths:
+
+```python
+# Example output from py_test_strategist:
+FunctionStrategy(
+    function_name="process_file",
+    mock_targets=[
+        MockTarget(
+            dependency_name="os",
+            patch_path="pipe.core.utils.path.os",  # Correct namespace
+            import_type="module",
+            original_import="import os"
+        ),
+        MockTarget(
+            dependency_name="join",
+            patch_path="pipe.core.utils.path.join",  # Correct namespace
+            import_type="from_import",
+            original_import="from os.path import join"
+        )
+    ]
+)
+```
+
+**Usage in Tests**:
+- **[REQUIRED]** Use the `patch_path` field directly in @patch decorators
+- **[PROHIBITED]** Guessing or inferring patch paths manually
+- **[PROHIBITED]** Using global module paths (e.g., "os.path.join" instead of "pipe.core.utils.path.join")
+
+**Example**:
+```python
+# CORRECT - Using mock_targets from py_test_strategist
+@patch("pipe.core.utils.path.join")  # ← From mock_targets[0].patch_path
+def test_process_file(mock_join):
+    ...
+
+# INCORRECT - Guessing the path
+@patch("os.path.join")  # ← Will fail: patches wrong namespace
+def test_process_file(mock_join):
+    ...
+```
+
+**Rationale**:
+Mock patches must target the **namespace where the dependency is imported**, not where it's defined. The tool eliminates guesswork by analyzing import statements automatically.
 
 #### Step 1c: Manual Analysis
 After obtaining file content (either from context or mandatory tools), manually identify:
@@ -165,13 +211,46 @@ Skipping these steps is equivalent to climbing a mountain without a map—it inv
    - Clear assertions
    - Edge case coverage
 
+**CRITICAL - Using Mock Targets from py_test_strategist**:
+
+When writing tests that require mocking, **ALWAYS use the `mock_targets` from Step 1b**:
+
+```python
+# Step 1b provided these mock_targets:
+# mock_targets=[
+#     MockTarget(dependency_name="os", patch_path="pipe.core.utils.path.os", ...),
+#     MockTarget(dependency_name="requests", patch_path="pipe.core.services.api.requests", ...)
+# ]
+
+# CORRECT - Use patch_path from mock_targets
+from unittest.mock import patch
+
+@patch("pipe.core.utils.path.os")  # ← From mock_targets[0].patch_path
+def test_process_file(mock_os):
+    mock_os.path.exists.return_value = True
+    ...
+
+# INCORRECT - Guessing the path
+@patch("os")  # ← Will fail: patches wrong namespace
+def test_process_file(mock_os):
+    ...
+```
+
+**Mocking Decision Tree**:
+1. Check `mock_targets` from `py_test_strategist` output
+2. For each dependency that needs mocking:
+   - Find the corresponding `MockTarget` by `dependency_name`
+   - Use its `patch_path` in `@patch()` decorator
+   - **NEVER** guess or infer the path manually
+3. If a dependency is not in `mock_targets`, verify if it actually needs mocking (it may be a test-safe dependency)
+
 **Layer-Specific Requirements**:
 - **Repositories**: Use `tmp_path` for real file I/O
-- **Services**: Mock repository layer
+- **Services**: Mock repository layer (use `mock_targets` for repository dependencies)
 - **Models**: Test validation and serialization
 - **Collections**: Test immutability
 - **Domains**: Verify no mutation of original data
-- **Tools**: Mock external dependencies, test security
+- **Tools**: Mock external dependencies using `mock_targets` (e.g., API clients, file system)
 
 **Output**: Complete test file
 

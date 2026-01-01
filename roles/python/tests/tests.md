@@ -464,6 +464,59 @@ def temp_sessions_dir(temp_project_root):
   - `patch`: Function/Class mocking
   - `patch.object`: Object method mocking
 
+#### MyPy Type Checking Limitations with MagicMock
+
+**CRITICAL**: MyPy's static type checker **cannot recognize** `return_value` assignments on `MagicMock` special methods (dunder methods like `__str__`, `__repr__`, etc.). This causes `attr-defined` errors even though the code is correct and works at runtime.
+
+**Root Cause:**
+- MyPy interprets special methods like `__str__` as their actual type: `Callable[[], str]`
+- Standard Python methods/functions do not have a `return_value` attribute
+- `MagicMock` allows dynamic attribute assignment to special methods at runtime, but MyPy cannot verify this statically
+
+**Example MyPy Error:**
+```python
+# This code works at runtime but fails MyPy validation
+mock_path = MagicMock()
+mock_path.__str__.return_value = "/mock/path"
+# ❌ MyPy error: "Callable[[], str]" has no attribute "return_value"  [attr-defined]
+```
+
+**Solutions:**
+
+**✅ Solution 1: Use `type: ignore[attr-defined]` (PREFERRED for special methods)**
+```python
+mock_path = MagicMock()
+mock_path.__str__.return_value = "/mock/path"  # type: ignore[attr-defined]
+# ✅ MyPy suppression is acceptable here - runtime behavior is correct
+```
+
+**✅ Solution 2: Mock the return value via side_effect**
+```python
+mock_path = MagicMock()
+mock_path.__str__ = MagicMock(return_value="/mock/path")
+# ✅ Creates a new MagicMock for __str__ - MyPy recognizes this pattern
+```
+
+**✅ Solution 3: Configure mock via spec and return_value on the object**
+```python
+# For simple cases, set return_value on the mock object itself
+mock_path = MagicMock(return_value=Path("/mock/path"))
+str(mock_path.return_value)  # Returns the string representation of Path object
+# ✅ Works when you need the actual Path object behavior
+```
+
+**Guidelines:**
+- **Prefer Solution 1** (`type: ignore[attr-defined]`) for special methods - it's the most concise and explicit
+- Use Solution 2 when you need more control over the mock behavior
+- Use Solution 3 when the mock should behave like the actual object type
+- **NEVER** suppress `attr-defined` errors on non-special methods - those indicate real type issues
+
+**Why `type: ignore` is acceptable here:**
+- The error is a known MyPy limitation, not a code defect
+- The code is correct and works at runtime
+- The suppression is narrowly scoped to the specific line
+- It documents the intentional use of MagicMock's dynamic behavior
+
 ### Time Mocking
 
 **CRITICAL**: When testing functions that depend on current time (`datetime.now()`, `time.time()`, etc.), **ALWAYS use `freezegun`** instead of `unittest.mock.patch`.

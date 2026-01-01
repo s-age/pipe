@@ -732,6 +732,7 @@ When generating tests, the following quality standards must be strictly followed
 - ❌ **No unnecessary mocks** for pure functions (Models/Domains/Collections)
 - ❌ **No unrestored global state changes** (see "Global State Management" below)
 - ❌ **No invalid escape sequences** in string literals (see "String Escape Sequences" below)
+- ❌ **No over-mocking of infrastructure** (see "Mock Complexity vs Real Implementation" below)
 
 ### Global State Management
 
@@ -780,6 +781,193 @@ Always restore these after modification:
 - File system state outside `tmp_path`
 
 Use `monkeypatch` fixture whenever possible for automatic cleanup.
+
+### Mock Complexity vs Real Implementation
+
+**CRITICAL**: When infrastructure code (file system, Jinja2, JSON, etc.) can be easily tested with real implementations using `tmp_path`, **ALWAYS prefer real implementations over complex mocks**. Over-mocking infrastructure leads to fragile, difficult-to-maintain tests.
+
+#### When to Use Real Implementation (PREFERRED)
+
+Use real implementations when:
+- Testing file operations with `tmp_path` fixture
+- Testing template rendering with actual Jinja2 templates
+- Testing JSON serialization/deserialization
+- Testing path operations with real Path objects
+- Infrastructure is fast and deterministic
+
+**✅ GOOD - Using real Jinja2 and filesystem:**
+```python
+@pytest.fixture
+def mock_project_root(self, tmp_path):
+    """Create a temporary project root with templates."""
+    template_dir = tmp_path / "templates" / "prompt"
+    template_dir.mkdir(parents=True)
+    # Create real template files
+    (template_dir / "gemini_cli_prompt.j2").write_text(
+        '{"instruction": "{{ prompt.main_instruction }}"}'
+    )
+    return str(tmp_path)
+
+def test_render_gemini_cli_mode(self, mock_project_root):
+    """Test render method in gemini-cli mode."""
+    # Uses REAL Jinja2, REAL Path, REAL FileSystemLoader
+    builder = GeminiCliPayloadBuilder(
+        project_root=mock_project_root, api_mode="gemini-cli"
+    )
+
+    mock_prompt = MagicMock()
+    mock_prompt.main_instruction = "Test instruction"
+
+    result = builder.render(mock_prompt)
+    assert "Test instruction" in result
+```
+
+**Benefits:**
+- **Simple**: 5 lines of fixture vs 50+ lines of complex mocks
+- **Reliable**: Tests actual behavior, not mock behavior
+- **Maintainable**: Real code changes don't break mocks
+- **Readable**: Clear what is being tested
+
+#### When Mocking is Necessary
+
+Mock ONLY when:
+- External API calls (network requests)
+- Database connections
+- System commands (subprocess)
+- Expensive operations (large file processing)
+- Non-deterministic operations (random, time - use freezegun)
+
+#### Anti-Patterns to Avoid
+
+**❌ BAD - Over-mocking infrastructure:**
+```python
+@patch("pipe.core.domains.gemini_cli_payload.FileSystemLoader")
+@patch("pipe.core.domains.gemini_cli_payload.Environment")
+@patch("pipe.core.domains.gemini_cli_payload.Path")
+def test_init(self, mock_path, mock_environment, mock_file_system_loader):
+    """Test initialization with complex mocks."""
+    # ❌ Mocking Path.__truediv__ is extremely fragile
+    mock_path_instance = MagicMock()
+    mock_path.return_value = mock_path_instance
+    mock_path_instance.__truediv__.return_value = mock_path_instance  # type: ignore
+    mock_path_instance.__str__.return_value = "/fake/path"
+
+    # ❌ 50+ lines of mock setup that breaks on ANY implementation change
+    builder = GeminiCliPayloadBuilder(project_root="/fake/path")
+
+    # ❌ Testing mock behavior, not actual code behavior
+    mock_path.assert_called_once_with("/fake/path")
+    mock_path_instance.__truediv__.assert_called_once_with("templates")
+    # This test passes even if the real code is completely broken!
+```
+
+**Problems with over-mocking:**
+1. **Fragile**: Breaks when implementation changes (e.g., Path chaining)
+2. **False confidence**: Tests pass even when real code is broken
+3. **Unreadable**: 50+ lines of mock setup obscures test intent
+4. **Hard to maintain**: Every code refactor requires test rewrite
+5. **Incorrect assertions**: `__truediv__` called twice but only asserted once
+
+**✅ GOOD - Use real implementations:**
+```python
+def test_init(self, tmp_path):
+    """Test initialization with real infrastructure."""
+    # Create real template directory
+    template_dir = tmp_path / "templates" / "prompt"
+    template_dir.mkdir(parents=True)
+    (template_dir / "gemini_cli_prompt.j2").write_text("{{ prompt }}")
+
+    # Use REAL Path, FileSystemLoader, Environment
+    builder = GeminiCliPayloadBuilder(project_root=str(tmp_path))
+
+    # Test actual behavior
+    assert builder.project_root == str(tmp_path)
+    assert builder.jinja_env is not None
+    assert "tojson" in builder.jinja_env.filters
+```
+
+**Benefits:**
+- **5 lines** vs 50+ lines of mock setup
+- **Tests real behavior**, not mock behavior
+- **Survives refactoring** - works regardless of implementation details
+- **Clear intent** - obviously testing initialization
+
+#### Special Case: Testing Complex Models
+
+When testing code that uses complex Pydantic models (many required fields):
+
+**✅ PREFERRED - Use MagicMock for complex models:**
+```python
+@pytest.fixture
+def mock_prompt_model(self):
+    """Create a mock Prompt model."""
+    mock_prompt = MagicMock()
+    mock_prompt.main_instruction = "Test instruction"
+    mock_prompt.current_datetime = "2026-01-01T12:00:00+09:00"
+    return mock_prompt
+```
+
+**❌ AVOID - Creating full Pydantic models in tests (unless using factories):**
+```python
+# ❌ BAD - Too verbose, requires maintaining all fields
+from pipe.core.models.prompt import Prompt
+from pipe.core.models.prompts.session_goal import PromptSessionGoal
+from pipe.core.models.prompts.constraints import PromptConstraints
+# ... 10+ more imports
+
+def mock_prompt_model(self):
+    return Prompt(
+        description="...",
+        main_instruction="...",
+        current_task=PromptCurrentTask(...),  # Many nested fields
+        session_goal=PromptSessionGoal(...),  # Many nested fields
+        roles=PromptRoles(...),               # Many nested fields
+        constraints=PromptConstraints(...),   # Many nested fields
+        conversation_history=PromptConversationHistory(...),
+        # ... 20+ more fields
+    )
+    # ❌ 50+ lines just to create one test object!
+```
+
+**Why MagicMock is better here:**
+- Only set fields you actually use in the test
+- No maintenance burden when model changes
+- Clear which fields matter for the test
+- 5 lines instead of 50+
+
+**Exception**: If a factory exists, use it instead of MagicMock:
+```python
+# ✅ BEST - Use factory when available
+prompt = PromptFactory.create(main_instruction="Test")
+```
+
+#### Decision Tree: Mock or Real?
+
+```
+Is this infrastructure (filesystem, JSON, templates, Path)?
+├─ YES → Can I use tmp_path or real implementation?
+│  ├─ YES → ✅ Use real implementation
+│  └─ NO → Is it slow or non-deterministic?
+│     ├─ YES → Mock it
+│     └─ NO → ✅ Use real implementation
+└─ NO → Is this a complex model with many fields?
+   ├─ YES → Is there a factory?
+   │  ├─ YES → ✅ Use factory
+   │  └─ NO → ✅ Use MagicMock (set only needed fields)
+   └─ NO → Is this external (API, DB, subprocess)?
+      ├─ YES → Mock it
+      └─ NO → ✅ Use real implementation
+```
+
+#### Guidelines Summary
+
+1. **Default to real implementations** for infrastructure (file I/O, templates, JSON, Path)
+2. **Use `tmp_path`** instead of mocking filesystem operations
+3. **Use MagicMock** for complex models or external dependencies
+4. **Mock only when necessary**: external APIs, databases, subprocess, expensive operations
+5. **If you're writing 20+ lines of mock setup**, you're probably over-mocking - use real implementation instead
+
+**Remember**: Tests should verify behavior, not implementation details. Real implementations test actual behavior; mocks often test mock behavior.
 
 ### String Escape Sequences
 

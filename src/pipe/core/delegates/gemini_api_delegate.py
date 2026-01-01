@@ -103,7 +103,7 @@ def run_stream(
                 # Store usage metadata
                 usage_metadata = unified_chunk.usage
 
-                # Update GeminiPayloadService with token summary
+                # Update GeminiApiPayload with token summary
                 if usage_metadata:
                     gemini_agent.payload_service.update_token_summary(
                         {

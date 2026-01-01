@@ -1,7 +1,7 @@
 """
-Service orchestrator for payload generation and cache management.
+Orchestrator for payload generation and cache management.
 
-This service manages the complete lifecycle of Gemini API request preparation:
+This orchestrator manages the complete lifecycle of Gemini API request preparation:
 - Tracks TokenCountSummary from API responses
 - Orchestrates cache management and payload generation
 """
@@ -13,11 +13,11 @@ from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 
 
-class GeminiPayloadService:
+class GeminiApiPayload:
     """
-    Service to orchestrate payload generation and cache management.
+    Orchestrator for payload generation and cache management.
 
-    This service maintains the state of:
+    This orchestrator maintains the state of:
     - Token count summary from the last API response
     - Cache manager instance for cache lifecycle management
 
@@ -34,7 +34,7 @@ class GeminiPayloadService:
         settings: Settings,
     ):
         """
-        Initialize the payload service.
+        Initialize the payload orchestrator.
 
         Args:
             client: Gemini API client for cache operations.

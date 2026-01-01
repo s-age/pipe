@@ -1,9 +1,9 @@
-"""Unit tests for gemini_payload_service module."""
+"""Unit tests for gemini_api_payload module."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
-from pipe.core.domains.gemini_payload_service import GeminiPayloadService
+from pipe.core.domains.gemini_api_payload import GeminiApiPayload
 from pipe.core.models.session import Session
 from pipe.core.models.settings import ModelConfig, Settings
 from pipe.core.models.turn import ModelResponseTurn, UserTaskTurn
@@ -66,20 +66,20 @@ def mock_prompt_factory():
 
 @pytest.fixture
 def payload_service(mock_client, mock_settings):
-    """Create a GeminiPayloadService instance."""
-    return GeminiPayloadService(
+    """Create a GeminiApiPayload instance."""
+    return GeminiApiPayload(
         client=mock_client,
         project_root="/test/project",
         settings=mock_settings,
     )
 
 
-class TestGeminiPayloadServiceInit:
-    """Test cases for GeminiPayloadService initialization."""
+class TestGeminiApiPayloadInit:
+    """Test cases for GeminiApiPayload initialization."""
 
     def test_init_sets_attributes(self, mock_client, mock_settings):
         """Test that __init__ correctly sets all attributes."""
-        service = GeminiPayloadService(
+        service = GeminiApiPayload(
             client=mock_client,
             project_root="/test/project",
             settings=mock_settings,
@@ -101,7 +101,7 @@ class TestGeminiPayloadServiceInit:
         invalid_settings.model = "gemini-2.5-pro"  # String instead of ModelConfig
 
         with pytest.raises(ValueError, match="settings.model must be a ModelConfig"):
-            GeminiPayloadService(
+            GeminiApiPayload(
                 client=mock_client,
                 project_root="/test/project",
                 settings=invalid_settings,
@@ -122,7 +122,7 @@ class TestPrepareRequestBasicFlow:
 
             with (
                 patch(
-                    "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                    "pipe.core.domains.gemini_api_payload.GeminiApiDynamicPayload"
                 ) as mock_dynamic,
                 patch(
                     "pipe.core.domains.gemini_api_static_payload.build"
@@ -153,7 +153,7 @@ class TestPrepareRequestBasicFlow:
             mock_update.return_value = ("test-cache-123", 5, [])
 
             with patch(
-                "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                "pipe.core.domains.gemini_api_payload.GeminiApiDynamicPayload"
             ) as mock_dynamic:
                 mock_dynamic.return_value.build.return_value = []
 
@@ -188,7 +188,7 @@ class TestPrepareRequestBasicFlow:
 
             with (
                 patch(
-                    "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                    "pipe.core.domains.gemini_api_payload.GeminiApiDynamicPayload"
                 ) as mock_dynamic,
                 patch(
                     "pipe.core.domains.gemini_api_static_payload.build"
@@ -221,7 +221,7 @@ class TestPrepareRequestBasicFlow:
             mock_update.return_value = ("cache-xyz", 3, [])
 
             with patch(
-                "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                "pipe.core.domains.gemini_api_payload.GeminiApiDynamicPayload"
             ) as mock_dynamic:
                 mock_dynamic.return_value.build.return_value = mock_contents
 
@@ -248,7 +248,7 @@ class TestPrepareRequestBasicFlow:
 
             with (
                 patch(
-                    "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                    "pipe.core.domains.gemini_api_payload.GeminiApiDynamicPayload"
                 ) as mock_dynamic,
                 patch(
                     "pipe.core.domains.gemini_api_static_payload.build"
@@ -285,7 +285,7 @@ class TestPrepareRequestBasicFlow:
 
             with (
                 patch(
-                    "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                    "pipe.core.domains.gemini_api_payload.GeminiApiDynamicPayload"
                 ) as mock_dynamic,
                 patch(
                     "pipe.core.domains.gemini_api_static_payload.build"
@@ -361,7 +361,7 @@ class TestTimeSeriesScenario:
 
         with (
             patch(
-                "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+                "pipe.core.domains.gemini_api_payload.GeminiApiDynamicPayload"
             ) as mock_dynamic,
             patch(
                 "pipe.core.domains.gemini_api_static_payload.build"
@@ -439,7 +439,7 @@ class TestTimeSeriesScenario:
         mock_session.cache_name = "old-cache-xyz"
 
         with patch(
-            "pipe.core.domains.gemini_payload_service.GeminiApiDynamicPayload"
+            "pipe.core.domains.gemini_api_payload.GeminiApiDynamicPayload"
         ) as mock_dynamic:
             mock_dynamic.return_value.build.return_value = []
 

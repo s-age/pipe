@@ -14,8 +14,8 @@ from google.genai import types
 from pipe.core.agents import register_agent
 from pipe.core.agents.base import BaseAgent
 from pipe.core.domains import gemini_token_count
+from pipe.core.domains.gemini_api_payload import GeminiApiPayload
 from pipe.core.domains.gemini_api_stream_processor import GeminiApiStreamProcessor
-from pipe.core.domains.gemini_payload_service import GeminiPayloadService
 from pipe.core.factories.prompt_factory import PromptFactory
 from pipe.core.models.args import TaktArgs
 from pipe.core.models.unified_chunk import UnifiedChunk
@@ -65,7 +65,7 @@ class GeminiApiAgent(BaseAgent):
         self.tool_service = tool_service or GeminiToolService()
 
         # Initialize new payload service and prompt factory
-        self.payload_service = GeminiPayloadService(
+        self.payload_service = GeminiApiPayload(
             client=genai.Client(),
             project_root=self.project_root,
             settings=self.settings,
@@ -162,8 +162,8 @@ class GeminiApiAgent(BaseAgent):
         """
         Execute Gemini API call with streaming.
 
-        Flow (New architecture with GeminiPayloadService):
-        1. Prepare request with cache management (GeminiPayloadService)
+        Flow (New architecture with GeminiApiPayload):
+        1. Prepare request with cache management (GeminiApiPayload)
         2. Load tools
         3. Log cache decision
         4. Execute streaming call

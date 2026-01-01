@@ -12,11 +12,10 @@ Used by any agent tasked with writing tests. Invoked via detailed instruction fr
 
 ```mermaid
 graph TD
-    Start([Start: Receive target file]) --> Step1A[Step 1a: py_analyze_code<br/>MANDATORY]
-    Step1A --> Step1B[Step 1b: py_test_strategist<br/>MANDATORY]
-    Step1B --> Step1C[Step 1c: Manual analysis]
+    Start([Start: Receive target file]) --> Step1A[Step 1a: py_test_strategist<br/>MANDATORY]
+    Step1A --> Step1B[Step 1b: Manual analysis]
 
-    Step1C --> Step2[Step 2: Review applicable test strategies]
+    Step1B --> Step2[Step 2: Review applicable test strategies]
 
     Step2 --> Step3[Step 3: Plan test structure]
 
@@ -43,8 +42,7 @@ graph TD
     style Start fill:#e1f5e1
     style End fill:#e1f5e1
     style Step1A fill:#ffdddd
-    style Step1B fill:#ffdddd
-    style Step1C fill:#fff4e1
+    style Step1B fill:#fff4e1
     style Step2 fill:#fff4e1
     style Step3 fill:#e1f0ff
     style Step4 fill:#ffe1f0
@@ -63,30 +61,13 @@ graph TD
 
 ## Step-by-Step Execution
 
-### Step 1: Read and Analyze Target File
+### Step 1: Analyze Target File
 
-**Context Check (Token Efficiency)**:
-If the target file content is already provided in `current_task` or `file_references`:
-- **[CONDITIONAL SKIP]** `read_file` - Use provided content directly
-- **[CONDITIONAL SKIP]** `py_analyze_code` - Analyze from provided content
-- **Purpose**: Avoid duplicate file reads that waste input tokens
+**Note**: The target file content is provided in `file_references`, so there is no need to read it separately.
 
-**Otherwise (Mandatory Tool Execution)**:
-The following tool executions are **MANDATORY** and must be performed in order:
+The following tool execution is **MANDATORY**:
 
-#### Step 1a: Extract Specifications and Docstrings (Mandatory)
-```python
-py_analyze_code(file_path="{target_file_path}")
-```
-This tool provides:
-- Docstrings for all classes, methods, and functions
-- Expected behavior descriptions
-- Parameter details and return values
-- Usage examples from documentation
-
-**Purpose**: Build test cases from **specifications** (what it should do), not implementation details (how it does it).
-
-#### Step 1b: Determine Test Strategy (Mandatory)
+#### Step 1a: Determine Test Strategy (Mandatory)
 ```python
 py_test_strategist(file_path="{target_file_path}")
 ```
@@ -144,8 +125,8 @@ def test_process_file(mock_join):
 **Rationale**:
 Mock patches must target the **namespace where the dependency is imported**, not where it's defined. The tool eliminates guesswork by analyzing import statements automatically.
 
-#### Step 1c: Manual Analysis
-After obtaining file content (either from context or mandatory tools), manually identify:
+#### Step 1b: Manual Analysis
+Using the file content from `file_references`, manually identify:
 - Public interface (classes, methods, functions)
 - Dependencies (imports, external calls)
 - Data flow (inputs, outputs, state changes)
@@ -153,14 +134,14 @@ After obtaining file content (either from context or mandatory tools), manually 
 - Error conditions (exceptions, validation failures)
 
 **Output**: Complete test specification including:
-- Behavioral specifications (from `py_analyze_code` or provided context)
-- Technical test strategy (from `py_test_strategist` or analysis)
+- Behavioral specifications (from `file_references`)
+- Technical test strategy (from `py_test_strategist`)
 - Manual analysis notes
 
-**Rationale**: This "golden routine" ensures tests are:
-1. **Aligned with specifications** (docstrings, not implementation)
-2. **Technically sound** (proper mocking and complexity handling)
-3. **Token efficient** (skip redundant reads when context already provided)
+**Rationale**: This approach ensures tests are:
+1. **Comprehensive** (based on actual code structure and docstrings)
+2. **Technically sound** (proper mocking and complexity handling from `py_test_strategist`)
+3. **Token efficient** (file content already in context via `file_references`)
 
 Skipping these steps is equivalent to climbing a mountain without a map—it invites coverage gaps and wasted effort.
 
@@ -494,11 +475,11 @@ Report successful test implementation with the following information:
 - ❌ **ABSOLUTE PROHIBITION**: Running coverage without grep filter (causes context overflow)
 
 ### Prohibited Shortcuts
-- ❌ Skipping mandatory tool executions in Step 1 (py_analyze_code, py_test_strategist) when context is NOT provided
+- ❌ Skipping mandatory `py_test_strategist` execution in Step 1
 - ❌ Proceeding to next step if current step fails
 - ❌ Batching quality checks (run sequentially)
 - ❌ Assuming tests pass without running them
-- ❌ Writing tests based solely on implementation details instead of specifications
+- ❌ Writing tests without understanding the code being tested
 
 ### Prohibited Token-Wasting Actions
 - ❌ **[CRITICAL]** Running `read_file` when file content is already in `current_task` or `file_references` (Step 1 only)
@@ -526,13 +507,12 @@ Input:
   layer: repositories
 
 Execution:
-  Step 1a: py_analyze_code(src/pipe/core/repositories/archive_repository.py)
-           → Extracted docstrings for save(), restore(), delete()
-           → Identified spec: "save() must create parent dirs", "delete() must handle missing files"
-  Step 1b: py_test_strategist(src/pipe/core/repositories/archive_repository.py)
+  Step 1a: py_test_strategist(src/pipe/core/repositories/archive_repository.py)
            → Complexity: Medium (cyclomatic=8)
            → Strategy: Use tmp_path for real file I/O, mock Path.exists for error cases
-  Step 1c: Manual analysis
+  Step 1b: Manual analysis (using file_references)
+           → Extract docstrings for save(), restore(), delete()
+           → Identify spec: "save() must create parent dirs", "delete() must handle missing files"
            → Identify edge cases: empty archives, corrupted files, permission errors
   Step 2: Review roles/python/tests/core/repositories.md (use tmp_path, test CRUD)
   Step 3: Plan TestArchiveRepositorySave, TestArchiveRepositoryRestore, etc.
@@ -552,9 +532,9 @@ Output: Success, ready for gatekeeper review
 
 ## Notes
 
-- **Mandatory tool execution**: Step 1a-1b tools are NON-NEGOTIABLE unless context is pre-provided. They form the "golden routine" that prevents coverage gaps and wasted effort
-- **Token efficiency**: Check for pre-provided context BEFORE executing tools. Skip redundant reads.
-- **Specification-driven testing**: Use `py_analyze_code` output (docstrings) to design tests, not implementation details
+- **Mandatory tool execution**: Step 1a (`py_test_strategist`) is NON-NEGOTIABLE. It provides the mocking strategy that prevents errors
+- **Token efficiency**: File content is provided via `file_references`, so no need to read it separately
+- **Comprehensive testing**: Use the file content from `file_references` to understand what needs testing, including both specifications (docstrings) and implementation
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
 - **No skipping**: Quality checks must all pass before reporting success

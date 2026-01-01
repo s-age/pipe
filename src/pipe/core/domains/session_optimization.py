@@ -332,7 +332,10 @@ def parse_doctor_result(content: str) -> DoctorResult:
             reason = doctor_result.get("reason", content)
 
         # Convert applied_edits to TurnEdit objects
-        applied_edits_data = doctor_result.get("applied_edits", [])
+        # Support both camelCase (from LLM) and snake_case
+        applied_edits_data = doctor_result.get(
+            "appliedEdits", doctor_result.get("applied_edits", [])
+        )
         applied_edits = [
             (
                 TurnEdit(**edit)
@@ -343,7 +346,9 @@ def parse_doctor_result(content: str) -> DoctorResult:
         ]
 
         # Convert applied_compressions to TurnCompression objects
-        applied_compressions_data = doctor_result.get("applied_compressions", [])
+        applied_compressions_data = doctor_result.get(
+            "appliedCompressions", doctor_result.get("applied_compressions", [])
+        )
         applied_compressions = [
             (
                 TurnCompression(**comp)
@@ -356,7 +361,9 @@ def parse_doctor_result(content: str) -> DoctorResult:
         return DoctorResult(
             status=status,
             reason=reason,
-            applied_deletions=doctor_result.get("applied_deletions", []),
+            applied_deletions=doctor_result.get(
+                "appliedDeletions", doctor_result.get("applied_deletions", [])
+            ),
             applied_edits=applied_edits,
             applied_compressions=applied_compressions,
         )

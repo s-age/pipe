@@ -462,13 +462,29 @@ def format_mcp_tool_result(result, is_error=False):
     """
     Format tool result in MCP-compliant format.
     Always returns content array as per MCP specification.
+    Includes advice to the model to prevent premature termination.
     """
     if isinstance(result, str):
         content_text = result
     else:
         content_text = json.dumps(result, ensure_ascii=False)
 
-    return {"content": [{"type": "text", "text": content_text}], "isError": is_error}
+    # Add critical advice to prevent model from treating tool result as final output
+    advice = (
+        "\n\n[IMPORTANT] This is a tool execution result, NOT the final user response. "
+        "You MUST:\n"
+        "1. Review the user's original instruction to determine the next action\n"
+        "2. Continue working until the user's request is fully satisfied\n"
+        "3. DO NOT return an empty response\n"
+        "4. Tool results are for your internal use - provide meaningful output to the user"
+    )
+
+    content_with_advice = content_text + advice
+
+    return {
+        "content": [{"type": "text", "text": content_with_advice}],
+        "isError": is_error,
+    }
 
 
 # --- Main Stdio Loop ---

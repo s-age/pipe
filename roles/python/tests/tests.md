@@ -517,6 +517,500 @@ str(mock_path.return_value)  # Returns the string representation of Path object
 - The suppression is narrowly scoped to the specific line
 - It documents the intentional use of MagicMock's dynamic behavior
 
+#### Mock vs. Patch: Critical Patterns
+
+**CRITICAL**: Understanding the difference between `Mock` and `@patch` is essential for writing correct tests. Misusing these leads to tests that pass incorrectly or fail mysteriously.
+
+##### Pattern 1: Testing Constructor Calls (Class Instantiation Verification)
+
+When you want to verify that a class is instantiated with correct arguments, you **MUST** use `@patch` to replace the class itself:
+
+**✅ CORRECT - Use `@patch` to verify constructor calls:**
+```python
+@patch("pipe.core.domains.gemini_api_payload.GeminiCacheManager")
+def test_init_cache_manager(MockGeminiCacheManager, mock_client, tmp_path, mock_settings):
+    """Test that GeminiCacheManager is instantiated with correct arguments."""
+    # MockGeminiCacheManager replaces the CLASS itself
+    GeminiApiPayload(
+        client=mock_client,
+        project_root=str(tmp_path),
+        settings=mock_settings,
+    )
+
+    # ✅ Verify the class constructor was called
+    MockGeminiCacheManager.assert_called_once_with(
+        client=mock_client,
+        project_root=str(tmp_path),
+        model_name=mock_settings.model.name,
+        cache_update_threshold=mock_settings.model.cache_update_threshold,
+        prompt_factory=None,
+        settings=mock_settings,
+    )
+```
+
+**❌ WRONG - Using fixture without `@patch`:**
+```python
+def test_init_valid_settings(gemini_api_payload_instance):
+    """Test initialization - WRONG APPROACH."""
+    # ❌ cache_manager is a REAL GeminiCacheManager object, not a Mock!
+    # This will raise: AttributeError: 'GeminiCacheManager' object has no attribute 'assert_called_once_with'
+    gemini_api_payload_instance.cache_manager.assert_called_once_with(...)
+```
+
+**Why this fails:**
+- Without `@patch`, the actual `GeminiCacheManager` class is instantiated
+- `cache_manager` attribute contains a real object, not a Mock
+- Real objects don't have `assert_called_once_with()` method
+
+##### Pattern 2: Testing Method Behavior (Instance Method Mocking)
+
+When you want to test behavior that calls methods on already-instantiated objects, use `MagicMock` or `patch.object`:
+
+**✅ CORRECT - Mock instance methods:**
+```python
+def test_prepare_request(gemini_api_payload_instance, mock_session, mock_prompt_factory):
+    """Test that prepare_request calls cache_manager.update_if_needed."""
+    # Mock the return value of an instance method
+    gemini_api_payload_instance.cache_manager.update_if_needed.return_value = (
+        None, 0, []
+    )
+
+    contents, cache_name = gemini_api_payload_instance.prepare_request(
+        session=mock_session,
+        prompt_factory=mock_prompt_factory
+    )
+
+    # ✅ Verify the instance method was called
+    gemini_api_payload_instance.cache_manager.update_if_needed.assert_called_once()
+```
+
+##### Decision Tree: Mock vs. Patch
+
+```
+What are you testing?
+│
+├─ "Was this CLASS instantiated with correct arguments?"
+│  └─ Use @patch("module.ClassName") to replace the class
+│     Example: @patch("pipe.core.domains.gemini_api_payload.GeminiCacheManager")
+│
+├─ "Does this METHOD get called with correct arguments?"
+│  └─ Use .return_value on Mock or patch.object
+│     Example: mock_instance.method.return_value = ...
+│
+└─ "Does this FUNCTION get called?"
+   └─ Use @patch("module.function_name")
+      Example: @patch("pipe.core.domains.gemini_token_count.count_tokens")
+```
+
+##### Common Mistakes
+
+**Mistake 1: Trying to assert on real objects**
+```python
+# ❌ WRONG
+def test_without_patch(instance):
+    instance.real_object.assert_called_once()  # Real objects don't have this!
+
+# ✅ CORRECT
+@patch("module.RealClass")
+def test_with_patch(MockClass):
+    instance = SomeClass()
+    MockClass.assert_called_once()
+```
+
+**Mistake 2: Patching in wrong location**
+```python
+# ❌ WRONG - Patching where class is defined
+@patch("pipe.core.domains.gemini_cache_manager.GeminiCacheManager")
+
+# ✅ CORRECT - Patching where class is imported and used
+@patch("pipe.core.domains.gemini_api_payload.GeminiCacheManager")
+```
+
+#### Patching Imports: Module-Level vs Function-Level
+
+**CRITICAL**: The patch path depends on **WHERE** the import statement is located, not where the module is defined.
+
+##### Function-Level Imports (Inside Functions)
+
+When code imports inside a function, patch the **module itself**, not the attribute:
+
+**Production code with function-level import:**
+```python
+# In pipe/core/domains/gemini_api_payload.py
+def prepare_request(self, session, prompt_factory):
+    # Import INSIDE the function
+    from pipe.core.domains import gemini_token_count
+
+    tokenizer = gemini_token_count.create_local_tokenizer(self.settings.model.name)
+    count = gemini_token_count.count_tokens(dynamic_json, tools=None, tokenizer=tokenizer)
+```
+
+**✅ CORRECT - Patch the module directly:**
+```python
+@patch("pipe.core.domains.gemini_token_count.create_local_tokenizer")
+@patch("pipe.core.domains.gemini_token_count.count_tokens")
+def test_prepare_request(mock_count_tokens, mock_create_tokenizer):
+    """Test with function-level import - patch at module level."""
+    # ✅ Patches the actual module functions
+```
+
+**❌ WRONG - Trying to patch as module attribute:**
+```python
+@patch("pipe.core.domains.gemini_api_payload.gemini_token_count.create_local_tokenizer")
+@patch("pipe.core.domains.gemini_api_payload.gemini_token_count.count_tokens")
+def test_prepare_request(mock_count_tokens, mock_create_tokenizer):
+    """This will FAIL!"""
+    # ❌ Error: module 'pipe.core.domains.gemini_api_payload' has no attribute 'gemini_token_count'
+    # gemini_token_count is not a module-level attribute!
+```
+
+##### Module-Level Imports (At Top of File)
+
+When code imports at module level, patch where it's **used**, not where it's defined:
+
+**Production code with module-level import:**
+```python
+# In pipe/core/domains/gemini_api_payload.py
+from pipe.core.domains import gemini_token_count  # ← Module-level import
+
+class GeminiApiPayload:
+    def prepare_request(self, session):
+        count = gemini_token_count.count_tokens(...)  # Uses the imported module
+```
+
+**✅ CORRECT - Patch where it's imported:**
+```python
+@patch("pipe.core.domains.gemini_api_payload.gemini_token_count.count_tokens")
+def test_prepare_request(mock_count_tokens):
+    """Patch where gemini_token_count is used."""
+    # ✅ This works because gemini_token_count exists at module level
+```
+
+##### Quick Reference Table
+
+| Import Location | Import Statement | Correct Patch Path |
+|----------------|------------------|-------------------|
+| Function-level | `from pipe.core.domains import gemini_token_count` | `@patch("pipe.core.domains.gemini_token_count.count_tokens")` |
+| Module-level | `from pipe.core.domains import gemini_token_count` | `@patch("pipe.core.domains.gemini_api_payload.gemini_token_count.count_tokens")` |
+| Function-level | `import pipe.core.domains.gemini_token_count` | `@patch("pipe.core.domains.gemini_token_count.count_tokens")` |
+| Module-level | `import pipe.core.domains.gemini_token_count` | `@patch("pipe.core.domains.gemini_api_payload.gemini_token_count.count_tokens")` |
+
+##### Verification Steps
+
+**Before writing a `@patch` decorator:**
+
+1. **Find the import statement** in the production code
+   ```bash
+   # Read the file being tested
+   Read: src/pipe/core/domains/gemini_api_payload.py
+   ```
+
+2. **Check if import is module-level or function-level**
+   ```python
+   # Module-level: at top of file
+   from pipe.core.domains import gemini_token_count
+
+   # Function-level: inside a function/method
+   def prepare_request(self):
+       from pipe.core.domains import gemini_token_count
+   ```
+
+3. **Choose correct patch path**
+   - Function-level → Patch the module directly: `pipe.core.domains.gemini_token_count.func`
+   - Module-level → Patch where used: `pipe.core.domains.gemini_api_payload.gemini_token_count.func`
+
+4. **Verify with error message**
+   - If you see `module 'X' has no attribute 'Y'`, the import is likely function-level
+   - Switch to patching the module directly
+
+#### TypedDict Attribute Access
+
+**CRITICAL**: `TypedDict` creates **dict objects**, not classes with attributes. Attempting attribute access will cause `AttributeError`.
+
+##### Understanding TypedDict
+
+```python
+# Definition (looks like a class)
+from typing import TypedDict
+
+class TokenCountSummary(TypedDict):
+    cached_tokens: int
+    current_prompt_tokens: int
+    buffered_tokens: int
+
+# But creates a dict at runtime!
+summary = TokenCountSummary(
+    cached_tokens=100,
+    current_prompt_tokens=200,
+    buffered_tokens=50
+)
+
+type(summary)  # <class 'dict'> - It's a dict, not TokenCountSummary instance!
+```
+
+##### Accessing TypedDict Values
+
+**❌ WRONG - Attribute access fails:**
+```python
+def test_update_token_summary(gemini_api_payload_instance):
+    """Test token summary update."""
+    usage_metadata = {
+        "cached_content_token_count": 100,
+        "prompt_token_count": 200,
+    }
+    gemini_api_payload_instance.update_token_summary(usage_metadata)
+
+    # ❌ AttributeError: 'dict' object has no attribute 'buffered_tokens'
+    assert gemini_api_payload_instance.last_token_summary.buffered_tokens == 30
+```
+
+**✅ CORRECT - Dictionary access:**
+```python
+def test_update_token_summary(gemini_api_payload_instance):
+    """Test token summary update."""
+    usage_metadata = {
+        "cached_content_token_count": 100,
+        "prompt_token_count": 200,
+    }
+    gemini_api_payload_instance.update_token_summary(usage_metadata)
+
+    # ✅ Use dictionary access
+    assert gemini_api_payload_instance.last_token_summary["buffered_tokens"] == 30
+```
+
+**✅ ALSO CORRECT - Import and use the TypedDict for type-safe comparison:**
+```python
+from pipe.core.domains.gemini_cache_manager import TokenCountSummary
+
+def test_update_token_summary_valid_metadata(gemini_api_payload_instance):
+    """Test updating with valid usage metadata."""
+    gemini_api_payload_instance.last_dynamic_tokens = 50
+    usage_metadata = {
+        "cached_content_token_count": 100,
+        "prompt_token_count": 200,
+    }
+    gemini_api_payload_instance.update_token_summary(usage_metadata)
+
+    # ✅ Compare with TokenCountSummary dict (type-safe)
+    assert gemini_api_payload_instance.last_token_summary == TokenCountSummary(
+        cached_tokens=100,
+        current_prompt_tokens=200,
+        buffered_tokens=50
+    )
+```
+
+##### Why This Happens
+
+**TypedDict is NOT a regular class:**
+- `TypedDict` is a **type hint** for static type checkers
+- At runtime, it creates a regular `dict`, not a class instance
+- Attribute access (`obj.field`) only works on class instances
+- Dictionary access (`obj["field"]`) works on dict objects
+
+##### Decision Tree: TypedDict Access
+
+```
+Is the type a TypedDict?
+│
+├─ YES → Use dictionary access: obj["field"]
+│  Examples:
+│  - TokenCountSummary
+│  - UsageMetadata
+│  - Any class inheriting from TypedDict
+│
+└─ NO → Is it a Pydantic model or dataclass?
+   ├─ YES → Use attribute access: obj.field
+   │  Examples:
+   │  - Session
+   │  - Turn
+   │  - Settings
+   │
+   └─ NO → Is it a regular dict?
+      └─ Use dictionary access: obj["field"]
+```
+
+##### Quick Identification
+
+**How to identify TypedDict in code:**
+
+```python
+# Look for this pattern in definitions
+from typing import TypedDict
+
+class SomeName(TypedDict):  # ← TypedDict in parentheses
+    field1: type
+    field2: type
+
+# In tests, use dictionary access:
+assert instance["field1"] == value  # ✅
+assert instance.field1 == value     # ❌
+```
+
+**How to identify Pydantic models:**
+
+```python
+# Look for this pattern
+from pydantic import BaseModel
+
+class SomeName(BaseModel):  # ← BaseModel in parentheses
+    field1: type
+    field2: type
+
+# In tests, use attribute access:
+assert instance.field1 == value  # ✅
+```
+
+#### Testing Validation Logic
+
+**CRITICAL**: Tests should verify **actual validation behavior**, not assumed behavior. Always read the production code to understand what validation actually exists.
+
+##### Anti-Pattern: Testing Non-Existent Validation
+
+**❌ WRONG - Assuming validation exists without verification:**
+```python
+def test_init_settings_model_missing_cache_threshold(mock_client, tmp_path, mock_settings):
+    """Test ValueError when settings.model lacks 'cache_update_threshold'."""
+    del mock_settings.model.cache_update_threshold
+
+    # ❌ This test WILL FAIL if the validation doesn't actually exist!
+    with pytest.raises(ValueError, match="settings.model must be a ModelConfig object"):
+        GeminiApiPayload(
+            client=mock_client,
+            project_root=str(tmp_path),
+            settings=mock_settings,
+        )
+```
+
+**Production code being tested:**
+```python
+# In gemini_api_payload.py __init__ method
+if not hasattr(settings.model, "name"):
+    raise ValueError("settings.model must be a ModelConfig object")
+
+# ❌ No validation for cache_update_threshold!
+# The test will fail with AttributeError, not ValueError
+```
+
+##### Correct Approach: Read-Then-Test
+
+**✅ CORRECT - Verify validation exists before writing test:**
+
+**Step 1: Read the production code**
+```bash
+# Read the actual __init__ method
+Read: src/pipe/core/domains/gemini_api_payload.py
+```
+
+**Step 2: Identify actual validations**
+```python
+# Found in code:
+if not hasattr(settings.model, "name"):
+    raise ValueError("settings.model must be a ModelConfig object")
+
+if not hasattr(settings.model, "cache_update_threshold"):  # ← Does this exist?
+    raise ValueError("...")                                 # ← Check!
+```
+
+**Step 3: Write tests only for existing validations**
+```python
+def test_init_settings_model_missing_name(mock_client, tmp_path, mock_settings):
+    """Test ValueError when settings.model lacks 'name'."""
+    del mock_settings.model.name
+
+    # ✅ This validation actually exists in the code
+    with pytest.raises(ValueError, match="settings.model must be a ModelConfig object"):
+        GeminiApiPayload(
+            client=mock_client,
+            project_root=str(tmp_path),
+            settings=mock_settings,
+        )
+
+# ✅ Don't write test for cache_update_threshold if validation doesn't exist
+# Instead, report it as a production code issue if validation is needed
+```
+
+##### When Validation is Missing
+
+If you discover that validation **should** exist but doesn't:
+
+**✅ CORRECT - Report as production code issue:**
+```python
+# DO NOT write a test for non-existent validation
+# Instead, report to user:
+# "The code does not validate cache_update_threshold.
+#  Should I add this validation to the production code?"
+```
+
+**❌ WRONG - Write test hoping it will pass:**
+```python
+# This creates a failing test that documents missing validation
+# But may confuse CI/CD or other developers
+def test_missing_validation(mock_settings):
+    """This test will FAIL - validation doesn't exist."""
+    del mock_settings.model.cache_update_threshold
+    with pytest.raises(ValueError):  # ❌ Will fail - no validation exists
+        GeminiApiPayload(...)
+```
+
+##### Validation Testing Checklist
+
+Before writing validation tests:
+
+- [ ] **Read the production code** to see what validations exist
+- [ ] **List all validation checks** (hasattr, isinstance, value ranges, etc.)
+- [ ] **Write tests only for existing validations**
+- [ ] **Report missing validations** as production code issues
+- [ ] **Don't assume validation exists** based on similar code patterns
+
+##### Common Validation Patterns
+
+**Pattern 1: Attribute existence check**
+```python
+# Production code
+if not hasattr(settings.model, "name"):
+    raise ValueError("settings.model must be a ModelConfig object")
+
+# Test
+del mock_settings.model.name
+with pytest.raises(ValueError, match="must be a ModelConfig"):
+    SomeClass(settings=mock_settings)
+```
+
+**Pattern 2: Type validation**
+```python
+# Production code
+if not isinstance(settings.model, ModelConfig):
+    raise TypeError("settings.model must be a ModelConfig instance")
+
+# Test
+mock_settings.model = "not a ModelConfig"
+with pytest.raises(TypeError, match="must be a ModelConfig instance"):
+    SomeClass(settings=mock_settings)
+```
+
+**Pattern 3: Value range validation**
+```python
+# Production code
+if cache_threshold < 0:
+    raise ValueError("cache_threshold must be non-negative")
+
+# Test
+mock_settings.model.cache_update_threshold = -1
+with pytest.raises(ValueError, match="must be non-negative"):
+    SomeClass(settings=mock_settings)
+```
+
+##### Summary
+
+**Golden Rule**: **Read the code first, then write tests for what actually exists.**
+
+- ✅ **DO**: Read production code to identify actual validations
+- ✅ **DO**: Test only validations that exist in the code
+- ✅ **DO**: Report missing validations as production code issues
+- ❌ **DON'T**: Assume validation exists based on naming or conventions
+- ❌ **DON'T**: Write tests for non-existent validations
+- ❌ **DON'T**: Hope that tests will reveal validation logic
+
 ### Time Mocking
 
 **CRITICAL**: When testing functions that depend on current time (`datetime.now()`, `time.time()`, etc.), **ALWAYS use `freezegun`** instead of `unittest.mock.patch`.

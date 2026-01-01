@@ -800,7 +800,7 @@ class TestBuildToolResponse:
         result = builder._build_tool_response(turn)
 
         assert result is not None
-        assert result.role == "user"
+        assert result.role == "tool"
         assert result.parts is not None
         assert len(result.parts) == 1
         assert hasattr(result.parts[0], "function_response")
@@ -1133,7 +1133,7 @@ class TestEdgeCases:
         result = builder._build_buffered_history(history)
 
         assert len(result) == 1
-        assert result[0].role == "user"
+        assert result[0].role == "tool"
         assert result[0].parts is not None
         assert len(result[0].parts) == 1
         assert hasattr(result[0].parts[0], "function_response")

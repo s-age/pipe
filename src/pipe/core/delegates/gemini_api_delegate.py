@@ -114,7 +114,10 @@ def run_stream(
                         }
                     )
 
-        if not usage_metadata and not full_text_parts and not tool_call_chunk:
+        # Check if we received actual content (text, thought, or tool)
+        has_content = bool(full_text_parts or tool_call_chunk or thought_parts)
+
+        if not usage_metadata and not has_content:
             yield "API Error: Model stream was empty."
             model_response_text = "API Error: Model stream was empty."
             break
@@ -122,6 +125,17 @@ def run_stream(
         # Accumulate thought and text
         model_response_thought = "".join(thought_parts)
         model_response_text = "".join(full_text_parts)
+
+        # If no content but usage reported, yield fallback message
+        if usage_metadata and not has_content:
+            fallback_msg = "\n(Model consumed tokens but generated no output. This may be a model refusal or internal stop.)"
+            yield fallback_msg
+            # Update text so it's not empty in the final turn
+            model_response_text = fallback_msg
+
+        # If text is empty but thought exists, yield a fallback message for visibility
+        elif not model_response_text and model_response_thought:
+            yield "\n(Model generated thoughts only. Check logs for details.)"
 
         # Extract token counts from metadata
         token_count = 0

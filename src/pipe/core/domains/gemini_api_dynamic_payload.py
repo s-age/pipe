@@ -406,6 +406,6 @@ class GeminiApiDynamicPayload:
         )
 
         return types.Content(
-            role="user",
+            role="tool",
             parts=[function_response_part],
         )

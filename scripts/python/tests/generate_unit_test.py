@@ -357,7 +357,7 @@ invoke_serial_children(
   "tasks": [
     {{
       "type": "agent",
-      "instruction": "Follow @procedures/python_unit_test_generation.md to write tests. Target: {source_file}. Output: {test_file}. Execute all 7 steps sequentially. Coverage: 95%+.\\n\\nTool Usage Guidelines:\\n- When using tools like py_analyze_code, py_test_strategist, etc., do not output the function call as text - just execute it.\\n- If a tool needs to be called, call it directly without describing the call in your response.",
+      "instruction": "🎯 CRITICAL MISSION: Implement comprehensive pytest tests\\n\\n📋 Target Specification:\\n- Test target file: {source_file}\\n- Test output path: {test_file}\\n- Architecture layer: {layer}\\n\\n⚠️ ABSOLUTE REQUIREMENTS:\\n1. Tests that fail have NO VALUE - ALL checks must pass\\n2. Follow @procedures/python_unit_test_generation.md (all 7 steps, no shortcuts)\\n3. Coverage target: 95%+ (non-negotiable)\\n4. ONLY modify {test_file} - any other file changes = immediate abort\\n\\n✅ Success Criteria (Test Execution Report):\\n- [ ] Linter (Ruff/Format): Pass\\n- [ ] Type Check (MyPy): Pass\\n- [ ] Test Result (Pytest): Pass (0 failures)\\n- [ ] Coverage: 95%+ achieved\\n\\nRefer to @roles/python/tests/tests.md 'Test Execution Report' section for the required checklist format.\\n\\n🚫 Tool Usage - Execute Silently:\\n- Do NOT output function calls as text (py_analyze_code, py_test_strategist, etc.)\\n- Execute tools directly without describing the call",
       "roles": ["roles/python/tests/tests.md", "roles/python/tests/core/{layer}.md"],
       "references_persist": ["{source_file}"],
       "procedure": "procedures/python_unit_test_generation.md"

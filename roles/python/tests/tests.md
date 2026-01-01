@@ -1867,6 +1867,171 @@ Session.parse_obj(data)               # ❌ Deprecated
 session.copy(deep=True)               # ❌ Deprecated
 ```
 
+#### CamelCaseModel JSON Parsing
+
+**CRITICAL**: When writing tests for functions that parse JSON data into `CamelCaseModel` instances, you **MUST** understand that `CamelCaseModel` automatically converts between camelCase (JSON) and snake_case (Python).
+
+##### Understanding CamelCaseModel
+
+```python
+# Base model definition (in src/pipe/core/models/base.py)
+class CamelCaseModel(BaseModel):
+    """Base model that automatically converts snake_case fields to camelCase aliases."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,      # Converts field names to camelCase
+        populate_by_name=True,         # Accept both camelCase and snake_case
+        from_attributes=True,
+    )
+
+# Example model
+class DoctorResult(CamelCaseModel):
+    status: str
+    applied_deletions: list[int]      # Python field name (snake_case)
+    applied_edits: list[TurnEdit]
+    applied_compressions: list[TurnCompression]
+
+# When serialized to JSON, field names become camelCase:
+# {
+#   "status": "Succeeded",
+#   "appliedDeletions": [1, 2],      ← camelCase in JSON
+#   "appliedEdits": [...],
+#   "appliedCompressions": [...]
+# }
+```
+
+##### Common Test Mistake: Manual JSON Parsing
+
+**❌ WRONG - Manually parsing JSON dict with snake_case keys:**
+```python
+def parse_doctor_result(content: str) -> DoctorResult:
+    """Parse doctor result - WRONG APPROACH."""
+    import json
+    doctor_result = json.loads(content)  # Raw dict with camelCase keys
+
+    # ❌ WRONG: Accessing with snake_case keys when JSON has camelCase
+    return DoctorResult(
+        status=doctor_result.get("status", "Unknown"),
+        applied_deletions=doctor_result.get("applied_deletions", []),  # ❌ Key doesn't exist!
+        applied_edits=...,
+        applied_compressions=...,
+    )
+
+# Test with camelCase JSON (as it comes from LLM)
+def test_parse_json_result_succeeded():
+    data = {
+        "status": "Succeeded",
+        "appliedDeletions": [1, 2],  # camelCase
+        "appliedEdits": [...],
+        "appliedCompressions": [...],
+    }
+    result = parse_doctor_result(json.dumps(data))
+
+    # ❌ FAILS: applied_deletions is [] instead of [1, 2]
+    # Because doctor_result.get("applied_deletions") returns None (key doesn't exist)
+    assert result.applied_deletions == [1, 2]
+```
+
+**✅ CORRECT - Let Pydantic handle the conversion:**
+```python
+def parse_doctor_result(content: str) -> DoctorResult:
+    """Parse doctor result - CORRECT APPROACH."""
+    import json
+    doctor_result_dict = json.loads(content)  # Raw dict with camelCase keys
+
+    # ✅ CORRECT: Let Pydantic convert camelCase → snake_case automatically
+    return DoctorResult(**doctor_result_dict)
+    # Pydantic sees "appliedDeletions" and maps it to applied_deletions field
+
+# Test with camelCase JSON
+def test_parse_json_result_succeeded():
+    data = {
+        "status": "Succeeded",
+        "appliedDeletions": [1, 2],  # camelCase (as LLM outputs)
+        "appliedEdits": [{"turn": 3, "newContent": "Fixed"}],
+        "appliedCompressions": [{"start": 4, "end": 5, "reason": "Done"}],
+    }
+    result = parse_doctor_result(json.dumps(data))
+
+    # ✅ PASSES: Pydantic correctly mapped appliedDeletions → applied_deletions
+    assert result.applied_deletions == [1, 2]
+    assert result.applied_edits[0].turn == 3
+```
+
+##### Why This Matters
+
+**JSON from LLM responses uses camelCase:**
+```json
+{
+  "status": "Succeeded",
+  "appliedDeletions": [1, 2],
+  "appliedEdits": [{"turn": 3, "newContent": "Fixed"}]
+}
+```
+
+**Pydantic model fields use snake_case:**
+```python
+class DoctorResult(CamelCaseModel):
+    applied_deletions: list[int]  # snake_case
+    applied_edits: list[TurnEdit]
+```
+
+**CamelCaseModel bridges this gap automatically** - you just need to pass the raw dict to Pydantic.
+
+##### Test Data Guidelines
+
+When writing test data for `CamelCaseModel` instances:
+
+1. **Use camelCase in test JSON** (matches real LLM output):
+   ```python
+   # ✅ CORRECT - camelCase matches what LLM outputs
+   test_data = {
+       "appliedDeletions": [1, 2],
+       "appliedEdits": [{"turn": 3, "newContent": "Fixed"}]
+   }
+   ```
+
+2. **Let Pydantic parse it** (don't manually convert):
+   ```python
+   # ✅ CORRECT - Pydantic handles conversion
+   result = DoctorResult(**test_data)
+
+   # ❌ WRONG - Manual conversion
+   result = DoctorResult(
+       applied_deletions=test_data.get("applied_deletions"),  # Wrong key!
+   )
+   ```
+
+3. **Access fields with snake_case** (Python convention):
+   ```python
+   # ✅ CORRECT - Python field names
+   assert result.applied_deletions == [1, 2]
+
+   # ❌ WRONG - Can't use camelCase for field access
+   assert result.appliedDeletions == [1, 2]  # AttributeError!
+   ```
+
+##### Verification Checklist
+
+Before committing parser functions:
+
+- [ ] **Read the model definition** - Is it a `CamelCaseModel`?
+- [ ] **Check test data keys** - Are they in camelCase (matching LLM output)?
+- [ ] **Use Pydantic parsing** - Pass raw dict to `ModelClass(**data)`, don't manually convert
+- [ ] **Verify field access** - Use snake_case for Python field names, not camelCase
+- [ ] **Run the test** - Ensure the parser correctly handles camelCase → snake_case conversion
+
+##### Summary
+
+**Golden Rule**: **When parsing JSON into `CamelCaseModel`, ALWAYS let Pydantic handle the camelCase ↔ snake_case conversion. Never manually access dict keys with snake_case when the JSON uses camelCase.**
+
+- ✅ **DO**: Use `ModelClass(**json.loads(data))` for automatic conversion
+- ✅ **DO**: Write test JSON with camelCase keys (matches real LLM output)
+- ✅ **DO**: Access model fields with snake_case (Python convention)
+- ❌ **DON'T**: Manually parse dict with `dict.get("snake_case_key")` when JSON has camelCase
+- ❌ **DON'T**: Try to access model fields with camelCase (`obj.appliedDeletions`)
+- ❌ **DON'T**: Mix camelCase and snake_case incorrectly in parsing logic
+
 #### Report Production Code Changes
 
 **CRITICAL**: If test generation requires changes to production code (non-test files), you **MUST** report this explicitly before making any changes.

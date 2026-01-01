@@ -44,20 +44,17 @@ class TestGeminiCliPayloadBuilder:
         """Create a mock SessionService instance."""
         return MagicMock(spec=SessionService)
 
-    @patch("pipe.core.domains.gemini_cli_payload.BasePayloadBuilder.__init__")
     @patch(
         "pipe.core.domains.gemini_cli_payload.GeminiCliPayloadBuilder._create_jinja_environment"
     )
-    def test_init(
-        self, mock_create_jinja_environment, mock_super_init, mock_project_root
-    ):
+    def test_init(self, mock_create_jinja_environment, mock_project_root):
         """Test initialization of GeminiCliPayloadBuilder."""
         builder = GeminiCliPayloadBuilder(
             project_root=mock_project_root, api_mode="gemini-api"
         )
 
-        mock_super_init.assert_called_once_with(mock_project_root)
         mock_create_jinja_environment.assert_called_once()
+        assert builder.project_root == mock_project_root
         assert builder.api_mode == "gemini-api"
         assert builder.jinja_env == mock_create_jinja_environment.return_value
 

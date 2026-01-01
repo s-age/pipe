@@ -5,18 +5,18 @@ Generates JSON-formatted prompts for the gemini-cli tool using Jinja2 templates.
 """
 
 import json
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from jinja2 import Environment, FileSystemLoader
-from pipe.core.domains.payload import BasePayloadBuilder
 from pipe.core.models.prompt import Prompt
 
 if TYPE_CHECKING:
     from pipe.core.services.session_service import SessionService
 
 
-class GeminiCliPayloadBuilder(BasePayloadBuilder):
+class GeminiCliPayloadBuilder:
     """
     Builds JSON payloads for Gemini CLI tool.
 
@@ -33,7 +33,7 @@ class GeminiCliPayloadBuilder(BasePayloadBuilder):
             project_root: The project root directory
             api_mode: API mode ('gemini-cli' or 'gemini-api')
         """
-        super().__init__(project_root)
+        self.project_root = project_root
         self.api_mode = api_mode
         self.jinja_env = self._create_jinja_environment()
 
@@ -67,6 +67,60 @@ class GeminiCliPayloadBuilder(BasePayloadBuilder):
 
         env.filters["pydantic_dump"] = pydantic_dump
         return env
+
+    def build_prompt_model(self, session_service: "SessionService") -> Prompt:
+        """
+        Build a Prompt object from session data.
+
+        This method replicates the core functionality of PromptService.build_prompt()
+        without requiring PromptService dependency.
+
+        Args:
+            session_service: Service containing session data
+
+        Returns:
+            A fully constructed Prompt object
+        """
+        from pipe.core.domains.artifacts import build_artifacts_from_data
+        from pipe.core.factories.prompt_factory import PromptFactory
+        from pipe.core.repositories.resource_repository import ResourceRepository
+
+        current_session = session_service.current_session
+        settings = session_service.settings
+
+        if not current_session:
+            raise ValueError("Cannot build prompt without a current session.")
+
+        # Initialize repositories and factories
+        resource_repository = ResourceRepository(self.project_root)
+        prompt_factory = PromptFactory(self.project_root, resource_repository)
+
+        # Process artifacts (read file contents)
+        processed_artifacts = None
+        if current_session.artifacts:
+            artifacts_with_contents = []
+            for artifact_path in current_session.artifacts:
+                full_path = os.path.abspath(
+                    os.path.join(self.project_root, artifact_path)
+                )
+                contents = None
+                if resource_repository.exists(
+                    full_path, allowed_root=self.project_root
+                ):
+                    contents = resource_repository.read_text(
+                        full_path, allowed_root=self.project_root
+                    )
+                artifacts_with_contents.append((artifact_path, contents))
+
+            processed_artifacts = build_artifacts_from_data(artifacts_with_contents)
+
+        # Create and return the Prompt object
+        return prompt_factory.create(
+            session=current_session,
+            settings=settings,
+            artifacts=processed_artifacts,
+            current_instruction=session_service.current_instruction,
+        )
 
     def render(self, prompt_model: Prompt) -> str:
         """

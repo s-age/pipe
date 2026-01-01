@@ -368,7 +368,7 @@ invoke_serial_children(
       "max_retries": 2
     }}
   ],
-  "background": "Write comprehensive pytest tests for {source_file}",
+  "background": "Complete ALL 7 steps in python_unit_test_generation.md for {source_file}. Verify Test Execution Report checklist: Linter Pass, Type Check Pass, Pytest Pass (0 failures), Coverage 95%+. DO NOT exit until all checklist items are completed.",
   "child_session_id": null,
   "procedure": "procedures/python_unit_test_generation.md"
 }})

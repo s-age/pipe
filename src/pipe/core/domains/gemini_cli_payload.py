@@ -56,9 +56,13 @@ class GeminiCliPayloadBuilder(BasePayloadBuilder):
 
         # Add custom filter to serialize Pydantic models to dict for JSON serialization
         def pydantic_dump(obj):
-            """Convert Pydantic model to dict using model_dump()."""
+            """Convert Pydantic model to dict using model_dump().
+
+            Uses mode='json' to ensure proper JSON serialization and prevent
+            circular reference errors by converting nested models to dicts.
+            """
             if hasattr(obj, "model_dump"):
-                return obj.model_dump()
+                return obj.model_dump(mode="json", exclude_none=True)
             return obj
 
         env.filters["pydantic_dump"] = pydantic_dump
@@ -82,7 +86,7 @@ class GeminiCliPayloadBuilder(BasePayloadBuilder):
         )
 
         template = self.jinja_env.get_template(template_name)
-        rendered_prompt = template.render(session=prompt_model)
+        rendered_prompt = template.render(prompt=prompt_model)
 
         # Ensure the rendered prompt is valid JSON and pretty-print it
         json_output = json.dumps(

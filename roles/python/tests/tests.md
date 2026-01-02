@@ -353,6 +353,95 @@ def test_example_with_factories():
     assert len(sessions) == 5
 ```
 
+### Factory Model Comparison Best Practices
+
+**CRITICAL**: When comparing factory-generated models with dictionaries using `model_dump()`, **ALWAYS use `exclude_none=True`** to avoid assertion failures.
+
+#### Why This Matters
+
+Factory-generated models often have **many optional fields with default `None` values**. When you serialize these models with `model_dump()`, all fields are included, even those with `None` values. This causes assertion failures when comparing with minimal test dictionaries.
+
+**❌ WRONG - Assertion fails due to None fields:**
+```python
+def test_turn_comparison():
+    """Test comparing factory-generated Turn with dict."""
+    # Factory creates Turn with all fields (many are None by default)
+    turn = TurnFactory.create_model_response(content="Response")
+
+    # Minimal expected dict (only non-None fields)
+    expected = {
+        "type": "model_response",
+        "content": "Response",
+        "timestamp": "2025-01-01T00:01:00+09:00",
+    }
+
+    # ❌ FAILS - model_dump() includes thought: None, raw_response: None, etc.
+    assert turn.model_dump(by_alias=True) == expected
+    # AssertionError: Extra fields in model: {'thought': None, 'rawResponse': None, ...}
+```
+
+**✅ CORRECT - Use exclude_none=True:**
+```python
+def test_turn_comparison():
+    """Test comparing factory-generated Turn with dict."""
+    turn = TurnFactory.create_model_response(content="Response")
+
+    expected = {
+        "type": "model_response",
+        "content": "Response",
+        "timestamp": "2025-01-01T00:01:00+09:00",
+    }
+
+    # ✅ PASSES - exclude_none=True omits None fields
+    assert turn.model_dump(by_alias=True, exclude_none=True) == expected
+```
+
+**✅ ALTERNATIVE - Include None fields in expected dict:**
+```python
+def test_turn_comparison_with_none():
+    """Test with explicit None fields in expected dict."""
+    turn = TurnFactory.create_model_response(content="Response")
+
+    # Include all fields, even None ones
+    expected = {
+        "type": "model_response",
+        "content": "Response",
+        "timestamp": "2025-01-01T00:01:00+09:00",
+        "thought": None,
+        "rawResponse": None,
+        # ... all other None fields
+    }
+
+    # ✅ PASSES - but verbose and brittle
+    assert turn.model_dump(by_alias=True) == expected
+```
+
+#### Decision Guide: When to Use exclude_none=True
+
+```
+Are you comparing Factory-generated model with dict?
+│
+├─ Using model_dump()?
+│  │
+│  ├─ Expected dict contains only non-None values?
+│  │  └─ ✅ Use exclude_none=True
+│  │
+│  └─ Expected dict contains all fields (including None)?
+│     └─ ❌ Don't use exclude_none=True
+│
+└─ Comparing model attributes directly?
+   └─ ❌ Don't use model_dump() - use direct comparison
+      Example: assert turn.content == "Response"
+```
+
+#### Summary
+
+- **Factory models have many optional fields** - most default to `None`
+- **`model_dump()` includes all fields** by default, even `None` values
+- **Minimal test dicts omit None fields** for brevity
+- **Solution**: Use `exclude_none=True` when comparing with minimal dicts
+- **Alternative**: Compare specific fields directly instead of full dict comparison
+
 ---
 
 ## pytest Configuration and Best Practices
@@ -362,7 +451,7 @@ def test_example_with_factories():
 **CRITICAL**: This project uses **Poetry** for dependency management. Always run pytest through Poetry:
 
 ```bash
-# ✅ CORRECT - Run pytest through Poetry
+# ✅ CORRECT - Run pytest through Poetry (from project root)
 poetry run pytest
 
 # ✅ CORRECT - Run specific test file
@@ -373,6 +462,59 @@ poetry run pytest --cov=src/pipe/core
 
 # ❌ WRONG - Do NOT run pytest directly
 pytest  # This may use wrong Python environment or missing dependencies
+```
+
+#### PYTHONPATH Configuration (Usually NOT Required)
+
+**IMPORTANT**: Due to the `--import-mode=importlib` setting in [pyproject.toml](../../../pyproject.toml), you **DO NOT need** to set `PYTHONPATH` when running tests from the project root.
+
+The following configuration in `pyproject.toml` ensures proper module resolution:
+
+```toml
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib"
+```
+
+**Understanding src-layout projects:**
+
+This project uses the **src-layout** structure where source code lives in `src/pipe/`:
+
+```
+project/
+├── src/
+│   └── pipe/          # Source code here
+│       └── core/
+└── tests/             # Tests here
+    └── unit/
+```
+
+With `--import-mode=importlib`, pytest automatically handles this layout. However, if you encounter import errors, you may need to explicitly set `PYTHONPATH`:
+
+```bash
+# ⚠️ For src-layout projects with import errors
+PYTHONPATH=src poetry run pytest tests/unit/core/collections/test_todos.py
+
+# ⚠️ Legacy approach (only if --import-mode is not configured)
+PYTHONPATH=. poetry run pytest tests/
+```
+
+**When PYTHONPATH might be needed:**
+
+1. **Running individual test files directly** (without pytest discovering the project structure)
+2. **CI/CD environments** where `--import-mode=importlib` is not configured
+3. **Legacy pytest versions** (< 6.0) that don't support importlib mode
+
+**Best Practice**: Always run pytest from the **project root directory** to avoid import issues:
+
+```bash
+# ✅ RECOMMENDED - Run from project root
+cd /path/to/project/root
+poetry run pytest tests/unit/core/collections/test_todos.py
+
+# ❌ NOT RECOMMENDED - Running from subdirectory
+cd /path/to/project/root/tests/unit/core/collections
+poetry run pytest test_todos.py  # May cause import errors
 ```
 
 ### Using MCP Tools for Test Development
@@ -663,6 +805,57 @@ def test_prepare_request(mock_count_tokens, mock_create_tokenizer):
     # ❌ Error: module 'pipe.core.domains.gemini_api_payload' has no attribute 'gemini_token_count'
     # gemini_token_count is not a module-level attribute!
 ```
+
+##### Special Case: Circular Import Avoidance
+
+**CRITICAL**: When production code uses function-level imports to **avoid circular dependencies**, the import is NOT a module-level attribute and cannot be patched as such.
+
+**Production code avoiding circular imports:**
+```python
+# In pipe/core/collections/turns.py
+class TurnCollection:
+    def get_turns_for_prompt(self, session):
+        # Import INSIDE to avoid circular dependency
+        from pipe.core.domains.turns import get_turns_for_prompt as domain_get_turns_for_prompt
+
+        return domain_get_turns_for_prompt(session.turns, ...)
+```
+
+**Common Error - AttributeError:**
+```python
+# ❌ WRONG - Trying to patch as collection attribute
+@patch("pipe.core.collections.turns.domain_get_turns_for_prompt")
+def test_get_turns_for_prompt(mock_domain_func):
+    """This FAILS with AttributeError!"""
+    # AttributeError: <module 'pipe.core.collections.turns'> does not have the attribute 'domain_get_turns_for_prompt'
+    # The import is INSIDE the method, not at module level!
+```
+
+**✅ CORRECT - Patch the source module:**
+```python
+@patch("pipe.core.domains.turns.get_turns_for_prompt")
+def test_get_turns_for_prompt(mock_domain_func):
+    """Patch at the source module where the function is defined."""
+    mock_domain_func.return_value = [...]
+
+    collection = TurnCollection(...)
+    result = collection.get_turns_for_prompt(session)
+
+    # ✅ This works because we patch where the function is IMPORTED FROM
+    mock_domain_func.assert_called_once()
+```
+
+**Why this works:**
+- Function-level imports execute when the method runs
+- The import fetches from `pipe.core.domains.turns`
+- Patching the source module intercepts the import
+- The local alias (`domain_get_turns_for_prompt`) uses the patched version
+
+**Debugging steps:**
+1. Read the production code to identify function-level imports
+2. Look for `from X import Y` inside methods (not at module top)
+3. Patch at the source (`X.Y`), not where it's used
+4. If you see `AttributeError: module 'X' does not have attribute 'Y'`, it's likely a function-level import
 
 ##### Module-Level Imports (At Top of File)
 
@@ -1854,6 +2047,10 @@ session.model_dump_json(by_alias=True) # Returns JSON string with camelCase
 # NOTE: model_dump(mode="json") does NOT use aliases - it only affects value serialization
 # To get camelCase field names, you MUST use by_alias=True
 
+# Excluding None values (CRITICAL for test assertions)
+session.model_dump(by_alias=True, exclude_none=True)  # Omit fields with None values
+session.model_dump_json(by_alias=True, exclude_none=True)
+
 # Deserialization (Pydantic V2)
 Session.model_validate(data)         # Create from dict
 Session.model_validate_json(json_str) # Create from JSON string
@@ -1866,6 +2063,58 @@ session.dict()                        # ❌ Deprecated
 Session.parse_obj(data)               # ❌ Deprecated
 session.copy(deep=True)               # ❌ Deprecated
 ```
+
+##### Common Pitfall: None Fields in Assertions
+
+**CRITICAL**: When comparing `model_dump()` output with test data, **ALWAYS use `exclude_none=True`** to avoid assertion failures from default None fields.
+
+**❌ WRONG - Assertion fails due to None fields:**
+```python
+def test_pydantic_validation():
+    """Test Pydantic model serialization."""
+    turns = [
+        {
+            "type": "model_response",
+            "content": "Response",
+            "timestamp": "2025-01-01T00:01:00+09:00",
+        }
+    ]
+    collection = TurnCollection(turns)
+
+    # ❌ FAILS - model_dump() includes thought: None, raw_response: None
+    assert collection._turns[0].model_dump(by_alias=True) == turns[0]
+    # AssertionError: {'type': 'model_response', 'content': 'Response',
+    #                  'timestamp': '...', 'thought': None, 'rawResponse': None}
+    #                  != {'type': 'model_response', 'content': 'Response', 'timestamp': '...'}
+```
+
+**✅ CORRECT - Use exclude_none=True:**
+```python
+def test_pydantic_validation():
+    """Test Pydantic model serialization."""
+    turns = [
+        {
+            "type": "model_response",
+            "content": "Response",
+            "timestamp": "2025-01-01T00:01:00+09:00",
+        }
+    ]
+    collection = TurnCollection(turns)
+
+    # ✅ PASSES - exclude_none=True omits None fields
+    assert collection._turns[0].model_dump(by_alias=True, exclude_none=True) == turns[0]
+```
+
+**Why this happens:**
+- Pydantic models include all fields in `model_dump()`, even if they're `None`
+- Test data often only includes non-None values for brevity
+- Without `exclude_none=True`, the comparison fails due to extra None fields
+
+**When to use exclude_none=True:**
+- ✅ Comparing model output with minimal test dictionaries
+- ✅ Testing JSON serialization for API responses (cleaner output)
+- ✅ Verifying model structure without caring about optional fields
+- ❌ When you explicitly need to verify that a field IS None
 
 #### CamelCaseModel JSON Parsing
 

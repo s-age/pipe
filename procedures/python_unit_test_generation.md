@@ -235,46 +235,53 @@ def test_process_file(mock_os):
 
 ### Step 5: Execute Quality Checks
 
-Run checks **in sequence** using the provided tools. If any fail, return to **Step 4** and fix.
+**CRITICAL - Unified Validation Script**:
+Run ALL quality checks in a single command using the project's validation script. This replaces individual tool calls (py_checker, py_run_and_test_code, pytest) to improve efficiency and avoid redundant execution.
 
-**CRITICAL**: Both py_checker and py_run_and_test_code MUST pass. Tests that fail linting or execution have NO VALUE and must not be committed.
-
-#### Step 5a: Run py_checker (Integrated Format + Validation)
-```python
-py_checker()
+**[MANDATORY]** Execute the following command:
+```bash
+bash scripts/python/validate_code.sh --ignore-external-changes --coverage {test_output_path}
 ```
 
-**CRITICAL - Integrated Pre-Formatting**:
-This tool now automatically performs **silent pre-formatting** before validation:
+**What This Script Does** (in order):
+1. Git status check (skipped with `--ignore-external-changes`)
+2. Black formatter (88-character line length)
+3. Ruff linting with auto-fix (entire project)
+4. Ruff formatting (entire project)
+5. MyPy type checking (entire project)
+6. PyTest execution with coverage reporting (target file only)
 
-**STEP 0 (Silent - Output Suppressed)**:
-1. `isort .` (entire project - import sorting)
-2. `black .` (entire project - code formatting)
+**Parameters**:
+- `--ignore-external-changes`: Skip git status check (required for test generation)
+- `--coverage`: Enable coverage reporting
+- `{test_output_path}`: Path to the test file (e.g., `tests/unit/core/repositories/test_archive_repository.py`)
 
-**STEP 1-4 (Reported)**:
-1. `ruff check --fix` (entire project)
-2. `ruff format` (entire project)
-3. `black` (entire project - validation pass)
-4. `mypy` (entire project)
+**Example**:
+```bash
+# For test file: tests/unit/core/repositories/test_archive_repository.py
+bash scripts/python/validate_code.sh --ignore-external-changes --coverage tests/unit/core/repositories/test_archive_repository.py
+```
 
-**Why Pre-Formatting is Silent**:
-- **Token efficiency**: Formatting output is discarded to save ~5,000-10,000 tokens
-- **State synchronization**: Files are formatted BEFORE validation checks
-- **Error prevention**: Eliminates "stale state" issues caused by formatters
+**Exit Codes**:
+- `0`: All checks passed (proceed to Step 6)
+- `1`: Quality checks failed (linting, type checking, or tests)
+- `2`: Unauthorized file modifications detected (should not occur with `--ignore-external-changes`)
 
 **CRITICAL - State Synchronization**:
-After `py_checker` completes:
+After the validation script completes:
 - All files have been **formatted and validated** in a single atomic operation
 - Your in-memory "last known state" is now **STALE** (files were auto-formatted)
 - **[MANDATORY]** Execute `read_file` on `{test_output_path}` BEFORE any error fixes
 - **[PROHIBITED]** Do NOT use `replace` tool based on your memory of what you wrote
 
 **Error Recovery Protocol**:
-If `py_checker` reports linting/type errors that require fixes:
+If the validation script reports errors:
 1. **[MANDATORY]** Execute `read_file` on `{test_output_path}` FIRST
 2. **[PROHIBITED]** Do NOT use `replace` tool based on your memory of what you wrote
-3. **[REQUIRED]** Use the fresh file content from `read_file` as the source for `replace`
-4. **Rationale**: Prevents "string not found" errors caused by formatter modifications
+3. **[REQUIRED]** Use the fresh file content from `read_file` as the source for fixes
+4. Fix the reported errors
+5. Re-run the validation script
+6. **Rationale**: Prevents "string not found" errors caused by formatter modifications
 
 **Example Trap (Common Failure Pattern)**:
 ```
@@ -282,65 +289,20 @@ If `py_checker` reports linting/type errors that require fixes:
 def test_example():
     x=1  # Bad formatting
 
-# py_checker silently pre-formats to:
+# Validation script auto-formats to:
 def test_example():
     x = 1  # Good formatting
 
-# Then validation reports an error (e.g., unused variable)
+# Then reports an error (e.g., unused variable)
 
 # If you try to replace "x=1" without reading first → TOOL FAILURE
 ```
 
 **Decision Tree**:
-- **Pass**: Continue to Step 5b
-- **Fail**: Execute `read_file` → Fix errors using fresh content → Re-run `py_checker`
+- **Exit code 0**: Continue to Step 6
+- **Exit code 1**: Execute `read_file` → Fix errors using fresh content → Re-run validation script
 
-#### Step 5b: Run py_run_and_test_code (Test Execution)
-```python
-py_run_and_test_code()
-```
-This runs all tests in the project using pytest.
-
-- **Pass**: Continue to Step 5c
-- **Fail**: Fix test logic, return to Step 4
-
-#### Step 5c: Verify Coverage (Mandatory)
-**CRITICAL**: Always use grep to filter output to avoid context window overflow.
-
-```bash
-poetry run pytest --cov=src --cov-report=term-missing tests/{test_path} | grep {source_file_name}
-```
-
-**Correct Usage**:
-- ✅ `--cov=src` (module root path, NOT file path)
-- ✅ `tests/{test_path}` (run only the specific test file)
-- ✅ `grep {source_file_name}` (filter by SOURCE file name, NOT test file name)
-
-**Incorrect Usage Examples**:
-- ❌ `--cov=src/pipe/core/utils/path.py` (file path - causes "module not imported" error)
-- ❌ `grep test_path.py` (test file name - shows nothing)
-- ❌ No grep filter (context window overflow with full project output)
-
-**Example**:
-```bash
-# For source file: src/pipe/core/utils/path.py
-# Test file: tests/unit/core/utils/test_path.py
-poetry run pytest --cov=src --cov-report=term-missing tests/unit/core/utils/test_path.py | grep path.py
-```
-
-**Purpose**:
-- Verify test coverage for the specific file being tested
-- Avoid overwhelming context window with full project coverage output
-- Full project coverage output consumes excessive tokens and provides unnecessary information
-
-**Actions**:
-1. Run coverage with `--cov=src` (module root)
-2. Execute only the specific test file
-3. Filter output with grep for the source file name
-4. Verify coverage meets project standards
-5. If coverage is insufficient, return to Step 4 and add missing test cases
-
-**Output**: Coverage verification passed
+**Output**: All quality gates passed (linting, type checking, tests, coverage)
 
 ---
 
@@ -376,8 +338,8 @@ Report successful test implementation with the following information:
 - ❌ Hardcoded file paths (use `tmp_path`, `tempfile`)
 - ❌ Test dependencies (tests must be independent)
 - ❌ Skipping quality checks
-- ❌ **ABSOLUTE PROHIBITION**: Using `--cov={file_path}` (must use `--cov=src`)
-- ❌ **ABSOLUTE PROHIBITION**: Running coverage without grep filter (causes context overflow)
+- ❌ **ABSOLUTE PROHIBITION**: Using individual tool calls (py_checker, py_run_and_test_code, pytest) - use validate_code.sh instead
+- ❌ **ABSOLUTE PROHIBITION**: Running coverage commands manually - validate_code.sh handles it
 
 ### Prohibited Shortcuts
 - ❌ Skipping mandatory `py_test_strategist` execution in Step 1
@@ -388,9 +350,10 @@ Report successful test implementation with the following information:
 
 ### Prohibited Token-Wasting Actions
 - ❌ **[ABSOLUTE PROHIBITION]** Running `read_file` on the target file being tested - content is ALWAYS in `file_references`
-- ❌ **[CRITICAL]** Re-reading content you just wrote with `write_file` (except Step 5a error recovery)
+- ❌ **[ABSOLUTE PROHIBITION]** Running `list_directory` - it provides no value for test generation and wastes tokens
+- ❌ **[CRITICAL]** Re-reading content you just wrote with `write_file` (except Step 5 error recovery)
 - ❌ Executing redundant verification commands that duplicate information already in context
-- ❌ **[CRITICAL]** Using `replace` tool based on stale memory after `py_checker` runs (must `read_file` first)
+- ❌ **[CRITICAL]** Using `replace` tool based on stale memory after validation script runs (must `read_file` first)
 
 ---
 
@@ -421,10 +384,8 @@ Execution:
   Step 2: Review roles/python/tests/core/repositories.md (use tmp_path, test CRUD)
   Step 3: Plan TestArchiveRepositorySave, TestArchiveRepositoryRestore, etc.
   Step 4: Write test file with fixtures, test classes, methods
-  Step 5a: py_checker() → PASS (ruff check, ruff format, mypy on entire project)
-  Step 5b: py_run_and_test_code() → PASS (pytest on entire project)
-  Step 5c: poetry run pytest --cov=src --cov-report=term-missing tests/unit/core/repositories/test_archive_repository.py | grep archive_repository.py
-           → Coverage: 95% (acceptable)
+  Step 5: bash scripts/python/validate_code.sh --ignore-external-changes --coverage tests/unit/core/repositories/test_archive_repository.py
+          → Exit code 0 (all quality gates passed: Black, Ruff, MyPy, PyTest, Coverage 95%+)
   Step 6: Report success with coverage metrics
 
 Output: Success, ready for test conductor review
@@ -436,10 +397,12 @@ Output: Success, ready for test conductor review
 
 - **Mandatory tool execution**: Step 1a (`py_test_strategist`) is NON-NEGOTIABLE. It provides the mocking strategy that prevents errors
 - **Token efficiency**: File content is ALWAYS provided via `file_references`. **NEVER use `read_file` on the target file**
+- **No list_directory**: **NEVER use `list_directory`** - it provides no value for test generation and wastes tokens
+- **Unified validation**: **ALWAYS use `validate_code.sh`** in Step 5 - **NEVER use individual tool calls** (py_checker, py_run_and_test_code, pytest)
 - **Comprehensive testing**: Use the file content from `file_references` to understand what needs testing, including both specifications (docstrings) and implementation
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
 - **No skipping**: Quality checks must all pass before reporting success
-- **Formatter safeguard**: ALWAYS execute `read_file` BEFORE fixing lint errors in Step 5a. Your memory is stale after auto-formatters run.
+- **Formatter safeguard**: ALWAYS execute `read_file` BEFORE fixing errors in Step 5. Your memory is stale after auto-formatters run.
 - **Responsibility**: Test implementation agents do NOT handle git operations or commits. They report success/failure to test conductor for verification and commit decision.
 

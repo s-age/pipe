@@ -277,6 +277,47 @@ def get_todos_from_session(session_id: str) -> tuple[list[dict], list[dict]]:
         return [], []
 
 
+def check_session_exit_code(session_id: str) -> int | None:
+    """
+    Check the last turn in session for exit code error messages.
+
+    Args:
+        session_id: Conductor session ID
+
+    Returns:
+        Exit code if found in error message, None otherwise
+    """
+    session_path = get_session_json_path(session_id)
+
+    if not session_path.exists():
+        return None
+
+    try:
+        with open(session_path) as f:
+            data = json.load(f)
+
+        turns = data.get("turns", [])
+        if not turns:
+            return None
+
+        # Check last turn for exit code messages
+        last_turn = turns[-1]
+        if last_turn.get("type") == "user_task":
+            instruction = last_turn.get("instruction", "")
+            # Check for exit code 2 (permanent failure)
+            if "exit code 2" in instruction.lower():
+                return 2
+            # Check for exit code 1 (retryable failure)
+            if "exit code 1" in instruction.lower():
+                return 1
+
+        return None
+
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[Session] Error reading session file: {e}")
+        return None
+
+
 def execute_next_todo(session_id: str) -> bool:
     """
     Execute the next unchecked TODO by sending instruction to conductor.
@@ -359,7 +400,13 @@ invoke_serial_children(
       "type": "agent",
       "instruction": "🎯 CRITICAL MISSION: Implement comprehensive pytest tests\\n\\n📋 Target Specification:\\n- Test target file: {source_file}\\n- Test output path: {test_file}\\n- Architecture layer: {layer}\\n\\n⚠️ ABSOLUTE REQUIREMENTS:\\n1. Tests that fail have NO VALUE - ALL checks must pass\\n2. Follow @procedures/python_unit_test_generation.md (all 7 steps, no shortcuts)\\n3. Coverage target: 95%+ (non-negotiable)\\n4. ONLY modify {test_file} - any other file changes = immediate abort\\n\\n✅ Success Criteria (Test Execution Report):\\n- [ ] Linter (Ruff/Format): Pass\\n- [ ] Type Check (MyPy): Pass\\n- [ ] Test Result (Pytest): Pass (0 failures)\\n- [ ] Coverage: 95%+ achieved\\n\\nRefer to @roles/python/tests/tests.md 'Test Execution Report' section for the required checklist format.\\n\\n🔧 Tool Execution Protocol:\\n- **EXECUTE, DON'T DISPLAY:** Do NOT write tool calls in markdown text or code blocks\\n- **IGNORE DOC FORMATTING:** Code blocks in procedures are illustrations only - convert them to actual tool invocations\\n- **IMMEDIATE INVOCATION:** Your response must be tool use requests, not text descriptions\\n- **NO PREAMBLE:** No 'I will now...', 'Okay...', 'Let me...' - invoke Step 1a tool immediately\\n- **COMPLETE ALL 7 STEPS:** Continue invoking tools through all steps until Test Execution Report is done",
       "roles": ["roles/python/tests/tests.md", "roles/python/tests/core/{layer}.md"],
-      "references_persist": ["{source_file}"],
+      "references_persist": [
+        "{source_file}",
+        "src/pipe/core/factories/prompt_factory.py",
+        "src/pipe/core/factories/service_factory.py",
+        "src/pipe/core/factories/settings_factory.py",
+        "src/pipe/core/factories/file_repository_factory.py"
+      ],
       "procedure": "procedures/python_unit_test_generation.md"
     }},
     {{
@@ -674,6 +721,26 @@ def main():
             print("\n[Error] Conductor did not complete successfully")
             print(f"[Info] You can resume with: --session {session_id}")
             sys.exit(1)
+
+        # Check for permanent failure (exit code 2)
+        exit_code = check_session_exit_code(session_id)
+        if exit_code == 2:
+            print("\n" + "=" * 70)
+            print("🚨 PERMANENT FAILURE DETECTED (exit code 2)")
+            print("=" * 70)
+            print("[Error] The conductor encountered a permanent failure that")
+            print("[Error] cannot be fixed through retries. This typically indicates:")
+            print("[Error] - Unauthorized file modifications detected")
+            print("[Error] - Validation failures requiring manual investigation")
+            print("[Error] - Configuration issues that cannot be auto-fixed")
+            print("")
+            print("[Action] Please check the session logs for details:")
+            print(f"[Action]   sessions/{session_id}.json")
+            print("")
+            print("[Action] After fixing the issue, you can resume with:")
+            print(f"[Action]   --session {session_id}")
+            print("=" * 70)
+            sys.exit(2)
 
         # Wait before next iteration (TPM/RPM mitigation)
         if iteration < max_iterations:

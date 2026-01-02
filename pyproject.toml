@@ -51,6 +51,8 @@ filterwarnings = [
     "ignore:Field name \"metadata\" shadows an attribute in parent \"Operation\".*:UserWarning",
     "ignore:Field name \"done\" shadows an attribute in parent \"Operation\".*:UserWarning",
     "ignore:Field name \"error\" shadows an attribute in parent \"Operation\".*:UserWarning",
+    "ignore:builtin type SwigPyPacked has no __module__ attribute:DeprecationWarning",
+    "ignore:builtin type SwigPyObject has no __module__ attribute:DeprecationWarning",
 ]
 
 [tool.ruff]

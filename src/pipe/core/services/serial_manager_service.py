@@ -428,7 +428,10 @@ def invoke_parent_session(
             f"with the following session IDs:\n"
             f"session_ids={session_ids_json}\n\n"
             f"Example:\n"
-            f"get_sessions_final_turns(session_ids={session_ids_json})"
+            f"get_sessions_final_turns(session_ids={session_ids_json})\n\n"
+            f"CRITICAL: Immediately use edit_todos to update your TODO list "
+            f"to mark completed tasks. DO NOT perform any other actions. "
+            f"The script will provide the next instruction based on TODO status."
         )
     else:
         instruction = (

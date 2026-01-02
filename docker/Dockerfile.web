@@ -5,9 +5,9 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 
-# Install Node.js 24 for ts-node and gemini-cli
+# Install Node.js 24 for ts-node and gemini-cli, and git
 RUN apt-get update && \
-	apt-get install -y curl ca-certificates gnupg && \
+	apt-get install -y curl ca-certificates gnupg git && \
 	curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
 	apt-get install -y nodejs && \
 	rm -rf /var/lib/apt/lists/* && \

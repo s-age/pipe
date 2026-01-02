@@ -63,7 +63,11 @@ graph TD
 
 ### Step 1: Analyze Target File
 
-**Note**: The target file content is provided in `file_references`, so there is no need to read it separately.
+**CRITICAL - File Content Source**:
+- The target file content is **ALWAYS** provided in `file_references` with the latest state
+- **[ABSOLUTE PROHIBITION]**: Using `read_file` on the target file
+- **[REQUIRED]**: Use the content from `file_references` directly
+- **Rationale**: Prevents redundant file reads and ensures you work with the most current version
 
 The following tool execution is **MANDATORY**:
 
@@ -126,7 +130,7 @@ def test_process_file(mock_join):
 Mock patches must target the **namespace where the dependency is imported**, not where it's defined. The tool eliminates guesswork by analyzing import statements automatically.
 
 #### Step 1b: Manual Analysis
-Using the file content from `file_references`, manually identify:
+**[REQUIRED]**: Use the file content from `file_references` (NOT `read_file`) to manually identify:
 - Public interface (classes, methods, functions)
 - Dependencies (imports, external calls)
 - Data flow (inputs, outputs, state changes)
@@ -352,8 +356,10 @@ poetry run pytest --cov=src --cov-report=term-missing tests/unit/core/utils/test
 
 **CRITICAL**: This step detects unauthorized file modifications and triggers immediate abort if violated.
 
+**IMPORTANT**: This step is typically handled by the test conductor or gatekeeper. Individual test implementation agents may skip this step if instructed.
+
 **Actions**:
-1. Run **ONLY**:
+1. If instructed to verify, run **ONLY**:
    ```bash
    git status --short
    ```
@@ -482,8 +488,8 @@ Report successful test implementation with the following information:
 - ❌ Writing tests without understanding the code being tested
 
 ### Prohibited Token-Wasting Actions
-- ❌ **[CRITICAL]** Running `read_file` when file content is already in `current_task` or `file_references` (Step 1 only)
-- ❌ **[CRITICAL]** Running `git diff` or `git diff HEAD` in Step 6 (use `git status --short` ONLY)
+- ❌ **[ABSOLUTE PROHIBITION]** Running `read_file` on the target file being tested - content is ALWAYS in `file_references`
+- ❌ **[ABSOLUTE PROHIBITION]** Running `git status` or `git diff` unless explicitly instructed by test conductor
 - ❌ **[CRITICAL]** Re-reading content you just wrote with `write_file` (except Step 5a error recovery)
 - ❌ Executing redundant verification commands that duplicate information already in context
 - ❌ **[CRITICAL]** Using `replace` tool based on stale memory after `py_checker` runs (must `read_file` first)
@@ -533,8 +539,9 @@ Output: Success, ready for gatekeeper review
 ## Notes
 
 - **Mandatory tool execution**: Step 1a (`py_test_strategist`) is NON-NEGOTIABLE. It provides the mocking strategy that prevents errors
-- **Token efficiency**: File content is provided via `file_references`, so no need to read it separately
+- **Token efficiency**: File content is ALWAYS provided via `file_references`. **NEVER use `read_file` on the target file**
 - **Comprehensive testing**: Use the file content from `file_references` to understand what needs testing, including both specifications (docstrings) and implementation
+- **Git operations**: Step 6 (`git status`) is typically handled by test conductor. Only perform if explicitly instructed
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
 - **No skipping**: Quality checks must all pass before reporting success

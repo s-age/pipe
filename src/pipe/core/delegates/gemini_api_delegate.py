@@ -238,7 +238,9 @@ def run_stream(
 
             # Log tool result to streaming log
             if streaming_log_repo:
-                truncated_output = f"{output[:200]}..." if len(output) > 200 else output
+                truncated_output = (
+                    f"{output[:3000]}..." if len(output) > 3000 else output
+                )
                 log_content = (
                     f"TOOL_RESULT: {function_call.name} | status: {status} | "
                     f"output: {truncated_output}"
@@ -265,7 +267,7 @@ def run_stream(
             if streaming_log_repo:
                 error_msg = str(e)
                 truncated_error = (
-                    f"{error_msg[:200]}..." if len(error_msg) > 200 else error_msg
+                    f"{error_msg[:3000]}..." if len(error_msg) > 3000 else error_msg
                 )
                 log_content = (
                     f"TOOL_RESULT: {function_call.name} | status: failed | "

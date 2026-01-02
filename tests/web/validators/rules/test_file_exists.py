@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from src.pipe.web.validators.rules.file_exists import (
+from pipe.web.validators.rules.file_exists import (
     validate_comma_separated_files,
     validate_file_exists,
     validate_space_separated_files,

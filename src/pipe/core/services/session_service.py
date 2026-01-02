@@ -99,20 +99,27 @@ class SessionService:
             # Note: first user_task turn will be added by start_transaction()
             # in dispatcher. Do not add it here to avoid duplication
 
-        if args.references:
+        # Combine references and references_persist, ensuring persist flag is set correctly
+        if args.references or args.references_persist:
             from pipe.core.domains.references import add_reference
 
-            persistent_references = set(args.references_persist)
+            # Convert to sets for easy lookup
+            persistent_references = set(
+                ref.strip() for ref in (args.references_persist or []) if ref.strip()
+            )
+            all_references = set(
+                ref.strip() for ref in (args.references or []) if ref.strip()
+            )
 
-            for ref_path in args.references:
-                if ref_path.strip():
-                    is_persistent = ref_path.strip() in persistent_references
-                    add_reference(
-                        session.references,
-                        ref_path.strip(),
-                        session.references.default_ttl,
-                        persist=is_persistent,
-                    )
+            # Add all references from both sources
+            for ref_path in all_references | persistent_references:
+                is_persistent = ref_path in persistent_references
+                add_reference(
+                    session.references,
+                    ref_path,
+                    session.references.default_ttl,
+                    persist=is_persistent,
+                )
 
         if not is_dry_run:
             self.repository.save(session)

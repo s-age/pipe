@@ -1,5 +1,6 @@
 """Unit tests for gemini_cache_manager module."""
 
+from datetime import UTC
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -637,3 +638,203 @@ class TestUpdateIfNeededStateManagement:
             # With 4 persisted_turns, new count = len(full_history) - 1 = 3
             assert cached_count == 3
             assert cache_manager.current_cached_turn_count == 3
+
+    def test_returns_none_when_cache_name_is_empty(
+        self, cache_manager, mock_session, persisted_turns, mock_client
+    ):
+        """Test that None is returned when cache creation returns empty name."""
+        mock_session.cached_turn_count = 2
+
+        token_summary: TokenCountSummary = {
+            "cached_tokens": 5000,
+            "current_prompt_tokens": 20000,
+            "buffered_tokens": 15000,
+        }
+
+        # Mock cache object with empty name
+        mock_cache = MagicMock()
+        mock_cache.name = ""  # Empty cache name
+        mock_client.caches.create.return_value = mock_cache
+
+        with (
+            patch(
+                "pipe.core.domains.gemini_cache_manager.gemini_api_static_payload.build"
+            ) as mock_build,
+            patch.object(cache_manager, "_get_existing_cache_name", return_value=None),
+        ):
+            mock_build.return_value = [MagicMock()]
+
+            cache_name, cached_count, buffered_history = cache_manager.update_if_needed(
+                session=mock_session,
+                full_history=persisted_turns,
+                token_count_summary=token_summary,
+                threshold=10000,
+            )
+
+            # Should return None when cache name is empty
+            assert cache_name is None
+            assert cached_count == 2  # Should remain at initial value
+            assert len(buffered_history) > 0
+
+
+class TestUpdateRegistry:
+    """Test cases for _update_registry method."""
+
+    def test_creates_new_registry_file(
+        self, cache_manager, mock_session, tmp_path, mock_client
+    ):
+        """Test that _update_registry creates a new registry file when it doesn't exist."""
+        # Update cache_manager to use tmp_path
+        cache_manager.project_root = str(tmp_path)
+
+        # Create mock cached object with expire_time
+        from datetime import datetime, timedelta
+
+        mock_cached_obj = MagicMock()
+        expire_time = datetime.now(UTC) + timedelta(seconds=3600)
+        mock_cached_obj.expire_time = expire_time
+
+        cache_manager._update_registry(
+            session_id="test-session-123",
+            cache_name="test-cache-abc",
+            cached_obj=mock_cached_obj,
+        )
+
+        # Verify registry file was created
+        registry_path = tmp_path / "sessions" / ".cache_registry.json"
+        assert registry_path.exists()
+
+        # Verify contents (to_dict() doesn't include 'entries' key)
+        import json
+
+        with open(registry_path, encoding="utf-8") as f:
+            data = json.load(f)
+
+        assert "test-session-123" in data
+        assert data["test-session-123"]["name"] == "test-cache-abc"
+        assert data["test-session-123"]["session_id"] == "test-session-123"
+        assert "expire_time" in data["test-session-123"]
+
+    def test_updates_existing_registry_file(
+        self, cache_manager, mock_session, tmp_path, mock_client
+    ):
+        """Test that _update_registry updates an existing registry file."""
+        # Update cache_manager to use tmp_path
+        cache_manager.project_root = str(tmp_path)
+
+        # Create existing registry file
+        import json
+        from datetime import datetime, timedelta
+
+        registry_path = tmp_path / "sessions" / ".cache_registry.json"
+        registry_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Use the correct format (without 'entries' wrapper)
+        existing_data = {
+            "existing-session": {
+                "name": "existing-cache",
+                "expire_time": "2025-01-01T12:00:00Z",
+                "session_id": "existing-session",
+            }
+        }
+
+        with open(registry_path, "w", encoding="utf-8") as f:
+            json.dump(existing_data, f)
+
+        # Create mock cached object with expire_time
+        mock_cached_obj = MagicMock()
+        expire_time = datetime.now(UTC) + timedelta(seconds=3600)
+        mock_cached_obj.expire_time = expire_time
+
+        cache_manager._update_registry(
+            session_id="new-session-456",
+            cache_name="new-cache-def",
+            cached_obj=mock_cached_obj,
+        )
+
+        # Verify registry file was updated
+        with open(registry_path, encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Old entry should still exist
+        assert "existing-session" in data
+        assert data["existing-session"]["name"] == "existing-cache"
+
+        # New entry should be added
+        assert "new-session-456" in data
+        assert data["new-session-456"]["name"] == "new-cache-def"
+
+    def test_uses_fallback_expire_time_when_not_provided(
+        self, cache_manager, mock_session, tmp_path, mock_client
+    ):
+        """Test that _update_registry uses fallback expire_time when not in API response."""
+        # Update cache_manager to use tmp_path
+        cache_manager.project_root = str(tmp_path)
+
+        # Create mock cached object WITHOUT expire_time
+        mock_cached_obj = MagicMock()
+        mock_cached_obj.expire_time = None
+
+        cache_manager._update_registry(
+            session_id="test-session-789",
+            cache_name="test-cache-ghi",
+            cached_obj=mock_cached_obj,
+        )
+
+        # Verify registry file was created
+        registry_path = tmp_path / "sessions" / ".cache_registry.json"
+        assert registry_path.exists()
+
+        # Verify fallback expire_time was used
+        import json
+
+        with open(registry_path, encoding="utf-8") as f:
+            data = json.load(f)
+
+        assert "test-session-789" in data
+        # Should have an expire_time (calculated as current + 3600s)
+        assert "expire_time" in data["test-session-789"]
+        # Verify it's a valid ISO format datetime string
+        expire_time_str = data["test-session-789"]["expire_time"]
+        from datetime import datetime
+
+        datetime.fromisoformat(expire_time_str)  # Should not raise
+
+    def test_uses_settings_timezone_for_fallback(
+        self, cache_manager, mock_session, tmp_path, mock_client
+    ):
+        """Test that _update_registry uses settings timezone for fallback expire_time."""
+        from unittest.mock import MagicMock
+
+        # Update cache_manager to use tmp_path and custom settings
+        cache_manager.project_root = str(tmp_path)
+        mock_settings = MagicMock()
+        mock_settings.timezone = "Asia/Tokyo"
+        cache_manager.settings = mock_settings
+
+        # Create mock cached object WITHOUT expire_time
+        mock_cached_obj = MagicMock()
+        mock_cached_obj.expire_time = None
+
+        cache_manager._update_registry(
+            session_id="test-session-jkl",
+            cache_name="test-cache-mno",
+            cached_obj=mock_cached_obj,
+        )
+
+        # Verify registry file was created
+        registry_path = tmp_path / "sessions" / ".cache_registry.json"
+        assert registry_path.exists()
+
+        # The actual timezone calculation is complex to test, but we can verify
+        # that the expire_time was set and is valid
+        import json
+
+        with open(registry_path, encoding="utf-8") as f:
+            data = json.load(f)
+
+        assert "test-session-jkl" in data
+        expire_time_str = data["test-session-jkl"]["expire_time"]
+        from datetime import datetime
+
+        datetime.fromisoformat(expire_time_str)  # Should not raise

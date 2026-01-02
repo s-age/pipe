@@ -426,6 +426,66 @@ class TestSessionService(unittest.TestCase):
         self.assertEqual(fetched_session.turns[0].type, "function_calling")
         self.assertEqual(fetched_session.turns[1].name, "tool1")
 
+    def test_prepare_with_references_persist(self):
+        """Tests that references_persist automatically adds to references with persist=True."""
+        from pipe.core.models.args import TaktArgs
+
+        # Create dummy files
+        ref1_path = os.path.join(self.project_root, "ref1.txt")
+        ref2_path = os.path.join(self.project_root, "ref2.txt")
+        persist_path = os.path.join(self.project_root, "persist.txt")
+
+        with open(ref1_path, "w") as f:
+            f.write("ref1 content")
+        with open(ref2_path, "w") as f:
+            f.write("ref2 content")
+        with open(persist_path, "w") as f:
+            f.write("persist content")
+
+        # Test 1: Only references_persist specified
+        args = TaktArgs(
+            purpose="Test",
+            background="BG",
+            instruction="Test task",
+            references_persist=["persist.txt"],
+        )
+        self.session_service.prepare(args, is_dry_run=False)
+        session = self.session_service.current_session
+
+        # Should have 1 reference with persist=True
+        self.assertEqual(len(session.references), 1)
+        self.assertEqual(session.references[0].path, "persist.txt")
+        self.assertTrue(session.references[0].persist)
+
+        # Test 2: Both references and references_persist specified
+        args2 = TaktArgs(
+            purpose="Test2",
+            background="BG2",
+            instruction="Test task 2",
+            references=["ref1.txt", "ref2.txt"],
+            references_persist=["ref2.txt", "persist.txt"],
+        )
+        self.session_service.prepare(args2, is_dry_run=False)
+        session2 = self.session_service.current_session
+
+        # Should have 3 references total
+        self.assertEqual(len(session2.references), 3)
+
+        # Create a mapping of path to reference for easy lookup
+        ref_map = {ref.path: ref for ref in session2.references}
+
+        # ref1.txt should be non-persistent
+        self.assertIn("ref1.txt", ref_map)
+        self.assertFalse(ref_map["ref1.txt"].persist)
+
+        # ref2.txt should be persistent (in both lists)
+        self.assertIn("ref2.txt", ref_map)
+        self.assertTrue(ref_map["ref2.txt"].persist)
+
+        # persist.txt should be persistent (only in references_persist)
+        self.assertIn("persist.txt", ref_map)
+        self.assertTrue(ref_map["persist.txt"].persist)
+
 
 if __name__ == "__main__":
     unittest.main()

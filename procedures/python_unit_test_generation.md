@@ -12,11 +12,10 @@ Used by any agent tasked with writing tests. Invoked via detailed instruction fr
 
 ```mermaid
 graph TD
-    Start([Start: Receive target file]) --> Step1A[Step 1a: py_analyze_code<br/>MANDATORY]
-    Step1A --> Step1B[Step 1b: py_test_strategist<br/>MANDATORY]
-    Step1B --> Step1C[Step 1c: Manual analysis]
+    Start([Start: Receive target file]) --> Step1A[Step 1a: py_test_strategist<br/>MANDATORY]
+    Step1A --> Step1B[Step 1b: Manual analysis]
 
-    Step1C --> Step2[Step 2: Review applicable test strategies]
+    Step1B --> Step2[Step 2: Review applicable test strategies]
 
     Step2 --> Step3[Step 3: Plan test structure]
 
@@ -31,75 +30,99 @@ graph TD
     CheckTests -- No --> Step4
     CheckTests -- Yes --> Step5C[Step 5c: Verify Coverage]
 
-    Step5C --> Step6[Step 6: Verify git status]
+    Step5C --> Success[Step 6: Report Success]
 
-    Step6 --> Step7{Only tests/<br/>changed?}
-    Step7 -- Yes --> Commit[Step 7a: Auto-commit]
-    Step7 -- No --> Report[Step 7b: ABORT - DO NOT COMMIT]
-
-    Commit --> End([End: Success])
-    Report --> End([End: Aborted])
+    Success --> End([End: Success])
 
     style Start fill:#e1f5e1
     style End fill:#e1f5e1
     style Step1A fill:#ffdddd
-    style Step1B fill:#ffdddd
-    style Step1C fill:#fff4e1
+    style Step1B fill:#fff4e1
     style Step2 fill:#fff4e1
     style Step3 fill:#e1f0ff
     style Step4 fill:#ffe1f0
     style Step5A fill:#f0e1ff
     style Step5B fill:#f0e1ff
     style Step5C fill:#f0e1ff
-    style Step6 fill:#e1ffe1
     style CheckChecker fill:#ffcccc
     style CheckTests fill:#ffcccc
-    style Step7 fill:#ffcccc
-    style Commit fill:#ccffcc
-    style Report fill:#ffcccc
+    style Success fill:#ccffcc
 ```
 
 ---
 
 ## Step-by-Step Execution
 
-### Step 1: Read and Analyze Target File
+### Step 1: Analyze Target File
 
-**Context Check (Token Efficiency)**:
-If the target file content is already provided in `current_task` or `file_references`:
-- **[CONDITIONAL SKIP]** `read_file` - Use provided content directly
-- **[CONDITIONAL SKIP]** `py_analyze_code` - Analyze from provided content
-- **Purpose**: Avoid duplicate file reads that waste input tokens
+**CRITICAL - File Content Source**:
+- The target file content is **ALWAYS** provided in `file_references` with the latest state
+- **[ABSOLUTE PROHIBITION]**: Using `read_file` on the target file
+- **[REQUIRED]**: Use the content from `file_references` directly
+- **Rationale**: Prevents redundant file reads and ensures you work with the most current version
 
-**Otherwise (Mandatory Tool Execution)**:
-The following tool executions are **MANDATORY** and must be performed in order:
+The following tool execution is **MANDATORY**:
 
-#### Step 1a: Extract Specifications and Docstrings (Mandatory)
-```python
-py_analyze_code(file_path="{target_file_path}")
-```
-This tool provides:
-- Docstrings for all classes, methods, and functions
-- Expected behavior descriptions
-- Parameter details and return values
-- Usage examples from documentation
-
-**Purpose**: Build test cases from **specifications** (what it should do), not implementation details (how it does it).
-
-#### Step 1b: Determine Test Strategy (Mandatory)
+#### Step 1a: Determine Test Strategy (Mandatory)
 ```python
 py_test_strategist(file_path="{target_file_path}")
 ```
 This tool analyzes:
 - Complexity metrics (cyclomatic complexity, nesting depth)
 - Required mocking patterns
+- **Mock patch paths** (automatically extracts import statements and generates correct @patch paths)
 - Suggested test structure
 - Risk areas requiring extra coverage
 
 **Purpose**: Know **how to test** (mocking strategy, complexity handling) before writing any code.
 
-#### Step 1c: Manual Analysis
-After obtaining file content (either from context or mandatory tools), manually identify:
+**CRITICAL - Mock Patch Paths**:
+The tool automatically analyzes import statements and provides `mock_targets` with accurate patch paths:
+
+```python
+# Example output from py_test_strategist:
+FunctionStrategy(
+    function_name="process_file",
+    mock_targets=[
+        MockTarget(
+            dependency_name="os",
+            patch_path="pipe.core.utils.path.os",  # Correct namespace
+            import_type="module",
+            original_import="import os"
+        ),
+        MockTarget(
+            dependency_name="join",
+            patch_path="pipe.core.utils.path.join",  # Correct namespace
+            import_type="from_import",
+            original_import="from os.path import join"
+        )
+    ]
+)
+```
+
+**Usage in Tests**:
+- **[REQUIRED]** Use the `patch_path` field directly in @patch decorators
+- **[PROHIBITED]** Guessing or inferring patch paths manually
+- **[PROHIBITED]** Using global module paths (e.g., "os.path.join" instead of "pipe.core.utils.path.join")
+
+**Example**:
+```python
+# CORRECT - Using mock_targets from py_test_strategist
+@patch("pipe.core.utils.path.join")  # ← From mock_targets[0].patch_path
+def test_process_file(mock_join):
+    ...
+
+# INCORRECT - Guessing the path
+@patch("os.path.join")  # ← Will fail: patches wrong namespace
+def test_process_file(mock_join):
+    ...
+```
+
+**Rationale**:
+Mock patches must target the **namespace where the dependency is imported**, not where it's defined. The tool eliminates guesswork by analyzing import statements automatically.
+
+#### Step 1b: Manual Analysis
+**[REQUIRED]**: Use the file content from `file_references` (NOT `read_file`) to manually identify:
 - Public interface (classes, methods, functions)
 - Dependencies (imports, external calls)
 - Data flow (inputs, outputs, state changes)
@@ -107,14 +130,14 @@ After obtaining file content (either from context or mandatory tools), manually 
 - Error conditions (exceptions, validation failures)
 
 **Output**: Complete test specification including:
-- Behavioral specifications (from `py_analyze_code` or provided context)
-- Technical test strategy (from `py_test_strategist` or analysis)
+- Behavioral specifications (from `file_references`)
+- Technical test strategy (from `py_test_strategist`)
 - Manual analysis notes
 
-**Rationale**: This "golden routine" ensures tests are:
-1. **Aligned with specifications** (docstrings, not implementation)
-2. **Technically sound** (proper mocking and complexity handling)
-3. **Token efficient** (skip redundant reads when context already provided)
+**Rationale**: This approach ensures tests are:
+1. **Comprehensive** (based on actual code structure and docstrings)
+2. **Technically sound** (proper mocking and complexity handling from `py_test_strategist`)
+3. **Token efficient** (file content already in context via `file_references`)
 
 Skipping these steps is equivalent to climbing a mountain without a map—it invites coverage gaps and wasted effort.
 
@@ -165,13 +188,46 @@ Skipping these steps is equivalent to climbing a mountain without a map—it inv
    - Clear assertions
    - Edge case coverage
 
+**CRITICAL - Using Mock Targets from py_test_strategist**:
+
+When writing tests that require mocking, **ALWAYS use the `mock_targets` from Step 1b**:
+
+```python
+# Step 1b provided these mock_targets:
+# mock_targets=[
+#     MockTarget(dependency_name="os", patch_path="pipe.core.utils.path.os", ...),
+#     MockTarget(dependency_name="requests", patch_path="pipe.core.services.api.requests", ...)
+# ]
+
+# CORRECT - Use patch_path from mock_targets
+from unittest.mock import patch
+
+@patch("pipe.core.utils.path.os")  # ← From mock_targets[0].patch_path
+def test_process_file(mock_os):
+    mock_os.path.exists.return_value = True
+    ...
+
+# INCORRECT - Guessing the path
+@patch("os")  # ← Will fail: patches wrong namespace
+def test_process_file(mock_os):
+    ...
+```
+
+**Mocking Decision Tree**:
+1. Check `mock_targets` from `py_test_strategist` output
+2. For each dependency that needs mocking:
+   - Find the corresponding `MockTarget` by `dependency_name`
+   - Use its `patch_path` in `@patch()` decorator
+   - **NEVER** guess or infer the path manually
+3. If a dependency is not in `mock_targets`, verify if it actually needs mocking (it may be a test-safe dependency)
+
 **Layer-Specific Requirements**:
 - **Repositories**: Use `tmp_path` for real file I/O
-- **Services**: Mock repository layer
+- **Services**: Mock repository layer (use `mock_targets` for repository dependencies)
 - **Models**: Test validation and serialization
 - **Collections**: Test immutability
 - **Domains**: Verify no mutation of original data
-- **Tools**: Mock external dependencies, test security
+- **Tools**: Mock external dependencies using `mock_targets` (e.g., API clients, file system)
 
 **Output**: Complete test file
 
@@ -288,109 +344,26 @@ poetry run pytest --cov=src --cov-report=term-missing tests/unit/core/utils/test
 
 ---
 
-### Step 6: Verify Git Status
-
-**CRITICAL**: This step detects unauthorized file modifications and triggers immediate abort if violated.
+### Step 6: Report Success
 
 **Actions**:
-1. Run **ONLY**:
-   ```bash
-   git status --short
-   ```
-2. Analyze ALL modified files in the output
-3. Verify that ONLY the following files are modified:
-   - The test file you are writing: `{test_output_path}`
-   - NO other files should appear in git status
+Report successful test implementation with the following information:
+- Test file path: `{test_output_path}`
+- Coverage metrics
+- All quality checks passed
 
-**Expected Output**:
-```
-M  tests/unit/core/utils/test_path.py
-```
-
-**Forbidden Scenarios**:
-- ❌ ANY files outside `tests/` directory are modified
-- ❌ ANY test files you did NOT create/modify appear in git status
-- ❌ ANY production code files appear in git status
-- ❌ ANY configuration files (pyproject.toml, .gitignore, etc.) appear in git status
-
-**Token Efficiency Rule**:
-- **[PROHIBITED]** `git diff` - Wastes tokens showing content you just wrote with `write_file`
-- **[PROHIBITED]** `git diff HEAD` - Duplicates entire file content in context
-- **[REQUIRED]** `git status --short` ONLY - Minimal output, sufficient verification
-- **Rationale**: Trust your own `write_file` output. You don't need to re-read what you just wrote.
-
-**Output**: List of changed files for Step 7 validation
-
----
-
-### Step 7: Final Action
-
-**Decision Tree**:
-1. Check if ONLY `{test_output_path}` is modified → Proceed to Step 7a
-2. Check if ANY other files are modified → Proceed to Step 7b (ABORT)
-
-#### Step 7a: If Only Target Test File Changed (Auto-Commit)
-
-**Condition**: ONLY the test file you are writing (`{test_output_path}`) is modified
-
-**Validation**:
-```bash
-# Expected git status output:
-M  {test_output_path}
-# OR for new files:
-A  {test_output_path}
-```
-
-**Actions**:
-```bash
-git add {test_output_path}
-git commit -m "test: add tests for {filename}"
-```
-
-**Output**: Committed changes
-
-#### Step 7b: If ANY Other Files Changed (ABORT - DO NOT COMMIT)
-
-**Condition**: ANY of the following are true:
-1. Files outside `tests/` directory are modified
-2. Test files OTHER than `{test_output_path}` are modified
-3. Configuration files are modified
-4. ANY files you did not intentionally create/modify appear in git diff
-
-**CRITICAL**: This is a **FATAL ERROR**. Tests must ONLY modify the single test file being written.
-
-**Actions**:
-1. Report ALL modified files and abort immediately:
-   ```
-   🚨 FATAL ERROR: Unauthorized file modifications detected
-
-   Expected ONLY this file to be modified:
-   - {test_output_path}
-
-   But git diff shows these files were also changed:
-   - {unrelated_file1}
-   - {unrelated_file2}
-
-   ABORT: Tests must ONLY modify the target test file.
-   Unrelated file changes indicate:
-   - Accidental code modification
-   - Tool side effects
-   - Import errors modifying __pycache__
-   - Configuration file corruption
-
-   DO NOT COMMIT. DO NOT PROCEED. ABORT IMMEDIATELY.
-   ```
-2. **DO NOT commit under ANY circumstances**
-3. **DO NOT wait for user confirmation**
-4. **DO NOT attempt to fix or rollback**
-5. **ABORT the procedure immediately**
-6. **Report to user for investigation**
-
-**Output**: Procedure aborted, no commit made, error reported
+**Output**: Success report (test conductor will handle git verification and commit)
 
 ---
 
 ## Constraints (Must Not)
+
+### Project Environment
+- **Poetry Environment**: This project uses Poetry for dependency management
+- ❌ **ABSOLUTE PROHIBITION**: Adding ANY new dependencies to pyproject.toml
+- ❌ **ABSOLUTE PROHIBITION**: Installing ANY new libraries via poetry add or pip install
+- ✅ **REQUIRED**: Use ONLY existing dependencies already defined in pyproject.toml
+- **Rationale**: Test implementation must work within the existing dependency constraints
 
 ### Prohibited Pydantic Patterns
 - ❌ `session.dict()` (use `session.model_dump()`)
@@ -403,23 +376,18 @@ git commit -m "test: add tests for {filename}"
 - ❌ Hardcoded file paths (use `tmp_path`, `tempfile`)
 - ❌ Test dependencies (tests must be independent)
 - ❌ Skipping quality checks
-- ❌ Committing with failing tests
-- ❌ **ABSOLUTE PROHIBITION**: Modifying ANY files outside `tests/` directory
-- ❌ **ABSOLUTE PROHIBITION**: Modifying ANY test files other than `{test_output_path}`
-- ❌ **ABSOLUTE PROHIBITION**: Committing if git diff shows ANY unintended file changes
 - ❌ **ABSOLUTE PROHIBITION**: Using `--cov={file_path}` (must use `--cov=src`)
 - ❌ **ABSOLUTE PROHIBITION**: Running coverage without grep filter (causes context overflow)
 
 ### Prohibited Shortcuts
-- ❌ Skipping mandatory tool executions in Step 1 (py_analyze_code, py_test_strategist) when context is NOT provided
+- ❌ Skipping mandatory `py_test_strategist` execution in Step 1
 - ❌ Proceeding to next step if current step fails
 - ❌ Batching quality checks (run sequentially)
 - ❌ Assuming tests pass without running them
-- ❌ Writing tests based solely on implementation details instead of specifications
+- ❌ Writing tests without understanding the code being tested
 
 ### Prohibited Token-Wasting Actions
-- ❌ **[CRITICAL]** Running `read_file` when file content is already in `current_task` or `file_references` (Step 1 only)
-- ❌ **[CRITICAL]** Running `git diff` or `git diff HEAD` in Step 6 (use `git status --short` ONLY)
+- ❌ **[ABSOLUTE PROHIBITION]** Running `read_file` on the target file being tested - content is ALWAYS in `file_references`
 - ❌ **[CRITICAL]** Re-reading content you just wrote with `write_file` (except Step 5a error recovery)
 - ❌ Executing redundant verification commands that duplicate information already in context
 - ❌ **[CRITICAL]** Using `replace` tool based on stale memory after `py_checker` runs (must `read_file` first)
@@ -443,13 +411,12 @@ Input:
   layer: repositories
 
 Execution:
-  Step 1a: py_analyze_code(src/pipe/core/repositories/archive_repository.py)
-           → Extracted docstrings for save(), restore(), delete()
-           → Identified spec: "save() must create parent dirs", "delete() must handle missing files"
-  Step 1b: py_test_strategist(src/pipe/core/repositories/archive_repository.py)
+  Step 1a: py_test_strategist(src/pipe/core/repositories/archive_repository.py)
            → Complexity: Medium (cyclomatic=8)
            → Strategy: Use tmp_path for real file I/O, mock Path.exists for error cases
-  Step 1c: Manual analysis
+  Step 1b: Manual analysis (using file_references)
+           → Extract docstrings for save(), restore(), delete()
+           → Identify spec: "save() must create parent dirs", "delete() must handle missing files"
            → Identify edge cases: empty archives, corrupted files, permission errors
   Step 2: Review roles/python/tests/core/repositories.md (use tmp_path, test CRUD)
   Step 3: Plan TestArchiveRepositorySave, TestArchiveRepositoryRestore, etc.
@@ -458,25 +425,21 @@ Execution:
   Step 5b: py_run_and_test_code() → PASS (pytest on entire project)
   Step 5c: poetry run pytest --cov=src --cov-report=term-missing tests/unit/core/repositories/test_archive_repository.py | grep archive_repository.py
            → Coverage: 95% (acceptable)
-  Step 6: git status --short → M tests/unit/core/repositories/test_archive_repository.py
-           → Verification: ONLY the target test file is modified ✓
-  Step 7a: git add tests/unit/core/repositories/test_archive_repository.py
-           git commit -m "test: add tests for archive_repository"
+  Step 6: Report success with coverage metrics
 
-Output: Success, test committed
+Output: Success, ready for test conductor review
 ```
 
 ---
 
 ## Notes
 
-- **Mandatory tool execution**: Step 1a-1b tools are NON-NEGOTIABLE unless context is pre-provided. They form the "golden routine" that prevents coverage gaps and wasted effort
-- **Token efficiency**: Check for pre-provided context BEFORE executing tools. Skip redundant reads.
-- **Specification-driven testing**: Use `py_analyze_code` output (docstrings) to design tests, not implementation details
+- **Mandatory tool execution**: Step 1a (`py_test_strategist`) is NON-NEGOTIABLE. It provides the mocking strategy that prevents errors
+- **Token efficiency**: File content is ALWAYS provided via `file_references`. **NEVER use `read_file` on the target file**
+- **Comprehensive testing**: Use the file content from `file_references` to understand what needs testing, including both specifications (docstrings) and implementation
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
-- **No skipping**: Quality checks must all pass before commit
-- **Verification efficiency**: Use `git status --short` ONLY in Step 6. Never use `git diff` to re-read what you just wrote.
+- **No skipping**: Quality checks must all pass before reporting success
 - **Formatter safeguard**: ALWAYS execute `read_file` BEFORE fixing lint errors in Step 5a. Your memory is stale after auto-formatters run.
-- **ABSOLUTE PROHIBITION**: ANY changes to files outside `tests/` directory will result in immediate procedure abort with NO commit
+- **Responsibility**: Test implementation agents do NOT handle git operations or commits. They report success/failure to test conductor for verification and commit decision.
 

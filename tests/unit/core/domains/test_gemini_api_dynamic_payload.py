@@ -1,6 +1,7 @@
 """Unit tests for gemini_api_dynamic_payload module."""
 
 import json
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,7 +12,13 @@ from pipe.core.models.prompt import Prompt
 from pipe.core.models.prompts.current_task import PromptCurrentTask
 from pipe.core.models.prompts.file_reference import PromptFileReference
 from pipe.core.models.prompts.todo import PromptTodo
-from pipe.core.models.turn import FunctionCallingTurn, ModelResponseTurn, UserTaskTurn
+from pipe.core.models.turn import (
+    FunctionCallingTurn,
+    ModelResponseTurn,
+    ToolResponseTurn,
+    TurnResponse,
+    UserTaskTurn,
+)
 
 
 @pytest.fixture
@@ -692,3 +699,465 @@ class TestRestoreFunctionCall:
         # Should use the last chunk
         assert result.parts[0].function_call.name == "second"
         assert result.parts[0].function_call.args == {"final": True}
+
+
+class TestRenderDynamicJson:
+    """Test cases for render_dynamic_json method."""
+
+    def test_render_dynamic_json_with_all_fields(self, builder, mock_prompt):
+        """Test render_dynamic_json with all fields."""
+        mock_prompt.file_references = [
+            PromptFileReference(
+                path="/test/file.py",
+                content="test content",
+            )
+        ]
+        mock_prompt.artifacts = [
+            Artifact(
+                path="/test/artifact.py",
+                content="artifact content",
+            )
+        ]
+        mock_prompt.todos = [
+            PromptTodo(
+                title="Test todo",
+                description="Testing todo",
+                checked=False,
+            )
+        ]
+        mock_prompt.current_datetime = "2025-01-01T00:00:00Z"
+
+        with patch(
+            "pipe.core.domains.gemini_api_dynamic_payload.Environment"
+        ) as mock_env_class:
+            mock_env = MagicMock()
+            mock_template = MagicMock()
+            mock_template.render.return_value = '{"test": "rendered"}'
+            mock_env.get_template.return_value = mock_template
+            mock_env_class.return_value = mock_env
+
+            result = builder.render_dynamic_json(mock_prompt)
+
+            assert result == '{"test": "rendered"}'
+
+            # Verify template was called with correct context
+            render_call_args = mock_template.render.call_args
+            context = render_call_args.kwargs["session"]
+            assert context["file_references"] == mock_prompt.file_references
+            assert context["artifacts"] == mock_prompt.artifacts
+            assert context["todos"] == mock_prompt.todos
+            assert context["current_datetime"] == "2025-01-01T00:00:00Z"
+
+    def test_render_dynamic_json_returns_empty_string_for_empty_template(
+        self, builder, mock_prompt
+    ):
+        """Test that empty rendered template returns empty string."""
+        mock_prompt.file_references = None
+        mock_prompt.artifacts = None
+        mock_prompt.todos = None
+        mock_prompt.current_datetime = "2025-01-01T00:00:00Z"
+
+        with patch(
+            "pipe.core.domains.gemini_api_dynamic_payload.Environment"
+        ) as mock_env_class:
+            mock_env = MagicMock()
+            mock_template = MagicMock()
+            mock_template.render.return_value = ""
+            mock_env.get_template.return_value = mock_template
+            mock_env_class.return_value = mock_env
+
+            result = builder.render_dynamic_json(mock_prompt)
+
+            assert result == ""
+
+
+class TestBuildToolResponse:
+    """Test cases for _build_tool_response method."""
+
+    def test_build_tool_response_returns_none_for_no_response(self, builder):
+        """Test that _build_tool_response returns None when response is absent."""
+        # Create a mock turn with response=None to test the defensive check
+        turn = MagicMock(spec=ToolResponseTurn)
+        turn.response = None
+        turn.name = "test_tool"
+
+        result = builder._build_tool_response(turn)
+
+        assert result is None
+
+    def test_build_tool_response_with_basic_response(self, builder):
+        """Test _build_tool_response with basic status and message."""
+        turn = ToolResponseTurn(
+            type="tool_response",
+            name="test_tool",
+            timestamp="2025-01-01T00:00:01Z",
+            response=TurnResponse(
+                status="succeeded",
+                message="Tool executed successfully",
+            ),
+        )
+
+        result = builder._build_tool_response(turn)
+
+        assert result is not None
+        assert result.role == "tool"
+        assert result.parts is not None
+        assert len(result.parts) == 1
+        assert hasattr(result.parts[0], "function_response")
+        assert result.parts[0].function_response.name == "test_tool"
+        assert result.parts[0].function_response.response["status"] == "succeeded"
+        assert (
+            result.parts[0].function_response.response["message"]
+            == "Tool executed successfully"
+        )
+
+    def test_build_tool_response_without_message(self, builder):
+        """Test _build_tool_response with only status."""
+        turn = ToolResponseTurn(
+            type="tool_response",
+            name="test_tool",
+            timestamp="2025-01-01T00:00:01Z",
+            response=TurnResponse(
+                status="succeeded",
+                message=None,
+            ),
+        )
+
+        result = builder._build_tool_response(turn)
+
+        assert result is not None
+        assert result.parts is not None
+        assert result.parts[0].function_response.response["status"] == "succeeded"
+        assert "message" not in result.parts[0].function_response.response
+
+    def test_build_tool_response_with_model_extra(self, builder):
+        """Test _build_tool_response with model_extra fields."""
+        # Create a mock response with model_extra
+        mock_response = MagicMock(spec=TurnResponse)
+        mock_response.status = "succeeded"
+        mock_response.message = "Tool executed"
+        mock_response.model_extra = {"extra_field": "extra_value", "count": 42}
+
+        turn = ToolResponseTurn(
+            type="tool_response",
+            name="test_tool",
+            timestamp="2025-01-01T00:00:01Z",
+            response=TurnResponse(
+                status="succeeded",
+                message="Tool executed",
+            ),
+        )
+        # Replace the response with our mock to test model_extra handling
+        turn.response = mock_response
+
+        result = builder._build_tool_response(turn)
+
+        assert result is not None
+        assert result.parts is not None
+        response_dict = result.parts[0].function_response.response
+        assert response_dict["status"] == "succeeded"
+        assert response_dict["message"] == "Tool executed"
+        assert response_dict["extra_field"] == "extra_value"
+        assert response_dict["count"] == 42
+
+
+class TestEdgeCases:
+    """Test cases for edge cases and error paths."""
+
+    def test_restore_thought_signature_with_empty_list(self, builder):
+        """Test restoration with empty chunks list."""
+        raw_response = json.dumps([])
+
+        turn = ModelResponseTurn(
+            type="model_response",
+            content="Fallback",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_thought_signature(turn)
+
+        assert result is None
+
+    def test_restore_thought_signature_with_non_list(self, builder):
+        """Test restoration with non-list raw_response."""
+        raw_response = json.dumps({"not": "a list"})
+
+        turn = ModelResponseTurn(
+            type="model_response",
+            content="Fallback",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_thought_signature(turn)
+
+        assert result is None
+
+    def test_restore_thought_signature_with_empty_candidates(self, builder):
+        """Test restoration with empty candidates."""
+        raw_response = json.dumps([{"candidates": []}])
+
+        turn = ModelResponseTurn(
+            type="model_response",
+            content="Fallback",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_thought_signature(turn)
+
+        assert result is None
+
+    def test_restore_thought_signature_with_missing_content(self, builder):
+        """Test restoration with missing content field."""
+        raw_response = json.dumps([{"candidates": [{"no_content": "here"}]}])
+
+        turn = ModelResponseTurn(
+            type="model_response",
+            content="Fallback",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_thought_signature(turn)
+
+        assert result is None
+
+    def test_restore_thought_signature_with_empty_parts(self, builder):
+        """Test restoration with empty parts list."""
+        raw_response = json.dumps(
+            [{"candidates": [{"content": {"parts": [], "role": "model"}}]}]
+        )
+
+        turn = ModelResponseTurn(
+            type="model_response",
+            content="Fallback",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_thought_signature(turn)
+
+        assert result is None
+
+    def test_restore_thought_signature_with_non_dict_chunk(self, builder):
+        """Test restoration with non-dict chunk in list."""
+        raw_response = json.dumps(
+            [
+                {
+                    "candidates": [
+                        {
+                            "content": {
+                                "parts": [{"text": "Valid text"}],
+                                "role": "model",
+                            }
+                        }
+                    ]
+                },
+                "not a dict",  # This should be skipped (processed first due to reversed)
+            ]
+        )
+
+        turn = ModelResponseTurn(
+            type="model_response",
+            content="Fallback",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_thought_signature(turn)
+
+        assert result is not None
+        assert result.parts is not None
+        assert len(result.parts) == 1
+        assert result.parts[0].text == "Valid text"
+
+    def test_restore_function_call_with_empty_list(self, builder):
+        """Test function call restoration with empty chunks list."""
+        raw_response = json.dumps([])
+
+        turn = FunctionCallingTurn(
+            type="function_calling",
+            response="Response",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_function_call(turn)
+
+        assert result is None
+
+    def test_restore_function_call_with_non_list(self, builder):
+        """Test function call restoration with non-list raw_response."""
+        raw_response = json.dumps({"not": "a list"})
+
+        turn = FunctionCallingTurn(
+            type="function_calling",
+            response="Response",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_function_call(turn)
+
+        assert result is None
+
+    def test_restore_function_call_with_empty_candidates(self, builder):
+        """Test function call restoration with empty candidates."""
+        raw_response = json.dumps([{"candidates": []}])
+
+        turn = FunctionCallingTurn(
+            type="function_calling",
+            response="Response",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_function_call(turn)
+
+        assert result is None
+
+    def test_restore_function_call_with_missing_content(self, builder):
+        """Test function call restoration with missing content field."""
+        raw_response = json.dumps([{"candidates": [{"no_content": "here"}]}])
+
+        turn = FunctionCallingTurn(
+            type="function_calling",
+            response="Response",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_function_call(turn)
+
+        assert result is None
+
+    def test_restore_function_call_with_empty_parts(self, builder):
+        """Test function call restoration with empty parts list."""
+        raw_response = json.dumps(
+            [{"candidates": [{"content": {"parts": [], "role": "model"}}]}]
+        )
+
+        turn = FunctionCallingTurn(
+            type="function_calling",
+            response="Response",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_function_call(turn)
+
+        assert result is None
+
+    def test_restore_function_call_with_non_dict_chunk(self, builder):
+        """Test function call restoration with non-dict chunk in list."""
+        raw_response = json.dumps(
+            [
+                {
+                    "candidates": [
+                        {
+                            "content": {
+                                "parts": [
+                                    {
+                                        "function_call": {
+                                            "name": "test_func",
+                                            "args": {"x": 1},
+                                        }
+                                    }
+                                ],
+                                "role": "model",
+                            }
+                        }
+                    ]
+                },
+                "not a dict",  # This should be skipped (processed first due to reversed)
+            ]
+        )
+
+        turn = FunctionCallingTurn(
+            type="function_calling",
+            response="Response",
+            timestamp="2025-01-01T00:00:01Z",
+            raw_response=raw_response,
+        )
+
+        result = builder._restore_function_call(turn)
+
+        assert result is not None
+        assert result.parts is not None
+        assert len(result.parts) == 1
+        assert result.parts[0].function_call.name == "test_func"
+
+    def test_reconstruct_parts_with_invalid_thought_signature(self, builder):
+        """Test reconstruction with invalid thought_signature structure."""
+        parts_data = [{"thought_signature": "not a dict"}]
+
+        result = builder._reconstruct_parts(parts_data)
+
+        # Should skip invalid thought_signature and return empty list
+        assert len(result) == 0
+
+    def test_reconstruct_parts_with_invalid_function_call(self, builder):
+        """Test reconstruction with invalid function_call structure."""
+        parts_data = [{"function_call": "not a dict"}]
+
+        result = builder._reconstruct_parts(parts_data)
+
+        # Should skip invalid function_call and return empty list
+        assert len(result) == 0
+
+    def test_reconstruct_parts_with_thought_signature_missing_chunks(self, builder):
+        """Test reconstruction with thought_signature missing chunks."""
+        parts_data: list[dict[str, Any]] = [{"thought_signature": {}}]
+
+        result = builder._reconstruct_parts(parts_data)
+
+        # Should handle missing chunks gracefully
+        assert len(result) == 0
+
+    def test_build_buffered_history_with_tool_response_turn(self, builder):
+        """Test buffered history with tool response turn."""
+        history = [
+            ToolResponseTurn(
+                type="tool_response",
+                name="test_tool",
+                timestamp="2025-01-01T00:00:01Z",
+                response=TurnResponse(
+                    status="succeeded",
+                    message="Tool executed",
+                ),
+            )
+        ]
+
+        result = builder._build_buffered_history(history)
+
+        assert len(result) == 1
+        assert result[0].role == "tool"
+        assert result[0].parts is not None
+        assert len(result[0].parts) == 1
+        assert hasattr(result[0].parts[0], "function_response")
+        assert result[0].parts[0].function_response.name == "test_tool"
+
+    def test_build_with_buffered_history_object(self, builder, mock_prompt):
+        """Test build with buffered_history as object with turns attribute."""
+
+        class MockBufferedHistory:
+            def __init__(self):
+                self.turns = [
+                    UserTaskTurn(
+                        type="user_task",
+                        instruction="Task from object",
+                        timestamp="2025-01-01T00:00:01Z",
+                    )
+                ]
+
+        mock_prompt.buffered_history = MockBufferedHistory()
+        mock_prompt.current_task = None
+
+        result = builder.build(mock_prompt, dynamic_json="")
+
+        assert len(result) == 1
+        assert result[0].role == "user"
+        assert result[0].parts is not None
+        assert result[0].parts[0].text == "Task from object"

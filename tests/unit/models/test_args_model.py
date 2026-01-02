@@ -79,6 +79,62 @@ class TestArgsModel(unittest.TestCase):
         self.assertIsNone(takt_args.procedure)
         self.assertEqual(takt_args.instruction, "Minimal instruction")
 
+    def test_taktargs_with_multiple_roles_via_append(self):
+        """
+        Tests that TaktArgs correctly handles multiple --roles flags (action='append').
+        """
+        # Simulate argparse with action='append'
+        parsed_args = argparse.Namespace(
+            dry_run=False,
+            session=None,
+            purpose="Test",
+            background="BG",
+            roles=["roles/tests.md", "roles/core/services.md"],
+            parent=None,
+            instruction="Test",
+            references=["ref1.txt", "ref2.txt"],
+            references_persist=["ref1.txt"],
+            artifacts=None,
+            procedure=None,
+            multi_step_reasoning=False,
+            fork=None,
+            at_turn=None,
+            api_mode=None,
+        )
+
+        takt_args = TaktArgs.from_parsed_args(parsed_args)
+
+        self.assertEqual(takt_args.roles, ["roles/tests.md", "roles/core/services.md"])
+        self.assertEqual(takt_args.references, ["ref1.txt", "ref2.txt"])
+        self.assertEqual(takt_args.references_persist, ["ref1.txt"])
+
+    def test_taktargs_with_mixed_comma_and_append(self):
+        """
+        Tests that TaktArgs handles mix of action='append' and comma-separated values.
+        """
+        # Simulate: --roles role1.md,role2.md --roles role3.md
+        parsed_args = argparse.Namespace(
+            dry_run=False,
+            session=None,
+            purpose="Test",
+            background="BG",
+            roles=["role1.md,role2.md", "role3.md"],
+            parent=None,
+            instruction="Test",
+            references=None,
+            references_persist=None,
+            artifacts=None,
+            procedure=None,
+            multi_step_reasoning=False,
+            fork=None,
+            at_turn=None,
+            api_mode=None,
+        )
+
+        takt_args = TaktArgs.from_parsed_args(parsed_args)
+
+        self.assertEqual(takt_args.roles, ["role1.md", "role2.md", "role3.md"])
+
 
 if __name__ == "__main__":
     unittest.main()

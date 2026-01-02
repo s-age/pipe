@@ -365,16 +365,22 @@ def invoke_parent_session(
     """
     print(f"[serial_manager] Invoking parent session: {session_id}", flush=True)
 
-    # Check for abort (exit_code 2)
+    # Check execution status
+    all_success = all(r.exit_code == 0 for r in results) if results else True
     abort_result = None
+    failed_result = None
+
     if results:
         for result in results:
             if result.exit_code == 2:
                 abort_result = result
                 break
+            elif result.exit_code != 0 and not failed_result:
+                failed_result = result
 
-    # Build instruction with abort information or child session IDs
+    # Build instruction based on execution status
     if abort_result:
+        # Exit code 2: Permanent failure
         instruction = (
             f"🚨 Task execution ABORTED (exit code 2 - permanent failure)\n\n"
             f"Task {abort_result.task_index + 1} failed with exit code 2, "
@@ -387,12 +393,37 @@ def invoke_parent_session(
             "- Unauthorized file modifications detected\n"
             "- Validation failures that require manual investigation\n"
             "- Configuration issues that cannot be auto-fixed\n\n"
-            "Please investigate the issue manually before retrying."
+            "CRITICAL: DO NOT retry or call invoke_serial_children again. "
+            "This is a permanent failure that requires manual investigation. "
+            "Report this error to the user and wait for manual intervention."
         )
-    elif child_session_ids:
+    elif failed_result:
+        # Exit code 1: Normal failure (retries exhausted)
+        instruction = (
+            f"❌ Task execution FAILED\n\n"
+            f"Task {failed_result.task_index + 1} failed with exit code {failed_result.exit_code} "
+            f"after exhausting all retry attempts.\n\n"
+        )
+        if failed_result.output_preview:
+            instruction += (
+                f"Error details:\n```\n{failed_result.output_preview}\n```\n\n"
+            )
+        if child_session_ids:
+            session_ids_json = json.dumps(child_session_ids, ensure_ascii=False)
+            instruction += (
+                f"Child sessions were created but the pipeline failed. "
+                f"Session IDs: {session_ids_json}\n\n"
+            )
+        instruction += (
+            "CRITICAL: DO NOT retry or call invoke_serial_children again. "
+            "All retry attempts have been exhausted. "
+            "Report this failure to the user."
+        )
+    elif child_session_ids and all_success:
+        # Success
         session_ids_json = json.dumps(child_session_ids, ensure_ascii=False)
         instruction = (
-            f"Child agent tasks completed successfully. "
+            f"✅ Child agent tasks completed successfully. "
             f"To retrieve the results, use get_sessions_final_turns "
             f"with the following session IDs:\n"
             f"session_ids={session_ids_json}\n\n"

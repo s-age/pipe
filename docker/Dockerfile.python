@@ -15,8 +15,11 @@ COPY pyproject.toml poetry.lock* ./
 # Configure poetry: do not create virtual environment
 RUN poetry config virtualenvs.create false
 
-# Install dependencies
-RUN poetry install --without dev --no-interaction --no-ansi
+# Suppress SyntaxWarning from Whoosh library (Python 3.12 compatibility)
+ENV PYTHONWARNINGS="ignore::SyntaxWarning"
+
+# Install dependencies (including dev tools like ruff, black, mypy)
+RUN poetry install --no-interaction --no-ansi --with dev,test
 
 # Copy the rest of the application
 COPY . .

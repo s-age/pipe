@@ -94,13 +94,69 @@ invoke_serial_children(
 
 **Result**: Conductor exits immediately
 
-#### Step 3d: Resume and Mark Complete
+#### Step 3d: Handle Serial Manager Response
 
-**Actions** (when conductor resumes):
-1. Check previous task result
-2. If successful: `edit_todos` to mark file as "completed"
-3. If failed: Report error and stop
-4. Move to next file
+**Actions** (when conductor resumes after `invoke_serial_children`):
+
+The serial manager will send one of three types of messages:
+
+##### Case 1: Success (✅)
+**Message pattern**: "✅ Child agent tasks completed successfully"
+
+**Actions**:
+1. Call `get_sessions_final_turns` with provided session IDs to retrieve results
+2. Use `edit_todos` to mark current file as "completed"
+3. Move to next file
+
+**Example**:
+```python
+# Receive: "✅ Child agent tasks completed successfully. Session IDs: [...]"
+# Response:
+get_sessions_final_turns(session_ids=[...])
+edit_todos(status="completed" for current file)
+# Continue to next file
+```
+
+##### Case 2: Normal Failure (❌)
+**Message pattern**: "❌ Task execution FAILED" + "DO NOT retry or call invoke_serial_children again"
+
+**Actions**:
+1. **STOP immediately** - do NOT call `invoke_serial_children` again
+2. Use `edit_todos` to mark current file as "failed"
+3. Report error to user with details from the message
+4. **Do NOT process remaining files** - stop the conductor
+
+**Example**:
+```python
+# Receive: "❌ Task execution FAILED ... DO NOT retry ..."
+# Response:
+edit_todos(status="failed" for current file)
+# Report to user: "Test generation failed for {file}. Error: {details}"
+# STOP - do not continue to next file
+```
+
+##### Case 3: Permanent Failure (🚨)
+**Message pattern**: "🚨 Task execution ABORTED (exit code 2 - permanent failure)" + "DO NOT retry"
+
+**Actions**:
+1. **STOP immediately** - do NOT call `invoke_serial_children` again
+2. Use `edit_todos` to mark current file as "aborted"
+3. Report abort reason to user (e.g., unauthorized file modifications)
+4. **Do NOT process remaining files** - stop the conductor
+
+**Example**:
+```python
+# Receive: "🚨 Task execution ABORTED ... DO NOT retry ..."
+# Response:
+edit_todos(status="aborted" for current file)
+# Report to user: "Test generation aborted for {file}. Reason: {abort_reason}"
+# STOP - manual investigation required
+```
+
+**Critical Rule**:
+- **NEVER** call `invoke_serial_children` again if the message contains "DO NOT retry"
+- Failures (❌ or 🚨) require stopping the conductor and reporting to the user
+- Only on success (✅) should processing continue to the next file
 
 ---
 
@@ -130,6 +186,8 @@ Summary:
 - ❌ Never reuse child sessions (create new session per file)
 - ❌ Never wait after `invoke_serial_children` (exit immediately)
 - ❌ Never skip TODO updates
+- ❌ **CRITICAL**: Never retry `invoke_serial_children` when receiving "DO NOT retry" message
+- ❌ **CRITICAL**: Never continue to next file after receiving failure (❌) or abort (🚨) messages
 
 ---
 

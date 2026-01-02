@@ -335,3 +335,129 @@ class TestBuild:
             render_call_args = mock_template.render.call_args
             assert "cached_history" in render_call_args.kwargs
             assert len(render_call_args.kwargs["cached_history"]) == 0
+
+    def test_build_raises_error_when_prompt_factory_is_none(
+        self, mock_session, mock_turns, mock_settings
+    ):
+        """Test that build raises ValueError when prompt_factory is None."""
+        with pytest.raises(
+            ValueError,
+            match="prompt_factory and settings are required for static payload generation",
+        ):
+            gemini_api_static_payload.build(
+                session=mock_session,
+                full_history=mock_turns,
+                cached_turn_count=2,
+                project_root="/test/project",
+                prompt_factory=None,
+                settings=mock_settings,
+            )
+
+    def test_build_raises_error_when_settings_is_none(
+        self, mock_session, mock_turns, mock_prompt_factory
+    ):
+        """Test that build raises ValueError when settings is None."""
+        with pytest.raises(
+            ValueError,
+            match="prompt_factory and settings are required for static payload generation",
+        ):
+            gemini_api_static_payload.build(
+                session=mock_session,
+                full_history=mock_turns,
+                cached_turn_count=2,
+                project_root="/test/project",
+                prompt_factory=mock_prompt_factory,
+                settings=None,
+            )
+
+    def test_build_raises_error_when_both_factory_and_settings_are_none(
+        self, mock_session, mock_turns
+    ):
+        """Test that build raises ValueError when both prompt_factory and settings are None."""
+        with pytest.raises(
+            ValueError,
+            match="prompt_factory and settings are required for static payload generation",
+        ):
+            gemini_api_static_payload.build(
+                session=mock_session,
+                full_history=mock_turns,
+                cached_turn_count=2,
+                project_root="/test/project",
+                prompt_factory=None,
+                settings=None,
+            )
+
+    def test_build_configures_tojson_filter(
+        self, mock_session, mock_turns, mock_prompt_factory, mock_settings
+    ):
+        """Test that build configures tojson filter correctly."""
+        with patch(
+            "pipe.core.domains.gemini_api_static_payload.Environment"
+        ) as mock_env_class:
+            mock_env = MagicMock()
+            # Make filters a real dictionary so assignments work
+            mock_env.filters = {}
+            mock_template = MagicMock()
+            mock_template.render.return_value = '{"test": "data"}'
+            mock_env.get_template.return_value = mock_template
+            mock_env_class.return_value = mock_env
+
+            gemini_api_static_payload.build(
+                session=mock_session,
+                full_history=mock_turns,
+                cached_turn_count=2,
+                project_root="/test/project",
+                prompt_factory=mock_prompt_factory,
+                settings=mock_settings,
+            )
+
+            # Verify tojson filter was set
+            assert "tojson" in mock_env.filters
+            tojson_filter = mock_env.filters["tojson"]
+
+            # Test the filter with non-ASCII characters
+            test_value = {"text": "日本語テスト"}
+            result = tojson_filter(test_value)
+            # The filter should not escape non-ASCII characters
+            assert "日本語テスト" in result
+            assert "\\u" not in result
+
+    def test_build_configures_pydantic_dump_filter(
+        self, mock_session, mock_turns, mock_prompt_factory, mock_settings
+    ):
+        """Test that build configures pydantic_dump filter correctly."""
+        with patch(
+            "pipe.core.domains.gemini_api_static_payload.Environment"
+        ) as mock_env_class:
+            mock_env = MagicMock()
+            # Make filters a real dictionary so assignments work
+            mock_env.filters = {}
+            mock_template = MagicMock()
+            mock_template.render.return_value = '{"test": "data"}'
+            mock_env.get_template.return_value = mock_template
+            mock_env_class.return_value = mock_env
+
+            gemini_api_static_payload.build(
+                session=mock_session,
+                full_history=mock_turns,
+                cached_turn_count=2,
+                project_root="/test/project",
+                prompt_factory=mock_prompt_factory,
+                settings=mock_settings,
+            )
+
+            # Verify pydantic_dump filter was set
+            assert "pydantic_dump" in mock_env.filters
+            pydantic_dump_filter = mock_env.filters["pydantic_dump"]
+
+            # Test with an object that has model_dump method
+            mock_pydantic_obj = MagicMock()
+            mock_pydantic_obj.model_dump.return_value = {"key": "value"}
+            result = pydantic_dump_filter(mock_pydantic_obj)
+            assert result == {"key": "value"}
+            mock_pydantic_obj.model_dump.assert_called_once()
+
+            # Test with an object that doesn't have model_dump method
+            regular_obj = {"regular": "object"}
+            result = pydantic_dump_filter(regular_obj)
+            assert result == {"regular": "object"}

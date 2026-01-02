@@ -11,29 +11,29 @@
 {% from "todos.j2" import render_todos_macro %}
 {% from "current_task.j2" import render_current_task_macro %}
 {
-  "description": {{ render_description_macro(session.description) }},
+  "description": {{ render_description_macro(prompt.description) }},
   "main_instruction": {{ render_main_instruction_macro() }},
-  "constraints": {{ render_constraints_macro(session.constraints) }},
-  "session_goal": {{ render_session_goal_macro(session.session_goal) }},
-  {% if session.procedure %}
-  "procedure": {{ render_procedure_macro(session.procedure, session.procedure_content) }},
+  "constraints": {{ render_constraints_macro(prompt.constraints) }},
+  "session_goal": {{ render_session_goal_macro(prompt.session_goal) }},
+  {% if prompt.procedure %}
+  "procedure": {{ render_procedure_macro(prompt.procedure, prompt.procedure_content) }},
   {% endif %}
-  {% if session.roles and session.roles.definitions | length > 0 %}
-  "roles": {{ render_roles_macro(session.roles) }},
+  {% if prompt.roles and prompt.roles.definitions | length > 0 %}
+  "roles": {{ render_roles_macro(prompt.roles) }},
   {% endif %}
-  "conversation_history": {{ render_conversation_history_macro(session.conversation_history) }},
-  {% if session.file_references %}
-  "file_references": {{ render_file_references_macro(session.file_references) }},
+  "conversation_history": {{ render_conversation_history_macro(prompt.conversation_history) }},
+  {% if prompt.file_references %}
+  "file_references": {{ render_file_references_macro(prompt.file_references) }},
   {% endif %}
-  {% if session.artifacts and session.artifacts | length > 0 %}
-  "files_to_be_modified": {{ render_artifacts_macro(session.artifacts) }},
+  {% if prompt.artifacts and prompt.artifacts | length > 0 %}
+  "files_to_be_modified": {{ render_artifacts_macro(prompt.artifacts) }},
   {% endif %}
-  {% if session.constraints.processing_config.multi_step_reasoning_active %}
-  "reasoning_process": {{ render_advanced_reasoning_flow_macro(session.constraints.processing_config.multi_step_reasoning_active) }},
+  {% if prompt.constraints.processing_config.multi_step_reasoning_active %}
+  "reasoning_process": {{ render_advanced_reasoning_flow_macro(prompt.constraints.processing_config.multi_step_reasoning_active) }},
   {% endif %}
-  {% if session.todos %}
-  "todos": {{ render_todos_macro(session.todos) }},
+  {% if prompt.todos %}
+  "todos": {{ render_todos_macro(prompt.todos) }},
   {% endif %}
-  "current_task": {{ render_current_task_macro(session.current_task) }},
-  "current_datetime": "{{ session.current_datetime }}"
+  "current_task": {{ render_current_task_macro(prompt.current_task) }},
+  "current_datetime": "{{ prompt.current_datetime }}"
 }

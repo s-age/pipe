@@ -1,23 +1,23 @@
 """
-Service orchestrator for payload generation and cache management.
+Orchestrator for payload generation and cache management.
 
-This service manages the complete lifecycle of Gemini API request preparation:
+This orchestrator manages the complete lifecycle of Gemini API request preparation:
 - Tracks TokenCountSummary from API responses
 - Orchestrates cache management and payload generation
 """
 
-from google.genai import Client
+from google.genai import Client, types
 from pipe.core.domains.gemini_api_dynamic_payload import GeminiApiDynamicPayload
 from pipe.core.domains.gemini_cache_manager import GeminiCacheManager, TokenCountSummary
 from pipe.core.models.session import Session
 from pipe.core.models.settings import Settings
 
 
-class GeminiPayloadService:
+class GeminiApiPayload:
     """
-    Service to orchestrate payload generation and cache management.
+    Orchestrator for payload generation and cache management.
 
-    This service maintains the state of:
+    This orchestrator maintains the state of:
     - Token count summary from the last API response
     - Cache manager instance for cache lifecycle management
 
@@ -34,7 +34,7 @@ class GeminiPayloadService:
         settings: Settings,
     ):
         """
-        Initialize the payload service.
+        Initialize the payload orchestrator.
 
         Args:
             client: Gemini API client for cache operations.
@@ -76,6 +76,7 @@ class GeminiPayloadService:
         session: Session,
         prompt_factory: "PromptFactory",  # type: ignore[name-defined] # noqa: F821
         current_instruction: str | None = None,
+        tools: list[types.Tool] | None = None,
     ) -> tuple[list["Content"], str | None]:  # type: ignore[name-defined] # noqa: F821
         """
         Prepare the complete API request payload with cache management.
@@ -84,6 +85,7 @@ class GeminiPayloadService:
             session: Current session object.
             prompt_factory: Factory to create Prompt objects.
             current_instruction: User's current input (optional).
+            tools: List of tools to include in cache configuration (optional).
 
         Returns:
             tuple: (contents, cache_name)
@@ -96,7 +98,6 @@ class GeminiPayloadService:
             3. Build Prompt object with buffered_history
             4. Generate dynamic payload contents
         """
-        from google.genai import types
 
         # === Phase 1: Cache Management ===
         # Set prompt_factory in cache_manager (needed for static payload generation)
@@ -110,6 +111,7 @@ class GeminiPayloadService:
                 full_history=full_history,
                 token_count_summary=self.last_token_summary,
                 threshold=self.settings.model.cache_update_threshold,  # type: ignore[attr-defined]
+                tools=tools,
             )
         )
 
@@ -128,6 +130,27 @@ class GeminiPayloadService:
         # Override buffered_history with the assembled history from cache manager
         # Note: prompt.buffered_history expects list[Turn], not PromptConversationHistory
         prompt.buffered_history = buffered_history  # type: ignore[assignment]
+
+        # If last turn is tool_response, insert a pseudo user_task to force continuation
+        # This prevents the model from returning empty responses by treating the guidance
+        # as a direct user command rather than a function response annotation
+        if buffered_history and buffered_history[-1].type == "tool_response":
+            from pipe.core.models.turn import UserTaskTurn
+            from pipe.core.utils.datetime import get_current_timestamp
+
+            pseudo_user_task = UserTaskTurn(
+                type="user_task",
+                instruction=(
+                    "[IMPORTANT] The tool execution result is shown above. You MUST:\n"
+                    "1. Review the user's original instruction to determine the next action\n"
+                    "2. Continue working until the user's request is fully satisfied\n"
+                    "3. DO NOT return an empty response\n"
+                    "4. Tool results are for your internal use - provide meaningful output to the user"
+                ),
+                timestamp=get_current_timestamp(),
+            )
+            buffered_history.append(pseudo_user_task)
+            prompt.buffered_history = buffered_history  # type: ignore[assignment]
 
         # Build contents following 4-layer architecture:
         # Layer 1 (Static) - only if no cache

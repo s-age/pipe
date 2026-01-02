@@ -12,6 +12,7 @@ services:
       - FLASK_ENV=development
       - PYTHONPATH=/app/src
       - PYTHONUNBUFFERED=1
+      - PYTHONWARNINGS=ignore::SyntaxWarning
     env_file:
       - .env
     volumes:
@@ -40,6 +41,7 @@ services:
       - "2087:2087" # pygls default port, adjust if needed
     environment:
       - PYTHONPATH=/app/src
+      - PYTHONWARNINGS=ignore::SyntaxWarning
     env_file:
       - .env
     volumes:

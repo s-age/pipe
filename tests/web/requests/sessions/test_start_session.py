@@ -4,9 +4,8 @@ import unittest
 from typing import Any
 
 import pytest
+from pipe.web.requests.sessions.start_session import StartSessionRequest
 from pydantic import ValidationError
-
-from src.pipe.web.requests.sessions.start_session import StartSessionRequest
 
 
 @pytest.mark.skip

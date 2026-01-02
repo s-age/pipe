@@ -45,6 +45,12 @@ black = "^25.12.0"
 testpaths = [
     "tests",
 ]
+# Use --import-mode=importlib to avoid module name conflicts
+# This allows test files with the same name in different directories
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--import-mode=importlib"
 filterwarnings = [
     "ignore:Field name .* shadows an attribute in parent .*Operation.*:UserWarning",
     "ignore:Field name \"name\" shadows an attribute in parent \"Operation\".*:UserWarning",

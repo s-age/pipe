@@ -605,6 +605,62 @@ For larger or complex test suites, leverage MCP (Model Context Protocol) tools t
 
 ---
 
+## Critical: Docstring Escaping in Tool Arguments
+
+**CRITICAL**: When writing Python code (especially docstrings with `"""`) into JSON tool arguments (e.g., `write_file`, `edit_file`), you **MUST** follow these escaping rules to prevent syntax errors.
+
+### The Problem
+
+JSON requires double quotes (`"`) to be escaped with a single backslash (`\"`). However, when embedding Python code containing docstrings (`"""`) into JSON, models often **over-escape** by adding extra backslashes, resulting in invalid Python syntax:
+
+```python
+# ❌ WRONG - Over-escaped docstring (causes SyntaxError)
+\"\"\"Unit tests for example module.\"\"\"
+
+# ✅ CORRECT - Properly escaped docstring
+"""Unit tests for example module."""
+```
+
+### Root Cause
+
+This occurs due to **nested string contexts**: Markdown → JSON → Python. The model mistakenly applies multiple layers of escaping.
+
+### Solution: Escaping Rules
+
+When writing Python code into JSON tool arguments:
+
+1. **Docstrings (`"""`)**: Escape **once** as `\"\"\"` in the JSON string
+2. **Regular strings (`"hello"`)**: Escape **once** as `\"hello\"`
+3. **DO NOT** double or triple escape (`\\\"` or `\\\\\"`)
+
+### Correct JSON Examples
+
+```json
+{
+  "content": "\"\"\"Unit tests for session model.\"\"\"\n\ndef test_example():\n    assert True"
+}
+```
+
+### Verification Steps
+
+After writing Python files with docstrings:
+
+1. **Always read back** the file immediately using `read_file`
+2. **Check the first line** for unintended backslashes (`\"""` instead of `"""`)
+3. **If escaping error detected**: Use `write_file` again with correct escaping
+4. **Run linter** to catch syntax errors: `scripts/python/validate_code.sh`
+
+### Historical Context
+
+This rule was added after observing **reproducible docstring escaping failures** in multiple sessions (edit_session_turn, edit_todos) where:
+- Initial `write_file` produced `\"\"\"` (invalid Python)
+- Black formatter failed with `UnexpectedCharacterAfterBackslash`
+- Self-recovery succeeded via `read_file` → detect error → `write_file` fix
+
+**Conclusion**: By following these rules and verification steps, you can **prevent** the escaping error on the first attempt, eliminating the need for self-recovery.
+
+---
+
 ## Tool-Specific Guidelines
 
 This section consolidates all tool-specific rules, best practices, and critical requirements for Ruff, MyPy, and PyTest.

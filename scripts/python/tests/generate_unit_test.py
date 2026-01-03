@@ -518,6 +518,11 @@ invoke_serial_children(
       "type": "script",
       "script": "python/validate_code.sh",
       "max_retries": 2
+    }},
+    {{
+      "type": "script",
+      "script": "commit.py",
+      "args": ["-m", "test: add {test_file}"]
     }}
   ],
   "background": "Complete ALL 7 steps in python_unit_test_generation.md for {source_file}. Verify Test Execution Report checklist: Linter Pass, Type Check Pass, Pytest Pass (0 failures), Coverage 95%+. DO NOT exit until all checklist items are completed.",

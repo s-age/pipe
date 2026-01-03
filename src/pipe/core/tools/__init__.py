@@ -2,9 +2,11 @@ import fnmatch
 import importlib
 import os
 import sys
+from collections.abc import Callable
+from typing import Any
 
 # This dictionary will store the loaded tool functions
-loaded_tools = {}
+loaded_tools: dict[str, Callable[..., Any]] = {}
 
 
 def load_tools():

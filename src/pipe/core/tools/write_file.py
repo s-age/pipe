@@ -10,7 +10,60 @@ def write_file(
     file_path: str, content: str, project_root: str | None = None
 ) -> ToolResult[WriteFileResult]:
     """
-    Writes content to a specified file.
+    Writes content to a file. Creates new file or overwrites existing file.
+
+    Args:
+        file_path: Path to the file to write
+        content: Content to write to the file
+        project_root: Optional project root directory
+
+    Returns:
+        ToolResult containing WriteFileResult with:
+        - status: "success" or error message
+        - message: Confirmation message with diff (if file existed)
+        - diff: Unified diff showing changes (None for new files)
+
+    Notes:
+        - Use triple quotes ('''content''') for multi-line strings
+        - Escape backslashes: use \\\\ for a single backslash
+        - Validate string is properly closed before calling
+
+    Examples:
+        Example 1 - Multi-line text files:
+        GOOD: Use \n for line breaks
+        write_file(
+            file_path="config.txt",
+            content="line1\nline2\nline3"
+        )
+        BAD: Spaces instead of newlines create single line
+        write_file(
+            file_path="config.txt",
+            content="line1 line2 line3"
+        )
+
+        Example 2 - Python code with proper formatting:
+        GOOD: Include \n and proper indentation
+        write_file(
+            file_path="test.py",
+            content="def test():\n    x = 1\n    return x"
+        )
+        BAD: Missing newlines creates invalid syntax
+        write_file(
+            file_path="test.py",
+            content="def test(): x = 1 return x"
+        )
+
+        Example 3 - Backslash escaping:
+        GOOD: Double backslashes for Windows paths
+        write_file(
+            file_path="path.txt",
+            content="C:\\\\Users\\\\data"
+        )
+        BAD: Single backslashes become escape sequences
+        write_file(
+            file_path="path.txt",
+            content="C:\\Users\\data"
+        )
     """
     try:
         # Normalize project_root if provided

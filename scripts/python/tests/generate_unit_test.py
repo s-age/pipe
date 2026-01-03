@@ -26,6 +26,7 @@ Key Improvements:
 - Fully expanded invoke_serial_children parameters in the instruction
 - Includes both tests.md and layer-specific roles
 - Complete task structure with retry configuration
+- Dynamic dependency injection via AST analysis
 
 Usage:
     poetry run python scripts/python/tests/generate_unit_test.py <targets...> [options]
@@ -50,11 +51,93 @@ Examples:
 """
 
 import argparse
+import ast
 import json
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+
+def extract_local_dependencies(
+    file_path: str, project_root: Path | None = None
+) -> list[str]:
+    """
+    Extract project-internal dependencies from a Python file via AST analysis.
+
+    Analyzes import statements to identify dependencies on other modules within
+    the project (modules starting with 'pipe.'). Returns resolved file paths for
+    these dependencies.
+
+    Args:
+        file_path: Path to the Python file to analyze
+        project_root: Project root directory (defaults to cwd)
+
+    Returns:
+        Sorted list of unique file paths for project-internal dependencies.
+        Returns empty list on parse errors (fail-safe).
+
+    Examples:
+        >>> extract_local_dependencies('src/pipe/core/services/session_service.py')
+        ['src/pipe/core/models/turn.py', 'src/pipe/core/repositories/session_repository.py']
+    """
+    if project_root is None:
+        project_root = Path.cwd()
+
+    dependencies = set()
+
+    try:
+        # Read and parse the target file
+        with open(file_path, encoding="utf-8") as f:
+            source = f.read()
+
+        tree = ast.parse(source, filename=file_path)
+
+        # Walk AST to find import statements
+        for node in ast.walk(tree):
+            module_name = None
+
+            if isinstance(node, ast.ImportFrom):
+                # from pipe.core.models import Turn
+                if node.module and node.module.startswith("pipe."):
+                    module_name = node.module
+            elif isinstance(node, ast.Import):
+                # import pipe.core.utils.datetime
+                for alias in node.names:
+                    if alias.name.startswith("pipe."):
+                        module_name = alias.name
+
+            if module_name:
+                # Convert module name to file path
+                # pipe.core.models.turn -> src/pipe/core/models/turn
+                relative_path = module_name.replace(".", "/")
+                base_path = project_root / "src" / relative_path
+
+                # Priority 1: Check for .py file
+                py_file = base_path.with_suffix(".py")
+                if py_file.exists():
+                    # Convert to relative path from project root
+                    try:
+                        rel = py_file.relative_to(project_root)
+                        dependencies.add(str(rel))
+                        continue
+                    except ValueError:
+                        pass
+
+                # Priority 2: Check for __init__.py
+                init_file = base_path / "__init__.py"
+                if init_file.exists():
+                    try:
+                        rel = init_file.relative_to(project_root)
+                        dependencies.add(str(rel))
+                    except ValueError:
+                        pass
+
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        # Fail-safe: Return empty list on any error
+        pass
+
+    return sorted(dependencies)
 
 
 def find_python_files(targets: list[str]) -> list[str]:
@@ -377,6 +460,34 @@ def execute_next_todo(session_id: str) -> bool:
     print(f"[Execute] Test: {test_file}")
     print(f"[Execute] Layer: {layer}")
 
+    # Dynamic dependency analysis
+    print(f"[Execute] Analyzing dependencies for {source_file}...")
+    dynamic_dependencies = extract_local_dependencies(source_file)
+
+    if dynamic_dependencies:
+        print(f"[Execute] Found {len(dynamic_dependencies)} project dependencies:")
+        for dep in dynamic_dependencies:
+            print(f"[Execute]   - {dep}")
+    else:
+        print("[Execute] No project dependencies found")
+
+    # Build references_persist list
+    base_references = [
+        source_file,
+        "src/pipe/core/factories/prompt_factory.py",
+        "src/pipe/core/factories/service_factory.py",
+        "src/pipe/core/factories/settings_factory.py",
+        "src/pipe/core/factories/file_repository_factory.py",
+    ]
+
+    # Merge and deduplicate
+    all_references = sorted(list(set(base_references + dynamic_dependencies)))
+
+    print(f"[Execute] Total references_persist: {len(all_references)} files")
+
+    # Build JSON structure for references_persist
+    references_json = json.dumps(all_references, indent=6)
+
     # Build comprehensive instruction with all necessary parameters
     instruction = f"""Process the next TODO item: {todo_title}
 
@@ -393,20 +504,14 @@ Execute invoke_serial_children with the following exact parameters:
 invoke_serial_children(
 {{
   "roles": ["roles/python/tests/tests.md", "roles/python/tests/core/{layer}.md"],
-  "references_persist": ["{source_file}"],
+  "references_persist": {references_json},
   "purpose": "Generate tests for {filename}.py",
   "tasks": [
     {{
       "type": "agent",
       "instruction": "🎯 CRITICAL MISSION: Implement comprehensive pytest tests\\n\\n📋 Target Specification:\\n- Test target file: {source_file}\\n- Test output path: {test_file}\\n- Architecture layer: {layer}\\n\\n⚠️ ABSOLUTE REQUIREMENTS:\\n1. Tests that fail have NO VALUE - ALL checks must pass\\n2. Follow @procedures/python_unit_test_generation.md (all 7 steps, no shortcuts)\\n3. Coverage target: 95%+ (non-negotiable)\\n4. ONLY modify {test_file} - any other file changes = immediate abort\\n\\n✅ Success Criteria (Test Execution Report):\\n- [ ] Linter (Ruff/Format): Pass\\n- [ ] Type Check (MyPy): Pass\\n- [ ] Test Result (Pytest): Pass (0 failures)\\n- [ ] Coverage: 95%+ achieved\\n\\nRefer to @roles/python/tests/tests.md 'Test Execution Report' section for the required checklist format.\\n\\n🔧 Tool Execution Protocol:\\n- **EXECUTE, DON'T DISPLAY:** Do NOT write tool calls in markdown text or code blocks\\n- **IGNORE DOC FORMATTING:** Code blocks in procedures are illustrations only - convert them to actual tool invocations\\n- **IMMEDIATE INVOCATION:** Your response must be tool use requests, not text descriptions\\n- **NO PREAMBLE:** No 'I will now...', 'Okay...', 'Let me...' - invoke Step 1a tool immediately\\n- **COMPLETE ALL 7 STEPS:** Continue invoking tools through all steps until Test Execution Report is done",
       "roles": ["roles/python/tests/tests.md", "roles/python/tests/core/{layer}.md"],
-      "references_persist": [
-        "{source_file}",
-        "src/pipe/core/factories/prompt_factory.py",
-        "src/pipe/core/factories/service_factory.py",
-        "src/pipe/core/factories/settings_factory.py",
-        "src/pipe/core/factories/file_repository_factory.py"
-      ],
+      "references_persist": {references_json},
       "procedure": "procedures/python_unit_test_generation.md"
     }},
     {{

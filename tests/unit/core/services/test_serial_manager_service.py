@@ -2,7 +2,7 @@
 Unit tests for Serial Task Manager Service.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from pipe.core.models.task import (
@@ -343,14 +343,16 @@ class TestExecuteTasksSerially:
 class TestSavePipelineResult:
     """Tests for save_pipeline_result function."""
 
-    @patch("pipe.core.services.serial_manager_service.open", create=True)
+    @patch("pipe.core.services.serial_manager_service.open", new_callable=mock_open)
     @patch("pipe.core.services.serial_manager_service.create_directory")
     @patch("pipe.core.services.serial_manager_service.get_current_timestamp")
     @patch("pipe.core.services.serial_manager_service.Path")
     def test_save_pipeline_result(
-        self, mock_path, mock_timestamp, mock_create_dir, mock_open
+        self, mock_path, mock_timestamp, mock_create_dir, mock_file
     ):
         """Test saving pipeline results to file."""
+        import json
+
         mock_path_instance = MagicMock()
         mock_path.return_value = mock_path_instance
         mock_path_instance.__truediv__.return_value = mock_path_instance
@@ -374,18 +376,32 @@ class TestSavePipelineResult:
 
         child_ids = save_pipeline_result("session-123", results, "/fake/root")
 
+        # Verify return value
         assert child_ids == ["abc/123"]
         mock_create_dir.assert_called_once()
-        mock_open.assert_called_once()
+        mock_file.assert_called_once()
 
-    @patch("pipe.core.services.serial_manager_service.open", create=True)
+        # Verify file content written by json.dump()
+        handle = mock_file()
+        written_content = "".join(call.args[0] for call in handle.write.call_args_list)
+        data = json.loads(written_content)
+
+        assert data["status"] == "success"
+        assert data["child_session_ids"] == ["abc/123"]
+        assert data["total_tasks"] == 1
+        assert data["completed_tasks"] == 1
+        assert data["timestamp"] == "2025-01-01T00:00:00+09:00"
+
+    @patch("pipe.core.services.serial_manager_service.open", new_callable=mock_open)
     @patch("pipe.core.services.serial_manager_service.create_directory")
     @patch("pipe.core.services.serial_manager_service.get_current_timestamp")
     @patch("pipe.core.services.serial_manager_service.Path")
     def test_save_pipeline_result_no_match(
-        self, mock_path, mock_timestamp, mock_create_dir, mock_open
+        self, mock_path, mock_timestamp, mock_create_dir, mock_file
     ):
         """Test saving pipeline results when no session ID is found in output."""
+        import json
+
         mock_path_instance = MagicMock()
         mock_path.return_value = mock_path_instance
         mock_path_instance.__truediv__.return_value = mock_path_instance
@@ -407,7 +423,16 @@ class TestSavePipelineResult:
 
         child_ids = save_pipeline_result("session-123", results, "/fake/root")
 
+        # Verify return value
         assert child_ids == []
+
+        # Verify file content
+        handle = mock_file()
+        written_content = "".join(call.args[0] for call in handle.write.call_args_list)
+        data = json.loads(written_content)
+
+        assert data["status"] == "success"
+        assert data["child_session_ids"] == []
 
 
 class TestInvokeParentSession:

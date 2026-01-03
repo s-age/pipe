@@ -132,7 +132,7 @@ class GeminiCacheManager:
             # Create new cache configuration
             cache_config = {
                 "contents": cached_contents,
-                "ttl": "3600s",
+                "ttl": "900s",
             }
             if tools:
                 cache_config["tools"] = tools

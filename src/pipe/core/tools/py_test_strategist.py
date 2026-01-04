@@ -8,6 +8,52 @@ from pipe.core.models.tool_result import ToolResult
 from pipe.core.tools.py_condition_analyzer import py_condition_analyzer
 from pydantic import BaseModel, ConfigDict, Field
 
+# Standard library modules that should NOT be mocked
+# These are stable, well-tested, and mocking them provides no benefit
+STDLIB_BLACKLIST = {
+    # Core modules
+    "sys",
+    "os",
+    "pathlib",
+    "builtins",
+    # Text processing
+    "re",
+    "json",
+    "csv",
+    "html",
+    "xml",
+    # System utilities
+    "logging",
+    "argparse",
+    "subprocess",
+    "traceback",
+    # Data structures & algorithms
+    "collections",
+    "itertools",
+    "functools",
+    "operator",
+    # Math & numbers
+    "math",
+    "decimal",
+    "fractions",
+    "random",
+    # Date & time
+    "datetime",
+    "time",
+    "calendar",
+    # File & I/O
+    "io",
+    "shutil",
+    "tempfile",
+    # Other common stdlib
+    "copy",
+    "pickle",
+    "struct",
+    "codecs",
+    "hashlib",
+    "uuid",
+}
+
 
 class TestLevel(str, Enum):
     UNIT = "unit"
@@ -72,6 +118,48 @@ class FunctionStrategy(BaseModel):
     )
 
 
+class SerializationHint(BaseModel):
+    """Serialization behavior hint for data models."""
+
+    model_config = ConfigDict(frozen=True)
+
+    model_name: str = Field(..., description="Data model name")
+    base_class: str = Field(
+        ..., description="Base class (e.g., 'CamelCaseModel', 'BaseModel')"
+    )
+    default_naming_convention: str = Field(
+        ...,
+        description="Default naming convention to use in tests: 'snake_case' or 'camelCase'",
+    )
+    serialization_notes: str = Field(
+        ...,
+        description="Notes about serialization behavior (e.g., camelCase vs snake_case)",
+    )
+    assertion_examples: list[str] = Field(
+        default_factory=list,
+        description="Example assertions for testing serialization",
+    )
+
+
+class AdditionalContext(BaseModel):
+    """Additional context for test generation."""
+
+    model_config = ConfigDict(frozen=True)
+
+    data_models: dict[str, str] = Field(
+        default_factory=dict,
+        description="Data model names and their import paths (e.g., {'AgentTask': 'from pipe.core.models import AgentTask'})",
+    )
+    stdlib_usage: list[str] = Field(
+        default_factory=list,
+        description="Standard library functions used (informational only, should not be mocked)",
+    )
+    serialization_hints: list[SerializationHint] = Field(
+        default_factory=list,
+        description="Hints about data model serialization behavior (camelCase vs snake_case)",
+    )
+
+
 class TestStrategyResult(BaseModel):
     """Overall test strategy result."""
 
@@ -83,7 +171,168 @@ class TestStrategyResult(BaseModel):
     )
     strategies: list[FunctionStrategy] = Field(default_factory=list)
     overall_recommendation: str = Field(..., description="Overall recommendation")
+    additional_context: AdditionalContext = Field(
+        default_factory=AdditionalContext,
+        description="Additional context for test generation (e.g., data models, stdlib usage)",
+    )
     error: str | None = None
+
+
+def _is_data_model_import(import_path: str) -> bool:
+    """
+    Check if the import is from a data model package.
+
+    Args:
+        import_path: Original import statement (e.g., 'from pipe.core.models import AgentTask')
+
+    Returns:
+        True if it's a data model import
+    """
+    # Check for common data model patterns
+    model_patterns = [
+        ".models.",
+        ".schemas.",
+        "pydantic",
+        "dataclasses",
+    ]
+    return any(pattern in import_path for pattern in model_patterns)
+
+
+def _is_stdlib_module(import_path: str, dependency_name: str) -> bool:
+    """
+    Check if the import is from standard library (should not be mocked).
+
+    Args:
+        import_path: Original import statement (e.g., 'import os', 'from os.path import join')
+        dependency_name: Name of the dependency (e.g., 'os', 'os.path', 'join')
+
+    Returns:
+        True if it's a standard library module that should not be mocked
+    """
+    # Extract base module name from dependency
+    # Examples:
+    #   - "os" -> "os"
+    #   - "os.path" -> "os"
+    #   - "join" (from "from os.path import join") -> need to check import_path
+    parts = dependency_name.split(".")
+    base_module = parts[0]
+
+    # Check if base module is in blacklist
+    if base_module in STDLIB_BLACKLIST:
+        return True
+
+    # For "from X import Y" style imports, check the module path in import statement
+    # Example: "from os.path import join" -> dependency_name="join", need to extract "os" from import_path
+    if import_path.startswith("from "):
+        # Extract module path: "from os.path import join" -> "os.path"
+        import_parts = import_path.split()
+        if len(import_parts) >= 4 and import_parts[2] == "import":
+            module_path = import_parts[1]
+            module_base = module_path.split(".")[0]
+            if module_base in STDLIB_BLACKLIST:
+                return True
+
+    return False
+
+
+def _analyze_model_base_class(
+    model_name: str, import_path: str
+) -> SerializationHint | None:
+    """
+    Analyze a data model to detect its base class and generate serialization hints.
+
+    Args:
+        model_name: Name of the data model (e.g., 'AgentTask')
+        import_path: Import statement (e.g., 'from pipe.core.models import AgentTask')
+
+    Returns:
+        SerializationHint if the model can be analyzed, None otherwise
+    """
+    repo = FileRepositoryFactory.create()
+
+    # Extract module path from import statement
+    # Example: "from pipe.core.models import AgentTask" -> "pipe.core.models"
+    if not import_path.startswith("from "):
+        return None
+
+    parts = import_path.split()
+    if len(parts) < 4 or parts[2] != "import":
+        return None
+
+    module_path = parts[1]
+
+    # Convert module path to file path
+    # Example: "pipe.core.models" -> "src/pipe/core/models.py" or "src/pipe/core/models/__init__.py"
+    module_parts = module_path.split(".")
+    possible_paths = [
+        f"src/{'/'.join(module_parts)}.py",
+        f"src/{'/'.join(module_parts)}/__init__.py",
+    ]
+
+    source_code = None
+    for path in possible_paths:
+        if repo.exists(path):
+            try:
+                source_code = repo.read_text(path)
+                break
+            except Exception:
+                continue
+
+    if not source_code:
+        return None
+
+    try:
+        tree = ast.parse(source_code)
+    except Exception:
+        return None
+
+    # Find the class definition
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name == model_name:
+            # Check base classes
+            for base in node.bases:
+                base_name = None
+                if isinstance(base, ast.Name):
+                    base_name = base.id
+                elif isinstance(base, ast.Attribute):
+                    # Handle cases like models.CamelCaseModel
+                    base_name = base.attr
+
+                if base_name == "CamelCaseModel":
+                    # Generate hints for CamelCaseModel
+                    return SerializationHint(
+                        model_name=model_name,
+                        base_class="CamelCaseModel",
+                        default_naming_convention="snake_case",
+                        serialization_notes=(
+                            f"{model_name} inherits from CamelCaseModel. "
+                            "Use snake_case by default (model_dump()). "
+                            "Only use camelCase with model_dump(by_alias=True) if the implementation explicitly requires it."
+                        ),
+                        assertion_examples=[
+                            f"# Default (snake_case): data = {model_name.lower()}.model_dump()",
+                            'assert data["field_name"] == expected_value',
+                            f"# If camelCase needed: data = {model_name.lower()}.model_dump(by_alias=True)",
+                            'assert data["fieldName"] == expected_value',
+                        ],
+                    )
+                elif base_name == "BaseModel":
+                    # Generate hints for regular BaseModel
+                    return SerializationHint(
+                        model_name=model_name,
+                        base_class="BaseModel",
+                        default_naming_convention="snake_case",
+                        serialization_notes=(
+                            f"{model_name} inherits from BaseModel (Pydantic). "
+                            "Use snake_case by default (model_dump())."
+                        ),
+                        assertion_examples=[
+                            f"data = {model_name.lower()}.model_dump()",
+                            'assert data["field_name"] == expected_value',
+                        ],
+                    )
+
+    return None
 
 
 def _get_module_namespace(target_file_path: str) -> str:
@@ -409,7 +658,42 @@ def py_test_strategist(
     if test_file_path:
         test_functions = _extract_test_functions(test_file_path)
 
-    # 6. Gap analysis (strategy formulation)
+    # 6. Collect additional context (data models, stdlib usage)
+    data_models: dict[str, str] = {}
+    stdlib_usage_set: set[str] = set()
+
+    # Extract data models and stdlib calls from all mock candidates
+    for func_analysis in condition_analysis.functions:
+        for mc in func_analysis.mock_candidates:
+            # Check for data models
+            parts = mc.name.split(".")
+            if len(parts) > 1:
+                base_name = parts[0]
+                if base_name in import_info:
+                    import_stmt = import_info[base_name].original_import
+                    if _is_data_model_import(import_stmt):
+                        data_models[base_name] = import_stmt
+                    elif _is_stdlib_module(import_stmt, mc.name):
+                        # Track stdlib usage (informational only, will not be mocked)
+                        stdlib_usage_set.add(mc.name)
+            elif mc.name in import_info:
+                import_stmt = import_info[mc.name].original_import
+                if _is_data_model_import(import_stmt):
+                    data_models[mc.name] = import_stmt
+                elif _is_stdlib_module(import_stmt, mc.name):
+                    # Track stdlib usage (informational only, will not be mocked)
+                    stdlib_usage_set.add(mc.name)
+
+    stdlib_usage = sorted(list(stdlib_usage_set))
+
+    # 6.1. Analyze serialization behavior for each data model
+    serialization_hints: list[SerializationHint] = []
+    for model_name, import_stmt in data_models.items():
+        hint = _analyze_model_base_class(model_name, import_stmt)
+        if hint:
+            serialization_hints.append(hint)
+
+    # 7. Gap analysis (strategy formulation)
     strategies = []
     for func_analysis in condition_analysis.functions:
         # Find matching test function
@@ -429,7 +713,7 @@ def py_test_strategist(
         # Extract mock candidates (for backward compatibility)
         mock_candidates = [mc.name for mc in func_analysis.mock_candidates]
 
-        # Build mock_targets with patch paths
+        # Build mock_targets with patch paths (excluding data models and stdlib)
         mock_targets = []
         for mc in func_analysis.mock_candidates:
             # Check if this is an attribute access (e.g., "module.function")
@@ -439,6 +723,16 @@ def py_test_strategist(
                 # Attribute access: check if the base is an imported module
                 base_name = parts[0]
                 if base_name in import_info:
+                    import_stmt = import_info[base_name].original_import
+
+                    # Check if it's a data model - skip if true
+                    if _is_data_model_import(import_stmt):
+                        continue
+
+                    # Check if it's a stdlib module - skip if true
+                    if _is_stdlib_module(import_stmt, mc.name):
+                        continue
+
                     # Build patch path: target_module.base_name.attribute
                     target_module = _get_module_namespace(target_file_path)
                     full_path = f"{target_module}.{mc.name}"
@@ -447,7 +741,7 @@ def py_test_strategist(
                             dependency_name=mc.name,
                             patch_path=full_path,
                             import_type="attribute_access",
-                            original_import=f"# Attribute access on: {import_info[base_name].original_import}",
+                            original_import=f"# Attribute access on: {import_stmt}",
                         )
                     )
                 else:
@@ -455,6 +749,16 @@ def py_test_strategist(
                     # Skip these as they are instance methods, not external dependencies
                     continue
             elif mc.name in import_info:
+                import_stmt = import_info[mc.name].original_import
+
+                # Check if it's a data model - skip if true
+                if _is_data_model_import(import_stmt):
+                    continue
+
+                # Check if it's a stdlib module - skip if true
+                if _is_stdlib_module(import_stmt, mc.name):
+                    continue
+
                 # Direct import: use the import info
                 mock_targets.append(import_info[mc.name])
             else:
@@ -485,9 +789,16 @@ def py_test_strategist(
             )
         )
 
-    # 7. Aggregate results
+    # 8. Aggregate results
     overall_recommendation = _generate_overall_recommendation(
         strategies, test_file_path is not None
+    )
+
+    # Create additional context
+    additional_context = AdditionalContext(
+        data_models=data_models,
+        stdlib_usage=stdlib_usage,
+        serialization_hints=serialization_hints,
     )
 
     result = TestStrategyResult(
@@ -495,6 +806,7 @@ def py_test_strategist(
         corresponding_test_file=test_file_path,
         strategies=strategies,
         overall_recommendation=overall_recommendation,
+        additional_context=additional_context,
     )
 
     return ToolResult(data=result)

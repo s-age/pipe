@@ -66,6 +66,91 @@ def _is_builtin(name: str) -> bool:
     return name in builtins.__dict__
 
 
+# Standard library modules that should not be mocked
+STDLIB_MODULES = {
+    # Core
+    "re",
+    "json",
+    "os",
+    "sys",
+    "pathlib",
+    "datetime",
+    "time",
+    "collections",
+    "itertools",
+    "functools",
+    "typing",
+    # I/O
+    "io",
+    "tempfile",
+    "shutil",
+    "glob",
+    # Data structures
+    "dataclasses",
+    "enum",
+    "abc",
+    # Encoding
+    "base64",
+    "hashlib",
+    "hmac",
+    "uuid",
+    # Math
+    "math",
+    "random",
+    "statistics",
+    "decimal",
+    # String
+    "string",
+    "textwrap",
+    # Other common stdlib
+    "copy",
+    "pickle",
+    "shelve",
+    "warnings",
+    "logging",
+}
+
+
+def _is_stdlib_call(func_name: str) -> bool:
+    """
+    Check if the function call is from standard library.
+
+    Args:
+        func_name: Function name (e.g., 're.search', 'json.dumps', 'Path.exists')
+
+    Returns:
+        True if it's a standard library call that should not be mocked
+    """
+    # Check for direct stdlib class/function names (without dots)
+    # Common stdlib classes that are often imported directly
+    stdlib_classes = {
+        "Path",
+        "datetime",
+        "timedelta",
+        "Decimal",
+        "Counter",
+        "defaultdict",
+    }
+    if func_name in stdlib_classes:
+        return True
+
+    if "." not in func_name:
+        return False
+
+    parts = func_name.split(".")
+    base_module = parts[0]
+
+    # Check if base module is in stdlib
+    if base_module in STDLIB_MODULES:
+        return True
+
+    # Special case: pathlib.Path -> Path.method
+    if base_module in stdlib_classes:
+        return True
+
+    return False
+
+
 def _ast_unparse_safe(node: ast.AST) -> str | None:
     """Safely unparse an AST node to string."""
     try:
@@ -235,7 +320,9 @@ class FunctionVisitor(ast.NodeVisitor):
         if func_name:
             # For attribute calls, check only the final attribute name for builtins
             check_name = func_name.split(".")[-1] if "." in func_name else func_name
-            if not _is_builtin(check_name):
+
+            # Filter out builtins and standard library calls
+            if not _is_builtin(check_name) and not _is_stdlib_call(func_name):
                 self.mock_candidates.append(
                     MockCandidate(
                         name=func_name,

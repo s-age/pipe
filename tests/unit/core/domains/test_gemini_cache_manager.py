@@ -389,7 +389,7 @@ class TestUpdateIfNeededCacheLifecycle:
                 model="gemini-2.5-pro",
                 config={
                     "contents": mock_content,
-                    "ttl": "3600s",
+                    "ttl": "900s",
                 },
             )
 
@@ -691,7 +691,7 @@ class TestUpdateRegistry:
         from datetime import datetime, timedelta
 
         mock_cached_obj = MagicMock()
-        expire_time = datetime.now(UTC) + timedelta(seconds=3600)
+        expire_time = datetime.now(UTC) + timedelta(seconds=900)
         mock_cached_obj.expire_time = expire_time
 
         cache_manager._update_registry(
@@ -743,7 +743,7 @@ class TestUpdateRegistry:
 
         # Create mock cached object with expire_time
         mock_cached_obj = MagicMock()
-        expire_time = datetime.now(UTC) + timedelta(seconds=3600)
+        expire_time = datetime.now(UTC) + timedelta(seconds=900)
         mock_cached_obj.expire_time = expire_time
 
         cache_manager._update_registry(
@@ -792,7 +792,7 @@ class TestUpdateRegistry:
             data = json.load(f)
 
         assert "test-session-789" in data
-        # Should have an expire_time (calculated as current + 3600s)
+        # Should have an expire_time (calculated as current + 900s)
         assert "expire_time" in data["test-session-789"]
         # Verify it's a valid ISO format datetime string
         expire_time_str = data["test-session-789"]["expire_time"]

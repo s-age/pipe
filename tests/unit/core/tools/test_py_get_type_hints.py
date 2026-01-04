@@ -98,3 +98,32 @@ class TestPyGetTypeHints:
             assert "List[str]" in hints["a"]
             assert "Optional[int] | None" in hints["b"]
             assert "Union[str, int]" in hints["return"]
+
+    @patch("pipe.core.tools.py_get_type_hints.os.path.exists")
+    def test_class_non_name_annotation(self, mock_exists: MagicMock) -> None:
+        """Test that non-Name targets in class annotations are ignored."""
+        mock_exists.return_value = True  # type: ignore[attr-defined]
+        source_code = "class MyClass:\n    x: int\n    a.b: str = 'val'\n"
+
+        with patch("builtins.open", mock_open(read_data=source_code)):
+            result = py_get_type_hints("test.py", "MyClass")
+
+            assert result.is_success is True
+            assert result.data is not None
+            assert result.data["type_hints"] == {"x": "int"}
+            assert "b" not in result.data["type_hints"]
+
+    @patch("pipe.core.tools.py_get_type_hints.os.path.exists")
+    def test_function_partial_annotations(self, mock_exists: MagicMock) -> None:
+        """Test function where only some arguments are annotated."""
+        mock_exists.return_value = True  # type: ignore[attr-defined]
+        source_code = "def partial_func(a: int, b, c: str): pass"
+
+        with patch("builtins.open", mock_open(read_data=source_code)):
+            result = py_get_type_hints("test.py", "partial_func")
+
+            assert result.is_success is True
+            assert result.data is not None
+            assert result.data["type_hints"] == {"a": "int", "c": "str"}
+            assert "b" not in result.data["type_hints"]
+            assert "return" not in result.data["type_hints"]

@@ -200,15 +200,15 @@ def find_python_files(targets: list[str]) -> list[str]:
     return sorted(python_files)
 
 
-def detect_layer(file_path: str) -> str | None:
+def detect_layer(file_path: str) -> tuple[str, str] | None:
     """
-    Detect layer name from file path.
+    Detect layer name and module from file path.
 
     Args:
         file_path: Absolute path to Python file
 
     Returns:
-        Layer name (repositories, services, models, etc.) or None
+        Tuple of (module, layer) where module is 'core' or 'web', or None
     """
     parts = Path(file_path).parts
 
@@ -217,8 +217,8 @@ def detect_layer(file_path: str) -> str | None:
         core_idx = parts.index("core")
         if core_idx + 1 < len(parts):
             layer = parts[core_idx + 1]
-            # Validate known layers
-            known_layers = {
+            # Validate known core layers
+            known_core_layers = {
                 "repositories",
                 "services",
                 "models",
@@ -230,8 +230,26 @@ def detect_layer(file_path: str) -> str | None:
                 "factories",
                 "utils",
             }
-            if layer in known_layers:
-                return layer
+            if layer in known_core_layers:
+                return ("core", layer)
+    except ValueError:
+        pass
+
+    # Look for src/pipe/web/{layer}
+    try:
+        web_idx = parts.index("web")
+        if web_idx + 1 < len(parts):
+            layer = parts[web_idx + 1]
+            # Validate known web layers
+            known_web_layers = {
+                "requests",
+                "responses",
+                "actions",
+                "middleware",
+                "validators",
+            }
+            if layer in known_web_layers:
+                return ("web", layer)
     except ValueError:
         pass
 
@@ -250,18 +268,20 @@ def build_file_metadata(files: list[str]) -> list[dict]:
     """
     metadata = []
     for file_path in files:
-        layer = detect_layer(file_path)
-        if not layer:
+        layer_info = detect_layer(file_path)
+        if not layer_info:
             print(f"Warning: Could not detect layer for {file_path}, skipping")
             continue
 
+        module, layer = layer_info
         filename = Path(file_path).stem
-        test_path = f"tests/unit/core/{layer}/test_{filename}.py"
+        test_path = f"tests/unit/{module}/{layer}/test_{filename}.py"
 
         metadata.append(
             {
                 "source_file": file_path,
                 "test_file": test_path,
+                "module": module,
                 "layer": layer,
                 "filename": filename,
             }
@@ -425,9 +445,10 @@ def execute_next_todo(session_id: str) -> bool:
     print(f"\n[Execute] Processing next TODO: {todo_title}")
 
     # Parse file metadata from description
-    # Expected format: "source_file=..., test_file=..., layer=..."
+    # Expected format: "source_file=..., test_file=..., module=..., layer=..."
     source_file = ""
     test_file = ""
+    module = ""
     layer = ""
 
     try:
@@ -439,6 +460,8 @@ def execute_next_todo(session_id: str) -> bool:
                     source_file = value.strip()
                 elif key.strip() == "test_file":
                     test_file = value.strip()
+                elif key.strip() == "module":
+                    module = value.strip()
                 elif key.strip() == "layer":
                     layer = value.strip()
     except Exception as e:
@@ -449,15 +472,20 @@ def execute_next_todo(session_id: str) -> bool:
         print("[Execute] Error: Could not extract source_file or layer from TODO")
         return False
 
+    # Derive module if not provided (default to core for backward compatibility)
+    if not module:
+        module = "core"
+
     # Derive test_file if not provided
     if not test_file:
         filename = Path(source_file).stem
-        test_file = f"tests/unit/core/{layer}/test_{filename}.py"
+        test_file = f"tests/unit/{module}/{layer}/test_{filename}.py"
 
     filename = Path(source_file).stem
 
     print(f"[Execute] Source: {source_file}")
     print(f"[Execute] Test: {test_file}")
+    print(f"[Execute] Module: {module}")
     print(f"[Execute] Layer: {layer}")
 
     # Dynamic dependency analysis
@@ -496,6 +524,7 @@ Follow @procedures/python_unit_test_conductor.md Step 3b-3c:
 File Details:
 - Source file: {source_file}
 - Test output: {test_file}
+- Module: {module}
 - Layer: {layer}
 - Filename: {filename}
 
@@ -503,14 +532,14 @@ Execute invoke_serial_children with the following exact parameters:
 
 invoke_serial_children(
 {{
-  "roles": ["roles/python/tests/tests.md", "roles/python/tests/core/{layer}.md"],
+  "roles": ["roles/python/tests/tests.md", "roles/python/tests/{module}/{layer}.md"],
   "references_persist": {references_json},
   "purpose": "Generate tests for {filename}.py",
   "tasks": [
     {{
       "type": "agent",
-      "instruction": "🎯 CRITICAL MISSION: Implement comprehensive pytest tests\\n\\n📋 Target Specification:\\n- Test target file: {source_file}\\n- Test output path: {test_file}\\n- Architecture layer: {layer}\\n\\n⚠️ ABSOLUTE REQUIREMENTS:\\n1. Tests that fail have NO VALUE - ALL checks must pass\\n2. Follow @procedures/python_unit_test_generation.md (all 7 steps, no shortcuts)\\n3. Coverage target: 95%+ (non-negotiable)\\n4. ONLY modify {test_file} - any other file changes = immediate abort\\n\\n✅ Success Criteria (Test Execution Report):\\n- [ ] Linter (Ruff/Format): Pass\\n- [ ] Type Check (MyPy): Pass\\n- [ ] Test Result (Pytest): Pass (0 failures)\\n- [ ] Coverage: 95%+ achieved\\n\\nRefer to @roles/python/tests/tests.md 'Test Execution Report' section for the required checklist format.\\n\\n🔧 Tool Execution Protocol:\\n- **EXECUTE, DON'T DISPLAY:** Do NOT write tool calls in markdown text or code blocks\\n- **IGNORE DOC FORMATTING:** Code blocks in procedures are illustrations only - convert them to actual tool invocations\\n- **IMMEDIATE INVOCATION:** Your response must be tool use requests, not text descriptions\\n- **NO PREAMBLE:** No 'I will now...', 'Okay...', 'Let me...' - invoke Step 1a tool immediately\\n- **COMPLETE ALL 7 STEPS:** Continue invoking tools through all steps until Test Execution Report is done",
-      "roles": ["roles/python/tests/tests.md", "roles/python/tests/core/{layer}.md"],
+      "instruction": "🎯 CRITICAL MISSION: Implement comprehensive pytest tests\\n\\n📋 Target Specification:\\n- Test target file: {source_file}\\n- Test output path: {test_file}\\n- Architecture module: {module}\\n- Architecture layer: {layer}\\n\\n⚠️ ABSOLUTE REQUIREMENTS:\\n1. Tests that fail have NO VALUE - ALL checks must pass\\n2. Follow @procedures/python_unit_test_generation.md (all 7 steps, no shortcuts)\\n3. Coverage target: 95%+ (non-negotiable)\\n4. ONLY modify {test_file} - any other file changes = immediate abort\\n\\n✅ Success Criteria (Test Execution Report):\\n- [ ] Linter (Ruff/Format): Pass\\n- [ ] Type Check (MyPy): Pass\\n- [ ] Test Result (Pytest): Pass (0 failures)\\n- [ ] Coverage: 95%+ achieved\\n\\nRefer to @roles/python/tests/tests.md 'Test Execution Report' section for the required checklist format.\\n\\n🔧 Tool Execution Protocol:\\n- **EXECUTE, DON'T DISPLAY:** Do NOT write tool calls in markdown text or code blocks\\n- **IGNORE DOC FORMATTING:** Code blocks in procedures are illustrations only - convert them to actual tool invocations\\n- **IMMEDIATE INVOCATION:** Your response must be tool use requests, not text descriptions\\n- **NO PREAMBLE:** No 'I will now...', 'Okay...', 'Let me...' - invoke Step 1a tool immediately\\n- **COMPLETE ALL 7 STEPS:** Continue invoking tools through all steps until Test Execution Report is done",
+      "roles": ["roles/python/tests/tests.md", "roles/python/tests/{module}/{layer}.md"],
       "references_persist": {references_json},
       "procedure": "procedures/python_unit_test_generation.md"
     }},
@@ -599,7 +628,7 @@ def launch_conductor_for_init(file_metadata: list[dict]) -> str | None:
     # Build initial instruction
     file_list = "\n".join(
         [
-            f"- {m['source_file']} → {m['test_file']} (layer: {m['layer']})"
+            f"- {m['source_file']} → {m['test_file']} (module: {m['module']}, layer: {m['layer']})"
             for m in file_metadata
         ]
     )
@@ -611,11 +640,15 @@ def launch_conductor_for_init(file_metadata: list[dict]) -> str | None:
         "Execute ONLY step 2:\n"
         "2. Create TODO list via edit_todos with all files listed above\n\n"
         "IMPORTANT: For each TODO, the description field MUST contain metadata in this format:\n"
-        '  description: "source_file=<path>, test_file=<path>, layer=<layer>"\n\n'
+        '  description: "source_file=<path>, test_file=<path>, module=<module>, layer=<layer>"\n\n'
         "Example:\n"
         '  title: "Generate tests for gemini_api_static_payload.py"\n'
         '  description: "source_file=src/pipe/core/domains/gemini_api_static_payload.py, '
-        'test_file=tests/unit/core/domains/test_gemini_api_static_payload.py, layer=domains"\n\n'
+        'test_file=tests/unit/core/domains/test_gemini_api_static_payload.py, module=core, layer=domains"\n\n'
+        "Example (web):\n"
+        '  title: "Generate tests for therapist_requests.py"\n'
+        '  description: "source_file=src/pipe/web/requests/therapist_requests.py, '
+        'test_file=tests/unit/web/requests/test_therapist_requests.py, module=web, layer=requests"\n\n'
         "After successfully creating TODOs with edit_todos, EXIT IMMEDIATELY.\n"
         "DO NOT process any files yet - the script will call you again "
         "to process each file one by one.\n\n"
@@ -758,7 +791,9 @@ def main():
         print(f"[Scan] {len(file_metadata)} files have detectable layers:\n")
         for meta in file_metadata:
             print(f"  • {meta['source_file']}")
-            print(f"    → {meta['test_file']} (layer: {meta['layer']})\n")
+            print(
+                f"    → {meta['test_file']} (module: {meta['module']}, layer: {meta['layer']})\n"
+            )
     else:
         file_metadata = []  # Not needed for resume
 

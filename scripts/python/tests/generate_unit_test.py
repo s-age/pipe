@@ -245,6 +245,7 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
                 "requests",
                 "responses",
                 "actions",
+                "controllers",
                 "middleware",
                 "validators",
             }

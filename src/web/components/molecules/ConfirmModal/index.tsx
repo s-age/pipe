@@ -2,6 +2,9 @@ import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { Paragraph } from '@/components/molecules/Paragraph'
 // ConfirmModal no longer renders its own Modal wrapper.
 // The ModalProvider is responsible for rendering a Modal around
 // any modal content provided via the `show` API.
@@ -30,22 +33,21 @@ export const ConfirmModal = ({
   confirmText = 'OK',
   cancelText = 'Cancel'
 }: ConfirmModalProperties): JSX.Element => (
-  <div className={styles.container}>
-    <div className={styles.header}>
+  <FlexColumn className={styles.container}>
+    <Flex align="center" gap="s" className={styles.header}>
       {icon && <div className={styles.icon}>{icon}</div>}
       <Heading level={3} className={styles.title}>
         {title}
       </Heading>
-    </div>
-    <p className={styles.message}>{message}</p>
-    <div className={styles.actions}>
-      <Button type="button" onClick={onCancel} className="primary">
-        {' '}
+    </Flex>
+    <Paragraph className={styles.message}>{message}</Paragraph>
+    <Flex justify="end" gap="s" className={styles.actions}>
+      <Button type="button" onClick={onCancel} kind="secondary">
         {cancelText}
       </Button>
-      <Button type="button" onClick={onConfirm} className="secondary">
+      <Button type="button" onClick={onConfirm} kind="primary">
         {confirmText}
       </Button>
-    </div>
-  </div>
+    </Flex>
+  </FlexColumn>
 )

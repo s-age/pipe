@@ -2,6 +2,8 @@ import type { JSX } from 'react'
 import React from 'react'
 import { createPortal } from 'react-dom'
 
+import { themeClass } from '@/styles/theme.css'
+
 import { useModalHandlers } from './hooks/useModalHandlers'
 import * as styles from './style.css'
 
@@ -16,6 +18,7 @@ let modalRoot =
 if (typeof document !== 'undefined' && !modalRoot) {
   modalRoot = document.createElement('div')
   modalRoot.id = MODAL_ROOT_ID
+  modalRoot.className = themeClass
   document.body.appendChild(modalRoot)
 }
 

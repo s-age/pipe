@@ -3,17 +3,12 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '../../../styles/colors.css'
 
 export const container = style({
-  display: 'flex',
   minWidth: '300px',
-  padding: '16px',
-  flexDirection: 'column',
-  gap: '16px'
+  padding: '16px'
 })
 
 export const header = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px'
+  // Flex component handles display, alignItems, and gap
 })
 
 export const icon = style({
@@ -34,8 +29,6 @@ export const message = style({
 })
 
 export const actions = style({
-  display: 'flex',
-  marginTop: '16px',
-  justifyContent: 'flex-end',
-  gap: '8px'
+  marginTop: '16px'
+  // Flex component handles display, justifyContent, and gap
 })

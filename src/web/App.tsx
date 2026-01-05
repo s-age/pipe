@@ -7,6 +7,7 @@ import { Toasts } from './components/organisms/Toast'
 import { TooltipManager } from './components/organisms/Tooltip'
 import { ChatHistoryPage } from './components/pages/ChatHistoryPage'
 import { AppStoreProvider } from './stores/useAppStore'
+import { themeClass } from './styles/theme.css'
 
 const StartSessionPage = lazy(() =>
   import('./components/pages/StartSessionPage').then((module) => ({
@@ -48,11 +49,13 @@ const router = createBrowserRouter([
 ])
 
 export const App = (): JSX.Element => (
-  <AppStoreProvider>
-    {/* ModalProvider removed in favor of event-based ModalManager */}
-    <RouterProvider router={router} />
-    <Toasts />
-    <ModalManager />
-    <TooltipManager />
-  </AppStoreProvider>
+  <div className={themeClass}>
+    <AppStoreProvider>
+      {/* ModalProvider removed in favor of event-based ModalManager */}
+      <RouterProvider router={router} />
+      <Toasts />
+      <ModalManager />
+      <TooltipManager />
+    </AppStoreProvider>
+  </div>
 )

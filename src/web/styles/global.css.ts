@@ -1,6 +1,7 @@
 import { globalStyle } from '@vanilla-extract/css'
 
 import './reset.css'
+import './theme.css'
 import { colors } from './colors.css.ts'
 
 // Global app styles (font stack and other app-wide defaults)

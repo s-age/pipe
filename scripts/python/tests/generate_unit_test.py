@@ -200,7 +200,7 @@ def find_python_files(targets: list[str]) -> list[str]:
     return sorted(python_files)
 
 
-def detect_layer(file_path: str) -> tuple[str, str] | None:
+def detect_layer(file_path: str) -> tuple[str, str | None] | None:
     """
     Detect layer name and module from file path.
 
@@ -208,7 +208,8 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
         file_path: Absolute path to Python file
 
     Returns:
-        Tuple of (module, layer) where module is 'core' or 'web', or None
+        Tuple of (module, layer) where module is 'core' or 'web', and layer can be None
+        for web root files, or None if layer cannot be detected
     """
     parts = Path(file_path).parts
 
@@ -229,6 +230,7 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
                 "validators",
                 "factories",
                 "utils",
+                "delegates",
             }
             if layer in known_core_layers:
                 return ("core", layer)
@@ -240,7 +242,15 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
         web_idx = parts.index("web")
         if web_idx + 1 < len(parts):
             layer = parts[web_idx + 1]
-            # Validate known web layers
+
+            # If the next part is a .py file (not a directory), it's a direct web layer file
+            # e.g., src/pipe/web/action_responses.py -> tests/unit/web/test_action_responses.py
+            if layer.endswith(".py"):
+                # Return None for layer to indicate this is a web root file
+                # This will be handled specially in build_file_metadata
+                return ("web", None)
+
+            # Validate known web layers (subdirectories)
             known_web_layers = {
                 "requests",
                 "responses",
@@ -251,10 +261,6 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
             }
             if layer in known_web_layers:
                 return ("web", layer)
-            # If the next part is a .py file (not a directory), it's a direct web layer file
-            # e.g., src/pipe/web/action_responses.py
-            if layer.endswith(".py"):
-                return ("web", "web")
     except ValueError:
         pass
 
@@ -280,14 +286,23 @@ def build_file_metadata(files: list[str]) -> list[dict]:
 
         module, layer = layer_info
         filename = Path(file_path).stem
-        test_path = f"tests/unit/{module}/{layer}/test_{filename}.py"
+
+        # Handle web root files (layer is None)
+        # e.g., src/pipe/web/action_responses.py -> tests/unit/web/test_action_responses.py
+        if layer is None:
+            test_path = f"tests/unit/{module}/test_{filename}.py"
+            # Use module name as layer for role resolution
+            effective_layer = module
+        else:
+            test_path = f"tests/unit/{module}/{layer}/test_{filename}.py"
+            effective_layer = layer
 
         metadata.append(
             {
                 "source_file": file_path,
                 "test_file": test_path,
                 "module": module,
-                "layer": layer,
+                "layer": effective_layer,
                 "filename": filename,
             }
         )

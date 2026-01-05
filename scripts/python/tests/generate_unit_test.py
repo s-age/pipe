@@ -41,6 +41,10 @@ Examples:
         src/pipe/core/repositories/archive_repository.py \
         src/pipe/core/repositories/session_repository.py
 
+    # Generate tests for CLI layer
+    poetry run python scripts/python/tests/generate_unit_test.py \
+        src/pipe/cli/takt.py
+
     # Resume existing conductor session
     poetry run python scripts/python/tests/generate_unit_test.py \
         --session abc123
@@ -200,7 +204,7 @@ def find_python_files(targets: list[str]) -> list[str]:
     return sorted(python_files)
 
 
-def detect_layer(file_path: str) -> tuple[str, str] | None:
+def detect_layer(file_path: str) -> tuple[str, str | None] | None:
     """
     Detect layer name and module from file path.
 
@@ -208,7 +212,8 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
         file_path: Absolute path to Python file
 
     Returns:
-        Tuple of (module, layer) where module is 'core' or 'web', or None
+        Tuple of (module, layer) where module is 'core', 'web', or 'cli', and layer can be None
+        for web/cli root files, or None if layer cannot be detected
     """
     parts = Path(file_path).parts
 
@@ -229,6 +234,7 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
                 "validators",
                 "factories",
                 "utils",
+                "delegates",
             }
             if layer in known_core_layers:
                 return ("core", layer)
@@ -240,7 +246,15 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
         web_idx = parts.index("web")
         if web_idx + 1 < len(parts):
             layer = parts[web_idx + 1]
-            # Validate known web layers
+
+            # If the next part is a .py file (not a directory), it's a direct web layer file
+            # e.g., src/pipe/web/action_responses.py -> tests/unit/web/test_action_responses.py
+            if layer.endswith(".py"):
+                # Return None for layer to indicate this is a web root file
+                # This will be handled specially in build_file_metadata
+                return ("web", None)
+
+            # Validate known web layers (subdirectories)
             known_web_layers = {
                 "requests",
                 "responses",
@@ -251,10 +265,20 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
             }
             if layer in known_web_layers:
                 return ("web", layer)
-            # If the next part is a .py file (not a directory), it's a direct web layer file
-            # e.g., src/pipe/web/action_responses.py
-            if layer.endswith(".py"):
-                return ("web", "web")
+    except ValueError:
+        pass
+
+    # Look for src/pipe/cli/{file}
+    # CLI files are directly under src/pipe/cli/ (no subdirectories)
+    # e.g., src/pipe/cli/takt.py -> tests/unit/cli/test_takt.py
+    try:
+        cli_idx = parts.index("cli")
+        if cli_idx + 1 < len(parts):
+            filename = parts[cli_idx + 1]
+            # If it's a .py file, it's a CLI file
+            if filename.endswith(".py") and filename != "__init__.py":
+                # Return None for layer to indicate this is a CLI root file
+                return ("cli", None)
     except ValueError:
         pass
 
@@ -280,14 +304,24 @@ def build_file_metadata(files: list[str]) -> list[dict]:
 
         module, layer = layer_info
         filename = Path(file_path).stem
-        test_path = f"tests/unit/{module}/{layer}/test_{filename}.py"
+
+        # Handle web/cli root files (layer is None)
+        # e.g., src/pipe/web/action_responses.py -> tests/unit/web/test_action_responses.py
+        # e.g., src/pipe/cli/takt.py -> tests/unit/cli/test_takt.py
+        if layer is None:
+            test_path = f"tests/unit/{module}/test_{filename}.py"
+            # Use module name as layer for role resolution
+            effective_layer = module
+        else:
+            test_path = f"tests/unit/{module}/{layer}/test_{filename}.py"
+            effective_layer = layer
 
         metadata.append(
             {
                 "source_file": file_path,
                 "test_file": test_path,
                 "module": module,
-                "layer": layer,
+                "layer": effective_layer,
                 "filename": filename,
             }
         )
@@ -654,6 +688,10 @@ def launch_conductor_for_init(file_metadata: list[dict]) -> str | None:
         '  title: "Generate tests for therapist_requests.py"\n'
         '  description: "source_file=src/pipe/web/requests/therapist_requests.py, '
         'test_file=tests/unit/web/requests/test_therapist_requests.py, module=web, layer=requests"\n\n'
+        "Example (cli):\n"
+        '  title: "Generate tests for takt.py"\n'
+        '  description: "source_file=src/pipe/cli/takt.py, '
+        'test_file=tests/unit/cli/test_takt.py, module=cli, layer=cli"\n\n'
         "After successfully creating TODOs with edit_todos, EXIT IMMEDIATELY.\n"
         "DO NOT process any files yet - the script will call you again "
         "to process each file one by one.\n\n"

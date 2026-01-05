@@ -251,6 +251,10 @@ def detect_layer(file_path: str) -> tuple[str, str] | None:
             }
             if layer in known_web_layers:
                 return ("web", layer)
+            # If the next part is a .py file (not a directory), it's a direct web layer file
+            # e.g., src/pipe/web/action_responses.py
+            if layer.endswith(".py"):
+                return ("web", "web")
     except ValueError:
         pass
 

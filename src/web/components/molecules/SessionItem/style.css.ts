@@ -3,10 +3,7 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '../../../styles/colors.css'
 
 export const sessionItem = style({
-  display: 'flex',
-  padding: '8px 12px',
   color: colors.white,
-  alignItems: 'center',
   borderBottom: `1px solid ${colors.darkGray}`,
   selectors: {
     '&:hover': {
@@ -16,22 +13,13 @@ export const sessionItem = style({
 })
 
 export const label = style({
-  display: 'flex',
   flex: 1,
-  cursor: 'pointer',
-  alignItems: 'center'
+  cursor: 'pointer'
 })
 
 export const checkbox = style({
   marginRight: '12px',
   flexShrink: 0
-})
-
-export const content = style({
-  display: 'grid',
-  flex: 1,
-  gridTemplateColumns: '1fr 100px 180px',
-  gap: '12px'
 })
 
 export const subject = style({

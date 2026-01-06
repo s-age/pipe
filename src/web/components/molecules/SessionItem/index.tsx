@@ -1,13 +1,24 @@
 import type { JSX } from 'react'
 
 import { Checkbox } from '@/components/atoms/Checkbox'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+import { Grid } from '@/components/molecules/Grid'
 import type {
   SessionOverview,
   SessionTreeNode
 } from '@/lib/api/sessionTree/getSessionTree'
 
 import { useSessionItemHandlers } from './hooks/useSessionItemHandlers'
-import { sessionItem, label, checkbox, content, subject, createdAt } from './style.css'
+import {
+  sessionItem,
+  label,
+  checkbox,
+  subject,
+  shortHash as shortHashStyle,
+  createdAt
+} from './style.css'
 
 type Properties = {
   session: SessionOverview | SessionTreeNode
@@ -65,20 +76,20 @@ export const SessionItem = ({
   const { handleSelect } = useSessionItemHandlers(itemId, isSelected, onSelect)
 
   return (
-    <div className={sessionItem}>
-      <label className={label}>
+    <Box padding="s" className={sessionItem}>
+      <Flex as="label" align="center" className={label}>
         <Checkbox
           id={`session-${itemId}`}
           className={checkbox}
           checked={isSelected}
           onChange={handleSelect}
         />
-        <div className={content}>
-          <span className={subject}>{sessionName}</span>
-          <span className={shortHash}>{shortHash}</span>
-          <span className={createdAt}>{displayDateDisplay}</span>
-        </div>
-      </label>
-    </div>
+        <Grid columns="1fr 100px 180px" gap="s">
+          <Text className={subject}>{sessionName}</Text>
+          <Text className={shortHashStyle}>{shortHash}</Text>
+          <Text className={createdAt}>{displayDateDisplay}</Text>
+        </Grid>
+      </Flex>
+    </Box>
   )
 }

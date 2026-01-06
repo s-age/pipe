@@ -5,21 +5,16 @@ import { zIndex } from '@/styles/zIndex.css'
 import { colors } from '../../../styles/colors.css.ts'
 
 export const sessionListColumn = style({
-  display: 'flex',
   flex: '0 0 250px',
   height: '100vh',
   background: colors.cyanDark,
-  flexDirection: 'column',
   borderRight: '1px solid rgba(0,0,0,0.08)'
 })
 
 export const sessionListContainer = style({
   minHeight: 0,
-  overflowY: 'auto',
-  margin: '0',
   padding: '12px 12px',
   paddingBottom: '88px',
-  listStyle: 'none',
   flexGrow: '1'
 })
 
@@ -42,8 +37,7 @@ export const depth10 = style({ marginLeft: '160px' })
 
 export const nestedList = style({
   margin: 0,
-  paddingLeft: 0,
-  listStyle: 'none'
+  paddingLeft: 0
 })
 
 export const sessionLink = style({

@@ -1,4 +1,5 @@
 import { clsx } from 'clsx'
+import { forwardRef } from 'react'
 import type { JSX, ReactNode } from 'react'
 
 import { listItem } from './style.css'
@@ -9,23 +10,22 @@ type ListItemProperties = {
   padding?: 's' | 'm' | 'l' | 'none'
 }
 
-export const ListItem = ({
-  children,
-  className,
-  padding = 'none',
-  ...rest
-}: ListItemProperties): JSX.Element => {
-  const classNames = clsx(
-    listItem,
-    {
-      [`padding-${padding}`]: padding !== 'none'
-    },
-    className
-  )
+export const ListItem = forwardRef<HTMLLIElement, ListItemProperties>(
+  ({ children, className, padding = 'none', ...rest }, reference): JSX.Element => {
+    const classNames = clsx(
+      listItem,
+      {
+        [`padding-${padding}`]: padding !== 'none'
+      },
+      className
+    )
 
-  return (
-    <li className={classNames} {...rest}>
-      {children}
-    </li>
-  )
-}
+    return (
+      <li className={classNames} ref={reference} {...rest}>
+        {children}
+      </li>
+    )
+  }
+)
+
+ListItem.displayName = 'ListItem'

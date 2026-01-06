@@ -1,5 +1,8 @@
 import type { JSX } from 'react'
 
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { ScrollArea } from '@/components/molecules/ScrollArea'
+import { UnorderedList } from '@/components/molecules/UnorderedList'
 import type {
   SessionOverview,
   SessionTreeNode as SessionTreeNodeType
@@ -46,39 +49,41 @@ export const SessionTree = ({
   // ref management delegated to handlers via `setSessionReference`.
 
   return (
-    <div className={sessionListColumn}>
-      <ul className={sessionListContainer}>
-        {Array.isArray(sessions) &&
-        sessions.length > 0 &&
-        'overview' in (sessions[0] as SessionOverview | SessionTreeNodeType)
-          ? // hierarchical nodes: render recursively
-            (sessions as SessionTreeNodeType[]).map((node: SessionTreeNodeType) => (
-              <SessionTreeNode
-                key={node.sessionId}
-                node={node}
-                currentSessionId={currentSessionId}
-                handleAnchorClick={handleAnchorClick}
-                setSessionReference={setSessionReference}
-              />
-            ))
-          : // flat list: render as before
-            (sessions as SessionOverview[]).map((session) => {
-              if (!session.sessionId || typeof session.sessionId !== 'string') {
-                return null // Invalid session, skip rendering
-              }
-
-              return (
-                <SessionOverviewComponent
-                  key={session.sessionId}
-                  session={session}
-                  currentSessionId={currentSessionId || ''}
-                  handleSelectSession={handleSelectSession}
-                  ref={setSessionReference(session.sessionId)}
+    <FlexColumn className={sessionListColumn}>
+      <ScrollArea className={sessionListContainer}>
+        <UnorderedList>
+          {Array.isArray(sessions) &&
+          sessions.length > 0 &&
+          'overview' in (sessions[0] as SessionOverview | SessionTreeNodeType)
+            ? // hierarchical nodes: render recursively
+              (sessions as SessionTreeNodeType[]).map((node: SessionTreeNodeType) => (
+                <SessionTreeNode
+                  key={node.sessionId}
+                  node={node}
+                  currentSessionId={currentSessionId}
+                  handleAnchorClick={handleAnchorClick}
+                  setSessionReference={setSessionReference}
                 />
-              )
-            })}
-      </ul>
+              ))
+            : // flat list: render as before
+              (sessions as SessionOverview[]).map((session) => {
+                if (!session.sessionId || typeof session.sessionId !== 'string') {
+                  return null // Invalid session, skip rendering
+                }
+
+                return (
+                  <SessionOverviewComponent
+                    key={session.sessionId}
+                    session={session}
+                    currentSessionId={currentSessionId || ''}
+                    handleSelectSession={handleSelectSession}
+                    ref={setSessionReference(session.sessionId)}
+                  />
+                )
+              })}
+        </UnorderedList>
+      </ScrollArea>
       <SessionTreeFooter handleNewChatClick={handleNewChatClick} />
-    </div>
+    </FlexColumn>
   )
 }

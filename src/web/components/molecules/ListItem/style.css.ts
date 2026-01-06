@@ -1,17 +1,17 @@
 import { style } from '@vanilla-extract/css'
 
-import { vars } from '@/styles/theme.css'
+import { variables } from '@/styles/theme.css'
 
 export const listItem = style({
   selectors: {
     '&.padding-s': {
-      padding: vars.spacing.s
+      padding: variables.spacing.s
     },
     '&.padding-m': {
-      padding: vars.spacing.m
+      padding: variables.spacing.m
     },
     '&.padding-l': {
-      padding: vars.spacing.l
+      padding: variables.spacing.l
     }
   }
 })

@@ -50,6 +50,11 @@ export const optionHighlighted = style({
   background: colors.lightBlue
 })
 
+export const optionDisabled = style({
+  opacity: 0.5,
+  cursor: 'not-allowed'
+})
+
 export const searchInput = style({
   width: '100%',
   marginBottom: 8,

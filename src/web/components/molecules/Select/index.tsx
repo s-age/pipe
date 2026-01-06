@@ -12,6 +12,7 @@ import {
   panel,
   option,
   optionHighlighted,
+  optionDisabled,
   searchInput
 } from './style.css'
 
@@ -71,7 +72,8 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     highlightedIndex,
     setHighlightedIndex,
     setSelectedValue,
-    setQuery
+    setQuery,
+    onChange: rest.onChange
   })
 
   const { rootReference } = useSelectLifecycle({
@@ -100,7 +102,7 @@ export const Select = (properties: SelectProperties): JSX.Element => {
         hidden={true}
       >
         {(normalizedOptions ?? []).map((opt) => (
-          <option key={opt.id ?? opt.value} value={opt.value}>
+          <option key={opt.id ?? opt.value} value={opt.value} disabled={opt.disabled}>
             {typeof opt.label === 'string' ? opt.label : String(opt.value)}
           </option>
         ))}
@@ -139,15 +141,17 @@ export const Select = (properties: SelectProperties): JSX.Element => {
               <li
                 key={opt.id ?? opt.value}
                 role="option"
-                onClick={handleOptionClick}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
+                onClick={opt.disabled ? undefined : handleOptionClick}
+                onMouseEnter={opt.disabled ? undefined : handleMouseEnter}
+                onMouseLeave={opt.disabled ? undefined : handleMouseLeave}
                 className={clsx(
                   option,
-                  highlightedIndex === index && optionHighlighted
+                  highlightedIndex === index && optionHighlighted,
+                  opt.disabled && optionDisabled
                 )}
                 data-value={opt.id ?? opt.value}
                 data-index={String(index)}
+                aria-disabled={opt.disabled}
               >
                 {opt.label}
               </li>

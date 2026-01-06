@@ -15,6 +15,7 @@ type UseSelectHandlersProperties = {
   setHighlightedIndex: (i: number) => void
   setSelectedValue: (v: string) => void
   setQuery: (q: string) => void
+  onChange?: (event: ChangeEvent<HTMLSelectElement>) => void
 }
 
 export type UseSelectHandlersReturn = {
@@ -34,7 +35,8 @@ export const useSelectHandlers = ({
   highlightedIndex,
   setHighlightedIndex,
   setSelectedValue,
-  setQuery
+  setQuery,
+  onChange
 }: UseSelectHandlersProperties): UseSelectHandlersReturn => {
   const toggleOpen = useCallback(() => setIsOpen(!isOpen), [isOpen, setIsOpen])
 
@@ -43,8 +45,17 @@ export const useSelectHandlers = ({
       setSelectedValue(value)
       setIsOpen(false)
       setQuery('')
+
+      // Trigger onChange callback if provided
+      if (onChange) {
+        const syntheticEvent = {
+          target: { value },
+          currentTarget: { value }
+        } as ChangeEvent<HTMLSelectElement>
+        onChange(syntheticEvent)
+      }
     },
-    [setSelectedValue, setIsOpen, setQuery]
+    [setSelectedValue, setIsOpen, setQuery, onChange]
   )
 
   const handleKeyDownNative = useCallback(

@@ -8,7 +8,12 @@ import type {
 import type { FormMethods } from '@/components/organisms/Form'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
-export type SelectOption = { value: string; label: React.ReactNode; id?: string }
+export type SelectOption = {
+  value: string
+  label: React.ReactNode
+  id?: string
+  disabled?: boolean
+}
 
 type UseSelectProperties = {
   register?: UseFormRegister<FieldValues>
@@ -74,7 +79,12 @@ export const useSelect = ({
         const opt = o as SelectOption
         const value = String(opt.value ?? '')
 
-        return { value, label: opt.label, id: `${value}__${index}` }
+        return {
+          value,
+          label: opt.label,
+          id: `${value}__${index}`,
+          disabled: opt.disabled
+        }
       }),
     [options]
   )

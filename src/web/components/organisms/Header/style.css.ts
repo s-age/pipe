@@ -5,13 +5,11 @@ import { zIndex } from '@/styles/zIndex.css'
 import { colors } from '../../../styles/colors.css.ts'
 
 export const headerContainer = style({
-  display: 'flex',
   height: '64px',
   padding: '0',
   color: colors.white,
   background: colors.headerGradation,
-  boxShadow: `inset 0 -1px 0 0 ${colors.gray}`,
-  alignItems: 'center'
+  boxShadow: `inset 0 -1px 0 0 ${colors.gray}`
 })
 
 export const headerTitle = style({
@@ -20,10 +18,7 @@ export const headerTitle = style({
 })
 
 export const brand = style({
-  display: 'flex',
-  marginRight: '12px',
-  alignItems: 'center',
-  gap: '10px'
+  marginRight: '12px'
 })
 
 export const brandLogo = style({

@@ -1,6 +1,7 @@
 import type { JSX } from 'react'
 
 import { IconBulkDelete } from '@/components/atoms/IconBulkDelete'
+import { Flex } from '@/components/molecules/Flex'
 import { InputSearch } from '@/components/molecules/InputSearch'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import logoSource from '@/static/images/logo.png'
@@ -35,10 +36,10 @@ export const Header = (): JSX.Element => {
   } = useSearchSessionsHandlers()
 
   return (
-    <header className={headerContainer}>
-      <div className={brand}>
+    <Flex as="header" align="center" className={headerContainer}>
+      <Flex align="center" gap="s" className={brand}>
         <img src={logoSource} alt="pipe logo" className={brandLogo} />
-      </div>
+      </Flex>
       <div className={searchWrapper}>
         <InputSearch
           placeholder="Search sessions..."
@@ -97,6 +98,6 @@ export const Header = (): JSX.Element => {
           </div>
         )}
       </div>
-    </header>
+    </Flex>
   )
 }

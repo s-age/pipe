@@ -3,13 +3,11 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '@/styles/colors.css.ts'
 
 export const wrapper = style({
-  display: 'flex',
   height: '100%',
   boxSizing: 'border-box',
   margin: '0 12px',
   borderRadius: '10px',
-  background: colors.darkGray,
-  flexDirection: 'column'
+  background: colors.darkGray
 })
 
 export const container = style({
@@ -121,14 +119,11 @@ export const reloadButton = style({
 })
 
 export const header = style({
-  display: 'flex',
   position: 'sticky',
   top: 0,
   height: '56px',
   boxSizing: 'border-box',
   padding: '12px 16px',
-  alignItems: 'center',
-  justifyContent: 'space-between',
   borderBottom: `2px solid ${colors.black}`,
   zIndex: 60
 })

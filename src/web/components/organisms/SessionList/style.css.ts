@@ -3,41 +3,28 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '../../../styles/colors.css'
 
 export const sessionList = style({
-  display: 'flex',
   height: '100%',
-  overflowY: 'auto',
-  flexDirection: 'column'
+  overflowY: 'auto'
 })
 
 export const header = style({
-  display: 'flex',
   position: 'sticky',
   top: 0,
   padding: '12px',
   fontWeight: 'bold',
   color: colors.white,
   background: colors.black,
-  alignItems: 'center',
   borderBottom: `1px solid ${colors.darkGray}`
 })
 
 export const headerLabel = style({
-  display: 'flex',
   flex: 1,
-  cursor: 'pointer',
-  alignItems: 'center'
+  cursor: 'pointer'
 })
 
 export const headerCheckbox = style({
   marginRight: '12px',
   flexShrink: 0
-})
-
-export const headerContent = style({
-  display: 'grid',
-  flex: 1,
-  gridTemplateColumns: '1fr 100px 180px',
-  gap: '12px'
 })
 
 export const headerSubject = style({

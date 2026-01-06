@@ -8,7 +8,7 @@ type LinkProperties = {
   children?: ReactNode
   className?: string
   target?: '_blank' | '_self' | '_parent' | '_top'
-  variant?: 'default' | 'subtle' | 'primary'
+  variant?: 'default' | 'subtle' | 'primary' | 'unstyled'
 } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'target'>
 
 export const Link = ({
@@ -16,13 +16,16 @@ export const Link = ({
   className,
   href,
   target,
-  variant = 'default',
+  variant,
   ...rest
 }: LinkProperties): JSX.Element => {
+  // Auto-apply unstyled variant when className is provided
+  const finalVariant = variant ?? (className ? 'unstyled' : 'default')
+
   const classNames = clsx(
     link,
     {
-      [`variant-${variant}`]: true
+      [`variant-${finalVariant}`]: true
     },
     className
   )

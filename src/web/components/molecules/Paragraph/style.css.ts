@@ -22,6 +22,9 @@ export const paragraph = style({
     '&.size-xl': {
       fontSize: variables.fontSize.xl
     },
+    '&.size-unstyled': {
+      // No fontSize styles applied, allows className to override
+    },
     '&.weight-normal': {
       fontWeight: 400
     },
@@ -42,6 +45,9 @@ export const paragraph = style({
     },
     '&.variant-success': {
       color: variables.color.success
+    },
+    '&.variant-unstyled': {
+      // No color styles applied, allows className to override
     },
     '&.align-left': {
       textAlign: 'left'

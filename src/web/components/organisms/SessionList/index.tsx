@@ -1,6 +1,9 @@
 import React, { type JSX } from 'react'
 
 import { Checkbox } from '@/components/atoms/Checkbox'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { Grid } from '@/components/molecules/Grid'
 import { SessionItem } from '@/components/molecules/SessionItem'
 import type {
   SessionOverview,
@@ -15,7 +18,6 @@ import {
   header,
   headerLabel,
   headerCheckbox,
-  headerContent,
   headerSubject,
   headerShortHash,
   headerUpdatedAt
@@ -116,9 +118,9 @@ export const SessionList = ({
   }
 
   return (
-    <div className={sessionList}>
-      <div className={header}>
-        <label className={headerLabel}>
+    <FlexColumn className={sessionList}>
+      <Flex className={header} align="center">
+        <Flex as="label" className={headerLabel} align="center">
           <Checkbox
             ref={checkboxRef}
             id="select-all-sessions"
@@ -126,14 +128,14 @@ export const SessionList = ({
             checked={allSelected}
             onChange={handleSelectAll}
           />
-          <div className={headerContent}>
+          <Grid columns="1fr 100px 180px" gap="s">
             <span className={headerSubject}>Subject</span>
             <span className={headerShortHash}>Short Hash</span>
             <span className={headerUpdatedAt}>{updateLabel}</span>
-          </div>
-        </label>
-      </div>
+          </Grid>
+        </Flex>
+      </Flex>
       {renderSessions()}
-    </div>
+    </FlexColumn>
   )
 }

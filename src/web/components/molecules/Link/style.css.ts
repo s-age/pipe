@@ -1,6 +1,6 @@
 import { style } from '@vanilla-extract/css'
 
-import { vars } from '@/styles/theme.css'
+import { variables } from '@/styles/theme.css'
 
 export const link = style({
   textDecoration: 'none',
@@ -8,7 +8,7 @@ export const link = style({
 
   selectors: {
     '&.variant-default': {
-      color: vars.color.link
+      color: variables.color.link
     },
     '&.variant-default:hover': {
       textDecoration: 'underline'
@@ -17,14 +17,17 @@ export const link = style({
       color: 'inherit'
     },
     '&.variant-subtle:hover': {
-      color: vars.color.link
+      color: variables.color.link
     },
     '&.variant-primary': {
-      color: vars.color.primary,
+      color: variables.color.primary,
       fontWeight: 500
     },
     '&.variant-primary:hover': {
       textDecoration: 'underline'
+    },
+    '&.variant-unstyled': {
+      // No color styles applied, allows className to override
     }
   }
 })

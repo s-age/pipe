@@ -1,7 +1,9 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
 
+import { Link } from '@/components/molecules/Link'
 import { ListItem } from '@/components/molecules/ListItem'
+import { Paragraph } from '@/components/molecules/Paragraph'
 import { UnorderedList } from '@/components/molecules/UnorderedList'
 import type {
   SessionOverview,
@@ -83,7 +85,7 @@ export const SessionTreeNode = ({
       className={clsx(sessionListItem, depthClass)}
       ref={setSessionReference(node.sessionId)}
     >
-      <a
+      <Link
         href={`/session/${node.sessionId}`}
         data-session-id={node.sessionId}
         className={clsx(sessionLink, {
@@ -92,8 +94,8 @@ export const SessionTreeNode = ({
         onClick={handleAnchorClick}
       >
         {sessionObject.purpose}{' '}
-        <p className={sessionIdStyle}>{getShortHash(node.sessionId)}</p>
-      </a>
+        <Paragraph className={sessionIdStyle}>{getShortHash(node.sessionId)}</Paragraph>
+      </Link>
       {node.children && node.children.length > 0 && (
         <UnorderedList className={nestedList}>
           {node.children.map((child) => (

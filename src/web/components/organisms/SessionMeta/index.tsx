@@ -1,6 +1,8 @@
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
+import { Box } from '@/components/molecules/Box'
+import { ScrollArea } from '@/components/molecules/ScrollArea'
 import { ArtifactList } from '@/components/organisms/ArtifactList'
 import { Form, useOptionalFormContext } from '@/components/organisms/Form'
 import { HyperParameters } from '@/components/organisms/HyperParameters'
@@ -57,12 +59,12 @@ export const SessionMeta = ({
           id="current-session-id"
           value={sessionDetail?.sessionId ?? ''}
         />
-        <section className={sessionMetaSection}>
-          <div className={sessionMetaView}>
+        <ScrollArea className={sessionMetaSection}>
+          <Box padding="m" radius="m" className={sessionMetaView}>
             <SessionMetaBasic sessionDetail={sessionDetail} />
-          </div>
+          </Box>
 
-          <div className={sessionMetaView}>
+          <Box padding="m" radius="m" className={sessionMetaView}>
             <ReferenceList sessionDetail={sessionDetail} refreshSessions={onRefresh} />
 
             <ArtifactList sessionDetail={sessionDetail} refreshSessions={onRefresh} />
@@ -80,8 +82,8 @@ export const SessionMeta = ({
               sessionDetail={sessionDetail}
               onSessionDetailUpdate={onSessionDetailUpdate}
             />
-          </div>
-        </section>
+          </Box>
+        </ScrollArea>
 
         <div className={stickySaveMetaButtonContainer}>
           <Button

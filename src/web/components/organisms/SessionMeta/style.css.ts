@@ -24,8 +24,6 @@ export const sessionMetaSection = style({
 
 export const sessionMetaView = style({
   flex: '1',
-  padding: '20px',
-  borderRadius: '8px',
   background: colors.gray,
   selectors: {
     '&:first-child': {

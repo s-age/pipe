@@ -15,6 +15,7 @@ import {
   sessionItem,
   label,
   checkbox,
+  gridContent,
   subject,
   shortHash as shortHashStyle,
   createdAt
@@ -84,7 +85,7 @@ export const SessionItem = ({
           checked={isSelected}
           onChange={handleSelect}
         />
-        <Grid columns="1fr 100px 180px" gap="s">
+        <Grid columns="1fr 100px 180px" gap="s" className={gridContent}>
           <Text className={subject}>{sessionName}</Text>
           <Text className={shortHashStyle}>{shortHash}</Text>
           <Text className={createdAt}>{displayDateDisplay}</Text>

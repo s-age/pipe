@@ -1,5 +1,5 @@
 import { clsx } from 'clsx'
-import type { JSX, ReactNode } from 'react'
+import type { CSSProperties, JSX, ReactNode } from 'react'
 
 import { grid } from './style.css'
 
@@ -33,12 +33,13 @@ export const Grid = ({
     className
   )
 
-  const customProperties = !isPresetColumns
-    ? { '--grid-template-columns': columns }
+  const style: CSSProperties | undefined = !isPresetColumns
+    ? ({ '--grid-template-columns': columns } as CSSProperties)
     : undefined
 
   return (
-    <div className={classNames} {...customProperties} {...rest}>
+    // eslint-disable-next-line react/forbid-dom-props
+    <div className={classNames} style={style} {...rest}>
       {children}
     </div>
   )

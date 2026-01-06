@@ -22,6 +22,10 @@ export const checkbox = style({
   flexShrink: 0
 })
 
+export const gridContent = style({
+  flex: 1
+})
+
 export const subject = style({
   overflow: 'hidden',
   fontWeight: '500',

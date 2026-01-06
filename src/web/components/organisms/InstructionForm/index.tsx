@@ -15,34 +15,34 @@ import {
 } from './style.css'
 
 type InstructionFormProperties = {
+  contextLimit: number
   currentSessionId: string | null
-  onSendInstruction: (instruction: string) => Promise<void>
   isStreaming: boolean
   tokenCount?: number
-  contextLimit: number
+  onSendInstruction: (instruction: string) => Promise<void>
   onRefresh?: () => Promise<void>
 }
 
 export const InstructionForm = ({
+  contextLimit: contextLimitProperty,
   currentSessionId,
-  onSendInstruction,
   isStreaming,
   tokenCount: tokenCountProperty,
-  contextLimit: contextLimitProperty,
+  onSendInstruction,
   onRefresh
 }: InstructionFormProperties): JSX.Element => {
   // We must call `useInstructionFormHandlers` inside the `Form` provider created by
   // `Form`. To ensure `useFormContext` is available we define an inner
   // component that consumes the context.
   const Inner = (): JSX.Element => {
-    const { register, submit, onStopClick } = useInstructionFormHandlers({
+    const { onStopClick, register, submit } = useInstructionFormHandlers({
       currentSessionId,
       onSendInstruction,
       onRefresh
     })
 
     const tokenCount = tokenCountProperty ?? 0
-    const { contextLeft, colorKey } = useInstructionFormLifecycle({
+    const { colorKey, contextLeft } = useInstructionFormLifecycle({
       isStreaming,
       tokenCount,
       contextLimit: contextLimitProperty

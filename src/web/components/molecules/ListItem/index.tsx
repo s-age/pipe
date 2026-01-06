@@ -5,14 +5,14 @@ import { listItem } from './style.css'
 
 type ListItemProperties = {
   children?: ReactNode
-  padding?: 's' | 'm' | 'l' | 'none'
   className?: string
+  padding?: 's' | 'm' | 'l' | 'none'
 }
 
 export const ListItem = ({
   children,
-  padding = 'none',
   className,
+  padding = 'none',
   ...rest
 }: ListItemProperties): JSX.Element => {
   const classNames = clsx(

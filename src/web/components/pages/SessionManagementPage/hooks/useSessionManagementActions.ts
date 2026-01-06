@@ -7,8 +7,8 @@ import { useToastStore } from '@/stores/useToastStore'
 export const useSessionManagementActions = (): {
   archiveSessionsAction: (sessionIds: string[]) => Promise<boolean>
   deleteArchivedSessionsAction: (parameters: {
-    sessionIds?: string[]
     filePaths?: string[]
+    sessionIds?: string[]
   }) => Promise<boolean>
 } => {
   const { addToast } = useToastStore()
@@ -36,11 +36,11 @@ export const useSessionManagementActions = (): {
   )
 
   const deleteArchivedSessionsAction = useCallback<
-    (parameters: { sessionIds?: string[]; filePaths?: string[] }) => Promise<boolean>
+    (parameters: { filePaths?: string[]; sessionIds?: string[] }) => Promise<boolean>
   >(
     async (parameters: {
-      sessionIds?: string[]
       filePaths?: string[]
+      sessionIds?: string[]
     }): Promise<boolean> => {
       try {
         const result = await deleteArchivedSessions(parameters)

@@ -11,28 +11,28 @@ import type { Diagnosis } from './types'
 export type TherapistResultProperties = {
   diagnosis: Diagnosis
   isSubmitting: boolean
+  selectedCompressions: { end: number; reason: string; start: number }[]
   selectedDeletions: number[]
-  selectedEdits: { turn: number; newContent: string }[]
-  selectedCompressions: { start: number; end: number; reason: string }[]
+  selectedEdits: { newContent: string; turn: number }[]
+  handleApply: () => void
   handleDeletionChange: (
     turn: number
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleEditChange: (edit: {
-    turn: number
     newContent: string
+    turn: number
   }) => (event: React.ChangeEvent<HTMLInputElement>) => void
-  handleApply: () => void
 }
 
 export const TherapistResult = ({
   diagnosis,
   isSubmitting,
+  selectedCompressions,
   selectedDeletions,
   selectedEdits,
-  selectedCompressions,
+  handleApply,
   handleDeletionChange,
-  handleEditChange,
-  handleApply
+  handleEditChange
 }: TherapistResultProperties): JSX.Element => (
   <div className={styles.container}>
     <div className={styles.body}>

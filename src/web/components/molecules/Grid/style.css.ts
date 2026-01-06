@@ -1,6 +1,6 @@
 import { style } from '@vanilla-extract/css'
 
-import { vars } from '@/styles/theme.css'
+import { variables } from '@/styles/theme.css'
 
 export const grid = style({
   display: 'grid',
@@ -24,17 +24,20 @@ export const grid = style({
     '&.columns-auto-fill': {
       gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))'
     },
+    '&.columns-custom': {
+      gridTemplateColumns: 'var(--grid-template-columns)'
+    },
     '&.gap-s': {
-      gap: vars.spacing.s
+      gap: variables.spacing.s
     },
     '&.gap-m': {
-      gap: vars.spacing.m
+      gap: variables.spacing.m
     },
     '&.gap-l': {
-      gap: vars.spacing.l
+      gap: variables.spacing.l
     },
     '&.gap-xl': {
-      gap: vars.spacing.xl
+      gap: variables.spacing.xl
     }
   }
 })

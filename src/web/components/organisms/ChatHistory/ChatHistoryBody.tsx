@@ -17,10 +17,10 @@ import {
 } from './style.css'
 
 type ChatHistoryBodyProperties = {
-  sessionDetail: SessionDetail | null
   currentSessionId: string | null
   expertMode: boolean
   isStreaming: boolean
+  sessionDetail: SessionDetail | null
   streamingTurns: TurnType[]
   turnsListReference: RefObject<HTMLDivElement | null>
   onRefresh: () => Promise<void>
@@ -32,10 +32,10 @@ type ChatHistoryBodyProperties = {
 }
 
 export const ChatHistoryBody = ({
-  sessionDetail,
   currentSessionId,
   expertMode,
   isStreaming,
+  sessionDetail,
   streamingTurns,
   turnsListReference,
   onRefresh,

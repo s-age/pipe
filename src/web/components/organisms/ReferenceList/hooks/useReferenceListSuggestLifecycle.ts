@@ -2,11 +2,11 @@ import { useEffect } from 'react'
 
 export type UseReferenceListSuggestLifecycleProperties = {
   inputReference: React.RefObject<HTMLInputElement | null>
-  suggestionListReference: React.RefObject<HTMLUListElement | null>
-  setSuggestions: React.Dispatch<
-    React.SetStateAction<{ name: string; isDirectory: boolean }[]>
-  >
   setSelectedIndex: React.Dispatch<React.SetStateAction<number>>
+  setSuggestions: React.Dispatch<
+    React.SetStateAction<{ isDirectory: boolean; name: string }[]>
+  >
+  suggestionListReference: React.RefObject<HTMLUListElement | null>
 }
 
 /**
@@ -17,9 +17,9 @@ export type UseReferenceListSuggestLifecycleProperties = {
  */
 export const useReferenceListSuggestLifecycle = ({
   inputReference,
-  suggestionListReference,
+  setSelectedIndex,
   setSuggestions,
-  setSelectedIndex
+  suggestionListReference
 }: UseReferenceListSuggestLifecycleProperties): void => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {

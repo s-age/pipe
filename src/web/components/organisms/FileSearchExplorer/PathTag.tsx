@@ -5,13 +5,13 @@ import { usePathTagHandlers } from './hooks/usePathTagHandlers'
 import { pathTag, pathTagDeleteButton } from './style.css'
 
 type PathTagProperties = {
-  path: string
   index: number
+  path: string
   onDelete: (index: number) => void
 }
 
 export const PathTag = React.memo(
-  ({ path, index, onDelete }: PathTagProperties): JSX.Element => {
+  ({ index, path, onDelete }: PathTagProperties): JSX.Element => {
     const { handleClick, handleKeyDown } = usePathTagHandlers({ index, onDelete })
 
     return (

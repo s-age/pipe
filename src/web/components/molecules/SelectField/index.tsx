@@ -9,19 +9,19 @@ import { useOptionalFormContext } from '@/components/organisms/Form'
 import { errorMessageStyle } from './style.css'
 
 type SelectOption = {
-  value: string
   label: string
+  value: string
 }
 
 type SelectFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
-  label: string
   id: string
+  label: string
   options: SelectOption[]
 } & UseControllerProps<TFieldValues>
 
 export const SelectField = <TFieldValues extends FieldValues = FieldValues>({
-  label,
   id,
+  label,
   options,
   ...properties
 }: SelectFieldProperties<TFieldValues>): JSX.Element => {

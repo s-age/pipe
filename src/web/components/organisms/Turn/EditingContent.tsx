@@ -6,16 +6,16 @@ import { turnContent, editTextArea, editButtonContainer } from './style.css'
 
 type EditingContentProperties = {
   editedContent: string
+  onCancelEdit?: () => void
   onEditedChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
   onSaveEdit?: () => void
-  onCancelEdit?: () => void
 }
 
 export const EditingContent = ({
   editedContent,
+  onCancelEdit,
   onEditedChange,
-  onSaveEdit,
-  onCancelEdit
+  onSaveEdit
 }: EditingContentProperties): JSX.Element => (
   <div className={turnContent}>
     <textarea

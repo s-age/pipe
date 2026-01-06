@@ -20,7 +20,7 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const error = formContext?.formState?.errors?.procedure
 
   const actions = useProceduresActions()
-  const { procedureOptions, handleFocus, handleProcedureChange } =
+  const { handleFocus, handleProcedureChange, procedureOptions } =
     useProceduresHandlers(actions, formContext)
 
   const list = procedureOptions.map((proc) => ({

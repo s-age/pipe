@@ -25,18 +25,18 @@ export const HyperParameters = ({
   const formContext = useOptionalFormContext()
   const errors = formContext?.formState?.errors
   const {
-    temperature,
-    setTemperature,
-    handleTemperatureMouseUp,
     handleTemperatureMouseDown,
-    topP,
-    setTopP,
-    handleTopPMouseUp,
-    handleTopPMouseDown,
-    topK,
-    setTopK,
+    handleTemperatureMouseUp,
+    handleTopKMouseDown,
     handleTopKMouseUp,
-    handleTopKMouseDown
+    handleTopPMouseDown,
+    handleTopPMouseUp,
+    setTemperature,
+    setTopK,
+    setTopP,
+    temperature,
+    topK,
+    topP
   } = useHyperParametersHandlers({ sessionDetail })
 
   return (

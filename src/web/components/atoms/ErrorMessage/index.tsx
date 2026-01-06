@@ -5,14 +5,13 @@ import { errorMessageStyle } from './style.css'
 
 type ErrorMessageProperties = {
   /** Plain string message. */
-  message?: string
-  /** react-hook-form FieldError */
   error?: FieldError
+  message?: string
 }
 
 export const ErrorMessage = ({
-  message,
-  error
+  error,
+  message
 }: ErrorMessageProperties): JSX.Element | null => {
   const resolved =
     message ??

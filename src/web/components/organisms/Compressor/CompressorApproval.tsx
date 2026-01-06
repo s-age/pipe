@@ -6,31 +6,31 @@ import { useCompressorApprovalHandlers } from './hooks/useCompressorApprovalHand
 import * as styles from './style.css'
 
 export type CompressorApprovalProperties = {
-  summary: string
+  compressorSessionId: string | null
   sessionId: string
-  start?: number
+  summary: string
   end?: number
-  setSummary: (summary: string) => void
+  isSubmitting?: boolean
+  start?: number
+  handleDeny: () => void
+  onRefresh: () => Promise<void>
+  setCompressorSessionId: (id: string | null) => void
   setError: (error: string | null) => void
   setIsSubmitting: (isSubmitting: boolean) => void
-  handleDeny: () => void
-  isSubmitting?: boolean
-  compressorSessionId: string | null
-  setCompressorSessionId: (id: string | null) => void
-  onRefresh: () => Promise<void>
+  setSummary: (summary: string) => void
 }
 
 export const CompressorApproval = ({
-  summary,
-  start,
-  end,
-  setSummary,
-  setIsSubmitting,
-  handleDeny,
-  isSubmitting = false,
   compressorSessionId,
+  summary,
+  end,
+  isSubmitting = false,
+  start,
+  handleDeny,
+  onRefresh,
   setCompressorSessionId,
-  onRefresh
+  setIsSubmitting,
+  setSummary
 }: CompressorApprovalProperties): JSX.Element => {
   const { handleApprove } = useCompressorApprovalHandlers({
     compressorSessionId,

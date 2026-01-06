@@ -17,37 +17,37 @@ import {
 } from './style.css'
 
 type SelectProperties = {
-  register?: UseFormRegister<Record<string, unknown>>
   name?: string
   options?: Array<string | SelectOption>
-  searchable?: boolean
   placeholder?: string
+  register?: UseFormRegister<Record<string, unknown>>
+  searchable?: boolean
 } & SelectHTMLAttributes<HTMLSelectElement>
 
 export const Select = (properties: SelectProperties): JSX.Element => {
   const {
-    register,
+    className,
     name,
     options,
-    searchable = false,
     placeholder,
-    className,
+    register,
+    searchable = false,
     ...rest
   } = properties
 
   const {
-    registerProperties,
-    normalizedOptions,
     filteredOptions,
+    highlightedIndex,
+    isOpen,
+    listReference,
+    normalizedOptions,
+    query,
+    registerProperties,
     selectedLabel,
     selectedNativeValue,
-    isOpen,
-    setIsOpen,
-    query,
-    setQuery,
-    listReference,
-    highlightedIndex,
     setHighlightedIndex,
+    setIsOpen,
+    setQuery,
     setSelectedValue
   } = useSelect({
     register,
@@ -59,12 +59,12 @@ export const Select = (properties: SelectProperties): JSX.Element => {
   })
 
   const {
-    toggleOpen,
     handleKeyDown,
-    handleSearchChange,
-    handleOptionClick,
     handleMouseEnter,
-    handleMouseLeave
+    handleMouseLeave,
+    handleOptionClick,
+    handleSearchChange,
+    toggleOpen
   } = useSelectHandlers({
     isOpen,
     setIsOpen,

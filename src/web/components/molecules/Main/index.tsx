@@ -8,14 +8,8 @@ type MainProperties = {
   className?: string
 } & Omit<HTMLAttributes<HTMLElement>, 'className'>
 
-export const Main = ({
-  children,
-  className,
-  ...rest
-}: MainProperties): JSX.Element => {
-  return (
-    <main className={clsx(main, className)} {...rest}>
-      {children}
-    </main>
-  )
-}
+export const Main = ({ children, className, ...rest }: MainProperties): JSX.Element => (
+  <main className={clsx(main, className)} {...rest}>
+    {children}
+  </main>
+)

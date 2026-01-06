@@ -8,5 +8,6 @@ export const header = style({
 
 export const stickyTop = style({
   position: 'sticky',
+  top: 0,
   zIndex: zIndex.low
 })

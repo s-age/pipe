@@ -7,21 +7,21 @@ import { useInputSearchHandlers } from './hooks/useInputSearchHandlers'
 import { container, input, button } from './style.css'
 
 type InputSearchProperties = {
+  name?: string
   placeholder?: string
+  register?: UseFormRegister<FieldValues>
   value?: string
   onChange?: (value: string) => void
-  onSubmit?: (value: string) => void
-  register?: UseFormRegister<FieldValues>
-  name?: string
   onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void
+  onSubmit?: (value: string) => void
 }
 
 export const InputSearch = React.forwardRef<HTMLInputElement, InputSearchProperties>(
   (
-    { placeholder = 'Search...', value, onChange, onSubmit, register, name, onKeyDown },
+    { name, onChange, onKeyDown, onSubmit, placeholder = 'Search...', register, value },
     reference
   ) => {
-    const { handleSubmit, handleChange, registerProperties } = useInputSearchHandlers({
+    const { handleChange, handleSubmit, registerProperties } = useInputSearchHandlers({
       value,
       onChange,
       onSubmit,

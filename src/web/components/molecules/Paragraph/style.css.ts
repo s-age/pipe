@@ -1,6 +1,6 @@
 import { style } from '@vanilla-extract/css'
 
-import { vars } from '@/styles/theme.css'
+import { variables } from '@/styles/theme.css'
 
 export const paragraph = style({
   margin: 0,
@@ -8,19 +8,19 @@ export const paragraph = style({
 
   selectors: {
     '&.size-xs': {
-      fontSize: vars.fontSize.xs
+      fontSize: variables.fontSize.xs
     },
     '&.size-s': {
-      fontSize: vars.fontSize.s
+      fontSize: variables.fontSize.s
     },
     '&.size-m': {
-      fontSize: vars.fontSize.m
+      fontSize: variables.fontSize.m
     },
     '&.size-l': {
-      fontSize: vars.fontSize.l
+      fontSize: variables.fontSize.l
     },
     '&.size-xl': {
-      fontSize: vars.fontSize.xl
+      fontSize: variables.fontSize.xl
     },
     '&.weight-normal': {
       fontWeight: 400
@@ -35,13 +35,13 @@ export const paragraph = style({
       fontWeight: 700
     },
     '&.variant-muted': {
-      color: vars.color.textMuted
+      color: variables.color.textMuted
     },
     '&.variant-error': {
-      color: vars.color.error
+      color: variables.color.error
     },
     '&.variant-success': {
-      color: vars.color.success
+      color: variables.color.success
     },
     '&.align-left': {
       textAlign: 'left'

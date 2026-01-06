@@ -4,21 +4,21 @@ import type { JSX, ReactNode, HTMLAttributes } from 'react'
 import { paragraph } from './style.css'
 
 type ParagraphProperties = {
-  children?: ReactNode
-  size?: 'xs' | 's' | 'm' | 'l' | 'xl'
-  weight?: 'normal' | 'medium' | 'semibold' | 'bold'
-  variant?: 'default' | 'muted' | 'error' | 'success'
   align?: 'left' | 'center' | 'right' | 'justify'
+  children?: ReactNode
   className?: string
+  size?: 'xs' | 's' | 'm' | 'l' | 'xl'
+  variant?: 'default' | 'muted' | 'error' | 'success'
+  weight?: 'normal' | 'medium' | 'semibold' | 'bold'
 } & Omit<HTMLAttributes<HTMLParagraphElement>, 'className'>
 
 export const Paragraph = ({
-  children,
-  size = 'm',
-  weight = 'normal',
-  variant = 'default',
   align = 'left',
+  children,
   className,
+  size = 'm',
+  variant = 'default',
+  weight = 'normal',
   ...rest
 }: ParagraphProperties): JSX.Element => {
   const classNames = clsx(

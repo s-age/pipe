@@ -38,46 +38,44 @@ import { ToolResponseContent } from './ToolResponseContent'
 import { UserTaskContent } from './UserTaskContent'
 
 type TurnProperties = {
-  turn: Turn
-  index: number
   expertMode: boolean
+  index: number
+  turn: Turn
+  editedContent?: string
+  isEditing?: boolean
   isStreaming?: boolean
-  // For ChatHistory integration
   sessionId?: string
+  onCancelEdit?: () => void
+  onCopy?: () => Promise<void>
+  onDelete?: () => void
+  onEditedChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
+  onFork?: () => void
   onRefresh?: () => Promise<void>
+  onSaveEdit?: () => void
+  onStartEdit?: () => void
   refreshSessionsInStore?: (
     sessionDetail: SessionDetail,
     sessions: SessionOverview[]
   ) => void
-  // Turn handlers passed from parent (for backward compatibility)
-  isEditing?: boolean
-  editedContent?: string
-  onCopy?: () => Promise<void>
-  onEditedChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
-  onCancelEdit?: () => void
-  onStartEdit?: () => void
-  onFork?: () => void
-  onDelete?: () => void
-  onSaveEdit?: () => void
 }
 
 export const TurnComponent = ({
-  turn,
-  index,
   expertMode,
+  index,
+  turn,
+  editedContent: propertyEditedContent = '',
+  isEditing: propertyIsEditing = false,
   isStreaming = false,
   sessionId,
-  onRefresh,
-  refreshSessionsInStore,
-  isEditing: propertyIsEditing = false,
-  editedContent: propertyEditedContent = '',
-  onCopy: propertyOnCopy,
-  onEditedChange: propertyOnEditedChange,
   onCancelEdit: propertyOnCancelEdit,
-  onStartEdit: propertyOnStartEdit,
-  onFork: propertyOnFork,
+  onCopy: propertyOnCopy,
   onDelete: propertyOnDelete,
-  onSaveEdit: propertyOnSaveEdit
+  onEditedChange: propertyOnEditedChange,
+  onFork: propertyOnFork,
+  onRefresh,
+  onSaveEdit: propertyOnSaveEdit,
+  onStartEdit: propertyOnStartEdit,
+  refreshSessionsInStore
 }: TurnProperties): JSX.Element => {
   const { deleteTurnAction, editTurnAction, forkSessionAction } = useTurnActions()
 

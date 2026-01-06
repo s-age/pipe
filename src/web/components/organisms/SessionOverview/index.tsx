@@ -12,15 +12,15 @@ import {
 } from './style.css'
 
 type SessionOverviewProperties = {
-  session: SessionOverviewType
   currentSessionId: string
+  session: SessionOverviewType
   handleSelectSession: (sessionId: string) => Promise<void>
 }
 
 export const SessionOverviewComponent = forwardRef<
   HTMLLIElement,
   SessionOverviewProperties
->(({ session, currentSessionId, handleSelectSession }, reference) => {
+>(({ currentSessionId, handleSelectSession, session }, reference) => {
   const { onClick } = useSessionOverviewHandlers({ session, handleSelectSession })
 
   return (

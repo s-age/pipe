@@ -27,10 +27,8 @@ export const getModalRoot = (): HTMLElement | null => modalRoot
 type ModalProperties = {
   /** Whether the modal is open (controlled by parent) */
   isOpen: boolean
-  /** Callback invoked when modal should close (overlay click, Escape key) */
-  onClose?: () => void
-  /** Modal content */
   children?: React.ReactNode
+  onClose?: () => void
 }
 
 /**
@@ -47,11 +45,11 @@ type ModalProperties = {
  */
 export const Modal = ({
   isOpen,
-  onClose,
-  children
+  children,
+  onClose
 }: ModalProperties): JSX.Element | null => {
   const modalRoot = getModalRoot()
-  const { onOverlayMouseDown, onContentMouseDown } = useModalHandlers(isOpen, onClose)
+  const { onContentMouseDown, onOverlayMouseDown } = useModalHandlers(isOpen, onClose)
 
   if (!isOpen || !modalRoot) return null
 

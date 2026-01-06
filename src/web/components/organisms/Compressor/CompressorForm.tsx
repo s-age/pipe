@@ -17,41 +17,41 @@ import * as styles from './style.css'
 import { renderTurnOptions } from './TurnOptions'
 
 export type CompressorFormProperties = {
-  sessionId: string
+  compressorSessionId: string | null
   effectiveMax: number
-  isSubmitting: boolean
-  execResult: string | null
-  error?: string | null
-  startLocal: number
   endLocal: number
-  handleStartChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
-  handleEndChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
   endOptions: number[]
-  setSummary: (summary: string) => void
+  execResult: string | null
+  isSubmitting: boolean
+  sessionId: string
+  startLocal: number
+  error?: string | null
+  handleEndChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+  handleStartChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+  onRefresh: () => Promise<void>
+  setCompressorSessionId: (id: string | null) => void
   setError: (error: string | null) => void
   setIsSubmitting: (isSubmitting: boolean) => void
-  compressorSessionId: string | null
-  setCompressorSessionId: (id: string | null) => void
-  onRefresh: () => Promise<void>
+  setSummary: (summary: string) => void
 }
 
 export const CompressorForm = ({
-  sessionId,
+  compressorSessionId,
   effectiveMax,
-  isSubmitting,
-  execResult,
-  error,
-  startLocal,
   endLocal,
-  handleStartChange,
-  handleEndChange,
   endOptions,
-  setSummary,
+  execResult,
+  isSubmitting,
+  sessionId,
+  startLocal,
+  error,
+  handleEndChange,
+  handleStartChange,
+  onRefresh,
+  setCompressorSessionId,
   setError,
   setIsSubmitting,
-  compressorSessionId,
-  setCompressorSessionId,
-  onRefresh
+  setSummary
 }: CompressorFormProperties): JSX.Element => {
   const formContext = useOptionalFormContext<CompressorFormInputs>()
 

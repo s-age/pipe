@@ -14,27 +14,27 @@ import {
 } from './style.css'
 
 type AccordionProperties = {
-  id?: string
   title: string | JSX.Element
-  summary?: string | JSX.Element
-  defaultOpen?: boolean
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
   children?: ReactNode
   className?: string
+  defaultOpen?: boolean
+  id?: string
+  open?: boolean
+  summary?: string | JSX.Element
+  onOpenChange?: (open: boolean) => void
 }
 
 export const Accordion = ({
-  id,
   title,
-  summary,
-  defaultOpen = false,
-  open: controlledOpen,
-  onOpenChange,
   children,
-  className
+  className,
+  defaultOpen = false,
+  id,
+  open: controlledOpen,
+  summary,
+  onOpenChange
 }: AccordionProperties): JSX.Element => {
-  const { open, contentId, handleToggle, handleKeyDown } = useAccordion({
+  const { contentId, handleKeyDown, handleToggle, open } = useAccordion({
     id,
     defaultOpen,
     controlledOpen,

@@ -30,10 +30,10 @@ export const ReferenceList = ({
   const errors = formContext?.formState?.errors?.references
 
   const {
+    accordionOpen,
+    existsValue,
     handleReferencesChange,
     references,
-    existsValue,
-    accordionOpen,
     setAccordionOpen
   } = useReferenceListHandlers(sessionDetail, formContext)
 

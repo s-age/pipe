@@ -8,11 +8,11 @@ import type { Settings } from '@/types/settings'
 import { normalizeSessionTreeToOptions } from '@/utils/normalizeSessionTreeToOptions'
 
 type UseStartSessionPageLifecycleResult = {
-  parentOptions: Option[]
-  settings: Settings | null
-  sessionTree: SessionTreeNode[]
-  loading: boolean
   error: string | null
+  loading: boolean
+  parentOptions: Option[]
+  sessionTree: SessionTreeNode[]
+  settings: Settings | null
   startDefaults?: Record<string, unknown> | null
 }
 

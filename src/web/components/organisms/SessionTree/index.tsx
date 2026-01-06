@@ -5,7 +5,10 @@ import type {
   SessionTreeNode as SessionTreeNodeType
 } from '@/lib/api/sessionTree/getSessionTree'
 
-import { useSessionTreeHandlers } from './hooks/useSessionTreeHandlers'
+import {
+  useSessionTreeHandlers,
+  type UseSessionTreeHandlersReturn
+} from './hooks/useSessionTreeHandlers'
 import { useSessionTreeLifecycle } from './hooks/useSessionTreeLifecycle'
 import { SessionTreeFooter } from './SessionTreeFooter'
 import { SessionTreeNode } from './SessionTreeNode'
@@ -14,24 +17,24 @@ import { SessionOverviewComponent } from '../SessionOverview'
 
 type SessionTreeProperties = {
   // sessions may be a flat array of SessionOverview or hierarchical nodes
-  sessions: SessionOverview[] | SessionTreeNodeType[]
   currentSessionId: string | null
+  sessions: SessionOverview[] | SessionTreeNodeType[]
   handleSelectSession: (sessionId: string) => Promise<void>
   onRefresh: () => Promise<void>
 }
 
 export const SessionTree = ({
-  sessions,
   currentSessionId,
+  sessions,
   handleSelectSession,
   onRefresh
 }: SessionTreeProperties): JSX.Element => {
   const {
     sessionReferences,
-    handleNewChatClick,
     handleAnchorClick,
+    handleNewChatClick,
     setSessionReference
-  } = useSessionTreeHandlers(onRefresh)
+  }: UseSessionTreeHandlersReturn = useSessionTreeHandlers(onRefresh)
 
   // Handle scroll to selected session on mount and selection change
   useSessionTreeLifecycle({

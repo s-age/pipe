@@ -11,15 +11,15 @@ import { sessionNode, sessionChildren } from './style.css'
 type SessionListNodeProperties = {
   node: SessionTreeNode
   selectedSessionIds: string[]
-  onSelectSession: (sessionId: string, isSelected: boolean) => void
   updateLabel: string
+  onSelectSession: (sessionId: string, isSelected: boolean) => void
 }
 
 export const SessionListNode = ({
   node,
   selectedSessionIds,
-  onSelectSession,
-  updateLabel
+  updateLabel,
+  onSelectSession
 }: SessionListNodeProperties): JSX.Element => {
   const overview = node.overview || {}
   const sessionObject: SessionOverview = {

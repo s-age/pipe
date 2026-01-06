@@ -46,7 +46,7 @@ export const SessionMeta = ({
   const MetaContent = (): JSX.Element => {
     const formContext = useOptionalFormContext()
 
-    const { isSubmitting, handleSaveClick } = useSessionMetaHandlers({
+    const { handleSaveClick, isSubmitting } = useSessionMetaHandlers({
       sessionDetail,
       onRefresh,
       formContext

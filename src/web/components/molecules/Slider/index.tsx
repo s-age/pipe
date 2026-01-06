@@ -9,25 +9,25 @@ export type SliderProperties = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'onChange' | 'type'
 > & {
-  min?: number
+  defaultValue?: number
   max?: number
+  min?: number
+  name?: string
+  register?: UseFormRegister<FieldValues>
   step?: number
   value?: number
-  defaultValue?: number
   onChange?: (value: number) => void
-  register?: UseFormRegister<FieldValues>
-  name?: string
 }
 
 export const Slider = (properties: SliderProperties): JSX.Element => {
   const {
-    onChange: _onChange,
-    min,
-    max,
-    step,
-    name,
-    value,
     defaultValue,
+    max,
+    min,
+    name,
+    onChange: _onChange,
+    step,
+    value,
     ...restProperties
   } = properties
   // intentionally reference the extracted `_onChange`, `value`, and `defaultValue` so linters know they're
@@ -38,17 +38,17 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
   void defaultValue
 
   const {
+    containerRef,
+    fillWidth,
+    handleChange,
     id,
     registerProperties,
-    visibleValue,
-    handleChange,
-    containerRef,
     svgWidth,
+    thumbCx,
     thumbR,
-    trackX,
     trackWidth,
-    fillWidth,
-    thumbCx
+    trackX,
+    visibleValue
   } = useSliderHandlers(properties)
 
   return (

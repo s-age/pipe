@@ -1,17 +1,17 @@
 import { client } from '../client'
 
 export type CreateCompressorRequest = {
-  sessionId: string
-  policy: string
-  targetLength: number
-  startTurn: number
   endTurn: number
+  policy: string
+  sessionId: string
+  startTurn: number
+  targetLength: number
 }
 
 export type CreateCompressorResponse = {
+  message?: string
   sessionId?: string
   summary?: string
-  message?: string
 }
 
 export const createCompressor = async (

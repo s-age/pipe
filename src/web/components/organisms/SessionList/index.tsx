@@ -22,25 +22,24 @@ import {
 } from './style.css'
 
 type Properties = {
-  sessions: SessionOverview[] | SessionTreeNode[]
   selectedSessionIds: string[]
+  sessions: SessionOverview[] | SessionTreeNode[]
+  updateLabel?: string
+  useFilePath?: boolean
   onSelectAll: (
     sessions: SessionOverview[] | SessionTreeNode[],
     isSelected: boolean
   ) => void
   onSelectSession: (sessionId: string, isSelected: boolean) => void
-  updateLabel?: string
-  /** Use filePath instead of sessionId for archives to handle multiple versions */
-  useFilePath?: boolean
 }
 
 export const SessionList = ({
-  sessions,
   selectedSessionIds,
-  onSelectAll,
-  onSelectSession,
+  sessions,
   updateLabel = 'Updated At',
-  useFilePath = false
+  useFilePath = false,
+  onSelectAll,
+  onSelectSession
 }: Properties): JSX.Element => {
   const getAllSessionIds = (
     sessions: SessionOverview[] | SessionTreeNode[]

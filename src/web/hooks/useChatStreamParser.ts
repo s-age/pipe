@@ -95,15 +95,15 @@ const parseContentToSegments = (
 }
 
 type UseChatStreamParserProperties = {
-  streamedText: string
-  isStreaming: boolean
   instructionTurn: Turn | null
+  isStreaming: boolean
+  streamedText: string
 }
 
 export const useChatStreamParser = ({
-  streamedText,
+  instructionTurn,
   isStreaming,
-  instructionTurn
+  streamedText
 }: UseChatStreamParserProperties): { streamingTurns: Turn[] } => {
   // Compute segments from accumulated text
   const segments = useMemo(

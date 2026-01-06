@@ -19,8 +19,8 @@ type Item = {
 
 type FileSearchExplorerProperties = {
   existsValue: string[]
-  list?: Item[]
   isMultiple?: boolean
+  list?: Item[]
   placeholder?: string
   onChange: (value: string[]) => void
   onFocus?: () => void
@@ -41,15 +41,15 @@ const PathDisplay = ({ pathList, onTagDelete }: PathDisplayProperties): JSX.Elem
 
 type SearchInputProperties = {
   value: string
+  placeholder?: string
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void
-  onFocus?: () => void
   onClick?: () => void
-  placeholder?: string
+  onFocus?: () => void
 }
 
 const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProperties>(
-  ({ value, onChange, onKeyDown, onFocus, onClick }, reference) => (
+  ({ onChange, onClick, onFocus, onKeyDown, value }, reference) => (
     <input
       ref={reference}
       type="text"
@@ -69,24 +69,24 @@ SearchInput.displayName = 'SearchInput'
 
 export const FileSearchExplorer = ({
   existsValue,
-  list,
   isMultiple = true,
+  list,
   placeholder = 'Search...',
   onChange,
   onFocus
 }: FileSearchExplorerProperties): JSX.Element => {
   const {
-    inputReference,
-    suggestionListReference,
-    selectedValues,
-    query,
-    suggestions,
-    selectedIndex,
-    handleTagDelete,
-    handleQueryChange,
+    handleInputFocus,
     handleKeyDown,
+    handleQueryChange,
     handleSuggestionClick,
-    handleInputFocus
+    handleTagDelete,
+    inputReference,
+    query,
+    selectedIndex,
+    selectedValues,
+    suggestionListReference,
+    suggestions
   } = useFileSearchExplorerHandlers({
     existsValue,
     list,

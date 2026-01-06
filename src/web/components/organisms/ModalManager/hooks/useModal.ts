@@ -18,8 +18,8 @@ let modalIdCounter = 1
  * hide(id)
  */
 export const useModal = (): {
-  show: (content: React.ReactNode | ConfirmDescriptor, id?: number) => number
   hide: (id?: number | string) => void
+  show: (content: React.ReactNode | ConfirmDescriptor, id?: number) => number
 } => {
   const show = React.useCallback(
     (content: React.ReactNode | ConfirmDescriptor, id?: number): number => {

@@ -14,8 +14,8 @@ const MyFormContent = ({
   handleSubmit: () => void
 }): React.JSX.Element => {
   const {
-    register,
-    formState: { errors }
+    formState: { errors },
+    register
   } = useFormContext<FormData>()
 
   return (

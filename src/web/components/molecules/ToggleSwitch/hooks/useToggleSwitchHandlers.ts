@@ -2,19 +2,19 @@ import { useState, useCallback } from 'react'
 
 type UseToggleSwitchProperties = {
   checked?: boolean
-  onChange?: (checked: boolean) => void
   disabled?: boolean
+  onChange?: (checked: boolean) => void
 }
 
 export const useToggleSwitchHandlers = ({
   checked: externalChecked,
-  onChange,
-  disabled = false
+  disabled = false,
+  onChange
 }: UseToggleSwitchProperties): {
   checked: boolean
-  handleToggle: () => void
-  handleInputClick: (event: React.MouseEvent<HTMLInputElement>) => void
   disabled: boolean
+  handleInputClick: (event: React.MouseEvent<HTMLInputElement>) => void
+  handleToggle: () => void
 } => {
   const [internalChecked, setInternalChecked] = useState(externalChecked ?? false)
 

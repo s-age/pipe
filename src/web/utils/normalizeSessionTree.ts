@@ -8,8 +8,8 @@ import type {
  * Handles both hierarchical tree nodes and flat session arrays
  */
 export const normalizeSessionTree = (sessionTreeData: {
-  sessionTree?: SessionTreeNode[]
   sessions: Array<[string, SessionOverview]>
+  sessionTree?: SessionTreeNode[]
 }): SessionOverview[] => {
   if (sessionTreeData.sessionTree) {
     // Hierarchical nodes - flatten for display

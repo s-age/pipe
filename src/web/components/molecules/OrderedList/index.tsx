@@ -5,16 +5,16 @@ import { orderedList } from './style.css'
 
 type OrderedListProperties = {
   children?: ReactNode
+  className?: string
   gap?: 's' | 'm' | 'l' | 'xl' | 'none'
   type?: '1' | 'a' | 'A' | 'i' | 'I'
-  className?: string
 }
 
 export const OrderedList = ({
   children,
+  className,
   gap = 'none',
   type = '1',
-  className,
   ...rest
 }: OrderedListProperties): JSX.Element => {
   const classNames = clsx(

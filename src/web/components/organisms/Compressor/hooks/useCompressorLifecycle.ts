@@ -6,22 +6,22 @@ import type { CompressorFormInputs } from '../schema'
 
 type UseCompressorLifecycleProperties = {
   effectiveMax: number
-  startLocal: number
   endLocal: number
   formContext: FormMethods<CompressorFormInputs> | undefined
+  startLocal: number
 }
 
 type UseCompressorLifecycleReturn = {
   defaultValues: CompressorFormInputs
-  mergedDefaultValues: Record<string, unknown>
   endOptions: number[]
+  mergedDefaultValues: Record<string, unknown>
 }
 
 export const useCompressorLifecycle = ({
   effectiveMax,
-  startLocal,
   endLocal,
-  formContext
+  formContext,
+  startLocal
 }: UseCompressorLifecycleProperties): UseCompressorLifecycleReturn => {
   // Synchronize local state to React Hook Form values
   useEffect(() => {

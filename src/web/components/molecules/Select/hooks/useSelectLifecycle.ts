@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react'
 
 type UseSelectLifecycleProperties = {
   isOpen: boolean
-  close: () => void
   clearHighlight: () => void
+  close: () => void
 }
 
 export const useSelectLifecycle = ({
   isOpen,
-  close,
-  clearHighlight
+  clearHighlight,
+  close
 }: UseSelectLifecycleProperties): {
   rootReference: React.RefObject<HTMLDivElement | null>
 } => {

@@ -20,14 +20,14 @@ export const SessionManagementPage = (): JSX.Element => {
   const navigate = useNavigate()
 
   const {
-    state,
     currentTab,
-    setCurrentTab,
-    selectedSessionIds,
+    handleBulkAction,
+    handleCancel,
     handleSelectAll,
     handleSelectSession,
-    handleBulkAction,
-    handleCancel
+    selectedSessionIds,
+    setCurrentTab,
+    state
   } = useSessionManagementHandlers({ navigate })
 
   const currentSessions =

@@ -7,21 +7,21 @@ import * as styles from './style.css'
 
 type InputCheckboxProperties = {
   label?: React.ReactNode
-  register?: UseFormRegister<FieldValues>
   name?: string
+  register?: UseFormRegister<FieldValues>
 } & InputHTMLAttributes<HTMLInputElement>
 
 export const InputCheckbox = ({
-  register,
-  name,
-  label,
-  id,
   children,
+  id,
+  label,
+  name,
+  register,
   ...rest
 }: InputCheckboxProperties): JSX.Element => {
   const resolvedLabel = label ?? children
 
-  const { registerProperties, inputId } = useInputCheckbox({
+  const { inputId, registerProperties } = useInputCheckbox({
     register,
     name,
     id,

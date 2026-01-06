@@ -3,14 +3,14 @@ import type { Hyperparameters } from '@/types/hyperparameters'
 import { client } from '../client'
 
 export type EditSessionMetaRequest = {
-  purpose?: string
-  background?: string
-  roles?: string[] | null
   artifacts?: string[] | null
-  procedure?: string | null
-  multiStepReasoningEnabled?: boolean
-  tokenCount?: number
+  background?: string
   hyperparameters?: Hyperparameters | null
+  multiStepReasoningEnabled?: boolean
+  procedure?: string | null
+  purpose?: string
+  roles?: string[] | null
+  tokenCount?: number
 }
 
 export const editSessionMeta = async (

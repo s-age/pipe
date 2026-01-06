@@ -21,19 +21,19 @@ import {
 } from './style.css'
 
 type Properties = {
-  session: SessionOverview | SessionTreeNode
   isSelected: boolean
-  onSelect: (sessionId: string, isSelected: boolean) => void
+  session: SessionOverview | SessionTreeNode
   updateLabel?: string
   useFilePath?: boolean
+  onSelect: (sessionId: string, isSelected: boolean) => void
 }
 
 export const SessionItem = ({
-  session,
   isSelected,
-  onSelect,
+  session,
   updateLabel = 'Updated At',
-  useFilePath = false
+  useFilePath = false,
+  onSelect
 }: Properties): JSX.Element => {
   const sessionId = session.sessionId || 'unknown'
   // Use filePath as identifier for archives to handle multiple versions

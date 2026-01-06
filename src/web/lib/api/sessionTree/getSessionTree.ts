@@ -1,23 +1,23 @@
 import { client } from '../client'
 
 export type SessionOverview = {
-  sessionId: string
-  purpose: string
-  background: string
-  roles: string[]
-  procedure: string
   artifacts: string[]
-  multiStepReasoningEnabled: boolean
-  tokenCount: number
+  background: string
   lastUpdatedAt: string
+  multiStepReasoningEnabled: boolean
+  procedure: string
+  purpose: string
+  roles: string[]
+  sessionId: string
+  tokenCount: number
   deletedAt?: string
   filePath?: string
 }
 
 export type SessionTreeNode = {
-  sessionId: string
-  overview: SessionOverview
   children: SessionTreeNode[]
+  overview: SessionOverview
+  sessionId: string
 }
 
 export const getSessionTree = async (): Promise<{

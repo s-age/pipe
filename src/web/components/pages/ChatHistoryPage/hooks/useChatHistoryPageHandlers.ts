@@ -8,25 +8,25 @@ import { useChatHistoryPageActions } from './useChatHistoryPageActions'
 import { useChatHistoryPageLifecycle } from './useChatHistoryPageLifecycle'
 
 type UseChatHistoryPageHandlersReturn = {
-  sessions: State['sessionTree']['sessions']
-  sessionDetail: State['sessionDetail']
   expertMode: boolean
-  handleSelectSession: (sessionId: string) => Promise<void>
-  setSessionDetail: Actions['setSessionDetail']
-  onRefresh: (sessionId?: string) => Promise<void>
   refreshSessionsInStore: Actions['refreshSessions']
+  sessionDetail: State['sessionDetail']
+  sessions: State['sessionTree']['sessions']
+  setSessionDetail: Actions['setSessionDetail']
+  handleSelectSession: (sessionId: string) => Promise<void>
+  onRefresh: (sessionId?: string) => Promise<void>
 }
 
 export const useChatHistoryPageHandlers = (): UseChatHistoryPageHandlersReturn => {
   const { '*': urlSessionId } = useParams<{ '*': string }>()
-  const { state, actions } = useSessionStore()
+  const { actions, state } = useSessionStore()
   const {
-    sessionTree: { sessions },
     sessionDetail,
+    sessionTree: { sessions },
     settings
   } = state
 
-  const { selectSession, setSessionDetail, refreshSessions } = actions
+  const { refreshSessions, selectSession, setSessionDetail } = actions
 
   // Use URL session ID if available, otherwise fall back to store's currentSessionId
   const activeSessionId = urlSessionId as string

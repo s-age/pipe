@@ -10,10 +10,10 @@ import { pageContent } from './style.css.ts'
 
 export const StartSessionPage = (): JSX.Element => {
   const {
-    settings,
-    parentOptions,
-    loading,
     error: sessionDataError,
+    loading,
+    parentOptions,
+    settings,
     startDefaults
   } = useStartSessionPageLifecycle()
 

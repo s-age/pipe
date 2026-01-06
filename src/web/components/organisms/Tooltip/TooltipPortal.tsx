@@ -16,8 +16,8 @@ type Properties = {
   isVisible: boolean
   placement: 'top' | 'bottom' | 'left' | 'right'
   targetRect: DOMRect | null
-  offsetMain?: number | null
   offsetCross?: number | null
+  offsetMain?: number | null
 }
 
 const TooltipPortal = ({
@@ -25,8 +25,8 @@ const TooltipPortal = ({
   isVisible,
   placement,
   targetRect,
-  offsetMain,
-  offsetCross
+  offsetCross,
+  offsetMain
 }: Properties): JSX.Element | null => {
   const elementReference = useTooltipLifecycle({
     isVisible,

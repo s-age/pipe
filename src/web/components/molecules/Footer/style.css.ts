@@ -8,5 +8,6 @@ export const footer = style({
 
 export const stickyBottom = style({
   position: 'sticky',
+  bottom: 0,
   zIndex: zIndex.low
 })

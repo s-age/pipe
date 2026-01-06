@@ -5,14 +5,14 @@ import { scrollArea } from './style.css'
 
 type ScrollAreaProperties = {
   children?: ReactNode
-  direction?: 'vertical' | 'horizontal' | 'both'
   className?: string
+  direction?: 'vertical' | 'horizontal' | 'both'
 }
 
 export const ScrollArea = ({
   children,
-  direction = 'vertical',
   className,
+  direction = 'vertical',
   ...rest
 }: ScrollAreaProperties): JSX.Element => {
   const classNames = clsx(

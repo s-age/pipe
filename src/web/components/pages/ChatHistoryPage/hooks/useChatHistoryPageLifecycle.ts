@@ -9,22 +9,22 @@ import type { SessionPair } from '@/types/session'
 import { isSessionPair } from '@/types/session'
 
 type UseChatHistoryPageLifecycleProperties = {
-  state: State
   actions: Actions
+  state: State
 }
 
 export const useChatHistoryPageLifecycle = ({
-  state,
-  actions
+  actions,
+  state
 }: UseChatHistoryPageLifecycleProperties): void => {
   const {
     sessionTree: { currentSessionId }
   } = state
   const {
-    setSessions,
     setCurrentSessionId,
-    setSessionDetail,
     setRoleOptions,
+    setSessionDetail,
+    setSessions,
     updateSettings
   } = actions
 

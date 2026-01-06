@@ -9,9 +9,9 @@ import { turnsHeader, deleteButton } from './style.css'
 
 type ChatHistoryHeaderProperties = {
   sessionDetail: SessionDetail | null
-  handleDeleteCurrentSession: () => void
-  tokenCount?: number
   contextLimit?: number
+  tokenCount?: number
+  handleDeleteCurrentSession: () => void
 }
 
 export const ChatHistoryHeader = ({

@@ -26,7 +26,7 @@ export default Meta
 type Story = StoryObj<typeof Meta>
 
 const Controls = (): JSX.Element => {
-  const { showLoader, hideLoader } = useAppStore()
+  const { hideLoader, showLoader } = useAppStore()
 
   const start = async (): Promise<void> => {
     showLoader()

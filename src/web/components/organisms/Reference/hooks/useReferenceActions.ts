@@ -6,6 +6,7 @@ import { toggleReferenceDisabled } from '@/lib/api/meta/toggleReferenceDisabled'
 import { addToast } from '@/stores/useToastStore'
 
 export const useReferenceActions = (): {
+  handleToggleReferenceDisabled: (sessionId: string, index: number) => Promise<void>
   handleUpdateReferencePersist: (
     sessionId: string,
     index: number,
@@ -16,7 +17,6 @@ export const useReferenceActions = (): {
     index: number,
     ttl: number
   ) => Promise<void>
-  handleToggleReferenceDisabled: (sessionId: string, index: number) => Promise<void>
 } => {
   const handleUpdateReferencePersist = useCallback(
     async (sessionId: string, index: number, persist: boolean): Promise<void> => {

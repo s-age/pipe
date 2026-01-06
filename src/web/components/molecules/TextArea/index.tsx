@@ -12,17 +12,17 @@ type TextAreaProperties = Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
   'onChange'
 > & {
-  onChange?: (value: string) => void
-  register?: UseFormRegister<FieldValues>
   name?: string
+  register?: UseFormRegister<FieldValues>
+  onChange?: (value: string) => void
 }
 
 export const TextArea: (properties: TextAreaProperties) => JSX.Element = (
   properties
 ) => {
   const {
-    onChange: _onChange,
     name,
+    onChange: _onChange,
     register: _register,
     ...restProperties
   } = properties
@@ -33,7 +33,7 @@ export const TextArea: (properties: TextAreaProperties) => JSX.Element = (
   // onChange has a different signature (value:string) and we bridge it via the hook.
   void _onChange
 
-  const { id, registerProperties, visibleValue, handleChange } = useTextArea(
+  const { handleChange, id, registerProperties, visibleValue } = useTextArea(
     properties as unknown as Parameters<typeof useTextArea>[0]
   )
 

@@ -13,9 +13,9 @@ export type UseInstructionFormHandlersProperties = {
 
 export type UseInstructionFormHandlersReturn = {
   register: UseFormRegister<FieldValues>
-  submit: () => Promise<void>
-  onTextAreaKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void
   onStopClick: () => Promise<void>
+  onTextAreaKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void
+  submit: () => Promise<void>
 }
 
 export const useInstructionFormHandlers = ({
@@ -25,7 +25,7 @@ export const useInstructionFormHandlers = ({
 }: UseInstructionFormHandlersProperties): UseInstructionFormHandlersReturn => {
   const { stopSession } = useInstructionFormActions()
   const methods = useFormContext()
-  const { register, handleSubmit, reset } = methods
+  const { handleSubmit, register, reset } = methods
 
   const submit = useCallback(async () => {
     await handleSubmit(async (data: { instruction?: string }) => {

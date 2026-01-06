@@ -5,8 +5,8 @@ export type ArchiveSessionsRequest = {
 }
 
 export type ArchiveSessionsResponse = {
-  message: string
   archivedCount: number
+  message: string
   totalRequested: number
 }
 

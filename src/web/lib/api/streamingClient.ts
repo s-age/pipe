@@ -11,8 +11,8 @@ export const API_BASE_URL = 'http://localhost:5001/api/v1'
 
 type StreamingRequestOptions = {
   body?: Record<string, unknown>
-  signal?: AbortSignal
   headers?: HeadersInit
+  signal?: AbortSignal
 }
 
 const streamingRequest = async (

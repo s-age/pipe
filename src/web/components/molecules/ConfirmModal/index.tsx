@@ -12,26 +12,26 @@ import { Paragraph } from '@/components/molecules/Paragraph'
 import * as styles from './style.css'
 
 type ConfirmModalProperties = {
-  title: string
   message: string
-  icon?: React.ReactNode
-  onConfirm: () => void
-  onCancel: () => void
-  confirmText?: string
+  title: string
   cancelText?: string
+  confirmText?: string
+  icon?: React.ReactNode
+  onCancel: () => void
+  onConfirm: () => void
 }
 
 // ConfirmModal now returns the inner content only.
 // It is intended to be passed to the ModalProvider's `show` API,
 // which will render the surrounding Modal.
 export const ConfirmModal = ({
-  title,
   message,
-  icon,
-  onConfirm,
-  onCancel,
+  title,
+  cancelText = 'Cancel',
   confirmText = 'OK',
-  cancelText = 'Cancel'
+  icon,
+  onCancel,
+  onConfirm
 }: ConfirmModalProperties): JSX.Element => (
   <FlexColumn className={styles.container}>
     <Flex align="center" gap="s" className={styles.header}>

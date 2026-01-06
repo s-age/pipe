@@ -15,17 +15,15 @@ export const useSessionTodosHandlers = ({
   sessionDetail,
   onSessionDetailUpdate
 }: UseSessionTodosProperties): {
-  handleUpdateTodo: (todos: Todo[]) => Promise<void>
+  register?: FormMethods['register']
+  handleCheckboxChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleDeleteAllTodos: () => Promise<void>
   handleTodoCheckboxChange: (index?: number) => void
-  // optional register for form integration
-  register?: FormMethods['register']
-  // DOM event helper for checkbox change handlers
-  handleCheckboxChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  handleUpdateTodo: (todos: Todo[]) => Promise<void>
 } => {
   const register = useOptionalFormContext()?.register
 
-  const { updateTodos, deleteAllTodos } = useSessionTodosActions()
+  const { deleteAllTodos, updateTodos } = useSessionTodosActions()
 
   const handleUpdateTodo = useCallback(
     async (todos: Todo[]) => {

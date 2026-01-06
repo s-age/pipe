@@ -5,16 +5,16 @@ import { unorderedList } from './style.css'
 
 type UnorderedListProperties = {
   children?: ReactNode
+  className?: string
   gap?: 's' | 'm' | 'l' | 'xl' | 'none'
   marker?: 'none' | 'disc' | 'circle' | 'square'
-  className?: string
 }
 
 export const UnorderedList = ({
   children,
+  className,
   gap = 'none',
   marker = 'none',
-  className,
   ...rest
 }: UnorderedListProperties): JSX.Element => {
   const classNames = clsx(

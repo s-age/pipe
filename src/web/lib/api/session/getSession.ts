@@ -6,38 +6,38 @@ import type { Todo } from '@/types/todo'
 import { client } from '../client'
 
 export type UserTaskTurn = {
-  type: 'user_task'
   instruction: string
   timestamp: string
+  type: 'user_task'
 }
 
 export type ModelResponseTurn = {
-  type: 'model_response'
   content: string
   timestamp: string
+  type: 'model_response'
 }
 
 export type FunctionCallingTurn = {
-  type: 'function_calling'
   response: string
   timestamp: string
+  type: 'function_calling'
 }
 
 export type ToolResponseTurn = {
-  type: 'tool_response'
   name: string
   response: {
-    status: string
     message: string
+    status: string
   }
   timestamp: string
+  type: 'tool_response'
 }
 
 export type CompressedHistoryTurn = {
-  type: 'compressed_history'
   content: string
   originalTurnsRange: number[]
   timestamp: string
+  type: 'compressed_history'
 }
 
 export type Turn =
@@ -48,25 +48,22 @@ export type Turn =
   | CompressedHistoryTurn
 
 export type SessionDetail = {
-  sessionId: string | null
-  purpose: string
-  background: string
-  roles: string[]
-  parent: string | null
-  references: Reference[]
   artifacts: string[]
-  procedure: string | null
+  background: string
+  hyperparameters: Settings['hyperparameters'] | null
   instruction: string
   multiStepReasoningEnabled: boolean
-  hyperparameters: Settings['hyperparameters'] | null
-  // tokenCount and settings are returned by the server in some endpoints
-  // (e.g. session dashboard). Make them optional so callers can use them
-  // when available without causing type errors.
-  tokenCount?: number
-  settings?: Settings
+  parent: string | null
+  procedure: string | null
+  purpose: string
+  references: Reference[]
+  roles: string[]
+  sessionId: string | null
   todos: Todo[]
   turns: Turn[]
   roleOptions?: RoleOption[]
+  settings?: Settings
+  tokenCount?: number
 }
 
 export const getSession = async (sessionId: string): Promise<SessionDetail> =>

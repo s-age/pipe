@@ -13,18 +13,18 @@ type UseSessionHyperparametersProperties = {
 export const useHyperParametersHandlers = ({
   sessionDetail
 }: UseSessionHyperparametersProperties): {
-  temperature: number
   setTemperature: React.Dispatch<React.SetStateAction<number>>
-  handleTemperatureMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void
-  handleTemperatureMouseDown: () => void
-  topP: number
-  setTopP: React.Dispatch<React.SetStateAction<number>>
-  handleTopPMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void
-  handleTopPMouseDown: () => void
-  topK: number
   setTopK: React.Dispatch<React.SetStateAction<number>>
-  handleTopKMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void
+  setTopP: React.Dispatch<React.SetStateAction<number>>
+  temperature: number
+  topK: number
+  topP: number
+  handleTemperatureMouseDown: () => void
+  handleTemperatureMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void
   handleTopKMouseDown: () => void
+  handleTopKMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void
+  handleTopPMouseDown: () => void
+  handleTopPMouseUp: (event: React.MouseEvent<HTMLDivElement>) => void
 } => {
   // Use a single object to hold hyperparameter UI state to avoid multiple
   // sequential setState calls inside an effect which the linter warns about.
@@ -34,7 +34,7 @@ export const useHyperParametersHandlers = ({
     topK: sessionDetail.hyperparameters?.topK ?? 5
   }))
 
-  const { temperature, topP: topP, topK: topK } = hpState
+  const { temperature, topK: topK, topP: topP } = hpState
 
   // Provide individual setter functions compatible with existing callers.
   const setTemperature: React.Dispatch<React.SetStateAction<number>> = (value) => {

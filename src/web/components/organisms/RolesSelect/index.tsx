@@ -8,16 +8,16 @@ import { useRolesHandlers } from './hooks/useRolesHandlers'
 import { container } from './style.css'
 
 type RolesSelectProperties = {
-  placeholder?: string
   sessionDetail: SessionDetail | null
+  placeholder?: string
   onChange?: (roles: string[]) => void
 }
 
 export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
-  const { placeholder = 'Select roles', sessionDetail, onChange } = properties
+  const { onChange, placeholder = 'Select roles', sessionDetail } = properties
 
   const actions = useRolesActions()
-  const { roleOptions, handleFocus, handleRolesChange } = useRolesHandlers(
+  const { handleFocus, handleRolesChange, roleOptions } = useRolesHandlers(
     sessionDetail,
     actions,
     onChange

@@ -5,14 +5,14 @@ import { section, paddingS, paddingM, paddingL } from './style.css'
 
 type SectionProperties = {
   children?: ReactNode
-  padding?: 's' | 'm' | 'l' | 'none'
   className?: string
+  padding?: 's' | 'm' | 'l' | 'none'
 } & Omit<HTMLAttributes<HTMLElement>, 'className'>
 
 export const Section = ({
   children,
-  padding = 'none',
   className,
+  padding = 'none',
   ...rest
 }: SectionProperties): JSX.Element => {
   const classNames = clsx(

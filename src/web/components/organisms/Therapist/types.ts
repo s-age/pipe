@@ -1,7 +1,7 @@
 export type Diagnosis = {
+  compressions: { end: number; reason: string; start: number }[]
   deletions: number[]
-  edits: { turn: number; newContent: string }[]
-  compressions: { start: number; end: number; reason: string }[]
+  edits: { newContent: string; turn: number }[]
   summary: string
   rawDiagnosis?: string
 }

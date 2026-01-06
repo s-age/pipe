@@ -9,25 +9,25 @@ import { useOptionalFormContext } from '@/components/organisms/Form'
 import { errorMessageStyle, inputFieldStyle } from './style.css'
 
 type InputFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
-  label: string
   id: string
-  type?: string
+  label: string
+  max?: string
+  min?: string
   placeholder?: string
   required?: boolean
-  min?: string
-  max?: string
   step?: string
+  type?: string
 } & UseControllerProps<TFieldValues>
 
 export const InputField = <TFieldValues extends FieldValues = FieldValues>({
-  label,
   id,
-  type = 'text',
+  label,
+  max,
+  min,
   placeholder,
   required,
-  min,
-  max,
   step,
+  type = 'text',
   ...properties
 }: InputFieldProperties<TFieldValues>): JSX.Element => {
   const formContext = useOptionalFormContext<TFieldValues>()

@@ -5,17 +5,17 @@ import { useCompressorActions } from './useCompressorActions'
 type UseCompressorApprovalHandlersProperties = {
   compressorSessionId: string | null
   onRefresh: () => Promise<void>
-  setSummary: (summary: string) => void
   setCompressorSessionId: (id: string | null) => void
   setIsSubmitting: (isSubmitting: boolean) => void
+  setSummary: (summary: string) => void
 }
 
 export const useCompressorApprovalHandlers = ({
   compressorSessionId,
   onRefresh,
-  setSummary,
   setCompressorSessionId,
-  setIsSubmitting
+  setIsSubmitting,
+  setSummary
 }: UseCompressorApprovalHandlersProperties): {
   handleApprove: () => Promise<void>
 } => {

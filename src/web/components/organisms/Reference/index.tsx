@@ -20,19 +20,19 @@ import {
 } from './style.css'
 
 type ReferenceProperties = {
-  reference: Reference
-  index: number
   currentSessionId: string | null
+  index: number
+  reference: Reference
   refreshSessions: () => Promise<void>
 }
 
 export const ReferenceComponent = ({
-  reference,
-  index,
   currentSessionId,
+  index,
+  reference,
   refreshSessions
 }: ReferenceProperties): JSX.Element => {
-  const { localReference, handlePersistToggle, handleTtlAction, handleToggle } =
+  const { handlePersistToggle, handleToggle, handleTtlAction, localReference } =
     useReferenceHandlers(currentSessionId, reference, index, refreshSessions)
 
   const ttl = localReference.ttl !== null ? localReference.ttl : 3

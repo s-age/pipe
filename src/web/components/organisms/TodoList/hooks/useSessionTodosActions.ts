@@ -6,8 +6,8 @@ import { addToast } from '@/stores/useToastStore'
 import type { Todo } from '@/types/todo'
 
 export const useSessionTodosActions = (): {
-  updateTodos: (sessionId: string, todos: Todo[]) => Promise<void>
   deleteAllTodos: (sessionId: string) => Promise<void>
+  updateTodos: (sessionId: string, todos: Todo[]) => Promise<void>
 } => {
   const updateTodos = useCallback(async (sessionId: string, todos: Todo[]) => {
     try {

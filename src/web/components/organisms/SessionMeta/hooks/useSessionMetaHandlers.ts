@@ -8,17 +8,17 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseSessionMetaHandlersProperties = {
   sessionDetail: SessionDetail
-  onRefresh: () => Promise<void>
   formContext?: FormMethods
+  onRefresh: () => Promise<void>
 }
 export const useSessionMetaHandlers = ({
   sessionDetail,
-  onRefresh,
-  formContext
+  formContext,
+  onRefresh
 }: UseSessionMetaHandlersProperties): {
-  onSubmit: (data: SessionMetaFormInputs) => Promise<void>
   isSubmitting: boolean
   handleSaveClick: () => void
+  onSubmit: (data: SessionMetaFormInputs) => Promise<void>
 } => {
   const { handleMetaSave } = useSessionMetaActions()
 

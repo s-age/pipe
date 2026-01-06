@@ -9,13 +9,13 @@ import type { FormMethods } from '@/components/organisms/Form'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
 type UseInputTextProperties = {
-  register?: UseFormRegister<FieldValues>
   name?: string
+  register?: UseFormRegister<FieldValues>
 }
 
 export const useInputText = ({
-  register,
-  name
+  name,
+  register
 }: UseInputTextProperties): {
   registerProperties: Partial<UseFormRegisterReturn>
 } => {

@@ -64,7 +64,6 @@ export const form = style({
   background: colors.gray
 })
 
-
 export const fieldsetContainer = style({
   borderRadius: '4px'
 })

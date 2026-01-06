@@ -4,16 +4,16 @@ import type { Reference } from '@/types/reference'
 import { client } from '../client'
 
 export type StartSessionRequest = {
-  purpose: string
-  background: string
-  instruction: string
-  roles: string[] | null
-  parent: string | null
-  references: Reference[] | null
   artifacts: string[] | null
-  procedure: string | null
-  multiStepReasoningEnabled: boolean
+  background: string
   hyperparameters: Hyperparameters | null
+  instruction: string
+  multiStepReasoningEnabled: boolean
+  parent: string | null
+  procedure: string | null
+  purpose: string
+  references: Reference[] | null
+  roles: string[] | null
 }
 
 export const startSession = async (

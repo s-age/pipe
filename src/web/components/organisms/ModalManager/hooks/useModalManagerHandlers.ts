@@ -16,11 +16,11 @@ import { useModalStore } from '@/stores/useModalStore'
  */
 export const useModalManagerHandlers = (): {
   stack: ModalEntry[]
-  handleClose: (id: number | string) => void
   createCloseHandler: (id: number | string) => () => void
+  handleClose: (id: number | string) => void
   isConfirmDescriptor: (v: unknown) => v is ConfirmDescriptor
 } => {
-  const { stack, hideModal } = useModalStore()
+  const { hideModal, stack } = useModalStore()
 
   const handleClose = useCallback(
     (id: number | string): void => {

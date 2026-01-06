@@ -13,25 +13,25 @@ export type UseTextAreaProperties = Omit<
   'onChange'
 > & {
   value: string
-  onChange?: (value: string) => void
-  register?: UseFormRegister<FieldValues>
-  name?: string
   id?: string
+  name?: string
+  register?: UseFormRegister<FieldValues>
+  onChange?: (value: string) => void
 }
 
 export type UseTextAreaReturn = {
   id: string
-  registerProperties?: UseFormRegisterReturn | undefined
   visibleValue: string
+  registerProperties?: UseFormRegisterReturn | undefined
   handleChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
 }
 
 export const useTextArea = ({
-  value: controlledValue,
+  id: idProperty,
+  name,
   onChange,
   register,
-  name,
-  id: idProperty
+  value: controlledValue
 }: UseTextAreaProperties): UseTextAreaReturn => {
   const fallbackId = useId()
   const resolvedId =

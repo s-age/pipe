@@ -4,23 +4,23 @@ import type { JSX } from 'react'
 import { text } from './style.css'
 
 type TextProperties = {
-  children?: string
-  size?: 'xs' | 's' | 'm' | 'l' | 'xl'
-  weight?: 'normal' | 'medium' | 'semibold' | 'bold'
-  variant?: 'default' | 'muted' | 'error' | 'success'
   align?: 'left' | 'center' | 'right' | 'justify'
-  truncate?: boolean
+  children?: string
   className?: string
+  size?: 'xs' | 's' | 'm' | 'l' | 'xl'
+  truncate?: boolean
+  variant?: 'default' | 'muted' | 'error' | 'success'
+  weight?: 'normal' | 'medium' | 'semibold' | 'bold'
 }
 
 export const Text = ({
-  children,
-  size = 'm',
-  weight = 'normal',
-  variant = 'default',
   align = 'left',
-  truncate = false,
+  children,
   className,
+  size = 'm',
+  truncate = false,
+  variant = 'default',
+  weight = 'normal',
   ...rest
 }: TextProperties): JSX.Element => {
   const classNames = clsx(

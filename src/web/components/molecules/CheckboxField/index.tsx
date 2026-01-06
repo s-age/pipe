@@ -9,13 +9,13 @@ import { useOptionalFormContext } from '@/components/organisms/Form'
 import { checkboxContainer, labelStyle } from './style.css'
 
 type CheckboxFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
-  label: string
   id: string
+  label: string
 } & UseControllerProps<TFieldValues>
 
 export const CheckboxField = <TFieldValues extends FieldValues = FieldValues>({
-  label,
   id,
+  label,
   ...properties
 }: CheckboxFieldProperties<TFieldValues>): JSX.Element => {
   const formContext = useOptionalFormContext<TFieldValues>()

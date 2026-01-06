@@ -4,8 +4,8 @@ import { useAppStore } from '@/stores/useAppStore'
 
 type ToastParameters = {
   status: 'success' | 'failure' | 'warning'
-  title?: string
   description?: string
+  duration?: number | null
   position?:
     | 'top-left'
     | 'top-center'
@@ -13,13 +13,13 @@ type ToastParameters = {
     | 'bottom-left'
     | 'bottom-center'
     | 'bottom-right'
-  duration?: number | null
+  title?: string
 }
 
 export type UseToastActions = {
+  failure: (titleOrParameters: string | Partial<ToastParameters>) => string
   show: (parameters: ToastParameters) => string
   success: (titleOrParameters: string | Partial<ToastParameters>) => string
-  failure: (titleOrParameters: string | Partial<ToastParameters>) => string
   warning: (titleOrParameters: string | Partial<ToastParameters>) => string
 }
 

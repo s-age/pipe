@@ -5,16 +5,14 @@ import { header, stickyTop } from './style.css'
 
 type HeaderProperties = {
   children?: ReactNode
-  sticky?: boolean
-  stickyOffset?: number
   className?: string
+  sticky?: boolean
 } & Omit<HTMLAttributes<HTMLElement>, 'className'>
 
 export const Header = ({
   children,
-  sticky = false,
-  stickyOffset = 0,
   className,
+  sticky = false,
   ...rest
 }: HeaderProperties): JSX.Element => {
   const classNames = clsx(
@@ -25,10 +23,8 @@ export const Header = ({
     className
   )
 
-  const style = sticky ? { top: stickyOffset } : undefined
-
   return (
-    <header className={classNames} style={style} {...rest}>
+    <header className={classNames} {...rest}>
       {children}
     </header>
   )

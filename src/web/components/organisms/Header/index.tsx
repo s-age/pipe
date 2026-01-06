@@ -24,15 +24,15 @@ import {
 
 export const Header = (): JSX.Element => {
   const {
-    query,
-    setQuery,
-    results,
-    open,
-    handleSubmit,
     closeModal,
     handleOverlayPointerDown,
+    handleResultKeyDown,
     handleResultPointerDown,
-    handleResultKeyDown
+    handleSubmit,
+    open,
+    query,
+    results,
+    setQuery
   } = useSearchSessionsHandlers()
 
   return (

@@ -10,18 +10,18 @@ import type {
 export type SessionTree = {
   // sessions may be either a flat list of SessionOverview or a hierarchical
   // tree of SessionTreeNode objects produced by the backend.
-  sessions: SessionOverview[] | SessionTreeNode[]
   currentSessionId: string | null
+  sessions: SessionOverview[] | SessionTreeNode[]
 }
 
 import type { Settings } from '../types/settings'
 
 export type State = {
-  sessionTree: SessionTree
-  sessionDetail: SessionDetail | null
-  settings: Settings
-  roleOptions: RoleOption[]
   archivedSessions: SessionOverview[]
+  roleOptions: RoleOption[]
+  sessionDetail: SessionDetail | null
+  sessionTree: SessionTree
+  settings: Settings
 }
 
 export const initialState: State = {
@@ -35,16 +35,16 @@ export const initialState: State = {
 }
 
 export type Action =
-  | { type: 'SET_SESSIONS'; payload: SessionOverview[] | SessionTreeNode[] }
-  | { type: 'SET_CURRENT_SESSION_ID'; payload: string | null }
-  | { type: 'SET_SESSION_DETAIL'; payload: SessionDetail | null }
+  | { payload: SessionOverview[] | SessionTreeNode[]; type: 'SET_SESSIONS' }
+  | { payload: string | null; type: 'SET_CURRENT_SESSION_ID' }
+  | { payload: SessionDetail | null; type: 'SET_SESSION_DETAIL' }
   | {
+      payload: { detail: SessionDetail | null; id: string | null }
       type: 'SET_SESSION_AND_CURRENT'
-      payload: { id: string | null; detail: SessionDetail | null }
     }
-  | { type: 'UPDATE_SETTINGS'; payload: Partial<Settings> }
-  | { type: 'SET_ROLE_OPTIONS'; payload: RoleOption[] }
-  | { type: 'SET_ARCHIVED_SESSIONS'; payload: SessionOverview[] }
+  | { payload: Partial<Settings>; type: 'UPDATE_SETTINGS' }
+  | { payload: RoleOption[]; type: 'SET_ROLE_OPTIONS' }
+  | { payload: SessionOverview[]; type: 'SET_ARCHIVED_SESSIONS' }
   | { type: 'RESET' }
 
 export const reducer = (state: State, action: Action): State => {
@@ -93,23 +93,23 @@ export const reducer = (state: State, action: Action): State => {
 }
 
 export type Actions = {
-  setSessions: (sessions: SessionOverview[] | SessionTreeNode[]) => void
-  setCurrentSessionId: (id: string | null) => void
-  setSessionDetail: (detail: SessionDetail | null) => void
-  selectSession: (id: string | null, detail: SessionDetail | null) => void
-  updateSettings: (partial: Partial<Settings>) => void
-  setRoleOptions: (roleOptions: RoleOption[]) => void
-  setArchivedSessions: (sessions: SessionOverview[]) => void
   refreshSessions: (
     sessionDetail: SessionDetail | null,
     sessions?: SessionOverview[] | SessionTreeNode[]
   ) => void
   reset: () => void
+  selectSession: (id: string | null, detail: SessionDetail | null) => void
+  setArchivedSessions: (sessions: SessionOverview[]) => void
+  setCurrentSessionId: (id: string | null) => void
+  setRoleOptions: (roleOptions: RoleOption[]) => void
+  setSessionDetail: (detail: SessionDetail | null) => void
+  setSessions: (sessions: SessionOverview[] | SessionTreeNode[]) => void
+  updateSettings: (partial: Partial<Settings>) => void
 }
 
 export type UseSessionStoreReturn = {
-  state: State
   actions: Actions
+  state: State
 }
 
 export const useSessionStore = (initial?: Partial<State>): UseSessionStoreReturn => {

@@ -6,19 +6,19 @@ type useCompressorHandlersProperties = {
 }
 
 export type useCompressorHandlersReturn = {
-  summary: string
+  compressorSessionId: string | null
+  endLocal: number
   error: string | null
   isSubmitting: boolean
   startLocal: number
-  endLocal: number
-  compressorSessionId: string | null
-  handleStartChange: (event: ChangeEvent<HTMLSelectElement>) => void
-  handleEndChange: (event: ChangeEvent<HTMLSelectElement>) => void
+  summary: string
   handleDeny: () => void
-  setSummary: (summary: string) => void
+  handleEndChange: (event: ChangeEvent<HTMLSelectElement>) => void
+  handleStartChange: (event: ChangeEvent<HTMLSelectElement>) => void
+  setCompressorSessionId: (id: string | null) => void
   setError: (error: string | null) => void
   setIsSubmitting: (isSubmitting: boolean) => void
-  setCompressorSessionId: (id: string | null) => void
+  setSummary: (summary: string) => void
 }
 
 export const useCompressorHandlers = ({

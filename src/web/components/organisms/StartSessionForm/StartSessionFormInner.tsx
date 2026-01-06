@@ -29,19 +29,19 @@ import {
 import { MultiStepReasoning } from '../MultiStepReasoning'
 
 type StartSessionFormInnerProperties = {
-  sessionDetail: SessionDetail
   parentOptions: Option[]
+  sessionDetail: SessionDetail
 }
 
 export const StartSessionFormInner = ({
-  sessionDetail,
-  parentOptions
+  parentOptions,
+  sessionDetail
 }: StartSessionFormInnerProperties): JSX.Element => {
   // Prefer the handler-provided submitting state to avoid relying on the
   // react-hook-form internal `formState.isSubmitting` which may not update
   // when native form submission is prevented or when navigation happens
   // quickly after submit. The hook will manage a local `isSubmitting` flag.
-  const { handleCancel, handleCreateClick, dummyHandler, isSubmitting } =
+  const { dummyHandler, handleCancel, handleCreateClick, isSubmitting } =
     useStartSessionFormHandlers()
 
   const formContext = useOptionalFormContext()

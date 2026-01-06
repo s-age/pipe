@@ -3,8 +3,8 @@ import type { SessionDetail } from '../session/getSession'
 
 export type EditHyperparametersRequest = Partial<{
   temperature: number
-  topP: number
   topK: number
+  topP: number
 }>
 
 export const editHyperparameters = async (

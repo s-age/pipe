@@ -1,7 +1,7 @@
 import { client } from '../client'
 
 export type EditArtifactsRequest = {
-  artifacts: Array<{ path: string; contents: null }>
+  artifacts: Array<{ contents: null; path: string }>
 }
 
 export type EditArtifactsResponse = {

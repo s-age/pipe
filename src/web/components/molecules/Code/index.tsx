@@ -4,14 +4,14 @@ import type { JSX, ReactNode } from 'react'
 import { code, pre } from './style.css'
 
 type CodeProperties = {
-  children?: ReactNode
   block?: boolean
+  children?: ReactNode
   className?: string
 }
 
 export const Code = ({
-  children,
   block = false,
+  children,
   className,
   ...rest
 }: CodeProperties): JSX.Element => {

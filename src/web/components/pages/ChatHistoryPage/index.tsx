@@ -10,13 +10,13 @@ import { mainContent, leftColumn, centerColumn } from './style.css.ts'
 
 export const ChatHistoryPage = (): JSX.Element => {
   const {
-    sessions,
-    sessionDetail,
     expertMode,
     handleSelectSession,
-    setSessionDetail,
     onRefresh,
-    refreshSessionsInStore
+    refreshSessionsInStore,
+    sessionDetail,
+    sessions,
+    setSessionDetail
   } = useChatHistoryPageHandlers()
 
   return (

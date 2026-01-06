@@ -4,19 +4,19 @@ import type { JSX, ReactNode, AnchorHTMLAttributes } from 'react'
 import { link } from './style.css'
 
 type LinkProperties = {
-  children?: ReactNode
   href: string
+  children?: ReactNode
+  className?: string
   target?: '_blank' | '_self' | '_parent' | '_top'
   variant?: 'default' | 'subtle' | 'primary'
-  className?: string
 } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'target'>
 
 export const Link = ({
   children,
+  className,
   href,
   target,
   variant = 'default',
-  className,
   ...rest
 }: LinkProperties): JSX.Element => {
   const classNames = clsx(

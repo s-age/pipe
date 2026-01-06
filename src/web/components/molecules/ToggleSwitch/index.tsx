@@ -13,24 +13,24 @@ import {
 } from './style.css'
 
 type ToggleSwitchProperties = {
+  ariaLabel?: string
   checked?: boolean
-  onChange?: (checked: boolean) => void
   disabled?: boolean
   label?: string
-  ariaLabel?: string
+  onChange?: (checked: boolean) => void
 }
 
 export const ToggleSwitch = ({
+  ariaLabel,
   checked,
-  onChange,
   disabled = false,
   label,
-  ariaLabel
+  onChange
 }: ToggleSwitchProperties): JSX.Element => {
   const {
     checked: isChecked,
-    handleToggle,
-    handleInputClick
+    handleInputClick,
+    handleToggle
   } = useToggleSwitchHandlers({
     checked,
     onChange,

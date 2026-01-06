@@ -10,14 +10,14 @@ import { StartSessionFormInner } from './StartSessionFormInner'
 import { wrapper } from './style.css'
 
 type StartSessionFormProperties = {
-  settings: Settings
   parentOptions: Option[]
+  settings: Settings
   defaultValues?: Partial<StartSessionFormInputs> | null
 }
 
 export const StartSessionForm = ({
-  settings,
   parentOptions,
+  settings,
   defaultValues: defaultValuesFromParent = null
 }: StartSessionFormProperties): JSX.Element => {
   const { computedDefaultValues, sessionDetail } = useStartSessionFormLifecycle({

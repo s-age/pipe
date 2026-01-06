@@ -26,17 +26,17 @@ import {
 } from './style.css'
 
 type SessionTreeNodeProperties = {
+  currentSessionId: string | null
   node: SessionTreeNodeType
   depth?: number
-  currentSessionId: string | null
   handleAnchorClick: (event: React.MouseEvent<HTMLAnchorElement>) => void
   setSessionReference: (sessionId: string) => (element: HTMLLIElement | null) => void
 }
 
 export const SessionTreeNode = ({
+  currentSessionId,
   node,
   depth = 0,
-  currentSessionId,
   handleAnchorClick,
   setSessionReference
 }: SessionTreeNodeProperties): JSX.Element => {

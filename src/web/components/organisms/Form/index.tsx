@@ -27,8 +27,8 @@ export type FormProperties<TFieldValues extends FieldValues = FieldValues> =
 
 export const Form = <TFieldValues extends FieldValues = FieldValues>({
   children,
-  schema,
   resolver,
+  schema,
   ...properties
 }: FormProperties<TFieldValues>): React.JSX.Element => {
   // Resolve which resolver to use. Priority:

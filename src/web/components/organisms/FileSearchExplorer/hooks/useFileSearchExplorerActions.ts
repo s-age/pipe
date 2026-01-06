@@ -10,8 +10,8 @@ import { fsApi } from '@/lib/api/fs/browse'
 import { addToast } from '@/stores/useToastStore'
 
 export const useFileSearchExplorerActions = (): {
-  searchFiles: (request: FileSearchRequest) => Promise<FileSearchResponse | void>
   browseDirectory: (request: BrowseRequest) => Promise<BrowseResponse | void>
+  searchFiles: (request: FileSearchRequest) => Promise<FileSearchResponse | void>
 } => {
   const searchFiles = useCallback(
     async (request: FileSearchRequest): Promise<FileSearchResponse | void> => {

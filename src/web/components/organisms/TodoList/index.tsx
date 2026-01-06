@@ -27,7 +27,7 @@ export const TodoList = ({
   sessionDetail,
   onSessionDetailUpdate
 }: TodoListProperties): React.JSX.Element => {
-  const { register, handleDeleteAllTodos, handleCheckboxChange } =
+  const { handleCheckboxChange, handleDeleteAllTodos, register } =
     useSessionTodosHandlers({
       sessionDetail,
       onSessionDetailUpdate

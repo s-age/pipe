@@ -24,14 +24,14 @@ export const Therapist = ({
 
   const {
     diagnosis,
-    isSubmitting,
-    selectedDeletions,
-    selectedEdits,
-    selectedCompressions,
-    handleDiagnose,
+    handleApply,
     handleDeletionChange,
+    handleDiagnose,
     handleEditChange,
-    handleApply
+    isSubmitting,
+    selectedCompressions,
+    selectedDeletions,
+    selectedEdits
   } = useTherapistHandlers(sessionId, onRefresh)
 
   return (

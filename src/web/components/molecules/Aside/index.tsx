@@ -5,14 +5,14 @@ import { aside, positionLeft, positionRight } from './style.css'
 
 type AsideProperties = {
   children?: ReactNode
-  position?: 'left' | 'right'
   className?: string
+  position?: 'left' | 'right'
 } & Omit<HTMLAttributes<HTMLElement>, 'className'>
 
 export const Aside = ({
   children,
-  position,
   className,
+  position,
   ...rest
 }: AsideProperties): JSX.Element => {
   const classNames = clsx(

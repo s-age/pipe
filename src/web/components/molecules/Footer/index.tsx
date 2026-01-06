@@ -5,16 +5,14 @@ import { footer, stickyBottom } from './style.css'
 
 type FooterProperties = {
   children?: ReactNode
-  sticky?: boolean
-  stickyOffset?: number
   className?: string
+  sticky?: boolean
 } & Omit<HTMLAttributes<HTMLElement>, 'className'>
 
 export const Footer = ({
   children,
-  sticky = false,
-  stickyOffset = 0,
   className,
+  sticky = false,
   ...rest
 }: FooterProperties): JSX.Element => {
   const classNames = clsx(
@@ -25,10 +23,8 @@ export const Footer = ({
     className
   )
 
-  const style = sticky ? { bottom: stickyOffset } : undefined
-
   return (
-    <footer className={classNames} style={style} {...rest}>
+    <footer className={classNames} {...rest}>
       {children}
     </footer>
   )

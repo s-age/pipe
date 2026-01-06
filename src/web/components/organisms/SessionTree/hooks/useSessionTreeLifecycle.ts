@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react'
 
 type UseSessionTreeLifecycleProperties = {
   currentSessionId: string | null
-  sessions: Array<{ sessionId: string }>
   sessionReferences: React.MutableRefObject<Map<string, HTMLLIElement>>
+  sessions: Array<{ sessionId: string }>
 }
 
 export const useSessionTreeLifecycle = ({
   currentSessionId,
-  sessions,
-  sessionReferences
+  sessionReferences,
+  sessions
 }: UseSessionTreeLifecycleProperties): void => {
   const hasScrolled = useRef(false)
 

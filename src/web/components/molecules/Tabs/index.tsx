@@ -9,14 +9,14 @@ export type TabItem<K extends string = string> = {
 }
 
 export type TabsProperties<K extends string> = {
-  tabs: TabItem<K>[]
   activeKey: K
+  tabs: TabItem<K>[]
   onChange: (key: K) => void
 }
 
 export const Tabs = <K extends string>({
-  tabs,
   activeKey,
+  tabs,
   onChange
 }: TabsProperties<K>): React.ReactElement => {
   const { handleClick } = useTabs(onChange)

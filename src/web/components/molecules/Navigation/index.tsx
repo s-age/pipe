@@ -4,20 +4,18 @@ import type { JSX, ReactNode, HTMLAttributes } from 'react'
 import { navigation } from './style.css'
 
 type NavigationProperties = {
-  children?: ReactNode
   ariaLabel?: string
+  children?: ReactNode
   className?: string
 } & Omit<HTMLAttributes<HTMLElement>, 'className' | 'aria-label'>
 
 export const Navigation = ({
-  children,
   ariaLabel,
+  children,
   className,
   ...rest
-}: NavigationProperties): JSX.Element => {
-  return (
-    <nav className={clsx(navigation, className)} aria-label={ariaLabel} {...rest}>
-      {children}
-    </nav>
-  )
-}
+}: NavigationProperties): JSX.Element => (
+  <nav className={clsx(navigation, className)} aria-label={ariaLabel} {...rest}>
+    {children}
+  </nav>
+)

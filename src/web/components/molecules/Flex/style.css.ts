@@ -1,6 +1,6 @@
 import { style } from '@vanilla-extract/css'
 
-import { vars } from '@/styles/theme.css'
+import { variables } from '@/styles/theme.css'
 
 export const flex = style({
   display: 'flex',
@@ -8,16 +8,16 @@ export const flex = style({
 
   selectors: {
     '&.gap-s': {
-      gap: vars.spacing.s
+      gap: variables.spacing.s
     },
     '&.gap-m': {
-      gap: vars.spacing.m
+      gap: variables.spacing.m
     },
     '&.gap-l': {
-      gap: vars.spacing.l
+      gap: variables.spacing.l
     },
     '&.gap-xl': {
-      gap: vars.spacing.xl
+      gap: variables.spacing.xl
     },
     '&.align-start': {
       alignItems: 'flex-start'

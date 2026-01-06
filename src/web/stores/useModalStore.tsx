@@ -2,24 +2,24 @@ import type React from 'react'
 import { useSyncExternalStore } from 'react'
 
 export type ConfirmDescriptor = {
-  type: 'confirm'
   props: {
-    title?: string
     message?: string
-    onConfirm?: () => Promise<void> | void
+    title?: string
     onCancel?: () => void
+    onConfirm?: () => Promise<void> | void
   }
+  type: 'confirm'
 }
 
 export type ModalEventData = {
-  id?: number | string
   content?: React.ReactNode | ConfirmDescriptor
+  id?: number | string
   options?: Record<string, unknown>
 }
 
 export type ModalEntry = {
-  id: number | string
   content: React.ReactNode | ConfirmDescriptor | null
+  id: number | string
 }
 
 let stack: ModalEntry[] = []
@@ -67,9 +67,9 @@ export const clearModals = (): void => {
 
 export const useModalStore = (): {
   stack: ModalEntry[]
-  showModal: (data: ModalEventData) => number | string
-  hideModal: (id?: number | string) => void
   clearModals: () => void
+  hideModal: (id?: number | string) => void
+  showModal: (data: ModalEventData) => number | string
 } => {
   const snapshot = useSyncExternalStore(subscribe, getStack, getStack)
 

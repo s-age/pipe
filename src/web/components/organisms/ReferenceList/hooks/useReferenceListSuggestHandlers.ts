@@ -6,32 +6,32 @@ import { useReferenceListSuggestLifecycle } from './useReferenceListSuggestLifec
 
 export const useReferenceListSuggestHandlers = (
   actions: {
-    loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
+    addReference: (path: string) => Promise<void>
+    loadRootSuggestions: () => Promise<{ isDirectory: boolean; name: string }[]>
     loadSubDirectorySuggestions: (
       pathParts: string[]
-    ) => Promise<{ name: string; isDirectory: boolean }[]>
-    addReference: (path: string) => Promise<void>
+    ) => Promise<{ isDirectory: boolean; name: string }[]>
   },
   existingReferences: Reference[]
 ): {
-  inputValue: string
-  suggestions: { name: string; isDirectory: boolean }[]
-  selectedIndex: number
   inputReference: React.RefObject<HTMLInputElement | null>
+  inputValue: string
+  selectedIndex: number
   suggestionListReference: React.RefObject<HTMLUListElement | null>
+  suggestions: { isDirectory: boolean; name: string }[]
   handleFocus: () => Promise<void>
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => Promise<void>
   handleSuggestionClick: (
-    suggestion: string | { name: string; isDirectory: boolean }
+    suggestion: string | { isDirectory: boolean; name: string }
   ) => Promise<void>
 } => {
   const [inputValue, setInputValue] = useState('')
   const [suggestions, setSuggestions] = useState<
-    { name: string; isDirectory: boolean }[]
+    { isDirectory: boolean; name: string }[]
   >([])
   const [rootSuggestions, setRootSuggestions] = useState<
-    { name: string; isDirectory: boolean }[]
+    { isDirectory: boolean; name: string }[]
   >([])
   const [selectedIndex, setSelectedIndex] = useState<number>(-1)
   const inputReference = useRef<HTMLInputElement>(null)
@@ -122,7 +122,7 @@ export const useReferenceListSuggestHandlers = (
 
   const handleSuggestionClick = useCallback(
     async (
-      suggestion: string | { name: string; isDirectory: boolean }
+      suggestion: string | { isDirectory: boolean; name: string }
     ): Promise<void> => {
       const suggestionName =
         typeof suggestion === 'string' ? suggestion : suggestion.name

@@ -4,16 +4,16 @@ type UseTooltipLifecycleProperties = {
   isVisible: boolean
   placement: 'top' | 'bottom' | 'left' | 'right'
   targetRect: DOMRect | null
-  offsetMain?: number | null
   offsetCross?: number | null
+  offsetMain?: number | null
 }
 
 export const useTooltipLifecycle = ({
   isVisible,
   placement,
   targetRect,
-  offsetMain,
-  offsetCross
+  offsetCross,
+  offsetMain
 }: UseTooltipLifecycleProperties): React.RefObject<HTMLDivElement | null> => {
   const elementReference = useRef<HTMLDivElement | null>(null)
 

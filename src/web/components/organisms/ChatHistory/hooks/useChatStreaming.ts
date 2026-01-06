@@ -22,11 +22,11 @@ type ChatStreamingProperties = {
 }
 
 type ChatStreamingReturn = {
-  streamingTurns: Turn[]
   isStreaming: boolean
+  streamingTurns: Turn[]
   turnsListReference: RefObject<HTMLDivElement | null>
-  scrollToBottom: () => void
   onSendInstruction: (instruction: string) => Promise<void>
+  scrollToBottom: () => void
 }
 
 export const useChatStreaming = ({
@@ -38,7 +38,7 @@ export const useChatStreaming = ({
   const previousLoadingState = useRef<boolean>(false)
 
   // 1. Client Hook: Handles API communication and SSE state
-  const { streamedText, isLoading, error, instructionTurn, startStreaming } =
+  const { error, instructionTurn, isLoading, startStreaming, streamedText } =
     useStreamingClient()
 
   // 2. Parser Hook: Converts raw text to Turn objects

@@ -15,12 +15,12 @@ export const useToastItemHandlers = ({
   item,
   removeToast
 }: UseToastItemHandlersProperties): {
-  hovering: boolean
   exiting: boolean
+  hovering: boolean
+  statusClass: 'statusSuccess' | 'statusFailure' | 'statusWarning'
+  handleClose: () => void
   handleMouseEnter: () => void
   handleMouseLeave: () => void
-  handleClose: () => void
-  statusClass: 'statusSuccess' | 'statusFailure' | 'statusWarning'
 } => {
   const [hovering, setHovering] = useState(false)
   const [exiting, setExiting] = useState(false)

@@ -12,11 +12,11 @@ import type {
 import { addToast } from '@/stores/useToastStore'
 
 export const useCompressorActions = (): {
+  approveCompression: (compressorSessionId: string) => Promise<void>
+  denyCompression: (compressorSessionId: string) => Promise<void>
   executeCompression: (
     data: CreateCompressorRequest
   ) => Promise<CreateCompressorResponse | void>
-  approveCompression: (compressorSessionId: string) => Promise<void>
-  denyCompression: (compressorSessionId: string) => Promise<void>
 } => {
   const executeCompression = useCallback(
     async (data: CreateCompressorRequest): Promise<CreateCompressorResponse | void> => {

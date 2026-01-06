@@ -9,16 +9,16 @@ import { useOptionalFormContext } from '@/components/organisms/Form'
 import { errorMessageStyle } from './style.css'
 
 type TextareaFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
-  label: string
   id: string
+  label: string
   placeholder?: string
   readOnly?: boolean
   required?: boolean
 } & UseControllerProps<TFieldValues>
 
 export const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
-  label,
   id,
+  label,
   placeholder,
   readOnly,
   required,

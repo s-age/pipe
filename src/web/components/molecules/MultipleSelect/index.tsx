@@ -23,32 +23,32 @@ import { useSelectLifecycle } from '../Select/hooks/useSelectLifecycle'
 type MultipleSelectProperties = {
   name: string
   options?: Array<string | SelectOption>
-  searchable?: boolean
   placeholder?: string
+  searchable?: boolean
 } & SelectHTMLAttributes<HTMLSelectElement>
 
 export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Element => {
   const {
+    className,
     name,
     options,
-    searchable = false,
     placeholder,
-    className,
+    searchable = false,
     ...rest
   } = properties
 
   const {
-    registerProperties,
-    normalizedOptions,
     filteredOptions,
-    selectedValues,
-    isOpen,
-    setIsOpen,
-    query,
-    setQuery,
-    listReference,
     highlightedIndex,
+    isOpen,
+    listReference,
+    normalizedOptions,
+    query,
+    registerProperties,
+    selectedValues,
     setHighlightedIndex,
+    setIsOpen,
+    setQuery,
     setSelectedValues
   } = useMultipleSelect({
     name,
@@ -60,14 +60,14 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
   // No debug logs in production code
 
   const {
-    toggleOpen,
-    handleRemoveTag,
+    handleCheckboxClick,
     handleKeyDown,
-    handleSearchChange,
-    handleOptionClick,
     handleMouseEnter,
     handleMouseLeave,
-    handleCheckboxClick
+    handleOptionClick,
+    handleRemoveTag,
+    handleSearchChange,
+    toggleOpen
   } = useMultipleSelectHandlers({
     isOpen,
     setIsOpen,

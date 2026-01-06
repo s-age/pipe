@@ -12,13 +12,13 @@ import {
 } from './style.css'
 
 type SessionItemProperties = {
-  session: SessionOverview
   currentSessionId: string
+  session: SessionOverview
   handleSelectSession: (sessionId: string) => Promise<void>
 }
 
 export const SessionItem = forwardRef<HTMLLIElement, SessionItemProperties>(
-  ({ session, currentSessionId, handleSelectSession }, reference) => {
+  ({ currentSessionId, handleSelectSession, session }, reference) => {
     const { onClick } = useSessionItemHandlers({ session, handleSelectSession })
 
     return (

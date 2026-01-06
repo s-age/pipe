@@ -7,21 +7,21 @@ import * as styles from './style.css'
 
 type InputRadioProperties = {
   label?: React.ReactNode
-  register?: UseFormRegister<FieldValues>
   name?: string
+  register?: UseFormRegister<FieldValues>
 } & InputHTMLAttributes<HTMLInputElement>
 
 export const InputRadio = ({
-  register,
-  name,
-  label,
-  id,
   children,
+  id,
+  label,
+  name,
+  register,
   ...rest
 }: InputRadioProperties): JSX.Element => {
   const resolvedLabel = label ?? children
 
-  const { registerProperties, inputId } = useInputRadio({
+  const { inputId, registerProperties } = useInputRadio({
     register,
     name,
     id,

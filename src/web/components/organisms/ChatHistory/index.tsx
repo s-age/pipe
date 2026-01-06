@@ -12,31 +12,31 @@ import { useChatStreaming } from './hooks/useChatStreaming'
 import { chatRoot } from './style.css'
 
 type ChatHistoryProperties = {
-  sessionDetail: SessionDetail | null
   expertMode: boolean
-  setSessionDetail: (data: SessionDetail | null) => void
+  sessionDetail: SessionDetail | null
   refreshSessionsInStore: (
     sessionDetail: SessionDetail,
     sessions: SessionOverview[]
   ) => void
+  setSessionDetail: (data: SessionDetail | null) => void
 }
 
 // Keep a default export for backward compatibility (renders the full composed view)
 export const ChatHistory = ({
-  sessionDetail,
   expertMode,
-  setSessionDetail,
-  refreshSessionsInStore
+  sessionDetail,
+  refreshSessionsInStore,
+  setSessionDetail
 }: ChatHistoryProperties): JSX.Element => {
   const parameters = useParams()
   const sessionId = parameters['*'] || null
 
   const {
-    streamingTurns,
     isStreaming,
-    turnsListReference,
     onSendInstruction,
-    scrollToBottom
+    scrollToBottom,
+    streamingTurns,
+    turnsListReference
   } = useChatStreaming({
     currentSessionId: sessionId,
     // ChatHistory hook expects a loose setter type; cast to unknown to satisfy lint

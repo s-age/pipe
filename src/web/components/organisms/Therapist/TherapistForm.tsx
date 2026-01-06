@@ -5,17 +5,17 @@ import { Button } from '@/components/atoms/Button'
 import * as styles from './style.css'
 
 export type TherapistFormProperties = {
+  isSubmitting: boolean
   sessionId: string
   turnsCount: number
-  isSubmitting: boolean
   handleDiagnose: () => Promise<void>
   onRefresh: () => Promise<void>
 }
 
 export const TherapistForm = ({
+  isSubmitting,
   sessionId,
   turnsCount,
-  isSubmitting,
   handleDiagnose
 }: TherapistFormProperties): JSX.Element => (
   <div className={styles.container}>

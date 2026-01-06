@@ -1,6 +1,6 @@
 import { style } from '@vanilla-extract/css'
 
-import { vars } from '@/styles/theme.css'
+import { variables } from '@/styles/theme.css'
 
 export const unorderedList = style({
   listStyle: 'none',
@@ -11,28 +11,28 @@ export const unorderedList = style({
 
   selectors: {
     '&.gap-s': {
-      gap: vars.spacing.s
+      gap: variables.spacing.s
     },
     '&.gap-m': {
-      gap: vars.spacing.m
+      gap: variables.spacing.m
     },
     '&.gap-l': {
-      gap: vars.spacing.l
+      gap: variables.spacing.l
     },
     '&.gap-xl': {
-      gap: vars.spacing.xl
+      gap: variables.spacing.xl
     },
     '&.marker-disc': {
       listStyle: 'disc',
-      paddingLeft: vars.spacing.l
+      paddingLeft: variables.spacing.l
     },
     '&.marker-circle': {
       listStyle: 'circle',
-      paddingLeft: vars.spacing.l
+      paddingLeft: variables.spacing.l
     },
     '&.marker-square': {
       listStyle: 'square',
-      paddingLeft: vars.spacing.l
+      paddingLeft: variables.spacing.l
     }
   }
 })

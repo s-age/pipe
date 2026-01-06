@@ -4,24 +4,24 @@ import type { JSX, ReactNode, ElementType } from 'react'
 import { box } from './style.css'
 
 type BoxProperties = {
-  children?: ReactNode
-  padding?: 's' | 'm' | 'l' | 'none'
-  margin?: 's' | 'm' | 'l' | 'auto' | 'none'
-  border?: boolean | 'thin' | 'thick'
-  radius?: 's' | 'm' | 'l' | 'none'
   as?: ElementType
+  border?: boolean | 'thin' | 'thick'
+  children?: ReactNode
   className?: string
   id?: string
+  margin?: 's' | 'm' | 'l' | 'auto' | 'none'
+  padding?: 's' | 'm' | 'l' | 'none'
+  radius?: 's' | 'm' | 'l' | 'none'
 }
 
 export const Box = ({
-  children,
-  padding = 'none',
-  margin = 'none',
-  border = false,
-  radius = 'none',
   as: Component = 'div',
+  border = false,
+  children,
   className,
+  margin = 'none',
+  padding = 'none',
+  radius = 'none',
   ...rest
 }: BoxProperties): JSX.Element => {
   const classNames = clsx(

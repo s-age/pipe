@@ -19,8 +19,8 @@ export const useTooltipHandlers = (
     event: React.MouseEvent<HTMLElement>,
     options?: {
       content?: string
-      offsetMain?: number
       offsetCross?: number
+      offsetMain?: number
       placement?: TooltipPlacement
     }
   ) => void
@@ -49,14 +49,14 @@ export const useTooltipHandlers = (
       event: React.MouseEvent<HTMLElement>,
       options?: {
         content?: string
-        offsetMain?: number
         offsetCross?: number
+        offsetMain?: number
         placement?: TooltipPlacement
       }
     ): void => {
       if (idReference.current === null) idReference.current = nextTooltipId++
 
-      const { content, offsetMain, offsetCross, placement } = options ?? {}
+      const { content, offsetCross, offsetMain, placement } = options ?? {}
 
       const element = event.currentTarget
 

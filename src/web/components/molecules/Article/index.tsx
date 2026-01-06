@@ -5,14 +5,14 @@ import { article, paddingS, paddingM, paddingL } from './style.css'
 
 type ArticleProperties = {
   children?: ReactNode
-  padding?: 's' | 'm' | 'l' | 'none'
   className?: string
+  padding?: 's' | 'm' | 'l' | 'none'
 } & Omit<HTMLAttributes<HTMLElement>, 'className'>
 
 export const Article = ({
   children,
-  padding = 'none',
   className,
+  padding = 'none',
   ...rest
 }: ArticleProperties): JSX.Element => {
   const classNames = clsx(

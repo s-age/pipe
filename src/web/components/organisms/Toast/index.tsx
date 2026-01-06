@@ -46,7 +46,7 @@ const ToastItem = ({
   item: ToastItem
   removeToast: (id: string) => void
 }): JSX.Element => {
-  const { handleMouseEnter, handleMouseLeave, handleClose, exiting } =
+  const { exiting, handleClose, handleMouseEnter, handleMouseLeave } =
     useToastItemHandlers({ item, removeToast })
 
   return (
@@ -80,7 +80,7 @@ const ToastItem = ({
 }
 
 export const Toasts = (): JSX.Element => {
-  const { toasts, removeToast } = useToast()
+  const { removeToast, toasts } = useToast()
   const { grouped } = useToastHandlers(toasts)
 
   return createPortal(

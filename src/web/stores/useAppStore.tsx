@@ -19,24 +19,24 @@ export type ToastPosition =
 export type ToastStatus = 'success' | 'failure' | 'warning'
 
 export type ToastItem = {
+  createdAt: number
   id: string
   status: ToastStatus
+  description?: string
+  dismissible?: boolean
+  duration?: number | null
   position?: ToastPosition
   title?: string
-  description?: string
-  duration?: number | null
-  dismissible?: boolean
-  createdAt: number
 }
 
 type State = {
-  toasts: ToastItem[]
   loadingCount: number
+  toasts: ToastItem[]
 }
 
 type Action =
-  | { type: 'PUSH_TOAST'; payload: ToastItem }
-  | { type: 'REMOVE_TOAST'; payload: { id: string } }
+  | { payload: ToastItem; type: 'PUSH_TOAST' }
+  | { payload: { id: string }; type: 'REMOVE_TOAST' }
   | { type: 'CLEAR_TOASTS' }
   | { type: 'SHOW_LOADER' }
   | { type: 'HIDE_LOADER' }
@@ -71,13 +71,13 @@ const reducer = (state: State, action: Action): State => {
 
 // Context value
 type AppStoreContextValue = {
+  isLoading: boolean
   state: State
+  clearToasts: () => void
+  hideLoader: () => void
   pushToast: (payload: Omit<ToastItem, 'id' | 'createdAt'>) => string
   removeToast: (id: string) => void
-  clearToasts: () => void
   showLoader: () => void
-  hideLoader: () => void
-  isLoading: boolean
 }
 
 const AppStoreContext = createContext<AppStoreContextValue | undefined>(undefined)

@@ -7,15 +7,15 @@ import { useMultiStepReasoningHandlers } from './hooks/useMultiStepReasoningHand
 import { multiStepLabel } from './style.css'
 
 type MultiStepReasoningProperties = {
-  multiStepReasoningEnabled: boolean
   currentSessionId: string | null
+  multiStepReasoningEnabled: boolean
 }
 
 export const MultiStepReasoning = ({
-  multiStepReasoningEnabled,
-  currentSessionId
+  currentSessionId,
+  multiStepReasoningEnabled
 }: MultiStepReasoningProperties): JSX.Element => {
-  const { localEnabled, handleMultiStepReasoningChange } =
+  const { handleMultiStepReasoningChange, localEnabled } =
     useMultiStepReasoningHandlers({
       currentSessionId,
       multiStepReasoningEnabled

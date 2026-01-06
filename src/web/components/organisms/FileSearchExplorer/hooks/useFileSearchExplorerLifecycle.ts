@@ -7,22 +7,22 @@ type Item = {
 }
 
 type UseFileSearchExplorerLifecycleProperties = {
-  query: string
   inputReference: React.RefObject<HTMLInputElement | null>
-  suggestionListReference: React.RefObject<HTMLUListElement | null>
-  setSuggestions: (suggestions: Item[]) => void
-  setSelectedIndex: (index: number) => void
+  query: string
   selectedValues: string[]
+  suggestionListReference: React.RefObject<HTMLUListElement | null>
+  setSelectedIndex: (index: number) => void
+  setSuggestions: (suggestions: Item[]) => void
   // ... cache management state/setters
 }
 
 export const useFileSearchExplorerLifecycle = ({
-  query,
   inputReference,
+  query,
+  selectedValues,
   suggestionListReference,
-  setSuggestions,
   setSelectedIndex,
-  selectedValues
+  setSuggestions
 }: UseFileSearchExplorerLifecycleProperties): {
   debouncedQuery: string
   existingValues: Set<string>

@@ -8,27 +8,27 @@ import { useFieldset } from './hooks/useFieldset'
 import * as styles from './style.css'
 
 type FieldsetIds = {
-  hintId?: string
   errorId?: string
+  hintId?: string
 }
 
 type FieldsetProperties = {
-  legend: ReactNode
-  hint?: ReactNode
-  error?: ReactNode
   children: ReactNode | ((ids: FieldsetIds) => ReactNode)
+  legend: ReactNode
   className?: string
+  error?: ReactNode
+  hint?: ReactNode
 }
 
 export const Fieldset = ({
-  legend,
-  hint,
-  error,
   children,
-  className
+  legend,
+  className,
+  error,
+  hint
 }: FieldsetProperties): JSX.Element => {
   const ids = useFieldset(hint, error)
-  const { hintId, errorId } = ids
+  const { errorId, hintId } = ids
 
   return (
     <fieldset className={styles.fieldset + (className ? ` ${className}` : '')}>

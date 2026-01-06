@@ -2,7 +2,7 @@ import { createTheme } from '@vanilla-extract/css'
 
 import { colors } from './colors.css'
 
-export const [themeClass, vars] = createTheme({
+export const [themeClass, variables] = createTheme({
   color: {
     // Base colors
     background: colors.darkGray,

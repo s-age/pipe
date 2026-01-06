@@ -2,10 +2,10 @@ import { client } from '../client'
 import type { SessionOverview } from '../sessionTree/getSessionTree'
 
 type ArchivedSession = {
-  sessionId: string
+  deletedAt: string | null
   filePath: string
   purpose: string | null
-  deletedAt: string | null
+  sessionId: string
 }
 
 export const getArchivedSessions = async (): Promise<SessionOverview[]> => {

@@ -1,15 +1,18 @@
 import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
+import { Box } from '@/components/molecules/Box'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { InputCheckbox } from '@/components/molecules/InputCheckbox'
+import { ListItem } from '@/components/molecules/ListItem'
 import { MetaItem } from '@/components/molecules/MetaItem'
+import { Paragraph } from '@/components/molecules/Paragraph'
+import { UnorderedList } from '@/components/molecules/UnorderedList'
 import { useSessionTodosHandlers } from '@/components/organisms/TodoList/hooks/useSessionTodosHandlers'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Todo } from '@/types/todo'
 
 import {
-  todosList,
   todoItem,
   todoCheckboxLabel,
   todoTitle,
@@ -37,13 +40,13 @@ export const TodoList = ({
     <MetaItem>
       <Fieldset legend="Todos">
         {() => (
-          <div>
+          <Box>
             {sessionDetail && sessionDetail.todos.length > 0 ? (
-              <ul className={todosList}>
+              <UnorderedList>
                 {sessionDetail.todos.map((todo: Todo, index: number) => (
-                  <li key={index} className={todoItem}>
-                    <div className={todoCheckboxLabel}>
-                      <div className={todoCheckboxMargin}>
+                  <ListItem key={index} className={todoItem}>
+                    <Box className={todoCheckboxLabel}>
+                      <Box className={todoCheckboxMargin}>
                         <InputCheckbox
                           register={register}
                           name={`todos[${index}].checked`}
@@ -51,14 +54,16 @@ export const TodoList = ({
                           onChange={handleCheckboxChange}
                           data-index={String(index)}
                         />
-                      </div>
+                      </Box>
                       <strong className={todoTitle}>{todo.title}</strong>
-                    </div>
-                  </li>
+                    </Box>
+                  </ListItem>
                 ))}
-              </ul>
+              </UnorderedList>
             ) : (
-              <p className={noItemsMessage}>No todos for this session.</p>
+              <Paragraph className={noItemsMessage}>
+                No todos for this session.
+              </Paragraph>
             )}
 
             <Button
@@ -69,7 +74,7 @@ export const TodoList = ({
             >
               Delete All Todos
             </Button>
-          </div>
+          </Box>
         )}
       </Fieldset>
     </MetaItem>

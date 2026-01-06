@@ -2,6 +2,7 @@ import type { JSX } from 'react'
 
 import { Label } from '@/components/atoms/Label'
 import { Fieldset } from '@/components/molecules/Fieldset'
+import { Flex } from '@/components/molecules/Flex'
 import { MetaItem } from '@/components/molecules/MetaItem'
 import { Slider } from '@/components/molecules/Slider'
 import { useOptionalFormContext } from '@/components/organisms/Form'
@@ -54,7 +55,7 @@ export const HyperParameters = ({
           discretion for gemini-cli.
         </p>
         <div>
-          <div className={hyperparametersControl}>
+          <Flex align="center" gap="m" className={hyperparametersControl}>
             <div className={labelContainer}>
               <Label>Temperature:</Label>
             </div>
@@ -71,9 +72,9 @@ export const HyperParameters = ({
                 tabIndex={-1}
               />
             </div>
-          </div>
+          </Flex>
 
-          <div className={hyperparametersControl}>
+          <Flex align="center" gap="m" className={hyperparametersControl}>
             <div className={labelContainer}>
               <Label>Top P:</Label>
             </div>
@@ -89,9 +90,9 @@ export const HyperParameters = ({
                 onMouseUp={handleTopPMouseUp}
               />
             </div>
-          </div>
+          </Flex>
 
-          <div className={hyperparametersControl}>
+          <Flex align="center" gap="m" className={hyperparametersControl}>
             <div className={labelContainer}>
               <Label>Top K:</Label>
             </div>
@@ -107,7 +108,7 @@ export const HyperParameters = ({
                 onMouseUp={handleTopKMouseUp}
               />
             </div>
-          </div>
+          </Flex>
         </div>
       </Fieldset>
     </MetaItem>

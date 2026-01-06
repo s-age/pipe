@@ -2,11 +2,6 @@ import { style } from '@vanilla-extract/css'
 
 import { colors } from '../../../styles/colors.css.ts'
 
-export const todosList = style({
-  paddingLeft: '0',
-  listStyle: 'none'
-})
-
 export const todoItem = style({
   display: 'flex',
   marginBottom: '10px',

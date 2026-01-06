@@ -1,10 +1,7 @@
 import { style } from '@vanilla-extract/css'
 
 export const hyperparametersControl = style({
-  display: 'flex',
-  marginBottom: '10px',
-  alignItems: 'center',
-  gap: '16px'
+  marginBottom: '10px'
 })
 
 export const labelContainer = style({

@@ -4,6 +4,8 @@ import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
 import { Accordion } from '@/components/molecules/Accordion'
 import { MetaLabel, MetaItem } from '@/components/molecules/MetaItem'
+import { Paragraph } from '@/components/molecules/Paragraph'
+import { UnorderedList } from '@/components/molecules/UnorderedList'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -60,7 +62,7 @@ export const ReferenceList = ({
         open={accordionOpen}
         onOpenChange={setAccordionOpen}
       >
-        <ul className={referencesList}>
+        <UnorderedList className={referencesList}>
           {references.map((reference, index) => (
             <ReferenceComponent
               key={reference.path}
@@ -70,9 +72,9 @@ export const ReferenceList = ({
               refreshSessions={refreshSessions}
             />
           ))}
-        </ul>
+        </UnorderedList>
         {references.length === 0 && (
-          <p className={noItemsMessage}>No references added yet.</p>
+          <Paragraph className={noItemsMessage}>No references added yet.</Paragraph>
         )}
         {errors && <ErrorMessage error={errors as never} />}
       </Accordion>

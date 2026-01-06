@@ -11,9 +11,7 @@ export const metaItemLabel = style({
 })
 
 export const referencesList = style({
-  margin: 0,
-  padding: 0,
-  listStyle: 'none'
+  margin: 0
 })
 
 export const referenceControls = style({

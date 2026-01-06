@@ -11,6 +11,7 @@ type BoxProperties = {
   radius?: 's' | 'm' | 'l' | 'none'
   as?: ElementType
   className?: string
+  id?: string
 }
 
 export const Box = ({

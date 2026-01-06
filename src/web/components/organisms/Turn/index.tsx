@@ -6,6 +6,9 @@ import { IconCopy } from '@/components/atoms/IconCopy'
 import { IconDelete } from '@/components/atoms/IconDelete'
 import { IconEdit } from '@/components/atoms/IconEdit'
 import { IconFork } from '@/components/atoms/IconFork'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import { useTurnActions } from '@/components/organisms/Turn/hooks/useTurnActions'
 import { useTurnHandlers } from '@/components/organisms/Turn/hooks/useTurnHandlers'
@@ -170,20 +173,28 @@ export const TurnComponent = ({
   const timestamp = turn.timestamp ? formatTimestamp(new Date(turn.timestamp)) : ''
 
   return (
-    <div
+    <Flex
       className={clsx(
         turnWrapper,
         turn.type === 'user_task' ? userTaskAligned : otherTurnAligned
       )}
     >
-      <div className={turnContentBase} id={`turn-${index}`}>
-        <div className={turnHeader}>
-          <span className={turnHeaderInfo}>
-            <span className={turnIndexStyle}>{index + 1}:</span>
+      <Box
+        className={turnContentBase}
+        id={`turn-${index}`}
+        padding="s"
+        radius="m"
+        border={true}
+      >
+        <Flex className={turnHeader} justify="between" align="center">
+          <Flex className={turnHeaderInfo} align="center" gap="s">
+            <Text className={turnIndexStyle} weight="bold">
+              {`${index + 1}:`}
+            </Text>
             {getHeaderContent(turn.type || 'unknown')}
-            <span className={turnTimestamp}>{timestamp}</span>
-          </span>
-          <div className={turnHeaderControls}>
+            <Text className={turnTimestamp}>{timestamp}</Text>
+          </Flex>
+          <Flex className={turnHeaderControls} gap="s">
             {turn.type === 'model_response' && onFork && (
               <Tooltip content="Fork Session" placement="bottom">
                 <Button kind="ghost" size="xsmall" onClick={onFork}>
@@ -214,10 +225,10 @@ export const TurnComponent = ({
                 </Button>
               </Tooltip>
             )}
-          </div>
-        </div>
+          </Flex>
+        </Flex>
         {renderTurnContent()}
-      </div>
-    </div>
+      </Box>
+    </Flex>
   )
 }

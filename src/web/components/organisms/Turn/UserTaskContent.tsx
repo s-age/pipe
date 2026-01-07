@@ -1,5 +1,7 @@
 import type { JSX } from 'react'
 
+import { Code } from '@/components/molecules/Code'
+
 import { editablePre } from './style.css'
 
 type UserTaskContentProperties = {
@@ -9,5 +11,7 @@ type UserTaskContentProperties = {
 export const UserTaskContent = ({
   instruction
 }: UserTaskContentProperties): JSX.Element => (
-  <pre className={editablePre}>{instruction || ''}</pre>
+  <Code block className={editablePre}>
+    {instruction || ''}
+  </Code>
 )

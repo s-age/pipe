@@ -2,6 +2,11 @@ import { clsx } from 'clsx'
 import { marked } from 'marked'
 import type { JSX } from 'react'
 
+import { Emphasis } from '@/components/atoms/Emphasis'
+import { Strong } from '@/components/atoms/Strong'
+import { Box } from '@/components/molecules/Box'
+import { Paragraph } from '@/components/molecules/Paragraph'
+
 import { turnContent, rawMarkdown, renderedMarkdown } from './style.css'
 
 type ModelResponseContentProperties = {
@@ -15,20 +20,20 @@ export const ModelResponseContent = ({
   isCompressed = false,
   isStreaming = false
 }: ModelResponseContentProperties): JSX.Element => (
-  <div className={turnContent}>
+  <Box className={turnContent}>
     {isCompressed && (
-      <p>
-        <strong>
-          <em>-- History Compressed --</em>
-        </strong>
-      </p>
+      <Paragraph>
+        <Strong>
+          <Emphasis>-- History Compressed --</Emphasis>
+        </Strong>
+      </Paragraph>
     )}
-    <div className={rawMarkdown}>{content}</div>
+    <Box className={rawMarkdown}>{content}</Box>
     {!isStreaming && (
-      <div
+      <Box
         className={clsx(renderedMarkdown, 'markdown-body')}
         dangerouslySetInnerHTML={{ __html: marked.parse(content.trim()) }}
       />
     )}
-  </div>
+  </Box>
 )

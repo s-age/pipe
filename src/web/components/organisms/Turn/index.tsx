@@ -8,6 +8,7 @@ import { IconEdit } from '@/components/atoms/IconEdit'
 import { IconFork } from '@/components/atoms/IconFork'
 import { Text } from '@/components/atoms/Text'
 import { Box } from '@/components/molecules/Box'
+import { Code } from '@/components/molecules/Code'
 import { Flex } from '@/components/molecules/Flex'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import { useTurnActions } from '@/components/organisms/Turn/hooks/useTurnActions'
@@ -144,7 +145,9 @@ export const TurnComponent = ({
 
       case 'function_calling':
         return (
-          <pre className={turnContent}>{JSON.stringify(turn.response, null, 2)}</pre>
+          <Code block className={turnContent}>
+            {JSON.stringify(turn.response, null, 2)}
+          </Code>
         )
 
       case 'tool_response':
@@ -153,7 +156,11 @@ export const TurnComponent = ({
         return <ToolResponseContent response={turn.response} />
 
       default:
-        return <pre className={turnContent}>{JSON.stringify(turn, null, 2)}</pre>
+        return (
+          <Code block className={turnContent}>
+            {JSON.stringify(turn, null, 2)}
+          </Code>
+        )
     }
   }
 

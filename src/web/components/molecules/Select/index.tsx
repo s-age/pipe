@@ -84,13 +84,20 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     clearHighlight: () => setHighlightedIndex(-1)
   })
 
+  // Generate stable IDs for ARIA attributes
+  const listboxId = name ? `${name}-listbox` : 'select-listbox'
+  const activeDescendantId =
+    highlightedIndex >= 0 && filteredOptions[highlightedIndex]
+      ? filteredOptions[highlightedIndex].id
+      : undefined
+
   // If no options specified and not searchable, fall back to native select for full compatibility
   if (!options && !searchable) {
     return <select className={selectStyle} {...rest} />
   }
 
   // Presentational: use label/native value computed by the hook
-  const displayLabel = selectedLabel ?? placeholder ?? ''
+  const displayLabel = selectedLabel ?? placeholder ?? 'Select an option...'
 
   return (
     <Box ref={rootReference} className={clsx(selectStyle, className)}>
@@ -115,8 +122,10 @@ export const Select = (properties: SelectProperties): JSX.Element => {
         role="button"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={listboxId}
+        aria-activedescendant={isOpen ? activeDescendantId : undefined}
         onClick={toggleOpen}
-        onKeyDown={handleKeyDown}
+        onKeyDown={searchable ? undefined : handleKeyDown}
         className={trigger}
       >
         <Box as="span">{displayLabel}</Box>
@@ -128,38 +137,51 @@ export const Select = (properties: SelectProperties): JSX.Element => {
               type="text"
               value={query}
               onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
               aria-label="Search options"
+              aria-controls={listboxId}
+              aria-activedescendant={activeDescendantId}
+              aria-autocomplete="list"
               className={searchInput}
+              autoFocus={true}
             />
           )}
 
           <Box
             as="ul"
+            id={listboxId}
             ref={listReference}
             role="listbox"
             aria-hidden={!isOpen}
             className={panel}
           >
-            {filteredOptions.map((opt, index) => (
-              <Box
-                as="li"
-                key={opt.id ?? opt.value}
-                role="option"
-                onClick={opt.disabled ? undefined : handleOptionClick}
-                onMouseEnter={opt.disabled ? undefined : handleMouseEnter}
-                onMouseLeave={opt.disabled ? undefined : handleMouseLeave}
-                className={clsx(
-                  option,
-                  highlightedIndex === index && optionHighlighted,
-                  opt.disabled && optionDisabled
-                )}
-                data-value={opt.id ?? opt.value}
-                data-index={String(index)}
-                aria-disabled={opt.disabled}
-              >
-                {opt.label}
-              </Box>
-            ))}
+            {filteredOptions.map((opt, index) => {
+              const isSelected =
+                selectedNativeValue !== undefined && opt.value === selectedNativeValue
+
+              return (
+                <Box
+                  as="li"
+                  id={opt.id}
+                  key={opt.id ?? opt.value}
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={opt.disabled ? undefined : handleOptionClick}
+                  onMouseEnter={opt.disabled ? undefined : handleMouseEnter}
+                  onMouseLeave={opt.disabled ? undefined : handleMouseLeave}
+                  className={clsx(
+                    option,
+                    highlightedIndex === index && optionHighlighted,
+                    opt.disabled && optionDisabled
+                  )}
+                  data-value={opt.id ?? opt.value}
+                  data-index={String(index)}
+                  aria-disabled={opt.disabled}
+                >
+                  {opt.label}
+                </Box>
+              )
+            })}
           </Box>
         </Box>
       )}

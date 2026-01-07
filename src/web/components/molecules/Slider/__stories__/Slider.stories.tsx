@@ -24,6 +24,7 @@ export const Default: Story = {
       return (
         <div style={{ width: 360 }}>
           <Slider
+            aria-label="Default slider"
             value={v}
             onChange={(value: number) => setV(value)}
             min={0}
@@ -42,7 +43,13 @@ export const WithRHF: Story = {
     const Example = (): JSX.Element => (
       <Form>
         <div style={{ width: 360 }}>
-          <Slider name="volume" defaultValue={25} min={0} max={100} />
+          <Slider
+            aria-label="Volume control"
+            name="volume"
+            defaultValue={25}
+            min={0}
+            max={100}
+          />
         </div>
         <Button type="submit" onClick={(data) => console.log('submit', data)}>
           Submit
@@ -68,7 +75,13 @@ export const WithoutForm: Story = {
       return (
         <form onSubmit={handleSubmit}>
           <div style={{ width: 360 }}>
-            <Slider name="plainVolume" defaultValue={50} min={0} max={100} />
+            <Slider
+              aria-label="Plain volume control"
+              name="plainVolume"
+              defaultValue={50}
+              min={0}
+              max={100}
+            />
           </div>
           <button type="submit">Submit</button>
         </form>

@@ -2,6 +2,9 @@ import { clsx } from 'clsx'
 import type { JSX, RefObject } from 'react'
 
 import { Heading } from '@/components/atoms/Heading'
+import { Box } from '@/components/molecules/Box'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { Paragraph } from '@/components/molecules/Paragraph'
 import { TurnComponent as Turn } from '@/components/organisms/Turn'
 import type { Turn as TurnType } from '@/lib/api/session/getSession'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -50,32 +53,32 @@ export const ChatHistoryBody = ({
 
   if (!currentSessionId) {
     return (
-      <div className={turnsColumn}>
-        <div className={welcomeMessage}>
+      <FlexColumn className={turnsColumn}>
+        <FlexColumn className={welcomeMessage}>
           <Heading level={1}>Welcome</Heading>
-          <p>Select a session from the sidebar to view its details.</p>
-        </div>
-      </div>
+          <Paragraph>Select a session from the sidebar to view its details.</Paragraph>
+        </FlexColumn>
+      </FlexColumn>
     )
   }
 
   if (!sessionDetail) {
     return (
-      <div className={turnsColumn}>
-        <div className={welcomeMessage}>
+      <FlexColumn className={turnsColumn}>
+        <FlexColumn className={welcomeMessage}>
           <Heading level={1}>Session Not Found</Heading>
-          <p>
+          <Paragraph>
             The selected session could not be found. It may have been deleted or the ID
             is invalid.
-          </p>
-        </div>
-      </div>
+          </Paragraph>
+        </FlexColumn>
+      </FlexColumn>
     )
   }
 
   return (
-    <div className={clsx(panel, panelBottomSpacing)}>
-      <section className={turnsListSection} ref={turnsListReference}>
+    <FlexColumn className={clsx(panel, panelBottomSpacing)}>
+      <Box as="section" className={turnsListSection} ref={turnsListReference}>
         {sessionDetail.turns.map((turn: TurnType, i: number) => (
           <Turn
             key={i}
@@ -98,7 +101,7 @@ export const ChatHistoryBody = ({
               isStreaming={isStreaming}
             />
           ))}
-      </section>
-    </div>
+      </Box>
+    </FlexColumn>
   )
 }

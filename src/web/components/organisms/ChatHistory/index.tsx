@@ -1,6 +1,7 @@
 import type { JSX } from 'react'
 import { useParams } from 'react-router-dom'
 
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 
@@ -52,7 +53,7 @@ export const ChatHistory = ({
   const contextLimit = sessionDetail?.settings?.contextLimit ?? 700000
 
   return (
-    <div className={chatRoot}>
+    <FlexColumn className={chatRoot}>
       <ChatHistoryHeader
         sessionDetail={sessionDetail}
         handleDeleteCurrentSession={handleDeleteCurrentSession}
@@ -76,6 +77,6 @@ export const ChatHistory = ({
         contextLimit={contextLimit}
         onRefresh={handleRefreshSession}
       />
-    </div>
+    </FlexColumn>
   )
 }

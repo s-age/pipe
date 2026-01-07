@@ -1,5 +1,6 @@
 import { clsx } from 'clsx'
-import type { JSX, ReactNode, ElementType, HTMLAttributes } from 'react'
+import { forwardRef } from 'react'
+import type { JSX, ReactNode, ElementType, HTMLAttributes, Ref } from 'react'
 
 import { box } from './style.css'
 
@@ -14,30 +15,37 @@ type BoxProperties = {
   radius?: 's' | 'm' | 'l' | 'none'
 } & Omit<HTMLAttributes<HTMLElement>, 'className'>
 
-export const Box = ({
-  as: Component = 'div',
-  border = false,
-  children,
-  className,
-  margin = 'none',
-  padding = 'none',
-  radius = 'none',
-  ...rest
-}: BoxProperties): JSX.Element => {
-  const classNames = clsx(
-    box,
+export const Box = forwardRef(
+  (
     {
-      [`padding-${padding}`]: padding !== 'none',
-      [`margin-${margin}`]: margin !== 'none',
-      [`border-${typeof border === 'string' ? border : 'default'}`]: border !== false,
-      [`radius-${radius}`]: radius !== 'none'
-    },
-    className
-  )
+      as: Component = 'div',
+      border = false,
+      children,
+      className,
+      margin = 'none',
+      padding = 'none',
+      radius = 'none',
+      ...rest
+    }: BoxProperties,
+    reference: Ref<HTMLElement>
+  ): JSX.Element => {
+    const classNames = clsx(
+      box,
+      {
+        [`padding-${padding}`]: padding !== 'none',
+        [`margin-${margin}`]: margin !== 'none',
+        [`border-${typeof border === 'string' ? border : 'default'}`]: border !== false,
+        [`radius-${radius}`]: radius !== 'none'
+      },
+      className
+    )
 
-  return (
-    <Component className={classNames} {...rest}>
-      {children}
-    </Component>
-  )
-}
+    return (
+      <Component className={classNames} ref={reference} {...rest}>
+        {children}
+      </Component>
+    )
+  }
+)
+
+Box.displayName = 'Box'

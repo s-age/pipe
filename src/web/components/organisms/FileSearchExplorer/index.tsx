@@ -1,6 +1,10 @@
 import type { JSX } from 'react'
 import React from 'react'
 
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+import { UnorderedList } from '@/components/molecules/UnorderedList'
+
 import { useFileSearchExplorerHandlers } from './hooks/useFileSearchExplorerHandlers'
 import { PathTag } from './PathTag'
 import {
@@ -32,11 +36,11 @@ type PathDisplayProperties = {
 }
 
 const PathDisplay = ({ pathList, onTagDelete }: PathDisplayProperties): JSX.Element => (
-  <div className={pathDisplayContainer}>
+  <Flex wrap={true} gap="s" className={pathDisplayContainer}>
     {pathList.map((path, index) => (
       <PathTag key={index} path={path} index={index} onDelete={onTagDelete} />
     ))}
-  </div>
+  </Flex>
 )
 
 type SearchInputProperties = {
@@ -96,10 +100,10 @@ export const FileSearchExplorer = ({
   })
 
   return (
-    <div className={container}>
+    <Box className={container}>
       {suggestions.length > 0 &&
         (query.trim() !== '' || list !== undefined || query.trim() === '') && (
-          <ul className={suggestionList} ref={suggestionListReference}>
+          <UnorderedList className={suggestionList} ref={suggestionListReference}>
             {suggestions.map((suggestion, index) => (
               <SuggestionItem
                 key={index}
@@ -108,7 +112,7 @@ export const FileSearchExplorer = ({
                 isSelected={index === selectedIndex}
               />
             ))}
-          </ul>
+          </UnorderedList>
         )}
       <SearchInput
         ref={inputReference}
@@ -120,6 +124,6 @@ export const FileSearchExplorer = ({
         placeholder={placeholder}
       />
       <PathDisplay pathList={selectedValues} onTagDelete={handleTagDelete} />
-    </div>
+    </Box>
   )
 }

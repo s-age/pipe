@@ -9,10 +9,7 @@ export const container = style({
 })
 
 export const pathDisplayContainer = style({
-  display: 'flex',
-  margin: '8px 0',
-  flexWrap: 'wrap',
-  gap: '5px'
+  margin: '8px 0'
 })
 
 export const pathTag = style({

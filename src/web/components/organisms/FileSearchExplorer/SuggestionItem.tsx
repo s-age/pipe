@@ -1,5 +1,7 @@
 import React from 'react'
 
+import { ListItem } from '@/components/molecules/ListItem'
+
 import { useSuggestionItemHandlers } from './hooks/useSuggestionItemHandlers'
 import { suggestionItem, selectedSuggestionItem } from './style.css'
 
@@ -20,13 +22,13 @@ export const SuggestionItem = React.memo(
       )
 
       return (
-        <li
+        <ListItem
           ref={elementReference}
           onClick={handleClick}
           className={isSelected ? selectedSuggestionItem : suggestionItem}
         >
           {suggestion.label}
-        </li>
+        </ListItem>
       )
     }
   )

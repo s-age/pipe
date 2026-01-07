@@ -19,7 +19,8 @@ export const Default: Story = {
   args: {
     placeholder: 'Write something…',
     name: 'notes',
-    rows: 4
+    rows: 4,
+    'aria-label': 'Notes'
   }
 }
 
@@ -30,7 +31,12 @@ export const Controlled: Story = {
 
       return (
         <div>
-          <TextArea value={value} onChange={(v: string) => setValue(v)} rows={6} />
+          <TextArea
+            value={value}
+            onChange={(v: string) => setValue(v)}
+            rows={6}
+            aria-label="Controlled textarea"
+          />
           <div style={{ marginTop: 8 }}>Current: {value}</div>
         </div>
       )
@@ -44,7 +50,7 @@ export const WithRHF: Story = {
   render: (): JSX.Element => {
     const FormExample = (): JSX.Element => (
       <Form>
-        <TextArea name="comments" rows={4} />
+        <TextArea name="comments" rows={4} aria-label="Comments" aria-required={true} />
         <button type="submit" onClick={(data) => console.log('submit', data)}>
           Submit
         </button>
@@ -68,7 +74,7 @@ export const WithoutForm: Story = {
 
       return (
         <form onSubmit={handleSubmit}>
-          <TextArea name="plainNotes" rows={4} />
+          <TextArea name="plainNotes" rows={4} aria-label="Plain notes" />
           <button type="submit">Submit</button>
         </form>
       )

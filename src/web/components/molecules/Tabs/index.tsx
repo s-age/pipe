@@ -35,21 +35,15 @@ export type TabItem<K extends string = string> = {
 export type TabsProperties<K extends string> = {
   activeKey: K
   tabs: TabItem<K>[]
-  onChange: (key: K) => void
-  /**
-   * Prefix for generating tab and panel IDs.
-   * Tab button ID: `${ariaControlsPrefix}-${key}`
-   * Panel ID: `${ariaControlsPrefix}-panel-${key}`
-   * @default "tab"
-   */
   ariaControlsPrefix?: string
+  onChange: (key: K) => void
 }
 
 export const Tabs = <K extends string>({
   activeKey,
   tabs,
-  onChange,
-  ariaControlsPrefix = 'tab'
+  ariaControlsPrefix = 'tab',
+  onChange
 }: TabsProperties<K>): React.ReactElement => {
   const { handleClick } = useTabs(onChange)
 

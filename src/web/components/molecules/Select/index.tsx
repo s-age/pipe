@@ -2,6 +2,8 @@ import { clsx } from 'clsx'
 import type { SelectHTMLAttributes, JSX } from 'react'
 import type { UseFormRegister } from 'react-hook-form'
 
+import { Box } from '@/components/molecules/Box'
+
 import { useSelect } from './hooks/useSelect'
 import type { SelectOption } from './hooks/useSelect'
 import { useSelectHandlers } from './hooks/useSelectHandlers'
@@ -91,7 +93,7 @@ export const Select = (properties: SelectProperties): JSX.Element => {
   const displayLabel = selectedLabel ?? placeholder ?? ''
 
   return (
-    <div ref={rootReference} className={clsx(selectStyle, className)}>
+    <Box ref={rootReference} className={clsx(selectStyle, className)}>
       {/* Hidden native select kept for form integrations (RHF / native form submit) */}
       <select
         {...rest}
@@ -108,7 +110,7 @@ export const Select = (properties: SelectProperties): JSX.Element => {
         ))}
       </select>
 
-      <div
+      <Box
         tabIndex={0}
         role="button"
         aria-haspopup="listbox"
@@ -117,10 +119,10 @@ export const Select = (properties: SelectProperties): JSX.Element => {
         onKeyDown={handleKeyDown}
         className={trigger}
       >
-        <span>{displayLabel}</span>
-      </div>
+        <Box as="span">{displayLabel}</Box>
+      </Box>
       {isOpen && (
-        <div>
+        <Box>
           {searchable && (
             <input
               type="text"
@@ -131,14 +133,16 @@ export const Select = (properties: SelectProperties): JSX.Element => {
             />
           )}
 
-          <ul
+          <Box
+            as="ul"
             ref={listReference}
             role="listbox"
             aria-hidden={!isOpen}
             className={panel}
           >
             {filteredOptions.map((opt, index) => (
-              <li
+              <Box
+                as="li"
                 key={opt.id ?? opt.value}
                 role="option"
                 onClick={opt.disabled ? undefined : handleOptionClick}
@@ -154,12 +158,12 @@ export const Select = (properties: SelectProperties): JSX.Element => {
                 aria-disabled={opt.disabled}
               >
                 {opt.label}
-              </li>
+              </Box>
             ))}
-          </ul>
-        </div>
+          </Box>
+        </Box>
       )}
-    </div>
+    </Box>
   )
 }
 

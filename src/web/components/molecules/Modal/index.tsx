@@ -2,6 +2,7 @@ import type { JSX } from 'react'
 import React from 'react'
 import { createPortal } from 'react-dom'
 
+import { Box } from '@/components/molecules/Box'
 import { themeClass } from '@/styles/theme.css'
 
 import { useModalHandlers } from './hooks/useModalHandlers'
@@ -54,16 +55,16 @@ export const Modal = ({
   if (!isOpen || !modalRoot) return null
 
   return createPortal(
-    <div
+    <Box
       className={styles.overlay}
       onMouseDown={onOverlayMouseDown}
       role="dialog"
       aria-modal="true"
     >
-      <div className={styles.content} onMouseDown={onContentMouseDown}>
+      <Box className={styles.content} onMouseDown={onContentMouseDown}>
         {children}
-      </div>
-    </div>,
+      </Box>
+    </Box>,
     modalRoot
   )
 }

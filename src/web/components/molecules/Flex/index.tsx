@@ -9,6 +9,7 @@ type FlexProperties = {
   children?: ReactNode
   className?: string
   gap?: 's' | 'm' | 'l' | 'xl' | 'none'
+  htmlFor?: string
   justify?: 'start' | 'center' | 'end' | 'between' | 'around'
   wrap?: boolean
 } & Omit<HTMLAttributes<HTMLElement>, 'className'>
@@ -19,6 +20,7 @@ export const Flex = ({
   children,
   className,
   gap = 'none',
+  htmlFor,
   justify = 'start',
   wrap = false,
   ...rest
@@ -35,7 +37,7 @@ export const Flex = ({
   )
 
   return (
-    <Element className={classNames} {...rest}>
+    <Element className={classNames} htmlFor={htmlFor} {...rest}>
       {children}
     </Element>
   )

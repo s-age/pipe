@@ -76,6 +76,48 @@ const InputGroup = ({ value, onChange }) => {
 - [Molecules](./molecules.md) - Composite UI components
 - [Atoms](./atoms.md) - Basic UI elements
 
+## Available Layout and Structural Components
+
+The following components have been added to provide a comprehensive set of layout primitives and semantic HTML elements. These components follow the atomic design principles and are designed to be composable.
+
+### Layout & Structure (Molecules)
+
+Located in `src/web/components/molecules`:
+
+- **Box**: Generic container component for wrapping content with customizable styling
+- **Flex**: Flexbox layout container for flexible one-dimensional layouts
+- **FlexColumn**: Flexbox container specifically for vertical (column) layouts
+- **Grid**: CSS Grid layout container for two-dimensional layouts
+- **Section**: Semantic `<section>` element for thematic grouping of content
+- **Article**: Semantic `<article>` element for self-contained content
+- **Aside**: Semantic `<aside>` element for tangentially related content
+- **Main**: Semantic `<main>` element for primary content
+- **Header**: Semantic `<header>` element for introductory content
+- **Footer**: Semantic `<footer>` element for footer content
+- **Navigation**: Semantic `<nav>` element for navigation links
+- **ScrollArea**: Scrollable container with customizable overflow behavior
+
+### Typography & Text (Atoms)
+
+Located in `src/web/components/atoms`:
+
+- **Text**: Generic text component with customizable typography
+- **Strong**: Semantic `<strong>` element for strong importance/emphasis
+- **Emphasis**: Semantic `<em>` element for stress emphasis (typically italic)
+
+### Content & Other (Molecules)
+
+Located in `src/web/components/molecules`:
+
+- **Link**: Anchor component for navigation and external links
+- **Paragraph**: Semantic `<p>` element for paragraphs
+- **Code**: Semantic `<code>` element for inline code display
+- **OrderedList**: Semantic `<ol>` element for ordered lists
+- **UnorderedList**: Semantic `<ul>` element for unordered lists
+- **ListItem**: Semantic `<li>` element for list items
+
+These components provide a solid foundation for building accessible, semantic UIs while maintaining consistency across the application.
+
 ## Development Process and Custom Hook Rules
 
 ### 1. Custom Hook Rules (Strict SRP)

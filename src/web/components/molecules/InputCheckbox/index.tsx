@@ -2,6 +2,9 @@ import React from 'react'
 import type { JSX, InputHTMLAttributes } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+
 import { useInputCheckbox } from './hooks/useInputCheckbox'
 import * as styles from './style.css'
 
@@ -29,7 +32,7 @@ export const InputCheckbox = ({
   })
 
   return (
-    <label className={styles.container} htmlFor={inputId}>
+    <Flex as="label" className={styles.container} htmlFor={inputId}>
       <input
         id={inputId}
         type="checkbox"
@@ -38,7 +41,7 @@ export const InputCheckbox = ({
         name={name}
         {...rest}
       />
-      <span className={styles.control} aria-hidden={true}>
+      <Box className={styles.control} aria-hidden={true}>
         <svg
           className={styles.svg}
           viewBox="0 0 24 24"
@@ -47,9 +50,13 @@ export const InputCheckbox = ({
         >
           <path className={styles.check} d="M20 6L9 17l-5-5" fill="none" />
         </svg>
-      </span>
-      {resolvedLabel ? <span className={styles.labelText}>{resolvedLabel}</span> : null}
-    </label>
+      </Box>
+      {resolvedLabel ? (
+        <Box as="span" className={styles.labelText}>
+          {resolvedLabel}
+        </Box>
+      ) : null}
+    </Flex>
   )
 }
 

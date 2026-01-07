@@ -2,6 +2,11 @@ import React from 'react'
 import type { InputHTMLAttributes, JSX } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
+import { Label } from '@/components/atoms/Label'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+
 import { useSliderHandlers } from './hooks/useSliderHandlers'
 import * as styles from './style.css'
 
@@ -52,12 +57,12 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
   } = useSliderHandlers(properties)
 
   return (
-    <div className={styles.container}>
-      <label htmlFor={id} className={styles.label}>
-        <span className={styles.valueLabel}>{visibleValue}</span>
-      </label>
+    <FlexColumn className={styles.container}>
+      <Label htmlFor={id} className={styles.label}>
+        <Text className={styles.valueLabel}>{visibleValue}</Text>
+      </Label>
 
-      <div
+      <Box
         className={styles.trackWrap}
         ref={containerRef as unknown as React.Ref<HTMLDivElement>}
         data-value={visibleValue}
@@ -102,8 +107,8 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
           onChange={handleChange}
           {...restProperties}
         />
-      </div>
-    </div>
+      </Box>
+    </FlexColumn>
   )
 }
 

@@ -1,6 +1,10 @@
 import { clsx } from 'clsx'
 import { type JSX, type ReactNode } from 'react'
 
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+
 import { useAccordion } from './hooks/useAccordion'
 import {
   accordionRoot,
@@ -42,8 +46,8 @@ export const Accordion = ({
   })
 
   return (
-    <div className={clsx(accordionRoot, className)}>
-      <div
+    <FlexColumn className={clsx(accordionRoot, className)}>
+      <Flex
         className={header}
         role="button"
         tabIndex={0}
@@ -52,20 +56,20 @@ export const Accordion = ({
         aria-expanded={open}
         aria-controls={contentId}
       >
-        <div className={headerLeft}>
-          <div className={titleStyle}>{title}</div>
-          {summary ? <div className={summaryStyle}>{summary}</div> : null}
-        </div>
-        <div aria-hidden={true} className={clsx(chevron, open && chevronOpen)}>
+        <Flex className={headerLeft}>
+          <Box className={titleStyle}>{title}</Box>
+          {summary ? <Box className={summaryStyle}>{summary}</Box> : null}
+        </Flex>
+        <Box aria-hidden={true} className={clsx(chevron, open && chevronOpen)}>
           ▸
-        </div>
-      </div>
+        </Box>
+      </Flex>
 
       {open && (
-        <div id={contentId} className={contentStyle} role="region">
+        <Box id={contentId} className={contentStyle} role="region">
           {children}
-        </div>
+        </Box>
       )}
-    </div>
+    </FlexColumn>
   )
 }

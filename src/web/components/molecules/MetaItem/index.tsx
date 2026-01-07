@@ -1,6 +1,9 @@
 import { clsx } from 'clsx'
 import type { JSX, ReactNode } from 'react'
 
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+
 import * as styles from './style.css'
 
 type MetaLabelProperties = {
@@ -12,10 +15,10 @@ export const MetaLabel = ({
   children,
   required = false
 }: MetaLabelProperties): JSX.Element => (
-  <span className={styles.label}>
+  <Box className={styles.label}>
     {children}
-    {required && <span className={styles.requiredMark}>*</span>}
-  </span>
+    {required && <Text className={styles.requiredMark}>*</Text>}
+  </Box>
 )
 
 type MetaItemProperties = {
@@ -24,7 +27,7 @@ type MetaItemProperties = {
 }
 
 export const MetaItem = ({ children, className }: MetaItemProperties): JSX.Element => (
-  <div className={clsx(styles.wrapper, className)}>{children}</div>
+  <Box className={clsx(styles.wrapper, className)}>{children}</Box>
 )
 
 export type { MetaLabelProperties as MetaLabelProps }

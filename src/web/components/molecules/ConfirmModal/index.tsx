@@ -2,6 +2,7 @@ import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
+import { Box } from '@/components/molecules/Box'
 import { Flex } from '@/components/molecules/Flex'
 import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { Paragraph } from '@/components/molecules/Paragraph'
@@ -35,7 +36,7 @@ export const ConfirmModal = ({
 }: ConfirmModalProperties): JSX.Element => (
   <FlexColumn className={styles.container}>
     <Flex align="center" gap="s" className={styles.header}>
-      {icon && <div className={styles.icon}>{icon}</div>}
+      {icon && <Box className={styles.icon}>{icon}</Box>}
       <Heading level={3} className={styles.title}>
         {title}
       </Heading>

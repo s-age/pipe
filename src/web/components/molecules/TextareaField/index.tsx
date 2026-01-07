@@ -3,6 +3,8 @@ import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
 import { Label } from '@/components/atoms/Label'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { Paragraph } from '@/components/molecules/Paragraph'
 import { TextArea } from '@/components/molecules/TextArea'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
@@ -31,7 +33,7 @@ export const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
   } = useController({ control: formContext?.control, ...properties })
 
   return (
-    <div>
+    <FlexColumn>
       <Label htmlFor={id}>{label}</Label>
       <TextArea
         id={id}
@@ -40,8 +42,8 @@ export const TextareaField = <TFieldValues extends FieldValues = FieldValues>({
         required={required}
         {...field}
       />
-      {error && <p className={errorMessageStyle}>{error.message}</p>}
-    </div>
+      {error && <Paragraph className={errorMessageStyle}>{error.message}</Paragraph>}
+    </FlexColumn>
   )
 }
 

@@ -5,7 +5,7 @@ import { text } from './style.css'
 
 type TextProperties = {
   align?: 'left' | 'center' | 'right' | 'justify'
-  children?: string
+  children?: string | number
   className?: string
   size?: 'xs' | 's' | 'm' | 'l' | 'xl'
   truncate?: boolean

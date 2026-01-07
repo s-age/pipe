@@ -3,6 +3,8 @@ import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
 import { Label } from '@/components/atoms/Label'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { Paragraph } from '@/components/molecules/Paragraph'
 import { Select } from '@/components/molecules/Select'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
@@ -32,7 +34,7 @@ export const SelectField = <TFieldValues extends FieldValues = FieldValues>({
   } = useController({ control: formContext?.control, ...properties })
 
   return (
-    <div>
+    <FlexColumn>
       <Label htmlFor={id}>{label}</Label>
       <Select id={id} {...field}>
         {options.map((option) => (
@@ -41,8 +43,8 @@ export const SelectField = <TFieldValues extends FieldValues = FieldValues>({
           </option>
         ))}
       </Select>
-      {error && <p className={errorMessageStyle}>{error.message}</p>}
-    </div>
+      {error && <Paragraph className={errorMessageStyle}>{error.message}</Paragraph>}
+    </FlexColumn>
   )
 }
 

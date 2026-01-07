@@ -6,21 +6,21 @@ import { useCompressorActions } from './useCompressorActions'
 import type { CompressorFormInputs } from '../schema'
 
 type UseCompressorFormLogicProperties = {
+  compressorSessionId: string | null
   sessionId: string
-  setSummary: (summary: string) => void
+  onRefresh: () => Promise<void>
+  setCompressorSessionId: (id: string | null) => void
   setError: (error: string | null) => void
   setIsSubmitting: (isSubmitting: boolean) => void
-  compressorSessionId: string | null
-  setCompressorSessionId: (id: string | null) => void
-  onRefresh: () => Promise<void>
+  setSummary: (summary: string) => void
 }
 
 export const useCompressorFormLogic = ({
   sessionId,
-  setSummary,
+  setCompressorSessionId,
   setError,
   setIsSubmitting,
-  setCompressorSessionId
+  setSummary
 }: UseCompressorFormLogicProperties): { onExecuteClick: () => void } => {
   const formContext = useOptionalFormContext()
   const actions = useCompressorActions()

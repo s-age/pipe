@@ -3,25 +3,26 @@ import type { JSX } from 'react'
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
 import { IconDelete } from '@/components/atoms/IconDelete'
+import { Flex } from '@/components/molecules/Flex'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 import { turnsHeader, deleteButton } from './style.css'
 
 type ChatHistoryHeaderProperties = {
   sessionDetail: SessionDetail | null
-  handleDeleteCurrentSession: () => void
-  tokenCount?: number
   contextLimit?: number
+  tokenCount?: number
+  handleDeleteCurrentSession: () => void
 }
 
 export const ChatHistoryHeader = ({
   sessionDetail,
   handleDeleteCurrentSession
-}: ChatHistoryHeaderProperties): JSX.Element => {
-  if (!sessionDetail) return <div />
+}: ChatHistoryHeaderProperties): JSX.Element | null => {
+  if (!sessionDetail) return null
 
   return (
-    <div className={turnsHeader}>
+    <Flex justify="between" align="center" className={turnsHeader}>
       <Heading level={2}>{sessionDetail.purpose}</Heading>
       <Button
         kind="secondary"
@@ -31,6 +32,6 @@ export const ChatHistoryHeader = ({
       >
         <IconDelete size={16} />
       </Button>
-    </div>
+    </Flex>
   )
 }

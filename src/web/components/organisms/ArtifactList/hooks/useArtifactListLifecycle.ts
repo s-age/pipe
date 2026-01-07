@@ -4,15 +4,15 @@ import type { UseFormReturn } from 'react-hook-form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
 type UseArtifactListLifecycleProperties = {
+  currentArtifacts: string[]
   sessionDetail: SessionDetail
   formContext?: UseFormReturn
-  currentArtifacts: string[]
 }
 
 export const useArtifactListLifecycle = ({
+  currentArtifacts,
   sessionDetail,
-  formContext,
-  currentArtifacts
+  formContext
 }: UseArtifactListLifecycleProperties): void => {
   // Sync form with updated sessionDetail.artifacts from server
   useEffect(() => {

@@ -2,11 +2,11 @@ import { useCallback, useRef } from 'react'
 import type React from 'react'
 import { useNavigate } from 'react-router-dom'
 
-type UseSessionTreeHandlersReturn = {
+export type UseSessionTreeHandlersReturn = {
   sessionReferences: React.RefObject<Map<string, HTMLLIElement>>
+  handleAnchorClick: (event: React.MouseEvent<HTMLAnchorElement>) => Promise<void>
   handleNewChatClick: () => void
   setSessionReference: (sessionId: string) => (element: HTMLLIElement | null) => void
-  handleAnchorClick: (event: React.MouseEvent<HTMLAnchorElement>) => Promise<void>
 }
 
 // `selectSession` is provided by the page to update selected session in the store.

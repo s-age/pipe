@@ -8,33 +8,35 @@ import type {
 import type { SelectOption } from './useSelect'
 
 type UseSelectHandlersProperties = {
-  isOpen: boolean
-  setIsOpen: (v: boolean) => void
   filteredOptions: SelectOption[]
   highlightedIndex: number
+  isOpen: boolean
   setHighlightedIndex: (i: number) => void
-  setSelectedValue: (v: string) => void
+  setIsOpen: (v: boolean) => void
   setQuery: (q: string) => void
+  setSelectedValue: (v: string) => void
+  onChange?: (event: ChangeEvent<HTMLSelectElement>) => void
 }
 
 export type UseSelectHandlersReturn = {
-  toggleOpen: () => void
-  handleSelect: (value: string) => void
   handleKeyDown: (event: ReactKeyboardEvent) => void
-  handleSearchChange: (event: ChangeEvent<HTMLInputElement>) => void
-  handleOptionClick: (event: ReactMouseEvent<HTMLLIElement>) => void
   handleMouseEnter: (event: ReactMouseEvent<HTMLLIElement>) => void
   handleMouseLeave: () => void
+  handleOptionClick: (event: ReactMouseEvent<HTMLLIElement>) => void
+  handleSearchChange: (event: ChangeEvent<HTMLInputElement>) => void
+  handleSelect: (value: string) => void
+  toggleOpen: () => void
 }
 
 export const useSelectHandlers = ({
-  isOpen,
-  setIsOpen,
   filteredOptions,
   highlightedIndex,
+  isOpen,
   setHighlightedIndex,
+  setIsOpen,
+  setQuery,
   setSelectedValue,
-  setQuery
+  onChange
 }: UseSelectHandlersProperties): UseSelectHandlersReturn => {
   const toggleOpen = useCallback(() => setIsOpen(!isOpen), [isOpen, setIsOpen])
 
@@ -43,8 +45,17 @@ export const useSelectHandlers = ({
       setSelectedValue(value)
       setIsOpen(false)
       setQuery('')
+
+      // Trigger onChange callback if provided
+      if (onChange) {
+        const syntheticEvent = {
+          target: { value },
+          currentTarget: { value }
+        } as ChangeEvent<HTMLSelectElement>
+        onChange(syntheticEvent)
+      }
     },
-    [setSelectedValue, setIsOpen, setQuery]
+    [setSelectedValue, setIsOpen, setQuery, onChange]
   )
 
   const handleKeyDownNative = useCallback(

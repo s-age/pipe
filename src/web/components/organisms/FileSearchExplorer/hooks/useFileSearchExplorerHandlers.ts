@@ -14,37 +14,37 @@ type Item = {
 
 type HandlersOptions = {
   existsValue: string[]
-  list?: Item[]
   isMultiple: boolean
-  onFocus?: () => void
+  list?: Item[]
   onChange?: (values: string[]) => void
+  onFocus?: () => void
 }
 
 export const useFileSearchExplorerHandlers = (
   options?: HandlersOptions
 ): {
-  inputReference: RefObject<HTMLInputElement | null>
-  suggestionListReference: RefObject<HTMLUListElement | null>
-  selectedValues: string[]
-  query: string
-  suggestions: Item[]
-  selectedIndex: number
-  setSelectedValues: (values: string[]) => void
-  setQuery: (query: string) => void
-  setSuggestions: (suggestions: Item[]) => void
-  setSelectedIndex: (index: number) => void
-  handleTagDelete: (index: number) => void
-  handleQueryChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>
-  handleValueConfirm: (value: string) => Promise<void>
-  handleKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void
-  handleSuggestionClick: (suggestion: Item) => Promise<void>
-  handleInputFocus: () => Promise<void>
   actions: ReturnType<typeof useFileSearchExplorerActions>
   debouncedQuery: string
+  inputReference: RefObject<HTMLInputElement | null>
+  query: string
+  selectedIndex: number
+  selectedValues: string[]
+  suggestionListReference: RefObject<HTMLUListElement | null>
+  suggestions: Item[]
+  handleInputFocus: () => Promise<void>
+  handleKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void
+  handleQueryChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>
+  handleSuggestionClick: (suggestion: Item) => Promise<void>
+  handleTagDelete: (index: number) => void
+  handleValueConfirm: (value: string) => Promise<void>
+  setQuery: (query: string) => void
+  setSelectedIndex: (index: number) => void
+  setSelectedValues: (values: string[]) => void
+  setSuggestions: (suggestions: Item[]) => void
 } => {
   const inputReference = useRef<HTMLInputElement>(null)
   const suggestionListReference = useRef<HTMLUListElement>(null)
-  const { existsValue = [], list, isMultiple = true, onFocus, onChange } = options || {}
+  const { existsValue = [], isMultiple = true, list, onChange, onFocus } = options || {}
   const [selectedValues, setSelectedValues] = useState<string[]>(existsValue)
   const [query, setQuery] = useState<string>('')
   const [suggestions, setSuggestions] = useState<Item[]>([])

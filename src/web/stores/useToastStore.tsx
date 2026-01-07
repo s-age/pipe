@@ -10,14 +10,14 @@ export type ToastPosition =
   | 'bottom-right'
 
 export type ToastItem = {
+  createdAt: number
   id: string
   status: ToastStatus
-  title?: string
   description?: string
-  position?: ToastPosition
-  duration?: number | null
   dismissible?: boolean
-  createdAt: number
+  duration?: number | null
+  position?: ToastPosition
+  title?: string
 }
 
 const listeners: Set<() => void> = new Set()
@@ -81,8 +81,8 @@ export const clearToasts = (): void => {
 export const useToastStore = (): {
   toasts: ToastItem[]
   addToast: (data: Omit<ToastItem, 'id' | 'createdAt'>) => string
-  removeToast: (id: string) => void
   clearToasts: () => void
+  removeToast: (id: string) => void
 } => {
   const snapshot = useSyncExternalStore(subscribe, getToasts, getToasts)
 

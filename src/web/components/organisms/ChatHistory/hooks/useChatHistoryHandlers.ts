@@ -23,7 +23,7 @@ export const useChatHistoryHandlers = ({
   handleDeleteSession: (sessionId: string) => Promise<void>
   handleRefreshSession: () => Promise<void>
 } => {
-  const { show, hide } = useModal()
+  const { hide, show } = useModal()
   const { deleteSessionAction, refreshSession } = useChatHistoryActions({
     currentSessionId
   })

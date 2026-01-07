@@ -4,15 +4,15 @@ import type { SessionDetail } from '@/lib/api/session/getSession'
 
 export type HyperParameterState = {
   temperature: number
-  topP: number
   topK: number
+  topP: number
 }
 
 export type UseHyperParametersLifecycleProperties = {
-  sessionDetail: SessionDetail
   hpState: HyperParameterState
-  setHpState: React.Dispatch<React.SetStateAction<HyperParameterState>>
   isInteractingReference: React.MutableRefObject<boolean>
+  sessionDetail: SessionDetail
+  setHpState: React.Dispatch<React.SetStateAction<HyperParameterState>>
 }
 
 /**
@@ -22,10 +22,10 @@ export type UseHyperParametersLifecycleProperties = {
  * Pattern: Lifecycle (separated from Handlers per hooks.md)
  */
 export const useHyperParametersLifecycle = ({
-  sessionDetail,
   hpState,
-  setHpState,
-  isInteractingReference
+  isInteractingReference,
+  sessionDetail,
+  setHpState
 }: UseHyperParametersLifecycleProperties): void => {
   useEffect(() => {
     if (!sessionDetail) return

@@ -4,8 +4,8 @@ import { client } from '../client'
 import type { SessionTreeNode } from '../sessionTree/getSessionTree'
 
 export type StartSessionSettingsResponse = {
-  settings: Settings
   sessionTree: SessionTreeNode[]
+  settings: Settings
 }
 
 export const getStartSession = async (): Promise<StartSessionSettingsResponse> =>

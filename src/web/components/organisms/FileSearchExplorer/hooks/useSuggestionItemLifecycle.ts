@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 
 export type UseSuggestionItemLifecycleProperties = {
-  isSelected: boolean
   elementReference: React.RefObject<HTMLLIElement | null>
+  isSelected: boolean
 }
 
 /**
@@ -12,8 +12,8 @@ export type UseSuggestionItemLifecycleProperties = {
  * Pattern: Lifecycle (separated from Handlers per hooks.md)
  */
 export const useSuggestionItemLifecycle = ({
-  isSelected,
-  elementReference
+  elementReference,
+  isSelected
 }: UseSuggestionItemLifecycleProperties): void => {
   useEffect(() => {
     if (isSelected && elementReference.current) {

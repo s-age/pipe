@@ -11,14 +11,9 @@ import type { SessionOverview } from '@/lib/api/sessionTree/getSessionTree'
 import { useToast } from '../../Toast/hooks/useToast'
 
 type UseTurnHandlersProperties = {
-  turn: Turn
   index: number
   sessionId: string
-  onRefresh: () => Promise<void>
-  refreshSessionsInStore: (
-    sessionDetail: SessionDetail,
-    sessions: SessionOverview[]
-  ) => void
+  turn: Turn
   deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
   editTurnAction: (
     sessionId: string,
@@ -30,29 +25,34 @@ type UseTurnHandlersProperties = {
     sessionId: string,
     forkIndex: number
   ) => Promise<string | undefined>
+  onRefresh: () => Promise<void>
+  refreshSessionsInStore: (
+    sessionDetail: SessionDetail,
+    sessions: SessionOverview[]
+  ) => void
 }
 
 export const useTurnHandlers = ({
-  turn,
   index,
   sessionId,
-  onRefresh,
-  refreshSessionsInStore,
+  turn,
   deleteTurnAction,
   editTurnAction,
-  forkSessionAction
+  forkSessionAction,
+  onRefresh,
+  refreshSessionsInStore
 }: UseTurnHandlersProperties): {
-  isEditing: boolean
   editedContent: string
-  setIsEditing: (isEditing: boolean) => void
-  setEditedContent: (editedContent: string) => void
-  handleCopy: () => Promise<void>
-  handleEditedChange: (event: ChangeEvent<HTMLTextAreaElement>) => void
+  isEditing: boolean
   handleCancelEdit: () => void
-  handleStartEdit: () => void
-  handleFork: () => void
+  handleCopy: () => Promise<void>
   handleDelete: () => void
+  handleEditedChange: (event: ChangeEvent<HTMLTextAreaElement>) => void
+  handleFork: () => void
   handleSaveEdit: () => void
+  handleStartEdit: () => void
+  setEditedContent: (editedContent: string) => void
+  setIsEditing: (isEditing: boolean) => void
 } => {
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const [editedContent, setEditedContent] = useState<string>(() => {
@@ -75,7 +75,7 @@ export const useTurnHandlers = ({
 
     return ''
   })
-  const { show, hide } = useModal()
+  const { hide, show } = useModal()
 
   const modalIdReference = useRef<number | null>(null)
   const toast = useToast()

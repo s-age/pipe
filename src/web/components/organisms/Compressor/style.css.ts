@@ -57,19 +57,11 @@ export const muted = style({
 })
 
 export const form = style({
-  display: 'flex',
   height: '100%',
   margin: '0 12px',
   marginBottom: '16px',
   borderRadius: '8px',
-  background: colors.gray,
-  flexDirection: 'column',
-  gap: '10px'
-})
-
-export const field = style({
-  display: 'flex',
-  flexDirection: 'column'
+  background: colors.gray
 })
 
 export const fieldsetContainer = style({
@@ -77,7 +69,6 @@ export const fieldsetContainer = style({
 })
 
 export const label = style({
-  fontSize: 12,
   color: colors.white
 })
 export const input = style({
@@ -114,9 +105,7 @@ export const textarea = style({
 })
 
 export const buttonRow = style({
-  display: 'flex',
-  marginTop: '6px',
-  gap: '8px'
+  marginTop: '6px'
 })
 
 export const primary = style({
@@ -139,34 +128,25 @@ export const secondary = style({
 
 export const previewBox = style({
   flex: '1',
-  overflowY: 'auto',
-  padding: '20px',
   border: `1px solid ${colors.gray}`,
-  borderRadius: '6px',
   color: colors.white,
   wordBreak: 'break-all'
 })
 
 export const previewTitle = style({
   marginBottom: '6px',
-  fontSize: 13,
-  fontWeight: 600,
   color: colors.white
 })
 
 export const errorBox = style({
   marginTop: '12px',
-  padding: '10px',
   border: `1px solid ${colors.red}`,
-  borderRadius: '6px',
   color: colors.white,
   background: colors.pureBlack
 })
 
 export const errorTitle = style({
   marginBottom: '6px',
-  fontSize: 13,
-  fontWeight: 600,
   color: colors.red
 })
 

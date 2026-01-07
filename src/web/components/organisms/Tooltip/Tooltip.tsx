@@ -2,36 +2,38 @@ import { clsx } from 'clsx'
 import React from 'react'
 import type { JSX } from 'react'
 
+import { Box } from '@/components/molecules/Box'
+
 import { useTooltipHandlers } from './hooks/useTooltipHandlers'
 import { tooltipContainer } from './style.css'
 
 type TooltipProperties = {
-  content: string
   children: React.ReactNode
-  placement?: 'top' | 'bottom' | 'left' | 'right'
+  content: string
   className?: string
+  placement?: 'top' | 'bottom' | 'left' | 'right'
 }
 
 export const Tooltip: ({
-  content,
   children,
-  placement,
-  className
+  content,
+  className,
+  placement
 }: TooltipProperties) => JSX.Element = ({
-  content,
   children,
-  placement,
-  className = ''
+  className = '',
+  content,
+  placement
 }) => {
-  const { onEnter, handleMouseLeave } = useTooltipHandlers(content, placement)
+  const { handleMouseLeave, onEnter } = useTooltipHandlers(content, placement)
 
   return (
-    <div
+    <Box
       className={clsx(tooltipContainer, className)}
       onMouseEnter={onEnter}
       onMouseLeave={handleMouseLeave}
     >
       {children}
-    </div>
+    </Box>
   )
 }

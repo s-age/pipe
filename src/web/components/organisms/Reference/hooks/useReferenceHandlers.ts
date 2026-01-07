@@ -15,9 +15,9 @@ export const useReferenceHandlers = (
   localReference: Reference
   setLocalReference: React.Dispatch<React.SetStateAction<Reference>>
   handlePersistToggle: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
-  handleTtlAction: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
-  handleToggleDisabled: () => Promise<void>
   handleToggle: () => void
+  handleToggleDisabled: () => Promise<void>
+  handleTtlAction: (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>
 } => {
   const [localReference, setLocalReference] = useState(reference)
 
@@ -26,9 +26,9 @@ export const useReferenceHandlers = (
 
   const formContext = useOptionalFormContext()
   const {
+    handleToggleReferenceDisabled,
     handleUpdateReferencePersist,
-    handleUpdateReferenceTtl,
-    handleToggleReferenceDisabled
+    handleUpdateReferenceTtl
   } = useReferenceActions()
 
   const updateReferences = useCallback(

@@ -1,6 +1,10 @@
 import { clsx } from 'clsx'
 import { type SelectHTMLAttributes, type JSX } from 'react'
 
+import { IconSearch } from '@/components/atoms/IconSearch'
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+
 import { useMultipleSelect } from './hooks/useMultipleSelect'
 import type { SelectOption } from './hooks/useMultipleSelect'
 import { useMultipleSelectHandlers } from './hooks/useMultipleSelectHandlers'
@@ -17,38 +21,37 @@ import {
   tagRemove,
   checkbox
 } from './style.css'
-import { IconSearch } from '../../atoms/IconSearch'
 import { useSelectLifecycle } from '../Select/hooks/useSelectLifecycle'
 
 type MultipleSelectProperties = {
   name: string
   options?: Array<string | SelectOption>
-  searchable?: boolean
   placeholder?: string
+  searchable?: boolean
 } & SelectHTMLAttributes<HTMLSelectElement>
 
 export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Element => {
   const {
+    className,
     name,
     options,
-    searchable = false,
     placeholder,
-    className,
+    searchable = false,
     ...rest
   } = properties
 
   const {
-    registerProperties,
-    normalizedOptions,
     filteredOptions,
-    selectedValues,
-    isOpen,
-    setIsOpen,
-    query,
-    setQuery,
-    listReference,
     highlightedIndex,
+    isOpen,
+    listReference,
+    normalizedOptions,
+    query,
+    registerProperties,
+    selectedValues,
     setHighlightedIndex,
+    setIsOpen,
+    setQuery,
     setSelectedValues
   } = useMultipleSelect({
     name,
@@ -60,14 +63,14 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
   // No debug logs in production code
 
   const {
-    toggleOpen,
-    handleRemoveTag,
+    handleCheckboxClick,
     handleKeyDown,
-    handleSearchChange,
-    handleOptionClick,
     handleMouseEnter,
     handleMouseLeave,
-    handleCheckboxClick
+    handleOptionClick,
+    handleRemoveTag,
+    handleSearchChange,
+    toggleOpen
   } = useMultipleSelectHandlers({
     isOpen,
     setIsOpen,
@@ -90,7 +93,7 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     .filter(Boolean)
 
   return (
-    <div ref={rootReference} className={clsx(selectStyle, className)}>
+    <Box ref={rootReference} className={clsx(selectStyle, className)}>
       {/* Hidden native select kept for form integrations (RHF / native form submit) */}
       <select
         {...rest}
@@ -108,17 +111,24 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
 
       {/* Selected tags */}
       {selectedLabels.length > 0 && (
-        <div className={selectedTags} onClick={handleRemoveTag}>
+        <Flex className={selectedTags} onClick={handleRemoveTag}>
           {selectedLabels.map((label, index) => (
-            <span key={selectedValues[index]} className={tag} data-index={index}>
+            <Box
+              as="span"
+              key={selectedValues[index]}
+              className={tag}
+              data-index={index}
+            >
               {label}
-              <span className={tagRemove}>×</span>
-            </span>
+              <Box as="span" className={tagRemove}>
+                ×
+              </Box>
+            </Box>
           ))}
-        </div>
+        </Flex>
       )}
 
-      <div
+      <Box
         tabIndex={0}
         role="button"
         aria-haspopup="listbox"
@@ -127,17 +137,17 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
         onKeyDown={handleKeyDown}
         className={trigger}
       >
-        <span>
+        <Box as="span">
           {selectedLabels.length === 0
             ? (placeholder ?? 'Select options...')
             : `${selectedLabels.length} selected`}
-        </span>
-      </div>
+        </Box>
+      </Box>
 
       {isOpen && (
-        <div>
+        <Box>
           {searchable && (
-            <div className={searchInput}>
+            <Box className={searchInput}>
               <IconSearch />
               <input
                 type="text"
@@ -146,17 +156,19 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
                 placeholder="Search options..."
                 className={searchInputField}
               />
-            </div>
+            </Box>
           )}
 
-          <ul
+          <Box
+            as="ul"
             ref={listReference}
             role="listbox"
             aria-hidden={!isOpen}
             className={panel}
           >
             {filteredOptions.map((opt, index) => (
-              <li
+              <Box
+                as="li"
                 key={`${opt.value ?? ''}-${index}`}
                 role="option"
                 onClick={handleOptionClick}
@@ -178,11 +190,11 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
                   onClick={handleCheckboxClick}
                 />
                 {opt.label}
-              </li>
+              </Box>
             ))}
-          </ul>
-        </div>
+          </Box>
+        </Box>
       )}
-    </div>
+    </Box>
   )
 }

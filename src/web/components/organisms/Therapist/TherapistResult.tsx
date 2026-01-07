@@ -3,6 +3,13 @@ import type { JSX } from 'react'
 import { Button } from '@/components/atoms/Button'
 import { Checkbox } from '@/components/atoms/Checkbox'
 import { Heading } from '@/components/atoms/Heading'
+import { Label } from '@/components/atoms/Label'
+import { Box } from '@/components/molecules/Box'
+import { Code } from '@/components/molecules/Code'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { ListItem } from '@/components/molecules/ListItem'
+import { Paragraph } from '@/components/molecules/Paragraph'
+import { UnorderedList } from '@/components/molecules/UnorderedList'
 // reload icon removed from initial display per design decision
 
 import * as styles from './style.css'
@@ -11,90 +18,90 @@ import type { Diagnosis } from './types'
 export type TherapistResultProperties = {
   diagnosis: Diagnosis
   isSubmitting: boolean
+  selectedCompressions: { end: number; reason: string; start: number }[]
   selectedDeletions: number[]
-  selectedEdits: { turn: number; newContent: string }[]
-  selectedCompressions: { start: number; end: number; reason: string }[]
+  selectedEdits: { newContent: string; turn: number }[]
+  handleApply: () => void
   handleDeletionChange: (
     turn: number
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void
   handleEditChange: (edit: {
-    turn: number
     newContent: string
+    turn: number
   }) => (event: React.ChangeEvent<HTMLInputElement>) => void
-  handleApply: () => void
 }
 
 export const TherapistResult = ({
   diagnosis,
   isSubmitting,
+  selectedCompressions,
   selectedDeletions,
   selectedEdits,
-  selectedCompressions,
+  handleApply,
   handleDeletionChange,
-  handleEditChange,
-  handleApply
+  handleEditChange
 }: TherapistResultProperties): JSX.Element => (
-  <div className={styles.container}>
-    <div className={styles.body}>
-      <div className={styles.results}>
+  <FlexColumn className={styles.container}>
+    <FlexColumn className={styles.body}>
+      <Box className={styles.results}>
         <Heading level={5} className={styles.resultItemHeading}>
           Summary:
         </Heading>
-        <p>
+        <Paragraph>
           The therapist has identified the following issues and suggestions for the
           session:
-        </p>
-        <p>{diagnosis.summary}</p>
+        </Paragraph>
+        <Paragraph>{diagnosis.summary}</Paragraph>
 
         <Heading level={5} className={styles.resultItemHeading}>
           Deletions:
         </Heading>
-        <ul className={styles.list}>
+        <UnorderedList className={styles.list}>
           {diagnosis.deletions?.map((turn: number) => (
-            <li key={turn}>
-              <label className={styles.checkboxLabel}>
+            <ListItem key={turn}>
+              <Label className={styles.checkboxLabel}>
                 <Checkbox onChange={handleDeletionChange(turn)} />
                 Turn {turn}: Suggested removal
-              </label>
-            </li>
-          )) || <li>None</li>}
-        </ul>
+              </Label>
+            </ListItem>
+          )) || <ListItem>None</ListItem>}
+        </UnorderedList>
 
         <Heading level={5} className={styles.resultItemHeading}>
           Edits:
         </Heading>
-        <ul className={styles.list}>
+        <UnorderedList className={styles.list}>
           {diagnosis.edits?.map((edit) => (
-            <li key={edit.turn}>
-              <label className={styles.checkboxLabel}>
+            <ListItem key={edit.turn}>
+              <Label className={styles.checkboxLabel}>
                 <Checkbox onChange={handleEditChange(edit)} />
                 Turn {edit.turn}: {edit.newContent}
-              </label>
-            </li>
-          )) || <li>None</li>}
-        </ul>
+              </Label>
+            </ListItem>
+          )) || <ListItem>None</ListItem>}
+        </UnorderedList>
 
         <Heading level={5} className={styles.resultItemHeading}>
           Compressions:
         </Heading>
-        <ul className={styles.list}>
+        <UnorderedList className={styles.list}>
           {diagnosis.compressions?.map((comp) => (
-            <li key={`${comp.start}-${comp.end}`}>
-              <label className={styles.checkboxLabel}>
+            <ListItem key={`${comp.start}-${comp.end}`}>
+              <Label className={styles.checkboxLabel}>
                 Turns {comp.start}-{comp.end}: {comp.reason}
-              </label>
-            </li>
-          )) || <li>None</li>}
-        </ul>
+              </Label>
+            </ListItem>
+          )) || <ListItem>None</ListItem>}
+        </UnorderedList>
         {diagnosis.rawDiagnosis && (
           <>
             <Heading level={5}>Raw Diagnosis:</Heading>
-            <pre>{diagnosis.rawDiagnosis}</pre>
+            <Code block={true}>{diagnosis.rawDiagnosis}</Code>
           </>
         )}
-      </div>
-    </div>
-    <div className={styles.buttonContainer}>
+      </Box>
+    </FlexColumn>
+    <Box className={styles.buttonContainer}>
       <Button
         type="button"
         onClick={handleApply}
@@ -108,6 +115,6 @@ export const TherapistResult = ({
       >
         Apply Selected Modifications
       </Button>
-    </div>
-  </div>
+    </Box>
+  </FlexColumn>
 )

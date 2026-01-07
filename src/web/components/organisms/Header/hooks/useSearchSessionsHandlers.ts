@@ -10,17 +10,17 @@ type SearchResult = {
 }
 
 type UseSearchSessionsHandlersReturn = {
-  query: string
-  setQuery: Dispatch<SetStateAction<string>>
-  results: SearchResult[]
   open: boolean
-  fetchResults: (q: string) => Promise<SearchResult[]>
-  handleSubmit: (value?: string) => Promise<void>
-  handleSelect: (id: string) => void
+  query: string
+  results: SearchResult[]
+  setQuery: Dispatch<SetStateAction<string>>
   closeModal: () => void
+  fetchResults: (q: string) => Promise<SearchResult[]>
   handleOverlayPointerDown: (event: MouseEvent<HTMLDivElement>) => void
-  handleResultPointerDown: (event: MouseEvent<HTMLDivElement>) => void
   handleResultKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void
+  handleResultPointerDown: (event: MouseEvent<HTMLDivElement>) => void
+  handleSelect: (id: string) => void
+  handleSubmit: (value?: string) => Promise<void>
 }
 
 export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => {

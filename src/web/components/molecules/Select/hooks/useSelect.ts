@@ -8,44 +8,47 @@ import type {
 import type { FormMethods } from '@/components/organisms/Form'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
-export type SelectOption = { value: string; label: React.ReactNode; id?: string }
+export type SelectOption = {
+  label: React.ReactNode
+  value: string
+  disabled?: boolean
+  id?: string
+}
 
 type UseSelectProperties = {
-  register?: UseFormRegister<FieldValues>
+  defaultValue?: string
   name?: string
   options?: Array<string | SelectOption>
-  defaultValue?: string
-  searchable?: boolean
   placeholder?: string
+  register?: UseFormRegister<FieldValues>
+  searchable?: boolean
 }
 
 export type UseSelectReturn = {
-  registerProperties: Partial<UseFormRegisterReturn>
-  normalizedOptions: SelectOption[]
   filteredOptions: SelectOption[]
-  query: string
-  setQuery: (q: string) => void
-  isOpen: boolean
-  setIsOpen: (v: boolean) => void
-  selectedValue?: string
-  setSelectedValue: (v: string) => void
-  // The resolved option and label to display in the UI (computed by the hook so the component stays presentational)
-  selectedOption?: SelectOption
-  selectedLabel: React.ReactNode
-  // The original value corresponding to the selected option (for native/select integrations)
-  selectedNativeValue?: string
   highlightedIndex: number
-  setHighlightedIndex: (i: number) => void
+  isOpen: boolean
   listReference: React.RefObject<HTMLUListElement | null>
+  normalizedOptions: SelectOption[]
+  query: string
+  registerProperties: Partial<UseFormRegisterReturn>
+  selectedLabel: React.ReactNode
+  selectedNativeValue?: string
+  selectedOption?: SelectOption
+  selectedValue?: string
+  setHighlightedIndex: (i: number) => void
+  setIsOpen: (v: boolean) => void
+  setQuery: (q: string) => void
+  setSelectedValue: (v: string) => void
 }
 
 export const useSelect = ({
-  register,
+  defaultValue,
   name,
   options = [],
-  defaultValue,
-  searchable = false,
-  placeholder
+  placeholder,
+  register,
+  searchable = false
 }: UseSelectProperties): UseSelectReturn => {
   // Resolve register from prop or optional provider
   const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined
@@ -74,7 +77,12 @@ export const useSelect = ({
         const opt = o as SelectOption
         const value = String(opt.value ?? '')
 
-        return { value, label: opt.label, id: `${value}__${index}` }
+        return {
+          value,
+          label: opt.label,
+          id: `${value}__${index}`,
+          disabled: opt.disabled
+        }
       }),
     [options]
   )

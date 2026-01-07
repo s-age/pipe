@@ -1,7 +1,12 @@
 import type { JSX } from 'react'
 
+import { Button } from '@/components/atoms/Button'
 import { IconBulkDelete } from '@/components/atoms/IconBulkDelete'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
 import { InputSearch } from '@/components/molecules/InputSearch'
+import { Link } from '@/components/molecules/Link'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import logoSource from '@/static/images/logo.png'
 
@@ -23,23 +28,23 @@ import {
 
 export const Header = (): JSX.Element => {
   const {
-    query,
-    setQuery,
-    results,
-    open,
-    handleSubmit,
     closeModal,
     handleOverlayPointerDown,
+    handleResultKeyDown,
     handleResultPointerDown,
-    handleResultKeyDown
+    handleSubmit,
+    open,
+    query,
+    results,
+    setQuery
   } = useSearchSessionsHandlers()
 
   return (
-    <header className={headerContainer}>
-      <div className={brand}>
+    <Flex as="header" align="center" className={headerContainer}>
+      <Flex align="center" gap="s" className={brand}>
         <img src={logoSource} alt="pipe logo" className={brandLogo} />
-      </div>
-      <div className={searchWrapper}>
+      </Flex>
+      <Flex className={searchWrapper} align="center" justify="center">
         <InputSearch
           placeholder="Search sessions..."
           value={query}
@@ -48,39 +53,43 @@ export const Header = (): JSX.Element => {
           name="site_search"
         />
         <Tooltip content="Session Management" placement="bottom">
-          <a
+          <Link
             href="/session_management"
             className={sessionManagementLink}
             aria-label="Session Management"
           >
             <IconBulkDelete size={18} />
-          </a>
+          </Link>
         </Tooltip>
 
         {open && (
-          <div
+          <Flex
             className={searchModalOverlay}
             role="dialog"
             aria-modal="true"
             onMouseDown={handleOverlayPointerDown}
+            align="center"
+            justify="center"
           >
-            <div className={searchModalContent}>
-              <div className={searchModalHeader}>
-                <div className={searchModalHeaderText}>Search results</div>
-                <button
+            <Box className={searchModalContent}>
+              <Flex className={searchModalHeader} justify="between">
+                <Text className={searchModalHeaderText}>Search results</Text>
+                <Button
+                  kind="ghost"
+                  size="small"
                   className={searchModalClose}
                   onClick={closeModal}
                   aria-label="Close search"
                 >
                   ✕
-                </button>
-              </div>
+                </Button>
+              </Flex>
 
               {results.length === 0 ? (
-                <div className={searchNoResults}>No results</div>
+                <Text className={searchNoResults}>No results</Text>
               ) : (
                 results.map((r: { sessionId: string; title: string }) => (
-                  <div
+                  <Box
                     key={r.sessionId}
                     className={searchResultItem}
                     role="button"
@@ -90,13 +99,13 @@ export const Header = (): JSX.Element => {
                     onKeyDown={handleResultKeyDown}
                   >
                     {r.title}
-                  </div>
+                  </Box>
                 ))
               )}
-            </div>
-          </div>
+            </Box>
+          </Flex>
         )}
-      </div>
-    </header>
+      </Flex>
+    </Flex>
   )
 }

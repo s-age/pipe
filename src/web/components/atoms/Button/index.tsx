@@ -4,18 +4,18 @@ import type { ButtonHTMLAttributes, JSX } from 'react'
 import { button } from './style.css'
 
 type ButtonProperties = {
+  hasBorder?: boolean
   kind?: 'primary' | 'secondary' | 'ghost' | 'danger'
   size?: 'small' | 'default' | 'large' | 'xsmall'
   text?: 'bold' | 'uppercase'
-  hasBorder?: boolean
 } & ButtonHTMLAttributes<HTMLButtonElement>
 
 export const Button = ({
+  className,
+  hasBorder = true,
   kind = 'primary',
   size = 'default',
   text,
-  hasBorder = true,
-  className,
   ...properties
 }: ButtonProperties): JSX.Element => (
   <button

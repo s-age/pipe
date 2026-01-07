@@ -3,7 +3,6 @@ import { style } from '@vanilla-extract/css'
 import { colors } from '../../../styles/colors.css'
 
 export const mainContent = style({
-  display: 'flex',
   flex: '1',
   overflow: 'hidden',
   gap: '0'
@@ -16,12 +15,10 @@ export const leftColumn = style({
 })
 
 export const centerColumn = style({
-  display: 'flex',
   flex: '1 1 0',
   overflowY: 'auto',
   padding: '0 12px',
-  background: colors.gray,
-  flexDirection: 'column'
+  background: colors.gray
 })
 
 export const rightColumn = style({

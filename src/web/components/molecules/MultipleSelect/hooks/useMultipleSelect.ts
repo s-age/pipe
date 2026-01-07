@@ -10,38 +10,38 @@ import type { FormMethods } from '@/components/organisms/Form'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
 export type SelectOption = {
-  value: string
   label: React.ReactNode
+  value: string
   __origValue?: string
 }
 
 type UseMultipleSelectProperties = {
-  register?: UseFormRegister<FieldValues>
+  defaultValue?: string[]
   name?: string
   options?: Array<string | SelectOption>
-  defaultValue?: string[]
+  register?: UseFormRegister<FieldValues>
   searchable?: boolean
 }
 
 export type UseMultipleSelectReturn = {
-  registerProperties: Partial<UseFormRegisterReturn>
-  normalizedOptions: SelectOption[]
   filteredOptions: SelectOption[]
-  query: string
-  setQuery: (q: string) => void
+  highlightedIndex: number
   isOpen: boolean
-  setIsOpen: (v: boolean) => void
+  listReference: React.RefObject<HTMLUListElement | null>
+  normalizedOptions: SelectOption[]
+  query: string
+  registerProperties: Partial<UseFormRegisterReturn>
   selectedValues: string[]
   setSelectedValues: React.Dispatch<React.SetStateAction<string[]>>
-  highlightedIndex: number
   setHighlightedIndex: (i: number) => void
-  listReference: React.RefObject<HTMLUListElement | null>
+  setIsOpen: (v: boolean) => void
+  setQuery: (q: string) => void
 }
 
 export const useMultipleSelect = ({
+  defaultValue = [],
   name,
   options = [],
-  defaultValue = [],
   searchable = false
 }: UseMultipleSelectProperties): UseMultipleSelectReturn => {
   // Resolve register from prop or optional provider

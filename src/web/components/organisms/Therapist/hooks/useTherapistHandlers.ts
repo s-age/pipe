@@ -6,39 +6,39 @@ import { useTherapistActions } from './useTherapistActions'
 type TherapistHandlers = {
   diagnosis: Diagnosis | null
   isSubmitting: boolean
+  selectedCompressions: { end: number; reason: string; start: number }[]
   selectedDeletions: number[]
-  selectedEdits: { turn: number; newContent: string }[]
-  selectedCompressions: { start: number; end: number; reason: string }[]
-  handleDiagnose: () => Promise<void>
+  selectedEdits: { newContent: string; turn: number }[]
+  handleApply: () => void
   handleApplyModifications: (modifications: {
+    compressions?: { end: number; reason: string; start: number }[]
     deletions?: number[]
-    edits?: { turn: number; newContent: string }[]
-    compressions?: { start: number; end: number; reason: string }[]
+    edits?: { newContent: string; turn: number }[]
   }) => Promise<void>
   handleDeletionChange: (
     turn: number
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void
+  handleDiagnose: () => Promise<void>
   handleEditChange: (edit: {
-    turn: number
     newContent: string
+    turn: number
   }) => (event: React.ChangeEvent<HTMLInputElement>) => void
-  handleApply: () => void
 }
 
 export const useTherapistHandlers = (
   sessionId: string,
   onRefresh: () => Promise<void>
 ): TherapistHandlers => {
-  const { diagnoseSession, applyModifications } = useTherapistActions()
+  const { applyModifications, diagnoseSession } = useTherapistActions()
 
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedDeletions, setSelectedDeletions] = useState<number[]>([])
   const [selectedEdits, setSelectedEdits] = useState<
-    { turn: number; newContent: string }[]
+    { newContent: string; turn: number }[]
   >([])
   const [selectedCompressions, setSelectedCompressions] = useState<
-    { start: number; end: number; reason: string }[]
+    { end: number; reason: string; start: number }[]
   >([])
 
   const handleDiagnose = useCallback(async (): Promise<void> => {
@@ -58,9 +58,9 @@ export const useTherapistHandlers = (
 
   const handleApplyModifications = useCallback(
     async (modifications: {
+      compressions?: { end: number; reason: string; start: number }[]
       deletions?: number[]
-      edits?: { turn: number; newContent: string }[]
-      compressions?: { start: number; end: number; reason: string }[]
+      edits?: { newContent: string; turn: number }[]
     }): Promise<void> => {
       setIsSubmitting(true)
 
@@ -91,11 +91,11 @@ export const useTherapistHandlers = (
 
   const handleEditChange = useCallback<
     (edit: {
-      turn: number
       newContent: string
+      turn: number
     }) => (event: React.ChangeEvent<HTMLInputElement>) => void
   >(
-    (edit: { turn: number; newContent: string }) =>
+    (edit: { newContent: string; turn: number }) =>
       (event: React.ChangeEvent<HTMLInputElement>): void => {
         const checked = event.target.checked
         if (checked) {

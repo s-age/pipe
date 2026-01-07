@@ -2,6 +2,11 @@ import React from 'react'
 import type { InputHTMLAttributes, JSX } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
+import { Label } from '@/components/atoms/Label'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+
 import { useSliderHandlers } from './hooks/useSliderHandlers'
 import * as styles from './style.css'
 
@@ -9,25 +14,25 @@ export type SliderProperties = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'onChange' | 'type'
 > & {
-  min?: number
+  defaultValue?: number
   max?: number
+  min?: number
+  name?: string
+  register?: UseFormRegister<FieldValues>
   step?: number
   value?: number
-  defaultValue?: number
   onChange?: (value: number) => void
-  register?: UseFormRegister<FieldValues>
-  name?: string
 }
 
 export const Slider = (properties: SliderProperties): JSX.Element => {
   const {
-    onChange: _onChange,
-    min,
-    max,
-    step,
-    name,
-    value,
     defaultValue,
+    max,
+    min,
+    name,
+    onChange: _onChange,
+    step,
+    value,
     ...restProperties
   } = properties
   // intentionally reference the extracted `_onChange`, `value`, and `defaultValue` so linters know they're
@@ -38,26 +43,26 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
   void defaultValue
 
   const {
+    containerRef,
+    fillWidth,
+    handleChange,
     id,
     registerProperties,
-    visibleValue,
-    handleChange,
-    containerRef,
     svgWidth,
+    thumbCx,
     thumbR,
-    trackX,
     trackWidth,
-    fillWidth,
-    thumbCx
+    trackX,
+    visibleValue
   } = useSliderHandlers(properties)
 
   return (
-    <div className={styles.container}>
-      <label htmlFor={id} className={styles.label}>
-        <span className={styles.valueLabel}>{visibleValue}</span>
-      </label>
+    <FlexColumn className={styles.container}>
+      <Label htmlFor={id} className={styles.label}>
+        <Text className={styles.valueLabel}>{visibleValue}</Text>
+      </Label>
 
-      <div
+      <Box
         className={styles.trackWrap}
         ref={containerRef as unknown as React.Ref<HTMLDivElement>}
         data-value={visibleValue}
@@ -102,8 +107,8 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
           onChange={handleChange}
           {...restProperties}
         />
-      </div>
-    </div>
+      </Box>
+    </FlexColumn>
   )
 }
 

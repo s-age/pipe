@@ -10,23 +10,23 @@ import type { FormMethods } from '@/components/organisms/Form'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
 type Properties = {
+  name?: string
+  register?: UseFormRegister<FieldValues>
   value?: string
   onChange?: (value: string) => void
   onSubmit?: (value: string) => void
-  register?: UseFormRegister<FieldValues>
-  name?: string
 }
 
 export const useInputSearchHandlers = ({
+  name,
+  register,
   value,
   onChange,
-  onSubmit,
-  register,
-  name
+  onSubmit
 }: Properties): {
-  handleSubmit: (event: FormEvent) => void
-  handleChange: (event: ChangeEvent<HTMLInputElement>) => void
   registerProperties: Partial<UseFormRegisterReturn>
+  handleChange: (event: ChangeEvent<HTMLInputElement>) => void
+  handleSubmit: (event: FormEvent) => void
 } => {
   const provider = useOptionalFormContext()
 

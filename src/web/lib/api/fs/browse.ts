@@ -2,15 +2,15 @@ import { client } from '@/lib/api/client' // Corrected path using alias
 
 // Type definitions for file search request and response
 export type FileSearchRequest = {
-  query: string
   path: string
+  query: string
 }
 
 export type FileSearchResponse = {
   results: {
     filePath: string
-    lineNumber: number
     lineContent: string
+    lineNumber: number
   }[]
 }
 
@@ -21,11 +21,11 @@ export type BrowseRequest = {
 
 export type BrowseResponse = {
   entries: {
-    name: string
     isDir: boolean
-    size?: number
-    lastModified?: number
+    name: string
     path: string
+    lastModified?: number
+    size?: number
   }[]
 }
 

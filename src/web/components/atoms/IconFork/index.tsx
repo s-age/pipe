@@ -5,8 +5,8 @@ type IconProperties = {
 } & SVGAttributes<SVGSVGElement>
 
 export const IconFork = ({
-  size = 20,
   className,
+  size = 20,
   ...properties
 }: IconProperties): JSX.Element => (
   <svg

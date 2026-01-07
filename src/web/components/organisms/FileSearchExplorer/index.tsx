@@ -1,6 +1,10 @@
 import type { JSX } from 'react'
 import React from 'react'
 
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+import { UnorderedList } from '@/components/molecules/UnorderedList'
+
 import { useFileSearchExplorerHandlers } from './hooks/useFileSearchExplorerHandlers'
 import { PathTag } from './PathTag'
 import {
@@ -19,8 +23,8 @@ type Item = {
 
 type FileSearchExplorerProperties = {
   existsValue: string[]
-  list?: Item[]
   isMultiple?: boolean
+  list?: Item[]
   placeholder?: string
   onChange: (value: string[]) => void
   onFocus?: () => void
@@ -32,24 +36,24 @@ type PathDisplayProperties = {
 }
 
 const PathDisplay = ({ pathList, onTagDelete }: PathDisplayProperties): JSX.Element => (
-  <div className={pathDisplayContainer}>
+  <Flex wrap={true} gap="s" className={pathDisplayContainer}>
     {pathList.map((path, index) => (
       <PathTag key={index} path={path} index={index} onDelete={onTagDelete} />
     ))}
-  </div>
+  </Flex>
 )
 
 type SearchInputProperties = {
   value: string
+  placeholder?: string
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void
-  onFocus?: () => void
   onClick?: () => void
-  placeholder?: string
+  onFocus?: () => void
 }
 
 const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProperties>(
-  ({ value, onChange, onKeyDown, onFocus, onClick }, reference) => (
+  ({ onChange, onClick, onFocus, onKeyDown, value }, reference) => (
     <input
       ref={reference}
       type="text"
@@ -69,24 +73,24 @@ SearchInput.displayName = 'SearchInput'
 
 export const FileSearchExplorer = ({
   existsValue,
-  list,
   isMultiple = true,
+  list,
   placeholder = 'Search...',
   onChange,
   onFocus
 }: FileSearchExplorerProperties): JSX.Element => {
   const {
-    inputReference,
-    suggestionListReference,
-    selectedValues,
-    query,
-    suggestions,
-    selectedIndex,
-    handleTagDelete,
-    handleQueryChange,
+    handleInputFocus,
     handleKeyDown,
+    handleQueryChange,
     handleSuggestionClick,
-    handleInputFocus
+    handleTagDelete,
+    inputReference,
+    query,
+    selectedIndex,
+    selectedValues,
+    suggestionListReference,
+    suggestions
   } = useFileSearchExplorerHandlers({
     existsValue,
     list,
@@ -96,10 +100,10 @@ export const FileSearchExplorer = ({
   })
 
   return (
-    <div className={container}>
+    <Box className={container}>
       {suggestions.length > 0 &&
         (query.trim() !== '' || list !== undefined || query.trim() === '') && (
-          <ul className={suggestionList} ref={suggestionListReference}>
+          <UnorderedList className={suggestionList} ref={suggestionListReference}>
             {suggestions.map((suggestion, index) => (
               <SuggestionItem
                 key={index}
@@ -108,7 +112,7 @@ export const FileSearchExplorer = ({
                 isSelected={index === selectedIndex}
               />
             ))}
-          </ul>
+          </UnorderedList>
         )}
       <SearchInput
         ref={inputReference}
@@ -120,6 +124,6 @@ export const FileSearchExplorer = ({
         placeholder={placeholder}
       />
       <PathDisplay pathList={selectedValues} onTagDelete={handleTagDelete} />
-    </div>
+    </Box>
   )
 }

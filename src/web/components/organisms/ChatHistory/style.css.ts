@@ -6,31 +6,24 @@ import { colors } from '../../../styles/colors.css.ts'
 
 // ChatHistory styles — use shared color tokens from `colors`.
 export const turnsColumn = style({
-  display: 'flex',
   flex: '1 1 0',
   minWidth: 0,
   minHeight: 0,
   overflowY: 'auto',
   borderRadius: '10px',
-  flexDirection: 'column',
   borderRight: `1px solid ${colors.gray}`
 })
 
 export const chatRoot = style({
-  display: 'flex',
   flex: '1 1 0',
-  minHeight: 0,
-  flexDirection: 'column'
+  minHeight: 0
 })
 
 export const turnsHeader = style({
-  display: 'flex',
   position: 'sticky',
   top: 0,
   padding: '8px',
   color: colors.cyan,
-  justifyContent: 'space-between',
-  alignItems: 'center',
   zIndex: zIndex.low
 })
 
@@ -44,7 +37,6 @@ export const turnsListSection = style({
 })
 
 export const panel = style({
-  display: 'flex',
   flex: '1 1 auto',
   height: '100%',
   overflow: 'hidden',
@@ -52,8 +44,7 @@ export const panel = style({
   borderRadius: '10px',
   color: colors.white,
   background: colors.black,
-  boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
-  flexDirection: 'column'
+  boxShadow: '0 6px 20px rgba(0,0,0,0.5)'
 })
 
 export const panelBottomSpacing = style({
@@ -64,19 +55,14 @@ export const newInstructionControl = style({
   position: 'sticky',
   bottom: 0,
   padding: '12px 12px 4px',
-  gap: '12px',
-  alignItems: 'stretch',
   zIndex: zIndex.low
 })
 
 // Ensure the form inside the sticky footer stretches and lays out its children
 // horizontally so the textarea can take available width next to the button.
 export const footerForm = style({
-  display: 'flex',
   flex: '1 1 auto',
-  width: '100%',
-  gap: '12px',
-  alignItems: 'stretch'
+  width: '100%'
 })
 
 export const welcomeMessage = style({

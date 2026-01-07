@@ -10,20 +10,20 @@ import type { FormMethods } from '@/components/organisms/Form'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
 type UseInputCheckboxProperties = {
-  register?: UseFormRegister<FieldValues>
-  name?: string
   id?: string
+  name?: string
+  register?: UseFormRegister<FieldValues>
   value?: InputHTMLAttributes<HTMLInputElement>['value']
 }
 
 export const useInputCheckbox = ({
-  register,
-  name,
   id,
+  name,
+  register,
   value
 }: UseInputCheckboxProperties): {
-  registerProperties: Partial<UseFormRegisterReturn>
   inputId: string
+  registerProperties: Partial<UseFormRegisterReturn>
 } => {
   // Use optional form context hook which returns undefined when no provider is present.
   const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined

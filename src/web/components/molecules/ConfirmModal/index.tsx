@@ -2,6 +2,10 @@ import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { Paragraph } from '@/components/molecules/Paragraph'
 // ConfirmModal no longer renders its own Modal wrapper.
 // The ModalProvider is responsible for rendering a Modal around
 // any modal content provided via the `show` API.
@@ -9,43 +13,42 @@ import { Heading } from '@/components/atoms/Heading'
 import * as styles from './style.css'
 
 type ConfirmModalProperties = {
-  title: string
   message: string
-  icon?: React.ReactNode
-  onConfirm: () => void
-  onCancel: () => void
-  confirmText?: string
+  title: string
   cancelText?: string
+  confirmText?: string
+  icon?: React.ReactNode
+  onCancel: () => void
+  onConfirm: () => void
 }
 
 // ConfirmModal now returns the inner content only.
 // It is intended to be passed to the ModalProvider's `show` API,
 // which will render the surrounding Modal.
 export const ConfirmModal = ({
-  title,
   message,
-  icon,
-  onConfirm,
-  onCancel,
+  title,
+  cancelText = 'Cancel',
   confirmText = 'OK',
-  cancelText = 'Cancel'
+  icon,
+  onCancel,
+  onConfirm
 }: ConfirmModalProperties): JSX.Element => (
-  <div className={styles.container}>
-    <div className={styles.header}>
-      {icon && <div className={styles.icon}>{icon}</div>}
+  <FlexColumn className={styles.container}>
+    <Flex align="center" gap="s" className={styles.header}>
+      {icon && <Box className={styles.icon}>{icon}</Box>}
       <Heading level={3} className={styles.title}>
         {title}
       </Heading>
-    </div>
-    <p className={styles.message}>{message}</p>
-    <div className={styles.actions}>
-      <Button type="button" onClick={onCancel} className="primary">
-        {' '}
+    </Flex>
+    <Paragraph className={styles.message}>{message}</Paragraph>
+    <Flex justify="end" gap="s" className={styles.actions}>
+      <Button type="button" onClick={onCancel} kind="secondary">
         {cancelText}
       </Button>
-      <Button type="button" onClick={onConfirm} className="secondary">
+      <Button type="button" onClick={onConfirm} kind="primary">
         {confirmText}
       </Button>
-    </div>
-  </div>
+    </Flex>
+  </FlexColumn>
 )

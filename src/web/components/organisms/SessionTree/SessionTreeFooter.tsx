@@ -1,6 +1,7 @@
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
+import { Box } from '@/components/molecules/Box'
 
 import { stickyNewChatButtonContainer, newChatButton } from './style.css'
 
@@ -11,7 +12,7 @@ type SessionTreeFooterProperties = {
 export const SessionTreeFooter = ({
   handleNewChatClick
 }: SessionTreeFooterProperties): JSX.Element => (
-  <div className={stickyNewChatButtonContainer}>
+  <Box className={stickyNewChatButtonContainer}>
     <Button
       kind="primary"
       size="default"
@@ -21,5 +22,5 @@ export const SessionTreeFooter = ({
     >
       + New Chat
     </Button>
-  </div>
+  </Box>
 )

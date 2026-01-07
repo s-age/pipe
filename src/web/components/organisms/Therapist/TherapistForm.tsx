@@ -1,34 +1,37 @@
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
+import { Box } from '@/components/molecules/Box'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { Paragraph } from '@/components/molecules/Paragraph'
 
 import * as styles from './style.css'
 
 export type TherapistFormProperties = {
+  isSubmitting: boolean
   sessionId: string
   turnsCount: number
-  isSubmitting: boolean
   handleDiagnose: () => Promise<void>
   onRefresh: () => Promise<void>
 }
 
 export const TherapistForm = ({
+  isSubmitting,
   sessionId,
   turnsCount,
-  isSubmitting,
   handleDiagnose
 }: TherapistFormProperties): JSX.Element => (
-  <div className={styles.container}>
-    <div className={styles.body}>
-      <p className={styles.muted}>
+  <FlexColumn className={styles.container}>
+    <FlexColumn className={styles.body}>
+      <Paragraph className={styles.muted}>
         Session: {sessionId.substring(0, 8)}... ({turnsCount} turns)
-      </p>
-      <p className={styles.description}>
+      </Paragraph>
+      <Paragraph className={styles.description}>
         Analyze session for issues: verbosity, irrelevance, redundancy. Suggest
         edits/deletions/compressions.
-      </p>
-    </div>
-    <div className={styles.buttonContainer}>
+      </Paragraph>
+    </FlexColumn>
+    <Box className={styles.buttonContainer}>
       <Button
         type="button"
         onClick={handleDiagnose}
@@ -37,6 +40,6 @@ export const TherapistForm = ({
       >
         {isSubmitting ? 'Diagnosing...' : 'Start Diagnosis'}
       </Button>
-    </div>
-  </div>
+    </Box>
+  </FlexColumn>
 )

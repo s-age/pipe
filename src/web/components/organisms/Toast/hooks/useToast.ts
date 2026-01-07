@@ -6,11 +6,11 @@ export type ToastInput = Partial<Omit<ToastItem, 'id' | 'createdAt'>>
 export const useToast = (): {
   toasts: ToastItem[]
   addToast: (toast: Omit<ToastItem, 'id' | 'createdAt'>) => string
-  removeToast: (id: string) => void
   clearToasts: () => void
+  failure: (data: string | ToastInput) => string
+  removeToast: (id: string) => void
   show: (data: string | ToastInput) => string
   success: (data: string | ToastInput) => string
-  failure: (data: string | ToastInput) => string
   warning: (data: string | ToastInput) => string
 } => {
   const store = useToastStore()

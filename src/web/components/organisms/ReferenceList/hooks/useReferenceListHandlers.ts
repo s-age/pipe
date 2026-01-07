@@ -13,11 +13,11 @@ export const useReferenceListHandlers = (
   sessionDetail: SessionDetail,
   formContext: UseFormReturn | undefined
 ): {
-  references: Reference[]
-  existsValue: string[]
   accordionOpen: boolean
-  setAccordionOpen: (open: boolean) => void
+  existsValue: string[]
+  references: Reference[]
   handleReferencesChange: (values: string[]) => void
+  setAccordionOpen: (open: boolean) => void
 } => {
   const [references, setReferences] = useState<Reference[]>(
     sessionDetail.references || []

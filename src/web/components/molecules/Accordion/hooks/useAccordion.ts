@@ -1,22 +1,22 @@
 import { useId, useState, useMemo, type KeyboardEvent } from 'react'
 
 type UseAccordionProperties = {
-  id?: string
-  defaultOpen?: boolean
   controlledOpen?: boolean
+  defaultOpen?: boolean
+  id?: string
   onOpenChange?: (open: boolean) => void
 }
 
 export const useAccordion = ({
-  id,
-  defaultOpen = false,
   controlledOpen,
+  defaultOpen = false,
+  id,
   onOpenChange
 }: UseAccordionProperties): {
-  open: boolean
   contentId: string
-  handleToggle: () => void
+  open: boolean
   handleKeyDown: (event: KeyboardEvent) => void
+  handleToggle: () => void
 } => {
   const generatedId = useId()
   const contentId = useMemo(

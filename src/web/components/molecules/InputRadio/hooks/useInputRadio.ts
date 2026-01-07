@@ -10,20 +10,20 @@ import type { FormMethods } from '@/components/organisms/Form'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
 type UseInputRadioProperties = {
-  register?: UseFormRegister<FieldValues>
-  name?: string
   id?: string
+  name?: string
+  register?: UseFormRegister<FieldValues>
   value?: InputHTMLAttributes<HTMLInputElement>['value']
 }
 
 export const useInputRadio = ({
-  register,
-  name,
   id,
+  name,
+  register,
   value
 }: UseInputRadioProperties): {
-  registerProperties: Partial<UseFormRegisterReturn>
   inputId: string
+  registerProperties: Partial<UseFormRegisterReturn>
 } => {
   const provider = useOptionalFormContext() as FormMethods<FieldValues> | undefined
 

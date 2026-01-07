@@ -15,8 +15,8 @@ export const useModalHandlers = (
   isOpen: boolean,
   onClose?: () => void
 ): {
-  onOverlayMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void
   onContentMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void
+  onOverlayMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void
 } => {
   // Handler: Close on overlay click
   const onOverlayMouseDown = useCallback(

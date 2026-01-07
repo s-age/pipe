@@ -1,5 +1,6 @@
 import type { JSX } from 'react'
 
+import { Box } from '@/components/molecules/Box'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
@@ -8,16 +9,16 @@ import { useRolesHandlers } from './hooks/useRolesHandlers'
 import { container } from './style.css'
 
 type RolesSelectProperties = {
-  placeholder?: string
   sessionDetail: SessionDetail | null
+  placeholder?: string
   onChange?: (roles: string[]) => void
 }
 
 export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
-  const { placeholder = 'Select roles', sessionDetail, onChange } = properties
+  const { onChange, placeholder = 'Select roles', sessionDetail } = properties
 
   const actions = useRolesActions()
-  const { roleOptions, handleFocus, handleRolesChange } = useRolesHandlers(
+  const { handleFocus, handleRolesChange, roleOptions } = useRolesHandlers(
     sessionDetail,
     actions,
     onChange
@@ -31,7 +32,7 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
   const existsValue = sessionDetail?.roles ?? []
 
   return (
-    <div className={container}>
+    <Box className={container}>
       <FileSearchExplorer
         existsValue={existsValue}
         list={list}
@@ -40,6 +41,6 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
         onChange={handleRolesChange}
         onFocus={handleFocus}
       />
-    </div>
+    </Box>
   )
 }

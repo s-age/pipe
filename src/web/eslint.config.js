@@ -17,8 +17,10 @@ import globals from 'globals'
 // Import from typescript-eslint instead of tseslintPlugin, tseslintParser
 import tseslint from 'typescript-eslint'
 
+import pluginMatchPropertiesOrder from './eslint-rules/match-props-order.js'
 import pluginNoSnakeCaseProperties from './eslint-rules/no-snake-case-properties.js'
 import pluginNoUselessBackticks from './eslint-rules/no-useless-backticks.js'
+import pluginSortProperties from './eslint-rules/sort-props.js'
 import pluginVanillaExtract from './eslint-rules/vanilla-extract-recess-order.js'
 // To avoid Prettier conflicts, do not use eslint-config-prettier (use plugin-prettier instead)
 
@@ -26,7 +28,13 @@ import pluginVanillaExtract from './eslint-rules/vanilla-extract-recess-order.js
 export default [
   // Ignore node_modules, dist, and build directories
   {
-    ignores: ['node_modules/**', 'dist/**', '.vite/**', '.storybook/**']
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      '.vite/**',
+      '.storybook/**',
+      'eslint-rules/**'
+    ]
   },
   // 1. Base Configuration (JavaScript + TypeScript)
   // ESLint recommended configuration
@@ -54,6 +62,8 @@ export default [
       'vanilla-extract': pluginVanillaExtract,
       'no-useless-backticks': pluginNoUselessBackticks,
       'no-snake-case-properties': pluginNoSnakeCaseProperties,
+      'sort-props': pluginSortProperties,
+      'match-props-order': pluginMatchPropertiesOrder,
       // Prettier is configured in rules, so it's often unnecessary here
       prettier: pluginPrettier
     },
@@ -182,7 +192,9 @@ export default [
         {
           ignoreDestructuring: false
         }
-      ]
+      ],
+      'sort-props/sort-props': 'error',
+      'match-props-order/match-props-order': 'error'
     },
 
     settings: {

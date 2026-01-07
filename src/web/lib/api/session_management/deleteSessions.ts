@@ -5,8 +5,8 @@ export type DeleteSessionsRequest = {
 }
 
 export type DeleteSessionsResponse = {
-  message: string
   deletedCount: number
+  message: string
   totalRequested: number
 }
 

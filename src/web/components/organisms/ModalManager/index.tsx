@@ -38,12 +38,12 @@ export const ModalProvider = ({
  */
 const ModalItem = ({
   entry,
-  onClose,
-  isConfirmDescriptor
+  isConfirmDescriptor,
+  onClose
 }: {
   entry: ModalEntry
-  onClose: () => void
   isConfirmDescriptor: (v: unknown) => v is ConfirmDescriptor
+  onClose: () => void
 }): JSX.Element | null => {
   const content = entry.content
 
@@ -51,10 +51,10 @@ const ModalItem = ({
   if (isConfirmDescriptor(content)) {
     const desc = content as {
       props: {
-        title?: string
         message?: string
-        onConfirm?: () => void | Promise<void>
+        title?: string
         onCancel?: () => void
+        onConfirm?: () => void | Promise<void>
       }
     }
     innerJSX = (
@@ -87,7 +87,7 @@ const ModalItem = ({
  * Pattern: Organism (Store connection & List Rendering)
  */
 export const ModalManager = (): JSX.Element | null => {
-  const { stack, createCloseHandler, isConfirmDescriptor } = useModalManagerHandlers()
+  const { createCloseHandler, isConfirmDescriptor, stack } = useModalManagerHandlers()
 
   if (typeof document === 'undefined') return null
 

@@ -3,16 +3,16 @@ import { useEffect, useRef } from 'react'
 import type { ToastItem as ToastItemType } from '@/stores/useAppStore'
 
 type UseToastItemLifecycleProperties = {
-  item: ToastItemType
-  hovering: boolean
   exiting: boolean
+  hovering: boolean
+  item: ToastItemType
   onExit: () => void
 }
 
 export const useToastItemLifecycle = ({
-  item,
-  hovering,
   exiting,
+  hovering,
+  item,
   onExit
 }: UseToastItemLifecycleProperties): void => {
   const autoTimerReference = useRef<number | null>(null)

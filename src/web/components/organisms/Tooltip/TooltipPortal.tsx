@@ -1,6 +1,8 @@
 import type { JSX } from 'react'
 import { createPortal } from 'react-dom'
 
+import { Box } from '@/components/molecules/Box'
+
 import { useTooltipLifecycle } from './hooks/useTooltipLifecycle'
 import {
   tooltipText,
@@ -16,8 +18,8 @@ type Properties = {
   isVisible: boolean
   placement: 'top' | 'bottom' | 'left' | 'right'
   targetRect: DOMRect | null
-  offsetMain?: number | null
   offsetCross?: number | null
+  offsetMain?: number | null
 }
 
 const TooltipPortal = ({
@@ -25,8 +27,8 @@ const TooltipPortal = ({
   isVisible,
   placement,
   targetRect,
-  offsetMain,
-  offsetCross
+  offsetCross,
+  offsetMain
 }: Properties): JSX.Element | null => {
   const elementReference = useTooltipLifecycle({
     isVisible,
@@ -49,9 +51,9 @@ const TooltipPortal = ({
   if (typeof document === 'undefined') return null
 
   return createPortal(
-    <div ref={elementReference} className={className}>
+    <Box ref={elementReference} className={className}>
       {content}
-    </div>,
+    </Box>,
     document.body
   )
 }

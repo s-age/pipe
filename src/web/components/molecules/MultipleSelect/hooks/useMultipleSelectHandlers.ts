@@ -10,36 +10,36 @@ import type {
 import type { SelectOption } from './useMultipleSelect'
 
 type UseMultipleSelectHandlersProperties = {
-  isOpen: boolean
-  setIsOpen: (v: boolean) => void
   filteredOptions: SelectOption[]
   highlightedIndex: number
-  setHighlightedIndex: (i: number) => void
+  isOpen: boolean
   selectedValues: string[]
   setSelectedValues: Dispatch<SetStateAction<string[]>>
+  setHighlightedIndex: (i: number) => void
+  setIsOpen: (v: boolean) => void
   setQuery: (q: string) => void
 }
 
 export type UseMultipleSelectHandlersReturn = {
-  toggleOpen: () => void
-  handleToggleSelect: (value: string) => void
-  handleRemoveTag: (event: React.MouseEvent) => void
+  handleCheckboxClick: (event: ReactMouseEvent<HTMLInputElement>) => void
   handleKeyDown: (event: ReactKeyboardEvent) => void
-  handleSearchChange: (event: ChangeEvent<HTMLInputElement>) => void
-  handleOptionClick: (event: ReactMouseEvent<HTMLLIElement>) => void
   handleMouseEnter: (event: ReactMouseEvent<HTMLLIElement>) => void
   handleMouseLeave: () => void
-  handleCheckboxClick: (event: ReactMouseEvent<HTMLInputElement>) => void
+  handleOptionClick: (event: ReactMouseEvent<HTMLLIElement>) => void
+  handleRemoveTag: (event: React.MouseEvent) => void
+  handleSearchChange: (event: ChangeEvent<HTMLInputElement>) => void
+  handleToggleSelect: (value: string) => void
+  toggleOpen: () => void
 }
 
 export const useMultipleSelectHandlers = ({
-  isOpen,
-  setIsOpen,
   filteredOptions,
   highlightedIndex,
-  setHighlightedIndex,
+  isOpen,
   selectedValues,
   setSelectedValues,
+  setHighlightedIndex,
+  setIsOpen,
   setQuery
 }: UseMultipleSelectHandlersProperties): UseMultipleSelectHandlersReturn => {
   const toggleOpen = useCallback(() => setIsOpen(!isOpen), [isOpen, setIsOpen])

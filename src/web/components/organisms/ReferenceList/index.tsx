@@ -2,8 +2,11 @@ import type { JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
+import { Text } from '@/components/atoms/Text'
 import { Accordion } from '@/components/molecules/Accordion'
 import { MetaLabel, MetaItem } from '@/components/molecules/MetaItem'
+import { Paragraph } from '@/components/molecules/Paragraph'
+import { UnorderedList } from '@/components/molecules/UnorderedList'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -28,10 +31,10 @@ export const ReferenceList = ({
   const errors = formContext?.formState?.errors?.references
 
   const {
+    accordionOpen,
+    existsValue,
     handleReferencesChange,
     references,
-    existsValue,
-    accordionOpen,
     setAccordionOpen
   } = useReferenceListHandlers(sessionDetail, formContext)
 
@@ -50,17 +53,17 @@ export const ReferenceList = ({
 
       {/* Collapsible list of reference items only */}
       <Accordion
-        title={<span />}
+        title=""
         summary={
-          <span
+          <Text
             className={referenceSummary}
-          >{`${references.length} ${references.length === 1 ? 'reference' : 'references'} · Advanced settings`}</span>
+          >{`${references.length} ${references.length === 1 ? 'reference' : 'references'} · Advanced settings`}</Text>
         }
         defaultOpen={false}
         open={accordionOpen}
         onOpenChange={setAccordionOpen}
       >
-        <ul className={referencesList}>
+        <UnorderedList className={referencesList}>
           {references.map((reference, index) => (
             <ReferenceComponent
               key={reference.path}
@@ -70,9 +73,9 @@ export const ReferenceList = ({
               refreshSessions={refreshSessions}
             />
           ))}
-        </ul>
+        </UnorderedList>
         {references.length === 0 && (
-          <p className={noItemsMessage}>No references added yet.</p>
+          <Paragraph className={noItemsMessage}>No references added yet.</Paragraph>
         )}
         {errors && <ErrorMessage error={errors as never} />}
       </Accordion>

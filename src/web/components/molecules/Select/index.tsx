@@ -2,6 +2,8 @@ import { clsx } from 'clsx'
 import type { SelectHTMLAttributes, JSX } from 'react'
 import type { UseFormRegister } from 'react-hook-form'
 
+import { Box } from '@/components/molecules/Box'
+
 import { useSelect } from './hooks/useSelect'
 import type { SelectOption } from './hooks/useSelect'
 import { useSelectHandlers } from './hooks/useSelectHandlers'
@@ -12,41 +14,42 @@ import {
   panel,
   option,
   optionHighlighted,
+  optionDisabled,
   searchInput
 } from './style.css'
 
 type SelectProperties = {
-  register?: UseFormRegister<Record<string, unknown>>
   name?: string
   options?: Array<string | SelectOption>
-  searchable?: boolean
   placeholder?: string
+  register?: UseFormRegister<Record<string, unknown>>
+  searchable?: boolean
 } & SelectHTMLAttributes<HTMLSelectElement>
 
 export const Select = (properties: SelectProperties): JSX.Element => {
   const {
-    register,
+    className,
     name,
     options,
-    searchable = false,
     placeholder,
-    className,
+    register,
+    searchable = false,
     ...rest
   } = properties
 
   const {
-    registerProperties,
-    normalizedOptions,
     filteredOptions,
+    highlightedIndex,
+    isOpen,
+    listReference,
+    normalizedOptions,
+    query,
+    registerProperties,
     selectedLabel,
     selectedNativeValue,
-    isOpen,
-    setIsOpen,
-    query,
-    setQuery,
-    listReference,
-    highlightedIndex,
     setHighlightedIndex,
+    setIsOpen,
+    setQuery,
     setSelectedValue
   } = useSelect({
     register,
@@ -58,12 +61,12 @@ export const Select = (properties: SelectProperties): JSX.Element => {
   })
 
   const {
-    toggleOpen,
     handleKeyDown,
-    handleSearchChange,
-    handleOptionClick,
     handleMouseEnter,
-    handleMouseLeave
+    handleMouseLeave,
+    handleOptionClick,
+    handleSearchChange,
+    toggleOpen
   } = useSelectHandlers({
     isOpen,
     setIsOpen,
@@ -71,7 +74,8 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     highlightedIndex,
     setHighlightedIndex,
     setSelectedValue,
-    setQuery
+    setQuery,
+    onChange: rest.onChange
   })
 
   const { rootReference } = useSelectLifecycle({
@@ -89,7 +93,7 @@ export const Select = (properties: SelectProperties): JSX.Element => {
   const displayLabel = selectedLabel ?? placeholder ?? ''
 
   return (
-    <div ref={rootReference} className={clsx(selectStyle, className)}>
+    <Box ref={rootReference} className={clsx(selectStyle, className)}>
       {/* Hidden native select kept for form integrations (RHF / native form submit) */}
       <select
         {...rest}
@@ -100,13 +104,13 @@ export const Select = (properties: SelectProperties): JSX.Element => {
         hidden={true}
       >
         {(normalizedOptions ?? []).map((opt) => (
-          <option key={opt.id ?? opt.value} value={opt.value}>
+          <option key={opt.id ?? opt.value} value={opt.value} disabled={opt.disabled}>
             {typeof opt.label === 'string' ? opt.label : String(opt.value)}
           </option>
         ))}
       </select>
 
-      <div
+      <Box
         tabIndex={0}
         role="button"
         aria-haspopup="listbox"
@@ -115,10 +119,10 @@ export const Select = (properties: SelectProperties): JSX.Element => {
         onKeyDown={handleKeyDown}
         className={trigger}
       >
-        <span>{displayLabel}</span>
-      </div>
+        <Box as="span">{displayLabel}</Box>
+      </Box>
       {isOpen && (
-        <div>
+        <Box>
           {searchable && (
             <input
               type="text"
@@ -129,33 +133,37 @@ export const Select = (properties: SelectProperties): JSX.Element => {
             />
           )}
 
-          <ul
+          <Box
+            as="ul"
             ref={listReference}
             role="listbox"
             aria-hidden={!isOpen}
             className={panel}
           >
             {filteredOptions.map((opt, index) => (
-              <li
+              <Box
+                as="li"
                 key={opt.id ?? opt.value}
                 role="option"
-                onClick={handleOptionClick}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
+                onClick={opt.disabled ? undefined : handleOptionClick}
+                onMouseEnter={opt.disabled ? undefined : handleMouseEnter}
+                onMouseLeave={opt.disabled ? undefined : handleMouseLeave}
                 className={clsx(
                   option,
-                  highlightedIndex === index && optionHighlighted
+                  highlightedIndex === index && optionHighlighted,
+                  opt.disabled && optionDisabled
                 )}
                 data-value={opt.id ?? opt.value}
                 data-index={String(index)}
+                aria-disabled={opt.disabled}
               >
                 {opt.label}
-              </li>
+              </Box>
             ))}
-          </ul>
-        </div>
+          </Box>
+        </Box>
       )}
-    </div>
+    </Box>
   )
 }
 

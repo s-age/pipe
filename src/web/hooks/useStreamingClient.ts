@@ -18,13 +18,13 @@ import type { SSEEvent } from '@/types/chat'
  */
 
 type UseStreamingClientReturn = {
-  streamedText: string
-  isLoading: boolean
   error: string | null
   instructionTurn: Turn | null
-  startStreaming: (sessionId: string, instruction: string) => Promise<void>
+  isLoading: boolean
+  streamedText: string
   abortStreaming: () => void
   reset: () => void
+  startStreaming: (sessionId: string, instruction: string) => Promise<void>
 }
 
 export const useStreamingClient = (): UseStreamingClientReturn => {
@@ -78,7 +78,7 @@ export const useStreamingClient = (): UseStreamingClientReturn => {
       let buffer = ''
 
       while (!done) {
-        const { value, done: readerDone } = await reader.read()
+        const { done: readerDone, value } = await reader.read()
         done = readerDone
         const chunk = decoder.decode(value, { stream: true })
 

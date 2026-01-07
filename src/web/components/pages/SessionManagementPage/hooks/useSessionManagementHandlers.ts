@@ -13,17 +13,17 @@ import { useSessionManagementActions } from './useSessionManagementActions'
 import { useSessionManagementLifecycle } from './useSessionManagementLifecycle'
 
 type UseSessionManagementHandlersReturn = {
-  state: State
   currentTab: 'sessions' | 'archives'
-  setCurrentTab: (tab: 'sessions' | 'archives') => void
   selectedSessionIds: string[]
-  handleSelectSession: (sessionId: string, isSelected: boolean) => void
+  state: State
+  handleBulkAction: () => Promise<void>
+  handleCancel: () => void
   handleSelectAll: (
     sessions: SessionOverview[] | SessionTreeNode[],
     isSelected: boolean
   ) => void
-  handleBulkAction: () => Promise<void>
-  handleCancel: () => void
+  handleSelectSession: (sessionId: string, isSelected: boolean) => void
+  setCurrentTab: (tab: 'sessions' | 'archives') => void
 }
 
 type Properties = {
@@ -34,7 +34,7 @@ export const useSessionManagementHandlers = ({
   navigate
 }: Properties): UseSessionManagementHandlersReturn => {
   // 1. Store initialization
-  const { state, actions: storeActions } = useSessionStore()
+  const { actions: storeActions, state } = useSessionStore()
 
   // 2. Actions hook
   const actions = useSessionManagementActions()

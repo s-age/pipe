@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from 'react'
 
 export type TooltipEventData = {
-  id?: number | string
-  rect?: DOMRect | null
-  placement?: 'top' | 'bottom' | 'left' | 'right'
   content?: React.ReactNode
-  offsetMain?: number
+  id?: number | string
   offsetCross?: number
+  offsetMain?: number
+  placement?: 'top' | 'bottom' | 'left' | 'right'
+  rect?: DOMRect | null
 }
 
 export type ActiveTooltip = TooltipEventData | null
@@ -77,9 +77,9 @@ export const clearTooltips = (): void => {
 
 export const useTooltipStore = (): {
   active: ActiveTooltip
-  showTooltip: (data: TooltipEventData) => void
-  hideTooltip: (id?: number | string) => void
   clearTooltips: () => void
+  hideTooltip: (id?: number | string) => void
+  showTooltip: (data: TooltipEventData) => void
 } => {
   const snapshot = useSyncExternalStore(subscribe, getActive, getActive)
 

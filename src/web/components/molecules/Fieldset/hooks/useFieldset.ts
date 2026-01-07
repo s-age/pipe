@@ -1,8 +1,8 @@
 import { useId } from 'react'
 
 type FieldsetIds = {
-  hintId?: string
   errorId?: string
+  hintId?: string
 }
 
 export const useFieldset = (hint?: unknown, error?: unknown): FieldsetIds => {

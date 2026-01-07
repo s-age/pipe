@@ -1,6 +1,10 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
 
+import { Link } from '@/components/molecules/Link'
+import { ListItem } from '@/components/molecules/ListItem'
+import { Paragraph } from '@/components/molecules/Paragraph'
+import { UnorderedList } from '@/components/molecules/UnorderedList'
 import type {
   SessionOverview,
   SessionTreeNode as SessionTreeNodeType
@@ -26,17 +30,17 @@ import {
 } from './style.css'
 
 type SessionTreeNodeProperties = {
+  currentSessionId: string | null
   node: SessionTreeNodeType
   depth?: number
-  currentSessionId: string | null
   handleAnchorClick: (event: React.MouseEvent<HTMLAnchorElement>) => void
   setSessionReference: (sessionId: string) => (element: HTMLLIElement | null) => void
 }
 
 export const SessionTreeNode = ({
+  currentSessionId,
   node,
   depth = 0,
-  currentSessionId,
   handleAnchorClick,
   setSessionReference
 }: SessionTreeNodeProperties): JSX.Element => {
@@ -76,12 +80,12 @@ export const SessionTreeNode = ({
   }
 
   return (
-    <li
+    <ListItem
       key={node.sessionId}
       className={clsx(sessionListItem, depthClass)}
       ref={setSessionReference(node.sessionId)}
     >
-      <a
+      <Link
         href={`/session/${node.sessionId}`}
         data-session-id={node.sessionId}
         className={clsx(sessionLink, {
@@ -90,10 +94,10 @@ export const SessionTreeNode = ({
         onClick={handleAnchorClick}
       >
         {sessionObject.purpose}{' '}
-        <p className={sessionIdStyle}>{getShortHash(node.sessionId)}</p>
-      </a>
+        <Paragraph className={sessionIdStyle}>{getShortHash(node.sessionId)}</Paragraph>
+      </Link>
       {node.children && node.children.length > 0 && (
-        <ul className={nestedList}>
+        <UnorderedList className={nestedList}>
           {node.children.map((child) => (
             <SessionTreeNode
               key={child.sessionId}
@@ -104,8 +108,8 @@ export const SessionTreeNode = ({
               setSessionReference={setSessionReference}
             />
           ))}
-        </ul>
+        </UnorderedList>
       )}
-    </li>
+    </ListItem>
   )
 }

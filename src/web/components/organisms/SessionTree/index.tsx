@@ -1,11 +1,17 @@
 import type { JSX } from 'react'
 
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+import { ScrollArea } from '@/components/molecules/ScrollArea'
+import { UnorderedList } from '@/components/molecules/UnorderedList'
 import type {
   SessionOverview,
   SessionTreeNode as SessionTreeNodeType
 } from '@/lib/api/sessionTree/getSessionTree'
 
-import { useSessionTreeHandlers } from './hooks/useSessionTreeHandlers'
+import {
+  useSessionTreeHandlers,
+  type UseSessionTreeHandlersReturn
+} from './hooks/useSessionTreeHandlers'
 import { useSessionTreeLifecycle } from './hooks/useSessionTreeLifecycle'
 import { SessionTreeFooter } from './SessionTreeFooter'
 import { SessionTreeNode } from './SessionTreeNode'
@@ -14,24 +20,24 @@ import { SessionOverviewComponent } from '../SessionOverview'
 
 type SessionTreeProperties = {
   // sessions may be a flat array of SessionOverview or hierarchical nodes
-  sessions: SessionOverview[] | SessionTreeNodeType[]
   currentSessionId: string | null
+  sessions: SessionOverview[] | SessionTreeNodeType[]
   handleSelectSession: (sessionId: string) => Promise<void>
   onRefresh: () => Promise<void>
 }
 
 export const SessionTree = ({
-  sessions,
   currentSessionId,
+  sessions,
   handleSelectSession,
   onRefresh
 }: SessionTreeProperties): JSX.Element => {
   const {
     sessionReferences,
-    handleNewChatClick,
     handleAnchorClick,
+    handleNewChatClick,
     setSessionReference
-  } = useSessionTreeHandlers(onRefresh)
+  }: UseSessionTreeHandlersReturn = useSessionTreeHandlers(onRefresh)
 
   // Handle scroll to selected session on mount and selection change
   useSessionTreeLifecycle({
@@ -43,39 +49,41 @@ export const SessionTree = ({
   // ref management delegated to handlers via `setSessionReference`.
 
   return (
-    <div className={sessionListColumn}>
-      <ul className={sessionListContainer}>
-        {Array.isArray(sessions) &&
-        sessions.length > 0 &&
-        'overview' in (sessions[0] as SessionOverview | SessionTreeNodeType)
-          ? // hierarchical nodes: render recursively
-            (sessions as SessionTreeNodeType[]).map((node: SessionTreeNodeType) => (
-              <SessionTreeNode
-                key={node.sessionId}
-                node={node}
-                currentSessionId={currentSessionId}
-                handleAnchorClick={handleAnchorClick}
-                setSessionReference={setSessionReference}
-              />
-            ))
-          : // flat list: render as before
-            (sessions as SessionOverview[]).map((session) => {
-              if (!session.sessionId || typeof session.sessionId !== 'string') {
-                return null // Invalid session, skip rendering
-              }
-
-              return (
-                <SessionOverviewComponent
-                  key={session.sessionId}
-                  session={session}
-                  currentSessionId={currentSessionId || ''}
-                  handleSelectSession={handleSelectSession}
-                  ref={setSessionReference(session.sessionId)}
+    <FlexColumn className={sessionListColumn}>
+      <ScrollArea className={sessionListContainer}>
+        <UnorderedList>
+          {Array.isArray(sessions) &&
+          sessions.length > 0 &&
+          'overview' in (sessions[0] as SessionOverview | SessionTreeNodeType)
+            ? // hierarchical nodes: render recursively
+              (sessions as SessionTreeNodeType[]).map((node: SessionTreeNodeType) => (
+                <SessionTreeNode
+                  key={node.sessionId}
+                  node={node}
+                  currentSessionId={currentSessionId}
+                  handleAnchorClick={handleAnchorClick}
+                  setSessionReference={setSessionReference}
                 />
-              )
-            })}
-      </ul>
+              ))
+            : // flat list: render as before
+              (sessions as SessionOverview[]).map((session) => {
+                if (!session.sessionId || typeof session.sessionId !== 'string') {
+                  return null // Invalid session, skip rendering
+                }
+
+                return (
+                  <SessionOverviewComponent
+                    key={session.sessionId}
+                    session={session}
+                    currentSessionId={currentSessionId || ''}
+                    handleSelectSession={handleSelectSession}
+                    ref={setSessionReference(session.sessionId)}
+                  />
+                )
+              })}
+        </UnorderedList>
+      </ScrollArea>
       <SessionTreeFooter handleNewChatClick={handleNewChatClick} />
-    </div>
+    </FlexColumn>
   )
 }

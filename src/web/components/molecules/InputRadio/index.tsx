@@ -2,26 +2,29 @@ import React from 'react'
 import type { InputHTMLAttributes, JSX } from 'react'
 import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+
 import { useInputRadio } from './hooks/useInputRadio'
 import * as styles from './style.css'
 
 type InputRadioProperties = {
   label?: React.ReactNode
-  register?: UseFormRegister<FieldValues>
   name?: string
+  register?: UseFormRegister<FieldValues>
 } & InputHTMLAttributes<HTMLInputElement>
 
 export const InputRadio = ({
-  register,
-  name,
-  label,
-  id,
   children,
+  id,
+  label,
+  name,
+  register,
   ...rest
 }: InputRadioProperties): JSX.Element => {
   const resolvedLabel = label ?? children
 
-  const { registerProperties, inputId } = useInputRadio({
+  const { inputId, registerProperties } = useInputRadio({
     register,
     name,
     id,
@@ -29,7 +32,7 @@ export const InputRadio = ({
   })
 
   return (
-    <label className={styles.container} htmlFor={inputId}>
+    <Flex as="label" className={styles.container} htmlFor={inputId}>
       <input
         id={inputId}
         type="radio"
@@ -38,7 +41,7 @@ export const InputRadio = ({
         name={name}
         {...rest}
       />
-      <span className={styles.control} aria-hidden={true}>
+      <Box className={styles.control} aria-hidden={true}>
         <svg
           className={styles.svg}
           viewBox="0 0 24 24"
@@ -47,9 +50,13 @@ export const InputRadio = ({
         >
           <circle cx="12" cy="12" r="5" fill="transparent" />
         </svg>
-      </span>
-      {resolvedLabel ? <span className={styles.labelText}>{resolvedLabel}</span> : null}
-    </label>
+      </Box>
+      {resolvedLabel ? (
+        <Box as="span" className={styles.labelText}>
+          {resolvedLabel}
+        </Box>
+      ) : null}
+    </Flex>
   )
 }
 

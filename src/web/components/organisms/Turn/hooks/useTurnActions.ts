@@ -8,16 +8,16 @@ import { addToast } from '@/stores/useToastStore'
 
 export type UseTurnActionsReturn = {
   deleteTurnAction: (sessionId: string, turnIndex: number) => Promise<void>
-  forkSessionAction: (
-    sessionId: string,
-    forkIndex: number
-  ) => Promise<string | undefined>
   editTurnAction: (
     sessionId: string,
     turnIndex: number,
     new_content: string,
     turn: Turn
   ) => Promise<void>
+  forkSessionAction: (
+    sessionId: string,
+    forkIndex: number
+  ) => Promise<string | undefined>
 }
 
 export const useTurnActions = (): UseTurnActionsReturn => {

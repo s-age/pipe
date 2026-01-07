@@ -1,5 +1,10 @@
 import type { JSX } from 'react'
 
+import { Strong } from '@/components/atoms/Strong'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { Code } from '@/components/molecules/Code'
+
 import { toolResponseContent, statusSuccess, statusError } from './style.css'
 
 type ToolResponseContentProperties = {
@@ -19,12 +24,12 @@ export const ToolResponseContent = ({
       : statusError
 
   return (
-    <div className={toolResponseContent}>
-      <strong>Status: </strong>
-      <span className={statusClass}>{response.status}</span>
+    <Box className={toolResponseContent}>
+      <Strong>Status: </Strong>
+      <Text className={statusClass}>{response.status}</Text>
       {response.message !== undefined && response.message !== null && (
-        <pre>{JSON.stringify(response.message, null, 2)}</pre>
+        <Code block={true}>{JSON.stringify(response.message, null, 2)}</Code>
       )}
-    </div>
+    </Box>
   )
 }

@@ -7,15 +7,15 @@ import { addToast } from '@/stores/useToastStore'
 import type { Diagnosis } from '../types'
 
 type TherapistActions = {
-  diagnoseSession: (sessionId: string) => Promise<Diagnosis | void>
   applyModifications: (
     sessionId: string,
     modifications: {
+      compressions?: { end: number; reason: string; start: number }[]
       deletions?: number[]
-      edits?: { turn: number; newContent: string }[]
-      compressions?: { start: number; end: number; reason: string }[]
+      edits?: { newContent: string; turn: number }[]
     }
   ) => Promise<void>
+  diagnoseSession: (sessionId: string) => Promise<Diagnosis | void>
 }
 
 export const useTherapistActions = (): TherapistActions => {
@@ -41,9 +41,9 @@ export const useTherapistActions = (): TherapistActions => {
     async (
       sessionId: string,
       modifications: {
+        compressions?: { end: number; reason: string; start: number }[]
         deletions?: number[]
-        edits?: { turn: number; newContent: string }[]
-        compressions?: { start: number; end: number; reason: string }[]
+        edits?: { newContent: string; turn: number }[]
       }
     ): Promise<void> => {
       try {

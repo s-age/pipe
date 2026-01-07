@@ -3,32 +3,34 @@ import type { FieldError } from 'react-hook-form'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Legend } from '@/components/atoms/Legend'
+import { Box } from '@/components/molecules/Box'
+import { Paragraph } from '@/components/molecules/Paragraph'
 
 import { useFieldset } from './hooks/useFieldset'
 import * as styles from './style.css'
 
 type FieldsetIds = {
-  hintId?: string
   errorId?: string
+  hintId?: string
 }
 
 type FieldsetProperties = {
-  legend: ReactNode
-  hint?: ReactNode
-  error?: ReactNode
   children: ReactNode | ((ids: FieldsetIds) => ReactNode)
+  legend: ReactNode
   className?: string
+  error?: ReactNode
+  hint?: ReactNode
 }
 
 export const Fieldset = ({
-  legend,
-  hint,
-  error,
   children,
-  className
+  legend,
+  className,
+  error,
+  hint
 }: FieldsetProperties): JSX.Element => {
   const ids = useFieldset(hint, error)
-  const { hintId, errorId } = ids
+  const { errorId, hintId } = ids
 
   return (
     <fieldset className={styles.fieldset + (className ? ` ${className}` : '')}>
@@ -37,12 +39,12 @@ export const Fieldset = ({
       {typeof children === 'function' ? children(ids) : children}
 
       {hint ? (
-        <p id={hintId} className={styles.hint} aria-hidden={!!error}>
+        <Paragraph id={hintId} className={styles.hint} aria-hidden={!!error}>
           {hint}
-        </p>
+        </Paragraph>
       ) : null}
       {error ? (
-        <div id={errorId} role="alert">
+        <Box id={errorId} role="alert">
           {typeof error === 'string' ? (
             <ErrorMessage message={error} />
           ) : error &&
@@ -52,7 +54,7 @@ export const Fieldset = ({
           ) : (
             error
           )}
-        </div>
+        </Box>
       ) : null}
     </fieldset>
   )

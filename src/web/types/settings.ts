@@ -1,17 +1,17 @@
 import type { Hyperparameters } from './hyperparameters'
 
 export type Settings = {
-  model: string
-  searchModel: string
-  contextLimit: number
   apiMode: string
-  language: string
-  yolo: boolean
-  maxToolCalls: number
-  hyperparameters: Hyperparameters
+  contextLimit: number
   expertMode: boolean
-  sessionsPath: string
+  hyperparameters: Hyperparameters
+  language: string
+  maxToolCalls: number
+  model: string
   referenceTtl: number
-  toolResponseExpiration: number
+  searchModel: string
+  sessionsPath: string
   timezone: string
+  toolResponseExpiration: number
+  yolo: boolean
 }

@@ -10,11 +10,11 @@ import type { Reference } from '@/types/reference'
 export const useReferenceListActions = (
   currentSessionId: string | null
 ): {
-  loadRootSuggestions: () => Promise<{ name: string; isDirectory: boolean }[]>
+  handleUpdateReference: (newReferences: Reference[]) => Promise<Reference[] | void>
+  loadRootSuggestions: () => Promise<{ isDirectory: boolean; name: string }[]>
   loadSubDirectorySuggestions: (
     pathParts: string[]
-  ) => Promise<{ name: string; isDirectory: boolean }[]>
-  handleUpdateReference: (newReferences: Reference[]) => Promise<Reference[] | void>
+  ) => Promise<{ isDirectory: boolean; name: string }[]>
 } => {
   const fileActions = useFileSearchExplorerActions()
 

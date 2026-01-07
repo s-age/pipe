@@ -14,44 +14,43 @@ export type UseSliderProperties = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'onChange' | 'type'
 > & {
-  min?: number
+  defaultValue?: number
   max?: number
+  min?: number
+  name?: string
+  register?: UseFormRegister<FieldValues>
   step?: number
   value?: number
-  defaultValue?: number
   onChange?: (value: number) => void
-  register?: UseFormRegister<FieldValues>
-  name?: string
 }
 
 export type UseSliderReturn = {
-  id: string
-  registerProperties?: UseFormRegisterReturn | undefined
-  visibleValue: number
-  handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  containerRef: (element: HTMLDivElement | null) => void
-  // geometry
-  svgWidth: number
-  thumbR: number
-  strokeWidth: number
-  shadowPad: number
-  pad: number
-  trackX: number
-  trackWidth: number
   fillWidth: number
+  id: string
+  pad: number
+  shadowPad: number
+  strokeWidth: number
+  svgWidth: number
   thumbCx: number
+  thumbR: number
+  trackWidth: number
+  trackX: number
+  visibleValue: number
+  registerProperties?: UseFormRegisterReturn | undefined
+  containerRef: (element: HTMLDivElement | null) => void
+  handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export const useSliderHandlers = ({
-  min = 0,
-  max = 100,
-  step: _step = 1,
-  value: controlledValue,
   defaultValue,
+  id: idProperty,
+  max = 100,
+  min = 0,
+  name,
   onChange,
   register,
-  name,
-  id: idProperty
+  step: _step = 1,
+  value: controlledValue
 }: UseSliderProperties): UseSliderReturn => {
   const fallbackId = useId()
   const id = idProperty ?? (name ? `${name}-slider` : `slider-${fallbackId}`)
@@ -104,7 +103,7 @@ export const useSliderHandlers = ({
     typeof controlledValue === 'number' ? controlledValue : internalValue
 
   // Lifecycle: ResizeObserver for responsive geometry
-  const { measuredWidth, containerRef: lifecycleContainerReference } =
+  const { containerRef: lifecycleContainerReference, measuredWidth } =
     useSliderLifecycle()
 
   const svgWidth = measuredWidth || 300

@@ -4,8 +4,8 @@ import { useSuggestionItemLifecycle } from './useSuggestionItemLifecycle'
 
 export type SuggestionItemProperties = {
   suggestion: { label: string; value: string; path?: string }
-  onClick: (suggestion: { label: string; value: string; path?: string }) => void
   isSelected?: boolean
+  onClick: (suggestion: { label: string; value: string; path?: string }) => void
 }
 
 export const useSuggestionItemHandlers = (

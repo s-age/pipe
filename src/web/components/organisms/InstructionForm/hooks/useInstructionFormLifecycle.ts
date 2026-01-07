@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useRef } from 'react'
 
 type UseInstructionFormLifecycleProperties = {
+  contextLimit: number
   isStreaming: boolean
   tokenCount: number
-  contextLimit: number
 }
 
 type ContextLeftInfo = {
-  contextLeft: string
   colorKey: 'cyan' | 'orange' | 'red'
+  contextLeft: string
 }
 
 export const useInstructionFormLifecycle = ({
+  contextLimit,
   isStreaming,
-  tokenCount,
-  contextLimit
+  tokenCount
 }: UseInstructionFormLifecycleProperties): ContextLeftInfo => {
   const previousStreamingState = useRef<boolean>(isStreaming)
 

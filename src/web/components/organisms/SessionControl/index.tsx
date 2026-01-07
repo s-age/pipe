@@ -1,5 +1,7 @@
 import type { JSX } from 'react'
 
+import { Box } from '@/components/molecules/Box'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { SessionMeta } from '@/components/organisms/SessionMeta'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
@@ -30,10 +32,10 @@ export const SessionControl = ({
   ]
 
   return (
-    <div className={styles.rightColumn}>
+    <FlexColumn className={styles.rightColumn}>
       <Tabs tabs={tabs} activeKey={active} onChange={handleTabChange} />
 
-      <div className={styles.metaBody}>
+      <Box className={styles.metaBody}>
         {active === 'meta' && (
           <SessionMeta
             sessionDetail={sessionDetail}
@@ -49,7 +51,7 @@ export const SessionControl = ({
         {active === 'therapist' && (
           <Therapist sessionDetail={sessionDetail} onRefresh={onRefresh} />
         )}
-      </div>
-    </div>
+      </Box>
+    </FlexColumn>
   )
 }

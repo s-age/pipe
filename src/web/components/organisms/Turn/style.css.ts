@@ -4,7 +4,6 @@ import { colors } from '../../../styles/colors.css'
 
 // 各ターンを囲むFlexboxコンテナとして機能
 export const turnWrapper = style({
-  display: 'flex',
   width: '100%',
   marginBottom: '8px'
 })
@@ -23,27 +22,22 @@ export const otherTurnAligned = style({
 export const turnContentBase = style({
   width: '75%',
   minWidth: 0,
-  padding: '8px',
   border: `1px solid ${colors.cyan}`,
-  borderRadius: '8px',
   boxShadow: '0 0 6px #00ffff, inset 0 0 6px #00ffff33',
   transition: 'transform 120ms ease, box-shadow 120ms ease'
 })
 
 export const turnHeader = style({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center'
+  // Flex コンポーネントで justify="between" と align="center" を指定
 })
 
 export const turnHeaderInfo = style({
-  display: 'flex',
-  alignItems: 'center'
+  // Flex コンポーネントで align="center" を指定
 })
 
 export const turnIndexStyle = style({
-  marginRight: '8px',
-  fontWeight: 'bold'
+  marginRight: '8px'
+  // fontWeight は Text コンポーネントの weight="bold" で指定
 })
 
 export const turnTimestamp = style({
@@ -52,8 +46,7 @@ export const turnTimestamp = style({
 })
 
 export const turnHeaderControls = style({
-  display: 'flex',
-  gap: '4px'
+  // Flex コンポーネントで gap="s" を指定
 })
 
 export const turnContent = style({

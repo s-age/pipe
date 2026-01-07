@@ -3,31 +3,33 @@ import type { UseControllerProps, FieldValues } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 
 import { Label } from '@/components/atoms/Label'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { InputText } from '@/components/molecules/InputText'
+import { Paragraph } from '@/components/molecules/Paragraph'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
 import { errorMessageStyle, inputFieldStyle } from './style.css'
 
 type InputFieldProperties<TFieldValues extends FieldValues = FieldValues> = {
-  label: string
   id: string
-  type?: string
+  label: string
+  max?: string
+  min?: string
   placeholder?: string
   required?: boolean
-  min?: string
-  max?: string
   step?: string
+  type?: string
 } & UseControllerProps<TFieldValues>
 
 export const InputField = <TFieldValues extends FieldValues = FieldValues>({
-  label,
   id,
-  type = 'text',
+  label,
+  max,
+  min,
   placeholder,
   required,
-  min,
-  max,
   step,
+  type = 'text',
   ...properties
 }: InputFieldProperties<TFieldValues>): JSX.Element => {
   const formContext = useOptionalFormContext<TFieldValues>()
@@ -37,7 +39,7 @@ export const InputField = <TFieldValues extends FieldValues = FieldValues>({
   } = useController({ control: formContext?.control, ...properties })
 
   return (
-    <div>
+    <FlexColumn>
       <Label htmlFor={id}>{label}</Label>
       <InputText
         id={id}
@@ -50,8 +52,8 @@ export const InputField = <TFieldValues extends FieldValues = FieldValues>({
         step={step}
         {...field}
       />
-      {error && <p className={errorMessageStyle}>{error.message}</p>}
-    </div>
+      {error && <Paragraph className={errorMessageStyle}>{error.message}</Paragraph>}
+    </FlexColumn>
   )
 }
 

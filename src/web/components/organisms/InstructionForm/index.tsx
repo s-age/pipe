@@ -2,6 +2,9 @@ import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { IconPaperPlane } from '@/components/atoms/IconPaperPlane'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { TextArea } from '@/components/molecules/TextArea'
 import { Form } from '@/components/organisms/Form'
 
@@ -15,42 +18,42 @@ import {
 } from './style.css'
 
 type InstructionFormProperties = {
+  contextLimit: number
   currentSessionId: string | null
-  onSendInstruction: (instruction: string) => Promise<void>
   isStreaming: boolean
   tokenCount?: number
-  contextLimit: number
+  onSendInstruction: (instruction: string) => Promise<void>
   onRefresh?: () => Promise<void>
 }
 
 export const InstructionForm = ({
+  contextLimit: contextLimitProperty,
   currentSessionId,
-  onSendInstruction,
   isStreaming,
   tokenCount: tokenCountProperty,
-  contextLimit: contextLimitProperty,
+  onSendInstruction,
   onRefresh
 }: InstructionFormProperties): JSX.Element => {
   // We must call `useInstructionFormHandlers` inside the `Form` provider created by
   // `Form`. To ensure `useFormContext` is available we define an inner
   // component that consumes the context.
   const Inner = (): JSX.Element => {
-    const { register, submit, onStopClick } = useInstructionFormHandlers({
+    const { onStopClick, register, submit } = useInstructionFormHandlers({
       currentSessionId,
       onSendInstruction,
       onRefresh
     })
 
     const tokenCount = tokenCountProperty ?? 0
-    const { contextLeft, colorKey } = useInstructionFormLifecycle({
+    const { colorKey, contextLeft } = useInstructionFormLifecycle({
       isStreaming,
       tokenCount,
       contextLimit: contextLimitProperty
     })
 
     return (
-      <div>
-        <div className={instructionWrapper}>
+      <FlexColumn>
+        <Box className={instructionWrapper}>
           <TextArea
             id="new-instruction-text"
             className={instructionTextarea}
@@ -82,11 +85,13 @@ export const InstructionForm = ({
               <IconPaperPlane />
             </Button>
           )}
-        </div>
+        </Box>
         {contextLimitProperty > 0 && tokenCount !== null && (
-          <div className={contextLeftText[colorKey]}>({contextLeft}% context left)</div>
+          <Text className={contextLeftText[colorKey]} size="xs">
+            {`(${contextLeft}% context left)`}
+          </Text>
         )}
-      </div>
+      </FlexColumn>
     )
   }
 

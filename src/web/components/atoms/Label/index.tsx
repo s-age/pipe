@@ -8,9 +8,9 @@ type LabelProperties = {
 } & LabelHTMLAttributes<HTMLLabelElement>
 
 export const Label = ({
-  required,
   children,
   className,
+  required,
   ...properties
 }: LabelProperties): JSX.Element => (
   <label className={clsx(labelStyle, className)} {...properties}>

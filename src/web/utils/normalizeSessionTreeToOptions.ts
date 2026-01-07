@@ -3,12 +3,12 @@ import type { Option } from '@/types/option'
 type SessionTreeTuple = [string, Record<string, unknown>, unknown[]?]
 type SessionTreeNodeObject = {
   sessionId: string
-  overview?: Record<string, unknown>
   children?: unknown[]
+  overview?: Record<string, unknown>
 }
 type OptionLike = {
-  value: string | number
   label: string
+  value: string | number
 }
 
 const isTuple = (value: unknown): value is SessionTreeTuple =>

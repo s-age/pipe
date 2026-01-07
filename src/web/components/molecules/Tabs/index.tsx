@@ -1,5 +1,9 @@
 import React from 'react'
 
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
+
 import { useTabs } from './hooks/useTabs'
 import * as styles from './style.css'
 
@@ -9,21 +13,21 @@ export type TabItem<K extends string = string> = {
 }
 
 export type TabsProperties<K extends string> = {
-  tabs: TabItem<K>[]
   activeKey: K
+  tabs: TabItem<K>[]
   onChange: (key: K) => void
 }
 
 export const Tabs = <K extends string>({
-  tabs,
   activeKey,
+  tabs,
   onChange
 }: TabsProperties<K>): React.ReactElement => {
   const { handleClick } = useTabs(onChange)
 
   return (
-    <div className={styles.tabsContainer}>
-      <div className={styles.tabHeader} role="tablist">
+    <FlexColumn className={styles.tabsContainer}>
+      <Flex className={styles.tabHeader} role="tablist">
         {tabs.map((t) => {
           const isActive = t.key === activeKey
           const className = isActive ? styles.tabButtonActive : styles.tabButton
@@ -41,11 +45,11 @@ export const Tabs = <K extends string>({
             </button>
           )
         })}
-      </div>
+      </Flex>
 
-      <div className={styles.tabPanel}>
+      <Box className={styles.tabPanel}>
         {/* panel content is controlled by parent via activeKey */}
-      </div>
-    </div>
+      </Box>
+    </FlexColumn>
   )
 }

@@ -5,14 +5,10 @@ import { zIndex } from '@/styles/zIndex.css'
 import { colors } from '../../../styles/colors.css'
 
 export const container = style({
-  display: 'flex',
   position: 'fixed',
   padding: 12,
   pointerEvents: 'none',
-  zIndex: zIndex.toast,
-  flexDirection: 'column',
-  gap: 8,
-  alignItems: 'flex-end'
+  zIndex: zIndex.toast
 })
 
 // Positioning helpers via data-pos attribute
@@ -20,52 +16,40 @@ globalStyle('[data-pos="top-left"]', {
   top: 12,
   left: 12,
   right: 'auto',
-  bottom: 'auto',
-  alignItems: 'flex-start',
-  flexDirection: 'column-reverse'
+  bottom: 'auto'
 })
 
 globalStyle('[data-pos="top-center"]', {
   top: 12,
   left: '50%',
   transform: 'translateX(-50%)',
-  bottom: 'auto',
-  alignItems: 'center',
-  flexDirection: 'column-reverse'
+  bottom: 'auto'
 })
 
 globalStyle('[data-pos="top-right"]', {
   top: 12,
   right: 12,
   left: 'auto',
-  bottom: 'auto',
-  alignItems: 'flex-end',
-  flexDirection: 'column-reverse'
+  bottom: 'auto'
 })
 
 globalStyle('[data-pos="bottom-left"]', {
   bottom: 12,
   left: 12,
-  top: 'auto',
-  alignItems: 'flex-start',
-  flexDirection: 'column'
+  top: 'auto'
 })
 
 globalStyle('[data-pos="bottom-center"]', {
   bottom: 12,
   left: '50%',
   transform: 'translateX(-50%)',
-  top: 'auto',
-  alignItems: 'center',
-  flexDirection: 'column'
+  top: 'auto'
 })
 
 globalStyle('[data-pos="bottom-right"]', {
   bottom: 12,
   right: 12,
-  top: 'auto',
-  alignItems: 'flex-end',
-  flexDirection: 'column'
+  top: 'auto'
 })
 
 export const toast = style({
@@ -105,9 +89,7 @@ export const exit = style({
 })
 
 export const row = style({
-  display: 'flex',
-  gap: 8,
-  alignItems: 'flex-start'
+  // Layout handled by Flex component
 })
 
 export const icon = style({
@@ -118,7 +100,8 @@ export const icon = style({
   fontSize: 14,
   color: colors.cyan,
   background: `${colors.cyan}33`,
-  placeItems: 'center'
+  placeItems: 'center',
+  flexShrink: 0
 })
 
 export const content = style({
@@ -140,6 +123,7 @@ export const close = style({
   marginLeft: 8,
   padding: 6,
   border: 0,
+  color: colors.black,
   background: 'transparent',
   cursor: 'pointer'
 })

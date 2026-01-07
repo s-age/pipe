@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
 import { AppLayout } from '@/components/layouts/AppLayout'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { Tabs } from '@/components/molecules/Tabs'
 import { SessionList } from '@/components/organisms/SessionList'
 
@@ -20,14 +22,14 @@ export const SessionManagementPage = (): JSX.Element => {
   const navigate = useNavigate()
 
   const {
-    state,
     currentTab,
-    setCurrentTab,
-    selectedSessionIds,
+    handleBulkAction,
+    handleCancel,
     handleSelectAll,
     handleSelectSession,
-    handleBulkAction,
-    handleCancel
+    selectedSessionIds,
+    setCurrentTab,
+    state
   } = useSessionManagementHandlers({ navigate })
 
   const currentSessions =
@@ -45,8 +47,8 @@ export const SessionManagementPage = (): JSX.Element => {
 
   return (
     <AppLayout>
-      <div className={pageContent}>
-        <div className={scrollableContainer}>
+      <FlexColumn className={pageContent}>
+        <FlexColumn className={scrollableContainer} gap="s">
           <Heading level={1}>Session Management</Heading>
           <Tabs tabs={tabs} activeKey={currentTab} onChange={setCurrentTab} />
           <SessionList
@@ -57,8 +59,8 @@ export const SessionManagementPage = (): JSX.Element => {
             updateLabel={currentTab === 'archives' ? 'Deleted At' : 'Updated At'}
             useFilePath={currentTab === 'archives'}
           />
-        </div>
-        <div className={buttonBar}>
+        </FlexColumn>
+        <Flex className={buttonBar} gap="s" justify="center" align="center">
           <Button className={secondaryButton} onClick={handleCancel}>
             Cancel
           </Button>
@@ -69,8 +71,8 @@ export const SessionManagementPage = (): JSX.Element => {
           >
             {buttonText}
           </Button>
-        </div>
-      </div>
+        </Flex>
+      </FlexColumn>
     </AppLayout>
   )
 }

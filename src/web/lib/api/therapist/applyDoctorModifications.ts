@@ -1,23 +1,23 @@
 import { client } from '../client'
 
 export type ApplyDoctorModificationsRequest = {
-  sessionId: string
   modifications: {
+    compressions?: { end: number; reason: string; start: number }[]
     deletions?: number[]
-    edits?: { turn: number; newContent: string }[]
-    compressions?: { start: number; end: number; reason: string }[]
+    edits?: { newContent: string; turn: number }[]
   }
+  sessionId: string
 }
 
 export type ApplyDoctorModificationsResponse = {
-  sessionId: string
   result: {
-    appliedDeletions?: number[]
-    appliedEdits?: { turn: number; newContent: string }[]
-    appliedCompressions?: { start: number; end: number; summary: string }[]
     status: string
+    appliedCompressions?: { end: number; start: number; summary: string }[]
+    appliedDeletions?: number[]
+    appliedEdits?: { newContent: string; turn: number }[]
     reason?: string
   }
+  sessionId: string
 }
 
 export const applyDoctorModifications = async (

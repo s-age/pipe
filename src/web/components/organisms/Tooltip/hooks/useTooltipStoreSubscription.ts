@@ -6,10 +6,10 @@ import type { TooltipPlacement } from './useTooltipHandlers'
 
 export type UseTooltipStoreSubscriptionProperties = {
   idReference: React.RefObject<number | null>
-  storeActive: ActiveTooltip
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>
   setPlacement: React.Dispatch<React.SetStateAction<TooltipPlacement>>
   setTargetRect: React.Dispatch<React.SetStateAction<DOMRect | null>>
+  storeActive: ActiveTooltip
 }
 
 /**
@@ -20,10 +20,10 @@ export type UseTooltipStoreSubscriptionProperties = {
  */
 export const useTooltipStoreSubscription = ({
   idReference,
-  storeActive,
   setIsVisible,
   setPlacement,
-  setTargetRect
+  setTargetRect,
+  storeActive
 }: UseTooltipStoreSubscriptionProperties): void => {
   useEffect(() => {
     const data = storeActive

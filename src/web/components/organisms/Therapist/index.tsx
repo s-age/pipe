@@ -1,7 +1,10 @@
 import type { JSX } from 'react'
 
+import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
 import { IconReload } from '@/components/atoms/IconReload'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
@@ -24,25 +27,31 @@ export const Therapist = ({
 
   const {
     diagnosis,
-    isSubmitting,
-    selectedDeletions,
-    selectedEdits,
-    selectedCompressions,
-    handleDiagnose,
+    handleApply,
     handleDeletionChange,
+    handleDiagnose,
     handleEditChange,
-    handleApply
+    isSubmitting,
+    selectedCompressions,
+    selectedDeletions,
+    selectedEdits
   } = useTherapistHandlers(sessionId, onRefresh)
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.header} role="region" aria-label="Therapist Diagnosis">
+    <FlexColumn className={styles.wrapper}>
+      <Flex
+        justify="between"
+        align="center"
+        className={styles.header}
+        role="region"
+        aria-label="Therapist Diagnosis"
+      >
         <Heading level={4} className={styles.title}>
           Therapist Diagnosis(experimental)
         </Heading>
         {diagnosis ? (
           <Tooltip content="Re-diagnose" placement="bottom">
-            <button
+            <Button
               type="button"
               className={styles.reloadButton}
               onClick={handleDiagnose}
@@ -50,10 +59,10 @@ export const Therapist = ({
               disabled={isSubmitting}
             >
               <IconReload size={18} />
-            </button>
+            </Button>
           </Tooltip>
         ) : null}
-      </div>
+      </Flex>
       {!diagnosis ? (
         <TherapistForm
           sessionId={sessionId}
@@ -74,6 +83,6 @@ export const Therapist = ({
           handleApply={handleApply}
         />
       )}
-    </div>
+    </FlexColumn>
   )
 }

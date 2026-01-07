@@ -5,26 +5,21 @@ import { zIndex } from '@/styles/zIndex.css'
 import { colors } from '../../../styles/colors.css'
 
 export const pageContent = style({
-  display: 'flex',
   flex: 1,
   width: '60%',
   minHeight: 0,
   margin: '12px 0',
-  flexDirection: 'column',
   alignSelf: 'center'
 })
 
 export const scrollableContainer = style({
-  display: 'flex',
   flex: 1,
   minHeight: 0,
   maxHeight: 'calc(100vh - 48px)',
   overflowY: 'auto',
   padding: '20px 20px 80px',
   borderRadius: '12px',
-  background: colors.gray,
-  flexDirection: 'column',
-  gap: '12px'
+  background: colors.gray
 })
 
 export const headerSection = style({
@@ -39,7 +34,6 @@ export const actionsSection = style({
 })
 
 export const buttonBar = style({
-  display: 'flex',
   position: 'fixed',
   bottom: '12px',
   left: '50%',
@@ -52,9 +46,6 @@ export const buttonBar = style({
   transform: 'translateX(-50%)',
   borderTop: `2px solid ${colors.black}`,
   zIndex: zIndex.stickyButtonBar,
-  gap: '12px',
-  justifyContent: 'center',
-  alignItems: 'center',
   '@media': {
     'screen and (max-width: 720px)': {
       width: 'calc(100% - 32px)',

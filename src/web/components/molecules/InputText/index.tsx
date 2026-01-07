@@ -9,13 +9,13 @@ import { useInputText } from './hooks/useInputText'
 import { inputStyle } from './style.css'
 
 type InputTextProperties = {
-  register?: UseFormRegister<FieldValues>
   name?: string
+  register?: UseFormRegister<FieldValues>
 } & InputHTMLAttributes<HTMLInputElement>
 
 export const InputText = ({
-  register,
   name,
+  register,
   ...rest
 }: InputTextProperties): JSX.Element => {
   const { registerProperties } = useInputText({ register, name })

@@ -8,9 +8,9 @@ type HeadingProperties = {
 } & HTMLAttributes<HTMLHeadingElement>
 
 export const Heading = ({
-  level = 1,
   children,
   className,
+  level = 1,
   ...properties
 }: HeadingProperties): JSX.Element => {
   const Tag = `h${level}` as const

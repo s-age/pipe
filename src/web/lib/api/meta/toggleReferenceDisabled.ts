@@ -1,8 +1,8 @@
 import { client } from '../client'
 
 export type ToggleReferenceDisabledResponse = {
-  message: string
   disabled: boolean
+  message: string
 }
 
 export const toggleReferenceDisabled = async (

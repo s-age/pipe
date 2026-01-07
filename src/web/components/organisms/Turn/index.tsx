@@ -6,6 +6,10 @@ import { IconCopy } from '@/components/atoms/IconCopy'
 import { IconDelete } from '@/components/atoms/IconDelete'
 import { IconEdit } from '@/components/atoms/IconEdit'
 import { IconFork } from '@/components/atoms/IconFork'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { Code } from '@/components/molecules/Code'
+import { Flex } from '@/components/molecules/Flex'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import { useTurnActions } from '@/components/organisms/Turn/hooks/useTurnActions'
 import { useTurnHandlers } from '@/components/organisms/Turn/hooks/useTurnHandlers'
@@ -35,46 +39,44 @@ import { ToolResponseContent } from './ToolResponseContent'
 import { UserTaskContent } from './UserTaskContent'
 
 type TurnProperties = {
-  turn: Turn
-  index: number
   expertMode: boolean
+  index: number
+  turn: Turn
+  editedContent?: string
+  isEditing?: boolean
   isStreaming?: boolean
-  // For ChatHistory integration
   sessionId?: string
+  onCancelEdit?: () => void
+  onCopy?: () => Promise<void>
+  onDelete?: () => void
+  onEditedChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
+  onFork?: () => void
   onRefresh?: () => Promise<void>
+  onSaveEdit?: () => void
+  onStartEdit?: () => void
   refreshSessionsInStore?: (
     sessionDetail: SessionDetail,
     sessions: SessionOverview[]
   ) => void
-  // Turn handlers passed from parent (for backward compatibility)
-  isEditing?: boolean
-  editedContent?: string
-  onCopy?: () => Promise<void>
-  onEditedChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
-  onCancelEdit?: () => void
-  onStartEdit?: () => void
-  onFork?: () => void
-  onDelete?: () => void
-  onSaveEdit?: () => void
 }
 
 export const TurnComponent = ({
-  turn,
-  index,
   expertMode,
+  index,
+  turn,
+  editedContent: propertyEditedContent = '',
+  isEditing: propertyIsEditing = false,
   isStreaming = false,
   sessionId,
-  onRefresh,
-  refreshSessionsInStore,
-  isEditing: propertyIsEditing = false,
-  editedContent: propertyEditedContent = '',
-  onCopy: propertyOnCopy,
-  onEditedChange: propertyOnEditedChange,
   onCancelEdit: propertyOnCancelEdit,
-  onStartEdit: propertyOnStartEdit,
-  onFork: propertyOnFork,
+  onCopy: propertyOnCopy,
   onDelete: propertyOnDelete,
-  onSaveEdit: propertyOnSaveEdit
+  onEditedChange: propertyOnEditedChange,
+  onFork: propertyOnFork,
+  onRefresh,
+  onSaveEdit: propertyOnSaveEdit,
+  onStartEdit: propertyOnStartEdit,
+  refreshSessionsInStore
 }: TurnProperties): JSX.Element => {
   const { deleteTurnAction, editTurnAction, forkSessionAction } = useTurnActions()
 
@@ -143,7 +145,9 @@ export const TurnComponent = ({
 
       case 'function_calling':
         return (
-          <pre className={turnContent}>{JSON.stringify(turn.response, null, 2)}</pre>
+          <Code block={true} className={turnContent}>
+            {JSON.stringify(turn.response, null, 2)}
+          </Code>
         )
 
       case 'tool_response':
@@ -152,7 +156,11 @@ export const TurnComponent = ({
         return <ToolResponseContent response={turn.response} />
 
       default:
-        return <pre className={turnContent}>{JSON.stringify(turn, null, 2)}</pre>
+        return (
+          <Code block={true} className={turnContent}>
+            {JSON.stringify(turn, null, 2)}
+          </Code>
+        )
     }
   }
 
@@ -170,20 +178,28 @@ export const TurnComponent = ({
   const timestamp = turn.timestamp ? formatTimestamp(new Date(turn.timestamp)) : ''
 
   return (
-    <div
+    <Flex
       className={clsx(
         turnWrapper,
         turn.type === 'user_task' ? userTaskAligned : otherTurnAligned
       )}
     >
-      <div className={turnContentBase} id={`turn-${index}`}>
-        <div className={turnHeader}>
-          <span className={turnHeaderInfo}>
-            <span className={turnIndexStyle}>{index + 1}:</span>
+      <Box
+        className={turnContentBase}
+        id={`turn-${index}`}
+        padding="s"
+        radius="m"
+        border={true}
+      >
+        <Flex className={turnHeader} justify="between" align="center">
+          <Flex className={turnHeaderInfo} align="center" gap="s">
+            <Text className={turnIndexStyle} weight="bold">
+              {`${index + 1}:`}
+            </Text>
             {getHeaderContent(turn.type || 'unknown')}
-            <span className={turnTimestamp}>{timestamp}</span>
-          </span>
-          <div className={turnHeaderControls}>
+            <Text className={turnTimestamp}>{timestamp}</Text>
+          </Flex>
+          <Flex className={turnHeaderControls} gap="s">
             {turn.type === 'model_response' && onFork && (
               <Tooltip content="Fork Session" placement="bottom">
                 <Button kind="ghost" size="xsmall" onClick={onFork}>
@@ -214,10 +230,10 @@ export const TurnComponent = ({
                 </Button>
               </Tooltip>
             )}
-          </div>
-        </div>
+          </Flex>
+        </Flex>
         {renderTurnContent()}
-      </div>
-    </div>
+      </Box>
+    </Flex>
   )
 }

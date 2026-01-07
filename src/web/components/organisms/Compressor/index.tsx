@@ -23,19 +23,19 @@ const CompressorContent = ({
   const effectiveMax = maxTurn
 
   const {
-    summary,
-    error,
-    isSubmitting,
-    startLocal,
-    endLocal,
     compressorSessionId,
-    handleStartChange,
-    handleEndChange,
+    endLocal,
+    error,
     handleDeny,
-    setSummary,
+    handleEndChange,
+    handleStartChange,
+    isSubmitting,
+    setCompressorSessionId,
     setError,
     setIsSubmitting,
-    setCompressorSessionId
+    setSummary,
+    startLocal,
+    summary
   } = useCompressorHandlers({
     effectiveMax
   })

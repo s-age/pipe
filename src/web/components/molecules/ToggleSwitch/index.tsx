@@ -1,7 +1,9 @@
 import clsx from 'clsx'
 import type { JSX } from 'react'
 
-import { Label } from '@/components/atoms/Label'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
 
 import { useToggleSwitchHandlers } from './hooks/useToggleSwitchHandlers'
 import {
@@ -13,24 +15,24 @@ import {
 } from './style.css'
 
 type ToggleSwitchProperties = {
+  ariaLabel?: string
   checked?: boolean
-  onChange?: (checked: boolean) => void
   disabled?: boolean
   label?: string
-  ariaLabel?: string
+  onChange?: (checked: boolean) => void
 }
 
 export const ToggleSwitch = ({
+  ariaLabel,
   checked,
-  onChange,
   disabled = false,
   label,
-  ariaLabel
+  onChange
 }: ToggleSwitchProperties): JSX.Element => {
   const {
     checked: isChecked,
-    handleToggle,
-    handleInputClick
+    handleInputClick,
+    handleToggle
   } = useToggleSwitchHandlers({
     checked,
     onChange,
@@ -38,7 +40,7 @@ export const ToggleSwitch = ({
   })
 
   return (
-    <label className={toggleSwitch} onClick={handleToggle}>
+    <Flex as="label" className={toggleSwitch} onClick={handleToggle} align="center">
       <input
         type="checkbox"
         className={toggleInput}
@@ -47,12 +49,13 @@ export const ToggleSwitch = ({
         aria-label={ariaLabel}
         onClick={handleInputClick}
       />
-      <span
+      <Box
+        as="span"
         className={clsx(toggleSlider, {
           [toggleSliderChecked]: isChecked
         })}
       />
-      {label && <Label className={toggleLabel}>{label}</Label>}
-    </label>
+      {label && <Text className={toggleLabel}>{label}</Text>}
+    </Flex>
   )
 }

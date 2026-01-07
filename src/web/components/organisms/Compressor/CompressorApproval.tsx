@@ -1,36 +1,40 @@
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
+import { Box } from '@/components/molecules/Box'
+import { Code } from '@/components/molecules/Code'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 
 import { useCompressorApprovalHandlers } from './hooks/useCompressorApprovalHandlers'
 import * as styles from './style.css'
 
 export type CompressorApprovalProperties = {
-  summary: string
+  compressorSessionId: string | null
   sessionId: string
-  start?: number
+  summary: string
   end?: number
-  setSummary: (summary: string) => void
+  isSubmitting?: boolean
+  start?: number
+  handleDeny: () => void
+  onRefresh: () => Promise<void>
+  setCompressorSessionId: (id: string | null) => void
   setError: (error: string | null) => void
   setIsSubmitting: (isSubmitting: boolean) => void
-  handleDeny: () => void
-  isSubmitting?: boolean
-  compressorSessionId: string | null
-  setCompressorSessionId: (id: string | null) => void
-  onRefresh: () => Promise<void>
+  setSummary: (summary: string) => void
 }
 
 export const CompressorApproval = ({
-  summary,
-  start,
-  end,
-  setSummary,
-  setIsSubmitting,
-  handleDeny,
-  isSubmitting = false,
   compressorSessionId,
+  summary,
+  end,
+  isSubmitting = false,
+  start,
+  handleDeny,
+  onRefresh,
   setCompressorSessionId,
-  onRefresh
+  setIsSubmitting,
+  setSummary
 }: CompressorApprovalProperties): JSX.Element => {
   const { handleApprove } = useCompressorApprovalHandlers({
     compressorSessionId,
@@ -41,27 +45,29 @@ export const CompressorApproval = ({
   })
 
   return (
-    <div className={styles.form}>
-      <div className={styles.previewBox}>
-        <div className={styles.previewTitle}>
+    <FlexColumn className={styles.form}>
+      <Box className={styles.previewBox}>
+        <Box className={styles.previewTitle}>
           Proposed Compression — Turns {start ?? '?'}–{end ?? '?'}
-        </div>
+        </Box>
 
-        <div className={styles.muted}>
+        <Box className={styles.muted}>
           The verifier sub-agent has reviewed the proposed compression and returned an
           approved result.
-        </div>
-        <div className={styles.muted}>
+        </Box>
+        <Box className={styles.muted}>
           Please review the verified summary below and confirm whether you want to
           replace turns {start ?? 'N'} through {end ?? 'N'} with this summary.
-        </div>
+        </Box>
 
-        <div className={styles.previewTitle}>Verified summary:</div>
-        <pre className={styles.pre}>{summary}</pre>
-      </div>
+        <Box className={styles.previewTitle}>Verified summary:</Box>
+        <Code block={true} className={styles.pre}>
+          {summary}
+        </Code>
+      </Box>
 
-      <div className={styles.buttonContainer}>
-        <div className={styles.buttonRow}>
+      <Box className={styles.buttonContainer}>
+        <Flex gap="s" className={styles.buttonRow}>
           <Button
             kind="secondary"
             size="default"
@@ -81,8 +87,8 @@ export const CompressorApproval = ({
           >
             Approve
           </Button>
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </Box>
+    </FlexColumn>
   )
 }

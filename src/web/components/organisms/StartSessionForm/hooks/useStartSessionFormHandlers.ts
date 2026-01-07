@@ -7,10 +7,10 @@ import { useStartSessionFormActions } from './useStartSessionFormActions'
 import type { StartSessionFormInputs } from '../schema'
 
 export const useStartSessionFormHandlers = (): {
+  isSubmitting: boolean
+  dummyHandler: () => Promise<void>
   handleCancel: () => void
   handleCreateClick: () => Promise<void>
-  dummyHandler: () => Promise<void>
-  isSubmitting: boolean
 } => {
   const { startSessionAction } = useStartSessionFormActions()
   const formContext = useOptionalFormContext<StartSessionFormInputs>()

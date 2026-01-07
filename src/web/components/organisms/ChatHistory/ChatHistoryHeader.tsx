@@ -18,8 +18,8 @@ type ChatHistoryHeaderProperties = {
 export const ChatHistoryHeader = ({
   sessionDetail,
   handleDeleteCurrentSession
-}: ChatHistoryHeaderProperties): JSX.Element => {
-  if (!sessionDetail) return <div />
+}: ChatHistoryHeaderProperties): JSX.Element | null => {
+  if (!sessionDetail) return null
 
   return (
     <Flex justify="between" align="center" className={turnsHeader}>

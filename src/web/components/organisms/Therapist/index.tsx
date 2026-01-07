@@ -1,5 +1,6 @@
 import type { JSX } from 'react'
 
+import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
 import { IconReload } from '@/components/atoms/IconReload'
 import { Flex } from '@/components/molecules/Flex'
@@ -50,7 +51,7 @@ export const Therapist = ({
         </Heading>
         {diagnosis ? (
           <Tooltip content="Re-diagnose" placement="bottom">
-            <button
+            <Button
               type="button"
               className={styles.reloadButton}
               onClick={handleDiagnose}
@@ -58,7 +59,7 @@ export const Therapist = ({
               disabled={isSubmitting}
             >
               <IconReload size={18} />
-            </button>
+            </Button>
           </Tooltip>
         ) : null}
       </Flex>

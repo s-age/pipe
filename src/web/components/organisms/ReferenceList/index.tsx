@@ -2,6 +2,7 @@ import type { JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Label } from '@/components/atoms/Label'
+import { Text } from '@/components/atoms/Text'
 import { Accordion } from '@/components/molecules/Accordion'
 import { MetaLabel, MetaItem } from '@/components/molecules/MetaItem'
 import { Paragraph } from '@/components/molecules/Paragraph'
@@ -52,11 +53,11 @@ export const ReferenceList = ({
 
       {/* Collapsible list of reference items only */}
       <Accordion
-        title={<span />}
+        title=""
         summary={
-          <span
+          <Text
             className={referenceSummary}
-          >{`${references.length} ${references.length === 1 ? 'reference' : 'references'} · Advanced settings`}</span>
+          >{`${references.length} ${references.length === 1 ? 'reference' : 'references'} · Advanced settings`}</Text>
         }
         defaultOpen={false}
         open={accordionOpen}

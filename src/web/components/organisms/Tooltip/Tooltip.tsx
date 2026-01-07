@@ -2,6 +2,8 @@ import { clsx } from 'clsx'
 import React from 'react'
 import type { JSX } from 'react'
 
+import { Box } from '@/components/molecules/Box'
+
 import { useTooltipHandlers } from './hooks/useTooltipHandlers'
 import { tooltipContainer } from './style.css'
 
@@ -26,12 +28,12 @@ export const Tooltip: ({
   const { handleMouseLeave, onEnter } = useTooltipHandlers(content, placement)
 
   return (
-    <div
+    <Box
       className={clsx(tooltipContainer, className)}
       onMouseEnter={onEnter}
       onMouseLeave={handleMouseLeave}
     >
       {children}
-    </div>
+    </Box>
   )
 }

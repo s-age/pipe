@@ -11,7 +11,7 @@ type UserTaskContentProperties = {
 export const UserTaskContent = ({
   instruction
 }: UserTaskContentProperties): JSX.Element => (
-  <Code block className={editablePre}>
+  <Code block={true} className={editablePre}>
     {instruction || ''}
   </Code>
 )

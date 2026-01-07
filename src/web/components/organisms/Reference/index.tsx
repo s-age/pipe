@@ -2,6 +2,9 @@ import clsx from 'clsx'
 import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
+import { Text } from '@/components/atoms/Text'
+import { Flex } from '@/components/molecules/Flex'
+import { ListItem } from '@/components/molecules/ListItem'
 import { ToggleSwitch } from '@/components/molecules/ToggleSwitch'
 import { Tooltip } from '@/components/organisms/Tooltip'
 import type { Reference } from '@/types/reference'
@@ -38,8 +41,8 @@ export const ReferenceComponent = ({
   const ttl = localReference.ttl !== null ? localReference.ttl : 3
 
   return (
-    <li className={referenceItem}>
-      <div className={referenceLabel}>
+    <ListItem className={referenceItem}>
+      <Flex className={referenceLabel} align="center">
         <Tooltip
           content={localReference.persist ? 'Unlock reference' : 'Lock reference'}
           placement="bottom"
@@ -56,25 +59,25 @@ export const ReferenceComponent = ({
                 : `Lock reference ${localReference.path}`
             }
           >
-            <span
+            <Text
               className={clsx(materialIcons, lockIconStyle)}
               data-locked={localReference.persist}
             >
               {localReference.persist ? 'lock' : 'lock_open'}
-            </span>
+            </Text>
           </Button>
         </Tooltip>
-        <span
+        <Text
           data-testid="reference-path"
           className={referencePath}
           data-disabled={String(Boolean(localReference.disabled))}
         >
           {localReference.path}
-        </span>
-      </div>
+        </Text>
+      </Flex>
 
-      <div className={referenceActions}>
-        <div className={ttlControls}>
+      <Flex className={referenceActions} align="center" justify="between">
+        <Flex className={ttlControls} align="center" gap="s">
           <Tooltip content="Decrease TTL" placement="bottom">
             <Button
               kind="primary"
@@ -87,7 +90,7 @@ export const ReferenceComponent = ({
               -
             </Button>
           </Tooltip>
-          <span className={ttlValue}>{ttl}</span>
+          <Text className={ttlValue}>{ttl}</Text>
           <Tooltip content="Increase TTL" placement="bottom">
             <Button
               kind="primary"
@@ -100,7 +103,7 @@ export const ReferenceComponent = ({
               +
             </Button>
           </Tooltip>
-        </div>
+        </Flex>
         <Tooltip content="Toggle reference enabled" placement="bottom">
           <ToggleSwitch
             checked={!localReference.disabled}
@@ -108,7 +111,7 @@ export const ReferenceComponent = ({
             ariaLabel={`Toggle reference ${localReference.path} enabled`}
           />
         </Tooltip>
-      </div>
-    </li>
+      </Flex>
+    </ListItem>
   )
 }

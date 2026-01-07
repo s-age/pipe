@@ -5,13 +5,10 @@ import { zIndex } from '@/styles/zIndex.css'
 import { colors } from '../../../styles/colors.css'
 
 export const overlay = style({
-  display: 'flex',
   position: 'fixed',
   backgroundColor: 'rgba(0,0,0,0.36)',
   pointerEvents: 'auto',
   inset: 0,
-  alignItems: 'center',
-  justifyContent: 'center',
   zIndex: zIndex.loading
 })
 

@@ -1,5 +1,6 @@
 import type { JSX } from 'react'
 
+import { Box } from '@/components/molecules/Box'
 import { SessionItem } from '@/components/molecules/SessionItem'
 import type {
   SessionOverview,
@@ -36,7 +37,7 @@ export const SessionListNode = ({
   }
 
   return (
-    <div key={node.sessionId} className={sessionNode}>
+    <Box key={node.sessionId} className={sessionNode}>
       <SessionItem
         session={sessionObject}
         isSelected={selectedSessionIds.includes(node.sessionId)}
@@ -44,7 +45,7 @@ export const SessionListNode = ({
         updateLabel={updateLabel}
       />
       {node.children && node.children.length > 0 && (
-        <div className={sessionChildren}>
+        <Box className={sessionChildren}>
           {node.children.map((child) => (
             <SessionListNode
               key={child.sessionId}
@@ -54,8 +55,8 @@ export const SessionListNode = ({
               updateLabel={updateLabel}
             />
           ))}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   )
 }

@@ -145,7 +145,7 @@ export const TurnComponent = ({
 
       case 'function_calling':
         return (
-          <Code block className={turnContent}>
+          <Code block={true} className={turnContent}>
             {JSON.stringify(turn.response, null, 2)}
           </Code>
         )
@@ -157,7 +157,7 @@ export const TurnComponent = ({
 
       default:
         return (
-          <Code block className={turnContent}>
+          <Code block={true} className={turnContent}>
             {JSON.stringify(turn, null, 2)}
           </Code>
         )

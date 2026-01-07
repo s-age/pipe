@@ -2,6 +2,9 @@ import type { JSX } from 'react'
 
 import { Button } from '@/components/atoms/Button'
 import { IconPaperPlane } from '@/components/atoms/IconPaperPlane'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { TextArea } from '@/components/molecules/TextArea'
 import { Form } from '@/components/organisms/Form'
 
@@ -49,8 +52,8 @@ export const InstructionForm = ({
     })
 
     return (
-      <div>
-        <div className={instructionWrapper}>
+      <FlexColumn>
+        <Box className={instructionWrapper}>
           <TextArea
             id="new-instruction-text"
             className={instructionTextarea}
@@ -82,11 +85,13 @@ export const InstructionForm = ({
               <IconPaperPlane />
             </Button>
           )}
-        </div>
+        </Box>
         {contextLimitProperty > 0 && tokenCount !== null && (
-          <div className={contextLeftText[colorKey]}>({contextLeft}% context left)</div>
+          <Text className={contextLeftText[colorKey]} size="xs">
+            {`(${contextLeft}% context left)`}
+          </Text>
         )}
-      </div>
+      </FlexColumn>
     )
   }
 

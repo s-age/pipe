@@ -4,7 +4,10 @@ import { useWatch } from 'react-hook-form'
 import { Button } from '@/components/atoms/Button'
 import { Heading } from '@/components/atoms/Heading'
 import { Fieldset } from '@/components/molecules/Fieldset'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { MetaLabel } from '@/components/molecules/MetaItem'
+import { ScrollArea } from '@/components/molecules/ScrollArea'
 import { Select } from '@/components/molecules/Select'
 import { TextArea } from '@/components/molecules/TextArea'
 import { ArtifactList } from '@/components/organisms/ArtifactList'
@@ -59,8 +62,8 @@ export const StartSessionFormInner = ({
   // Debug exposure removed.
 
   return (
-    <div className={formContainer}>
-      <div className={scrollable}>
+    <FlexColumn className={formContainer}>
+      <ScrollArea className={scrollable}>
         <Heading level={1} className={headingSticky}>
           Create New Session
         </Heading>
@@ -110,7 +113,7 @@ export const StartSessionFormInner = ({
           currentSessionId=""
         />
 
-        <div className={buttonBar}>
+        <Flex className={buttonBar}>
           <Button
             type="submit"
             kind="primary"
@@ -131,8 +134,8 @@ export const StartSessionFormInner = ({
           >
             Cancel
           </Button>
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </ScrollArea>
+    </FlexColumn>
   )
 }

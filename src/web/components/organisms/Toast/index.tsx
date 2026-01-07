@@ -2,6 +2,11 @@ import { clsx } from 'clsx'
 import type { JSX } from 'react'
 import { createPortal } from 'react-dom'
 
+import { Button } from '@/components/atoms/Button'
+import { Text } from '@/components/atoms/Text'
+import { Box } from '@/components/molecules/Box'
+import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import type { ToastItem } from '@/stores/useToastStore'
 
 import { useToast } from './hooks/useToast'
@@ -27,10 +32,10 @@ const allPositions: Position[] = [
 ]
 
 const Icon = ({ status }: { status: ToastItem['status'] }): JSX.Element => {
-  if (status === 'success') return <span className={styles.icon}>✓</span>
-  if (status === 'failure') return <span className={styles.icon}>✕</span>
+  if (status === 'success') return <Text className={styles.icon}>✓</Text>
+  if (status === 'failure') return <Text className={styles.icon}>✕</Text>
 
-  return <span className={styles.icon}>!</span>
+  return <Text className={styles.icon}>!</Text>
 }
 
 const statusClassMap: Record<ToastItem['status'], string> = {
@@ -50,7 +55,7 @@ const ToastItem = ({
     useToastItemHandlers({ item, removeToast })
 
   return (
-    <div
+    <Box
       role={item.status === 'failure' ? 'alert' : 'status'}
       aria-live={item.status === 'failure' ? 'assertive' : 'polite'}
       className={clsx(
@@ -61,21 +66,27 @@ const ToastItem = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className={styles.row}>
+      <Flex gap="s" align="start">
         <Icon status={item.status} />
-        <div className={styles.content}>
-          {item.title ? <div className={styles.title}>{item.title}</div> : null}
+        <FlexColumn className={styles.content}>
+          {item.title ? <Text className={styles.title}>{item.title}</Text> : null}
           {item.description ? (
-            <div className={styles.description}>{item.description}</div>
+            <Text className={styles.description}>{item.description}</Text>
           ) : null}
-        </div>
+        </FlexColumn>
         {item.dismissible ? (
-          <button className={styles.close} onClick={handleClose} aria-label="Close">
+          <Button
+            kind="ghost"
+            size="small"
+            className={styles.close}
+            onClick={handleClose}
+            aria-label="Close"
+          >
             ×
-          </button>
+          </Button>
         ) : null}
-      </div>
-    </div>
+      </Flex>
+    </Box>
   )
 }
 
@@ -85,11 +96,11 @@ export const Toasts = (): JSX.Element => {
 
   return createPortal(
     allPositions.map((pos) => (
-      <div key={pos} className={styles.container} data-pos={pos}>
+      <FlexColumn key={pos} className={styles.container} data-pos={pos} gap="s">
         {grouped[pos].map((item) => (
           <ToastItem key={item.id} item={item} removeToast={removeToast} />
         ))}
-      </div>
+      </FlexColumn>
     )),
     document.body
   )

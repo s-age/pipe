@@ -1,9 +1,12 @@
 import type { JSX } from 'react'
 
 import { Label } from '@/components/atoms/Label'
+import { Box } from '@/components/molecules/Box'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { Flex } from '@/components/molecules/Flex'
+import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { MetaItem } from '@/components/molecules/MetaItem'
+import { Paragraph } from '@/components/molecules/Paragraph'
 import { Slider } from '@/components/molecules/Slider'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 import type { SessionDetail } from '@/lib/api/session/getSession'
@@ -50,16 +53,16 @@ export const HyperParameters = ({
             : undefined
         }
       >
-        <p className={note}>
+        <Paragraph className={note}>
           Hyperparameters are fixed for GeminiAPI, but left to the model&apos;s
           discretion for gemini-cli.
-        </p>
-        <div>
+        </Paragraph>
+        <FlexColumn gap="s">
           <Flex align="center" gap="m" className={hyperparametersControl}>
-            <div className={labelContainer}>
+            <Box className={labelContainer}>
               <Label>Temperature:</Label>
-            </div>
-            <div className={sliderContainer}>
+            </Box>
+            <Box className={sliderContainer}>
               <Slider
                 min={0}
                 max={2}
@@ -71,14 +74,14 @@ export const HyperParameters = ({
                 onMouseUp={handleTemperatureMouseUp}
                 tabIndex={-1}
               />
-            </div>
+            </Box>
           </Flex>
 
           <Flex align="center" gap="m" className={hyperparametersControl}>
-            <div className={labelContainer}>
+            <Box className={labelContainer}>
               <Label>Top P:</Label>
-            </div>
-            <div className={sliderContainer}>
+            </Box>
+            <Box className={sliderContainer}>
               <Slider
                 min={0}
                 max={1}
@@ -89,14 +92,14 @@ export const HyperParameters = ({
                 onMouseDown={handleTopPMouseDown}
                 onMouseUp={handleTopPMouseUp}
               />
-            </div>
+            </Box>
           </Flex>
 
           <Flex align="center" gap="m" className={hyperparametersControl}>
-            <div className={labelContainer}>
+            <Box className={labelContainer}>
               <Label>Top K:</Label>
-            </div>
-            <div className={sliderContainer}>
+            </Box>
+            <Box className={sliderContainer}>
               <Slider
                 min={1}
                 max={50}
@@ -107,9 +110,9 @@ export const HyperParameters = ({
                 onMouseDown={handleTopKMouseDown}
                 onMouseUp={handleTopKMouseUp}
               />
-            </div>
+            </Box>
           </Flex>
-        </div>
+        </FlexColumn>
       </Fieldset>
     </MetaItem>
   )

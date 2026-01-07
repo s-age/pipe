@@ -1,5 +1,6 @@
 import type { JSX } from 'react'
 
+import { Box } from '@/components/molecules/Box'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
@@ -31,7 +32,7 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
   const existsValue = sessionDetail?.roles ?? []
 
   return (
-    <div className={container}>
+    <Box className={container}>
       <FileSearchExplorer
         existsValue={existsValue}
         list={list}
@@ -40,6 +41,6 @@ export const RolesSelect = (properties: RolesSelectProperties): JSX.Element => {
         onChange={handleRolesChange}
         onFocus={handleFocus}
       />
-    </div>
+    </Box>
   )
 }

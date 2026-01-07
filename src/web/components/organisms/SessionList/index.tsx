@@ -1,6 +1,7 @@
 import React, { type JSX } from 'react'
 
 import { Checkbox } from '@/components/atoms/Checkbox'
+import { Text } from '@/components/atoms/Text'
 import { Flex } from '@/components/molecules/Flex'
 import { FlexColumn } from '@/components/molecules/FlexColumn'
 import { Grid } from '@/components/molecules/Grid'
@@ -129,9 +130,9 @@ export const SessionList = ({
             onChange={handleSelectAll}
           />
           <Grid columns="1fr 100px 180px" gap="s">
-            <span className={headerSubject}>Subject</span>
-            <span className={headerShortHash}>Short Hash</span>
-            <span className={headerUpdatedAt}>{updateLabel}</span>
+            <Text className={headerSubject}>Subject</Text>
+            <Text className={headerShortHash}>Short Hash</Text>
+            <Text className={headerUpdatedAt}>{updateLabel}</Text>
           </Grid>
         </Flex>
       </Flex>

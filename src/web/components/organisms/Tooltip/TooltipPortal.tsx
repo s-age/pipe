@@ -1,6 +1,8 @@
 import type { JSX } from 'react'
 import { createPortal } from 'react-dom'
 
+import { Box } from '@/components/molecules/Box'
+
 import { useTooltipLifecycle } from './hooks/useTooltipLifecycle'
 import {
   tooltipText,
@@ -49,9 +51,9 @@ const TooltipPortal = ({
   if (typeof document === 'undefined') return null
 
   return createPortal(
-    <div ref={elementReference} className={className}>
+    <Box ref={elementReference} className={className}>
       {content}
-    </div>,
+    </Box>,
     document.body
   )
 }

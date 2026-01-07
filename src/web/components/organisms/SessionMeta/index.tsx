@@ -85,7 +85,7 @@ export const SessionMeta = ({
           </Box>
         </ScrollArea>
 
-        <div className={stickySaveMetaButtonContainer}>
+        <Box className={stickySaveMetaButtonContainer}>
           <Button
             kind="primary"
             size="default"
@@ -96,19 +96,19 @@ export const SessionMeta = ({
           >
             {isSubmitting ? 'Saving...' : 'Save Meta'}
           </Button>
-        </div>
+        </Box>
       </>
     )
   }
 
   return (
-    <div className={metaColumn}>
+    <Box className={metaColumn}>
       <Form<SessionMetaFormInputs>
         defaultValues={computedDefaultValues}
         schema={sessionMetaSchema}
       >
         <MetaContent />
       </Form>
-    </div>
+    </Box>
   )
 }

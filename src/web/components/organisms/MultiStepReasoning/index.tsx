@@ -1,5 +1,6 @@
 import type { JSX } from 'react'
 
+import { Strong } from '@/components/atoms/Strong'
 import { InputCheckbox } from '@/components/molecules/InputCheckbox'
 import { MetaItem } from '@/components/molecules/MetaItem'
 
@@ -28,7 +29,7 @@ export const MultiStepReasoning = ({
         checked={localEnabled}
         onChange={handleMultiStepReasoningChange}
       >
-        <strong className={multiStepLabel}>Multi-step Reasoning</strong>
+        <Strong className={multiStepLabel}>Multi-step Reasoning</Strong>
       </InputCheckbox>
     </MetaItem>
   )

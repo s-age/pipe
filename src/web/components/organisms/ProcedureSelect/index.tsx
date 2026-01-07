@@ -1,6 +1,7 @@
 import type { JSX } from 'react'
 
 import { ErrorMessage } from '@/components/atoms/ErrorMessage'
+import { Box } from '@/components/molecules/Box'
 import { FileSearchExplorer } from '@/components/organisms/FileSearchExplorer'
 import { useOptionalFormContext } from '@/components/organisms/Form'
 
@@ -31,7 +32,7 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
   const existsValue = currentValue ? [currentValue] : []
 
   return (
-    <div className={container}>
+    <Box className={container}>
       <FileSearchExplorer
         existsValue={existsValue}
         list={list}
@@ -41,6 +42,6 @@ export const ProcedureSelect = (properties: ProcedureSelectProperties): JSX.Elem
         onFocus={handleFocus}
       />
       {error && <ErrorMessage error={error as never} />}
-    </div>
+    </Box>
   )
 }

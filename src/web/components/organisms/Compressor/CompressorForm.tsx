@@ -3,6 +3,7 @@ import type { JSX } from 'react'
 import { Button } from '@/components/atoms/Button'
 import { Text } from '@/components/atoms/Text'
 import { Box } from '@/components/molecules/Box'
+import { Code } from '@/components/molecules/Code'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { Flex } from '@/components/molecules/Flex'
 import { FlexColumn } from '@/components/molecules/FlexColumn'
@@ -119,7 +120,9 @@ export const CompressorForm = ({
                 <Text size="xs" weight="semibold" className={styles.errorTitle}>
                   Error
                 </Text>
-                <pre className={styles.pre}>{error}</pre>
+                <Code block={true} className={styles.pre}>
+                  {error}
+                </Code>
               </Box>
             )}
 
@@ -128,7 +131,9 @@ export const CompressorForm = ({
                 <Text size="xs" weight="semibold" className={styles.previewTitle}>
                   Execution Result
                 </Text>
-                <pre className={styles.pre}>{execResult}</pre>
+                <Code block={true} className={styles.pre}>
+                  {execResult}
+                </Code>
               </Box>
             )}
           </Box>

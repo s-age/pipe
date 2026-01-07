@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { Button } from '@/components/atoms/Button'
+import { Strong } from '@/components/atoms/Strong'
 import { Box } from '@/components/molecules/Box'
 import { Fieldset } from '@/components/molecules/Fieldset'
 import { InputCheckbox } from '@/components/molecules/InputCheckbox'
@@ -55,7 +56,7 @@ export const TodoList = ({
                           data-index={String(index)}
                         />
                       </Box>
-                      <strong className={todoTitle}>{todo.title}</strong>
+                      <Strong className={todoTitle}>{todo.title}</Strong>
                     </Box>
                   </ListItem>
                 ))}

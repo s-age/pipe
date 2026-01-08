@@ -25,6 +25,3 @@ export const Button = ({
     {...properties}
   />
 )
-
-// Button is now a named export. Remove the default export to comply with
-// the project's `import/no-default-export` rule.

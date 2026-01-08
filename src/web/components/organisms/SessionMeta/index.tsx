@@ -21,7 +21,8 @@ import {
   sessionMetaSection,
   sessionMetaView,
   stickySaveMetaButtonContainer,
-  saveMetaButton
+  saveMetaButton,
+  srOnly
 } from './style.css'
 
 type SessionMetaProperties = {
@@ -60,8 +61,10 @@ export const SessionMeta = ({
           value={sessionDetail?.sessionId ?? ''}
         />
         {saveStatus !== 'idle' && (
-          <div role="status" aria-live="polite" style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}>
-            {saveStatus === 'success' ? 'Session metadata saved successfully' : 'Failed to save session metadata'}
+          <div role="status" aria-live="polite" className={srOnly}>
+            {saveStatus === 'success'
+              ? 'Session metadata saved successfully'
+              : 'Failed to save session metadata'}
           </div>
         )}
         <ScrollArea className={sessionMetaSection}>

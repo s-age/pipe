@@ -29,19 +29,21 @@ type Story = StoryObj<typeof Meta>
 export const Default: Story = {
   args: {
     existsValue: [],
-    onChange: () => {}
+    onChange: () => {},
+    'aria-label': 'Search files or directories'
   }
 }
 
 export const WithInitialPath: Story = {
   args: {
     existsValue: ['/path1', '/path2'],
-    onChange: () => {}
+    onChange: () => {},
+    'aria-label': 'Search files or directories'
   },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByPlaceholderText('Search files or directories...')
-    // Just check that the input exists and is focusable
+    const input = canvas.getByRole('combobox', { name: 'Search files or directories' })
+    // Verify ARIA attributes
     await userEvent.click(input)
   }
 }

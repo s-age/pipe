@@ -12,6 +12,16 @@ type InputRadioProperties = {
   label?: React.ReactNode
   name?: string
   register?: UseFormRegister<FieldValues>
+  /**
+   * Provides an accessible label for the radio button when a visible label is not present.
+   * Use this for radio buttons without associated label text.
+   */
+  'aria-label'?: string
+  /**
+   * Links the radio button to descriptive text such as error messages or help text.
+   * Provide the ID(s) of the describing element(s).
+   */
+  'aria-describedby'?: string
 } & InputHTMLAttributes<HTMLInputElement>
 
 export const InputRadio = ({

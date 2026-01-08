@@ -9,7 +9,20 @@ type LinkProperties = {
   className?: string
   target?: '_blank' | '_self' | '_parent' | '_top'
   variant?: 'default' | 'subtle' | 'primary' | 'unstyled'
-} & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'target'>
+  'aria-label'?: string
+  'aria-current'?:
+    | 'page'
+    | 'step'
+    | 'location'
+    | 'date'
+    | 'time'
+    | boolean
+    | 'true'
+    | 'false'
+} & Omit<
+  AnchorHTMLAttributes<HTMLAnchorElement>,
+  'href' | 'target' | 'aria-label' | 'aria-current'
+>
 
 export const Link = ({
   children,

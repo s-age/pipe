@@ -4,7 +4,18 @@ import type { InputHTMLAttributes, JSX } from 'react'
 
 import { checkboxStyle } from './style.css'
 
-type CheckboxProperties = {} & InputHTMLAttributes<HTMLInputElement>
+type CheckboxProperties = {
+  /**
+   * Provides an accessible label for the checkbox when a visible label is not present.
+   * Use this for checkboxes without associated <label> elements.
+   */
+  'aria-label'?: string
+  /**
+   * Links the checkbox to descriptive text such as error messages or help text.
+   * Provide the ID(s) of the describing element(s).
+   */
+  'aria-describedby'?: string
+} & InputHTMLAttributes<HTMLInputElement>
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProperties>(
   ({ className, ...properties }, reference): JSX.Element => (

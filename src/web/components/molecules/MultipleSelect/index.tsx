@@ -88,6 +88,13 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
     clearHighlight: () => setHighlightedIndex(-1)
   })
 
+  // Generate stable IDs for ARIA attributes
+  const listboxId = `${name}-listbox`
+  const activeDescendantId =
+    highlightedIndex >= 0 && filteredOptions[highlightedIndex]
+      ? `${name}-option-${highlightedIndex}`
+      : undefined
+
   const selectedLabels = selectedValues
     .map((value) => normalizedOptions.find((o) => o.value === value)?.label)
     .filter(Boolean)
@@ -133,8 +140,10 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
         role="button"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={listboxId}
+        aria-activedescendant={isOpen ? activeDescendantId : undefined}
         onClick={toggleOpen}
-        onKeyDown={handleKeyDown}
+        onKeyDown={searchable ? undefined : handleKeyDown}
         className={trigger}
       >
         <Box as="span">
@@ -153,45 +162,62 @@ export const MultipleSelect = (properties: MultipleSelectProperties): JSX.Elemen
                 type="text"
                 value={query}
                 onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
                 placeholder="Search options..."
+                aria-label="Search options"
+                aria-controls={listboxId}
+                aria-activedescendant={activeDescendantId}
+                aria-autocomplete="list"
                 className={searchInputField}
+                autoFocus={true}
               />
             </Box>
           )}
 
           <Box
             as="ul"
+            id={listboxId}
             ref={listReference}
             role="listbox"
             aria-hidden={!isOpen}
+            aria-multiselectable={true}
             className={panel}
           >
-            {filteredOptions.map((opt, index) => (
-              <Box
-                as="li"
-                key={`${opt.value ?? ''}-${index}`}
-                role="option"
-                onClick={handleOptionClick}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                className={clsx(
-                  option,
-                  highlightedIndex === index && optionHighlighted
-                )}
-                data-value={opt.value}
-                data-index={String(index)}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedValues.includes(opt.value)}
-                  readOnly={true}
-                  className={checkbox}
-                  value={opt.value}
-                  onClick={handleCheckboxClick}
-                />
-                {opt.label}
-              </Box>
-            ))}
+            {filteredOptions.map((opt, index) => {
+              const isSelected = selectedValues.includes(opt.value)
+              const optionId = `${name}-option-${index}`
+
+              return (
+                <Box
+                  as="li"
+                  id={optionId}
+                  key={`${opt.value ?? ''}-${index}`}
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={handleOptionClick}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  className={clsx(
+                    option,
+                    highlightedIndex === index && optionHighlighted
+                  )}
+                  data-value={opt.value}
+                  data-index={String(index)}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    readOnly={true}
+                    className={checkbox}
+                    value={opt.value}
+                    onClick={handleCheckboxClick}
+                    tabIndex={-1}
+                    aria-hidden={true}
+                  />
+                  {opt.label}
+                </Box>
+              )
+            })}
           </Box>
         </Box>
       )}

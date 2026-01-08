@@ -3,6 +3,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 
 import { Box } from '@/components/molecules/Box'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { themeClass } from '@/styles/theme.css'
 
 import { useModalHandlers } from './hooks/useModalHandlers'
@@ -28,6 +29,8 @@ export const getModalRoot = (): HTMLElement | null => modalRoot
 type ModalProperties = {
   /** Whether the modal is open (controlled by parent) */
   isOpen: boolean
+  'aria-labelledby'?: string
+  'aria-describedby'?: string
   children?: React.ReactNode
   onClose?: () => void
 }
@@ -47,10 +50,13 @@ type ModalProperties = {
 export const Modal = ({
   isOpen,
   children,
-  onClose
+  onClose,
+  'aria-labelledby': ariaLabelledby,
+  'aria-describedby': ariaDescribedby
 }: ModalProperties): JSX.Element | null => {
   const modalRoot = getModalRoot()
   const { onContentMouseDown, onOverlayMouseDown } = useModalHandlers(isOpen, onClose)
+  useFocusTrap({ isOpen })
 
   if (!isOpen || !modalRoot) return null
 
@@ -60,6 +66,8 @@ export const Modal = ({
       onMouseDown={onOverlayMouseDown}
       role="dialog"
       aria-modal="true"
+      aria-labelledby={ariaLabelledby}
+      aria-describedby={ariaDescribedby}
     >
       <Box className={styles.content} onMouseDown={onContentMouseDown}>
         {children}

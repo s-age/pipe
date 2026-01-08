@@ -22,6 +22,7 @@ export const TooltipManager = (): JSX.Element | null => {
           targetRect={activeTooltip.rect ?? null}
           offsetMain={activeTooltip.offsetMain}
           offsetCross={activeTooltip.offsetCross}
+          tooltipId={activeTooltip.id ? `tooltip-${activeTooltip.id}` : undefined}
         />
       ) : null}
     </>,

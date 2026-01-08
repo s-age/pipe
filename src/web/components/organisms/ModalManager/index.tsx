@@ -48,6 +48,9 @@ const ModalItem = ({
   const content = entry.content
 
   let innerJSX: React.ReactNode | null = null
+  let ariaLabelledby: string | undefined
+  let ariaDescribedby: string | undefined
+
   if (isConfirmDescriptor(content)) {
     const desc = content as {
       props: {
@@ -65,6 +68,8 @@ const ModalItem = ({
         onCancel={desc.props.onCancel ?? ((): void => undefined)}
       />
     )
+    ariaLabelledby = 'confirm-modal-title'
+    ariaDescribedby = 'confirm-modal-description'
   } else if (content != null && !isConfirmDescriptor(content)) {
     innerJSX = content as React.ReactNode
   }
@@ -72,7 +77,13 @@ const ModalItem = ({
   if (innerJSX == null) return null
 
   return (
-    <Modal key={String(entry.id)} isOpen={true} onClose={onClose}>
+    <Modal
+      key={String(entry.id)}
+      isOpen={true}
+      onClose={onClose}
+      aria-labelledby={ariaLabelledby}
+      aria-describedby={ariaDescribedby}
+    >
       {innerJSX}
     </Modal>
   )

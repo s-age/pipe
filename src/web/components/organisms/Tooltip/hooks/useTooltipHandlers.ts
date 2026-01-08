@@ -26,6 +26,9 @@ export const useTooltipHandlers = (
   ) => void
   handleMouseLeave: () => void
   onEnter: (event: React.MouseEvent<HTMLElement>) => void
+  onFocus: (event: React.FocusEvent<HTMLElement>) => void
+  onBlur: () => void
+  tooltipId: string | undefined
 } => {
   const [isVisible, setIsVisible] = useState(false)
   const [placement, setPlacement] = useState<TooltipPlacement>('top')
@@ -118,12 +121,33 @@ export const useTooltipHandlers = (
     [handleMouseEnter, content, forcedPlacement]
   )
 
+  const onFocus = useCallback(
+    (event: React.FocusEvent<HTMLElement>) => {
+      // Treat focus the same as mouse enter for accessibility
+      handleMouseEnter(event as unknown as React.MouseEvent<HTMLElement>, {
+        content,
+        placement: forcedPlacement
+      })
+    },
+    [handleMouseEnter, content, forcedPlacement]
+  )
+
+  const onBlur = useCallback(() => {
+    handleMouseLeave()
+  }, [handleMouseLeave])
+
+  const tooltipId =
+    idReference.current !== null ? `tooltip-${idReference.current}` : undefined
+
   return {
     isVisible,
     placement,
     targetRect,
     handleMouseEnter,
     handleMouseLeave,
-    onEnter
+    onEnter,
+    onFocus,
+    onBlur,
+    tooltipId
   }
 }

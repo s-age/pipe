@@ -8,6 +8,8 @@ type ButtonProperties = {
   kind?: 'primary' | 'secondary' | 'ghost' | 'danger'
   size?: 'small' | 'default' | 'large' | 'xsmall'
   text?: 'bold' | 'uppercase'
+  'aria-label'?: string
+  'aria-expanded'?: boolean | 'true' | 'false'
 } & ButtonHTMLAttributes<HTMLButtonElement>
 
 export const Button = ({

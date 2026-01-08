@@ -23,6 +23,7 @@ type Item = {
 
 type FileSearchExplorerProperties = {
   existsValue: string[]
+  'aria-label'?: string
   isMultiple?: boolean
   list?: Item[]
   placeholder?: string
@@ -44,7 +45,11 @@ const PathDisplay = ({ pathList, onTagDelete }: PathDisplayProperties): JSX.Elem
 )
 
 type SearchInputProperties = {
+  'aria-expanded': boolean
+  'aria-controls': string
   value: string
+  'aria-label'?: string
+  'aria-activedescendant'?: string
   placeholder?: string
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void
@@ -53,7 +58,20 @@ type SearchInputProperties = {
 }
 
 const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProperties>(
-  ({ onChange, onClick, onFocus, onKeyDown, value }, reference) => (
+  (
+    {
+      'aria-label': ariaLabel,
+      'aria-expanded': ariaExpanded,
+      'aria-controls': ariaControls,
+      'aria-activedescendant': ariaActiveDescendant,
+      onChange,
+      onClick,
+      onFocus,
+      onKeyDown,
+      value
+    },
+    reference
+  ) => (
     <input
       ref={reference}
       type="text"
@@ -65,6 +83,12 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProperties>(
       placeholder="Search files or directories..."
       className={searchInput}
       autoComplete="off"
+      role="combobox"
+      aria-autocomplete="list"
+      aria-label={ariaLabel}
+      aria-expanded={ariaExpanded}
+      aria-controls={ariaControls}
+      aria-activedescendant={ariaActiveDescendant}
     />
   )
 )
@@ -77,7 +101,8 @@ export const FileSearchExplorer = ({
   list,
   placeholder = 'Search...',
   onChange,
-  onFocus
+  onFocus,
+  'aria-label': ariaLabel = 'Search files or directories'
 }: FileSearchExplorerProperties): JSX.Element => {
   const {
     handleInputFocus,
@@ -99,21 +124,33 @@ export const FileSearchExplorer = ({
     onChange
   })
 
+  const suggestionListId = 'file-search-suggestions'
+  const isExpanded = suggestions.length > 0
+  const activeDescendantId =
+    isExpanded && selectedIndex >= 0
+      ? `${suggestionListId}-option-${selectedIndex}`
+      : undefined
+
   return (
     <Box className={container}>
-      {suggestions.length > 0 &&
-        (query.trim() !== '' || list !== undefined || query.trim() === '') && (
-          <UnorderedList className={suggestionList} ref={suggestionListReference}>
-            {suggestions.map((suggestion, index) => (
-              <SuggestionItem
-                key={index}
-                suggestion={suggestion}
-                onClick={handleSuggestionClick}
-                isSelected={index === selectedIndex}
-              />
-            ))}
-          </UnorderedList>
-        )}
+      {isExpanded && (
+        <UnorderedList
+          className={suggestionList}
+          ref={suggestionListReference}
+          role="listbox"
+          id={suggestionListId}
+        >
+          {suggestions.map((suggestion, index) => (
+            <SuggestionItem
+              key={index}
+              id={`${suggestionListId}-option-${index}`}
+              suggestion={suggestion}
+              onClick={handleSuggestionClick}
+              isSelected={index === selectedIndex}
+            />
+          ))}
+        </UnorderedList>
+      )}
       <SearchInput
         ref={inputReference}
         value={query}
@@ -122,6 +159,10 @@ export const FileSearchExplorer = ({
         onFocus={handleInputFocus}
         onClick={handleInputFocus}
         placeholder={placeholder}
+        aria-label={ariaLabel}
+        aria-expanded={isExpanded}
+        aria-controls={suggestionListId}
+        aria-activedescendant={activeDescendantId}
       />
       <PathDisplay pathList={selectedValues} onTagDelete={handleTagDelete} />
     </Box>

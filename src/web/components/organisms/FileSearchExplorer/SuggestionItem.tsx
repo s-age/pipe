@@ -6,6 +6,7 @@ import { useSuggestionItemHandlers } from './hooks/useSuggestionItemHandlers'
 import { suggestionItem, selectedSuggestionItem } from './style.css'
 
 export type SuggestionItemProperties = {
+  id: string
   suggestion: { label: string; value: string; path?: string }
   isSelected?: boolean
   onClick: (suggestion: { label: string; value: string; path?: string }) => void
@@ -13,7 +14,7 @@ export type SuggestionItemProperties = {
 
 export const SuggestionItem = React.memo(
   React.forwardRef<HTMLLIElement, SuggestionItemProperties>(
-    ({ isSelected = false, onClick, suggestion }, reference) => {
+    ({ id, isSelected = false, onClick, suggestion }, reference) => {
       const { elementReference, handleClick } = useSuggestionItemHandlers(
         suggestion,
         onClick,
@@ -26,6 +27,9 @@ export const SuggestionItem = React.memo(
           ref={elementReference}
           onClick={handleClick}
           className={isSelected ? selectedSuggestionItem : suggestionItem}
+          role="option"
+          id={id}
+          aria-selected={isSelected}
         >
           {suggestion.label}
         </ListItem>

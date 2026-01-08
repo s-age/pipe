@@ -17,6 +17,7 @@ export const useSessionMetaHandlers = ({
   onRefresh
 }: UseSessionMetaHandlersProperties): {
   isSubmitting: boolean
+  saveStatus: 'idle' | 'success' | 'error'
   handleSaveClick: () => void
   onSubmit: (data: SessionMetaFormInputs) => Promise<void>
 } => {
@@ -38,12 +39,20 @@ export const useSessionMetaHandlers = ({
   )
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   const wrappedSubmit = useCallback(
     async (data: SessionMetaFormInputs) => {
       setIsSubmitting(true)
-      await onSubmit(data)
-      setIsSubmitting(false)
+      setSaveStatus('idle')
+      try {
+        await onSubmit(data)
+        setSaveStatus('success')
+      } catch {
+        setSaveStatus('error')
+      } finally {
+        setIsSubmitting(false)
+      }
     },
     [onSubmit]
   )
@@ -59,5 +68,5 @@ export const useSessionMetaHandlers = ({
     }
   }, [formContext, onSubmit])
 
-  return { onSubmit: wrappedSubmit, isSubmitting, handleSaveClick }
+  return { onSubmit: wrappedSubmit, isSubmitting, saveStatus, handleSaveClick }
 }

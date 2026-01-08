@@ -20,6 +20,7 @@ type Properties = {
   targetRect: DOMRect | null
   offsetCross?: number | null
   offsetMain?: number | null
+  tooltipId?: string
 }
 
 const TooltipPortal = ({
@@ -28,7 +29,8 @@ const TooltipPortal = ({
   placement,
   targetRect,
   offsetCross,
-  offsetMain
+  offsetMain,
+  tooltipId
 }: Properties): JSX.Element | null => {
   const elementReference = useTooltipLifecycle({
     isVisible,
@@ -51,7 +53,7 @@ const TooltipPortal = ({
   if (typeof document === 'undefined') return null
 
   return createPortal(
-    <Box ref={elementReference} className={className}>
+    <Box ref={elementReference} className={className} id={tooltipId} role="tooltip">
       {content}
     </Box>,
     document.body

@@ -25,13 +25,19 @@ export const Tooltip: ({
   content,
   placement
 }) => {
-  const { handleMouseLeave, onEnter } = useTooltipHandlers(content, placement)
+  const { handleMouseLeave, onEnter, onFocus, onBlur, tooltipId } = useTooltipHandlers(
+    content,
+    placement
+  )
 
   return (
     <Box
       className={clsx(tooltipContainer, className)}
       onMouseEnter={onEnter}
       onMouseLeave={handleMouseLeave}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      aria-describedby={tooltipId}
     >
       {children}
     </Box>

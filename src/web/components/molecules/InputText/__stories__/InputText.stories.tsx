@@ -19,7 +19,8 @@ type Story = StoryObj<typeof Meta>
 export const Default: Story = {
   args: {
     placeholder: 'Type here…',
-    name: 'simpleText'
+    name: 'simpleText',
+    'aria-label': 'Simple text input'
   }
 }
 
@@ -35,6 +36,7 @@ export const Controlled: Story = {
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
               setValue(event.target.value)
             }
+            aria-label="Controlled text input"
           />
           <div style={{ marginTop: 8 }}>Current: {value}</div>
         </div>
@@ -49,7 +51,12 @@ export const WithRHF: Story = {
   render: (): JSX.Element => {
     const FormExample = (): JSX.Element => (
       <Form>
-        <InputText name="firstName" placeholder="First name" />
+        <InputText
+          name="firstName"
+          placeholder="First name"
+          aria-label="First name"
+          aria-required={true}
+        />
         <button type="submit" onClick={(data) => console.log('submit', data)}>
           Submit
         </button>
@@ -73,7 +80,11 @@ export const WithoutForm: Story = {
 
       return (
         <form onSubmit={handleSubmit}>
-          <InputText name="plainInput" placeholder="Plain input" />
+          <InputText
+            name="plainInput"
+            placeholder="Plain input"
+            aria-label="Plain text input"
+          />
           <button type="submit">Submit</button>
         </form>
       )

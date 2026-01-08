@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
 import React from 'react'
-import type { ReactNode } from 'react'
+import type { ReactNode, HTMLAttributes } from 'react'
 
 import { unorderedList } from './style.css'
 
@@ -9,7 +9,7 @@ type UnorderedListProperties = {
   className?: string
   gap?: 's' | 'm' | 'l' | 'xl' | 'none'
   marker?: 'none' | 'disc' | 'circle' | 'square'
-}
+} & Omit<HTMLAttributes<HTMLUListElement>, 'className'>
 
 export const UnorderedList = React.forwardRef<
   HTMLUListElement,

@@ -10,7 +10,7 @@ import type { FormMethods } from './FormContext'
 import { useFormHandlers } from './hooks/useFormHandlers'
 import { useFormLifecycle } from './hooks/useFormLifecycle'
 import { useFormMethodsPatcher } from './hooks/useFormMethodsPatcher'
-import { formStyle } from './style.css'
+import { formStyle, formErrorStyle } from './style.css'
 
 export { useFormContext, useOptionalFormContext } from './FormContext'
 export type { FormMethods } from './FormContext'
@@ -23,12 +23,24 @@ export type FormProperties<TFieldValues extends FieldValues = FieldValues> =
      * the Form will create a zodResolver(schema) internally.
      */
     schema?: ZodTypeAny
+    /**
+     * Optional aria-busy state. When true, announces to screen readers
+     * that the form is processing (e.g., during submission).
+     */
+    'aria-busy'?: boolean
+    /**
+     * Optional form-level error message. When provided, displays in a
+     * role="alert" region for screen reader announcements.
+     */
+    formError?: string
   }
 
 export const Form = <TFieldValues extends FieldValues = FieldValues>({
   children,
   resolver,
   schema,
+  'aria-busy': ariaBusy,
+  formError,
   ...properties
 }: FormProperties<TFieldValues>): React.JSX.Element => {
   // Resolve which resolver to use. Priority:
@@ -59,7 +71,12 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <FormContext.Provider value={patchedMethods as FormMethods<FieldValues>}>
-      <form className={formStyle} onSubmit={handleFormSubmit}>
+      <form className={formStyle} onSubmit={handleFormSubmit} aria-busy={ariaBusy}>
+        {formError && (
+          <div role="alert" className={formErrorStyle}>
+            {formError}
+          </div>
+        )}
         {children}
       </form>
     </FormContext.Provider>

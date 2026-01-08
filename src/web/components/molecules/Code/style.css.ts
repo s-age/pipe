@@ -1,4 +1,4 @@
-import { style } from '@vanilla-extract/css'
+import { style, globalStyle } from '@vanilla-extract/css'
 
 import { variables } from '@/styles/theme.css'
 
@@ -19,14 +19,12 @@ export const pre = style({
   borderRadius: variables.borderRadius.m,
   border: `1px solid ${variables.color.border}`,
   overflow: 'auto',
-  margin: 0,
+  margin: 0
+})
 
-  selectors: {
-    '& code': {
-      backgroundColor: 'transparent',
-      padding: 0,
-      border: 'none',
-      borderRadius: 0
-    }
-  }
+globalStyle(`${pre} code`, {
+  backgroundColor: 'transparent',
+  padding: 0,
+  border: 'none',
+  borderRadius: 0
 })

@@ -7,6 +7,7 @@ type TextProperties = {
   align?: 'left' | 'center' | 'right' | 'justify'
   children?: string | number
   className?: string
+  id?: string
   size?: 'xs' | 's' | 'm' | 'l' | 'xl'
   truncate?: boolean
   variant?: 'default' | 'muted' | 'error' | 'success'

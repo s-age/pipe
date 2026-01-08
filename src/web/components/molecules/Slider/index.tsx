@@ -12,8 +12,10 @@ import * as styles from './style.css'
 
 export type SliderProperties = Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  'onChange' | 'type'
+  'onChange' | 'type' | 'aria-label' | 'aria-orientation'
 > & {
+  'aria-label'?: string
+  'aria-orientation'?: 'horizontal' | 'vertical'
   defaultValue?: number
   max?: number
   min?: number
@@ -26,6 +28,8 @@ export type SliderProperties = Omit<
 
 export const Slider = (properties: SliderProperties): JSX.Element => {
   const {
+    'aria-label': ariaLabel,
+    'aria-orientation': ariaOrientation = 'horizontal',
     defaultValue,
     max,
     min,
@@ -105,6 +109,11 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
           value={visibleValue}
           data-value={visibleValue}
           onChange={handleChange}
+          aria-label={ariaLabel}
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={visibleValue}
+          aria-orientation={ariaOrientation}
           {...restProperties}
         />
       </Box>

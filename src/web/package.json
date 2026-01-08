@@ -15,7 +15,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "check:hooks": "node scripts/check-hooks.js",
     "format": "prettier \"**/*.{js,jsx,ts,tsx,json,css,md}\" --write",
-    "storybook": "storybook dev -p 6006",
+    "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build"
   },
   "dependencies": {

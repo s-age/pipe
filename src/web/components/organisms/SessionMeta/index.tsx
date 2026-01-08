@@ -46,7 +46,7 @@ export const SessionMeta = ({
   const MetaContent = (): JSX.Element => {
     const formContext = useOptionalFormContext()
 
-    const { handleSaveClick, isSubmitting } = useSessionMetaHandlers({
+    const { handleSaveClick, isSubmitting, saveStatus } = useSessionMetaHandlers({
       sessionDetail,
       onRefresh,
       formContext
@@ -59,6 +59,11 @@ export const SessionMeta = ({
           id="current-session-id"
           value={sessionDetail?.sessionId ?? ''}
         />
+        {saveStatus !== 'idle' && (
+          <div role="status" aria-live="polite" style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}>
+            {saveStatus === 'success' ? 'Session metadata saved successfully' : 'Failed to save session metadata'}
+          </div>
+        )}
         <ScrollArea className={sessionMetaSection}>
           <Box padding="m" radius="m" className={sessionMetaView}>
             <SessionMetaBasic sessionDetail={sessionDetail} />
@@ -93,6 +98,8 @@ export const SessionMeta = ({
             disabled={isSubmitting}
             onClick={handleSaveClick}
             className={saveMetaButton}
+            aria-label="Save session metadata"
+            aria-busy={isSubmitting}
           >
             {isSubmitting ? 'Saving...' : 'Save Meta'}
           </Button>

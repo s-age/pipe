@@ -67,13 +67,17 @@ export const Header = (): JSX.Element => {
             className={searchModalOverlay}
             role="dialog"
             aria-modal="true"
+            aria-labelledby="search-modal-title"
+            aria-describedby="search-modal-description"
             onMouseDown={handleOverlayPointerDown}
             align="center"
             justify="center"
           >
-            <Box className={searchModalContent}>
+            <Box id="modal-root" className={searchModalContent}>
               <Flex className={searchModalHeader} justify="between">
-                <Text className={searchModalHeaderText}>Search results</Text>
+                <Text id="search-modal-title" className={searchModalHeaderText}>
+                  Search results
+                </Text>
                 <Button
                   kind="ghost"
                   size="small"
@@ -86,21 +90,26 @@ export const Header = (): JSX.Element => {
               </Flex>
 
               {results.length === 0 ? (
-                <Text className={searchNoResults}>No results</Text>
+                <Text id="search-modal-description" className={searchNoResults}>
+                  No results
+                </Text>
               ) : (
-                results.map((r: { sessionId: string; title: string }) => (
-                  <Box
-                    key={r.sessionId}
-                    className={searchResultItem}
-                    role="button"
-                    tabIndex={0}
-                    data-session-id={r.sessionId}
-                    onMouseDown={handleResultPointerDown}
-                    onKeyDown={handleResultKeyDown}
-                  >
-                    {r.title}
-                  </Box>
-                ))
+                <Box id="search-modal-description">
+                  {results.map((r: { sessionId: string; title: string }) => (
+                    <Box
+                      key={r.sessionId}
+                      className={searchResultItem}
+                      role="button"
+                      tabIndex={0}
+                      data-session-id={r.sessionId}
+                      aria-label={`Open session: ${r.title}`}
+                      onMouseDown={handleResultPointerDown}
+                      onKeyDown={handleResultKeyDown}
+                    >
+                      {r.title}
+                    </Box>
+                  ))}
+                </Box>
               )}
             </Box>
           </Flex>

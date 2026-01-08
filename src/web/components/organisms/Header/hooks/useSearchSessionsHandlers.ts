@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
 import type { MouseEvent, KeyboardEvent, Dispatch, SetStateAction } from 'react'
 
+import { useFocusTrap } from '@/hooks/useFocusTrap'
+
 import { useSearchSessionsActions } from './useSearchSessionsActions'
 import { useSearchSessionsLifecycle } from './useSearchSessionsLifecycle'
 
@@ -29,6 +31,9 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
+
+  // Focus trap for modal
+  useFocusTrap({ isOpen: open })
 
   const fetchResults = useCallback(
     async (q: string) => {
@@ -98,9 +103,16 @@ export const useSearchSessionsHandlers = (): UseSearchSessionsHandlersReturn => 
 
       const id = target.dataset.sessionId
       if (!id) return
-      if (event.key === 'Enter' || event.key === ' ') handleSelect(id)
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        handleSelect(id)
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeModal()
+      }
     },
-    [handleSelect]
+    [handleSelect, closeModal]
   )
 
   return {

@@ -202,14 +202,24 @@ export const TurnComponent = ({
           <Flex className={turnHeaderControls} gap="s">
             {turn.type === 'model_response' && onFork && (
               <Tooltip content="Fork Session" placement="bottom">
-                <Button kind="ghost" size="xsmall" onClick={onFork}>
+                <Button
+                  kind="ghost"
+                  size="xsmall"
+                  onClick={onFork}
+                  aria-label="Fork conversation from this turn"
+                >
                   <IconFork size={24} className={forkButtonIcon} />
                 </Button>
               </Tooltip>
             )}
             {onCopy && (
               <Tooltip content="Copy Turn" placement="bottom">
-                <Button kind="ghost" size="xsmall" onClick={onCopy}>
+                <Button
+                  kind="ghost"
+                  size="xsmall"
+                  onClick={onCopy}
+                  aria-label="Copy turn content"
+                >
                   <IconCopy size={24} className={copyButtonIcon} />
                 </Button>
               </Tooltip>
@@ -218,14 +228,24 @@ export const TurnComponent = ({
               (turn.type === 'user_task' || turn.type === 'model_response') &&
               onStartEdit && (
                 <Tooltip content="Edit Turn" placement="bottom">
-                  <Button kind="ghost" size="xsmall" onClick={onStartEdit}>
+                  <Button
+                    kind="ghost"
+                    size="xsmall"
+                    onClick={onStartEdit}
+                    aria-label="Edit turn"
+                  >
                     <IconEdit size={24} className={editButtonIcon} />
                   </Button>
                 </Tooltip>
               )}
             {expertMode && onDelete && (
               <Tooltip content="Delete Turn" placement="bottom">
-                <Button kind="ghost" size="xsmall" onClick={onDelete}>
+                <Button
+                  kind="ghost"
+                  size="xsmall"
+                  onClick={onDelete}
+                  aria-label="Delete turn"
+                >
                   <IconDelete size={24} className={deleteButtonIcon} />
                 </Button>
               </Tooltip>

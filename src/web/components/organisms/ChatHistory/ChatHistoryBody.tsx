@@ -91,16 +91,19 @@ export const ChatHistoryBody = ({
           />
         ))}
 
-        {isStreaming &&
-          streamingTurns.map((turn, turnIndex) => (
-            <Turn
-              key={`streaming-turn-${turnIndex}`}
-              turn={turn}
-              index={sessionDetail.turns.length + turnIndex}
-              expertMode={expertMode}
-              isStreaming={isStreaming}
-            />
-          ))}
+        {isStreaming && (
+          <Box aria-live="polite" aria-atomic="false">
+            {streamingTurns.map((turn, turnIndex) => (
+              <Turn
+                key={`streaming-turn-${turnIndex}`}
+                turn={turn}
+                index={sessionDetail.turns.length + turnIndex}
+                expertMode={expertMode}
+                isStreaming={isStreaming}
+              />
+            ))}
+          </Box>
+        )}
       </Box>
     </FlexColumn>
   )

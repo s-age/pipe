@@ -29,6 +29,7 @@ export const ChatHistoryHeader = ({
         size="default"
         onClick={handleDeleteCurrentSession}
         className={deleteButton}
+        aria-label="Delete current session"
       >
         <IconDelete size={16} />
       </Button>

@@ -1,5 +1,6 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
+import { useState } from 'react'
 import { z } from 'zod'
 
 import { Button } from '@/components/atoms/Button'
@@ -23,6 +24,113 @@ type Story = StoryObj<typeof Meta>
 // This story is intended as an annotated manual for LLMs and humans alike.
 // It demonstrates how to compose the project's form primitives both with
 // react-hook-form (via the `Form` provider) and in a plain HTML <form>.
+
+export const WithAriaAttributes: Story = {
+  render: (): JSX.Element => {
+    const AriaExample = (): JSX.Element => {
+      const [isSubmitting, setIsSubmitting] = useState(false)
+      const [formError, setFormError] = useState<string>()
+
+      const InnerForm = (): JSX.Element => {
+        const methods = useFormContext()
+
+        const handleSubmit = async (): Promise<void> => {
+          setIsSubmitting(true)
+          setFormError(undefined)
+
+          // Simulate async submission
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+
+          // Simulate random error
+          if (Math.random() > 0.5) {
+            setFormError('Form submission failed. Please try again.')
+            setIsSubmitting(false)
+          } else {
+            setFormError(undefined)
+            setIsSubmitting(false)
+            alert('Form submitted successfully!')
+          }
+        }
+
+        return (
+          <div style={{ display: 'grid', gap: 8 }}>
+            <Fieldset legend="Name">
+              {(ids) => (
+                <InputText
+                  name="firstName"
+                  placeholder="First name"
+                  register={methods.register}
+                  aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+                  aria-required={true}
+                />
+              )}
+            </Fieldset>
+
+            <Fieldset legend="Email">
+              {(ids) => (
+                <InputText
+                  name="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  register={methods.register}
+                  aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
+                  aria-required={true}
+                />
+              )}
+            </Fieldset>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </Button>
+            </div>
+          </div>
+        )
+      }
+
+      const schema = z.object({
+        firstName: z.string().min(1, 'First name is required'),
+        email: z.string().email('Valid email is required')
+      })
+
+      const defaultValues = {
+        firstName: '',
+        email: ''
+      }
+
+      return (
+        <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 6 }}>
+          <h3>Form with ARIA attributes (aria-busy and form error)</h3>
+          <p style={{ marginTop: 0 }}>
+            This example demonstrates <code>aria-busy</code> during form submission and{' '}
+            <code>role=&quot;alert&quot;</code> for form-level errors.
+          </p>
+
+          <Form
+            schema={schema}
+            defaultValues={defaultValues}
+            aria-busy={isSubmitting}
+            formError={formError}
+          >
+            <InnerForm />
+          </Form>
+        </div>
+      )
+    }
+
+    return (
+      <div style={{ display: 'grid', gap: 16 }}>
+        <p>
+          This story demonstrates the Form component with proper ARIA attributes for
+          accessibility. The form announces its busy state to screen readers during
+          submission and displays form-level errors in an alert region.
+        </p>
+
+        <AriaExample />
+      </div>
+    )
+  }
+}
 
 export const Manual: Story = {
   render: (): JSX.Element => {

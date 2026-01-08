@@ -37,11 +37,13 @@ export const ConfirmModal = ({
   <FlexColumn className={styles.container}>
     <Flex align="center" gap="s" className={styles.header}>
       {icon && <Box className={styles.icon}>{icon}</Box>}
-      <Heading level={3} className={styles.title}>
+      <Heading level={3} className={styles.title} id="confirm-modal-title">
         {title}
       </Heading>
     </Flex>
-    <Paragraph className={styles.message}>{message}</Paragraph>
+    <Paragraph className={styles.message} id="confirm-modal-description">
+      {message}
+    </Paragraph>
     <Flex justify="end" gap="s" className={styles.actions}>
       <Button type="button" onClick={onCancel} kind="secondary">
         {cancelText}

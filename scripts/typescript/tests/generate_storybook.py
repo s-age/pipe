@@ -427,8 +427,6 @@ def execute_next_todo(session_id: str) -> bool:
     # Build comprehensive instruction with all necessary parameters
     instruction = f"""Process the next TODO item: {todo_title}
 
-Follow @procedures/typescript_storybook_conductor.md Step 3b-3c:
-
 Component Details:
 - Component file: {component_file}
 - Story output: {story_file}
@@ -438,7 +436,10 @@ Component Details:
 
 IMPORTANT: The __stories__ directory has already been created. DO NOT create it again.
 
-You must invoke the invoke_serial_children tool with these parameters:
+Follow @procedures/typescript_storybook_conductor.md Step 3b-3c:
+
+Step 3b: Construct task sequence (agent task + validation script)
+Step 3c: Invoke invoke_serial_children tool with these parameters:
 - roles: ["roles/typescript/tests/storybook.md", "roles/typescript/components/{layer}.md"]
 - references_persist: {references_json}
 - purpose: "Generate Storybook stories for {component_name}"
@@ -457,9 +458,17 @@ You must invoke the invoke_serial_children tool with these parameters:
      - args: ["--ignore-external-changes"]
      - max_retries: 2
 
-After calling invoke_serial_children, EXIT IMMEDIATELY.
+After calling invoke_serial_children, EXIT IMMEDIATELY and wait for completion notification.
 
-CRITICAL: Call the invoke_serial_children tool directly - do NOT output JSON or code examples.
+When you receive the completion notification:
+- ✅ On success: Call get_sessions_final_turns with provided session IDs, then edit_todos to mark as completed
+- ❌ On failure: Do NOT retry. Mark as failed with edit_todos and report error
+- 🚨 On abort: Do NOT retry. Mark as aborted with edit_todos and report abort reason
+
+CRITICAL RULES:
+1. Call invoke_serial_children tool directly - do NOT output JSON or code examples
+2. NEVER call invoke_serial_children again to retry - retry logic is handled by invoke_serial_children itself
+3. Follow the response instructions in the completion notification exactly
 """
 
     # Execute takt with instruction

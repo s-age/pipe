@@ -326,6 +326,14 @@ Skipping these steps is equivalent to writing documentation without reading the 
 
 ### Step 5: Execute Quality Checks
 
+**CRITICAL - Agent vs Orchestration Responsibility**:
+
+- **This agent's responsibility**: Execute quality checks and report results
+- **NOT this agent's responsibility**: Retry logic or re-launching child agents
+- **orchestration layer (`invoke_serial_children`) responsibility**: Handle retries via `max_retries` for script tasks
+
+If quality checks fail, report the error and EXIT. Do NOT retry by calling `invoke_serial_children` again.
+
 **CRITICAL - TypeScript Validation Protocol**:
 
 TypeScript projects use a multi-stage validation process. You MUST execute these checks sequentially.
@@ -421,6 +429,16 @@ Report successful story implementation with the following information:
 ---
 
 ## Constraints (Must Not)
+
+### Agent Responsibilities
+- ❌ **ABSOLUTE PROHIBITION**: This agent MUST NOT retry or restart failed child agents
+- ❌ **ABSOLUTE PROHIBITION**: This agent MUST NOT call `invoke_serial_children` more than once per TODO item
+- ✅ **REQUIRED**: If a TODO item fails validation, report the error and EXIT
+- ✅ **REQUIRED**: Retry logic is the responsibility of `invoke_serial_children` and its `max_retries` configuration
+- **Rationale**:
+  - The orchestration layer (`invoke_serial_children`) handles retries for script tasks via `max_retries`
+  - Conductor-level retries duplicate work and waste tokens
+  - Agent should report success/failure, not implement retry logic
 
 ### Project Environment
 - **npm Environment**: This project uses npm for dependency management

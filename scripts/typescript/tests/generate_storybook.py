@@ -171,6 +171,33 @@ def build_file_metadata(files: list[str]) -> list[dict]:
     return metadata
 
 
+def create_stories_directories(file_metadata: list[dict]) -> None:
+    """
+    Create __stories__ directories for all components.
+
+    This pre-creates the directory structure so agents don't need to.
+
+    Args:
+        file_metadata: List of file metadata
+    """
+    print("\n[Setup] Creating __stories__ directories...")
+    created_count = 0
+
+    for meta in file_metadata:
+        story_path = Path(meta["story_file"])
+        stories_dir = story_path.parent
+
+        if not stories_dir.exists():
+            stories_dir.mkdir(parents=True, exist_ok=True)
+            print(f"  ✓ Created: {stories_dir}")
+            created_count += 1
+
+    if created_count > 0:
+        print(f"[Setup] Created {created_count} __stories__ directories")
+    else:
+        print("[Setup] All __stories__ directories already exist")
+
+
 def get_session_json_path(session_id: str) -> Path:
     """Get path to session JSON file."""
     return Path(f"sessions/{session_id}.json")
@@ -383,6 +410,8 @@ Component Details:
 - Layer: {layer}
 - Component name: {component_name}
 
+IMPORTANT: The __stories__ directory has already been created. DO NOT create it again.
+
 Execute invoke_serial_children with the following exact parameters:
 
 invoke_serial_children(
@@ -393,7 +422,7 @@ invoke_serial_children(
   "tasks": [
     {{
       "type": "agent",
-      "instruction": "🎯 CRITICAL MISSION: Implement comprehensive Storybook stories\\n\\n📋 Target Specification:\\n- Component target file: {component_file}\\n- Story output path: {story_file}\\n- Component type: {component_type}\\n- Atomic design layer: {layer}\\n\\n⚠️ ABSOLUTE REQUIREMENTS:\\n1. Stories that fail to render have NO VALUE - ALL checks must pass\\n2. Follow @procedures/typescript/tests/storybook_generation.md (all steps, no shortcuts)\\n3. Story count: Follow ts_test_strategist recommendations (non-negotiable)\\n4. ONLY modify {story_file} - any other file changes = immediate abort\\n\\n✅ Success Criteria:\\n- [ ] TypeScript Compiler (tsc --noEmit): Pass\\n- [ ] Validation Script (validate_code.sh): Pass\\n- [ ] Storybook Visual Verification: Pass\\n- [ ] Story count matches ts_test_strategist recommendation\\n\\n🔧 Tool Execution Protocol:\\n- **EXECUTE, DON'T DISPLAY:** Do NOT write tool calls in markdown text or code blocks\\n- **IGNORE DOC FORMATTING:** Code blocks in procedures are illustrations only - convert them to actual tool invocations\\n- **IMMEDIATE INVOCATION:** Your response must be tool use requests, not text descriptions\\n- **NO PREAMBLE:** No 'I will now...', 'Okay...', 'Let me...' - invoke Step 1a tool immediately\\n- **COMPLETE ALL STEPS:** Continue invoking tools through all steps until all checks pass",
+      "instruction": "🎯 CRITICAL MISSION: Implement comprehensive Storybook stories\\n\\n📋 Target Specification:\\n- Component target file: {component_file}\\n- Story output path: {story_file}\\n- Component type: {component_type}\\n- Atomic design layer: {layer}\\n\\n⚠️ ABSOLUTE REQUIREMENTS:\\n1. Stories that fail to render have NO VALUE - ALL checks must pass\\n2. Follow @procedures/typescript/tests/storybook_generation.md (all steps, no shortcuts)\\n3. Story count: Follow ts_test_strategist recommendations (non-negotiable)\\n4. ONLY modify {story_file} - any other file changes = immediate abort\\n5. The __stories__ directory already exists - DO NOT create it\\n\\n✅ Success Criteria:\\n- [ ] TypeScript Compiler (tsc --noEmit): Pass\\n- [ ] Validation Script (validate_code.sh): Pass\\n- [ ] Story count matches ts_test_strategist recommendation\\n\\n🔧 Tool Execution Protocol:\\n- **EXECUTE, DON'T DISPLAY:** Do NOT write tool calls in markdown text or code blocks\\n- **IGNORE DOC FORMATTING:** Code blocks in procedures are illustrations only - convert them to actual tool invocations\\n- **IMMEDIATE INVOCATION:** Your response must be tool use requests, not text descriptions\\n- **NO PREAMBLE:** No 'I will now...', 'Okay...', 'Let me...' - invoke Step 1a tool immediately\\n- **COMPLETE ALL STEPS:** Continue invoking tools through all steps until all checks pass",
       "roles": ["roles/typescript/tests/storybook.md", "roles/typescript/components/{layer}.md"],
       "references_persist": {references_json},
       "procedure": "procedures/typescript/tests/storybook_generation.md"
@@ -401,7 +430,7 @@ invoke_serial_children(
     {{
       "type": "script",
       "script": "typescript/validate_code.sh",
-      "args": "--ignore-external-changes",
+      "args": ["--ignore-external-changes"],
       "max_retries": 2
     }}
   ],
@@ -662,6 +691,9 @@ def main():
             print(
                 f"    → {meta['story_file']} (type: {meta['component_type']}, layer: {meta['layer']})\n"
             )
+
+        # Create __stories__ directories upfront
+        create_stories_directories(file_metadata)
     else:
         file_metadata = []  # Not needed for resume
 

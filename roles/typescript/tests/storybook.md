@@ -343,6 +343,309 @@ export const WithValidation: Story = {
 - **Data Display**: Empty state, Loading, With data, Error state
 - **Interactive Components**: Default interaction, Keyboard navigation, Edge cases
 
+## Play Functions (Interaction Testing)
+
+### Overview
+
+Play functions enable automated interaction testing within Storybook stories. They simulate user interactions and verify component behavior using `@storybook/testing-library` and `@storybook/jest`.
+
+**When to Use Play Functions**:
+- Testing user interactions (clicks, typing, focus)
+- Verifying accessibility attributes
+- Testing state changes and side effects
+- Ensuring proper event handling
+
+### Required Dependencies
+
+```json
+{
+  "devDependencies": {
+    "@storybook/testing-library": "^0.2.1",
+    "@storybook/jest": "^0.2.2"
+  }
+}
+```
+
+### Basic Play Function Pattern
+
+```typescript
+import { expect } from '@storybook/jest'
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
+import { userEvent, within } from '@storybook/testing-library'
+
+import { Button } from '../index'
+
+const Meta = {
+  title: 'Atoms/Button',
+  component: Button,
+  tags: ['autodocs']
+} satisfies StoryMeta<typeof Button>
+
+export default Meta
+type Story = StoryObj<typeof Meta>
+
+export const Default: Story = {
+  args: {
+    children: 'Click me'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: /click me/i })
+
+    await expect(button).toBeInTheDocument()
+    await userEvent.click(button)
+  }
+}
+```
+
+### Play Function Patterns by Use Case
+
+#### Pattern 1: Click Interaction
+
+```typescript
+export const ClickInteraction: Story = {
+  args: {
+    children: 'Primary Button',
+    onClick: fn() // Use fn() from @storybook/test for action tracking
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: /primary button/i })
+
+    await expect(button).toBeInTheDocument()
+    await userEvent.click(button)
+    await expect(args.onClick).toHaveBeenCalledTimes(1)
+  }
+}
+```
+
+#### Pattern 2: Accessibility Verification
+
+```typescript
+export const AccessibilityCheck: Story = {
+  args: {
+    children: 'Close',
+    'aria-label': 'Close dialog'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: /close dialog/i })
+
+    await expect(button).toBeInTheDocument()
+    await expect(button).toHaveAccessibleName('Close dialog')
+    await userEvent.click(button)
+  }
+}
+```
+
+#### Pattern 3: Disabled State Verification
+
+```typescript
+export const DisabledState: Story = {
+  args: {
+    disabled: true,
+    children: 'Disabled Button',
+    'aria-disabled': true
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: /disabled button/i })
+
+    await expect(button).toBeDisabled()
+    await expect(button).toHaveAttribute('aria-disabled', 'true')
+  }
+}
+```
+
+#### Pattern 4: Form Input Testing
+
+```typescript
+export const FormInput: Story = {
+  args: {
+    placeholder: 'Enter your name',
+    name: 'username',
+    'aria-label': 'Username'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox', { name: /username/i })
+
+    await expect(input).toBeInTheDocument()
+    await userEvent.type(input, 'John Doe')
+    await expect(input).toHaveValue('John Doe')
+  }
+}
+```
+
+#### Pattern 5: Multiple Interactions
+
+```typescript
+export const MultipleInteractions: Story = {
+  render: (): JSX.Element => {
+    const Example = (): JSX.Element => {
+      const [count, setCount] = useState(0)
+
+      return (
+        <div>
+          <button onClick={() => setCount(count + 1)}>
+            Count: {count}
+          </button>
+        </div>
+      )
+    }
+
+    return <Example />
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: /count: 0/i })
+
+    await userEvent.click(button)
+    await expect(canvas.getByText(/count: 1/i)).toBeInTheDocument()
+
+    await userEvent.click(button)
+    await expect(canvas.getByText(/count: 2/i)).toBeInTheDocument()
+  }
+}
+```
+
+### Common Testing Utilities
+
+#### Finding Elements
+
+```typescript
+// By role (preferred for accessibility)
+const button = canvas.getByRole('button', { name: /submit/i })
+const textbox = canvas.getByRole('textbox', { name: /email/i })
+const checkbox = canvas.getByRole('checkbox', { name: /agree/i })
+
+// By label text
+const input = canvas.getByLabelText(/username/i)
+
+// By text content
+const heading = canvas.getByText(/welcome/i)
+
+// By placeholder
+const input = canvas.getByPlaceholderText(/enter email/i)
+```
+
+#### User Events
+
+```typescript
+// Click
+await userEvent.click(element)
+
+// Type text
+await userEvent.type(input, 'Hello world')
+
+// Clear and type
+await userEvent.clear(input)
+await userEvent.type(input, 'New text')
+
+// Keyboard events
+await userEvent.keyboard('{Enter}')
+await userEvent.keyboard('{Tab}')
+
+// Hover
+await userEvent.hover(element)
+await userEvent.unhover(element)
+```
+
+#### Assertions
+
+```typescript
+// Presence
+await expect(element).toBeInTheDocument()
+await expect(element).not.toBeInTheDocument()
+
+// Visibility
+await expect(element).toBeVisible()
+await expect(element).not.toBeVisible()
+
+// State
+await expect(button).toBeDisabled()
+await expect(button).toBeEnabled()
+await expect(checkbox).toBeChecked()
+
+// Attributes
+await expect(element).toHaveAttribute('aria-label', 'Close')
+await expect(element).toHaveAccessibleName('Submit form')
+await expect(input).toHaveValue('test value')
+
+// Text content
+await expect(element).toHaveTextContent('Hello')
+
+// CSS classes (avoid with CSS modules)
+// Note: Don't use toHaveClass with vanilla-extract or CSS modules
+// as class names are dynamically generated
+```
+
+### Best Practices
+
+1. **Use Semantic Queries**: Prefer `getByRole` over `getByTestId` for better accessibility testing
+2. **Async/Await**: Always use `await` with user events and assertions
+3. **Regex Patterns**: Use case-insensitive regex for text matching: `/submit/i`
+4. **Avoid CSS Class Checks**: Don't test dynamically generated CSS module classes
+5. **Test User Behavior**: Focus on testing what users see and do, not implementation details
+6. **Keep Tests Simple**: Each play function should test one primary interaction or scenario
+
+### Layer-Specific Recommendations
+
+#### Atoms
+- Test basic interactions (click, focus, blur)
+- Verify accessibility attributes
+- Test disabled/enabled states
+- **Example count**: 2-4 play functions per component
+
+#### Molecules
+- Test form input interactions
+- Verify controlled/uncontrolled behavior
+- Test validation feedback
+- **Example count**: 3-5 play functions per component
+
+#### Organisms
+- Test complex user workflows
+- Verify multi-step interactions
+- Test error handling and recovery
+- **Example count**: 4-6 play functions per component
+
+### Troubleshooting
+
+#### Issue: Tests fail in Docker
+
+**Solution**: Install Playwright browsers in Dockerfile
+
+```dockerfile
+# Install Playwright system dependencies and browsers
+RUN npx playwright install-deps && \
+    npx playwright install
+```
+
+#### Issue: Element not found
+
+**Solution**: Use `findBy*` queries for asynchronous elements
+
+```typescript
+// Instead of getBy (synchronous)
+const button = canvas.getByRole('button')
+
+// Use findBy for async elements
+const button = await canvas.findByRole('button')
+```
+
+#### Issue: CSS class name mismatch
+
+**Solution**: Avoid testing CSS classes with vanilla-extract/CSS modules. Test behavior instead.
+
+```typescript
+// ❌ BAD: Testing generated class names
+await expect(button).toHaveClass('secondary')
+
+// ✅ GOOD: Test behavior or attributes
+await expect(button).toBeInTheDocument()
+await userEvent.click(button)
+```
+
 ## Common Patterns
 
 ### ARIA Attributes

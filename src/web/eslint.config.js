@@ -33,6 +33,7 @@ export default [
       'dist/**',
       '.vite/**',
       '.storybook/**',
+      'storybook-static/**',
       'eslint-rules/**'
     ]
   },

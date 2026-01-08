@@ -10,6 +10,10 @@ COPY src/web/package.json src/web/package-lock.json* ./
 # Install dependencies
 RUN npm install
 
+# Install Playwright system dependencies and browsers
+RUN npx playwright install-deps && \
+    npx playwright install
+
 # Copy the rest of the application
 COPY src/web .
 

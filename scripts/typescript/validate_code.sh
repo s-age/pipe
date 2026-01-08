@@ -2,10 +2,11 @@
 #
 # Validate code quality gates for TypeScript project
 #
-# Usage: validate_code.sh [--ignore-external-changes]
+# Usage: validate_code.sh [--ignore-external-changes] [--files <file1> <file2> ...]
 #
 # Options:
 #   --ignore-external-changes  Skip git status check (for pre-commit hooks)
+#   --files <paths>           Only validate specified files (relative to src/web/)
 #
 # This script:
 # 1. Checks git status for changes outside src/web/ (FIRST - abort early if violated)
@@ -23,20 +24,29 @@ set -euo pipefail
 
 # Parse arguments
 IGNORE_EXTERNAL_CHANGES=false
-POSITIONAL_ARGS=()
+TARGET_FILES=()
 while [[ $# -gt 0 ]]; do
     case $1 in
         --ignore-external-changes)
             IGNORE_EXTERNAL_CHANGES=true
             shift
             ;;
+        --files)
+            shift
+            # Collect all subsequent arguments until next flag or end
+            while [[ $# -gt 0 ]] && [[ ! "$1" =~ ^-- ]]; do
+                TARGET_FILES+=("$1")
+                shift
+            done
+            ;;
         -*)
             echo "Unknown option: $1"
-            echo "Usage: validate_code.sh [--ignore-external-changes]"
+            echo "Usage: validate_code.sh [--ignore-external-changes] [--files <file1> <file2> ...]"
             exit 1
             ;;
         *)
-            POSITIONAL_ARGS+=("$1")
+            # Default behavior: treat positional args as target files
+            TARGET_FILES+=("$1")
             shift
             ;;
     esac
@@ -44,7 +54,14 @@ done
 
 echo "=================================================="
 echo "Quality Gate Validation (TypeScript)"
-echo "Checking src/web/ directory"
+if [ ${#TARGET_FILES[@]} -eq 0 ]; then
+    echo "Checking src/web/ directory (all files)"
+else
+    echo "Checking specific files:"
+    for file in "${TARGET_FILES[@]}"; do
+        echo "  - $file"
+    done
+fi
 echo "=================================================="
 echo ""
 
@@ -107,21 +124,43 @@ echo ""
 
 # Quality gate 3: Formatter
 echo "[3/4] Running formatter..."
-if npm run format; then
-    echo "✅ Formatting completed"
+if [ ${#TARGET_FILES[@]} -eq 0 ]; then
+    # Format all files
+    if npm run format; then
+        echo "✅ Formatting completed"
+    else
+        echo "❌ Formatting failed"
+        exit 1
+    fi
 else
-    echo "❌ Formatting failed"
-    exit 1
+    # Format only specified files
+    if npx prettier "${TARGET_FILES[@]}" --write; then
+        echo "✅ Formatting completed"
+    else
+        echo "❌ Formatting failed"
+        exit 1
+    fi
 fi
 echo ""
 
 # Quality gate 4: Linter
 echo "[4/4] Running linter with auto-fix..."
-if npm run lint -- --fix; then
-    echo "✅ Linting passed"
+if [ ${#TARGET_FILES[@]} -eq 0 ]; then
+    # Lint all files
+    if npm run lint -- --fix; then
+        echo "✅ Linting passed"
+    else
+        echo "❌ Linting failed"
+        exit 1
+    fi
 else
-    echo "❌ Linting failed"
-    exit 1
+    # Lint only specified files
+    if npx eslint "${TARGET_FILES[@]}" --fix; then
+        echo "✅ Linting passed"
+    else
+        echo "❌ Linting failed"
+        exit 1
+    fi
 fi
 echo ""
 

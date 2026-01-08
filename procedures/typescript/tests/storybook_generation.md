@@ -30,11 +30,7 @@ graph TD
 
     Step5B --> CheckValidation{Validation<br/>passed?}
     CheckValidation -- No --> Step4
-    CheckValidation -- Yes --> Step5C[Step 5c: Verify Storybook renders]
-
-    Step5C --> CheckStorybook{Storybook<br/>renders?}
-    CheckStorybook -- No --> Step4
-    CheckStorybook -- Yes --> Success[Step 6: Report Success]
+    CheckValidation -- Yes --> Success[Step 6: Report Success]
 
     Success --> End([End: Success])
 
@@ -47,10 +43,8 @@ graph TD
     style Step4 fill:#ffe1f0
     style Step5A fill:#f0e1ff
     style Step5B fill:#f0e1ff
-    style Step5C fill:#f0e1ff
     style CheckTSC fill:#ffcccc
     style CheckValidation fill:#ffcccc
-    style CheckStorybook fill:#ffcccc
     style Success fill:#ccffcc
 ```
 
@@ -177,14 +171,19 @@ Skipping these steps is equivalent to writing documentation without reading the 
 
 ### Step 3: Plan Story Structure
 
+**IMPORTANT - Directory Pre-Creation**:
+- The `__stories__` directory is **already created** by the orchestration script
+- **[PROHIBITED]** Creating or checking for the `__stories__` directory
+- **[REQUIRED]** Proceed directly to writing the story file
+
 **Actions**:
-1. Determine story file location:
+1. Story file location (directory already exists):
    ```
    ComponentName/
    ├── index.tsx
    ├── style.css.ts
-   └── __stories__/
-       └── ComponentName.stories.tsx  ← Create here
+   └── __stories__/              ← Already created by script
+       └── ComponentName.stories.tsx  ← Write file here
    ```
 
 2. List required stories based on `ts_test_strategist` output:
@@ -379,7 +378,7 @@ bash scripts/typescript/validate_code.sh --ignore-external-changes
 ```
 
 **Exit Codes**:
-- `0`: All checks passed (proceed to Step 5c)
+- `0`: All checks passed (proceed to Step 6)
 - `1`: Quality checks failed (formatting, linting)
 - `2`: Unauthorized file modifications detected
 
@@ -399,28 +398,9 @@ If the validation script reports errors:
 5. Re-run the validation script
 6. **Rationale**: Prevents "string not found" errors caused by formatter modifications
 
-#### Step 5c: Storybook Visual Verification
+**Output**: All quality gates passed (types, formatting, linting)
 
-**[REQUIRED]** Verify stories render correctly:
-
-```bash
-cd src/web && npm run storybook
-```
-
-**Manual Verification** (inform user):
-- Open Storybook in browser (typically `http://localhost:6006`)
-- Navigate to your component's stories
-- Verify all stories render without errors
-- Check visual appearance matches expectations
-- Test interactive elements (clicks, hovers, form submissions)
-
-**Common Issues**:
-- Missing imports → Fix and re-run validation
-- Props mismatch → Verify against component interface
-- Store not provided → Add AppStoreProvider decorator
-- Form context missing → Wrap in Form component
-
-**Output**: All quality gates passed (types, formatting, linting, visual rendering)
+**Note**: Visual verification in Storybook is left to human review. The automated checks above ensure code quality and type safety.
 
 ---
 
@@ -432,9 +412,11 @@ Report successful story implementation with the following information:
 - Story file path: `{story_output_path}`
 - Number of stories created: `{story_count}` (should match `recommended_story_count` from Step 1a)
 - Component layer: `{atom|molecule|organism}`
-- All quality checks passed: ✅ TypeScript, Formatter, Linter, Visual verification
+- All quality checks passed: ✅ TypeScript, Formatter, Linter
 
 **Output**: Success report (test conductor will handle git verification and commit)
+
+**Note**: Visual verification in Storybook (`npm run storybook`) is optional and left to human review
 
 ---
 
@@ -514,8 +496,6 @@ Execution:
            → Exit code 0 (type check passed)
   Step 5b: bash scripts/typescript/validate_code.sh --ignore-external-changes
            → Exit code 0 (all quality gates passed: TypeScript, Formatter, Linter)
-  Step 5c: npm run storybook
-           → Visual verification: All 4 stories render correctly
   Step 6: Report success with story count = 4 (matches recommended)
 
 Output: Success, ready for test conductor review
@@ -533,5 +513,5 @@ Output: Success, ready for test conductor review
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
 - **Formatter safeguard**: ALWAYS execute `read_file` BEFORE fixing errors in Step 5. Your memory is stale after auto-formatters run.
-- **Visual verification**: Stories must render correctly in Storybook (Step 5c)
+- **Visual verification**: Optional human review via `npm run storybook`. Automated checks (TypeScript, Formatter, Linter) are sufficient for quality gates.
 - **Responsibility**: Story implementation agents do NOT handle git operations or commits. They report success/failure to test conductor for verification and commit decision.

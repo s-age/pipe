@@ -1,0 +1,11 @@
+# Build outputs
+node_modules
+dist
+.vite
+storybook-static
+
+# Configuration
+.storybook
+
+# Custom rules
+eslint-rules

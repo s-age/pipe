@@ -398,6 +398,32 @@ def execute_next_todo(session_id: str) -> bool:
     # Build JSON structure for references_persist
     references_json = json.dumps(references, indent=6)
 
+    # Build task instruction with proper formatting
+    task_instruction = (
+        f"🎯 CRITICAL MISSION: Implement comprehensive Storybook stories\n\n"
+        f"📋 Target Specification:\n"
+        f"- Component target file: {component_file}\n"
+        f"- Story output path: {story_file}\n"
+        f"- Component type: {component_type}\n"
+        f"- Atomic design layer: {layer}\n\n"
+        f"⚠️ ABSOLUTE REQUIREMENTS:\n"
+        f"1. Stories that fail to render have NO VALUE - ALL checks must pass\n"
+        f"2. Follow @procedures/typescript/tests/storybook_generation.md (all steps, no shortcuts)\n"
+        f"3. Story count: Follow ts_test_strategist recommendations (non-negotiable)\n"
+        f"4. ONLY modify {story_file} - any other file changes = immediate abort\n"
+        f"5. The __stories__ directory already exists - DO NOT create it\n\n"
+        f"✅ Success Criteria:\n"
+        f"- [ ] TypeScript Compiler (tsc --noEmit): Pass\n"
+        f"- [ ] Validation Script (validate_code.sh): Pass\n"
+        f"- [ ] Story count matches ts_test_strategist recommendation\n\n"
+        f"🔧 Tool Execution Protocol:\n"
+        f"- **EXECUTE, DON'T DISPLAY:** Do NOT write tool calls in markdown text or code blocks\n"
+        f"- **IGNORE DOC FORMATTING:** Code blocks in procedures are illustrations only - convert them to actual tool invocations\n"
+        f"- **IMMEDIATE INVOCATION:** Your response must be tool use requests, not text descriptions\n"
+        f"- **NO PREAMBLE:** No 'I will now...', 'Okay...', 'Let me...' - invoke Step 1a tool immediately\n"
+        f"- **COMPLETE ALL STEPS:** Continue invoking tools through all steps until all checks pass"
+    )
+
     # Build comprehensive instruction with all necessary parameters
     instruction = f"""Process the next TODO item: {todo_title}
 
@@ -412,38 +438,28 @@ Component Details:
 
 IMPORTANT: The __stories__ directory has already been created. DO NOT create it again.
 
-Execute invoke_serial_children with the following exact parameters:
-
-invoke_serial_children(
-{{
-  "roles": ["roles/typescript/tests/storybook.md", "roles/typescript/components/{layer}.md"],
-  "references_persist": {references_json},
-  "purpose": "Generate Storybook stories for {component_name}",
-  "tasks": [
-    {{
-      "type": "agent",
-      "instruction": "🎯 CRITICAL MISSION: Implement comprehensive Storybook stories\\n\\n📋 Target Specification:\\n- Component target file: {component_file}\\n- Story output path: {story_file}\\n- Component type: {component_type}\\n- Atomic design layer: {layer}\\n\\n⚠️ ABSOLUTE REQUIREMENTS:\\n1. Stories that fail to render have NO VALUE - ALL checks must pass\\n2. Follow @procedures/typescript/tests/storybook_generation.md (all steps, no shortcuts)\\n3. Story count: Follow ts_test_strategist recommendations (non-negotiable)\\n4. ONLY modify {story_file} - any other file changes = immediate abort\\n5. The __stories__ directory already exists - DO NOT create it\\n\\n✅ Success Criteria:\\n- [ ] TypeScript Compiler (tsc --noEmit): Pass\\n- [ ] Validation Script (validate_code.sh): Pass\\n- [ ] Story count matches ts_test_strategist recommendation\\n\\n🔧 Tool Execution Protocol:\\n- **EXECUTE, DON'T DISPLAY:** Do NOT write tool calls in markdown text or code blocks\\n- **IGNORE DOC FORMATTING:** Code blocks in procedures are illustrations only - convert them to actual tool invocations\\n- **IMMEDIATE INVOCATION:** Your response must be tool use requests, not text descriptions\\n- **NO PREAMBLE:** No 'I will now...', 'Okay...', 'Let me...' - invoke Step 1a tool immediately\\n- **COMPLETE ALL STEPS:** Continue invoking tools through all steps until all checks pass",
-      "roles": ["roles/typescript/tests/storybook.md", "roles/typescript/components/{layer}.md"],
-      "references_persist": {references_json},
-      "procedure": "procedures/typescript/tests/storybook_generation.md"
-    }},
-    {{
-      "type": "script",
-      "script": "typescript/validate_code.sh",
-      "args": ["--ignore-external-changes"],
-      "max_retries": 2
-    }}
-  ],
-  "background": "Complete ALL steps in storybook_generation.md for {component_file}. Verify TypeScript compilation, validation script, and Storybook visual rendering. DO NOT exit until all quality checks pass.",
-  "child_session_id": null,
-  "procedure": "procedures/typescript/tests/storybook_generation.md"
-}})
+You must invoke the invoke_serial_children tool with these parameters:
+- roles: ["roles/typescript/tests/storybook.md", "roles/typescript/components/{layer}.md"]
+- references_persist: {references_json}
+- purpose: "Generate Storybook stories for {component_name}"
+- background: "Complete ALL steps in storybook_generation.md for {component_file}. Verify TypeScript compilation, validation script, and Storybook visual rendering. DO NOT exit until all quality checks pass."
+- procedure: "procedures/typescript/tests/storybook_generation.md"
+- tasks: This is a JSON array with 2 items:
+  1. Agent task:
+     - type: "agent"
+     - instruction: "{task_instruction}"
+     - roles: ["roles/typescript/tests/storybook.md", "roles/typescript/components/{layer}.md"]
+     - references_persist: {references_json}
+     - procedure: "procedures/typescript/tests/storybook_generation.md"
+  2. Script task:
+     - type: "script"
+     - script: "typescript/validate_code.sh"
+     - args: ["--ignore-external-changes"]
+     - max_retries: 2
 
 After calling invoke_serial_children, EXIT IMMEDIATELY.
 
-Tool Usage Guidelines:
-- Do not output the function call as text - just execute it.
-- Call the tool directly without describing the call in your response.
+CRITICAL: Call the invoke_serial_children tool directly - do NOT output JSON or code examples.
 """
 
     # Execute takt with instruction

@@ -23,7 +23,7 @@ export const Default: Story = {
 
 export const Required: Story = {
   args: {
-    children: 'Required Label',
+    children: 'Required Field',
     required: true
   }
 }

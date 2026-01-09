@@ -357,21 +357,26 @@ Play functions enable automated interaction testing within Storybook stories. Th
 
 ### Required Dependencies
 
+For Storybook 10.x with Vitest integration:
+
 ```json
 {
   "devDependencies": {
-    "@storybook/testing-library": "^0.2.1",
-    "@storybook/jest": "^0.2.2"
+    "@storybook/addon-vitest": "^10.0.6",
+    "storybook": "^10.0.6"
   }
 }
 ```
 
+**Note**: The `storybook` package includes the `storybook/test` module which provides all testing utilities (`expect`, `userEvent`, `within`, etc.).
+
 ### Basic Play Function Pattern
 
+**IMPORTANT**: When using Storybook 10 with `@storybook/addon-vitest`, you MUST use `storybook/test` instead of `@storybook/jest` and `@storybook/testing-library`:
+
 ```typescript
-import { expect } from '@storybook/jest'
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { userEvent, within } from '@storybook/testing-library'
+import { expect, userEvent, within } from 'storybook/test'
 
 import { Button } from '../index'
 
@@ -403,10 +408,12 @@ export const Default: Story = {
 #### Pattern 1: Click Interaction
 
 ```typescript
+import { expect, fn, userEvent, within } from 'storybook/test'
+
 export const ClickInteraction: Story = {
   args: {
     children: 'Primary Button',
-    onClick: fn() // Use fn() from @storybook/test for action tracking
+    onClick: fn() // Use fn() from storybook/test for action tracking
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
@@ -608,6 +615,49 @@ await expect(element).toHaveTextContent('Hello')
 - Verify multi-step interactions
 - Test error handling and recovery
 - **Example count**: 4-6 play functions per component
+
+### Important Notes for Storybook 10 + Vitest
+
+#### Correct Import Pattern
+
+When using `@storybook/addon-vitest` with Storybook 10.x, **always import from `storybook/test`**:
+
+```typescript
+// ✅ CORRECT: Storybook 10 with addon-vitest
+import { expect, userEvent, within, fn } from 'storybook/test'
+
+// ❌ WRONG: These will cause import errors in Vitest browser mode
+import { expect } from '@storybook/jest'
+import { userEvent, within } from '@storybook/testing-library'
+```
+
+**Why?** The `storybook/test` module is specifically designed to work with Vitest and provides:
+- Async-compatible `expect` assertions (based on Vitest's expect)
+- Testing Library utilities (`userEvent`, `within`)
+- Mock function utilities (`fn`, `spyOn`)
+- Full compatibility with `@storybook/addon-vitest`
+
+#### Error: "BrowserTestRunner.importFile failed"
+
+If you see this error when running Vitest with Storybook stories:
+
+```
+Error:
+    at BrowserTestRunner.importFile
+```
+
+**Cause**: Using incompatible imports (`@storybook/jest` or `@storybook/testing-library`) with Vitest browser mode.
+
+**Solution**: Change all imports to use `storybook/test`:
+
+```typescript
+// Before (causes error)
+import { expect } from '@storybook/jest'
+import { userEvent, within } from '@storybook/testing-library'
+
+// After (works correctly)
+import { expect, userEvent, within } from 'storybook/test'
+```
 
 ### Troubleshooting
 
@@ -853,6 +903,614 @@ export const WithFieldset: Story = {
   }
 }
 ```
+
+## Common Pitfalls and Solutions
+
+### Issue 1: Form Validation Not Triggering
+
+**Problem**: Error messages don't appear when using React Hook Form validation in stories.
+
+**Cause**: React Hook Form's default validation mode is `onSubmit`, which doesn't trigger on blur events.
+
+**Solution**: Explicitly set `mode="onBlur"` on the `Form` component to trigger validation when input loses focus.
+
+```typescript
+// ❌ BAD: Validation won't trigger on blur
+export const WithError: Story = {
+  render: (args): JSX.Element => {
+    const schema = z.object({
+      [args.name]: z.string().min(1, 'This field is required')
+    })
+
+    return (
+      <Form schema={schema} defaultValues={{ [args.name]: '' }}>
+        <InputField {...args} />
+      </Form>
+    )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    await userEvent.type(input, 'test')
+    await userEvent.clear(input)
+    await userEvent.tab()
+
+    // ❌ This will fail - error message won't appear
+    const error = await canvas.findByText(/this field is required/i)
+    await expect(error).toBeInTheDocument()
+  }
+}
+
+// ✅ GOOD: Add mode="onBlur" to trigger validation
+export const WithError: Story = {
+  render: (args): JSX.Element => {
+    const schema = z.object({
+      [args.name]: z.string().min(1, 'This field is required')
+    })
+
+    return (
+      <Form schema={schema} defaultValues={{ [args.name]: '' }} mode="onBlur">
+        <InputField {...args} />
+      </Form>
+    )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    await userEvent.type(input, 'test')
+    await userEvent.clear(input)
+    await userEvent.tab()
+
+    // ✅ Error message will appear after blur
+    const error = await canvas.findByText(/this field is required/i)
+    await expect(error).toBeInTheDocument()
+  }
+}
+```
+
+**Available validation modes**:
+- `onBlur`: Validates when field loses focus (recommended for real-time feedback)
+- `onChange`: Validates on every keystroke (can be too aggressive)
+- `onSubmit`: Validates only on form submission (default)
+- `onTouched`: Validates after first blur, then on every change
+
+### Issue 2: Nested Forms Breaking Submit Events
+
+**Problem**: `onSubmit` callback not being called when testing form submission.
+
+**Cause**: HTML doesn't allow nested `<form>` elements. Some components like `InputSearch` have their own `<form>` wrapper. When placed inside another `Form` component, the nested form's `event.preventDefault()` blocks the outer form's submission.
+
+**Solution**: Don't nest forms. Components with their own `<form>` elements should be placed outside the `Form` component or tested independently.
+
+```typescript
+// ❌ BAD: Nested forms - onSubmit won't be called
+export const WithRHF: Story = {
+  render: (args): JSX.Element => (
+    <Form>
+      {/* InputSearch has its own <form> element */}
+      <InputSearch {...args} name="searchQuery" />
+      <button type="submit">Submit Form</button>
+    </Form>
+  ),
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const submitButton = canvas.getByRole('button', { name: /submit form/i })
+    await userEvent.click(submitButton)
+
+    // ❌ This will fail - args.onSubmit was never called
+    await expect(args.onSubmit).toHaveBeenCalled()
+  }
+}
+
+// ✅ GOOD: Remove nested form, test component's own submit
+export const WithRHF: Story = {
+  render: (args): JSX.Element => (
+    <div>
+      <Form>
+        <input name="otherField" placeholder="Other field" />
+      </Form>
+      {/* InputSearch outside of Form - uses its own form */}
+      <InputSearch {...args} name="searchQuery" />
+    </div>
+  ),
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox', { name: /search/i })
+    await userEvent.type(input, 'test')
+
+    // Click the component's own submit button
+    const submitButton = canvas.getByRole('button', { name: /search/i })
+    await userEvent.click(submitButton)
+
+    // ✅ args.onSubmit will be called correctly
+    await expect(args.onSubmit).toHaveBeenCalled()
+  }
+}
+```
+
+**Components that have their own `<form>` element**:
+- `InputSearch`: Has built-in form with submit button
+
+**Rule of thumb**: If a component accepts an `onSubmit` prop and has its own `<form>`, don't wrap it in another `Form` component.
+
+### Issue 3: Callback Props Not Being Called in Controlled Stories
+
+**Problem**: Testing callbacks like `onClose`, `onSubmit`, etc. in controlled component stories, but `args.onClose` is never called even though the component appears to work correctly.
+
+**Cause**: The controlled story creates its own state and event handlers that bypass the `args` callback. When you click a button in the component's children, it only calls the local state setter, not the `args` callback that the test is monitoring.
+
+**Solution**: Create a shared handler function that calls both the local state update AND the `args` callback. Use this handler consistently for all close/submit actions.
+
+```typescript
+// ❌ BAD: Local handler doesn't call args callback
+export const Controlled: Story = {
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [isOpen, setIsOpen] = useState(false)
+
+      return (
+        <div>
+          <button type="button" onClick={() => setIsOpen(true)}>
+            Open Modal
+          </button>
+          <Modal
+            {...args}
+            isOpen={isOpen}
+            onClose={() => {
+              setIsOpen(false)
+              args.onClose?.()  // Modal's onClose calls this
+            }}
+          >
+            <div>
+              <h2>Controlled Modal</h2>
+              {/* ❌ This button only calls setIsOpen, not args.onClose */}
+              <button type="button" onClick={() => setIsOpen(false)}>
+                Close
+              </button>
+            </div>
+          </Modal>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const openButton = canvas.getByRole('button', { name: /open modal/i })
+    await userEvent.click(openButton)
+
+    const modal = await canvas.findByRole('dialog')
+    const closeButton = within(modal).getByRole('button', { name: /close/i })
+    await userEvent.click(closeButton)
+
+    // ❌ This will fail - args.onClose was never called
+    await expect(args.onClose).toHaveBeenCalled()
+  }
+}
+
+// ✅ GOOD: Shared handler calls both state setter and args callback
+export const Controlled: Story = {
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [isOpen, setIsOpen] = useState(false)
+
+      // ✅ Single handler that calls both
+      const handleClose = (): void => {
+        setIsOpen(false)
+        args.onClose?.()
+      }
+
+      return (
+        <div>
+          <button type="button" onClick={() => setIsOpen(true)}>
+            Open Modal
+          </button>
+          <Modal
+            {...args}
+            isOpen={isOpen}
+            onClose={handleClose}  // ✅ Use shared handler
+          >
+            <div>
+              <h2>Controlled Modal</h2>
+              {/* ✅ Button also uses shared handler */}
+              <button type="button" onClick={handleClose}>
+                Close
+              </button>
+            </div>
+          </Modal>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const openButton = canvas.getByRole('button', { name: /open modal/i })
+    await userEvent.click(openButton)
+
+    const modal = await canvas.findByRole('dialog')
+    const closeButton = within(modal).getByRole('button', { name: /close/i })
+    await userEvent.click(closeButton)
+
+    // ✅ args.onClose will be called correctly
+    await expect(args.onClose).toHaveBeenCalled()
+  }
+}
+```
+
+**Key principle**: In controlled stories, any action that should trigger a callback prop must use a handler that calls both:
+1. The local state update (e.g., `setIsOpen(false)`)
+2. The args callback (e.g., `args.onClose?.()`)
+
+**Common callbacks this applies to**:
+- `onClose`: Modal, Dialog, Drawer components
+- `onSubmit`: Form components
+- `onChange`: Input components
+- `onConfirm`, `onCancel`: Confirmation dialogs
+
+### Issue 4: "Found multiple elements" with getByText
+
+**Problem**: Test fails with error "Found multiple elements with the text: Apple" when using `getByText` to find options in Select/MultipleSelect components.
+
+**Cause**: Components with hidden native `<select>` elements render the same text twice:
+1. In the hidden `<select><option>` for form compatibility
+2. In the visible custom dropdown UI
+
+When you use `canvas.getByText('Apple')`, Testing Library finds both elements and throws an error because the query must return exactly one element.
+
+**Solution**: Use `getByRole('option')` scoped to the visible listbox instead of `getByText`.
+
+```typescript
+// ❌ BAD: getByText finds both hidden and visible elements
+export const Default: Story = {
+  args: {
+    options: ['Apple', 'Banana', 'Cherry'],
+    placeholder: 'Choose a fruit'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button')
+    await userEvent.click(trigger)
+
+    // ❌ Error: Found multiple elements with the text: Apple
+    await expect(canvas.getByText('Apple')).toBeInTheDocument()
+  }
+}
+
+// ✅ GOOD: Use getByRole('option') scoped to listbox
+export const Default: Story = {
+  args: {
+    options: ['Apple', 'Banana', 'Cherry'],
+    placeholder: 'Choose a fruit'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button', { name: /choose a fruit/i })
+    await userEvent.click(trigger)
+
+    const listbox = await canvas.findByRole('listbox')
+    const options = within(listbox).getAllByRole('option')
+    await expect(options).toHaveLength(3)
+    await expect(options[0]).toHaveTextContent('Apple')
+  }
+}
+
+// ✅ GOOD: For single option selection
+export const Controlled: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button')
+    await userEvent.click(trigger)
+
+    const listbox = await canvas.findByRole('listbox')
+    const option = within(listbox).getByRole('option', { name: /apple/i })
+    await userEvent.click(option)
+  }
+}
+```
+
+**Key principles**:
+- Always scope option queries to the `listbox`: `within(listbox).getByRole('option')`
+- Use `getAllByRole('option')` for multiple options verification
+- Use `getByRole('option', { name: /text/i })` for single option selection
+- Never use `getByText` for option elements in Select/MultipleSelect components
+
+**Components affected**:
+- `Select`: Has hidden `<select>` (index.tsx:105-118) and visible dropdown (index.tsx:158-184)
+- `MultipleSelect`: Has hidden `<select multiple>` and visible dropdown
+
+### Issue 5: Field Components Require Form Context
+
+**Problem**: Test fails with "Cannot read properties of null (reading 'control')" when using Field components (e.g., `InputField`, `TextareaField`, `SelectField`) without a Form wrapper.
+
+**Cause**: Field components use React Hook Form's `useController` hook, which requires a form context. They cannot be used standalone - they must always be wrapped in a `Form` component.
+
+**Solution**: Always wrap Field components in a `Form` component, even in the Default story.
+
+```typescript
+// ❌ BAD: Field component without Form wrapper
+export const Default: Story = {
+  args: {
+    id: 'input-field',
+    label: 'Label',
+    name: 'testField',
+    placeholder: 'Placeholder text'
+  }
+}
+
+// ✅ GOOD: Wrap in Form component
+export const Default: Story = {
+  render: (args): JSX.Element => (
+    <Form defaultValues={{ [args.name]: '' }}>
+      <InputField {...args} />
+    </Form>
+  )
+}
+
+// ✅ GOOD: With initial value
+export const WithValue: Story = {
+  render: (args): JSX.Element => (
+    <Form defaultValues={{ [args.name]: 'Initial value' }}>
+      <InputField {...args} />
+    </Form>
+  )
+}
+
+// ✅ GOOD: With validation
+export const WithError: Story = {
+  render: (args): JSX.Element => {
+    const schema = z.object({
+      [args.name]: z.string().min(1, 'This field is required')
+    })
+
+    return (
+      <Form schema={schema} defaultValues={{ [args.name]: '' }} mode="onBlur">
+        <InputField {...args} />
+      </Form>
+    )
+  }
+}
+```
+
+**Key principles**:
+- **Always** wrap Field components in `Form`, even for simple stories
+- Use `defaultValues` to set initial values instead of component props
+- Field components include any component that uses `useController`:
+  - `InputField`
+  - `TextareaField`
+  - `SelectField`
+  - `CheckboxField`
+  - Any custom field component using `useController`
+
+**Components that DON'T need Form wrapper**:
+- Base input components: `InputText`, `TextArea`, `Select`, `Checkbox`
+- These components can be used standalone or with `register` prop
+
+**Rule of thumb**: If the component name ends with "Field", it needs a `Form` wrapper.
+
+### Issue 6: Range Input onChange Not Triggering with userEvent.type
+
+**Problem**: Test fails with "expected 'onChange' to be called at least once" when testing Slider or range input components using `userEvent.type()` for keyboard interactions.
+
+**Cause**: `userEvent.type()` is designed for text input fields and doesn't properly trigger change events on `<input type="range">` elements. Keyboard navigation on range inputs requires actual key events, not character typing.
+
+**Solution**: Use `fireEvent.change()` directly to change slider values in tests instead of simulating keyboard interactions.
+
+```typescript
+// ❌ BAD: Using userEvent.type() with range input
+import { expect, fn, userEvent, within } from 'storybook/test'
+
+export const Controlled: Story = {
+  args: {
+    onChange: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+
+    // ❌ This doesn't work for range inputs
+    await userEvent.type(slider, '{ArrowRight}')
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+
+// ❌ BAD: Using userEvent.click() + userEvent.keyboard()
+export const Controlled: Story = {
+  args: {
+    onChange: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+
+    // ❌ This also doesn't reliably work
+    await userEvent.click(slider)
+    await userEvent.keyboard('{ArrowRight}')
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+
+// ❌ BAD: Trying to simulate pointer drag
+export const Controlled: Story = {
+  args: {
+    onChange: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+
+    // ❌ Complex and unreliable for range inputs
+    const sliderRect = slider.getBoundingClientRect()
+    const startX = sliderRect.left + sliderRect.width * 0.3
+    const endX = sliderRect.left + sliderRect.width * 0.5
+    const centerY = sliderRect.top + sliderRect.height / 2
+
+    await userEvent.pointer([
+      { keys: '[MouseLeft>]', target: slider, coords: { x: startX, y: centerY } },
+      { coords: { x: endX, y: centerY } },
+      { keys: '[/MouseLeft]' }
+    ])
+
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+
+// ✅ GOOD: Use fireEvent.change() directly
+import { expect, fireEvent, fn, within } from 'storybook/test'
+
+export const Controlled: Story = {
+  args: {
+    onChange: fn()
+  },
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [value, setValue] = useState(30)
+
+      const handleChange = (v: number): void => {
+        setValue(v)
+        args.onChange?.(v)
+      }
+
+      return (
+        <div style={{ width: 360 }}>
+          <Slider {...args} value={value} onChange={handleChange} />
+          <div style={{ marginTop: 16 }}>Current Value: {value}</div>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+
+    // ✅ Directly change the value
+    fireEvent.change(slider, { target: { value: '50' } })
+
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+```
+
+**Key principles**:
+- For range inputs (`<input type="range">`), use `fireEvent.change()` to test value changes
+- `userEvent.type()` is for text inputs only
+- Don't attempt complex pointer drag simulations for range inputs in tests
+- Focus on testing the onChange callback is called, not simulating exact user interactions
+
+**Components affected**:
+- `Slider`: Uses `<input type="range">` underneath SVG visualization
+- Any custom range input components
+
+**Why fireEvent instead of userEvent?**
+- `userEvent` attempts to simulate realistic user interactions, but range input interactions are complex (drag, click-to-position, keyboard navigation)
+- `fireEvent.change()` directly triggers the change event, which is what we actually want to test
+- Testing that `onChange` is called is more important than simulating exact user gestures
+
+### Issue 7: Async State Updates Not Completing Before Assertion
+
+**Problem**: Test fails with "Unable to find an element with the text: Selected: Green" even though the element should exist after user interaction.
+
+**Cause**: After clicking an option in a controlled component, multiple asynchronous operations occur:
+1. User clicks option
+2. `onChange` event fires and updates React state
+3. Dropdown closes
+4. React re-renders with new state
+5. DOM updates with new value
+
+If you use synchronous queries (`getByText`) immediately after `userEvent.click()`, the test runs before steps 3-5 complete.
+
+**Solution**: Use `findByText` (async query) and wait for the dropdown to close before asserting the result.
+
+```typescript
+// ❌ BAD: Using getByText immediately after click
+export const Controlled: Story = {
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [value, setValue] = useState<string | undefined>(undefined)
+
+      return (
+        <div>
+          <Select
+            {...args}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <div>Selected: {value ?? 'None'}</div>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button')
+    await userEvent.click(trigger)
+
+    const listbox = await canvas.findByRole('listbox')
+    const option = within(listbox).getByRole('option', { name: /green/i })
+    await userEvent.click(option)
+
+    // ❌ Error: Unable to find element - state hasn't updated yet
+    await expect(canvas.getByText('Selected: Green')).toBeInTheDocument()
+  }
+}
+
+// ✅ GOOD: Wait for dropdown to close and use findByText
+export const Controlled: Story = {
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [value, setValue] = useState<string | undefined>(undefined)
+
+      return (
+        <div>
+          <Select
+            {...args}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <div>Selected: {value ?? 'None'}</div>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button', { name: /select a color/i })
+    await userEvent.click(trigger)
+
+    const listbox = await canvas.findByRole('listbox')
+    const option = within(listbox).getByRole('option', { name: /green/i })
+    await userEvent.click(option)
+
+    // ✅ Wait for dropdown to close
+    await expect(canvas.queryByRole('listbox')).not.toBeInTheDocument()
+
+    // ✅ Use findByText to wait for async state update
+    const selectedText = await canvas.findByText(/selected:/i)
+    await expect(selectedText).toHaveTextContent('Selected: Green')
+  }
+}
+```
+
+**Key principles**:
+- Always wait for the dropdown/modal to close after selection: `await expect(canvas.queryByRole('listbox')).not.toBeInTheDocument()`
+- Use `findByText` (async) instead of `getByText` (sync) when asserting state changes after user interaction
+- Use partial text matching (`/selected:/i`) then verify full content with `toHaveTextContent`
+- Remember that `userEvent` actions are asynchronous even with `await` - the DOM updates come after
+
+**When to use this pattern**:
+- Controlled components with `useState` that update based on user interaction
+- Any component where clicking triggers state changes that affect displayed text
+- Components that close/hide after interaction (modals, dropdowns, tooltips)
 
 ## Prohibited Patterns
 

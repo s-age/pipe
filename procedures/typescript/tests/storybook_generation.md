@@ -334,36 +334,11 @@ Skipping these steps is equivalent to writing documentation without reading the 
 
 If quality checks fail, report the error and EXIT. Do NOT retry by calling `invoke_serial_children` again.
 
-**CRITICAL - TypeScript Validation Protocol**:
+**CRITICAL - Validation Protocol**:
 
-TypeScript projects use a multi-stage validation process. You MUST execute these checks sequentially.
+Execute the validation script which performs all necessary quality checks in a single atomic operation.
 
-#### Step 5a: TypeScript Compiler Check
-
-**[MANDATORY]** First, verify type correctness:
-
-```bash
-cd src/web && npx tsc --noEmit
-```
-
-**What This Does**:
-- Validates TypeScript types across the entire project
-- Checks for type errors in your new story file
-- Ensures props match component interface
-
-**Exit Codes**:
-- `0`: Type check passed (proceed to Step 5b)
-- Non-zero: Type errors found (fix and retry)
-
-**CRITICAL - State Synchronization**:
-If the compiler reports errors:
-1. **[MANDATORY]** Execute `read_file` on your story file FIRST
-2. **[PROHIBITED]** Do NOT use `replace` tool based on your memory
-3. **[REQUIRED]** Use the fresh file content as the source for fixes
-4. Fix the reported errors
-5. Re-run the compiler check
-
-#### Step 5b: Full Validation Script
+#### Step 5: Run Validation Script
 
 **[MANDATORY]** Execute comprehensive validation:
 
@@ -374,11 +349,17 @@ bash scripts/typescript/validate_code.sh --ignore-external-changes
 **What This Script Does** (in order):
 1. Git status check (skipped with `--ignore-external-changes`)
 2. TypeScript compiler check (tsc --noEmit)
-3. Formatter (npm run format)
-4. Linter with auto-fix (npm run lint --fix)
+3. Formatter (npm run format) - auto-formats code
+4. Linter with auto-fix (npm run lint --fix) - **automatically removes unused imports** via `eslint-plugin-unused-imports`
 
 **Parameters**:
 - `--ignore-external-changes`: Skip git status check (required for story generation)
+
+**CRITICAL - Do NOT Manually Fix Unused Imports**:
+- The linter (Step 4) **automatically removes unused imports** with `--fix`
+- **[PROHIBITED]** Do NOT manually remove unused imports before running validate_code.sh
+- **[REQUIRED]** Let the validation script handle all auto-fixable issues
+- **Rationale**: Prevents wasted token consumption on issues the linter fixes automatically
 
 **Example**:
 ```bash
@@ -406,9 +387,9 @@ If the validation script reports errors:
 5. Re-run the validation script
 6. **Rationale**: Prevents "string not found" errors caused by formatter modifications
 
-**Output**: All quality gates passed (types, formatting, linting)
+**Success Criteria**: All quality gates passed (TypeScript types, formatting, linting)
 
-**Note**: Visual verification in Storybook is left to human review. The automated checks above ensure code quality and type safety.
+**Note**: Visual verification in Storybook is left to human review. The automated checks ensure code quality and type safety.
 
 ---
 
@@ -510,10 +491,8 @@ Execution:
   Step 2: Review roles/typescript/tests/storybook.md (Atoms section)
   Step 3: Plan 4 stories: Default, Primary, Disabled, Small
   Step 4: Write story file with Meta, 4 Story exports, ARIA attributes
-  Step 5a: cd src/web && npx tsc --noEmit
-           → Exit code 0 (type check passed)
-  Step 5b: bash scripts/typescript/validate_code.sh --ignore-external-changes
-           → Exit code 0 (all quality gates passed: TypeScript, Formatter, Linter)
+  Step 5: bash scripts/typescript/validate_code.sh --ignore-external-changes
+          → Exit code 0 (all quality gates passed: TypeScript, Formatter, Linter)
   Step 6: Report success with story count = 4 (matches recommended)
 
 Output: Success, ready for test conductor review
@@ -526,7 +505,7 @@ Output: Success, ready for test conductor review
 - **Mandatory tool execution**: Step 1a (`ts_test_strategist`) is NON-NEGOTIABLE. It provides the story count recommendation
 - **Token efficiency**: Component content is ALWAYS provided via `file_references`. **NEVER use `read_file` on the target component**
 - **No list_directory**: **NEVER use `list_directory`** - it provides no value for story generation
-- **Unified validation**: **ALWAYS use `validate_code.sh`** in Step 5b for consistency
+- **Unified validation**: **ALWAYS use `validate_code.sh`** in Step 5 for consistency - it includes TypeScript type checking, formatting, and linting
 - **Comprehensive coverage**: Use the component content from `file_references` to understand what needs documenting
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure

@@ -39,7 +39,7 @@ export const Default: Story = {
 export const ReadOnly: Story = {
   render: (arguments_): JSX.Element => (
     <Form defaultValues={{ [arguments_.name]: 'This is a read-only value.' }}>
-      <TextareaField {...arguments_} readOnly />
+      <TextareaField {...arguments_} readOnly={true} />
     </Form>
   )
 }
@@ -50,7 +50,7 @@ export const ReadOnly: Story = {
 export const Required: Story = {
   render: (arguments_): JSX.Element => (
     <Form defaultValues={{ [arguments_.name]: '' }}>
-      <TextareaField {...arguments_} required />
+      <TextareaField {...arguments_} required={true} />
     </Form>
   )
 }

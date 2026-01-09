@@ -18,12 +18,14 @@ export const useToggleSwitchHandlers = ({
 } => {
   const [internalChecked, setInternalChecked] = useState(externalChecked ?? false)
 
+  const currentChecked = externalChecked ?? internalChecked
+
   const handleToggle = useCallback(() => {
     if (disabled) return
-    const newChecked = !internalChecked
+    const newChecked = !currentChecked
     setInternalChecked(newChecked)
     onChange?.(newChecked)
-  }, [internalChecked, onChange, disabled])
+  }, [currentChecked, onChange, disabled])
 
   const handleInputClick = useCallback((event: React.MouseEvent<HTMLInputElement>) => {
     event.preventDefault()
@@ -31,7 +33,7 @@ export const useToggleSwitchHandlers = ({
   }, [])
 
   return {
-    checked: externalChecked ?? internalChecked,
+    checked: currentChecked,
     handleToggle,
     handleInputClick,
     disabled

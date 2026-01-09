@@ -1,6 +1,7 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { expect, fireEvent, fn, within } from 'storybook/test'
 
 import { Button } from '@/components/atoms/Button'
 import { Form } from '@/components/organisms/Form'
@@ -8,86 +9,125 @@ import { Form } from '@/components/organisms/Form'
 import { Slider } from '../index'
 
 const Meta = {
-  title: 'Atoms/Slider',
+  title: 'Molecules/Slider',
   component: Slider,
-  tags: ['autodocs']
+  tags: ['autodocs'],
+  args: {
+    'aria-label': 'Slider label',
+    min: 0,
+    max: 100,
+    step: 1
+  }
 } satisfies StoryMeta<typeof Slider>
 
 export default Meta
 type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {
-  render: (): JSX.Element => {
-    const Example = (): JSX.Element => {
-      const [v, setV] = useState(40)
+  args: {
+    defaultValue: 50
+  },
+  render: (arguments_): JSX.Element => (
+    <div style={{ width: 360 }}>
+      <Slider {...arguments_} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+    await expect(slider).toHaveValue('50')
+  }
+}
+
+export const Controlled: Story = {
+  args: {
+    onChange: fn()
+  },
+  render: (arguments_): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [value, setValue] = useState(30)
+
+      const handleChange = (v: number): void => {
+        setValue(v)
+        arguments_.onChange?.(v)
+      }
 
       return (
         <div style={{ width: 360 }}>
-          <Slider
-            aria-label="Default slider"
-            value={v}
-            onChange={(value: number) => setV(value)}
-            min={0}
-            max={100}
-          />
+          <Slider {...arguments_} value={value} onChange={handleChange} />
+          <div style={{ marginTop: 16 }}>Current Value: {value}</div>
         </div>
       )
     }
 
-    return <Example />
+    return <ControlledExample />
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+
+    // Simulate value change using fireEvent
+    fireEvent.change(slider, { target: { value: '50' } })
+
+    await expect(args.onChange).toHaveBeenCalled()
   }
 }
 
 export const WithRHF: Story = {
-  render: (): JSX.Element => {
-    const Example = (): JSX.Element => (
+  render: (arguments_): JSX.Element => {
+    const FormExample = (): JSX.Element => (
       <Form>
         <div style={{ width: 360 }}>
-          <Slider
-            aria-label="Volume control"
-            name="volume"
-            defaultValue={25}
-            min={0}
-            max={100}
-          />
+          <Slider {...arguments_} name="volume" defaultValue={25} />
         </div>
-        <Button type="submit" onClick={(data) => console.log('submit', data)}>
-          Submit
-        </Button>
+        <div style={{ marginTop: 16 }}>
+          <Button type="submit">Submit</Button>
+        </div>
       </Form>
     )
 
-    return <Example />
+    return <FormExample />
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+    await expect(slider).toHaveValue('25')
   }
 }
 
-export const WithoutForm: Story = {
-  render: (): JSX.Element => {
-    const Example = (): JSX.Element => {
-      const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
-        event.preventDefault()
-        const fd = new FormData(event.currentTarget)
-        const data = Object.fromEntries(fd.entries())
+export const Disabled: Story = {
+  args: {
+    disabled: true,
+    defaultValue: 75
+  },
+  render: (arguments_): JSX.Element => (
+    <div style={{ width: 360 }}>
+      <Slider {...arguments_} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+    await expect(slider).toBeDisabled()
+  }
+}
 
-        console.log('submit plain', data)
-      }
-
-      return (
-        <form onSubmit={handleSubmit}>
-          <div style={{ width: 360 }}>
-            <Slider
-              aria-label="Plain volume control"
-              name="plainVolume"
-              defaultValue={50}
-              min={0}
-              max={100}
-            />
-          </div>
-          <button type="submit">Submit</button>
-        </form>
-      )
-    }
-
-    return <Example />
+export const CustomStep: Story = {
+  args: {
+    min: 0,
+    max: 10,
+    step: 2,
+    defaultValue: 4
+  },
+  render: (arguments_): JSX.Element => (
+    <div style={{ width: 360 }}>
+      <Slider {...arguments_} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+    await expect(slider).toHaveAttribute('step', '2')
+    await expect(slider).toHaveValue('4')
   }
 }

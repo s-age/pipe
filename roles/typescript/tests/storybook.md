@@ -1152,6 +1152,177 @@ export const Controlled: Story = {
 - `onChange`: Input components
 - `onConfirm`, `onCancel`: Confirmation dialogs
 
+### Issue 4: "Found multiple elements" with getByText
+
+**Problem**: Test fails with error "Found multiple elements with the text: Apple" when using `getByText` to find options in Select/MultipleSelect components.
+
+**Cause**: Components with hidden native `<select>` elements render the same text twice:
+1. In the hidden `<select><option>` for form compatibility
+2. In the visible custom dropdown UI
+
+When you use `canvas.getByText('Apple')`, Testing Library finds both elements and throws an error because the query must return exactly one element.
+
+**Solution**: Use `getByRole('option')` scoped to the visible listbox instead of `getByText`.
+
+```typescript
+// ❌ BAD: getByText finds both hidden and visible elements
+export const Default: Story = {
+  args: {
+    options: ['Apple', 'Banana', 'Cherry'],
+    placeholder: 'Choose a fruit'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button')
+    await userEvent.click(trigger)
+
+    // ❌ Error: Found multiple elements with the text: Apple
+    await expect(canvas.getByText('Apple')).toBeInTheDocument()
+  }
+}
+
+// ✅ GOOD: Use getByRole('option') scoped to listbox
+export const Default: Story = {
+  args: {
+    options: ['Apple', 'Banana', 'Cherry'],
+    placeholder: 'Choose a fruit'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button', { name: /choose a fruit/i })
+    await userEvent.click(trigger)
+
+    const listbox = await canvas.findByRole('listbox')
+    const options = within(listbox).getAllByRole('option')
+    await expect(options).toHaveLength(3)
+    await expect(options[0]).toHaveTextContent('Apple')
+  }
+}
+
+// ✅ GOOD: For single option selection
+export const Controlled: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button')
+    await userEvent.click(trigger)
+
+    const listbox = await canvas.findByRole('listbox')
+    const option = within(listbox).getByRole('option', { name: /apple/i })
+    await userEvent.click(option)
+  }
+}
+```
+
+**Key principles**:
+- Always scope option queries to the `listbox`: `within(listbox).getByRole('option')`
+- Use `getAllByRole('option')` for multiple options verification
+- Use `getByRole('option', { name: /text/i })` for single option selection
+- Never use `getByText` for option elements in Select/MultipleSelect components
+
+**Components affected**:
+- `Select`: Has hidden `<select>` (index.tsx:105-118) and visible dropdown (index.tsx:158-184)
+- `MultipleSelect`: Has hidden `<select multiple>` and visible dropdown
+
+### Issue 5: Async State Updates Not Completing Before Assertion
+
+**Problem**: Test fails with "Unable to find an element with the text: Selected: Green" even though the element should exist after user interaction.
+
+**Cause**: After clicking an option in a controlled component, multiple asynchronous operations occur:
+1. User clicks option
+2. `onChange` event fires and updates React state
+3. Dropdown closes
+4. React re-renders with new state
+5. DOM updates with new value
+
+If you use synchronous queries (`getByText`) immediately after `userEvent.click()`, the test runs before steps 3-5 complete.
+
+**Solution**: Use `findByText` (async query) and wait for the dropdown to close before asserting the result.
+
+```typescript
+// ❌ BAD: Using getByText immediately after click
+export const Controlled: Story = {
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [value, setValue] = useState<string | undefined>(undefined)
+
+      return (
+        <div>
+          <Select
+            {...args}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <div>Selected: {value ?? 'None'}</div>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button')
+    await userEvent.click(trigger)
+
+    const listbox = await canvas.findByRole('listbox')
+    const option = within(listbox).getByRole('option', { name: /green/i })
+    await userEvent.click(option)
+
+    // ❌ Error: Unable to find element - state hasn't updated yet
+    await expect(canvas.getByText('Selected: Green')).toBeInTheDocument()
+  }
+}
+
+// ✅ GOOD: Wait for dropdown to close and use findByText
+export const Controlled: Story = {
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [value, setValue] = useState<string | undefined>(undefined)
+
+      return (
+        <div>
+          <Select
+            {...args}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <div>Selected: {value ?? 'None'}</div>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button', { name: /select a color/i })
+    await userEvent.click(trigger)
+
+    const listbox = await canvas.findByRole('listbox')
+    const option = within(listbox).getByRole('option', { name: /green/i })
+    await userEvent.click(option)
+
+    // ✅ Wait for dropdown to close
+    await expect(canvas.queryByRole('listbox')).not.toBeInTheDocument()
+
+    // ✅ Use findByText to wait for async state update
+    const selectedText = await canvas.findByText(/selected:/i)
+    await expect(selectedText).toHaveTextContent('Selected: Green')
+  }
+}
+```
+
+**Key principles**:
+- Always wait for the dropdown/modal to close after selection: `await expect(canvas.queryByRole('listbox')).not.toBeInTheDocument()`
+- Use `findByText` (async) instead of `getByText` (sync) when asserting state changes after user interaction
+- Use partial text matching (`/selected:/i`) then verify full content with `toHaveTextContent`
+- Remember that `userEvent` actions are asynchronous even with `await` - the DOM updates come after
+
+**When to use this pattern**:
+- Controlled components with `useState` that update based on user interaction
+- Any component where clicking triggers state changes that affect displayed text
+- Components that close/hide after interaction (modals, dropdowns, tooltips)
+
 ## Prohibited Patterns
 
 ### ❌ Don't: Import Zod in Stories

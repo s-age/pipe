@@ -1,8 +1,7 @@
-import { expect } from '@storybook/jest'
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { userEvent, within } from '@storybook/testing-library'
 import type { JSX } from 'react'
 import { useState } from 'react'
+import { expect, userEvent, within } from 'storybook/test'
 
 import { Accordion } from '../index'
 

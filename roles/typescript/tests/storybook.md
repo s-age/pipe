@@ -357,21 +357,26 @@ Play functions enable automated interaction testing within Storybook stories. Th
 
 ### Required Dependencies
 
+For Storybook 10.x with Vitest integration:
+
 ```json
 {
   "devDependencies": {
-    "@storybook/testing-library": "^0.2.1",
-    "@storybook/jest": "^0.2.2"
+    "@storybook/addon-vitest": "^10.0.6",
+    "storybook": "^10.0.6"
   }
 }
 ```
 
+**Note**: The `storybook` package includes the `storybook/test` module which provides all testing utilities (`expect`, `userEvent`, `within`, etc.).
+
 ### Basic Play Function Pattern
 
+**IMPORTANT**: When using Storybook 10 with `@storybook/addon-vitest`, you MUST use `storybook/test` instead of `@storybook/jest` and `@storybook/testing-library`:
+
 ```typescript
-import { expect } from '@storybook/jest'
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { userEvent, within } from '@storybook/testing-library'
+import { expect, userEvent, within } from 'storybook/test'
 
 import { Button } from '../index'
 
@@ -403,10 +408,12 @@ export const Default: Story = {
 #### Pattern 1: Click Interaction
 
 ```typescript
+import { expect, fn, userEvent, within } from 'storybook/test'
+
 export const ClickInteraction: Story = {
   args: {
     children: 'Primary Button',
-    onClick: fn() // Use fn() from @storybook/test for action tracking
+    onClick: fn() // Use fn() from storybook/test for action tracking
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
@@ -608,6 +615,49 @@ await expect(element).toHaveTextContent('Hello')
 - Verify multi-step interactions
 - Test error handling and recovery
 - **Example count**: 4-6 play functions per component
+
+### Important Notes for Storybook 10 + Vitest
+
+#### Correct Import Pattern
+
+When using `@storybook/addon-vitest` with Storybook 10.x, **always import from `storybook/test`**:
+
+```typescript
+// ✅ CORRECT: Storybook 10 with addon-vitest
+import { expect, userEvent, within, fn } from 'storybook/test'
+
+// ❌ WRONG: These will cause import errors in Vitest browser mode
+import { expect } from '@storybook/jest'
+import { userEvent, within } from '@storybook/testing-library'
+```
+
+**Why?** The `storybook/test` module is specifically designed to work with Vitest and provides:
+- Async-compatible `expect` assertions (based on Vitest's expect)
+- Testing Library utilities (`userEvent`, `within`)
+- Mock function utilities (`fn`, `spyOn`)
+- Full compatibility with `@storybook/addon-vitest`
+
+#### Error: "BrowserTestRunner.importFile failed"
+
+If you see this error when running Vitest with Storybook stories:
+
+```
+Error:
+    at BrowserTestRunner.importFile
+```
+
+**Cause**: Using incompatible imports (`@storybook/jest` or `@storybook/testing-library`) with Vitest browser mode.
+
+**Solution**: Change all imports to use `storybook/test`:
+
+```typescript
+// Before (causes error)
+import { expect } from '@storybook/jest'
+import { userEvent, within } from '@storybook/testing-library'
+
+// After (works correctly)
+import { expect, userEvent, within } from 'storybook/test'
+```
 
 ### Troubleshooting
 

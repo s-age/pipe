@@ -349,11 +349,17 @@ bash scripts/typescript/validate_code.sh --ignore-external-changes
 **What This Script Does** (in order):
 1. Git status check (skipped with `--ignore-external-changes`)
 2. TypeScript compiler check (tsc --noEmit)
-3. Formatter (npm run format)
-4. Linter with auto-fix (npm run lint --fix)
+3. Formatter (npm run format) - auto-formats code
+4. Linter with auto-fix (npm run lint --fix) - **automatically removes unused imports** via `eslint-plugin-unused-imports`
 
 **Parameters**:
 - `--ignore-external-changes`: Skip git status check (required for story generation)
+
+**CRITICAL - Do NOT Manually Fix Unused Imports**:
+- The linter (Step 4) **automatically removes unused imports** with `--fix`
+- **[PROHIBITED]** Do NOT manually remove unused imports before running validate_code.sh
+- **[REQUIRED]** Let the validation script handle all auto-fixable issues
+- **Rationale**: Prevents wasted token consumption on issues the linter fixes automatically
 
 **Example**:
 ```bash

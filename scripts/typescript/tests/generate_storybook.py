@@ -469,14 +469,14 @@ Follow @procedures/typescript_storybook_conductor.md Step 3b-3c:
 Step 3b: Construct task sequence (agent task + validation script)
 Step 3c: Invoke invoke_serial_children tool with EXACTLY these parameters:
 
-invoke_serial_children(
-    roles={roles_json},
-    references_persist={references_json},
-    purpose="Generate Storybook stories for {component_name}",
-    background="Complete ALL steps in storybook_generation.md for {component_file}. Verify TypeScript compilation, validation script, and Storybook visual rendering. DO NOT exit until all quality checks pass.",
-    procedure="procedures/typescript/tests/storybook_generation.md",
-    tasks={tasks_json}
-)
+CRITICAL: Copy and use the EXACT parameter values below. Do NOT escape, re-format, or stringify them.
+
+roles={roles_json}
+references_persist={references_json}
+purpose="Generate Storybook stories for {component_name}"
+background="Complete ALL steps in storybook_generation.md for {component_file}. Verify TypeScript compilation, validation script, and Storybook visual rendering. DO NOT exit until all quality checks pass."
+procedure="procedures/typescript/tests/storybook_generation.md"
+tasks={tasks_json}
 
 After calling invoke_serial_children, EXIT IMMEDIATELY and wait for completion notification.
 
@@ -486,10 +486,12 @@ When you receive the completion notification:
 - 🚨 On abort: Do NOT retry. Mark as aborted with edit_todos and report abort reason
 
 CRITICAL RULES:
-1. Call invoke_serial_children tool directly using the EXACT parameters shown above
-2. Do NOT modify the JSON structures - use them as-is
-3. NEVER call invoke_serial_children again to retry - retry logic is handled by invoke_serial_children itself
-4. Follow the response instructions in the completion notification exactly
+1. Call invoke_serial_children with the EXACT parameter values shown above
+2. Do NOT add quotes, escape characters, or convert to strings
+3. Do NOT modify, re-format, or re-encode the JSON arrays/objects
+4. Use the raw JSON values directly as tool parameters
+5. NEVER call invoke_serial_children again to retry - retry logic is handled by invoke_serial_children itself
+6. Follow the response instructions in the completion notification exactly
 """
 
     # Execute takt with instruction

@@ -1,7 +1,8 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
+import { expect, userEvent, within } from 'storybook/test'
+import { z } from 'zod'
 
-import { Button } from '@/components/atoms/Button'
 import { Form } from '@/components/organisms/Form'
 
 import { MultipleSelect } from '../index'
@@ -9,75 +10,72 @@ import { MultipleSelect } from '../index'
 const Meta = {
   title: 'Molecules/MultipleSelect',
   component: MultipleSelect,
-  tags: ['autodocs']
+  tags: ['autodocs'],
+  args: {
+    name: 'multiple-select',
+    options: [
+      { value: 'apple', label: 'Apple' },
+      { value: 'banana', label: 'Banana' },
+      { value: 'cherry', label: 'Cherry' },
+      { value: 'date', label: 'Date' },
+      { value: 'elderberry', label: 'Elderberry' }
+    ],
+    placeholder: 'Select fruits...'
+  }
 } satisfies StoryMeta<typeof MultipleSelect>
 
 export default Meta
 type Story = StoryObj<typeof Meta>
 
 export const Default: Story = {
-  args: {
-    options: ['Apple', 'Banana', 'Cherry'],
-    placeholder: 'Choose fruits',
-    name: 'fruits'
-  }
+  args: {}
 }
 
 export const Searchable: Story = {
   args: {
-    options: ['Apricot', 'Blueberry', 'Cantaloupe', 'Durian', 'Elderberry'],
-    searchable: true,
-    placeholder: 'Search fruits',
-    name: 'searchFruits'
+    searchable: true
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole('button', { name: /select fruits/i })
+
+    await expect(trigger).toBeInTheDocument()
+    await userEvent.click(trigger)
+
+    const searchInput = canvas.getByRole('textbox', { name: /search options/i })
+    await expect(searchInput).toBeInTheDocument()
+
+    await userEvent.type(searchInput, 'apple')
+    const option = canvas.getByRole('option', { name: /apple/i })
+    await expect(option).toBeInTheDocument()
+  }
+}
+
+export const WithDefaultValues: Story = {
+  args: {
+    defaultValue: ['apple', 'cherry']
   }
 }
 
 export const WithRHF: Story = {
-  args: {
-    name: 'favorites',
-    options: [
-      { value: 'a', label: 'Option A' },
-      { value: 'b', label: 'Option B' },
-      { value: 'c', label: 'Option C' }
-    ]
-  },
   render: (arguments_): JSX.Element => {
-    const FormExample = (): JSX.Element => (
-      <Form>
-        <MultipleSelect {...arguments_} />
-        <Button type="submit" onClick={(data) => console.log('submit', data)}>
-          Submit
-        </Button>
+    const schema = z.object({
+      [arguments_.name]: z.array(z.string()).min(1, 'Please select at least one fruit')
+    })
+
+    return (
+      <Form schema={schema} defaultValues={{ [arguments_.name]: [] }} mode="onBlur">
+        <div style={{ display: 'grid', gap: '1rem' }}>
+          <MultipleSelect {...arguments_} />
+          <button type="submit">Submit</button>
+        </div>
       </Form>
     )
-
-    return <FormExample />
   }
 }
 
-export const WithoutForm: Story = {
+export const Disabled: Story = {
   args: {
-    name: 'plainFruits',
-    options: ['One', 'Two', 'Three']
-  },
-  render: (arguments_): JSX.Element => {
-    const PlainExample = (): JSX.Element => {
-      const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
-        event.preventDefault()
-        const fd = new FormData(event.currentTarget)
-        const data = Object.fromEntries(fd.entries())
-
-        console.log('submit plain', data)
-      }
-
-      return (
-        <form onSubmit={handleSubmit}>
-          <MultipleSelect {...arguments_} />
-          <button type="submit">Submit</button>
-        </form>
-      )
-    }
-
-    return <PlainExample />
+    disabled: true
   }
 }

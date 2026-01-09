@@ -71,11 +71,7 @@ export const Controlled: Story = {
           <button type="button" onClick={() => setIsOpen(true)}>
             Open Modal
           </button>
-          <Modal
-            {...arguments_}
-            isOpen={isOpen}
-            onClose={handleClose}
-          >
+          <Modal {...arguments_} isOpen={isOpen} onClose={handleClose}>
             <div style={{ padding: '20px', background: 'white', borderRadius: '8px' }}>
               <h2>Controlled Modal</h2>
               <p>Click the close button to dismiss.</p>

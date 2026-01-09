@@ -1035,6 +1035,123 @@ export const WithRHF: Story = {
 
 **Rule of thumb**: If a component accepts an `onSubmit` prop and has its own `<form>`, don't wrap it in another `Form` component.
 
+### Issue 3: Callback Props Not Being Called in Controlled Stories
+
+**Problem**: Testing callbacks like `onClose`, `onSubmit`, etc. in controlled component stories, but `args.onClose` is never called even though the component appears to work correctly.
+
+**Cause**: The controlled story creates its own state and event handlers that bypass the `args` callback. When you click a button in the component's children, it only calls the local state setter, not the `args` callback that the test is monitoring.
+
+**Solution**: Create a shared handler function that calls both the local state update AND the `args` callback. Use this handler consistently for all close/submit actions.
+
+```typescript
+// ❌ BAD: Local handler doesn't call args callback
+export const Controlled: Story = {
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [isOpen, setIsOpen] = useState(false)
+
+      return (
+        <div>
+          <button type="button" onClick={() => setIsOpen(true)}>
+            Open Modal
+          </button>
+          <Modal
+            {...args}
+            isOpen={isOpen}
+            onClose={() => {
+              setIsOpen(false)
+              args.onClose?.()  // Modal's onClose calls this
+            }}
+          >
+            <div>
+              <h2>Controlled Modal</h2>
+              {/* ❌ This button only calls setIsOpen, not args.onClose */}
+              <button type="button" onClick={() => setIsOpen(false)}>
+                Close
+              </button>
+            </div>
+          </Modal>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const openButton = canvas.getByRole('button', { name: /open modal/i })
+    await userEvent.click(openButton)
+
+    const modal = await canvas.findByRole('dialog')
+    const closeButton = within(modal).getByRole('button', { name: /close/i })
+    await userEvent.click(closeButton)
+
+    // ❌ This will fail - args.onClose was never called
+    await expect(args.onClose).toHaveBeenCalled()
+  }
+}
+
+// ✅ GOOD: Shared handler calls both state setter and args callback
+export const Controlled: Story = {
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [isOpen, setIsOpen] = useState(false)
+
+      // ✅ Single handler that calls both
+      const handleClose = (): void => {
+        setIsOpen(false)
+        args.onClose?.()
+      }
+
+      return (
+        <div>
+          <button type="button" onClick={() => setIsOpen(true)}>
+            Open Modal
+          </button>
+          <Modal
+            {...args}
+            isOpen={isOpen}
+            onClose={handleClose}  // ✅ Use shared handler
+          >
+            <div>
+              <h2>Controlled Modal</h2>
+              {/* ✅ Button also uses shared handler */}
+              <button type="button" onClick={handleClose}>
+                Close
+              </button>
+            </div>
+          </Modal>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const openButton = canvas.getByRole('button', { name: /open modal/i })
+    await userEvent.click(openButton)
+
+    const modal = await canvas.findByRole('dialog')
+    const closeButton = within(modal).getByRole('button', { name: /close/i })
+    await userEvent.click(closeButton)
+
+    // ✅ args.onClose will be called correctly
+    await expect(args.onClose).toHaveBeenCalled()
+  }
+}
+```
+
+**Key principle**: In controlled stories, any action that should trigger a callback prop must use a handler that calls both:
+1. The local state update (e.g., `setIsOpen(false)`)
+2. The args callback (e.g., `args.onClose?.()`)
+
+**Common callbacks this applies to**:
+- `onClose`: Modal, Dialog, Drawer components
+- `onSubmit`: Form components
+- `onChange`: Input components
+- `onConfirm`, `onCancel`: Confirmation dialogs
+
 ## Prohibited Patterns
 
 ### ❌ Don't: Import Zod in Stories

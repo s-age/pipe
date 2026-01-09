@@ -1,7 +1,8 @@
 import React from 'react'
 import type { JSX, InputHTMLAttributes } from 'react'
-import type { FieldValues, UseFormRegister } from 'react-hook-form'
+import type { FieldValues, UseFormRegister, FieldError } from 'react-hook-form'
 
+import { ErrorMessage } from '@/components/atoms/ErrorMessage'
 import { Box } from '@/components/molecules/Box'
 import { Flex } from '@/components/molecules/Flex'
 
@@ -12,6 +13,7 @@ type InputCheckboxProperties = {
   label?: React.ReactNode
   name?: string
   register?: UseFormRegister<FieldValues>
+  error?: FieldError | string
   /**
    * Provides an accessible label for the checkbox when a visible label is not present.
    * Use this for checkboxes without associated label text.
@@ -30,6 +32,7 @@ export const InputCheckbox = ({
   label,
   name,
   register,
+  error,
   ...rest
 }: InputCheckboxProperties): JSX.Element => {
   const resolvedLabel = label ?? children
@@ -42,31 +45,38 @@ export const InputCheckbox = ({
   })
 
   return (
-    <Flex as="label" className={styles.container} htmlFor={inputId}>
-      <input
-        id={inputId}
-        type="checkbox"
-        className={styles.hiddenInput}
-        {...registerProperties}
-        name={name}
-        {...rest}
-      />
-      <Box className={styles.control} aria-hidden={true}>
-        <svg
-          className={styles.svg}
-          viewBox="0 0 24 24"
-          aria-hidden={true}
-          focusable="false"
-        >
-          <path className={styles.check} d="M20 6L9 17l-5-5" fill="none" />
-        </svg>
-      </Box>
-      {resolvedLabel ? (
-        <Box as="span" className={styles.labelText}>
-          {resolvedLabel}
+    <>
+      <Flex as="label" className={styles.container} htmlFor={inputId}>
+        <input
+          id={inputId}
+          type="checkbox"
+          className={styles.hiddenInput}
+          {...registerProperties}
+          name={name}
+          {...rest}
+        />
+        <Box className={styles.control} aria-hidden={true}>
+          <svg
+            className={styles.svg}
+            viewBox="0 0 24 24"
+            aria-hidden={true}
+            focusable="false"
+          >
+            <path className={styles.check} d="M20 6L9 17l-5-5" fill="none" />
+          </svg>
         </Box>
-      ) : null}
-    </Flex>
+        {resolvedLabel ? (
+          <Box as="span" className={styles.labelText}>
+            {resolvedLabel}
+          </Box>
+        ) : null}
+      </Flex>
+      {typeof error === 'string' ? (
+        <ErrorMessage message={error} />
+      ) : (
+        <ErrorMessage error={error} />
+      )}
+    </>
   )
 }
 

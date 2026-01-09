@@ -82,6 +82,22 @@ export const WithRHF: Story = {
 }
 
 /**
+ * Error state.
+ * Demonstrates how the component displays validation errors.
+ */
+export const WithError: Story = {
+  args: {
+    label: 'Checkbox with Error',
+    error: 'This field is required'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const errorMessage = await canvas.findByText(/this field is required/i)
+    await expect(errorMessage).toBeInTheDocument()
+  }
+}
+
+/**
  * Disabled state.
  * Verifies that the checkbox is not interactive when disabled.
  */

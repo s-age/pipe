@@ -16,7 +16,8 @@ export const turnsColumn = style({
 
 export const chatRoot = style({
   flex: '1 1 0',
-  minHeight: 0
+  minHeight: 0,
+  height: '100vh'
 })
 
 export const turnsHeader = style({

@@ -904,6 +904,137 @@ export const WithFieldset: Story = {
 }
 ```
 
+## Common Pitfalls and Solutions
+
+### Issue 1: Form Validation Not Triggering
+
+**Problem**: Error messages don't appear when using React Hook Form validation in stories.
+
+**Cause**: React Hook Form's default validation mode is `onSubmit`, which doesn't trigger on blur events.
+
+**Solution**: Explicitly set `mode="onBlur"` on the `Form` component to trigger validation when input loses focus.
+
+```typescript
+// ❌ BAD: Validation won't trigger on blur
+export const WithError: Story = {
+  render: (args): JSX.Element => {
+    const schema = z.object({
+      [args.name]: z.string().min(1, 'This field is required')
+    })
+
+    return (
+      <Form schema={schema} defaultValues={{ [args.name]: '' }}>
+        <InputField {...args} />
+      </Form>
+    )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    await userEvent.type(input, 'test')
+    await userEvent.clear(input)
+    await userEvent.tab()
+
+    // ❌ This will fail - error message won't appear
+    const error = await canvas.findByText(/this field is required/i)
+    await expect(error).toBeInTheDocument()
+  }
+}
+
+// ✅ GOOD: Add mode="onBlur" to trigger validation
+export const WithError: Story = {
+  render: (args): JSX.Element => {
+    const schema = z.object({
+      [args.name]: z.string().min(1, 'This field is required')
+    })
+
+    return (
+      <Form schema={schema} defaultValues={{ [args.name]: '' }} mode="onBlur">
+        <InputField {...args} />
+      </Form>
+    )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    await userEvent.type(input, 'test')
+    await userEvent.clear(input)
+    await userEvent.tab()
+
+    // ✅ Error message will appear after blur
+    const error = await canvas.findByText(/this field is required/i)
+    await expect(error).toBeInTheDocument()
+  }
+}
+```
+
+**Available validation modes**:
+- `onBlur`: Validates when field loses focus (recommended for real-time feedback)
+- `onChange`: Validates on every keystroke (can be too aggressive)
+- `onSubmit`: Validates only on form submission (default)
+- `onTouched`: Validates after first blur, then on every change
+
+### Issue 2: Nested Forms Breaking Submit Events
+
+**Problem**: `onSubmit` callback not being called when testing form submission.
+
+**Cause**: HTML doesn't allow nested `<form>` elements. Some components like `InputSearch` have their own `<form>` wrapper. When placed inside another `Form` component, the nested form's `event.preventDefault()` blocks the outer form's submission.
+
+**Solution**: Don't nest forms. Components with their own `<form>` elements should be placed outside the `Form` component or tested independently.
+
+```typescript
+// ❌ BAD: Nested forms - onSubmit won't be called
+export const WithRHF: Story = {
+  render: (args): JSX.Element => (
+    <Form>
+      {/* InputSearch has its own <form> element */}
+      <InputSearch {...args} name="searchQuery" />
+      <button type="submit">Submit Form</button>
+    </Form>
+  ),
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const submitButton = canvas.getByRole('button', { name: /submit form/i })
+    await userEvent.click(submitButton)
+
+    // ❌ This will fail - args.onSubmit was never called
+    await expect(args.onSubmit).toHaveBeenCalled()
+  }
+}
+
+// ✅ GOOD: Remove nested form, test component's own submit
+export const WithRHF: Story = {
+  render: (args): JSX.Element => (
+    <div>
+      <Form>
+        <input name="otherField" placeholder="Other field" />
+      </Form>
+      {/* InputSearch outside of Form - uses its own form */}
+      <InputSearch {...args} name="searchQuery" />
+    </div>
+  ),
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox', { name: /search/i })
+    await userEvent.type(input, 'test')
+
+    // Click the component's own submit button
+    const submitButton = canvas.getByRole('button', { name: /search/i })
+    await userEvent.click(submitButton)
+
+    // ✅ args.onSubmit will be called correctly
+    await expect(args.onSubmit).toHaveBeenCalled()
+  }
+}
+```
+
+**Components that have their own `<form>` element**:
+- `InputSearch`: Has built-in form with submit button
+
+**Rule of thumb**: If a component accepts an `onSubmit` prop and has its own `<form>`, don't wrap it in another `Form` component.
+
 ## Prohibited Patterns
 
 ### ❌ Don't: Import Zod in Stories

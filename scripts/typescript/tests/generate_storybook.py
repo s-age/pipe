@@ -392,8 +392,38 @@ def execute_next_todo(session_id: str) -> bool:
     print(f"[Execute] Type: {component_type}")
     print(f"[Execute] Layer: {layer}")
 
-    # Build references_persist list
-    references = [component_file]
+    # Build references_persist list - include all files in component directory
+    component_dir = Path(component_file).parent
+    references = []
+
+    # Collect all files in component directory (excluding __stories__ and node_modules)
+    if component_dir.exists():
+        for file in sorted(component_dir.rglob("*")):
+            # Skip directories
+            if file.is_dir():
+                continue
+
+            # Skip __stories__ directory files
+            if "__stories__" in file.parts:
+                continue
+
+            # Skip node_modules
+            if "node_modules" in file.parts:
+                continue
+
+            # Convert to relative path
+            try:
+                rel_path = file.relative_to(Path.cwd())
+                references.append(str(rel_path))
+            except ValueError:
+                references.append(str(file))
+
+    # Ensure component_file is first in the list
+    if component_file in references:
+        references.remove(component_file)
+    references.insert(0, component_file)
+
+    print(f"[Execute] References: {len(references)} files in component directory")
 
     # Build task instruction with proper formatting (no newlines that need escaping)
     task_instruction = (
@@ -409,9 +439,19 @@ def execute_next_todo(session_id: str) -> bool:
         "3. Story count: Follow ts_test_strategist recommendations (non-negotiable)\n"
         f"4. ONLY modify {story_file} - any other file changes = immediate abort\n"
         "5. The __stories__ directory already exists - DO NOT create it\n\n"
+        "📐 IMPLEMENTATION PATTERNS (from @roles/typescript/tests/storybook.md):\n"
+        "- Use ONLY patterns documented in storybook.md - DO NOT search for existing stories\n"
+        "- DO NOT use vi.mock, jest.mock, or search for mock patterns in the codebase\n"
+        "- DO NOT read preview.ts or other Storybook configuration files\n"
+        "- Story structure: Follow Basic Story Template (lines 40-63 in storybook.md)\n"
+        f"- Layer patterns: Follow {layer.capitalize()} patterns (lines 65-345 in storybook.md)\n"
+        "- Play functions: Follow Play Function Patterns (lines 346-698 in storybook.md)\n"
+        "- Common Pitfalls: Review and avoid Issues 1-7 (lines 907-1514 in storybook.md)\n"
+        "- Import pattern: ALWAYS use 'import { expect, userEvent, within, fn } from \"storybook/test\"'\n\n"
         "✅ Success Criteria:\n"
         "- [ ] Validation Script (validate_code.sh): Pass (includes TypeScript, Formatter, Linter)\n"
-        "- [ ] Story count matches ts_test_strategist recommendation\n\n"
+        "- [ ] Story count matches ts_test_strategist recommendation\n"
+        "- [ ] All patterns follow storybook.md exactly (no codebase exploration)\n\n"
         "🔧 Tool Execution Protocol:\n"
         "- **EXECUTE, DON'T DISPLAY:** Do NOT write tool calls in markdown text or code blocks\n"
         "- **IGNORE DOC FORMATTING:** Code blocks in procedures are illustrations only - convert them to actual tool invocations\n"

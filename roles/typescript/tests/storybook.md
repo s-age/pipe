@@ -1223,7 +1223,196 @@ export const Controlled: Story = {
 - `Select`: Has hidden `<select>` (index.tsx:105-118) and visible dropdown (index.tsx:158-184)
 - `MultipleSelect`: Has hidden `<select multiple>` and visible dropdown
 
-### Issue 5: Async State Updates Not Completing Before Assertion
+### Issue 5: Field Components Require Form Context
+
+**Problem**: Test fails with "Cannot read properties of null (reading 'control')" when using Field components (e.g., `InputField`, `TextareaField`, `SelectField`) without a Form wrapper.
+
+**Cause**: Field components use React Hook Form's `useController` hook, which requires a form context. They cannot be used standalone - they must always be wrapped in a `Form` component.
+
+**Solution**: Always wrap Field components in a `Form` component, even in the Default story.
+
+```typescript
+// ❌ BAD: Field component without Form wrapper
+export const Default: Story = {
+  args: {
+    id: 'input-field',
+    label: 'Label',
+    name: 'testField',
+    placeholder: 'Placeholder text'
+  }
+}
+
+// ✅ GOOD: Wrap in Form component
+export const Default: Story = {
+  render: (args): JSX.Element => (
+    <Form defaultValues={{ [args.name]: '' }}>
+      <InputField {...args} />
+    </Form>
+  )
+}
+
+// ✅ GOOD: With initial value
+export const WithValue: Story = {
+  render: (args): JSX.Element => (
+    <Form defaultValues={{ [args.name]: 'Initial value' }}>
+      <InputField {...args} />
+    </Form>
+  )
+}
+
+// ✅ GOOD: With validation
+export const WithError: Story = {
+  render: (args): JSX.Element => {
+    const schema = z.object({
+      [args.name]: z.string().min(1, 'This field is required')
+    })
+
+    return (
+      <Form schema={schema} defaultValues={{ [args.name]: '' }} mode="onBlur">
+        <InputField {...args} />
+      </Form>
+    )
+  }
+}
+```
+
+**Key principles**:
+- **Always** wrap Field components in `Form`, even for simple stories
+- Use `defaultValues` to set initial values instead of component props
+- Field components include any component that uses `useController`:
+  - `InputField`
+  - `TextareaField`
+  - `SelectField`
+  - `CheckboxField`
+  - Any custom field component using `useController`
+
+**Components that DON'T need Form wrapper**:
+- Base input components: `InputText`, `TextArea`, `Select`, `Checkbox`
+- These components can be used standalone or with `register` prop
+
+**Rule of thumb**: If the component name ends with "Field", it needs a `Form` wrapper.
+
+### Issue 6: Range Input onChange Not Triggering with userEvent.type
+
+**Problem**: Test fails with "expected 'onChange' to be called at least once" when testing Slider or range input components using `userEvent.type()` for keyboard interactions.
+
+**Cause**: `userEvent.type()` is designed for text input fields and doesn't properly trigger change events on `<input type="range">` elements. Keyboard navigation on range inputs requires actual key events, not character typing.
+
+**Solution**: Use `fireEvent.change()` directly to change slider values in tests instead of simulating keyboard interactions.
+
+```typescript
+// ❌ BAD: Using userEvent.type() with range input
+import { expect, fn, userEvent, within } from 'storybook/test'
+
+export const Controlled: Story = {
+  args: {
+    onChange: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+
+    // ❌ This doesn't work for range inputs
+    await userEvent.type(slider, '{ArrowRight}')
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+
+// ❌ BAD: Using userEvent.click() + userEvent.keyboard()
+export const Controlled: Story = {
+  args: {
+    onChange: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+
+    // ❌ This also doesn't reliably work
+    await userEvent.click(slider)
+    await userEvent.keyboard('{ArrowRight}')
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+
+// ❌ BAD: Trying to simulate pointer drag
+export const Controlled: Story = {
+  args: {
+    onChange: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+
+    // ❌ Complex and unreliable for range inputs
+    const sliderRect = slider.getBoundingClientRect()
+    const startX = sliderRect.left + sliderRect.width * 0.3
+    const endX = sliderRect.left + sliderRect.width * 0.5
+    const centerY = sliderRect.top + sliderRect.height / 2
+
+    await userEvent.pointer([
+      { keys: '[MouseLeft>]', target: slider, coords: { x: startX, y: centerY } },
+      { coords: { x: endX, y: centerY } },
+      { keys: '[/MouseLeft]' }
+    ])
+
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+
+// ✅ GOOD: Use fireEvent.change() directly
+import { expect, fireEvent, fn, within } from 'storybook/test'
+
+export const Controlled: Story = {
+  args: {
+    onChange: fn()
+  },
+  render: (args): JSX.Element => {
+    const ControlledExample = (): JSX.Element => {
+      const [value, setValue] = useState(30)
+
+      const handleChange = (v: number): void => {
+        setValue(v)
+        args.onChange?.(v)
+      }
+
+      return (
+        <div style={{ width: 360 }}>
+          <Slider {...args} value={value} onChange={handleChange} />
+          <div style={{ marginTop: 16 }}>Current Value: {value}</div>
+        </div>
+      )
+    }
+
+    return <ControlledExample />
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const slider = canvas.getByRole('slider')
+
+    // ✅ Directly change the value
+    fireEvent.change(slider, { target: { value: '50' } })
+
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+```
+
+**Key principles**:
+- For range inputs (`<input type="range">`), use `fireEvent.change()` to test value changes
+- `userEvent.type()` is for text inputs only
+- Don't attempt complex pointer drag simulations for range inputs in tests
+- Focus on testing the onChange callback is called, not simulating exact user interactions
+
+**Components affected**:
+- `Slider`: Uses `<input type="range">` underneath SVG visualization
+- Any custom range input components
+
+**Why fireEvent instead of userEvent?**
+- `userEvent` attempts to simulate realistic user interactions, but range input interactions are complex (drag, click-to-position, keyboard navigation)
+- `fireEvent.change()` directly triggers the change event, which is what we actually want to test
+- Testing that `onChange` is called is more important than simulating exact user gestures
+
+### Issue 7: Async State Updates Not Completing Before Assertion
 
 **Problem**: Test fails with "Unable to find an element with the text: Selected: Green" even though the element should exist after user interaction.
 

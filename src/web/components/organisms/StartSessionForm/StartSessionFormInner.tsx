@@ -83,6 +83,7 @@ export const StartSessionFormInner = ({
                 id="instruction"
                 name="instruction"
                 register={register}
+                aria-label="First Instruction"
                 aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
               />
             )}

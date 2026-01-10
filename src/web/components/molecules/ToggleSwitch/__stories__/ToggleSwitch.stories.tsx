@@ -71,23 +71,19 @@ export const Interactive: Story = {
   },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
-    const toggle = canvas.getByRole('checkbox')
-
-    // We click the label text because the checkbox itself has stopPropagation in the component implementation
-    const label = canvas.getByText(/Status: OFF/i)
+    const toggle = canvas.getByRole('switch')
 
     // Initial state
-    await expect(toggle).not.toBeChecked()
+    await expect(toggle).toHaveAttribute('aria-checked', 'false')
 
     // Click to toggle ON
-    await userEvent.click(label)
-    await expect(toggle).toBeChecked()
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-checked', 'true')
     await expect(args.onChange).toHaveBeenCalledWith(true)
 
     // Click to toggle OFF
-    const labelOn = await canvas.findByText(/Status: ON/i)
-    await userEvent.click(labelOn)
-    await expect(toggle).not.toBeChecked()
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-checked', 'false')
     await expect(args.onChange).toHaveBeenCalledWith(false)
   }
 }

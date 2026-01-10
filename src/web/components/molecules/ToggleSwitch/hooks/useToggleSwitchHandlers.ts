@@ -14,6 +14,7 @@ export const useToggleSwitchHandlers = ({
   checked: boolean
   disabled: boolean
   handleInputClick: (event: React.MouseEvent<HTMLInputElement>) => void
+  handleKeyDown: (event: React.KeyboardEvent<HTMLLabelElement>) => void
   handleToggle: () => void
 } => {
   const [internalChecked, setInternalChecked] = useState(externalChecked ?? false)
@@ -32,10 +33,22 @@ export const useToggleSwitchHandlers = ({
     event.stopPropagation()
   }, [])
 
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLLabelElement>) => {
+      if (disabled) return
+      if (event.key === ' ' || event.key === 'Enter') {
+        event.preventDefault()
+        handleToggle()
+      }
+    },
+    [disabled, handleToggle]
+  )
+
   return {
     checked: currentChecked,
     handleToggle,
     handleInputClick,
+    handleKeyDown,
     disabled
   }
 }

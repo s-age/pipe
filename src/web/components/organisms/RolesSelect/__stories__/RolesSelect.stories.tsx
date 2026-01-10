@@ -1,72 +1,114 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
+import { http, HttpResponse } from 'msw'
 import type { JSX } from 'react'
+import { expect, userEvent, waitFor, within } from 'storybook/test'
 
-import { Button } from '@/components/atoms/Button'
-import { Form } from '@/components/organisms/Form'
+import { API_BASE_URL } from '@/constants/uri'
+import { AppStoreProvider } from '@/stores/useAppStore'
 
 import { RolesSelect } from '../index'
 
-const Meta = {
-  title: 'Organisms/RolesSelect',
-  component: RolesSelect,
-  tags: ['autodocs']
-} satisfies StoryMeta<typeof RolesSelect>
+const mockRoles = [
+  { label: 'Admin', value: 'admin' },
+  { label: 'Editor', value: 'editor' },
+  { label: 'Viewer', value: 'viewer' }
+]
 
-export default Meta
-type Story = StoryObj<typeof Meta>
-
-const STUB_SESSION_DETAIL = {
-  purpose: 'Example session',
-  background: 'This is an example session for demonstration purposes.',
-  instruction: 'Please follow the instructions carefully.',
-  parent: null,
-  roles: ['admin', 'editor'],
+const mockSession = {
   artifacts: [],
-  procedure: null,
-  references: [],
-  hyperparameters: {
-    temperature: 0.7,
-    topP: 0.9,
-    topK: 5
-  },
-  sessionId: null,
+  background: 'Test background',
+  hyperparameters: null,
+  instruction: 'Test instruction',
   multiStepReasoningEnabled: false,
+  parent: null,
+  procedure: null,
+  purpose: 'Test purpose',
+  references: [],
+  roles: [],
+  sessionId: 'test-session-id',
   todos: [],
   turns: []
 }
 
+const Meta = {
+  title: 'Organisms/RolesSelect',
+  component: RolesSelect,
+  tags: ['autodocs'],
+  decorators: [
+    (Story): JSX.Element => (
+      <AppStoreProvider>
+        <Story />
+      </AppStoreProvider>
+    )
+  ],
+  parameters: {
+    msw: {
+      handlers: [
+        http.get(`${API_BASE_URL}/fs/roles`, () =>
+          HttpResponse.json({ roles: mockRoles })
+        )
+      ]
+    }
+  }
+} satisfies StoryMeta<typeof RolesSelect>
+
+export default Meta
+
+type Story = StoryObj<typeof Meta>
+
 export const Default: Story = {
   args: {
-    sessionDetail: STUB_SESSION_DETAIL,
-    placeholder: 'Select roles'
+    sessionDetail: mockSession,
+    placeholder: 'Select roles...'
   }
 }
 
-export const WithRHF: Story = {
+export const WithSelectedRoles: Story = {
   args: {
-    sessionDetail: STUB_SESSION_DETAIL
+    sessionDetail: {
+      ...mockSession,
+      roles: ['admin', 'editor']
+    },
+    placeholder: 'Select roles...'
+  }
+}
+
+export const Interaction: Story = {
+  args: {
+    sessionDetail: mockSession,
+    placeholder: 'Select roles...'
   },
-  render: (): JSX.Element => {
-    const FormExample = (): JSX.Element => (
-      <Form>
-        <RolesSelect sessionDetail={STUB_SESSION_DETAIL} />
-        <Button type="submit" onClick={(data) => console.log('submit', data)}>
-          Submit
-        </Button>
-      </Form>
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByPlaceholderText('Search files or directories...')
+
+    // Focus and type to trigger role filtering
+    await userEvent.click(input)
+    await userEvent.type(input, 'Ad')
+
+    // Wait for the suggestion list to appear and roles to be loaded
+    await waitFor(
+      async () => {
+        const listbox = canvas.getByRole('listbox')
+        expect(listbox).toBeInTheDocument()
+      },
+      { timeout: 3000 }
     )
 
-    return <FormExample />
-  }
-}
+    // Wait for roles to be loaded and displayed in the list
+    // FileSearchExplorer renders a list of items. We expect 'Admin' to appear.
+    const adminOption = await canvas.findByText('Admin')
+    await expect(adminOption).toBeInTheDocument()
 
-export const WithoutForm: Story = {
-  args: {
-    sessionDetail: STUB_SESSION_DETAIL
-  },
-  render: (): JSX.Element => (
-    <div>
-      <RolesSelect sessionDetail={STUB_SESSION_DETAIL} />
-    </div>
-  )
+    // Select a role
+    await userEvent.click(adminOption)
+
+    // Verify selection - Admin should appear as a tag in PathDisplay
+    // After selection, the item should be in the pathDisplayContainer
+    await waitFor(() => {
+      const tags = canvas.getAllByText('admin')
+      // There should be at least one tag with the selected role
+      expect(tags.length).toBeGreaterThan(0)
+    })
+  }
 }

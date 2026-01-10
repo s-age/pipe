@@ -1,6 +1,6 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
-import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fn, waitFor, within } from 'storybook/test'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { AppStoreProvider } from '@/stores/useAppStore'
@@ -62,9 +62,8 @@ export const Default: Story = {
     // Verify summary text
     await expect(canvas.getByText(/2 references/i)).toBeInTheDocument()
 
-    // Open accordion to see details
-    const accordionTrigger = canvas.getByRole('button', { expanded: false })
-    await userEvent.click(accordionTrigger)
+    // Accordion is already open by default (aria-expanded="true")
+    // Just verify the content is visible
 
     // Wait for and verify reference paths are displayed using data-testid
     await waitFor(() => {

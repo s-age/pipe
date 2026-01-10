@@ -2,13 +2,21 @@ import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { AppStoreProvider } from '@/stores/useAppStore'
 
 import { SessionMeta } from '..'
 
 const Meta = {
   title: 'Organisms/SessionMeta',
   component: SessionMeta,
-  tags: ['autodocs']
+  tags: ['autodocs'],
+  decorators: [
+    (Story): JSX.Element => (
+      <AppStoreProvider>
+        <Story />
+      </AppStoreProvider>
+    )
+  ]
 } satisfies StoryMeta<typeof SessionMeta>
 
 export default Meta

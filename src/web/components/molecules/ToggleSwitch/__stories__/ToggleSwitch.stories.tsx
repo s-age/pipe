@@ -27,21 +27,24 @@ export const Default: Story = {
 export const Checked: Story = {
   args: {
     checked: true,
-    ariaLabel: 'Toggle switch checked'
+    ariaLabel: 'Toggle switch checked',
+    onChange: fn()
   }
 }
 
 export const Disabled: Story = {
   args: {
     disabled: true,
-    ariaLabel: 'Toggle switch disabled'
+    ariaLabel: 'Toggle switch disabled',
+    onChange: fn()
   }
 }
 
 export const WithLabel: Story = {
   args: {
     label: 'Enable notifications',
-    ariaLabel: 'Toggle switch with label'
+    ariaLabel: 'Toggle switch with label',
+    onChange: fn()
   }
 }
 

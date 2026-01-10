@@ -7,7 +7,7 @@
  * interface for interacting with RESTful APIs.
  */
 
-export const API_BASE_URL = 'http://localhost:5001/api/v1'
+import { API_BASE_URL } from '@/constants/uri'
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: Record<string, unknown>

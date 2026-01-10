@@ -22,6 +22,11 @@ type ToggleSwitchProperties = {
   onChange?: (checked: boolean) => void
 }
 
+const dumyyHandle = (): void => {
+  // onChange is handled by the parent label's onClick
+  // This empty handler satisfies React's controlled component requirements
+}
+
 export const ToggleSwitch = ({
   ariaLabel,
   checked,
@@ -48,6 +53,7 @@ export const ToggleSwitch = ({
         disabled={disabled}
         aria-label={ariaLabel}
         onClick={handleInputClick}
+        onChange={dumyyHandle}
       />
       <Box
         as="span"

@@ -17,6 +17,7 @@ export const useSessionMetaActions = (): {
           status: 'failure',
           title: (error as Error).message || 'Failed to save session meta.'
         })
+        throw error
       }
     },
     []

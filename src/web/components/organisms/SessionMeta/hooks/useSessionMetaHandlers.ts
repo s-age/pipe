@@ -60,13 +60,13 @@ export const useSessionMetaHandlers = ({
   const handleSaveClick = useCallback(() => {
     if (formContext?.handleSubmit) {
       // Type guard: verify handleSubmit exists and call it
-      const submitHandler = formContext.handleSubmit(onSubmit as never)
+      const submitHandler = formContext.handleSubmit(wrappedSubmit as never)
       if (typeof submitHandler === 'function') {
         // Intentionally not awaiting - errors are handled in Actions layer
         void submitHandler()
       }
     }
-  }, [formContext, onSubmit])
+  }, [formContext, wrappedSubmit])
 
   return { onSubmit: wrappedSubmit, isSubmitting, saveStatus, handleSaveClick }
 }

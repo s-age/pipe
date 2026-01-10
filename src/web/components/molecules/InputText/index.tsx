@@ -1,9 +1,5 @@
 import type { InputHTMLAttributes, JSX } from 'react'
-import type {
-  FieldValues,
-  UseFormRegister,
-  UseFormRegisterReturn
-} from 'react-hook-form'
+import type { FieldValues, UseFormRegister } from 'react-hook-form'
 
 import { useInputText } from './hooks/useInputText'
 import { inputStyle } from './style.css'
@@ -33,18 +29,20 @@ type InputTextProperties = {
   'aria-invalid'?: boolean
 } & InputHTMLAttributes<HTMLInputElement>
 
-export const InputText = ({
-  name,
-  register,
-  'aria-label': ariaLabel,
-  'aria-describedby': ariaDescribedby,
-  'aria-required': ariaRequired,
-  'aria-invalid': ariaInvalid,
-  ...rest
-}: InputTextProperties): JSX.Element => {
-  const { registerProperties } = useInputText({ register, name })
+export const InputText = (properties: InputTextProperties): JSX.Element => {
+  const {
+    'aria-describedby': ariaDescribedby,
+    'aria-invalid': ariaInvalid,
+    'aria-label': ariaLabel,
+    'aria-required': ariaRequired,
+    name,
+    register,
+    ...rest
+  } = properties
+  // Explicitly exclude register from being spread to the DOM
+  void register
 
-  const rp = registerProperties as UseFormRegisterReturn | undefined
+  const { registerProperties } = useInputText({ register, name })
 
   return (
     <input
@@ -52,7 +50,7 @@ export const InputText = ({
       className={inputStyle}
       {...rest}
       name={name}
-      {...(rp ? (rp as unknown as Record<string, unknown>) : {})}
+      {...registerProperties}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedby}
       aria-required={ariaRequired}

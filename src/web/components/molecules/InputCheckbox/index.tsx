@@ -26,15 +26,11 @@ type InputCheckboxProperties = {
   'aria-describedby'?: string
 } & InputHTMLAttributes<HTMLInputElement>
 
-export const InputCheckbox = ({
-  children,
-  id,
-  label,
-  name,
-  register,
-  error,
-  ...rest
-}: InputCheckboxProperties): JSX.Element => {
+export const InputCheckbox = (properties: InputCheckboxProperties): JSX.Element => {
+  const { children, error, id, label, name, register, ...rest } = properties
+  // Explicitly exclude register from being spread to the DOM
+  void register
+
   const resolvedLabel = label ?? children
 
   const { inputId, registerProperties } = useInputCheckbox({
@@ -51,9 +47,9 @@ export const InputCheckbox = ({
           id={inputId}
           type="checkbox"
           className={styles.hiddenInput}
-          {...registerProperties}
-          name={name}
           {...rest}
+          name={name}
+          {...registerProperties}
         />
         <Box className={styles.control} aria-hidden={true}>
           <svg

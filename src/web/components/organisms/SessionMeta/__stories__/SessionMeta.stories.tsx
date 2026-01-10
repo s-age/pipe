@@ -1,14 +1,25 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
+import { http, HttpResponse } from 'msw'
 import type { JSX } from 'react'
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
+import { API_BASE_URL } from '@/constants/uri'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { AppStoreProvider } from '@/stores/useAppStore'
 
 import { SessionMeta } from '..'
 
 const Meta = {
   title: 'Organisms/SessionMeta',
   component: SessionMeta,
-  tags: ['autodocs']
+  tags: ['autodocs'],
+  decorators: [
+    (Story): JSX.Element => (
+      <AppStoreProvider>
+        <Story />
+      </AppStoreProvider>
+    )
+  ]
 } satisfies StoryMeta<typeof SessionMeta>
 
 export default Meta
@@ -34,78 +45,101 @@ const mockSessionDetail: SessionDetail = {
   turns: []
 }
 
-const mockOnRefresh = async (): Promise<void> => {
-  console.log('Refresh called')
-
-  return Promise.resolve()
-}
-
-const mockOnSessionDetailUpdate = (updatedDetail: SessionDetail): void => {
-  console.log('Session detail updated:', updatedDetail)
-}
-
 export const Default: Story = {
   args: {
     sessionDetail: mockSessionDetail,
-    onRefresh: mockOnRefresh,
-    onSessionDetailUpdate: mockOnSessionDetailUpdate
+    onRefresh: fn(async () => Promise.resolve()),
+    onSessionDetailUpdate: fn()
   }
 }
 
-const ariaSessionDetail: SessionDetail = {
-  sessionId: 'session_aria_demo',
-  purpose: 'Demonstrating ARIA attributes',
-  background: 'This story demonstrates the ARIA attributes implementation',
-  roles: ['developer'],
-  parent: null,
-  references: [],
-  artifacts: [],
-  procedure: null,
-  instruction: '',
-  multiStepReasoningEnabled: false,
-  hyperparameters: null,
-  todos: [],
-  turns: []
-}
-
-const ariaOnRefresh = async (): Promise<void> => {
-  // Simulate async refresh
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-  console.log('Refresh completed')
-}
-
-export const WithAriaAttributes: Story = {
+/**
+ * Demonstrates the save interaction with mocked API response.
+ */
+export const SaveInteraction: Story = {
   args: {
-    sessionDetail: ariaSessionDetail,
-    onRefresh: ariaOnRefresh
+    sessionDetail: mockSessionDetail,
+    onRefresh: fn(async () => Promise.resolve()),
+    onSessionDetailUpdate: fn()
   },
-  decorators: [
-    (Story): JSX.Element => (
-      <div style={{ height: '600px', display: 'flex' }}>
-        <div style={{ flex: 1 }}>
-          <Story />
-        </div>
-        <div style={{ padding: '16px', borderLeft: '1px solid #eee', width: '300px' }}>
-          <h3>ARIA Features:</h3>
-          <ul style={{ fontSize: '14px', lineHeight: '1.6' }}>
-            <li>
-              <strong>aria-label</strong>: Save button has descriptive label &quot;Save
-              session metadata&quot;
-            </li>
-            <li>
-              <strong>aria-busy</strong>: Indicates when save operation is in progress
-            </li>
-            <li>
-              <strong>role=&quot;status&quot;</strong>: Announces save success/failure
-              to screen readers
-            </li>
-          </ul>
-          <p style={{ fontSize: '12px', color: '#666', marginTop: '16px' }}>
-            Try clicking the &quot;Save Meta&quot; button and observe the aria-busy
-            state and status announcements.
-          </p>
-        </div>
-      </div>
-    )
-  ]
+  parameters: {
+    msw: {
+      handlers: [
+        http.patch(`${API_BASE_URL}/session/${mockSessionDetail.sessionId}/meta`, () =>
+          HttpResponse.json({ message: 'Session metadata saved' })
+        )
+      ]
+    }
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const saveButton = canvas.getByRole('button', {
+      name: /save session metadata/i
+    })
+
+    // Click the save button
+    await userEvent.click(saveButton)
+
+    // Wait for loading state (aria-busy and text change)
+    await waitFor(() => expect(saveButton).toHaveAttribute('aria-busy', 'true'))
+    await waitFor(() => expect(saveButton).toHaveTextContent(/saving/i))
+
+    // Wait for success message in status role
+    const status = await canvas.findByRole('status')
+    await expect(status).toHaveTextContent(/saved successfully/i)
+
+    // Verify onRefresh was called after successful save
+    await waitFor(() => expect(args.onRefresh).toHaveBeenCalled())
+  }
+}
+
+/**
+ * Demonstrates error handling when the save operation fails.
+ */
+export const SaveError: Story = {
+  args: {
+    sessionDetail: mockSessionDetail,
+    onRefresh: fn(async () => Promise.resolve())
+  },
+  parameters: {
+    msw: {
+      handlers: [
+        http.patch(
+          `${API_BASE_URL}/session/${mockSessionDetail.sessionId}/meta`,
+          () => new HttpResponse(null, { status: 500 })
+        )
+      ]
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const saveButton = canvas.getByRole('button', {
+      name: /save session metadata/i
+    })
+
+    // Click the save button
+    await userEvent.click(saveButton)
+
+    // Wait for error message in status role
+    const status = await canvas.findByRole('status')
+    await expect(status).toHaveTextContent(/failed to save/i)
+  }
+}
+
+/**
+ * Demonstrates the component with minimal data.
+ */
+export const MinimalData: Story = {
+  args: {
+    sessionDetail: {
+      ...mockSessionDetail,
+      purpose: '',
+      background: '',
+      roles: [],
+      procedure: null,
+      artifacts: [],
+      hyperparameters: null
+    },
+    onRefresh: fn(async () => Promise.resolve())
+  }
 }

@@ -36,6 +36,8 @@ export const Select = (properties: SelectProperties): JSX.Element => {
     searchable = false,
     ...rest
   } = properties
+  // Explicitly exclude register from being spread to the DOM
+  void register
 
   const {
     filteredOptions,

@@ -26,11 +26,15 @@ export const Default: Story = {
   args: {
     placeholder: 'Search...'
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     const input = canvas.getByRole('textbox', { name: /search/i })
     await expect(input).toBeInTheDocument()
     await expect(input).toHaveAttribute('placeholder', 'Search...')
+
+    // Verify onChange is called when typing
+    await userEvent.type(input, 'test')
+    await expect(args.onChange).toHaveBeenCalled()
   }
 }
 
@@ -108,6 +112,11 @@ export const WithRHF: Story = {
 export const CustomPlaceholder: Story = {
   args: {
     placeholder: 'Find users by name...'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox', { name: /search/i })
+    await expect(input).toHaveAttribute('placeholder', 'Find users by name...')
   }
 }
 

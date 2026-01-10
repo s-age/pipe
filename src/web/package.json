@@ -12,11 +12,12 @@
     "build": "tsc && vite build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:e2e": "playwright test",
+    "test:storybook": "vitest --project=storybook --config .storybook/vitest.config.ts --coverage",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "check:hooks": "node scripts/check-hooks.js",
     "format": "prettier \"**/*.{js,jsx,ts,tsx,json,css,md}\" --write",
     "storybook": "storybook dev -p 6006 --no-open",
-    "build-storybook": "storybook build"
+    "build:storybook": "storybook build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -40,6 +41,7 @@
     "@storybook/addon-vitest": "^10.0.6",
     "@storybook/jest": "^0.2.2",
     "@storybook/react-vite": "^10.0.6",
+    "@storybook/test-runner": "^0.24.2",
     "@storybook/testing-library": "^0.2.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
@@ -64,6 +66,8 @@
     "eslint-plugin-unicorn": "^62.0.0",
     "eslint-plugin-unused-imports": "^4.3.0",
     "jest": "^30.2.0",
+    "msw": "^2.12.7",
+    "msw-storybook-addon": "^2.0.6",
     "playwright": "^1.56.1",
     "prettier": "^3.6.2",
     "storybook": "^10.0.6",

@@ -35,7 +35,9 @@ export const useReferenceHandlers = (
     (updater: (reference_: Reference) => Reference) => {
       const currentReferences = formContext?.getValues?.('references') || []
       const updatedReferences = [...currentReferences]
-      updatedReferences[referenceIndex] = updater(updatedReferences[referenceIndex])
+      const currentReference = updatedReferences[referenceIndex]
+      if (!currentReference) return
+      updatedReferences[referenceIndex] = updater(currentReference)
       formContext?.setValue?.('references', updatedReferences, {
         shouldDirty: true
       })

@@ -22,6 +22,11 @@ type ToggleSwitchProperties = {
   onChange?: (checked: boolean) => void
 }
 
+const dumyyHandle = (): void => {
+  // onChange is handled by the parent label's onClick
+  // This empty handler satisfies React's controlled component requirements
+}
+
 export const ToggleSwitch = ({
   ariaLabel,
   checked,
@@ -32,6 +37,7 @@ export const ToggleSwitch = ({
   const {
     checked: isChecked,
     handleInputClick,
+    handleKeyDown,
     handleToggle
   } = useToggleSwitchHandlers({
     checked,
@@ -40,14 +46,26 @@ export const ToggleSwitch = ({
   })
 
   return (
-    <Flex as="label" className={toggleSwitch} onClick={handleToggle} align="center">
+    <Flex
+      as="label"
+      className={toggleSwitch}
+      onClick={handleToggle}
+      onKeyDown={handleKeyDown}
+      align="center"
+      role="switch"
+      aria-checked={isChecked}
+      aria-label={ariaLabel}
+      tabIndex={disabled ? -1 : 0}
+    >
       <input
         type="checkbox"
         className={toggleInput}
         checked={isChecked}
         disabled={disabled}
-        aria-label={ariaLabel}
+        aria-hidden="true"
         onClick={handleInputClick}
+        onChange={dumyyHandle}
+        tabIndex={-1}
       />
       <Box
         as="span"

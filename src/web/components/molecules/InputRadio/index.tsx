@@ -24,14 +24,11 @@ type InputRadioProperties = {
   'aria-describedby'?: string
 } & InputHTMLAttributes<HTMLInputElement>
 
-export const InputRadio = ({
-  children,
-  id,
-  label,
-  name,
-  register,
-  ...rest
-}: InputRadioProperties): JSX.Element => {
+export const InputRadio = (properties: InputRadioProperties): JSX.Element => {
+  const { children, id, label, name, register, ...rest } = properties
+  // Explicitly exclude register from being spread to the DOM
+  void register
+
   const resolvedLabel = label ?? children
 
   const { inputId, registerProperties } = useInputRadio({
@@ -47,9 +44,9 @@ export const InputRadio = ({
         id={inputId}
         type="radio"
         className={styles.hiddenInput}
-        {...registerProperties}
-        name={name}
         {...rest}
+        name={name}
+        {...registerProperties}
       />
       <Box className={styles.control} aria-hidden={true}>
         <svg

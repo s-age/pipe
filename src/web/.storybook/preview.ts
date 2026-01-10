@@ -1,9 +1,16 @@
 /* eslint-disable import/no-default-export */
 import type { Preview } from '@storybook/react-vite'
+import { initialize, mswLoader } from 'msw-storybook-addon'
 
 // Load app global vanilla-extract styles so Storybook matches app appearance.
 // The file uses `globalStyle(...)` and side-effects on import are intended.
 import '@/styles/global.css'
+
+// Initialize MSW
+initialize({
+  onUnhandledRequest: 'bypass',
+  quiet: true
+})
 
 const preview: Preview = {
   parameters: {
@@ -20,7 +27,8 @@ const preview: Preview = {
       // 'off' - skip a11y checks entirely
       test: 'todo'
     }
-  }
+  },
+  loaders: [mswLoader]
 }
 
 export default preview

@@ -525,6 +525,7 @@ export const MultipleInteractions: Story = {
 const button = canvas.getByRole('button', { name: /submit/i })
 const textbox = canvas.getByRole('textbox', { name: /email/i })
 const checkbox = canvas.getByRole('checkbox', { name: /agree/i })
+const switchElement = canvas.getByRole('switch', { name: /toggle/i })
 
 // By label text
 const input = canvas.getByLabelText(/username/i)
@@ -573,6 +574,10 @@ await expect(element).not.toBeVisible()
 await expect(button).toBeDisabled()
 await expect(button).toBeEnabled()
 await expect(checkbox).toBeChecked()
+
+// Switch state (use aria-checked, not toBeChecked)
+await expect(switchElement).toHaveAttribute('aria-checked', 'true')
+await expect(switchElement).toHaveAttribute('aria-checked', 'false')
 
 // Attributes
 await expect(element).toHaveAttribute('aria-label', 'Close')
@@ -695,6 +700,93 @@ await expect(button).toHaveClass('secondary')
 await expect(button).toBeInTheDocument()
 await userEvent.click(button)
 ```
+
+#### Issue: "This interaction test passed in this browser, but the tests failed in the CLI"
+
+**Problem**: Storybook shows warning "This interaction test passed in this browser, but the tests failed in the CLI" for stories that use `fn()` mock functions.
+
+**Cause**: Using `fn()` to create mock callback functions without actually verifying those callbacks are called in the `play` function. This creates environment differences between browser and CLI test runners.
+
+**Solution**: Always verify `fn()` mock functions are called in your `play` function, or use regular functions instead.
+
+```typescript
+// ❌ BAD: Using fn() without verification in play function
+import { fn } from 'storybook/test'
+
+const Meta = {
+  component: MyComponent,
+  args: {
+    onChange: fn(),
+    onFocus: fn()
+  }
+} satisfies StoryMeta<typeof MyComponent>
+
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    await userEvent.type(input, 'test')
+    // ❌ onChange callback created with fn() but never verified
+  }
+}
+
+// ✅ GOOD: Verify fn() callbacks are called
+import { expect, fn, userEvent, within } from 'storybook/test'
+
+const Meta = {
+  component: MyComponent,
+  args: {
+    onChange: fn(),
+    onFocus: fn()
+  }
+} satisfies StoryMeta<typeof MyComponent>
+
+export const Default: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    // Verify onFocus is called
+    await userEvent.click(input)
+    await expect(args.onFocus).toHaveBeenCalled()
+
+    // Verify onChange is called
+    await userEvent.type(input, 'test')
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+
+// ✅ ALTERNATIVE: Use regular functions if not testing callbacks
+const Meta = {
+  component: MyComponent,
+  args: {
+    onChange: (): void => {
+      console.log('onChange called')
+    },
+    onFocus: (): void => {
+      console.log('onFocus called')
+    }
+  }
+} satisfies StoryMeta<typeof MyComponent>
+
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    await userEvent.type(input, 'test')
+    // No need to verify callbacks since we're not testing them
+  }
+}
+```
+
+**Key principle**: Only use `fn()` when you intend to verify the callback is called in your `play` function. Otherwise, use regular functions.
+
+**Components commonly affected**:
+- Form components with `onChange`, `onSubmit`, `onBlur` callbacks
+- Interactive components with `onClick`, `onFocus`, `onHover` callbacks
+- Components with `onRefresh`, `onClose`, `onConfirm` callbacks
 
 ## Common Patterns
 
@@ -1412,7 +1504,217 @@ export const Controlled: Story = {
 - `fireEvent.change()` directly triggers the change event, which is what we actually want to test
 - Testing that `onChange` is called is more important than simulating exact user gestures
 
-### Issue 7: Async State Updates Not Completing Before Assertion
+### Issue 7: Switch Components Require role="switch" Not role="checkbox"
+
+**Problem**: Test fails with "Unable to find an accessible element with the role 'checkbox'" when testing toggle switch components, even though a checkbox input exists in the DOM.
+
+**Cause**: Toggle switch components that use `<label>` with `onClick` to handle toggle events (instead of relying on the native checkbox click) need to expose themselves as `role="switch"` to screen readers and testing tools. The internal `<input type="checkbox">` should be hidden from the accessibility tree with `aria-hidden="true"` since the parent label handles all interactions.
+
+**Why this pattern exists**:
+- Native checkboxes have `event.stopPropagation()` in their click handlers to prevent double-firing
+- This means clicking the checkbox directly won't trigger the parent label's onClick handler
+- The component intentionally uses label-level onClick for all toggle interactions
+- Therefore, the checkbox is a visual/form element only, not the interactive element
+
+**Solution**: Implement proper WAI-ARIA switch pattern with `role="switch"`, `aria-checked`, and keyboard support.
+
+```typescript
+// ❌ BAD: Checkbox-based implementation without proper ARIA
+export const ToggleSwitch = ({ checked, onChange }): JSX.Element => {
+  return (
+    <label onClick={() => onChange(!checked)}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={() => {}} // Empty handler, label handles toggle
+      />
+      <span>Toggle</span>
+    </label>
+  )
+}
+
+// Test fails trying to find checkbox
+export const Interaction: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // ❌ Checkbox exists but isn't the interactive element
+    const toggle = canvas.getByRole('checkbox') // Error!
+    await userEvent.click(toggle) // Click won't trigger onChange
+  }
+}
+
+// ✅ GOOD: Proper WAI-ARIA switch implementation
+export const ToggleSwitch = ({
+  checked,
+  onChange,
+  ariaLabel
+}): JSX.Element => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault()
+      onChange(!checked)
+    }
+  }
+
+  return (
+    <label
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      tabIndex={0}
+      onClick={() => onChange(!checked)}
+      onKeyDown={handleKeyDown}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        aria-hidden="true"
+        tabIndex={-1}
+        onChange={() => {}}
+      />
+      <span>Toggle</span>
+    </label>
+  )
+}
+
+// Test uses role="switch" and checks aria-checked
+export const Interaction: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = canvas.getByRole('switch', { name: /toggle/i })
+
+    // Initial state
+    await expect(toggle).toHaveAttribute('aria-checked', 'false')
+
+    // Click to toggle
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  }
+}
+```
+
+**Required ARIA attributes for switch pattern**:
+- `role="switch"` - Identifies element as a switch
+- `aria-checked="true|false"` - Current state (use boolean converted to string)
+- `aria-label` or `aria-labelledby` - Accessible name
+- `tabIndex={0}` - Keyboard focusable (or -1 if disabled)
+- `onKeyDown` handler - Support Space and Enter keys
+
+**Internal checkbox attributes**:
+- `aria-hidden="true"` - Hide from accessibility tree
+- `tabIndex={-1}` - Remove from keyboard navigation
+- Keep `checked` synced for form compatibility
+- Use `onChange={() => {}}` to satisfy React controlled component
+
+**Key principles**:
+- Don't use `toBeChecked()` for switch elements - it checks the internal checkbox, not the switch state
+- Use `toHaveAttribute('aria-checked', 'true')` to verify switch state
+- Always implement keyboard support (Space/Enter) for switches
+- The switch role requires aria-checked, not the checked HTML attribute
+
+**Components affected**:
+- Toggle switches
+- ON/OFF controls
+- Enable/disable toggles
+- Any checkbox-styled control that uses label-level onClick
+
+**References**:
+- [WAI-ARIA Switch Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/switch/)
+- [MDN: role="switch"](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/switch_role)
+
+### Issue 8: Async Callbacks Not Called Before Assertion
+
+**Problem**: Test fails with "expected 'refreshSessions' to be called at least once" even though the user interaction appears to work correctly in the browser.
+
+**Cause**: The component's event handler performs asynchronous operations (API calls) before calling the callback prop. The test assertion runs immediately after `userEvent.click()`, before the async work completes.
+
+**Common scenario**:
+```typescript
+// Component handler
+const handleToggle = async () => {
+  await apiCall()  // Async operation
+  await refreshSessions()  // Callback called AFTER async work
+}
+```
+
+**Solution**: Use `waitFor()` to wait for the async callback to be called.
+
+```typescript
+// ❌ BAD: Immediate assertion after user event
+import { expect, fn, userEvent, within } from 'storybook/test'
+
+export const Interaction: Story = {
+  args: {
+    onRefresh: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button')
+
+    await userEvent.click(button)
+    // ❌ Fails - onRefresh hasn't been called yet
+    await expect(args.onRefresh).toHaveBeenCalled()
+  }
+}
+
+// ✅ GOOD: Wait for async callback
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
+
+export const Interaction: Story = {
+  args: {
+    onRefresh: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button')
+
+    await userEvent.click(button)
+    // ✅ Waits up to 1000ms for callback to be called
+    await waitFor(() => expect(args.onRefresh).toHaveBeenCalled())
+  }
+}
+
+// ✅ GOOD: With custom timeout for slow operations
+export const SlowOperation: Story = {
+  args: {
+    onRefresh: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button')
+
+    await userEvent.click(button)
+    // Wait up to 3 seconds for slow API calls
+    await waitFor(() => expect(args.onRefresh).toHaveBeenCalled(), {
+      timeout: 3000
+    })
+  }
+}
+```
+
+**Key principles**:
+- Always use `waitFor()` when testing callbacks that are called after async operations
+- Default timeout is 1000ms, increase for slow operations
+- `waitFor()` polls the assertion until it passes or times out
+- Don't assume callbacks are called synchronously, even with `await userEvent.click()`
+
+**When to use `waitFor()` for callbacks**:
+- Callbacks called after API requests (fetch, axios)
+- Callbacks in components with debounced handlers
+- Callbacks that depend on state updates completing
+- Any callback not called synchronously in the event handler
+
+**Components commonly affected**:
+- Components with `onRefresh`, `onSave`, `onSubmit` after API calls
+- Components with debounced `onChange` handlers
+- Components that update server state before calling callbacks
+
+**Timeout guidelines**:
+- Default (1000ms): Most API calls with MSW mocks
+- 2000-3000ms: Debounced inputs, slower operations
+- 5000ms+: Only for intentionally slow operations (avoid if possible)
+
+### Issue 9: Async State Updates Not Completing Before Assertion
 
 **Problem**: Test fails with "Unable to find an element with the text: Selected: Green" even though the element should exist after user interaction.
 
@@ -1511,6 +1813,297 @@ export const Controlled: Story = {
 - Controlled components with `useState` that update based on user interaction
 - Any component where clicking triggers state changes that affect displayed text
 - Components that close/hide after interaction (modals, dropdowns, tooltips)
+
+## Mocking API Requests with MSW
+
+### Overview
+
+Stories that test components with API calls require mocking HTTP requests using MSW (Mock Service Worker). This allows components to behave realistically without making actual network requests.
+
+### Setup
+
+MSW is already configured in the Storybook environment:
+
+1. **MSW Initialization** (`.storybook/preview.ts`):
+   ```typescript
+   import { initialize, mswLoader } from 'msw-storybook-addon'
+
+   initialize()
+
+   const preview: Preview = {
+     loaders: [mswLoader]
+   }
+   ```
+
+2. **Static Files** (`.storybook/main.ts`):
+   ```typescript
+   const config: StorybookConfig = {
+     staticDirs: ['./public']  // Serves mockServiceWorker.js
+   }
+   ```
+
+3. **Service Worker** (`.storybook/public/mockServiceWorker.js`):
+   - Generated by `npx msw init .storybook/public`
+   - Automatically loaded when Storybook starts
+
+### Creating Mock Handlers
+
+Mock handlers are organized by API resource in `src/web/msw/resources/`. Follow the [MSW Resources README](../../src/web/msw/resources/README.md) for file naming conventions.
+
+**Example**: `src/web/msw/resources/fs.ts`
+
+```typescript
+import { http, HttpResponse } from 'msw'
+
+import { API_BASE_URL } from '@/constants/uri'
+import type { SessionSearchResponse } from '@/lib/api/fs/search'
+
+/**
+ * MSW handlers for /fs endpoints
+ */
+export const fsHandlers = [
+  // POST /api/v1/fs/search
+  http.post<never, { query: string }, SessionSearchResponse>(
+    `${API_BASE_URL}/fs/search`,
+    async ({ request }) => {
+      const body = await request.json()
+      const { query } = body
+
+      // Return mock results
+      return HttpResponse.json({
+        results: [
+          { sessionId: 'session-1', title: `${query} - Session 1` },
+          { sessionId: 'session-2', title: `${query} - Session 2` }
+        ]
+      })
+    }
+  )
+]
+```
+
+### Using Mock Handlers in Stories
+
+Add MSW handlers to story parameters:
+
+```typescript
+import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
+import { expect, userEvent, within } from 'storybook/test'
+
+import { fsHandlers } from '@/msw/resources/fs'
+
+import { SearchComponent } from '../index'
+
+const Meta = {
+  title: 'Organisms/SearchComponent',
+  component: SearchComponent,
+  tags: ['autodocs']
+} satisfies StoryMeta<typeof SearchComponent>
+
+export default Meta
+type Story = StoryObj<typeof Meta>
+
+/**
+ * Demonstrates search with mocked API responses
+ */
+export const SearchInteraction: Story = {
+  parameters: {
+    msw: {
+      handlers: fsHandlers  // Apply mock handlers
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByPlaceholderText(/search/i)
+
+    // Type to trigger API call
+    await userEvent.type(input, 'test')
+
+    // Wait for API response and UI update
+    const results = await canvas.findByText(/session-1/i)
+    await expect(results).toBeInTheDocument()
+  }
+}
+```
+
+### Pattern: Override Handlers for Specific Stories
+
+You can override or extend handlers for individual stories:
+
+```typescript
+import { http, HttpResponse } from 'msw'
+import { API_BASE_URL } from '@/constants/uri'
+import { fsHandlers } from '@/msw/resources/fs'
+
+// Story with empty results
+export const EmptyResults: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        // Override the search handler
+        http.post(`${API_BASE_URL}/fs/search`, () => {
+          return HttpResponse.json({ results: [] })
+        })
+      ]
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByPlaceholderText(/search/i)
+
+    await userEvent.type(input, 'test')
+
+    const noResults = await canvas.findByText(/no results/i)
+    await expect(noResults).toBeInTheDocument()
+  }
+}
+
+// Story with error response
+export const ErrorState: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.post(`${API_BASE_URL}/fs/search`, () => {
+          return HttpResponse.json(
+            { message: 'Search service unavailable' },
+            { status: 500 }
+          )
+        })
+      ]
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByPlaceholderText(/search/i)
+
+    await userEvent.type(input, 'test')
+
+    const error = await canvas.findByText(/unavailable/i)
+    await expect(error).toBeInTheDocument()
+  }
+}
+```
+
+### Pattern: Testing Debounced API Calls
+
+When testing components with debounced API calls, use `findBy*` queries with appropriate timeouts:
+
+```typescript
+export const DebouncedSearch: Story = {
+  parameters: {
+    msw: {
+      handlers: fsHandlers
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByPlaceholderText(/search/i)
+
+    // Type search query
+    await userEvent.type(input, 'test')
+
+    // Wait for debounce (e.g., 250ms) and API response
+    // findByRole waits up to 1000ms by default, or use custom timeout
+    const modal = await canvas.findByRole('dialog', {}, { timeout: 3000 })
+    await expect(modal).toBeInTheDocument()
+  }
+}
+```
+
+### Best Practices
+
+1. **Organize Handlers by Resource**: Follow the file naming convention in `msw/resources/README.md`
+2. **Import API_BASE_URL**: Always use `API_BASE_URL` from `@/constants/uri` for consistency
+3. **Reuse Type Definitions**: Import response types from corresponding API client files
+4. **Test Multiple Scenarios**: Create stories for success, empty, and error states
+5. **Use Async Queries**: Use `findBy*` queries when waiting for API responses
+6. **Add Timeouts**: Increase timeout for debounced or slow API calls
+
+### Common MSW Patterns
+
+#### Pattern 1: GET Request
+
+```typescript
+http.get<never, never, SessionListResponse>(
+  `${API_BASE_URL}/sessions`,
+  () => {
+    return HttpResponse.json({
+      sessions: [
+        { id: '1', title: 'Session 1' },
+        { id: '2', title: 'Session 2' }
+      ]
+    })
+  }
+)
+```
+
+#### Pattern 2: POST Request with Body
+
+```typescript
+http.post<never, CreateSessionRequest, CreateSessionResponse>(
+  `${API_BASE_URL}/sessions`,
+  async ({ request }) => {
+    const body = await request.json()
+
+    return HttpResponse.json({
+      id: 'new-session',
+      title: body.title
+    })
+  }
+)
+```
+
+#### Pattern 3: Error Response
+
+```typescript
+http.get(`${API_BASE_URL}/sessions/:id`, () => {
+  return HttpResponse.json(
+    { message: 'Session not found' },
+    { status: 404 }
+  )
+})
+```
+
+#### Pattern 4: Delayed Response (Simulating Network Latency)
+
+```typescript
+import { delay, http, HttpResponse } from 'msw'
+
+http.get(`${API_BASE_URL}/sessions`, async () => {
+  await delay(1000)  // 1 second delay
+
+  return HttpResponse.json({ sessions: [] })
+})
+```
+
+### Troubleshooting
+
+#### Issue: "Did you forget to run npx msw init"
+
+**Cause**: Service Worker file is missing or not being served.
+
+**Solution**:
+1. Ensure `.storybook/public/mockServiceWorker.js` exists
+2. Verify `staticDirs: ['./public']` is in `.storybook/main.ts`
+3. Restart Storybook
+
+#### Issue: Mock handlers not working
+
+**Cause**: Handlers not properly registered or incorrect URL.
+
+**Solution**:
+1. Verify handler URL matches the API endpoint exactly
+2. Check that `msw` parameters are added to the story
+3. Ensure MSW is initialized in `.storybook/preview.ts`
+4. Check browser console for MSW logs
+
+#### Issue: Tests pass but API calls go to real server
+
+**Cause**: MSW not intercepting requests.
+
+**Solution**:
+1. Check that `mswLoader` is in the `loaders` array in `.storybook/preview.ts`
+2. Verify `initialize()` is called before the preview config
+3. Clear browser cache and restart Storybook
 
 ## Prohibited Patterns
 

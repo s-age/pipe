@@ -35,16 +35,18 @@ export const Slider = (properties: SliderProperties): JSX.Element => {
     min,
     name,
     onChange: _onChange,
+    register,
     step,
     value,
     ...restProperties
   } = properties
-  // intentionally reference the extracted `_onChange`, `value`, and `defaultValue` so linters know they're
+  // intentionally reference the extracted `_onChange`, `value`, `defaultValue`, and `register` so linters know they're
   // intentionally excluded from `...restProperties` which is spread into the
   // native input (these are handled by useSlider hook instead).
   void _onChange
   void value
   void defaultValue
+  void register
 
   const {
     containerRef,

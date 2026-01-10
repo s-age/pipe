@@ -46,6 +46,7 @@ export const SessionMetaBasic = ({
               register={register}
               name="purpose"
               className={inputFullWidth}
+              aria-label="Purpose"
               aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
             />
           )}
@@ -65,6 +66,7 @@ export const SessionMetaBasic = ({
               register={register}
               name="background"
               className={inputFullWidth}
+              aria-label="Background"
               aria-describedby={[ids.hintId, ids.errorId].filter(Boolean).join(' ')}
             />
           )}

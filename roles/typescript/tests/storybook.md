@@ -525,6 +525,7 @@ export const MultipleInteractions: Story = {
 const button = canvas.getByRole('button', { name: /submit/i })
 const textbox = canvas.getByRole('textbox', { name: /email/i })
 const checkbox = canvas.getByRole('checkbox', { name: /agree/i })
+const switchElement = canvas.getByRole('switch', { name: /toggle/i })
 
 // By label text
 const input = canvas.getByLabelText(/username/i)
@@ -573,6 +574,10 @@ await expect(element).not.toBeVisible()
 await expect(button).toBeDisabled()
 await expect(button).toBeEnabled()
 await expect(checkbox).toBeChecked()
+
+// Switch state (use aria-checked, not toBeChecked)
+await expect(switchElement).toHaveAttribute('aria-checked', 'true')
+await expect(switchElement).toHaveAttribute('aria-checked', 'false')
 
 // Attributes
 await expect(element).toHaveAttribute('aria-label', 'Close')
@@ -1499,7 +1504,217 @@ export const Controlled: Story = {
 - `fireEvent.change()` directly triggers the change event, which is what we actually want to test
 - Testing that `onChange` is called is more important than simulating exact user gestures
 
-### Issue 7: Async State Updates Not Completing Before Assertion
+### Issue 7: Switch Components Require role="switch" Not role="checkbox"
+
+**Problem**: Test fails with "Unable to find an accessible element with the role 'checkbox'" when testing toggle switch components, even though a checkbox input exists in the DOM.
+
+**Cause**: Toggle switch components that use `<label>` with `onClick` to handle toggle events (instead of relying on the native checkbox click) need to expose themselves as `role="switch"` to screen readers and testing tools. The internal `<input type="checkbox">` should be hidden from the accessibility tree with `aria-hidden="true"` since the parent label handles all interactions.
+
+**Why this pattern exists**:
+- Native checkboxes have `event.stopPropagation()` in their click handlers to prevent double-firing
+- This means clicking the checkbox directly won't trigger the parent label's onClick handler
+- The component intentionally uses label-level onClick for all toggle interactions
+- Therefore, the checkbox is a visual/form element only, not the interactive element
+
+**Solution**: Implement proper WAI-ARIA switch pattern with `role="switch"`, `aria-checked`, and keyboard support.
+
+```typescript
+// ❌ BAD: Checkbox-based implementation without proper ARIA
+export const ToggleSwitch = ({ checked, onChange }): JSX.Element => {
+  return (
+    <label onClick={() => onChange(!checked)}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={() => {}} // Empty handler, label handles toggle
+      />
+      <span>Toggle</span>
+    </label>
+  )
+}
+
+// Test fails trying to find checkbox
+export const Interaction: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // ❌ Checkbox exists but isn't the interactive element
+    const toggle = canvas.getByRole('checkbox') // Error!
+    await userEvent.click(toggle) // Click won't trigger onChange
+  }
+}
+
+// ✅ GOOD: Proper WAI-ARIA switch implementation
+export const ToggleSwitch = ({
+  checked,
+  onChange,
+  ariaLabel
+}): JSX.Element => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault()
+      onChange(!checked)
+    }
+  }
+
+  return (
+    <label
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      tabIndex={0}
+      onClick={() => onChange(!checked)}
+      onKeyDown={handleKeyDown}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        aria-hidden="true"
+        tabIndex={-1}
+        onChange={() => {}}
+      />
+      <span>Toggle</span>
+    </label>
+  )
+}
+
+// Test uses role="switch" and checks aria-checked
+export const Interaction: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = canvas.getByRole('switch', { name: /toggle/i })
+
+    // Initial state
+    await expect(toggle).toHaveAttribute('aria-checked', 'false')
+
+    // Click to toggle
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  }
+}
+```
+
+**Required ARIA attributes for switch pattern**:
+- `role="switch"` - Identifies element as a switch
+- `aria-checked="true|false"` - Current state (use boolean converted to string)
+- `aria-label` or `aria-labelledby` - Accessible name
+- `tabIndex={0}` - Keyboard focusable (or -1 if disabled)
+- `onKeyDown` handler - Support Space and Enter keys
+
+**Internal checkbox attributes**:
+- `aria-hidden="true"` - Hide from accessibility tree
+- `tabIndex={-1}` - Remove from keyboard navigation
+- Keep `checked` synced for form compatibility
+- Use `onChange={() => {}}` to satisfy React controlled component
+
+**Key principles**:
+- Don't use `toBeChecked()` for switch elements - it checks the internal checkbox, not the switch state
+- Use `toHaveAttribute('aria-checked', 'true')` to verify switch state
+- Always implement keyboard support (Space/Enter) for switches
+- The switch role requires aria-checked, not the checked HTML attribute
+
+**Components affected**:
+- Toggle switches
+- ON/OFF controls
+- Enable/disable toggles
+- Any checkbox-styled control that uses label-level onClick
+
+**References**:
+- [WAI-ARIA Switch Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/switch/)
+- [MDN: role="switch"](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/switch_role)
+
+### Issue 8: Async Callbacks Not Called Before Assertion
+
+**Problem**: Test fails with "expected 'refreshSessions' to be called at least once" even though the user interaction appears to work correctly in the browser.
+
+**Cause**: The component's event handler performs asynchronous operations (API calls) before calling the callback prop. The test assertion runs immediately after `userEvent.click()`, before the async work completes.
+
+**Common scenario**:
+```typescript
+// Component handler
+const handleToggle = async () => {
+  await apiCall()  // Async operation
+  await refreshSessions()  // Callback called AFTER async work
+}
+```
+
+**Solution**: Use `waitFor()` to wait for the async callback to be called.
+
+```typescript
+// ❌ BAD: Immediate assertion after user event
+import { expect, fn, userEvent, within } from 'storybook/test'
+
+export const Interaction: Story = {
+  args: {
+    onRefresh: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button')
+
+    await userEvent.click(button)
+    // ❌ Fails - onRefresh hasn't been called yet
+    await expect(args.onRefresh).toHaveBeenCalled()
+  }
+}
+
+// ✅ GOOD: Wait for async callback
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
+
+export const Interaction: Story = {
+  args: {
+    onRefresh: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button')
+
+    await userEvent.click(button)
+    // ✅ Waits up to 1000ms for callback to be called
+    await waitFor(() => expect(args.onRefresh).toHaveBeenCalled())
+  }
+}
+
+// ✅ GOOD: With custom timeout for slow operations
+export const SlowOperation: Story = {
+  args: {
+    onRefresh: fn()
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button')
+
+    await userEvent.click(button)
+    // Wait up to 3 seconds for slow API calls
+    await waitFor(() => expect(args.onRefresh).toHaveBeenCalled(), {
+      timeout: 3000
+    })
+  }
+}
+```
+
+**Key principles**:
+- Always use `waitFor()` when testing callbacks that are called after async operations
+- Default timeout is 1000ms, increase for slow operations
+- `waitFor()` polls the assertion until it passes or times out
+- Don't assume callbacks are called synchronously, even with `await userEvent.click()`
+
+**When to use `waitFor()` for callbacks**:
+- Callbacks called after API requests (fetch, axios)
+- Callbacks in components with debounced handlers
+- Callbacks that depend on state updates completing
+- Any callback not called synchronously in the event handler
+
+**Components commonly affected**:
+- Components with `onRefresh`, `onSave`, `onSubmit` after API calls
+- Components with debounced `onChange` handlers
+- Components that update server state before calling callbacks
+
+**Timeout guidelines**:
+- Default (1000ms): Most API calls with MSW mocks
+- 2000-3000ms: Debounced inputs, slower operations
+- 5000ms+: Only for intentionally slow operations (avoid if possible)
+
+### Issue 9: Async State Updates Not Completing Before Assertion
 
 **Problem**: Test fails with "Unable to find an element with the text: Selected: Green" even though the element should exist after user interaction.
 

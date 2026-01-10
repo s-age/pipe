@@ -95,10 +95,9 @@ export const Interaction: Story = {
     await userEvent.click(checkboxes[0])
 
     // Wait for API call and callback with increased timeout
-    await waitFor(
-      () => expect(args.onSessionDetailUpdate).toHaveBeenCalled(),
-      { timeout: 3000 }
-    )
+    await waitFor(() => expect(args.onSessionDetailUpdate).toHaveBeenCalled(), {
+      timeout: 3000
+    })
 
     // Test Delete All button
     const deleteButton = canvas.getByRole('button', { name: /delete all todos/i })
@@ -110,9 +109,8 @@ export const Interaction: Story = {
     await userEvent.click(deleteButton)
 
     await expect(confirmSpy).toHaveBeenCalled()
-    await waitFor(
-      () => expect(args.onSessionDetailUpdate).toHaveBeenCalledTimes(2),
-      { timeout: 3000 }
-    )
+    await waitFor(() => expect(args.onSessionDetailUpdate).toHaveBeenCalledTimes(2), {
+      timeout: 3000
+    })
   }
 }

@@ -696,6 +696,93 @@ await expect(button).toBeInTheDocument()
 await userEvent.click(button)
 ```
 
+#### Issue: "This interaction test passed in this browser, but the tests failed in the CLI"
+
+**Problem**: Storybook shows warning "This interaction test passed in this browser, but the tests failed in the CLI" for stories that use `fn()` mock functions.
+
+**Cause**: Using `fn()` to create mock callback functions without actually verifying those callbacks are called in the `play` function. This creates environment differences between browser and CLI test runners.
+
+**Solution**: Always verify `fn()` mock functions are called in your `play` function, or use regular functions instead.
+
+```typescript
+// ❌ BAD: Using fn() without verification in play function
+import { fn } from 'storybook/test'
+
+const Meta = {
+  component: MyComponent,
+  args: {
+    onChange: fn(),
+    onFocus: fn()
+  }
+} satisfies StoryMeta<typeof MyComponent>
+
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    await userEvent.type(input, 'test')
+    // ❌ onChange callback created with fn() but never verified
+  }
+}
+
+// ✅ GOOD: Verify fn() callbacks are called
+import { expect, fn, userEvent, within } from 'storybook/test'
+
+const Meta = {
+  component: MyComponent,
+  args: {
+    onChange: fn(),
+    onFocus: fn()
+  }
+} satisfies StoryMeta<typeof MyComponent>
+
+export const Default: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    // Verify onFocus is called
+    await userEvent.click(input)
+    await expect(args.onFocus).toHaveBeenCalled()
+
+    // Verify onChange is called
+    await userEvent.type(input, 'test')
+    await expect(args.onChange).toHaveBeenCalled()
+  }
+}
+
+// ✅ ALTERNATIVE: Use regular functions if not testing callbacks
+const Meta = {
+  component: MyComponent,
+  args: {
+    onChange: (): void => {
+      console.log('onChange called')
+    },
+    onFocus: (): void => {
+      console.log('onFocus called')
+    }
+  }
+} satisfies StoryMeta<typeof MyComponent>
+
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('textbox')
+
+    await userEvent.type(input, 'test')
+    // No need to verify callbacks since we're not testing them
+  }
+}
+```
+
+**Key principle**: Only use `fn()` when you intend to verify the callback is called in your `play` function. Otherwise, use regular functions.
+
+**Components commonly affected**:
+- Form components with `onChange`, `onSubmit`, `onBlur` callbacks
+- Interactive components with `onClick`, `onFocus`, `onHover` callbacks
+- Components with `onRefresh`, `onClose`, `onConfirm` callbacks
+
 ## Common Patterns
 
 ### ARIA Attributes

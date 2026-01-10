@@ -1,6 +1,5 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
-import { fn } from 'storybook/test'
 
 import type { SessionDetail } from '@/lib/api/session/getSession'
 import { AppStoreProvider } from '@/stores/useAppStore'
@@ -60,9 +59,9 @@ const Meta = {
     )
   ],
   args: {
-    onRefresh: fn(async () => {
+    onRefresh: async (): Promise<void> => {
       console.log('onRefresh called')
-    })
+    }
   }
 } satisfies StoryMeta<typeof Compressor>
 

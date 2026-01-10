@@ -35,12 +35,16 @@ export const Default: Story = {
     isMultiple: true,
     placeholder: 'Search files...'
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     const input = canvas.getByRole('combobox', { name: /search files or directories/i })
 
     await expect(input).toBeInTheDocument()
     await expect(canvas.getByText('src/index.ts')).toBeInTheDocument()
+
+    // Verify onFocus is called when input is focused
+    await userEvent.click(input)
+    await expect(args.onFocus).toHaveBeenCalled()
 
     // Interaction: Type to see suggestions
     await userEvent.type(input, 'package')
@@ -49,6 +53,10 @@ export const Default: Story = {
 
     const option = within(listbox).getByRole('option', { name: /package\.json/i })
     await expect(option).toBeInTheDocument()
+
+    // Click the option to trigger onChange
+    await userEvent.click(option)
+    await expect(args.onChange).toHaveBeenCalled()
   }
 }
 
@@ -76,11 +84,15 @@ export const SingleSelection: Story = {
     isMultiple: false,
     placeholder: 'Select a file...'
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement)
     const input = canvas.getByRole('combobox')
 
     await expect(canvas.getByText('package.json')).toBeInTheDocument()
+
+    // Verify onFocus is called
+    await userEvent.click(input)
+    await expect(args.onFocus).toHaveBeenCalled()
 
     // In single selection mode, adding another should replace or be handled by the component logic
     // Here we just verify the initial state and that suggestions appear

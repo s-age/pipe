@@ -76,6 +76,7 @@ tests/sessions/
 
 # HTML Coverage Report
 htmlcov
+src/web/coverage
 
 # Ignore pipe sessions and vite cache
 .pipe_sessions/

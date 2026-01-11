@@ -55,6 +55,7 @@ export const text = style({
       textAlign: 'justify'
     },
     '&.truncate': {
+      display: 'inline-block',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'

@@ -134,3 +134,151 @@ export const Editing: Story = {
     await expect(canvas.getByRole('button', { name: /Cancel/i })).toBeInTheDocument()
   }
 }
+
+/**
+ * Compressed history turn showing compressed previous conversation.
+ * Covers lines 114-116 and 137-144 in index.tsx
+ */
+export const CompressedHistory: Story = {
+  args: {
+    turn: {
+      type: 'compressed_history',
+      content:
+        'Previous conversation has been compressed. The user asked about weather and I provided information.',
+      timestamp: '2024-01-01T11:00:00Z',
+      originalTurnsRange: [0, 1, 2, 3, 4, 5]
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Use getAllByText since "Compressed" appears in multiple places
+    const compressedElements = canvas.getAllByText(/Compressed/i)
+    expect(compressedElements.length).toBeGreaterThan(0)
+    // Use getAllByText since content appears in both raw and rendered markdown
+    const contentElements = canvas.getAllByText(
+      /Previous conversation has been compressed/i
+    )
+    expect(contentElements.length).toBeGreaterThan(0)
+  }
+}
+
+/**
+ * Unknown turn type showing the default handling with JSON display.
+ * Covers lines 159-164 in index.tsx (default case)
+ */
+export const UnknownType: Story = {
+  args: {
+    turn: {
+      type: 'unknown_type',
+      someData: 'Example data',
+      timestamp: '2024-01-01T12:00:00Z'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Use getAllByText since "Unknown" appears in the header and the JSON
+    const unknownElements = canvas.getAllByText(/Unknown/i)
+    expect(unknownElements.length).toBeGreaterThan(0)
+    // The turn data should be rendered as JSON
+    await expect(canvas.getByText(/unknown_type/i)).toBeInTheDocument()
+  }
+}
+
+/**
+ * User task with missing instruction field.
+ * Covers line 134 in index.tsx (instruction fallback to empty string)
+ */
+export const UserTaskWithoutInstruction: Story = {
+  args: {
+    turn: {
+      type: 'user_task',
+      timestamp: '2024-01-01T12:00:00Z'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getAllByText(/You/i)[0]).toBeInTheDocument()
+  }
+}
+
+/**
+ * Turn without timestamp field.
+ * Covers line 178 in index.tsx (timestamp fallback to empty string)
+ */
+export const TurnWithoutTimestamp: Story = {
+  args: {
+    turn: {
+      type: 'model_response',
+      content: 'Response without timestamp'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getByText(/Model/i)).toBeInTheDocument()
+  }
+}
+
+/**
+ * Turn without type field.
+ * Covers line 199 in index.tsx (type fallback to 'unknown')
+ */
+export const TurnWithoutType: Story = {
+  args: {
+    turn: {
+      content: 'Data without type',
+      timestamp: '2024-01-01T12:00:00Z'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const unknownElements = canvas.getAllByText(/Unknown/i)
+    expect(unknownElements.length).toBeGreaterThan(0)
+  }
+}
+
+/**
+ * Expert mode with edit and delete buttons.
+ * Covers expert mode interactions and handler fallbacks (lines 96-102)
+ */
+export const ExpertMode: Story = {
+  args: {
+    expertMode: true,
+    turn: {
+      type: 'user_task',
+      instruction: 'Test instruction',
+      timestamp: '2024-01-01T12:00:00Z'
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getByLabelText(/Edit turn/i)).toBeInTheDocument()
+    await expect(canvas.getByLabelText(/Delete turn/i)).toBeInTheDocument()
+  }
+}
+
+/**
+ * Expert mode with model response showing fork button.
+ * Covers fork button visibility and handler fallback
+ */
+export const ExpertModeModelResponse: Story = {
+  args: {
+    expertMode: true,
+    turn: {
+      type: 'model_response',
+      content: 'Test model response',
+      timestamp: '2024-01-01T12:00:00Z'
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(
+      canvas.getByLabelText(/Fork conversation from this turn/i)
+    ).toBeInTheDocument()
+    await expect(canvas.getByLabelText(/Edit turn/i)).toBeInTheDocument()
+    await expect(canvas.getByLabelText(/Delete turn/i)).toBeInTheDocument()
+  }
+}

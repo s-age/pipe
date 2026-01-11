@@ -59,3 +59,15 @@ export const LongMessage: Story = {
       'This is a very long error message to test how the component handles wrapping and layout when the text exceeds the container width. It should remain readable and properly styled.'
   }
 }
+
+/**
+ * Tests with a FieldError where message is not a string (line 19 coverage).
+ */
+export const WithNonStringFieldErrorMessage: Story = {
+  args: {
+    error: {
+      type: 'custom',
+      message: { key: 'error.required' } as unknown as string
+    }
+  }
+}

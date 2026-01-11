@@ -1,8 +1,11 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import { http, HttpResponse } from 'msw'
+import type { JSX } from 'react'
 import { expect, userEvent, within } from 'storybook/test'
+import { z } from 'zod'
 
-import { Form } from '@/components/organisms/Form'
+import { Button } from '@/components/atoms/Button'
+import { Form, useFormContext } from '@/components/organisms/Form'
 import { API_BASE_URL } from '@/constants/uri'
 
 import { ProcedureSelect } from '../index'
@@ -33,6 +36,48 @@ export const WithRHF: Story = {
       <ProcedureSelect {...arguments_} />
     </Form>
   )
+}
+
+/**
+ * Demonstrates error display (line 44 coverage).
+ */
+export const WithError: Story = {
+  render: (arguments_): JSX.Element => {
+    const FormWithError = (): JSX.Element => {
+      const methods = useFormContext()
+
+      const handleSubmit = async (): Promise<void> => {
+        await methods.trigger('procedure')
+      }
+
+      return (
+        <>
+          <ProcedureSelect {...arguments_} />
+          <Button type="button" onClick={handleSubmit}>
+            Trigger Validation
+          </Button>
+        </>
+      )
+    }
+
+    const schema = z.object({
+      procedure: z.string().min(1, 'Procedure is required')
+    })
+
+    return (
+      <Form schema={schema} defaultValues={{ procedure: '' }}>
+        <FormWithError />
+      </Form>
+    )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: /trigger validation/i })
+    await userEvent.click(button)
+
+    const errorMessage = await canvas.findByText(/procedure is required/i)
+    await expect(errorMessage).toBeInTheDocument()
+  }
 }
 
 /**

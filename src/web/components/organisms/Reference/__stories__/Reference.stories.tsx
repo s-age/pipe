@@ -78,6 +78,26 @@ export const Disabled: Story = {
 }
 
 /**
+ * Reference with null TTL (line 41 coverage).
+ * Should default to 3.
+ */
+export const NullTTL: Story = {
+  args: {
+    reference: {
+      path: 'src/web/components/organisms/Reference/index.tsx',
+      disabled: false,
+      persist: false,
+      ttl: null
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const ttlValue = canvas.getByText('3')
+    await expect(ttlValue).toBeInTheDocument()
+  }
+}
+
+/**
  * Interaction test for TTL increment and decrement.
  */
 export const TTLInteraction: Story = {

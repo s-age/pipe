@@ -1,10 +1,11 @@
 /* eslint-disable import/no-default-export */
-import type { Preview } from '@storybook/react-vite'
+import type { Preview, Decorator } from '@storybook/react-vite'
 import { initialize, mswLoader } from 'msw-storybook-addon'
 
 // Load app global vanilla-extract styles so Storybook matches app appearance.
 // The file uses `globalStyle(...)` and side-effects on import are intended.
 import '@/styles/global.css'
+import { themeClass } from '../styles/theme.css'
 
 // Initialize MSW
 initialize({
@@ -12,7 +13,15 @@ initialize({
   quiet: true
 })
 
+// Apply theme class to all stories
+const withTheme: Decorator = (Story) => (
+  <div className={themeClass}>
+    <Story />
+  </div>
+)
+
 const preview: Preview = {
+  decorators: [withTheme],
   parameters: {
     controls: {
       matchers: {

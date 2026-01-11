@@ -140,3 +140,125 @@ export const Interaction: Story = {
     )
   }
 }
+
+// 9. UnknownSessionId
+export const UnknownSessionId: Story = {
+  args: {
+    isSelected: false,
+    session: {
+      ...mockSessionOverview,
+      sessionId: ''
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const checkbox = canvas.getByRole('checkbox')
+    await expect(checkbox).toHaveAttribute('id', 'session-unknown')
+  }
+}
+
+// 10. TreeNodeWithDeletedAt
+export const TreeNodeWithDeletedAt: Story = {
+  args: {
+    isSelected: false,
+    session: {
+      ...mockSessionTreeNode,
+      overview: {
+        ...mockSessionTreeNode.overview,
+        deletedAt: '2023-10-15T16:00:00Z'
+      }
+    },
+    updateLabel: 'Deleted At'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const dateText = canvas.getByText(/2023-10-15/)
+    await expect(dateText).toBeInTheDocument()
+  }
+}
+
+// 11. OverviewWithoutPurpose
+export const OverviewWithoutPurpose: Story = {
+  args: {
+    isSelected: false,
+    session: {
+      ...mockSessionTreeNode,
+      overview: {
+        ...mockSessionTreeNode.overview,
+        purpose: ''
+      }
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const unknownText = canvas.getByText(/unknown/i)
+    await expect(unknownText).toBeInTheDocument()
+  }
+}
+
+// 12. TreeNodeDeletedAtFallback
+/**
+ * Tests TreeNode with Deleted At label but no deletedAt in overview (lines 52-53 coverage).
+ */
+export const TreeNodeDeletedAtFallback: Story = {
+  args: {
+    isSelected: false,
+    session: {
+      ...mockSessionTreeNode,
+      overview: {
+        ...mockSessionTreeNode.overview
+        // No deletedAt field
+      }
+    },
+    updateLabel: 'Deleted At'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Should fallback to empty string, then formatDate handles it as 'Unknown'
+    const unknownText = canvas.getByText(/unknown/i)
+    await expect(unknownText).toBeInTheDocument()
+  }
+}
+
+// 13. OverviewDeletedAtFallback
+/**
+ * Tests SessionOverview with Deleted At label but no deletedAt field (line 53 coverage).
+ */
+export const OverviewDeletedAtFallback: Story = {
+  args: {
+    isSelected: false,
+    session: {
+      ...mockSessionOverview
+      // No deletedAt field
+    },
+    updateLabel: 'Deleted At'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const unknownText = canvas.getByText(/unknown/i)
+    await expect(unknownText).toBeInTheDocument()
+  }
+}
+
+// 14. TreeNodeUpdateAtFallback
+/**
+ * Tests TreeNode with Updated At label but no lastUpdatedAt in overview (line 55 coverage).
+ */
+export const TreeNodeUpdateAtFallback: Story = {
+  args: {
+    isSelected: false,
+    session: {
+      ...mockSessionTreeNode,
+      overview: {
+        ...mockSessionTreeNode.overview,
+        lastUpdatedAt: ''
+      }
+    },
+    updateLabel: 'Updated At'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const unknownText = canvas.getByText(/unknown/i)
+    await expect(unknownText).toBeInTheDocument()
+  }
+}

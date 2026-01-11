@@ -136,3 +136,13 @@ export const Loading: Story = {
     sessionDetail: null
   }
 }
+
+/**
+ * Tests the NoSessionSelected state (ChatHistoryBody line 55).
+ * This covers the welcome message when no session is selected.
+ * Note: This story is already covered by the default decorator with MemoryRouter,
+ * so we just need to ensure sessionDetail is provided but the route has no sessionId.
+ */
+export const NoSessionSelected: Story = {
+  args: defaultArguments
+}

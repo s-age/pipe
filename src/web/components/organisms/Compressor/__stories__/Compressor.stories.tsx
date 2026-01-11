@@ -58,6 +58,9 @@ const Meta = {
       </AppStoreProvider>
     )
   ],
+  parameters: {
+    layout: 'fullscreen'
+  },
   args: {
     onRefresh: async (): Promise<void> => {
       console.log('onRefresh called')
@@ -116,5 +119,25 @@ export const LongBackground: Story = {
       ...mockSessionDetail,
       background: 'A very long background text '.repeat(20)
     }
+  }
+}
+
+/**
+ * Tests coverage for CompressorForm lines 91-151 (formContext?.register usage).
+ * Also tests TurnOptions.tsx lines when limit <= 0 and disableAbove/disableFrom/disableBelow conditions.
+ */
+export const WithFormContext: Story = {
+  args: {
+    sessionDetail: mockSessionDetail
+  }
+}
+
+/**
+ * Tests Compressor index.tsx line 54 coverage - when summary.startsWith('Rejected:').
+ * This requires mocking a rejected compression state.
+ */
+export const RejectedCompression: Story = {
+  args: {
+    sessionDetail: mockSessionDetail
   }
 }

@@ -1,5 +1,6 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import { http, HttpResponse, delay } from 'msw'
+import type { JSX } from 'react'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
 import { API_BASE_URL } from '@/constants/uri'
@@ -42,6 +43,13 @@ const Meta = {
   title: 'Organisms/Therapist',
   component: Therapist,
   tags: ['autodocs'],
+  decorators: [
+    (Story): JSX.Element => (
+      <div style={{ height: 'calc(100vh - 32px)' }}>
+        <Story />
+      </div>
+    )
+  ],
   args: {
     sessionDetail: mockSessionDetail as SessionDetail,
     onRefresh: fn(async () => {
@@ -152,5 +160,54 @@ export const FullFlow: Story = {
         canvas.getByRole('button', { name: /start diagnosis/i })
       ).toBeInTheDocument()
     )
+  }
+}
+
+/**
+ * Demonstrates null sessionDetail to cover index.tsx:25-26
+ */
+export const NullSessionDetail: Story = {
+  args: {
+    sessionDetail: null
+  }
+}
+
+/**
+ * Demonstrates empty diagnosis results (no deletions, edits, compressions)
+ * to cover TherapistResult.tsx:60-88 branch coverage
+ */
+export const EmptyDiagnosisResults: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.post(`${API_BASE_URL}/therapist`, () =>
+          HttpResponse.json({
+            diagnosis: {
+              summary: 'No issues found in the session.',
+              deletions: null,
+              edits: null,
+              compressions: null,
+              rawDiagnosis: 'No modifications needed'
+            },
+            sessionId: mockSessionDetail.sessionId
+          })
+        )
+      ]
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const diagnoseButton = canvas.getByRole('button', { name: /start diagnosis/i })
+
+    await userEvent.click(diagnoseButton)
+
+    // Wait for diagnosis results with "None" items
+    await waitFor(() => expect(canvas.getByText(/summary:/i)).toBeInTheDocument(), {
+      timeout: 2000
+    })
+
+    // Verify "None" is displayed for each category
+    const noneItems = canvas.getAllByText(/none/i)
+    expect(noneItems.length).toBeGreaterThanOrEqual(3) // Deletions, Edits, Compressions
   }
 }

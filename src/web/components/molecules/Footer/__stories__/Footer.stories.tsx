@@ -1,6 +1,7 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 
+import { ScrollArea } from '../../ScrollArea'
 import { Footer } from '../index'
 
 const Meta = {
@@ -34,9 +35,14 @@ export const Sticky: Story = {
     )
   },
   render: (arguments_): JSX.Element => (
-    <div style={{ height: '150vh', position: 'relative' }}>
-      <div style={{ padding: '1rem' }}>Scroll down to see the sticky footer.</div>
+    <ScrollArea height="320px">
+      <div style={{ minHeight: '400px', padding: '1rem' }}>
+        <p>Scroll down to see the sticky footer.</p>
+        {Array.from({ length: 20 }).map((_, i) => (
+          <p key={i}>Content line {i + 1}</p>
+        ))}
+      </div>
       <Footer {...arguments_} />
-    </div>
+    </ScrollArea>
   )
 }

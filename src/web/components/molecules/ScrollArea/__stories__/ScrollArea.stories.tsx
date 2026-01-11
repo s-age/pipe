@@ -45,11 +45,7 @@ const Box = ({
 )
 
 export const Vertical: Story = {
-  render: (arguments_) => (
-    <div style={{ height: '200px', border: '1px solid #ccc' }}>
-      <ScrollArea {...arguments_} />
-    </div>
-  ),
+  render: (arguments_) => <ScrollArea height="320px" {...arguments_} />,
   args: {
     direction: 'vertical',
     children: (
@@ -81,11 +77,7 @@ export const Horizontal: Story = {
 }
 
 export const Both: Story = {
-  render: (arguments_) => (
-    <div style={{ width: '300px', height: '200px', border: '1px solid #ccc' }}>
-      <ScrollArea {...arguments_} />
-    </div>
-  ),
+  render: (arguments_) => <ScrollArea height="320px" {...arguments_} />,
   args: {
     direction: 'both',
     children: (

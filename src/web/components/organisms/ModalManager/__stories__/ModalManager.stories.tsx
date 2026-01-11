@@ -217,3 +217,50 @@ export const ProviderWithModal: StoryObj<typeof ModalProvider> = {
     await expect(modal).toBeInTheDocument()
   }
 }
+
+/**
+ * Tests the fallback branch in ModalManager (lines 67-68).
+ * Covers the case where desc.props fields have default fallbacks.
+ */
+export const ConfirmModalWithDefaults: Story = {
+  render: (): JSX.Element => {
+    const Example = (): JSX.Element => {
+      const { show } = useModal()
+      const handleOpen = (): void => {
+        // Show confirm modal with minimal props to trigger default fallbacks
+        show({
+          type: 'confirm',
+          props: {}
+        })
+      }
+
+      return (
+        <div>
+          <button type="button" onClick={handleOpen} data-testid="open-defaults-button">
+            Open Confirm with Defaults
+          </button>
+          <ModalManager />
+        </div>
+      )
+    }
+
+    return <Example />
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByTestId('open-defaults-button')
+
+    await userEvent.click(button)
+
+    // Wait for the new modal to appear - it should have empty title
+    // Use getAllByRole and find the one with empty title
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    const dialogs = document.body.querySelectorAll('[role="dialog"]')
+    const newDialog = Array.from(dialogs).find(
+      (dialog) => dialog.querySelector('#confirm-modal-title')?.textContent === ''
+    )
+
+    await expect(newDialog).toBeTruthy()
+  }
+}

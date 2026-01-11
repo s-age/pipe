@@ -34,13 +34,13 @@ const Meta = {
   tags: ['autodocs'],
   decorators: [
     (Story): JSX.Element => (
-      <AppStoreProvider>
-        <div style={{ height: '600px' }}>
-          <ScrollArea direction="vertical">
+      <div style={{ height: '100vh' }}>
+        <AppStoreProvider>
+          <ScrollArea direction="vertical" height="full">
             <Story />
           </ScrollArea>
-        </div>
-      </AppStoreProvider>
+        </AppStoreProvider>
+      </div>
     )
   ],
   args: {

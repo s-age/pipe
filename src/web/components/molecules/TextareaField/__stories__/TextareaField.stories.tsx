@@ -74,3 +74,26 @@ export const WithRHF: Story = {
     )
   }
 }
+
+/**
+ * Shows error message when validation fails (line 45 coverage).
+ */
+export const WithError: Story = {
+  render: (arguments_): JSX.Element => {
+    const schema = z.object({
+      [arguments_.name]: z
+        .string()
+        .min(10, 'Description must be at least 10 characters')
+    })
+
+    return (
+      <Form
+        schema={schema}
+        defaultValues={{ [arguments_.name]: 'Short' }}
+        mode="onChange"
+      >
+        <TextareaField {...arguments_} />
+      </Form>
+    )
+  }
+}

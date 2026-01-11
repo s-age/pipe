@@ -188,3 +188,94 @@ export const SelectSessionInteraction: Story = {
     await expect(args.onSelectSession).toHaveBeenCalledWith('session-1', true)
   }
 }
+
+/**
+ * Tests archive sessions with filePath (line 55 coverage).
+ * When useFilePath is true, uses filePath as identifier instead of sessionId.
+ */
+export const WithFilePath: Story = {
+  args: {
+    sessions: [
+      {
+        sessionId: 'archive-1',
+        filePath: '/archives/session-2024-01-10.json',
+        purpose: 'Archived session from Jan 10',
+        background: 'Historical session',
+        roles: ['Archivist'],
+        procedure: 'Review',
+        artifacts: [],
+        multiStepReasoningEnabled: false,
+        tokenCount: 800,
+        lastUpdatedAt: '2024-01-10T08:00:00Z',
+        deletedAt: ''
+      }
+    ] as SessionOverview[],
+    selectedSessionIds: [],
+    useFilePath: true
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Find the checkbox for the archived session
+    const sessionCheckbox = canvas.getByRole('checkbox', { name: /archived session/i })
+
+    await userEvent.click(sessionCheckbox)
+
+    // Verify that onSelectSession was called with filePath instead of sessionId
+    await expect(args.onSelectSession).toHaveBeenCalledWith(
+      '/archives/session-2024-01-10.json',
+      true
+    )
+  }
+}
+
+/**
+ * Tests SessionListNode with missing or empty overview fields (lines 25-35).
+ * Covers the fallback logic for undefined overview properties.
+ */
+export const NodeWithPartialOverview: Story = {
+  args: {
+    sessions: [
+      {
+        sessionId: 'partial-1',
+        overview: {
+          sessionId: 'partial-1'
+          // All other fields are missing to trigger fallbacks
+        }
+      } as SessionTreeNode
+    ],
+    selectedSessionIds: []
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // The session should still render with default values
+    // The accessible name is "partial Unknown" based on the error message
+    const sessionCheckbox = canvas.getByRole('checkbox', { name: /partial unknown/i })
+    await expect(sessionCheckbox).toBeInTheDocument()
+  }
+}
+
+/**
+ * Tests SessionListNode with completely missing overview (line 25).
+ * Covers the case where node.overview is undefined.
+ */
+export const NodeWithoutOverview: Story = {
+  args: {
+    sessions: [
+      {
+        sessionId: 'no-overview-1'
+        // No overview field at all
+      } as SessionTreeNode
+    ],
+    selectedSessionIds: []
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // The session should still render with all default fallback values
+    // Use the text "Unknown" which appears in the subject field
+    const sessionCheckbox = canvas.getByRole('checkbox', { name: /unknown/i })
+    await expect(sessionCheckbox).toBeInTheDocument()
+  }
+}

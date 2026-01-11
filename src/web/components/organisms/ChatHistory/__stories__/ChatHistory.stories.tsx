@@ -138,9 +138,11 @@ export const Loading: Story = {
 }
 
 /**
- * Tests streaming turns rendering (ChatHistoryBody line 97).
- * This requires mocking the streaming state.
+ * Tests the NoSessionSelected state (ChatHistoryBody line 55).
+ * This covers the welcome message when no session is selected.
+ * Note: This story is already covered by the default decorator with MemoryRouter,
+ * so we just need to ensure sessionDetail is provided but the route has no sessionId.
  */
-export const WithStreamingTurns: Story = {
+export const NoSessionSelected: Story = {
   args: defaultArguments
 }

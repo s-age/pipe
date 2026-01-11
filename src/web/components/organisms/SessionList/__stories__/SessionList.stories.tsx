@@ -228,3 +228,54 @@ export const WithFilePath: Story = {
     )
   }
 }
+
+/**
+ * Tests SessionListNode with missing or empty overview fields (lines 25-35).
+ * Covers the fallback logic for undefined overview properties.
+ */
+export const NodeWithPartialOverview: Story = {
+  args: {
+    sessions: [
+      {
+        sessionId: 'partial-1',
+        overview: {
+          sessionId: 'partial-1'
+          // All other fields are missing to trigger fallbacks
+        }
+      } as SessionTreeNode
+    ],
+    selectedSessionIds: []
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // The session should still render with default values
+    // The accessible name is "partial Unknown" based on the error message
+    const sessionCheckbox = canvas.getByRole('checkbox', { name: /partial unknown/i })
+    await expect(sessionCheckbox).toBeInTheDocument()
+  }
+}
+
+/**
+ * Tests SessionListNode with completely missing overview (line 25).
+ * Covers the case where node.overview is undefined.
+ */
+export const NodeWithoutOverview: Story = {
+  args: {
+    sessions: [
+      {
+        sessionId: 'no-overview-1'
+        // No overview field at all
+      } as SessionTreeNode
+    ],
+    selectedSessionIds: []
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // The session should still render with all default fallback values
+    // Use the text "Unknown" which appears in the subject field
+    const sessionCheckbox = canvas.getByRole('checkbox', { name: /unknown/i })
+    await expect(sessionCheckbox).toBeInTheDocument()
+  }
+}

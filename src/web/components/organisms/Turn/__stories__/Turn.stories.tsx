@@ -184,3 +184,101 @@ export const UnknownType: Story = {
     await expect(canvas.getByText(/unknown_type/i)).toBeInTheDocument()
   }
 }
+
+/**
+ * User task with missing instruction field.
+ * Covers line 134 in index.tsx (instruction fallback to empty string)
+ */
+export const UserTaskWithoutInstruction: Story = {
+  args: {
+    turn: {
+      type: 'user_task',
+      timestamp: '2024-01-01T12:00:00Z'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getAllByText(/You/i)[0]).toBeInTheDocument()
+  }
+}
+
+/**
+ * Turn without timestamp field.
+ * Covers line 178 in index.tsx (timestamp fallback to empty string)
+ */
+export const TurnWithoutTimestamp: Story = {
+  args: {
+    turn: {
+      type: 'model_response',
+      content: 'Response without timestamp'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getByText(/Model/i)).toBeInTheDocument()
+  }
+}
+
+/**
+ * Turn without type field.
+ * Covers line 199 in index.tsx (type fallback to 'unknown')
+ */
+export const TurnWithoutType: Story = {
+  args: {
+    turn: {
+      content: 'Data without type',
+      timestamp: '2024-01-01T12:00:00Z'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const unknownElements = canvas.getAllByText(/Unknown/i)
+    expect(unknownElements.length).toBeGreaterThan(0)
+  }
+}
+
+/**
+ * Expert mode with edit and delete buttons.
+ * Covers expert mode interactions and handler fallbacks (lines 96-102)
+ */
+export const ExpertMode: Story = {
+  args: {
+    expertMode: true,
+    turn: {
+      type: 'user_task',
+      instruction: 'Test instruction',
+      timestamp: '2024-01-01T12:00:00Z'
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getByLabelText(/Edit turn/i)).toBeInTheDocument()
+    await expect(canvas.getByLabelText(/Delete turn/i)).toBeInTheDocument()
+  }
+}
+
+/**
+ * Expert mode with model response showing fork button.
+ * Covers fork button visibility and handler fallback
+ */
+export const ExpertModeModelResponse: Story = {
+  args: {
+    expertMode: true,
+    turn: {
+      type: 'model_response',
+      content: 'Test model response',
+      timestamp: '2024-01-01T12:00:00Z'
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(
+      canvas.getByLabelText(/Fork conversation from this turn/i)
+    ).toBeInTheDocument()
+    await expect(canvas.getByLabelText(/Edit turn/i)).toBeInTheDocument()
+    await expect(canvas.getByLabelText(/Delete turn/i)).toBeInTheDocument()
+  }
+}

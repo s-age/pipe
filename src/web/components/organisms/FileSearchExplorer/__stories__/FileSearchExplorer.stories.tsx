@@ -130,3 +130,32 @@ export const NoSelectedSuggestion: Story = {
     await expect(input).not.toHaveAttribute('aria-activedescendant')
   }
 }
+
+/**
+ * Tests keyboard navigation to select a suggestion.
+ * Covers SuggestionItem.tsx line 29 when isSelected=true (selectedSuggestionItem class).
+ */
+export const KeyboardNavigation: Story = {
+  args: {
+    existsValue: [],
+    list: mockList,
+    isMultiple: true,
+    placeholder: 'Navigate with arrow keys...'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('combobox')
+
+    // Type to show suggestions
+    await userEvent.type(input, 'src')
+    const listbox = await canvas.findByRole('listbox')
+    await expect(listbox).toBeInTheDocument()
+
+    // Press arrow down to select first suggestion
+    await userEvent.keyboard('{ArrowDown}')
+
+    // Verify that the first option has aria-selected="true"
+    const options = within(listbox).getAllByRole('option')
+    await expect(options[0]).toHaveAttribute('aria-selected', 'true')
+  }
+}

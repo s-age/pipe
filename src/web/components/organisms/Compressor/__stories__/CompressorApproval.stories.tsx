@@ -17,6 +17,9 @@ const Meta = {
       </AppStoreProvider>
     )
   ],
+  parameters: {
+    layout: 'fullscreen'
+  },
   args: {
     compressorSessionId: 'comp-session-123',
     sessionId: 'session-123',

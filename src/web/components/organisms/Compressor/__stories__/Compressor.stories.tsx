@@ -58,6 +58,9 @@ const Meta = {
       </AppStoreProvider>
     )
   ],
+  parameters: {
+    layout: 'fullscreen'
+  },
   args: {
     onRefresh: async (): Promise<void> => {
       console.log('onRefresh called')

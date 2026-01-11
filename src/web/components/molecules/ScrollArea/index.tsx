@@ -1,18 +1,20 @@
 import { clsx } from 'clsx'
 import type { JSX, ReactNode } from 'react'
 
-import { scrollArea } from './style.css'
+import { heightVariants, scrollArea } from './style.css'
 
 type ScrollAreaProperties = {
   children?: ReactNode
   className?: string
   direction?: 'vertical' | 'horizontal' | 'both'
+  height?: keyof typeof heightVariants
 }
 
 export const ScrollArea = ({
   children,
   className,
   direction = 'vertical',
+  height,
   ...rest
 }: ScrollAreaProperties): JSX.Element => {
   const classNames = clsx(
@@ -20,6 +22,7 @@ export const ScrollArea = ({
     {
       [`direction-${direction}`]: true
     },
+    height && heightVariants[height],
     className
   )
 

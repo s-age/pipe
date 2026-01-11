@@ -1,4 +1,4 @@
-import { style } from '@vanilla-extract/css'
+import { style, styleVariants } from '@vanilla-extract/css'
 
 export const scrollArea = style({
   flex: 1,
@@ -16,5 +16,17 @@ export const scrollArea = style({
     '&.direction-both': {
       overflow: 'auto'
     }
+  }
+})
+
+export const heightVariants = styleVariants({
+  auto: {
+    height: 'auto'
+  },
+  full: {
+    height: '100%'
+  },
+  '320px': {
+    height: '320px'
   }
 })

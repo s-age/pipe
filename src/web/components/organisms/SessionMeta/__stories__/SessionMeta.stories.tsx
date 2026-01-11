@@ -15,9 +15,11 @@ const Meta = {
   tags: ['autodocs'],
   decorators: [
     (Story): JSX.Element => (
-      <AppStoreProvider>
-        <Story />
-      </AppStoreProvider>
+      <div style={{ height: 'calc(100vh - 32px)' }}>
+        <AppStoreProvider>
+          <Story />
+        </AppStoreProvider>
+      </div>
     )
   ]
 } satisfies StoryMeta<typeof SessionMeta>

@@ -1,5 +1,6 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import { http, HttpResponse, delay } from 'msw'
+import type { JSX } from 'react'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
 import { API_BASE_URL } from '@/constants/uri'
@@ -42,6 +43,13 @@ const Meta = {
   title: 'Organisms/Therapist',
   component: Therapist,
   tags: ['autodocs'],
+  decorators: [
+    (Story): JSX.Element => (
+      <div style={{ height: 'calc(100vh - 32px)' }}>
+        <Story />
+      </div>
+    )
+  ],
   args: {
     sessionDetail: mockSessionDetail as SessionDetail,
     onRefresh: fn(async () => {

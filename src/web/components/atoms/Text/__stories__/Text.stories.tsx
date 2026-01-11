@@ -1,6 +1,8 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
 
+import { ScrollArea } from '@/components/molecules/ScrollArea'
+
 import { Text } from '../index'
 
 const Meta = {
@@ -39,59 +41,61 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: (): JSX.Element => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <h4 style={{ marginBottom: '8px', color: '#666' }}>Sizes</h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <Text size="xs">Extra Small Text (xs)</Text>
-          <Text size="s">Small Text (s)</Text>
-          <Text size="m">Medium Text (m - Default)</Text>
-          <Text size="l">Large Text (l)</Text>
-          <Text size="xl">Extra Large Text (xl)</Text>
+    <ScrollArea height="320px">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div>
+          <h4 style={{ marginBottom: '8px', color: '#666' }}>Sizes</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <Text size="xs">Extra Small Text (xs)</Text>
+            <Text size="s">Small Text (s)</Text>
+            <Text size="m">Medium Text (m - Default)</Text>
+            <Text size="l">Large Text (l)</Text>
+            <Text size="xl">Extra Large Text (xl)</Text>
+          </div>
         </div>
-      </div>
 
-      <div>
-        <h4 style={{ marginBottom: '8px', color: '#666' }}>Weights</h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <Text weight="normal">Normal Weight</Text>
-          <Text weight="medium">Medium Weight</Text>
-          <Text weight="semibold">Semibold Weight</Text>
-          <Text weight="bold">Bold Weight</Text>
+        <div>
+          <h4 style={{ marginBottom: '8px', color: '#666' }}>Weights</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <Text weight="normal">Normal Weight</Text>
+            <Text weight="medium">Medium Weight</Text>
+            <Text weight="semibold">Semibold Weight</Text>
+            <Text weight="bold">Bold Weight</Text>
+          </div>
         </div>
-      </div>
 
-      <div>
-        <h4 style={{ marginBottom: '8px', color: '#666' }}>Variants</h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <Text variant="default">Default Variant</Text>
-          <Text variant="muted">Muted Variant</Text>
-          <Text variant="success">Success Variant</Text>
-          <Text variant="error">Error Variant</Text>
+        <div>
+          <h4 style={{ marginBottom: '8px', color: '#666' }}>Variants</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <Text variant="default">Default Variant</Text>
+            <Text variant="muted">Muted Variant</Text>
+            <Text variant="success">Success Variant</Text>
+            <Text variant="error">Error Variant</Text>
+          </div>
         </div>
-      </div>
 
-      <div>
-        <h4 style={{ marginBottom: '8px', color: '#666' }}>Alignment</h4>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            width: '300px',
-            border: '1px solid #eee'
-          }}
-        >
-          <Text align="left">Left Aligned</Text>
-          <Text align="center">Center Aligned</Text>
-          <Text align="right">Right Aligned</Text>
-          <Text align="justify">
-            Justify Aligned: This is a longer text to demonstrate the justification
-            alignment property of the Text component.
-          </Text>
+        <div>
+          <h4 style={{ marginBottom: '8px', color: '#666' }}>Alignment</h4>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              width: '300px',
+              border: '1px solid #eee'
+            }}
+          >
+            <Text align="left">Left Aligned</Text>
+            <Text align="center">Center Aligned</Text>
+            <Text align="right">Right Aligned</Text>
+            <Text align="justify">
+              Justify Aligned: This is a longer text to demonstrate the justification
+              alignment property of the Text component.
+            </Text>
+          </div>
         </div>
       </div>
-    </div>
+    </ScrollArea>
   )
 }
 

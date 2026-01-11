@@ -19,10 +19,10 @@ export const grid = style({
       gridTemplateColumns: 'repeat(4, 1fr)'
     },
     '&.columns-auto-fit': {
-      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'
+      gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))'
     },
     '&.columns-auto-fill': {
-      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))'
+      gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 150px), 1fr))'
     },
     '&.columns-custom': {
       gridTemplateColumns: 'var(--grid-template-columns)'

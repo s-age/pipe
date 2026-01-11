@@ -1,8 +1,7 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { http, HttpResponse } from 'msw'
 import { expect, userEvent, within } from 'storybook/test'
 
-import { API_BASE_URL } from '@/constants/uri'
+import { sessionHandlers } from '@/msw/resources/session'
 
 import { MultiStepReasoning } from '../index'
 
@@ -12,23 +11,7 @@ const Meta = {
   tags: ['autodocs'],
   parameters: {
     msw: {
-      handlers: [
-        http.patch(
-          `${API_BASE_URL}/session/:sessionId/multi_step_reasoning`,
-          async ({ request }) => {
-            const body = await request.json()
-
-            return HttpResponse.json({
-              message: 'Multi-step reasoning updated',
-              session: {
-                multiStepReasoningEnabled: (
-                  body as { multiStepReasoningEnabled: boolean }
-                ).multiStepReasoningEnabled
-              }
-            })
-          }
-        )
-      ]
+      handlers: sessionHandlers
     }
   }
 } satisfies StoryMeta<typeof MultiStepReasoning>

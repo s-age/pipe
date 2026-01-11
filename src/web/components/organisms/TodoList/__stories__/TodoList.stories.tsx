@@ -1,10 +1,9 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { http, HttpResponse } from 'msw'
 import type { JSX } from 'react'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
-import { API_BASE_URL } from '@/constants/uri'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { sessionHandlers } from '@/msw/resources/session'
 import { AppStoreProvider } from '@/stores/useAppStore'
 
 import { TodoList } from '../index'
@@ -68,17 +67,7 @@ export const Empty: Story = {
 export const Interaction: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.patch(`${API_BASE_URL}/session/:sessionId/todos`, () =>
-          HttpResponse.json({ message: 'Todos updated' })
-        ),
-        http.delete(`${API_BASE_URL}/session/:sessionId/todos`, () =>
-          HttpResponse.json({ message: 'All todos deleted' })
-        ),
-        http.get(`${API_BASE_URL}/session/:sessionId`, () =>
-          HttpResponse.json(mockSessionDetail)
-        )
-      ]
+      handlers: sessionHandlers
     }
   },
   play: async ({ args, canvasElement }) => {

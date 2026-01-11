@@ -28,5 +28,27 @@ export const fsHandlers = [
         ]
       })
     }
+  ),
+
+  // GET /api/v1/fs/procedures
+  http.get(`${API_BASE_URL}/fs/procedures`, () =>
+    HttpResponse.json({
+      procedures: [
+        { label: 'Procedure 1', value: 'proc-1' },
+        { label: 'Procedure 2', value: 'proc-2' },
+        { label: 'Procedure 3', value: 'proc-3' }
+      ]
+    })
+  ),
+
+  // GET /api/v1/fs/roles
+  http.get(`${API_BASE_URL}/fs/roles`, () =>
+    HttpResponse.json({
+      roles: [
+        { label: 'Admin', value: 'admin' },
+        { label: 'Editor', value: 'editor' },
+        { label: 'Viewer', value: 'viewer' }
+      ]
+    })
   )
 ]

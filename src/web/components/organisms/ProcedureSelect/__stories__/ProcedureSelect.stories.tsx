@@ -1,12 +1,11 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { http, HttpResponse } from 'msw'
 import type { JSX } from 'react'
 import { expect, userEvent, within } from 'storybook/test'
 import { z } from 'zod'
 
 import { Button } from '@/components/atoms/Button'
 import { Form, useFormContext } from '@/components/organisms/Form'
-import { API_BASE_URL } from '@/constants/uri'
+import { fsHandlers } from '@/msw/resources/fs'
 
 import { ProcedureSelect } from '../index'
 
@@ -86,17 +85,7 @@ export const WithError: Story = {
 export const Interaction: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get(`${API_BASE_URL}/fs/procedures`, () =>
-          HttpResponse.json({
-            procedures: [
-              { label: 'Procedure 1', value: 'proc-1' },
-              { label: 'Procedure 2', value: 'proc-2' },
-              { label: 'Procedure 3', value: 'proc-3' }
-            ]
-          })
-        )
-      ]
+      handlers: fsHandlers
     }
   },
   render: (arguments_) => (

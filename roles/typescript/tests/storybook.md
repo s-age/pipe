@@ -1848,6 +1848,8 @@ MSW is already configured in the Storybook environment:
 
 ### Creating Mock Handlers
 
+**IMPORTANT**: All MSW handlers MUST be defined in external resource files under `src/web/msw/resources/`. Never define handlers inline in story files.
+
 Mock handlers are organized by API resource in `src/web/msw/resources/`. Follow the [MSW Resources README](../../src/web/msw/resources/README.md) for file naming conventions.
 
 **Example**: `src/web/msw/resources/fs.ts`
@@ -1880,6 +1882,12 @@ export const fsHandlers = [
   )
 ]
 ```
+
+**Why external files?**
+1. **Reusability**: Handlers can be shared across multiple stories
+2. **Maintainability**: Centralized mock definitions are easier to update
+3. **Consistency**: All API mocks follow the same structure
+4. **Type Safety**: Shared type definitions improve type checking
 
 ### Using Mock Handlers in Stories
 
@@ -1925,63 +1933,82 @@ export const SearchInteraction: Story = {
 }
 ```
 
-### Pattern: Override Handlers for Specific Stories
+### Pattern: Specialized Handlers for Different Scenarios
 
-You can override or extend handlers for individual stories:
+**IMPORTANT**: For specialized scenarios (error states, empty results, delays), create separate named exports in the resource file instead of defining handlers inline.
+
+**Example**: `src/web/msw/resources/session.ts`
 
 ```typescript
 import { http, HttpResponse } from 'msw'
-import { API_BASE_URL } from '@/constants/uri'
-import { fsHandlers } from '@/msw/resources/fs'
 
-// Story with empty results
-export const EmptyResults: Story = {
+import { API_BASE_URL } from '@/constants/uri'
+
+/**
+ * MSW handlers for /session endpoints
+ */
+export const sessionHandlers = [
+  http.patch(`${API_BASE_URL}/session/:sessionId/meta`, () =>
+    HttpResponse.json({ message: 'Session metadata saved' })
+  )
+]
+
+/**
+ * MSW handlers for /session endpoints with error responses
+ */
+export const sessionErrorHandlers = [
+  http.patch(
+    `${API_BASE_URL}/session/:sessionId/meta`,
+    () => new HttpResponse(null, { status: 500 })
+  )
+]
+```
+
+**Using specialized handlers in stories**:
+
+```typescript
+import { sessionHandlers, sessionErrorHandlers } from '@/msw/resources/session'
+
+// Story with successful response
+export const SaveInteraction: Story = {
   parameters: {
     msw: {
-      handlers: [
-        // Override the search handler
-        http.post(`${API_BASE_URL}/fs/search`, () => {
-          return HttpResponse.json({ results: [] })
-        })
-      ]
+      handlers: sessionHandlers
     }
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByPlaceholderText(/search/i)
+    const button = canvas.getByRole('button', { name: /save/i })
+    await userEvent.click(button)
 
-    await userEvent.type(input, 'test')
-
-    const noResults = await canvas.findByText(/no results/i)
-    await expect(noResults).toBeInTheDocument()
+    const success = await canvas.findByText(/saved successfully/i)
+    await expect(success).toBeInTheDocument()
   }
 }
 
 // Story with error response
-export const ErrorState: Story = {
+export const SaveError: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post(`${API_BASE_URL}/fs/search`, () => {
-          return HttpResponse.json(
-            { message: 'Search service unavailable' },
-            { status: 500 }
-          )
-        })
-      ]
+      handlers: sessionErrorHandlers  // Use specialized error handlers
     }
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByPlaceholderText(/search/i)
+    const button = canvas.getByRole('button', { name: /save/i })
+    await userEvent.click(button)
 
-    await userEvent.type(input, 'test')
-
-    const error = await canvas.findByText(/unavailable/i)
+    const error = await canvas.findByText(/failed to save/i)
     await expect(error).toBeInTheDocument()
   }
 }
 ```
+
+**Key principles**:
+- ❌ Never define handlers with `http` and `HttpResponse` directly in story files
+- ✅ Create separate named exports for different scenarios (success, error, empty, delay)
+- ✅ Keep all handler definitions in `src/web/msw/resources/` directory
+- ✅ Follow the naming pattern: `{resource}Handlers`, `{resource}ErrorHandlers`, `{resource}EmptyHandlers`, `{resource}DelayHandlers`
 
 ### Pattern: Testing Debounced API Calls
 
@@ -2011,12 +2038,15 @@ export const DebouncedSearch: Story = {
 
 ### Best Practices
 
-1. **Organize Handlers by Resource**: Follow the file naming convention in `msw/resources/README.md`
-2. **Import API_BASE_URL**: Always use `API_BASE_URL` from `@/constants/uri` for consistency
-3. **Reuse Type Definitions**: Import response types from corresponding API client files
-4. **Test Multiple Scenarios**: Create stories for success, empty, and error states
-5. **Use Async Queries**: Use `findBy*` queries when waiting for API responses
-6. **Add Timeouts**: Increase timeout for debounced or slow API calls
+1. **External Resource Files Only**: Never define MSW handlers inline in story files - always create them in `src/web/msw/resources/`
+2. **Organize Handlers by Resource**: Follow the file naming convention in `msw/resources/README.md`
+3. **Import API_BASE_URL**: Always use `API_BASE_URL` from `@/constants/uri` for consistency
+4. **Reuse Type Definitions**: Import response types from corresponding API client files
+5. **Create Specialized Handlers**: Export separate handler arrays for different scenarios (error, empty, delay)
+6. **Test Multiple Scenarios**: Create stories for success, empty, and error states using specialized handlers
+7. **Use Async Queries**: Use `findBy*` queries when waiting for API responses
+8. **Add Timeouts**: Increase timeout for debounced or slow API calls
+9. **Never Import from 'msw' in Stories**: Import handlers from `@/msw/resources/*` instead
 
 ### Common MSW Patterns
 

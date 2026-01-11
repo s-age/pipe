@@ -1,10 +1,9 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { http, HttpResponse } from 'msw'
 import type { JSX } from 'react'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
-import { API_BASE_URL } from '@/constants/uri'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { sessionErrorHandlers, sessionHandlers } from '@/msw/resources/session'
 import { AppStoreProvider } from '@/stores/useAppStore'
 
 import { SessionMeta } from '..'
@@ -66,11 +65,7 @@ export const SaveInteraction: Story = {
   },
   parameters: {
     msw: {
-      handlers: [
-        http.patch(`${API_BASE_URL}/session/${mockSessionDetail.sessionId}/meta`, () =>
-          HttpResponse.json({ message: 'Session metadata saved' })
-        )
-      ]
+      handlers: sessionHandlers
     }
   },
   play: async ({ args, canvasElement }) => {
@@ -105,12 +100,7 @@ export const SaveError: Story = {
   },
   parameters: {
     msw: {
-      handlers: [
-        http.patch(
-          `${API_BASE_URL}/session/${mockSessionDetail.sessionId}/meta`,
-          () => new HttpResponse(null, { status: 500 })
-        )
-      ]
+      handlers: sessionErrorHandlers
     }
   },
   play: async ({ canvasElement }) => {

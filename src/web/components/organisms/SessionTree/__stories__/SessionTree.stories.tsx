@@ -185,3 +185,79 @@ export const SelectionInteraction: Story = {
     await expect(args.handleSelectSession).toHaveBeenCalledWith('session-2')
   }
 }
+
+/**
+ * Test with invalid session (missing sessionId) to cover line 71 in index.tsx
+ */
+export const WithInvalidSession: Story = {
+  args: {
+    sessions: [
+      mockSessions[0],
+      { sessionId: null, purpose: 'Invalid session' } as unknown as SessionOverview,
+      mockSessions[1]
+    ],
+    currentSessionId: 'session-1'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Only valid sessions should be rendered
+    await expect(canvas.getByText(/Research on AI agents/i)).toBeInTheDocument()
+    await expect(
+      canvas.getByText(/Development of Storybook stories/i)
+    ).toBeInTheDocument()
+  }
+}
+
+/**
+ * Test hierarchical tree with missing/undefined overview properties to cover SessionTreeNode.tsx:61-79
+ */
+export const HierarchicalWithMissingProperties: Story = {
+  args: {
+    sessions: [
+      {
+        sessionId: 'parent-with-minimal-overview',
+        overview: {
+          sessionId: 'parent-with-minimal-overview',
+          artifacts: [],
+          background: '',
+          lastUpdatedAt: '',
+          multiStepReasoningEnabled: false,
+          procedure: '',
+          purpose: '',
+          roles: [],
+          tokenCount: 0
+          // Testing with minimal/empty values
+        },
+        children: [
+          {
+            sessionId: 'child-with-partial-overview',
+            overview: {
+              sessionId: 'child-with-partial-overview',
+              purpose: 'Child with partial data',
+              artifacts: [],
+              background: '',
+              lastUpdatedAt: '',
+              multiStepReasoningEnabled: false,
+              procedure: '',
+              roles: [],
+              tokenCount: 0
+            },
+            children: []
+          }
+        ]
+      }
+    ] as SessionTreeNode[],
+    currentSessionId: null
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Parent node should render with empty purpose
+    const parentLinks = canvas.getAllByRole('link')
+    expect(parentLinks.length).toBeGreaterThan(0)
+
+    // Child should render with its purpose
+    await expect(canvas.getByText(/Child with partial data/i)).toBeInTheDocument()
+  }
+}

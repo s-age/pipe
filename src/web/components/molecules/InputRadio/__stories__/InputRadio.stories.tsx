@@ -1,5 +1,6 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { JSX } from 'react'
+import { expect, within } from 'storybook/test'
 
 import { Form } from '@/components/organisms/Form'
 
@@ -61,5 +62,19 @@ export const WithoutForm: Story = {
     }
 
     return <PlainExample />
+  }
+}
+
+export const WithoutLabel: Story = {
+  args: {
+    'aria-label': 'Hidden radio option',
+    id: 'radio-no-label',
+    value: 'hidden',
+    name: 'radio-hidden'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const radio = canvas.getByRole('radio', { name: /hidden radio option/i })
+    await expect(radio).toBeInTheDocument()
   }
 }

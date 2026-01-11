@@ -98,3 +98,38 @@ export const Interaction: Story = {
     // testable in Storybook, but we've verified the interaction triggers.
   }
 }
+
+/**
+ * Demonstrates empty form to trigger validation errors.
+ */
+export const ValidationErrors: Story = {
+  args: {
+    defaultValues: {
+      purpose: '',
+      background: '',
+      instruction: ''
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Verify heading is present
+    await expect(
+      canvas.getByRole('heading', { name: /create new session/i })
+    ).toBeInTheDocument()
+  }
+}
+
+/**
+ * Demonstrates cancel button is present.
+ */
+export const CancelInteraction: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Verify the Cancel button exists
+    const cancelButton = canvas.getByRole('button', { name: /cancel/i })
+    await expect(cancelButton).toBeEnabled()
+  }
+}

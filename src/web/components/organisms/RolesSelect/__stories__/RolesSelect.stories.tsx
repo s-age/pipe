@@ -82,11 +82,13 @@ export const Interaction: Story = {
     const canvas = within(canvasElement)
     const input = canvas.getByPlaceholderText('Search files or directories...')
 
-    // Focus and type to trigger role filtering
+    // Focus to trigger role loading
     await userEvent.click(input)
-    await userEvent.type(input, 'Ad')
 
-    // Wait for the suggestion list to appear and roles to be loaded
+    // Type to filter roles with delay to allow roles to load
+    await userEvent.type(input, 'Ad', { delay: 200 })
+
+    // Wait for the filtered results to appear - the listbox should show with Admin option
     await waitFor(
       async () => {
         const listbox = canvas.getByRole('listbox')
@@ -95,8 +97,7 @@ export const Interaction: Story = {
       { timeout: 3000 }
     )
 
-    // Wait for roles to be loaded and displayed in the list
-    // FileSearchExplorer renders a list of items. We expect 'Admin' to appear.
+    // Verify Admin option is visible
     const adminOption = await canvas.findByText('Admin')
     await expect(adminOption).toBeInTheDocument()
 

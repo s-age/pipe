@@ -1,5 +1,4 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import type { JSX } from 'react'
 import { expect, userEvent, within } from 'storybook/test'
 
 import { Form } from '@/components/organisms/Form'
@@ -26,14 +25,7 @@ const mockSessionDetail: SessionDetail = {
 const Meta = {
   title: 'Organisms/SessionMetaBasic',
   component: SessionMetaBasic,
-  tags: ['autodocs'],
-  decorators: [
-    (Story): JSX.Element => (
-      <Form defaultValues={mockSessionDetail}>
-        <Story />
-      </Form>
-    )
-  ]
+  tags: ['autodocs']
 } satisfies StoryMeta<typeof SessionMetaBasic>
 
 export default Meta
@@ -43,6 +35,11 @@ type Story = StoryObj<typeof Meta>
  * Default story for SessionMetaBasic
  */
 export const Default: Story = {
+  render: (arguments_) => (
+    <Form defaultValues={mockSessionDetail}>
+      <SessionMetaBasic {...arguments_} />
+    </Form>
+  ),
   args: {
     sessionDetail: mockSessionDetail
   }
@@ -52,6 +49,11 @@ export const Default: Story = {
  * Story demonstrating SessionMetaBasic with children
  */
 export const WithChildren: Story = {
+  render: (arguments_) => (
+    <Form defaultValues={mockSessionDetail}>
+      <SessionMetaBasic {...arguments_} />
+    </Form>
+  ),
   args: {
     sessionDetail: mockSessionDetail,
     children: (
@@ -74,6 +76,11 @@ export const WithChildren: Story = {
  * Interaction test for SessionMetaBasic
  */
 export const Interaction: Story = {
+  render: (arguments_) => (
+    <Form defaultValues={mockSessionDetail}>
+      <SessionMetaBasic {...arguments_} />
+    </Form>
+  ),
   args: {
     sessionDetail: mockSessionDetail
   },
@@ -93,5 +100,25 @@ export const Interaction: Story = {
     await userEvent.clear(backgroundInput)
     await userEvent.type(backgroundInput, 'Updated Background')
     await expect(backgroundInput).toHaveValue('Updated Background')
+  }
+}
+
+/**
+ * Story demonstrating validation errors for required fields
+ */
+export const WithValidationErrors: Story = {
+  render: (arguments_) => (
+    <Form
+      defaultValues={{
+        ...mockSessionDetail,
+        purpose: '',
+        background: ''
+      }}
+    >
+      <SessionMetaBasic {...arguments_} />
+    </Form>
+  ),
+  args: {
+    sessionDetail: mockSessionDetail
   }
 }

@@ -92,3 +92,21 @@ export const LowContext: Story = {
     await expect(contextText).toBeInTheDocument()
   }
 }
+
+/**
+ * State when tokenCount is undefined (line 47 coverage).
+ * Should default to 0 and show 100% context left.
+ */
+export const UndefinedTokenCount: Story = {
+  args: {
+    contextLimit: 10000,
+    currentSessionId: 'session-123',
+    isStreaming: false,
+    tokenCount: undefined
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const contextText = canvas.getByText(/\(100% context left\)/i)
+    await expect(contextText).toBeInTheDocument()
+  }
+}

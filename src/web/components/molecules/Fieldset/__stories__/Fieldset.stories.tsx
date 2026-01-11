@@ -1,5 +1,6 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
+import { expect, within } from 'storybook/test'
 
 import { Fieldset } from '../index'
 
@@ -59,6 +60,11 @@ export const WithFieldError: Story = {
       type: 'required',
       message: 'This field is required and cannot be left empty.'
     } as unknown as ReactNode
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const errorBox = canvas.getByRole('alert')
+    await expect(errorBox).toBeInTheDocument()
   }
 }
 
@@ -106,5 +112,20 @@ export const CustomClassName: Story = {
   args: {
     className: 'custom-fieldset-class',
     legend: 'Custom Styled Fieldset'
+  }
+}
+
+/**
+ * Fieldset with a custom ReactNode error (not a FieldError).
+ * This covers line 50 where error is an object without 'message' property.
+ */
+export const WithCustomReactNodeError: Story = {
+  args: {
+    legend: 'Custom Error Component',
+    error: (
+      <div style={{ color: 'red', fontWeight: 'bold' }}>
+        Custom error component rendered here
+      </div>
+    )
   }
 }

@@ -101,3 +101,32 @@ export const SingleSelection: Story = {
     await expect(listbox).toBeInTheDocument()
   }
 }
+
+/**
+ * Tests coverage for SuggestionItem.tsx line 29 (isSelected false case).
+ * Also tests FileSearchExplorer index.tsx line 130 (selectedIndex < 0 case).
+ */
+export const NoSelectedSuggestion: Story = {
+  args: {
+    existsValue: [],
+    list: mockList,
+    isMultiple: true,
+    placeholder: 'Type to search...'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole('combobox')
+
+    // Type to show suggestions but don't select any
+    await userEvent.type(input, 'src')
+    const listbox = await canvas.findByRole('listbox')
+    await expect(listbox).toBeInTheDocument()
+
+    // Verify that none of the suggestions have the selected class
+    const options = within(listbox).getAllByRole('option')
+    await expect(options.length).toBeGreaterThan(0)
+
+    // Verify aria-activedescendant is not set when selectedIndex < 0
+    await expect(input).not.toHaveAttribute('aria-activedescendant')
+  }
+}

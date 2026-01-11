@@ -71,3 +71,33 @@ export const SessionManagementLink: Story = {
     await expect(link).toHaveAttribute('href', '/session_management')
   }
 }
+
+/**
+ * Demonstrates the search input interaction.
+ * Tests that typing in the search input works (line 99 coverage).
+ * Note: Full modal testing with navigation is better suited for E2E tests.
+ */
+export const SearchInputInteraction: Story = {
+  parameters: {
+    msw: {
+      handlers: fsHandlers
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const searchInput = canvas.getByPlaceholderText(/search sessions/i)
+
+    // Verify search input exists
+    await expect(searchInput).toBeInTheDocument()
+
+    // Type into search input without triggering submission
+    await userEvent.clear(searchInput)
+    await userEvent.type(searchInput, 'test', { delay: 50 })
+
+    // Verify the input value was updated
+    await expect(searchInput).toHaveValue('test')
+
+    // Clear the input to avoid any side effects
+    await userEvent.clear(searchInput)
+  }
+}

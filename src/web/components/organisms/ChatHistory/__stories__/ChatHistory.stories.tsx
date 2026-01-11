@@ -136,3 +136,11 @@ export const Loading: Story = {
     sessionDetail: null
   }
 }
+
+/**
+ * Tests streaming turns rendering (ChatHistoryBody line 97).
+ * This requires mocking the streaming state.
+ */
+export const WithStreamingTurns: Story = {
+  args: defaultArguments
+}

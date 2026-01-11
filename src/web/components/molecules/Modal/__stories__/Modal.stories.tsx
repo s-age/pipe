@@ -3,7 +3,7 @@ import type { JSX } from 'react'
 import { useState } from 'react'
 import { expect, fn, userEvent, within } from 'storybook/test'
 
-import { Modal } from '../index'
+import { Modal, getModalRoot } from '../index'
 
 const Meta = {
   title: 'Molecules/Modal',
@@ -101,5 +101,48 @@ export const Controlled: Story = {
     // Wait for modal to be removed
     await expect(within(body).queryByRole('dialog')).not.toBeInTheDocument()
     await expect(args.onClose).toHaveBeenCalled()
+  }
+}
+
+export const ModalRootExists: Story = {
+  args: {
+    isOpen: true,
+    children: <div>Modal Root Test</div>
+  },
+  play: async ({ canvasElement }) => {
+    const body = canvasElement.ownerDocument.body
+    const modalRoot = getModalRoot()
+    await expect(modalRoot).not.toBeNull()
+    await expect(modalRoot?.id).toBe('modal-root')
+
+    const modal = await within(body).findByRole('dialog')
+    await expect(modal).toBeInTheDocument()
+  }
+}
+
+/**
+ * Modal without onClose handler (line 17-20 coverage).
+ * Tests the case where onClose is undefined.
+ */
+export const WithoutOnClose: Story = {
+  args: {
+    isOpen: true,
+    onClose: undefined,
+    children: (
+      <div style={{ padding: '20px', background: 'white', borderRadius: '8px' }}>
+        <h2>Modal without close handler</h2>
+        <p>This modal has no onClose handler defined.</p>
+      </div>
+    )
+  },
+  play: async ({ canvasElement }) => {
+    const body = canvasElement.ownerDocument.body
+    const modal = await within(body).findByRole('dialog')
+    await expect(modal).toBeInTheDocument()
+
+    // Click overlay to verify no errors occur without onClose
+    const overlay = modal
+    await userEvent.click(overlay)
+    await expect(modal).toBeInTheDocument()
   }
 }

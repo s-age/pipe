@@ -1,9 +1,11 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
 import { http, HttpResponse } from 'msw'
 import type { JSX } from 'react'
-import { expect, fireEvent, within } from 'storybook/test'
+import { expect, fireEvent, userEvent, within } from 'storybook/test'
+import { z } from 'zod'
 
-import { Form } from '@/components/organisms/Form'
+import { Button } from '@/components/atoms/Button'
+import { Form, useFormContext } from '@/components/organisms/Form'
 import { API_BASE_URL } from '@/constants/uri'
 import type { SessionDetail } from '@/lib/api/session/getSession'
 
@@ -50,17 +52,59 @@ export const Default: Story = {}
  * Demonstrates error display when wrapped in a Form context
  */
 export const WithErrors: Story = {
-  render: (arguments_): JSX.Element => (
-    <Form
-      defaultValues={{}}
-      // Note: In a real scenario, errors would come from formState.
-      // Here we simulate it by providing a context that useOptionalFormContext can read.
-      // However, our Form component might not support direct 'errors' prop for simulation.
-      // If it doesn't, we might need a more complex setup.
-    >
-      <HyperParameters {...arguments_} />
-    </Form>
-  )
+  render: (arguments_): JSX.Element => {
+    const FormWithError = (): JSX.Element => {
+      const methods = useFormContext()
+
+      const handleSubmit = async (): Promise<void> => {
+        await methods.trigger('hyperparameters')
+      }
+
+      return (
+        <>
+          <HyperParameters {...arguments_} />
+          <Button type="button" onClick={handleSubmit}>
+            Trigger Validation
+          </Button>
+        </>
+      )
+    }
+
+    const schema = z.object({
+      hyperparameters: z
+        .object({
+          temperature: z.number(),
+          topP: z.number(),
+          topK: z.number()
+        })
+        .refine(() => false, {
+          message: 'Invalid hyperparameters configuration'
+        })
+    })
+
+    return (
+      <Form
+        schema={schema}
+        defaultValues={{
+          hyperparameters: {
+            temperature: 0.7,
+            topP: 0.9,
+            topK: 5
+          }
+        }}
+      >
+        <FormWithError />
+      </Form>
+    )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: /trigger validation/i })
+    await userEvent.click(button)
+
+    const errorMessage = await canvas.findByText(/invalid hyperparameters/i)
+    await expect(errorMessage).toBeInTheDocument()
+  }
 }
 
 /**

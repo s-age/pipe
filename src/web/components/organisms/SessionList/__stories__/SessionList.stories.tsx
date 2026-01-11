@@ -188,3 +188,43 @@ export const SelectSessionInteraction: Story = {
     await expect(args.onSelectSession).toHaveBeenCalledWith('session-1', true)
   }
 }
+
+/**
+ * Tests archive sessions with filePath (line 55 coverage).
+ * When useFilePath is true, uses filePath as identifier instead of sessionId.
+ */
+export const WithFilePath: Story = {
+  args: {
+    sessions: [
+      {
+        sessionId: 'archive-1',
+        filePath: '/archives/session-2024-01-10.json',
+        purpose: 'Archived session from Jan 10',
+        background: 'Historical session',
+        roles: ['Archivist'],
+        procedure: 'Review',
+        artifacts: [],
+        multiStepReasoningEnabled: false,
+        tokenCount: 800,
+        lastUpdatedAt: '2024-01-10T08:00:00Z',
+        deletedAt: ''
+      }
+    ] as SessionOverview[],
+    selectedSessionIds: [],
+    useFilePath: true
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Find the checkbox for the archived session
+    const sessionCheckbox = canvas.getByRole('checkbox', { name: /archived session/i })
+
+    await userEvent.click(sessionCheckbox)
+
+    // Verify that onSelectSession was called with filePath instead of sessionId
+    await expect(args.onSelectSession).toHaveBeenCalledWith(
+      '/archives/session-2024-01-10.json',
+      true
+    )
+  }
+}

@@ -154,3 +154,52 @@ export const FullFlow: Story = {
     )
   }
 }
+
+/**
+ * Demonstrates null sessionDetail to cover index.tsx:25-26
+ */
+export const NullSessionDetail: Story = {
+  args: {
+    sessionDetail: null
+  }
+}
+
+/**
+ * Demonstrates empty diagnosis results (no deletions, edits, compressions)
+ * to cover TherapistResult.tsx:60-88 branch coverage
+ */
+export const EmptyDiagnosisResults: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.post(`${API_BASE_URL}/therapist`, () =>
+          HttpResponse.json({
+            diagnosis: {
+              summary: 'No issues found in the session.',
+              deletions: null,
+              edits: null,
+              compressions: null,
+              rawDiagnosis: 'No modifications needed'
+            },
+            sessionId: mockSessionDetail.sessionId
+          })
+        )
+      ]
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const diagnoseButton = canvas.getByRole('button', { name: /start diagnosis/i })
+
+    await userEvent.click(diagnoseButton)
+
+    // Wait for diagnosis results with "None" items
+    await waitFor(() => expect(canvas.getByText(/summary:/i)).toBeInTheDocument(), {
+      timeout: 2000
+    })
+
+    // Verify "None" is displayed for each category
+    const noneItems = canvas.getAllByText(/none/i)
+    expect(noneItems.length).toBeGreaterThanOrEqual(3) // Deletions, Edits, Compressions
+  }
+}

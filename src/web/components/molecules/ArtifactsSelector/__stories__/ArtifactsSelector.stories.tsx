@@ -59,3 +59,34 @@ export const WithRHF: Story = {
     return <FormExample />
   }
 }
+
+/**
+ * Tests ArtifactsSelector without form context (line 19 coverage).
+ * This covers the case where formContext is null/undefined.
+ */
+export const WithoutFormContext: Story = {
+  args: {
+    legend: 'Standalone Selector (No Form)'
+  }
+}
+
+/**
+ * Tests ArtifactsSelector when watch returns null/undefined (line 19 coverage).
+ * This covers the || [] fallback when watch('artifacts') returns a falsy value.
+ */
+export const WithFormContextButNoArtifacts: Story = {
+  render: (): JSX.Element => {
+    const schema = z.object({
+      artifacts: z.array(z.string()).optional()
+    })
+
+    const FormExample = (): JSX.Element => (
+      <Form schema={schema} defaultValues={{}}>
+        <ArtifactsSelector legend="No Initial Artifacts" />
+        <ArtifactsWatcher />
+      </Form>
+    )
+
+    return <FormExample />
+  }
+}

@@ -56,9 +56,8 @@ export const sessionHandlers = [
   ),
 
   // PATCH /api/v1/session/:sessionId/references/:index/persist
-  http.patch(
-    `${API_BASE_URL}/session/:sessionId/references/:index/persist`,
-    () => HttpResponse.json({ message: 'Success' })
+  http.patch(`${API_BASE_URL}/session/:sessionId/references/:index/persist`, () =>
+    HttpResponse.json({ message: 'Success' })
   ),
 
   // PATCH /api/v1/session/:sessionId/references/:index/ttl

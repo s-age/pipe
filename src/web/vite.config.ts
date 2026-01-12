@@ -2,11 +2,10 @@
 import { fileURLToPath } from 'node:url'
 import path from 'path'
 
-import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin'
 import react from '@vitejs/plugin-react'
-import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vite'
+
 const dirname =
   typeof __dirname !== 'undefined'
     ? __dirname
@@ -18,8 +17,9 @@ export default defineConfig({
   plugins: [react(), vanillaExtractPlugin()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, '.')
-    }
+      '@': path.resolve(dirname, '.')
+    },
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
   },
   root: '.',
   // src/web をルートディレクトリとして設定
@@ -40,31 +40,9 @@ export default defineConfig({
     }
   },
   test: {
-    projects: [
-      {
-        extends: true,
-        plugins: [
-          // The plugin will run tests for the stories defined in your Storybook config
-          // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
-          storybookTest({
-            configDir: path.join(dirname, '.storybook')
-          })
-        ],
-        test: {
-          name: 'storybook',
-          browser: {
-            enabled: true,
-            headless: true,
-            provider: playwright({}),
-            instances: [
-              {
-                browser: 'chromium'
-              }
-            ]
-          },
-          setupFiles: ['.storybook/vitest.setup.ts']
-        }
-      }
-    ]
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['**/__tests__/**/*.test.{ts,tsx}']
   }
 })

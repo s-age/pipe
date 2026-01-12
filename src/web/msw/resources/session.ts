@@ -148,13 +148,10 @@ export const sessionErrorHandlers = [
   http.post(
     `${API_BASE_URL}/session/:sessionId/instruction`,
     () =>
-      new HttpResponse(
-        JSON.stringify({ message: 'Failed to send instruction.' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
+      new HttpResponse(JSON.stringify({ message: 'Failed to send instruction.' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
   ),
 
   // POST /api/v1/session/:sessionId/stop (error response)

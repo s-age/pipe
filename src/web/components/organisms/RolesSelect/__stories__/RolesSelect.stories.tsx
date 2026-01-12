@@ -1,18 +1,11 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { http, HttpResponse } from 'msw'
 import type { JSX } from 'react'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
 
-import { API_BASE_URL } from '@/constants/uri'
+import { fsHandlers } from '@/msw/resources/fs'
 import { AppStoreProvider } from '@/stores/useAppStore'
 
 import { RolesSelect } from '../index'
-
-const mockRoles = [
-  { label: 'Admin', value: 'admin' },
-  { label: 'Editor', value: 'editor' },
-  { label: 'Viewer', value: 'viewer' }
-]
 
 const mockSession = {
   artifacts: [],
@@ -43,11 +36,7 @@ const Meta = {
   ],
   parameters: {
     msw: {
-      handlers: [
-        http.get(`${API_BASE_URL}/fs/roles`, () =>
-          HttpResponse.json({ roles: mockRoles })
-        )
-      ]
+      handlers: fsHandlers
     }
   }
 } satisfies StoryMeta<typeof RolesSelect>

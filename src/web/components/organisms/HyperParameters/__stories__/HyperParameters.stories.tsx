@@ -1,13 +1,12 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { http, HttpResponse } from 'msw'
 import type { JSX } from 'react'
 import { expect, fireEvent, userEvent, within } from 'storybook/test'
 import { z } from 'zod'
 
 import { Button } from '@/components/atoms/Button'
 import { Form, useFormContext } from '@/components/organisms/Form'
-import { API_BASE_URL } from '@/constants/uri'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { metaHandlers } from '@/msw/resources/meta'
 
 import { HyperParameters } from '../index'
 
@@ -113,19 +112,7 @@ export const WithErrors: Story = {
 export const Interactive: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post(
-          `${API_BASE_URL}/meta/hyperparameters/:sessionId`,
-          async ({ params }) =>
-            HttpResponse.json({
-              message: 'Hyperparameters updated successfully',
-              session: {
-                ...mockSessionDetail,
-                sessionId: params.sessionId as string
-              }
-            })
-        )
-      ]
+      handlers: metaHandlers
     }
   },
   play: async ({ canvasElement }) => {

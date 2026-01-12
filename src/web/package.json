@@ -10,7 +10,8 @@
   "scripts": {
     "start": "vite",
     "build": "tsc && vite build",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
+    "test:unit": "vitest --run",
     "test:e2e": "playwright test",
     "test:storybook": "vitest --project=storybook --config .storybook/vitest.config.ts --coverage",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
@@ -66,6 +67,7 @@
     "eslint-plugin-unicorn": "^62.0.0",
     "eslint-plugin-unused-imports": "^4.3.0",
     "jest": "^30.2.0",
+    "jsdom": "^27.4.0",
     "msw": "^2.12.7",
     "msw-storybook-addon": "^2.0.6",
     "playwright": "^1.56.1",

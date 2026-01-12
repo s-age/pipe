@@ -1,8 +1,7 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { http, HttpResponse } from 'msw'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
-import { API_BASE_URL } from '@/constants/uri'
+import { sessionHandlers } from '@/msw/resources/session'
 
 import { ReferenceComponent } from '../index'
 
@@ -23,20 +22,7 @@ const Meta = {
   },
   parameters: {
     msw: {
-      handlers: [
-        http.patch(`${API_BASE_URL}/session/:sessionId/references/:index/persist`, () =>
-          HttpResponse.json({ message: 'Success' })
-        ),
-        http.patch(`${API_BASE_URL}/session/:sessionId/references/:index/ttl`, () =>
-          HttpResponse.json({ message: 'Success' })
-        ),
-        http.patch(`${API_BASE_URL}/session/:sessionId/references/:index/toggle`, () =>
-          HttpResponse.json({
-            disabled: true,
-            message: 'Success'
-          })
-        )
-      ]
+      handlers: sessionHandlers
     }
   }
 } satisfies StoryMeta<typeof ReferenceComponent>

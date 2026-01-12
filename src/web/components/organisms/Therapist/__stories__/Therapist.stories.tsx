@@ -1,10 +1,14 @@
 import type { Meta as StoryMeta, StoryObj } from '@storybook/react-vite'
-import { http, HttpResponse, delay } from 'msw'
 import type { JSX } from 'react'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
-import { API_BASE_URL } from '@/constants/uri'
 import type { SessionDetail } from '@/lib/api/session/getSession'
+import { doctorDelayHandlers } from '@/msw/resources/doctor'
+import {
+  therapistDelayHandlers,
+  therapistEmptyHandlers,
+  therapistHandlers
+} from '@/msw/resources/therapist'
 
 import { Therapist } from '../index'
 import type { Diagnosis } from '../types'
@@ -77,14 +81,7 @@ export const Default: Story = {
 export const WithDiagnosis: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post(`${API_BASE_URL}/therapist`, () =>
-          HttpResponse.json({
-            diagnosis: mockDiagnosis,
-            sessionId: mockSessionDetail.sessionId
-          })
-        )
-      ]
+      handlers: therapistHandlers
     }
   },
   play: async ({ canvasElement }) => {
@@ -107,24 +104,7 @@ export const WithDiagnosis: Story = {
 export const FullFlow: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post(`${API_BASE_URL}/therapist`, async () => {
-          await delay(500)
-
-          return HttpResponse.json({
-            diagnosis: mockDiagnosis,
-            sessionId: mockSessionDetail.sessionId
-          })
-        }),
-        http.post(`${API_BASE_URL}/doctor`, async () => {
-          await delay(500)
-
-          return HttpResponse.json({
-            result: { status: 'Succeeded' },
-            sessionId: mockSessionDetail.sessionId
-          })
-        })
-      ]
+      handlers: [...therapistDelayHandlers, ...doctorDelayHandlers]
     }
   },
   play: async ({ args, canvasElement }) => {
@@ -179,20 +159,7 @@ export const NullSessionDetail: Story = {
 export const EmptyDiagnosisResults: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post(`${API_BASE_URL}/therapist`, () =>
-          HttpResponse.json({
-            diagnosis: {
-              summary: 'No issues found in the session.',
-              deletions: null,
-              edits: null,
-              compressions: null,
-              rawDiagnosis: 'No modifications needed'
-            },
-            sessionId: mockSessionDetail.sessionId
-          })
-        )
-      ]
+      handlers: therapistEmptyHandlers
     }
   },
   play: async ({ canvasElement }) => {

@@ -86,6 +86,18 @@ export const sessionHandlers = [
   // DELETE /api/v1/session/:sessionId
   http.delete(`${API_BASE_URL}/session/:sessionId`, () =>
     HttpResponse.json({ message: 'Session deleted' })
+  ),
+
+  // POST /api/v1/session/:sessionId/instruction
+  http.post<{ sessionId: string }, { instruction: string }, { message: string }>(
+    `${API_BASE_URL}/session/:sessionId/instruction`,
+    () => HttpResponse.json({ message: 'Instruction sent successfully' })
+  ),
+
+  // POST /api/v1/session/:sessionId/stop
+  http.post<{ sessionId: string }, never, { message: string }>(
+    `${API_BASE_URL}/session/:sessionId/stop`,
+    () => HttpResponse.json({ message: 'Session stopped' })
   )
 ]
 
@@ -130,5 +142,28 @@ export const sessionErrorHandlers = [
           headers: { 'Content-Type': 'application/json' }
         }
       )
+  ),
+
+  // POST /api/v1/session/:sessionId/instruction (error response)
+  http.post(
+    `${API_BASE_URL}/session/:sessionId/instruction`,
+    () =>
+      new HttpResponse(
+        JSON.stringify({ message: 'Failed to send instruction.' }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+  ),
+
+  // POST /api/v1/session/:sessionId/stop (error response)
+  http.post(
+    `${API_BASE_URL}/session/:sessionId/stop`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to stop session' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
   )
 ]

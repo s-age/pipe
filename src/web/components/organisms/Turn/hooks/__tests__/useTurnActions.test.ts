@@ -50,10 +50,7 @@ describe('useTurnActions', () => {
     it('should fork session successfully and return new session ID', async () => {
       const { result } = renderHook(() => useTurnActions())
 
-      const newSessionId = await result.current.forkSessionAction(
-        'test-session-id',
-        2
-      )
+      const newSessionId = await result.current.forkSessionAction('test-session-id', 2)
 
       await waitFor(() => {
         const toasts = getToasts()
@@ -68,10 +65,7 @@ describe('useTurnActions', () => {
       server.use(...turnErrorHandlers)
       const { result } = renderHook(() => useTurnActions())
 
-      const newSessionId = await result.current.forkSessionAction(
-        'test-session-id',
-        2
-      )
+      const newSessionId = await result.current.forkSessionAction('test-session-id', 2)
 
       await waitFor(() => {
         const toasts = getToasts()

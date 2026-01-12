@@ -181,5 +181,25 @@ export const sessionErrorHandlers = [
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
+  ),
+
+  // PATCH /api/v1/session/:sessionId/todos (error response)
+  http.patch(
+    `${API_BASE_URL}/session/:sessionId/todos`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to update todos' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  ),
+
+  // DELETE /api/v1/session/:sessionId/todos (error response)
+  http.delete(
+    `${API_BASE_URL}/session/:sessionId/todos`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to delete all todos' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
   )
 ]

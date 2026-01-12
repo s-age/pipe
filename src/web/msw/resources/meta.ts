@@ -29,6 +29,37 @@ export const metaHandlers = [
       HttpResponse.json({
         message: 'Reference added successfully'
       })
+  ),
+
+  // PATCH /api/v1/session/:sessionId/references/:referenceIndex/persist
+  http.patch<
+    { sessionId: string; referenceIndex: string },
+    { persist: boolean },
+    { message: string }
+  >(`${API_BASE_URL}/session/:sessionId/references/:referenceIndex/persist`, () =>
+    HttpResponse.json({
+      message: 'Reference persist state updated successfully'
+    })
+  ),
+
+  // PATCH /api/v1/session/:sessionId/references/:referenceIndex/ttl
+  http.patch<
+    { sessionId: string; referenceIndex: string },
+    { ttl: number },
+    { message: string }
+  >(`${API_BASE_URL}/session/:sessionId/references/:referenceIndex/ttl`, () =>
+    HttpResponse.json({
+      message: 'Reference TTL updated successfully'
+    })
+  ),
+
+  // PATCH /api/v1/session/:sessionId/references/:referenceIndex/toggle
+  http.patch<{ sessionId: string; referenceIndex: string }, never, { message: string }>(
+    `${API_BASE_URL}/session/:sessionId/references/:referenceIndex/toggle`,
+    () =>
+      HttpResponse.json({
+        message: 'Reference disabled state updated successfully'
+      })
   )
 ]
 
@@ -44,5 +75,42 @@ export const metaErrorHandlers = [
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
+  ),
+
+  // PATCH /api/v1/session/:sessionId/references/:referenceIndex/persist (error response)
+  http.patch(
+    `${API_BASE_URL}/session/:sessionId/references/:referenceIndex/persist`,
+    () =>
+      HttpResponse.json(
+        { message: 'Failed to update reference persist state.' },
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+  ),
+
+  // PATCH /api/v1/session/:sessionId/references/:referenceIndex/ttl (error response)
+  http.patch(`${API_BASE_URL}/session/:sessionId/references/:referenceIndex/ttl`, () =>
+    HttpResponse.json(
+      { message: 'Failed to update reference TTL.' },
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
+  ),
+
+  // PATCH /api/v1/session/:sessionId/references/:referenceIndex/toggle (error response)
+  http.patch(
+    `${API_BASE_URL}/session/:sessionId/references/:referenceIndex/toggle`,
+    () =>
+      HttpResponse.json(
+        { message: 'Failed to update reference disabled state.' },
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
   )
 ]

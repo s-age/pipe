@@ -98,6 +98,15 @@ export const sessionHandlers = [
   http.post<{ sessionId: string }, never, { message: string }>(
     `${API_BASE_URL}/session/:sessionId/stop`,
     () => HttpResponse.json({ message: 'Session stopped' })
+  ),
+
+  // PATCH /api/v1/session/:sessionId/artifacts
+  http.patch<
+    { sessionId: string },
+    { artifacts: Array<{ contents: null; path: string }> },
+    { message: string }
+  >(`${API_BASE_URL}/session/:sessionId/artifacts`, () =>
+    HttpResponse.json({ message: 'Artifacts updated successfully' })
   )
 ]
 
@@ -159,6 +168,16 @@ export const sessionErrorHandlers = [
     `${API_BASE_URL}/session/:sessionId/stop`,
     () =>
       new HttpResponse(JSON.stringify({ message: 'Failed to stop session' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  ),
+
+  // PATCH /api/v1/session/:sessionId/artifacts (error response)
+  http.patch(
+    `${API_BASE_URL}/session/:sessionId/artifacts`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to update artifacts' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })

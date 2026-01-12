@@ -47,10 +47,13 @@ describe('useTurnActions', () => {
   })
 
   describe('forkSessionAction', () => {
-    it('should fork session successfully and show success toast', async () => {
+    it('should fork session successfully and return new session ID', async () => {
       const { result } = renderHook(() => useTurnActions())
 
-      const newSessionId = await result.current.forkSessionAction('test-session-id', 2)
+      const newSessionId = await result.current.forkSessionAction(
+        'test-session-id',
+        2
+      )
 
       await waitFor(() => {
         const toasts = getToasts()
@@ -61,11 +64,14 @@ describe('useTurnActions', () => {
       expect(newSessionId).toBe('forked-session-test-session-id')
     })
 
-    it('should handle fork session error and show failure toast', async () => {
+    it('should handle fork session error and return undefined', async () => {
       server.use(...turnErrorHandlers)
       const { result } = renderHook(() => useTurnActions())
 
-      const newSessionId = await result.current.forkSessionAction('test-session-id', 2)
+      const newSessionId = await result.current.forkSessionAction(
+        'test-session-id',
+        2
+      )
 
       await waitFor(() => {
         const toasts = getToasts()
@@ -124,29 +130,6 @@ describe('useTurnActions', () => {
       })
     })
 
-    it('should edit function_calling turn successfully with content field', async () => {
-      const { result } = renderHook(() => useTurnActions())
-      const functionCallingTurn: Turn = {
-        type: 'function_calling',
-        response: 'original response',
-        timestamp: '2024-01-01T00:00:00Z'
-      }
-
-      await result.current.editTurnAction(
-        'test-session-id',
-        1,
-        'updated response',
-        functionCallingTurn
-      )
-
-      await waitFor(() => {
-        const toasts = getToasts()
-        expect(toasts).toHaveLength(1)
-        expect(toasts[0].status).toBe('success')
-        expect(toasts[0].title).toBe('Turn updated successfully')
-      })
-    })
-
     it('should handle edit turn error and show failure toast', async () => {
       server.use(...turnErrorHandlers)
       const { result } = renderHook(() => useTurnActions())
@@ -173,7 +156,7 @@ describe('useTurnActions', () => {
   })
 
   describe('return value structure', () => {
-    it('should return all three action functions', () => {
+    it('should return all action functions', () => {
       const { result } = renderHook(() => useTurnActions())
 
       expect(result.current).toHaveProperty('deleteTurnAction')

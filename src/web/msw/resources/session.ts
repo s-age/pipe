@@ -107,6 +107,15 @@ export const sessionHandlers = [
     { message: string }
   >(`${API_BASE_URL}/session/:sessionId/artifacts`, () =>
     HttpResponse.json({ message: 'Artifacts updated successfully' })
+  ),
+
+  // POST /api/v1/session/start
+  http.post<never, Record<string, unknown>, { sessionId: string }>(
+    `${API_BASE_URL}/session/start`,
+    () =>
+      HttpResponse.json({
+        sessionId: 'test-session-id'
+      })
   )
 ]
 
@@ -198,6 +207,16 @@ export const sessionErrorHandlers = [
     `${API_BASE_URL}/session/:sessionId/todos`,
     () =>
       new HttpResponse(JSON.stringify({ message: 'Failed to delete all todos' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  ),
+
+  // POST /api/v1/session/start (error response)
+  http.post(
+    `${API_BASE_URL}/session/start`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to create session' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })

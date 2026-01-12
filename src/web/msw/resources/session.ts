@@ -81,6 +81,11 @@ export const sessionHandlers = [
   // DELETE /api/v1/session/:sessionId/todos
   http.delete(`${API_BASE_URL}/session/:sessionId/todos`, () =>
     HttpResponse.json({ message: 'All todos deleted' })
+  ),
+
+  // DELETE /api/v1/session/:sessionId
+  http.delete(`${API_BASE_URL}/session/:sessionId`, () =>
+    HttpResponse.json({ message: 'Session deleted' })
   )
 ]
 
@@ -88,6 +93,26 @@ export const sessionHandlers = [
  * MSW handlers for /session endpoints with error responses
  */
 export const sessionErrorHandlers = [
+  // GET /api/v1/session/:sessionId (error response)
+  http.get(
+    `${API_BASE_URL}/session/:sessionId`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to get session' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  ),
+
+  // DELETE /api/v1/session/:sessionId (error response)
+  http.delete(
+    `${API_BASE_URL}/session/:sessionId`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to delete session' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  ),
+
   // PATCH /api/v1/session/:sessionId/meta (error response)
   http.patch(
     `${API_BASE_URL}/session/:sessionId/meta`,

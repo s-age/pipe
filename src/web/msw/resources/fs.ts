@@ -63,6 +63,7 @@ export const fsHandlers = [
     `${API_BASE_URL}/fs/browse_l2`,
     async ({ request }) => {
       const { query } = await request.json()
+
       return HttpResponse.json({
         results: [
           {
@@ -81,6 +82,7 @@ export const fsHandlers = [
     async ({ request }) => {
       const { finalPathList } = await request.json()
       const path = finalPathList.join('/')
+
       return HttpResponse.json({
         entries: [
           {
@@ -105,18 +107,22 @@ export const fsHandlers = [
  */
 export const fsErrorHandlers = [
   // POST /api/v1/fs/browse_l2 (error response)
-  http.post(`${API_BASE_URL}/fs/browse_l2`, () => {
-    return new HttpResponse(JSON.stringify({ message: 'Search failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
-  }),
+  http.post(
+    `${API_BASE_URL}/fs/browse_l2`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Search failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  ),
 
   // POST /api/v1/fs/browse (error response)
-  http.post(`${API_BASE_URL}/fs/browse`, () => {
-    return new HttpResponse(JSON.stringify({ message: 'Failed to list directory' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
-  })
+  http.post(
+    `${API_BASE_URL}/fs/browse`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to list directory' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  )
 ]

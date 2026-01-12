@@ -715,6 +715,96 @@ export const useMyActions = () => {
 
 **Why this works**: Direct function import doesn't create a subscription to store state changes, avoiding React state updates during test execution.
 
+### Issue 7: MSW Mock Data Not Matching Test Expectations
+
+**Problem**: Tests fail with unexpected data structures or empty arrays even though MSW handlers are set up correctly.
+
+**Symptoms**:
+- Expected array length 1, but got 0
+- Expected specific field values, but got different values
+- MSW handler is being called, but data transformation returns unexpected results
+
+**Common Causes**:
+
+1. **Mock data IDs don't match test expectations**
+   ```typescript
+   // MSW handler returns 'test-session-id'
+   const mockData = { sessionId: 'test-session-id', ... }
+
+   // But test expects 'test-session'
+   expect(response?.sessionId).toBe('test-session')  // ❌ Fails
+   ```
+
+2. **Response structure differs from what transformation logic expects**
+   ```typescript
+   // MSW returns both fields
+   return HttpResponse.json({
+     sessions: mockSessions,
+     sessionTree: []  // Empty array present
+   })
+
+   // Transformation logic checks for presence, not content
+   if (data.sessionTree) {  // True even if empty!
+     return flattenTree(data.sessionTree)  // Returns []
+   }
+   ```
+
+**Solution Steps**:
+
+1. **Check data transformation logic** - When tests fail with unexpected data:
+   ```bash
+   # Find the transformation/normalization function
+   grep -r "function normalize" src/
+   grep -r "function transform" src/
+   ```
+
+2. **Understand the transformation behavior**:
+   ```typescript
+   // Example: Check if transformation differentiates between
+   // undefined vs empty array vs populated array
+   export const normalizeData = (data: Response) => {
+     if (data.tree) {  // Checks presence, not emptiness
+       return flattenTree(data.tree)
+     } else {
+       return data.items.map(...)
+     }
+   }
+   ```
+
+3. **Align MSW mock data with transformation expectations**:
+   ```typescript
+   // ❌ BAD: Returns field that triggers wrong branch
+   return HttpResponse.json({
+     items: mockItems,
+     tree: []  // Transformation will use tree branch, returning []
+   })
+
+   // ✅ GOOD: Only return field for the desired branch
+   return HttpResponse.json({
+     items: mockItems
+     // Don't include tree field at all
+   })
+   ```
+
+4. **Ensure mock IDs match test expectations**:
+   ```typescript
+   // In MSW handler
+   const mockData = {
+     sessionId: 'test-session',  // Match exactly what test expects
+     ...
+   }
+
+   // In test
+   expect(result?.sessionId).toBe('test-session')  // ✅ Matches
+   ```
+
+**Key points**:
+- Always check if transformation/normalization logic exists between API and hook
+- Understand how transformation logic handles optional fields (undefined vs empty vs populated)
+- Mock data structure should match what transformation logic expects, not just what API returns
+- Ensure all test data IDs are consistent between MSW handlers and test assertions
+- Use real application code flow to understand: API → transformation → hook → test
+
 ## Summary
 
 This role defines the technical **HOW** of writing unit tests for custom hooks:

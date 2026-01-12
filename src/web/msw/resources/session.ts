@@ -92,5 +92,18 @@ export const sessionErrorHandlers = [
   http.patch(
     `${API_BASE_URL}/session/:sessionId/meta`,
     () => new HttpResponse(null, { status: 500 })
+  ),
+
+  // PATCH /api/v1/session/:sessionId/multi_step_reasoning (error response)
+  http.patch(
+    `${API_BASE_URL}/session/:sessionId/multi_step_reasoning`,
+    () =>
+      new HttpResponse(
+        JSON.stringify({ message: 'Failed to update multi-step reasoning' }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
   )
 ]

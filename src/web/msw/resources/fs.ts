@@ -1,6 +1,12 @@
 import { http, HttpResponse } from 'msw'
 
 import { API_BASE_URL } from '@/constants/uri'
+import type {
+  BrowseRequest,
+  BrowseResponse,
+  FileSearchRequest,
+  FileSearchResponse
+} from '@/lib/api/fs/browse'
 import type { SessionSearchResponse } from '@/lib/api/fs/search'
 
 /**
@@ -50,5 +56,67 @@ export const fsHandlers = [
         { label: 'Viewer', value: 'viewer' }
       ]
     })
+  ),
+
+  // POST /api/v1/fs/browse_l2
+  http.post<never, FileSearchRequest, FileSearchResponse>(
+    `${API_BASE_URL}/fs/browse_l2`,
+    async ({ request }) => {
+      const { query } = await request.json()
+      return HttpResponse.json({
+        results: [
+          {
+            filePath: 'src/test.ts',
+            lineContent: `found ${query}`,
+            lineNumber: 10
+          }
+        ]
+      })
+    }
+  ),
+
+  // POST /api/v1/fs/browse
+  http.post<never, BrowseRequest, BrowseResponse>(
+    `${API_BASE_URL}/fs/browse`,
+    async ({ request }) => {
+      const { finalPathList } = await request.json()
+      const path = finalPathList.join('/')
+      return HttpResponse.json({
+        entries: [
+          {
+            isDir: true,
+            name: 'subdir',
+            path: `${path}/subdir`
+          },
+          {
+            isDir: false,
+            name: 'file.txt',
+            path: `${path}/file.txt`,
+            size: 1024
+          }
+        ]
+      })
+    }
   )
+]
+
+/**
+ * MSW handlers for /fs endpoints with error responses
+ */
+export const fsErrorHandlers = [
+  // POST /api/v1/fs/browse_l2 (error response)
+  http.post(`${API_BASE_URL}/fs/browse_l2`, () => {
+    return new HttpResponse(JSON.stringify({ message: 'Search failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }),
+
+  // POST /api/v1/fs/browse (error response)
+  http.post(`${API_BASE_URL}/fs/browse`, () => {
+    return new HttpResponse(JSON.stringify({ message: 'Failed to list directory' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  })
 ]

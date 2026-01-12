@@ -62,3 +62,16 @@ export const therapistEmptyHandlers = [
     })
   )
 ]
+
+/**
+ * MSW handlers for /therapist endpoints with error responses
+ */
+export const therapistErrorHandlers = [
+  // POST /api/v1/therapist (error response)
+  http.post(`${API_BASE_URL}/therapist`, () =>
+    new HttpResponse(JSON.stringify({ message: 'Diagnosis failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  )
+]

@@ -144,5 +144,15 @@ export const fsErrorHandlers = [
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
+  ),
+
+  // POST /api/v1/fs/search (error response)
+  http.post(
+    `${API_BASE_URL}/fs/search`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Search failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
   )
 ]

@@ -11,7 +11,6 @@ export const useSessionManagementActions = (): {
     sessionIds?: string[]
   }) => Promise<boolean>
 } => {
-
   const archiveSessionsAction = useCallback<(sessionIds: string[]) => Promise<boolean>>(
     async (sessionIds: string[]): Promise<boolean> => {
       try {

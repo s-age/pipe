@@ -11,6 +11,7 @@
     "start": "vite",
     "build": "tsc && vite build",
     "test": "vitest",
+    "test:unit": "vitest --run",
     "test:e2e": "playwright test",
     "test:storybook": "vitest --project=storybook --config .storybook/vitest.config.ts --coverage",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",

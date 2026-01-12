@@ -573,25 +573,25 @@ it.each([
 ### Run all unit tests:
 
 ```bash
-npm test
+npm run test:unit
 ```
 
 ### Run specific test file:
 
 ```bash
-npm test -- useTurnActions
+npm run test:unit -- useTurnActions
 ```
 
 ### Run tests in watch mode:
 
 ```bash
-npm test -- --watch
+npm test -- useTurnActions
 ```
 
 ### Run tests in Docker:
 
 ```bash
-docker compose exec react npm test -- useTurnActions --run
+docker compose exec react npm run test:unit -- useTurnActions
 ```
 
 ## Troubleshooting
@@ -671,6 +671,49 @@ afterEach(() => {
 2. Check handler URLs match exactly (including path params)
 3. Verify `API_BASE_URL` is correct
 4. Check MSW is imported from `msw/node`, not `msw`
+
+### Issue 6: React `act()` Warning in Hook Tests
+
+**Problem**: Tests show warning "An update to TestComponent inside a test was not wrapped in act(...)"
+
+**Cause**: Hook uses `useToastStore()` which subscribes to Zustand store state, causing React state updates during testing.
+
+**Example of problematic code**:
+```typescript
+// ❌ BAD: Using hook causes state subscription
+import { useToastStore } from '@/stores/useToastStore'
+
+export const useMyActions = () => {
+  const { addToast } = useToastStore()  // Subscribes to store state
+
+  const myAction = useCallback(async () => {
+    // ...
+    addToast({ status: 'success', title: 'Success' })
+  }, [addToast])  // addToast in dependency array
+}
+```
+
+**Solution**: Import `addToast` function directly instead of using the hook:
+
+```typescript
+// ✅ GOOD: Direct import, no state subscription
+import { addToast } from '@/stores/useToastStore'
+
+export const useMyActions = () => {
+  const myAction = useCallback(async () => {
+    // ...
+    addToast({ status: 'success', title: 'Success' })
+  }, [])  // Empty dependency array
+}
+```
+
+**Key points**:
+- Use direct function import: `import { addToast } from '@/stores/useToastStore'`
+- Don't use the hook: `const { addToast } = useToastStore()`
+- Remove `addToast` from `useCallback` dependency array (use empty array `[]`)
+- This pattern matches `useTurnActions.ts` and other action hooks
+
+**Why this works**: Direct function import doesn't create a subscription to store state changes, avoiding React state updates during test execution.
 
 ## Summary
 

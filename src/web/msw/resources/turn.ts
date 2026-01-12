@@ -9,11 +9,10 @@ export const turnHandlers = [
   // DELETE /api/v1/session/:sessionId/turn/:turnIndex
   http.delete<{ sessionId: string; turnIndex: string }, never, { message: string }>(
     `${API_BASE_URL}/session/:sessionId/turn/:turnIndex`,
-    () => {
-      return HttpResponse.json({
+    () =>
+      HttpResponse.json({
         message: 'Turn deleted successfully'
       })
-    }
   ),
 
   // PATCH /api/v1/session/:sessionId/turn/:turnIndex
@@ -30,17 +29,12 @@ export const turnHandlers = [
   }),
 
   // POST /api/v1/session/:sessionId/fork/:forkIndex
-  http.post<
-    { sessionId: string; forkIndex: string },
-    never,
-    { newSessionId: string }
-  >(
+  http.post<{ sessionId: string; forkIndex: string }, never, { newSessionId: string }>(
     `${API_BASE_URL}/session/:sessionId/fork/:forkIndex`,
-    ({ params }) => {
-      return HttpResponse.json({
+    ({ params }) =>
+      HttpResponse.json({
         newSessionId: `forked-session-${params.sessionId}`
       })
-    }
   )
 ]
 

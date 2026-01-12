@@ -136,7 +136,7 @@ tasks = [
 
 ✅ Success Criteria:
 - [ ] TypeScript Compiler (tsc --noEmit): Pass
-- [ ] Validation Script (validate_code.sh): Pass
+- [ ] Unit Test Script (unit_test.sh): Pass (includes validation + test execution)
 - [ ] Test coverage includes success cases, error cases, return values, conditional logic
 
 🔧 Tool Execution Protocol:
@@ -154,8 +154,8 @@ tasks = [
     },
     {
         "type": "script",
-        "script": "typescript/validate_code.sh",
-        "args": ["--ignore-external-changes"],
+        "script": "typescript/unit_test.sh",
+        "args": ["--ignore-external-changes", "--files", test_file],
         "max_retries": 2  # Total 3 attempts (initial + 2 retries)
     }
 ]
@@ -332,11 +332,11 @@ Summary:
     "references_persist": [hook_file]
 }
 
-# Script task: Validate quality (with retry)
+# Script task: Run tests and validate quality (with retry)
 {
     "type": "script",
-    "script": "typescript/validate_code.sh",
-    "args": ["--ignore-external-changes"],
+    "script": "typescript/unit_test.sh",
+    "args": ["--ignore-external-changes", "--files", test_file],
     "max_retries": 2  # Optional: retry on failure (default: 0)
 }
 ```

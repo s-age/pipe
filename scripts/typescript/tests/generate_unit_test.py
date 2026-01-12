@@ -432,7 +432,7 @@ def execute_next_todo(session_id: str) -> bool:
         "- Verify side effects (toasts, state changes)\n"
         "- Import types from API client files for type safety\n\n"
         "✅ Success Criteria:\n"
-        "- [ ] Validation Script (validate_code.sh): Pass (includes TypeScript, Formatter, Linter)\n"
+        "- [ ] Unit Test Script (unit_test.sh): Pass (includes validation + test execution)\n"
         "- [ ] Test coverage includes success cases, error cases, return values, conditional logic\n"
         "- [ ] All patterns follow useActions.md exactly\n\n"
         "🔧 Tool Execution Protocol:\n"
@@ -457,8 +457,8 @@ def execute_next_todo(session_id: str) -> bool:
         },
         {
             "type": "script",
-            "script": "typescript/validate_code.sh",
-            "args": ["--ignore-external-changes"],
+            "script": "typescript/unit_test.sh",
+            "args": ["--ignore-external-changes", "--files", test_file],
             "max_retries": 2,
         },
     ]

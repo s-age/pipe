@@ -426,72 +426,37 @@ describe('return value structure', () => {
 
 ---
 
-### Step 5: Run Tests in Docker
+### Step 5: Execute Quality Checks and Unit Tests
 
-**CRITICAL - Test Execution Environment**:
+**CRITICAL - Test and Validation Protocol**:
 
-Tests MUST be run in Docker to ensure consistent environment:
-
-```bash
-docker compose exec react npm test -- {hookName} --run
-```
-
-**Example**:
-```bash
-docker compose exec react npm test -- useTurnActions --run
-```
-
-**Why Docker?**:
-- Consistent Node.js version
-- All dependencies properly installed
-- Same environment as CI/CD
-- Avoids local machine issues (missing dependencies, wrong Node version)
-
-**Success criteria**:
-```
-✓ components/organisms/Turn/hooks/__tests__/useTurnActions.test.ts (9 tests) 49ms
-
-Test Files  1 passed (1)
-     Tests  9 passed (9)
-```
-
-**If tests fail**:
-1. Read error messages carefully
-2. Fix issues in test file
-3. Re-run tests
-4. Repeat until all tests pass
-
-**Output**: All tests passing
-
----
-
-### Step 6: Execute Quality Checks
-
-**CRITICAL - Validation Protocol**:
-
-After tests pass, run the validation script to ensure code quality:
+After writing tests, run the unit test script to execute tests and validate code quality:
 
 ```bash
-bash scripts/typescript/validate_code.sh --ignore-external-changes
+bash scripts/typescript/unit_test.sh --ignore-external-changes --files {test_file_path}
 ```
 
 **What This Script Does** (in order):
-1. Git status check (skipped with `--ignore-external-changes`)
-2. TypeScript compiler check (tsc --noEmit)
-3. Formatter (npm run format) - auto-formats code
-4. Linter with auto-fix (npm run lint --fix) - automatically removes unused imports
+1. **Validation** (via validate_code.sh):
+   - Git status check (skipped with `--ignore-external-changes`)
+   - TypeScript compiler check (tsc --noEmit)
+   - Formatter (npm run format) - auto-formats code
+   - Linter with auto-fix (npm run lint --fix) - automatically removes unused imports
+2. **Unit Tests**:
+   - Runs npm run test:unit for the specified test file (vitest with --run flag)
 
 **Parameters**:
 - `--ignore-external-changes`: Skip git status check
+- `--files <path>`: Test file to run (relative to src/web/)
 
 **Exit Codes**:
-- `0`: All checks passed (proceed to Step 7)
-- `1`: Quality checks failed (formatting, linting)
+- `0`: All checks and tests passed (proceed to Step 7)
+- `1`: Quality checks or tests failed
 - `2`: Unauthorized file modifications detected
 
 **CRITICAL - State Synchronization**:
 
-After validation script completes:
+After unit test script completes:
 - Files have been **formatted and linted** automatically
 - Your in-memory state is now **STALE**
 - **[MANDATORY]** Execute `read_file` on test file BEFORE any error fixes
@@ -499,20 +464,20 @@ After validation script completes:
 
 **Error Recovery Protocol**:
 
-If validation script reports errors:
+If unit test script reports errors:
 1. **[MANDATORY]** Execute `read_file` on test file FIRST
 2. **[REQUIRED]** Use fresh file content for fixes
-3. Fix reported errors
-4. Re-run validation script
+3. Fix reported errors (test failures, type errors, linting issues)
+4. Re-run unit test script
 5. **Rationale**: Prevents "string not found" errors from formatter changes
 
-**Success Criteria**: Exit code 0 (all checks passed)
+**Success Criteria**: Exit code 0 (all checks and tests passed)
 
-**Output**: Code passes all quality gates
+**Output**: Code passes all quality gates and unit tests
 
 ---
 
-### Step 7: Report Success
+### Step 6: Report Success
 
 **Actions**:
 
@@ -560,12 +525,12 @@ Report successful test implementation with the following information:
 - ❌ Not testing error cases (only testing success cases)
 - ❌ Not verifying toast notifications
 - ❌ Proceeding to next step if current step fails
-- ❌ Using `replace` tool based on stale memory after validation script
+- ❌ Using `replace` tool based on stale memory after unit test script
 
 ### Prohibited Token-Wasting Actions
-- ❌ **[CRITICAL]** Re-reading content you just wrote (except Step 6 error recovery)
-- ❌ **[CRITICAL]** Using `replace` tool based on stale memory after validation script runs (must `read_file` first)
-- ❌ Running validation script multiple times without fixing errors
+- ❌ **[CRITICAL]** Re-reading content you just wrote (except Step 5 error recovery)
+- ❌ **[CRITICAL]** Using `replace` tool based on stale memory after unit test script runs (must `read_file` first)
+- ❌ Running unit test script multiple times without fixing errors
 
 ---
 
@@ -684,15 +649,11 @@ Execution:
           → Write 9 test cases covering all actions
           → Test success, error, return values, conditional logic, structure
 
-  Step 5: Run tests in Docker
-          → docker compose exec react npm test -- useTurnActions --run
-          → Exit code 0 (9 tests passed)
+  Step 5: Run unit test script
+          → bash scripts/typescript/unit_test.sh --ignore-external-changes --files ...
+          → Exit code 0 (validation passed + 9 tests passed)
 
-  Step 6: Run validation script
-          → bash scripts/typescript/validate_code.sh --ignore-external-changes
-          → Exit code 0 (all quality gates passed)
-
-  Step 7: Report success
+  Step 6: Report success
           → Test file: src/web/components/organisms/Turn/hooks/__tests__/useTurnActions.test.ts
           → Test count: 9
           → Coverage: success ✅, error ✅, return values ✅, conditional ✅, structure ✅
@@ -710,5 +671,5 @@ Output: Success, ready for test conductor review
 - **Path alias**: MUST use `dirname` variable (not `__dirname`) for ES module compatibility
 - **Sequential execution**: Complete each step before proceeding
 - **Error handling**: Always return to Step 4 on any failure
-- **Formatter safeguard**: ALWAYS execute `read_file` BEFORE fixing errors in Step 6
+- **Formatter safeguard**: ALWAYS execute `read_file` BEFORE fixing errors in Step 5
 - **Responsibility**: Test implementation agents do NOT handle git operations or commits

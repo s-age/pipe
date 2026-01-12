@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 
 import { archiveSessions } from '@/lib/api/session_management/archiveSessions'
 import { deleteArchivedSessions } from '@/lib/api/session_management/deleteArchivedSessions'
-import { useToastStore } from '@/stores/useToastStore'
+import { addToast } from '@/stores/useToastStore'
 
 export const useSessionManagementActions = (): {
   archiveSessionsAction: (sessionIds: string[]) => Promise<boolean>
@@ -11,7 +11,6 @@ export const useSessionManagementActions = (): {
     sessionIds?: string[]
   }) => Promise<boolean>
 } => {
-  const { addToast } = useToastStore()
 
   const archiveSessionsAction = useCallback<(sessionIds: string[]) => Promise<boolean>>(
     async (sessionIds: string[]): Promise<boolean> => {
@@ -32,7 +31,7 @@ export const useSessionManagementActions = (): {
         return false
       }
     },
-    [addToast]
+    []
   )
 
   const deleteArchivedSessionsAction = useCallback<
@@ -59,7 +58,7 @@ export const useSessionManagementActions = (): {
         return false
       }
     },
-    [addToast]
+    []
   )
 
   return {

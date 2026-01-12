@@ -1,13 +1,34 @@
 import { http, HttpResponse } from 'msw'
 
 import { API_BASE_URL } from '@/constants/uri'
+import type { EditHyperparametersRequest } from '@/lib/api/meta/editHyperparameters'
+import type { SessionDetail } from '@/lib/api/session/getSession'
 import type { Reference } from '@/types/reference'
 
 /**
  * MSW handlers for /meta endpoints
  */
 export const metaHandlers = [
-  // POST /api/v1/meta/hyperparameters/:sessionId
+  // PATCH /api/v1/session/:sessionId/hyperparameters
+  http.patch<
+    { sessionId: string },
+    EditHyperparametersRequest,
+    { message: string; session: SessionDetail }
+  >(`${API_BASE_URL}/session/:sessionId/hyperparameters`, async ({ params }) =>
+    HttpResponse.json({
+      message: 'Hyperparameters updated successfully',
+      session: {
+        sessionId: params.sessionId as string,
+        hyperparameters: {
+          temperature: 0.7,
+          topP: 0.9,
+          topK: 5
+        }
+      } as SessionDetail
+    })
+  ),
+
+  // POST /api/v1/meta/hyperparameters/:sessionId (Legacy/Other)
   http.post(`${API_BASE_URL}/meta/hyperparameters/:sessionId`, async ({ params }) =>
     HttpResponse.json({
       message: 'Hyperparameters updated successfully',
@@ -67,6 +88,19 @@ export const metaHandlers = [
  * MSW handlers for /meta endpoints with error responses
  */
 export const metaErrorHandlers = [
+  // PATCH /api/v1/session/:sessionId/hyperparameters (error response)
+  http.patch(
+    `${API_BASE_URL}/session/:sessionId/hyperparameters`,
+    () =>
+      new HttpResponse(
+        JSON.stringify({ message: 'Failed to update hyperparameters' }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+  ),
+
   // PATCH /api/v1/session/:sessionId/references (error response)
   http.patch(
     `${API_BASE_URL}/session/:sessionId/references`,

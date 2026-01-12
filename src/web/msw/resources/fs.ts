@@ -124,5 +124,15 @@ export const fsErrorHandlers = [
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
+  ),
+
+  // GET /api/v1/fs/procedures (error response)
+  http.get(
+    `${API_BASE_URL}/fs/procedures`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to fetch procedures' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
   )
 ]

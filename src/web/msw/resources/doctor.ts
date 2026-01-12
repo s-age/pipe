@@ -35,11 +35,13 @@ export const doctorDelayHandlers = [
  */
 export const doctorErrorHandlers = [
   // POST /api/v1/doctor (error response)
-  http.post(`${API_BASE_URL}/doctor`, () =>
-    new HttpResponse(JSON.stringify({ message: 'Failed to apply modifications' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+  http.post(
+    `${API_BASE_URL}/doctor`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to apply modifications' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
   ),
 
   // POST /api/v1/doctor (failed status response)

@@ -68,10 +68,12 @@ export const therapistEmptyHandlers = [
  */
 export const therapistErrorHandlers = [
   // POST /api/v1/therapist (error response)
-  http.post(`${API_BASE_URL}/therapist`, () =>
-    new HttpResponse(JSON.stringify({ message: 'Diagnosis failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+  http.post(
+    `${API_BASE_URL}/therapist`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Diagnosis failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
   )
 ]

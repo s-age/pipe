@@ -99,7 +99,10 @@ echo "=================================================="
 echo ""
 
 # Change to src/web directory for npm commands
-cd src/web
+# Get script directory and navigate to repo root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT/src/web"
 
 # Build test command
 if [ ${#TARGET_FILES[@]} -eq 0 ]; then

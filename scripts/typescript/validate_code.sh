@@ -110,7 +110,10 @@ else
 fi
 
 # Change to src/web directory for all subsequent commands
-cd src/web
+# Get script directory and navigate to repo root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT/src/web"
 
 # Quality gate 2: TypeScript compiler check
 echo "[2/4] Running TypeScript compiler check..."
@@ -134,7 +137,12 @@ if [ ${#TARGET_FILES[@]} -eq 0 ]; then
     fi
 else
     # Format only specified files
-    if npx prettier "${TARGET_FILES[@]}" --write; then
+    # Remove 'src/web/' prefix from file paths since we're already in src/web/
+    RELATIVE_FILES=()
+    for file in "${TARGET_FILES[@]}"; do
+        RELATIVE_FILES+=("${file#src/web/}")
+    done
+    if npx prettier "${RELATIVE_FILES[@]}" --write; then
         echo "✅ Formatting completed"
     else
         echo "❌ Formatting failed"
@@ -155,7 +163,12 @@ if [ ${#TARGET_FILES[@]} -eq 0 ]; then
     fi
 else
     # Lint only specified files
-    if npx eslint "${TARGET_FILES[@]}" --fix; then
+    # Remove 'src/web/' prefix from file paths since we're already in src/web/
+    RELATIVE_FILES=()
+    for file in "${TARGET_FILES[@]}"; do
+        RELATIVE_FILES+=("${file#src/web/}")
+    done
+    if npx eslint "${RELATIVE_FILES[@]}" --fix; then
         echo "✅ Linting passed"
     else
         echo "❌ Linting failed"

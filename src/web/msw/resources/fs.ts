@@ -134,5 +134,15 @@ export const fsErrorHandlers = [
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
+  ),
+
+  // GET /api/v1/fs/roles (error response)
+  http.get(
+    `${API_BASE_URL}/fs/roles`,
+    () =>
+      new HttpResponse(JSON.stringify({ message: 'Failed to fetch roles' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
   )
 ]
